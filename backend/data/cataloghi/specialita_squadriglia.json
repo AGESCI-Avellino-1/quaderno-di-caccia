@@ -1,0 +1,58 @@
+{
+  "catalogo": "specialita_squadriglia",
+  "branca": "EG",
+  "tipo": "SPECIALITA_SQUADRIGLIA",
+  "titolare": "SQUADRIGLIA",
+  "versione": "2026",
+  "fonte": "Regolamento metodologico AGESCI 2026, allegati (trascritti nel documento 'Specifica di dominio PP' v1.0, appendice A). Codici tecnici di QdC, non ufficiali AGESCI.",
+  "voci": [
+    {
+      "codice": "EGSQ001",
+      "nome": "Alpinismo"
+    },
+    {
+      "codice": "EGSQ002",
+      "nome": "Artigianato"
+    },
+    {
+      "codice": "EGSQ003",
+      "nome": "Campismo"
+    },
+    {
+      "codice": "EGSQ004",
+      "nome": "Civitas"
+    },
+    {
+      "codice": "EGSQ005",
+      "nome": "Esplorazione"
+    },
+    {
+      "codice": "EGSQ006",
+      "nome": "Espressione"
+    },
+    {
+      "codice": "EGSQ007",
+      "nome": "Giornalismo"
+    },
+    {
+      "codice": "EGSQ008",
+      "nome": "Internazionale"
+    },
+    {
+      "codice": "EGSQ009",
+      "nome": "Natura"
+    },
+    {
+      "codice": "EGSQ010",
+      "nome": "Nautica"
+    },
+    {
+      "codice": "EGSQ011",
+      "nome": "Olimpia"
+    },
+    {
+      "codice": "EGSQ012",
+      "nome": "Pronto Intervento"
+    }
+  ]
+}

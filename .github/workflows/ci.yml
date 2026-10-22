@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Django)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: qdc
+          POSTGRES_USER: qdc
+          POSTGRES_PASSWORD: qdc
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U qdc -d qdc"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      # Tests run on PostgreSQL here (locally they fall back to in-memory SQLite).
+      DATABASE_URL: postgres://qdc:qdc@localhost:5432/qdc
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --locked
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run black --check .
+      - name: Migrations up to date
+        run: uv run python manage.py makemigrations --check --dry-run --settings=config.settings.test
+      - name: Django checks (dev and production)
+        run: |
+          uv run python manage.py check
+          uv run python manage.py check --deploy --fail-level WARNING --settings=config.settings.prod
+        env:
+          DJANGO_SECRET_KEY: ci-only-not-a-secret-ci-only-not-a-secret-ci-only-not-a-secret
+          DJANGO_ALLOWED_HOSTS: qdc.example.org
+          DJANGO_CSRF_TRUSTED_ORIGINS: https://qdc.example.org
+      - name: Tests
+        run: uv run pytest
+
+  frontend:
+    name: Frontend (Vue PWA)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lint and format
+        run: |
+          npm run lint
+          npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    env:
+      POSTGRES_PASSWORD: ci
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose -f compose.prod.yml build

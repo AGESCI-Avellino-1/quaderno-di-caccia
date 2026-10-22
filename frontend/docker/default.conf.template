@@ -1,0 +1,13 @@
+# Plain HTTP: used behind a reverse proxy on the host (nginx-host, apache-host), which
+# terminates TLS and sends X-Forwarded-Proto. For nginx-docker this file is replaced by
+# deploy/nginx-docker/default.conf.template.
+map $http_x_forwarded_proto $qdc_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
+server {
+    listen 80;
+    server_name _;
+    include /etc/nginx/qdc/qdc-locations.conf;
+}

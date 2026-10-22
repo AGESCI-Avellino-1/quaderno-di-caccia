@@ -1,0 +1,24 @@
+# Development: only PostgreSQL runs in a container (Docker or Podman); Django and
+# Vite run on the host (PyCharm / WebStorm). Start with: mise run db
+# (or: docker compose -f compose.dev.yml up -d  /  podman compose -f compose.dev.yml up -d)
+name: qdc-dev
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: qdc
+      POSTGRES_USER: qdc
+      POSTGRES_PASSWORD: qdc
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # PostgreSQL 18 images keep data under /var/lib/postgresql/<version>/.
+      - db-dev:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qdc -d qdc"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  db-dev:

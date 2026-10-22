@@ -1,0 +1,13 @@
+// =============================================================
+//  Prefisso delle CSS custom properties del framework.
+//
+//  "bs-"  -> Bootstrap 5 (default, entrypoint agesci.scss)
+//  "cui-" -> CoreUI 5    (entrypoint agesci-coreui.scss del pacchetto
+//            django-agesci-campania-coreui-theme)
+//
+//  CoreUI e' una fork di Bootstrap: i nomi delle variabili sono identici,
+//  cambia solo il prefisso (verificato su CoreUI 5.9.0 / Bootstrap 5.3.8).
+//  Si configura al PRIMO @use del modulo, prima di qualunque altro partial:
+//      @use "prefix" with ($prefix: "cui-");
+// =============================================================
+$prefix: "bs-" !default;

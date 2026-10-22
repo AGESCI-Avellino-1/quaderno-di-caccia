@@ -1,0 +1,270 @@
+{
+  "catalogo": "specialita_eg",
+  "branca": "EG",
+  "tipo": "SPECIALITA",
+  "titolare": "PERSONA",
+  "versione": "2026",
+  "fonte": "Regolamento metodologico AGESCI 2026, allegati (trascritti nel documento 'Specifica di dominio PP' v1.0, appendice A). Codici tecnici di QdC, non ufficiali AGESCI.",
+  "voci": [
+    {
+      "codice": "EGSP001",
+      "nome": "Allevatore"
+    },
+    {
+      "codice": "EGSP002",
+      "nome": "Alpinista"
+    },
+    {
+      "codice": "EGSP003",
+      "nome": "Amico degli animali"
+    },
+    {
+      "codice": "EGSP004",
+      "nome": "Amico del quartiere"
+    },
+    {
+      "codice": "EGSP005",
+      "nome": "Archeologo"
+    },
+    {
+      "codice": "EGSP006",
+      "nome": "Artigiano"
+    },
+    {
+      "codice": "EGSP007",
+      "nome": "Artista di strada"
+    },
+    {
+      "codice": "EGSP008",
+      "nome": "Astronomo"
+    },
+    {
+      "codice": "EGSP009",
+      "nome": "Atleta"
+    },
+    {
+      "codice": "EGSP010",
+      "nome": "Attore"
+    },
+    {
+      "codice": "EGSP011",
+      "nome": "Battelliere"
+    },
+    {
+      "codice": "EGSP012",
+      "nome": "Boscaiolo"
+    },
+    {
+      "codice": "EGSP013",
+      "nome": "Botanico"
+    },
+    {
+      "codice": "EGSP014",
+      "nome": "Campeggiatore"
+    },
+    {
+      "codice": "EGSP015",
+      "nome": "Canoista"
+    },
+    {
+      "codice": "EGSP016",
+      "nome": "Cantante"
+    },
+    {
+      "codice": "EGSP017",
+      "nome": "Carpentiere navale"
+    },
+    {
+      "codice": "EGSP018",
+      "nome": "Ciclista"
+    },
+    {
+      "codice": "EGSP019",
+      "nome": "Collezionista"
+    },
+    {
+      "codice": "EGSP020",
+      "nome": "Coltivatore"
+    },
+    {
+      "codice": "EGSP021",
+      "nome": "Corrispondente"
+    },
+    {
+      "codice": "EGSP022",
+      "nome": "Corrispondente radio"
+    },
+    {
+      "codice": "EGSP023",
+      "nome": "Cuoco"
+    },
+    {
+      "codice": "EGSP024",
+      "nome": "Danzatore"
+    },
+    {
+      "codice": "EGSP025",
+      "nome": "Disegnatore"
+    },
+    {
+      "codice": "EGSP026",
+      "nome": "Elettricista"
+    },
+    {
+      "codice": "EGSP027",
+      "nome": "Elettronico"
+    },
+    {
+      "codice": "EGSP028",
+      "nome": "Esperto del computer"
+    },
+    {
+      "codice": "EGSP029",
+      "nome": "Europeista"
+    },
+    {
+      "codice": "EGSP030",
+      "nome": "Falegname"
+    },
+    {
+      "codice": "EGSP031",
+      "nome": "Fa tutto"
+    },
+    {
+      "codice": "EGSP032",
+      "nome": "Folclorista"
+    },
+    {
+      "codice": "EGSP033",
+      "nome": "Fotografo"
+    },
+    {
+      "codice": "EGSP034",
+      "nome": "Geologo"
+    },
+    {
+      "codice": "EGSP035",
+      "nome": "Giardiniere"
+    },
+    {
+      "codice": "EGSP036",
+      "nome": "Giocattolaio"
+    },
+    {
+      "codice": "EGSP037",
+      "nome": "Grafico"
+    },
+    {
+      "codice": "EGSP038",
+      "nome": "Guida"
+    },
+    {
+      "codice": "EGSP039",
+      "nome": "Guida marina"
+    },
+    {
+      "codice": "EGSP040",
+      "nome": "Hebertista"
+    },
+    {
+      "codice": "EGSP041",
+      "nome": "Idraulico"
+    },
+    {
+      "codice": "EGSP042",
+      "nome": "Infermiere"
+    },
+    {
+      "codice": "EGSP043",
+      "nome": "Interprete"
+    },
+    {
+      "codice": "EGSP044",
+      "nome": "Lavoratore/ce in cuoio"
+    },
+    {
+      "codice": "EGSP045",
+      "nome": "Maestro dei giochi"
+    },
+    {
+      "codice": "EGSP046",
+      "nome": "Maestro dei nodi"
+    },
+    {
+      "codice": "EGSP047",
+      "nome": "Meccanico"
+    },
+    {
+      "codice": "EGSP048",
+      "nome": "Modellista"
+    },
+    {
+      "codice": "EGSP049",
+      "nome": "Muratore"
+    },
+    {
+      "codice": "EGSP050",
+      "nome": "Musicista"
+    },
+    {
+      "codice": "EGSP051",
+      "nome": "Nuotatore"
+    },
+    {
+      "codice": "EGSP052",
+      "nome": "Osservatore"
+    },
+    {
+      "codice": "EGSP053",
+      "nome": "Osservatore meteo"
+    },
+    {
+      "codice": "EGSP054",
+      "nome": "Pescatore"
+    },
+    {
+      "codice": "EGSP055",
+      "nome": "Pompiere"
+    },
+    {
+      "codice": "EGSP056",
+      "nome": "Redattore"
+    },
+    {
+      "codice": "EGSP057",
+      "nome": "Regista"
+    },
+    {
+      "codice": "EGSP058",
+      "nome": "Sarto"
+    },
+    {
+      "codice": "EGSP059",
+      "nome": "Scenografo"
+    },
+    {
+      "codice": "EGSP060",
+      "nome": "Segnalatore"
+    },
+    {
+      "codice": "EGSP061",
+      "nome": "Servizio della Parola"
+    },
+    {
+      "codice": "EGSP062",
+      "nome": "Servizio liturgico"
+    },
+    {
+      "codice": "EGSP063",
+      "nome": "Servizio missionario"
+    },
+    {
+      "codice": "EGSP064",
+      "nome": "Topografo"
+    },
+    {
+      "codice": "EGSP065",
+      "nome": "Velista"
+    }
+  ]
+}

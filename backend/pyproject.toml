@@ -1,0 +1,61 @@
+[project]
+name = "qdc-backend"
+version = "0.1.0"
+description = "Quaderno di Caccia (QdC) — backend Django per la gestione di un Gruppo AGESCI"
+requires-python = ">=3.14"
+license = "MIT"
+authors = [{ name = "Andrea Bruno" }]
+dependencies = [
+    "django>=6.1,<6.2",
+    "django-allauth[headless-spec,mfa,socialaccount]>=65.20",
+    "django-auditlog>=3.4",
+    "django-axes>=8.3",
+    "django-environ>=0.14",
+    "django-ninja>=1.7",
+    "gunicorn>=26",
+    "psycopg[binary]>=3.3",
+    "whitenoise>=6.12",
+]
+
+[project.urls]
+Repository = "https://github.com/AGESCI-Avellino-1/quaderno-di-caccia"
+
+[dependency-groups]
+dev = [
+    "black>=26",
+    "factory-boy>=3.3",
+    "pytest>=8",
+    "pytest-django>=4.14",
+    "ruff>=0.17",
+]
+
+# The backend is an application, not a distributable package.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.black]
+line-length = 100
+target-version = ["py314"]
+extend-exclude = "migrations"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["**/migrations/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+"config/settings/*.py" = ["F403", "F405"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]

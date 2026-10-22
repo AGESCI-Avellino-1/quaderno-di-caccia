@@ -1,0 +1,59 @@
+// =============================================================
+//  Branche / ambiti AGESCI -> colore primario
+//  Ogni "tema" rimappa le CSS custom properties di Bootstrap 5
+//  (o di CoreUI 5: il prefisso --bs-/--cui- viene da _prefix.scss)
+//  in base all'attributo [data-branca] sul tag <html> o <body>.
+// =============================================================
+@use "sass:color";
+@use "sass:map";
+@use "palette" as p;
+@use "prefix" as pf;
+
+// Mappa: nome ambito -> colore dominante
+$branche: (
+  "generico": p.$agesci-azzurro,      // default: blu/azzurro istituzionale
+  "capi":     p.$agesci-viola,        // Capi / Comunita' capi -> viola
+  "lc":       p.$agesci-giallo-lc,    // Branca Lupetti/Coccinelle -> giallo
+  "eg":       p.$agesci-verde-eg,     // Branca Esploratori/Guide -> verde
+  "rs":       p.$agesci-rosso-rs,     // Branca Rover/Scolte -> rosso
+  "viola":    p.$agesci-viola,        // alias esplicito
+  "generico2": p.$agesci-generico-2,  // variante "Generico 2"
+);
+
+// Funzione: restituisce un colore di testo leggibile sul primario
+@function on-color($c) {
+  @if (color.channel($c, "lightness", $space: hsl) > 62%) {
+    @return p.$agesci-nero;
+  }
+  @return p.$agesci-bianco;
+}
+
+// Genera le variabili tematiche per un dato colore primario
+@mixin tema-primario($primario) {
+  --#{pf.$prefix}primary: #{$primario};
+  --#{pf.$prefix}primary-rgb: #{color.channel($primario, "red", $space: rgb)}, #{color.channel($primario, "green", $space: rgb)}, #{color.channel($primario, "blue", $space: rgb)};
+
+  --ag-primary: #{$primario};
+  --ag-primary-hover: #{color.adjust($primario, $lightness: -8%)};
+  --ag-primary-active: #{color.adjust($primario, $lightness: -14%)};
+  --ag-primary-subtle: #{color.adjust($primario, $lightness: 42%)};
+  --ag-on-primary: #{on-color($primario)};
+
+  --#{pf.$prefix}link-color: #{$primario};
+  --#{pf.$prefix}link-color-rgb: #{color.channel($primario, "red", $space: rgb)}, #{color.channel($primario, "green", $space: rgb)}, #{color.channel($primario, "blue", $space: rgb)};
+  --#{pf.$prefix}link-hover-color: #{color.adjust($primario, $lightness: -12%)};
+
+  --#{pf.$prefix}btn-focus-shadow-rgb: #{color.channel($primario, "red", $space: rgb)}, #{color.channel($primario, "green", $space: rgb)}, #{color.channel($primario, "blue", $space: rgb)};
+}
+
+// Applica il tema di default su :root
+:root {
+  @include tema-primario(map.get($branche, "generico"));
+}
+
+// Un selettore per ciascun ambito
+@each $nome, $colore in $branche {
+  [data-branca="#{$nome}"] {
+    @include tema-primario($colore);
+  }
+}

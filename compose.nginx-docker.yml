@@ -1,0 +1,13 @@
+# Added by scripts/configure-prod.sh when the reverse proxy is "nginx-docker": the app
+# container publishes 80/443 itself and terminates TLS.
+services:
+  app:
+    ports: !override
+      - "80:80"
+      - "443:443"
+    environment:
+      QDC_DOMAIN: ${QDC_DOMAIN:?QDC_DOMAIN mancante in .env}
+    volumes:
+      - ./deploy/nginx-docker/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${QDC_CERT_DIR:-/etc/letsencrypt}:/etc/letsencrypt:ro
+      - ./deploy/nginx-docker/acme:/var/www/acme:ro

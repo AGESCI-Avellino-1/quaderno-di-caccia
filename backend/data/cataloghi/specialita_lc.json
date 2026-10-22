@@ -1,0 +1,170 @@
+{
+  "catalogo": "specialita_lc",
+  "branca": "LC",
+  "tipo": "SPECIALITA",
+  "titolare": "PERSONA",
+  "versione": "2026",
+  "fonte": "Regolamento metodologico AGESCI 2026, allegati (trascritti nel documento 'Specifica di dominio PP' v1.0, appendice A). Codici tecnici di QdC, non ufficiali AGESCI.",
+  "voci": [
+    {
+      "codice": "LCSP001",
+      "nome": "Amico degli animali"
+    },
+    {
+      "codice": "LCSP002",
+      "nome": "Amico degli anziani"
+    },
+    {
+      "codice": "LCSP003",
+      "nome": "Amico del mare"
+    },
+    {
+      "codice": "LCSP004",
+      "nome": "Amico della natura"
+    },
+    {
+      "codice": "LCSP005",
+      "nome": "Amico di Aronne"
+    },
+    {
+      "codice": "LCSP006",
+      "nome": "Amico di Samuele"
+    },
+    {
+      "codice": "LCSP007",
+      "nome": "Amico di San Francesco"
+    },
+    {
+      "codice": "LCSP008",
+      "nome": "Artigiano"
+    },
+    {
+      "codice": "LCSP009",
+      "nome": "Astronomo"
+    },
+    {
+      "codice": "LCSP010",
+      "nome": "Atleta"
+    },
+    {
+      "codice": "LCSP011",
+      "nome": "Attore"
+    },
+    {
+      "codice": "LCSP012",
+      "nome": "Botanico"
+    },
+    {
+      "codice": "LCSP013",
+      "nome": "Canterino"
+    },
+    {
+      "codice": "LCSP014",
+      "nome": "Cercatore di tracce"
+    },
+    {
+      "codice": "LCSP015",
+      "nome": "Cittadino del mondo"
+    },
+    {
+      "codice": "LCSP016",
+      "nome": "Collezionista"
+    },
+    {
+      "codice": "LCSP017",
+      "nome": "Cuoco"
+    },
+    {
+      "codice": "LCSP018",
+      "nome": "Disegnatore"
+    },
+    {
+      "codice": "LCSP019",
+      "nome": "Folclorista"
+    },
+    {
+      "codice": "LCSP020",
+      "nome": "Fotografo"
+    },
+    {
+      "codice": "LCSP021",
+      "nome": "Giardiniere"
+    },
+    {
+      "codice": "LCSP022",
+      "nome": "Giocatore di squadra"
+    },
+    {
+      "codice": "LCSP023",
+      "nome": "Giocattolaio"
+    },
+    {
+      "codice": "LCSP024",
+      "nome": "Giornalista"
+    },
+    {
+      "codice": "LCSP025",
+      "nome": "Guida"
+    },
+    {
+      "codice": "LCSP026",
+      "nome": "Infermiere"
+    },
+    {
+      "codice": "LCSP027",
+      "nome": "Kim"
+    },
+    {
+      "codice": "LCSP028",
+      "nome": "Maestro dei giochi"
+    },
+    {
+      "codice": "LCSP029",
+      "nome": "Maestro del bosco"
+    },
+    {
+      "codice": "LCSP030",
+      "nome": "Maestro della salute"
+    },
+    {
+      "codice": "LCSP031",
+      "nome": "Maestro di danze"
+    },
+    {
+      "codice": "LCSP032",
+      "nome": "Mani abili"
+    },
+    {
+      "codice": "LCSP033",
+      "nome": "Massaio"
+    },
+    {
+      "codice": "LCSP034",
+      "nome": "Meteorologo"
+    },
+    {
+      "codice": "LCSP035",
+      "nome": "Montanaro"
+    },
+    {
+      "codice": "LCSP036",
+      "nome": "Musicista"
+    },
+    {
+      "codice": "LCSP037",
+      "nome": "Ripara-Ricicla"
+    },
+    {
+      "codice": "LCSP038",
+      "nome": "Sarto"
+    },
+    {
+      "codice": "LCSP039",
+      "nome": "Scaccia pericoli"
+    },
+    {
+      "codice": "LCSP040",
+      "nome": "Scrittore"
+    }
+  ]
+}

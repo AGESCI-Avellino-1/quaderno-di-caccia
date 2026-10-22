@@ -1,0 +1,94 @@
+// =============================================================
+//  QdC theme.
+//  _palette.scss and _branche.scss are copied from django-agesci-campania-theme 2.7.0
+//  (MIT, AGESCI Campania) together with _prefix.scss ("bs-" = Bootstrap), byte for byte. Keep them in sync with
+//  the Django package: never invent colours, never hardcode them in components —
+//  use var(--ag-primary) and friends. The branch is chosen with <html data-branca>.
+// =============================================================
+@use 'palette' as p;
+
+@use 'branche';
+
+// Titillium Web is bundled (SIL OFL 1.1, src/assets/fonts/OFL.txt) so the app keeps its
+// look offline at camp: no Google Fonts request.
+@each $nome, $peso in ('Regular': 400, 'SemiBold': 600, 'Bold': 700) {
+  @font-face {
+    font-family: 'Titillium Web';
+    font-style: normal;
+    font-weight: $peso;
+    font-display: swap;
+    src: url('../assets/fonts/TitilliumWeb-#{$nome}.woff2') format('woff2');
+  }
+}
+
+body {
+  background-color: p.$agesci-grigio-chiaro;
+  color: p.$agesci-nero;
+  font-family:
+    'Titillium Web',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  // Safe areas on phones with notches (installed PWA).
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.qdc-intestazione {
+  background-color: var(--ag-primary);
+  color: var(--ag-on-primary);
+  padding-top: env(safe-area-inset-top);
+}
+
+.qdc-intestazione a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--ag-primary);
+  --bs-btn-border-color: var(--ag-primary);
+  --bs-btn-hover-bg: var(--ag-primary-hover);
+  --bs-btn-hover-border-color: var(--ag-primary-hover);
+  --bs-btn-active-bg: var(--ag-primary-active);
+  --bs-btn-active-border-color: var(--ag-primary-active);
+  --bs-btn-color: var(--ag-on-primary);
+  --bs-btn-hover-color: var(--ag-on-primary);
+  --bs-btn-active-color: var(--ag-on-primary);
+  // Disabled buttons too (e.g. while a request runs), or Bootstrap's blue shows through.
+  --bs-btn-disabled-bg: var(--ag-primary);
+  --bs-btn-disabled-border-color: var(--ag-primary);
+  --bs-btn-disabled-color: var(--ag-on-primary);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--ag-primary);
+  --bs-btn-border-color: var(--ag-primary);
+  --bs-btn-hover-bg: var(--ag-primary);
+  --bs-btn-hover-border-color: var(--ag-primary);
+  --bs-btn-hover-color: var(--ag-on-primary);
+  --bs-btn-active-bg: var(--ag-primary-active);
+  --bs-btn-active-border-color: var(--ag-primary-active);
+  --bs-btn-active-color: var(--ag-on-primary);
+  --bs-btn-disabled-color: var(--ag-primary);
+  --bs-btn-disabled-border-color: var(--ag-primary);
+}
+
+// Bootstrap compiles these colours as constants: map them to the branch colour too.
+.form-check-input:checked {
+  background-color: var(--ag-primary);
+  border-color: var(--ag-primary);
+}
+
+.form-check-input:focus,
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--ag-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.qdc-barra-offline {
+  background-color: p.$agesci-giallo-oro;
+  color: p.$agesci-nero;
+}

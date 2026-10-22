@@ -1,0 +1,141 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+import * as cassaforte from '@/sicurezza/cassaforte'
+import { controllaRevoca } from '@/sicurezza/dispositivo'
+import { useSessioneStore } from '@/stores/sessione'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** Reachable without login. */
+    pubblica?: boolean
+    /** Menu guard only: the API enforces the real permission. */
+    richiede?: 'capo' | 'importazione'
+  }
+}
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
+    {
+      path: '/accesso',
+      name: 'accesso',
+      component: () => import('@/views/AccessoView.vue'),
+      meta: { pubblica: true },
+    },
+    {
+      path: '/sblocco',
+      name: 'sblocco',
+      component: () => import('@/views/SbloccoView.vue'),
+      meta: { pubblica: true },
+    },
+    {
+      path: '/protezione',
+      name: 'protezione',
+      component: () => import('@/views/ProtezioneView.vue'),
+    },
+    {
+      path: '/invito/:token',
+      name: 'invito',
+      component: () => import('@/views/InvitoView.vue'),
+      meta: { pubblica: true },
+      props: true,
+    },
+    {
+      path: '/account/verifica-email/:chiave',
+      name: 'verifica-email',
+      component: () => import('@/views/VerificaEmailView.vue'),
+      meta: { pubblica: true },
+      props: true,
+    },
+    {
+      path: '/account/reimposta-password/:chiave?',
+      name: 'reimposta-password',
+      component: () => import('@/views/ReimpostaPasswordView.vue'),
+      meta: { pubblica: true },
+      props: true,
+    },
+    { path: '/persone', name: 'persone', component: () => import('@/views/PersoneView.vue') },
+    {
+      path: '/persone/:id(\\d+)',
+      name: 'persona',
+      component: () => import('@/views/PersonaView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
+      path: '/persone/:id(\\d+)/sanitarie',
+      name: 'sanitarie',
+      component: () => import('@/views/SanitarieView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
+      path: '/campo',
+      name: 'campo',
+      component: () => import('@/views/CampoView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
+      path: '/unita',
+      name: 'unita',
+      component: () => import('@/views/UnitaView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
+      path: '/importazione',
+      name: 'importazione',
+      component: () => import('@/views/ImportazioneView.vue'),
+      meta: { richiede: 'importazione' },
+    },
+    {
+      path: '/dispositivi',
+      name: 'dispositivi',
+      component: () => import('@/views/DispositiviView.vue'),
+    },
+    { path: '/modifiche', name: 'modifiche', component: () => import('@/views/CodaView.vue') },
+    {
+      path: '/:percorso(.*)*',
+      name: 'non-trovata',
+      component: () => import('@/views/NonTrovataView.vue'),
+      meta: { pubblica: true },
+    },
+  ],
+})
+
+let inizializzata = false
+
+router.beforeEach(async (verso) => {
+  if (!inizializzata) {
+    await cassaforte.inizializza() // also wipes data past the offline expiry (DEC-97)
+    await controllaRevoca() // a lost phone wipes itself here, before the PIN is asked
+    inizializzata = true
+  }
+  // Data just wiped (revocation, expiry, wrong PINs): to the login page, saying why.
+  const motivo = cassaforte.ultimoMotivo.value
+  if (motivo && motivo !== 'uscita') {
+    cassaforte.ultimoMotivo.value = null
+    useSessioneStore().dimentica()
+    if (verso.name !== 'accesso' || verso.query.motivo !== motivo) {
+      return { name: 'accesso', query: { motivo } }
+    }
+  }
+  // Locked vault: nothing (not even the cached profile) is readable before unlocking.
+  if (cassaforte.stato.value === 'bloccata') {
+    if (verso.name === 'sblocco') return true
+    return { name: 'sblocco', query: { prossima: verso.fullPath } }
+  }
+  if (verso.name === 'sblocco') return { name: 'home' }
+
+  const sessione = useSessioneStore()
+  if (!sessione.pronta) await sessione.carica()
+  if (verso.meta.pubblica) return true
+  if (!sessione.autenticato) return { name: 'accesso', query: { prossima: verso.fullPath } }
+  // First login on this device: choose PIN or "solo online" before anything else.
+  if (cassaforte.stato.value === 'da_configurare' && verso.name !== 'protezione') {
+    return { name: 'protezione', query: { prossima: verso.fullPath } }
+  }
+  if (verso.meta.richiede === 'capo' && !sessione.capo) return { name: 'home' }
+  if (verso.meta.richiede === 'importazione' && !sessione.puoImportare) return { name: 'home' }
+  return true
+})
+
+export default router

@@ -1,0 +1,47 @@
+# --- Secrets and local configuration -------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- Personal data: NEVER commit real exports or dumps --------------------------------
+# BuonaStrada exports contain data of minors. Tests use a synthetic export built in code
+# (backend/tests/export_sintetico.py).
+RicercaSoci*.csv
+*.xlsx
+backups/
+backend/media/
+*.sql
+*.sql.gz
+*.sqlite3
+*.sqlite3-journal
+
+# --- Python --------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+backend/staticfiles/
+
+# --- Node / frontend ---------------------------------------------------------------
+node_modules/
+frontend/dist/
+frontend/dev-dist/
+frontend/coverage/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- Deploy (generated per server) -----------------------------------------------------
+deploy/generated/
+deploy/nginx-docker/acme/
+
+# --- IDE / OS --------------------------------------------------------------------------
+# JetBrains: shared run configurations live in .run/ (committed), not in .idea/.
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+.vscode/

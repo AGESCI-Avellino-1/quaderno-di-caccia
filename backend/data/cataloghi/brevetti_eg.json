@@ -1,0 +1,70 @@
+{
+  "catalogo": "brevetti_eg",
+  "branca": "EG",
+  "tipo": "BREVETTO",
+  "titolare": "PERSONA",
+  "versione": "2026",
+  "fonte": "Regolamento metodologico AGESCI 2026, allegati (trascritti nel documento 'Specifica di dominio PP' v1.0, appendice A). Codici tecnici di QdC, non ufficiali AGESCI.",
+  "voci": [
+    {
+      "codice": "EGBR001",
+      "nome": "Animatore sportivo"
+    },
+    {
+      "codice": "EGBR002",
+      "nome": "Artista"
+    },
+    {
+      "codice": "EGBR003",
+      "nome": "Cittadino del mondo"
+    },
+    {
+      "codice": "EGBR004",
+      "nome": "Esploratore delle acque"
+    },
+    {
+      "codice": "EGBR005",
+      "nome": "Giornalista"
+    },
+    {
+      "codice": "EGBR006",
+      "nome": "Grafico multimediale"
+    },
+    {
+      "codice": "EGBR007",
+      "nome": "Guida alpina"
+    },
+    {
+      "codice": "EGBR008",
+      "nome": "Liturgista"
+    },
+    {
+      "codice": "EGBR009",
+      "nome": "Maestro delle tecnologie"
+    },
+    {
+      "codice": "EGBR010",
+      "nome": "Mani Abili"
+    },
+    {
+      "codice": "EGBR011",
+      "nome": "Naturalista"
+    },
+    {
+      "codice": "EGBR012",
+      "nome": "Pioniere"
+    },
+    {
+      "codice": "EGBR013",
+      "nome": "Sherpa"
+    },
+    {
+      "codice": "EGBR014",
+      "nome": "Soccorritore"
+    },
+    {
+      "codice": "EGBR015",
+      "nome": "Trappeur"
+    }
+  ]
+}

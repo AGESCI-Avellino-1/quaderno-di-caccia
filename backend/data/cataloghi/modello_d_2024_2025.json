@@ -1,0 +1,405 @@
+{
+  "catalogo": "modello_d",
+  "anno_bilancio": "2024-2025",
+  "fonte": "AGESCI, 'Bilancio di Gruppo 2024-2025 - Terzo Settore - Vademecum per la corretta compilazione del Modello D (Rendiconto di cassa)'. Le righe grigie del vademecum sono 'selezionabile': false.",
+  "entrate": [
+    {
+      "sezione": "A",
+      "titolo": "Entrate da attività di interesse generale",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Entrate da quote associative e apporti dei fondatori",
+          "selezionabile": true,
+          "voci_scout": [
+            "Quota associativa nazionale (annualmente definita dal Consiglio generale)",
+            "Eventuale - Quota associativa di Gruppo (uguale per tutti gli associati del Gruppo e definita annualmente dall'Assemblea di Gruppo)",
+            "Eventuale - Quota associativa di Zona (uguale per tutti gli associati della Zona e definita annualmente dall'Assemblea di Zona)",
+            "Eventuale - Quota associativa di Regione (uguale per tutti gli associati della Regione e definita annualmente dall'Assemblea regionale)"
+          ]
+        },
+        {
+          "numero": 2,
+          "titolo": "Entrate dagli associati per attività mutuali",
+          "selezionabile": true,
+          "voci_scout": [
+            "Quote per attività/cacce/uscite e per vacanze di branco/cerchio, campi di reparto o route"
+          ]
+        },
+        {
+          "numero": 3,
+          "titolo": "Entrate per prestazioni e cessioni ad associati e fondatori",
+          "selezionabile": true,
+          "voci_scout": [
+            "Quote raccolte per gestione basi"
+          ]
+        },
+        {
+          "numero": 4,
+          "titolo": "Erogazioni liberali",
+          "selezionabile": true,
+          "voci_scout": [
+            "Erogazioni liberali ricevute (NB: trattasi di DONAZIONI! NON SONO le quote!)",
+            "Lasciti testamentari"
+          ]
+        },
+        {
+          "numero": 5,
+          "titolo": "Entrate del 5 x 1000",
+          "selezionabile": false,
+          "voci_scout": []
+        },
+        {
+          "numero": 6,
+          "titolo": "Contributi da soggetti privati",
+          "selezionabile": true,
+          "voci_scout": [
+            "Entrate per contributi da Fondazioni, aziende o altri enti privati sponsors (senza certificazione erogazione liberale)"
+          ]
+        },
+        {
+          "numero": 7,
+          "titolo": "Entrate per prestazioni e cessioni a terzi",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 8,
+          "titolo": "Contributi da enti pubblici",
+          "selezionabile": true,
+          "voci_scout": [
+            "Entrate per contributi da Comuni, altri enti pubblici a favore del Gruppo"
+          ]
+        },
+        {
+          "numero": 9,
+          "titolo": "Entrate da contratti con enti pubblici",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 10,
+          "titolo": "Altre entrate",
+          "selezionabile": true,
+          "voci_scout": [
+            "Entrate dal livello Nazionale e da altri livelli territoriali dell'AGESCI",
+            "Quote utilizzo sede altri Gruppi Scout"
+          ]
+        }
+      ]
+    },
+    {
+      "sezione": "B",
+      "titolo": "Entrate da attività diverse",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Entrate per prestazioni e cessioni ad associati e fondatori",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Contributi da soggetti privati",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 3,
+          "titolo": "Entrate per prestazioni e cessioni a terzi",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 4,
+          "titolo": "Contributi da enti pubblici",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 5,
+          "titolo": "Entrate da contratti con enti pubblici",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 6,
+          "titolo": "Altre entrate",
+          "selezionabile": true,
+          "voci_scout": []
+        }
+      ]
+    },
+    {
+      "sezione": "C",
+      "titolo": "Entrate da attività di raccolta fondi",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Entrate da raccolte fondi abituali",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Entrate da raccolte fondi occasionali",
+          "selezionabile": true,
+          "voci_scout": [
+            "Entrate da autofinanziamento occasionale (indispensabile rendicontazione dedicata per ogni evento)"
+          ]
+        },
+        {
+          "numero": 3,
+          "titolo": "Altre Entrate",
+          "selezionabile": false,
+          "voci_scout": []
+        }
+      ]
+    },
+    {
+      "sezione": "D",
+      "titolo": "Entrate da attività finanziarie e patrimoniali",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Da rapporti bancari",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Da altri investimenti finanziari",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 3,
+          "titolo": "Da patrimonio edilizio",
+          "selezionabile": true,
+          "voci_scout": [
+            "Affitti attivi"
+          ]
+        },
+        {
+          "numero": 4,
+          "titolo": "Da altri beni patrimoniali",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 5,
+          "titolo": "Altre entrate",
+          "selezionabile": true,
+          "voci_scout": []
+        }
+      ]
+    },
+    {
+      "sezione": "E",
+      "titolo": "Entrate di supporto generale",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Entrate da distacco del personale",
+          "selezionabile": false,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Altre Entrate di supporto generale",
+          "selezionabile": true,
+          "voci_scout": []
+        }
+      ]
+    }
+  ],
+  "uscite": [
+    {
+      "sezione": "A",
+      "titolo": "Uscite da attività di interesse generale",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Materie prime, sussidiarie, di consumo e di merci",
+          "selezionabile": true,
+          "voci_scout": [
+            "Uscite per acquisto materiale vario (es. Cancelleria, materiale da campo, materiale per la sede, ecc)"
+          ]
+        },
+        {
+          "numero": 2,
+          "titolo": "Servizi",
+          "selezionabile": true,
+          "voci_scout": [
+            "Spese per attività/cacce/uscite e per vacanze di branco/cerchio, campi di reparto o route",
+            "Utenze sedi",
+            "Oneri e servizi bancari (spese per i bonifici, costo tenuta conto corrente, ecc)",
+            "Consulenze tecniche, formazione, spese legali, spese di viaggio, compensi professionisti, compensi lavoratori occasionali"
+          ]
+        },
+        {
+          "numero": 3,
+          "titolo": "Godimento beni di terzi",
+          "selezionabile": true,
+          "voci_scout": [
+            "Canone locazione sede",
+            "Canoni e spese gestione basi",
+            "Affitti, leasing, noleggi, royalties, licenze d'uso software, etc."
+          ]
+        },
+        {
+          "numero": 4,
+          "titolo": "Personale",
+          "selezionabile": false,
+          "voci_scout": []
+        },
+        {
+          "numero": 5,
+          "titolo": "Uscite diverse di gestione",
+          "selezionabile": true,
+          "voci_scout": [
+            "Imposte di bollo, IMU. Imposta di registro, TARI, diritti",
+            "Rimborsi spese volontari",
+            "Censimenti inviati al livello nazionale",
+            "Censimenti inviati al livello di Zona",
+            "Censimenti inviati al livello regionale"
+          ]
+        }
+      ]
+    },
+    {
+      "sezione": "B",
+      "titolo": "Uscite da attività diverse",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Materie prime, sussidiarie, di consumo e di merci",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Servizi",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 3,
+          "titolo": "Godimento beni di terzi",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 4,
+          "titolo": "Personale",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 5,
+          "titolo": "Uscite diverse di gestione",
+          "selezionabile": true,
+          "voci_scout": []
+        }
+      ]
+    },
+    {
+      "sezione": "C",
+      "titolo": "Uscite da attività di raccolta fondi",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Uscite per raccolte fondi abituali",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Uscite per raccolte fondi occasionali",
+          "selezionabile": true,
+          "voci_scout": [
+            "Uscite da autofinanziamento occasionale (indispensabile rendicontazione dedicata per ogni evento)"
+          ]
+        },
+        {
+          "numero": 3,
+          "titolo": "Altre Uscite",
+          "selezionabile": false,
+          "voci_scout": []
+        }
+      ]
+    },
+    {
+      "sezione": "D",
+      "titolo": "Uscite da attività finanziarie e patrimoniali",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Su rapporti bancari",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Su investimenti finanziari",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 3,
+          "titolo": "Su patrimonio edilizio",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 4,
+          "titolo": "Su altri beni patrimoniali",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 5,
+          "titolo": "Altre uscite",
+          "selezionabile": true,
+          "voci_scout": []
+        }
+      ]
+    },
+    {
+      "sezione": "E",
+      "titolo": "Uscite di supporto generale",
+      "voci": [
+        {
+          "numero": 1,
+          "titolo": "Materie prime, sussidiarie, di consumo e di merci",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 2,
+          "titolo": "Servizi",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 3,
+          "titolo": "Godimento beni di terzi",
+          "selezionabile": true,
+          "voci_scout": []
+        },
+        {
+          "numero": 4,
+          "titolo": "Personale",
+          "selezionabile": false,
+          "voci_scout": []
+        },
+        {
+          "numero": 5,
+          "titolo": "Altre uscite",
+          "selezionabile": true,
+          "voci_scout": []
+        }
+      ]
+    }
+  ]
+}

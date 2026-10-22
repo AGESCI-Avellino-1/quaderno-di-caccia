@@ -1,0 +1,107 @@
+# Tool versions and common tasks. `mise install`, then `mise run setup`.
+# PyCharm/WebStorm pick up the same interpreters (see README, "IDE").
+# Compose tasks use Docker when installed, otherwise Podman (see COMPOSE below).
+
+[tools]
+python = "3.14"
+node = "22"
+uv = "0.11"
+
+# Use `docker compose` when Docker is installed, otherwise fall back to
+# `podman compose` (both read the same compose.*.yml).
+[env]
+COMPOSE = "{{ exec(command='command -v docker >/dev/null 2>&1 && echo docker compose || echo podman compose') }}"
+
+[tasks.setup]
+description = "Installa le dipendenze di backend e frontend e prepara il database"
+run = [
+  "test -f .env || cp .env.example .env",
+  "$COMPOSE -f compose.dev.yml up -d --wait",
+  "cd backend && uv sync && uv run python manage.py migrate",
+  "cd frontend && npm ci",
+]
+
+[tasks.db]
+description = "Avvia PostgreSQL di sviluppo (Docker o Podman)"
+run = "$COMPOSE -f compose.dev.yml up -d --wait"
+
+[tasks."db:stop"]
+description = "Ferma PostgreSQL di sviluppo"
+run = "$COMPOSE -f compose.dev.yml down"
+
+[tasks.backend]
+description = "Django su http://localhost:8000"
+dir = "backend"
+run = "uv run python manage.py runserver"
+
+[tasks.frontend]
+description = "PWA su http://localhost:5173 (API tramite proxy Vite)"
+dir = "frontend"
+run = "npm run dev"
+
+# --- Avvio dell'applicativo ------------------------------------------------
+# I servizi di infrastruttura (oggi solo il database; in futuro cache, broker,
+# mailpit, ...) girano in background tramite compose.dev.yml. Per tenere i task
+# di avvio aggiornati in UN SOLO PUNTO, aggiungere ogni nuovo servizio come
+# dipendenza dell'aggregatore giusto qui sotto. Lo stop ferma tutto lo stack
+# compose, quindi non va toccato quando si aggiunge un servizio a compose.dev.yml.
+
+[tasks."infra:backend"]
+description = "Servizi necessari al backend (oggi: solo il database)"
+depends = ["db"]
+# Aggiungere qui i futuri servizi del backend, es. "redis", "mailpit".
+
+[tasks.infra]
+description = "Tutti i servizi necessari all'applicativo"
+depends = ["infra:backend"]
+# Aggiungere qui i servizi non specifici del backend, se ce ne saranno.
+
+[tasks."dev:backend"]
+description = "Backend + i suoi servizi (database, ...)"
+depends = ["infra:backend"]
+run = "mise run backend"
+
+[tasks.dev]
+description = "Applicativo completo: servizi + backend + frontend"
+depends = ["infra"]
+run = """
+trap 'kill 0' EXIT
+mise run backend &
+mise run frontend &
+wait
+"""
+
+[tasks."dev:stop"]
+description = "Ferma i servizi in background (database e gli altri dello stack)"
+run = "$COMPOSE -f compose.dev.yml down"
+
+[tasks."test:backend"]
+dir = "backend"
+run = "uv run pytest"
+
+[tasks."test:frontend"]
+dir = "frontend"
+run = "npm test"
+
+[tasks.test]
+description = "Tutti i test"
+depends = ["test:backend", "test:frontend"]
+
+[tasks.lint]
+description = "Lint e formattazione (come la CI)"
+run = [
+  "cd backend && uv run ruff check . && uv run black --check .",
+  "cd frontend && npm run lint && npm run format:check && npm run typecheck",
+]
+
+[tasks.format]
+description = "Formatta il codice"
+run = [
+  "cd backend && uv run ruff check --fix . && uv run black .",
+  "cd frontend && npm run format",
+]
+
+[tasks.importa]
+description = "Anteprima di un export BuonaStrada: mise run importa -- percorso.csv [--applica]"
+dir = "backend"
+run = "uv run python manage.py importa_buonastrada"

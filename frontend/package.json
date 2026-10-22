@@ -1,0 +1,58 @@
+{
+  "name": "qdc-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quaderno di Caccia (QdC) — PWA",
+  "license": "MIT",
+  "author": "Andrea Bruno",
+  "homepage": "https://github.com/AGESCI-Avellino-1/quaderno-di-caccia",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AGESCI-Avellino-1/quaderno-di-caccia.git",
+    "directory": "frontend"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --build && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "^14.0.0",
+    "bootstrap": "^5.3.8",
+    "dexie": "^4.4.6",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/test-utils": "^2.5.1",
+    "@vue/tsconfig": "^0.9.1",
+    "eslint": "^10.13.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "fake-indexeddb": "^6.2.6",
+    "jiti": "^2.7.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.10",
+    "sass": "^1.106.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5",
+    "vue-tsc": "^3.3.13"
+  }
+}

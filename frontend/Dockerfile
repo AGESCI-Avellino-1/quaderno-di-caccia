@@ -2,7 +2,7 @@
 # QdC PWA served by nginx, which also forwards the Django paths to the "web" service,
 # so app and API share one origin (session cookie + CSRF, no CORS).
 
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci

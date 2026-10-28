@@ -11,7 +11,7 @@ Read the root `CLAUDE.md` first.
 | `config/api.py` | NinjaAPI: mounts each app's `router` under `/api/v1/` |
 | `apps/core` | `anno.py` (associative year, ages, DEC-37), `date_parziali.py` (partial dates, DEC-70), `ModelloTracciato`, `FonteDato`, idempotency middleware (DEC-96) |
 | `apps/accounts` | `User` (email login, `amministratore_tecnico`), `Invito` (DEC-21, DEC-24), allauth adapters, `/io`, `/inviti`, `crea_invito` command |
-| `apps/organizzazione` | `Gruppo`, `Unita`, `Squadriglia`, `Incarico` (roles with diarchy, DEC-18) |
+| `apps/organizzazione` | `Gruppo`, `Unita`, `Squadriglia`, `Incarico` (roles with diarchy, DEC-18; `STAFF` = the capi serving a unit, no holder limit; `clean()` checks who may hold each role); API for units, patrols, roles, `/capi` |
 | `apps/anagrafica` | `Persona` (one identity for life, DEC-57), `RelazioneTutela`, `Appartenenza`, `AppartenenzaSquadriglia`, `CorrezioneAnagrafica` (DEC-31), `fratelli()` (DEC-33) |
 | `apps/importazione` | BuonaStrada parser (`buonastrada.py`, pure, no DB), import service (`servizi.py`: `anteprima`/`applica`), `importa_buonastrada` command |
 | `apps/permessi/policy.py` | **The only place that decides visibility and actions** |

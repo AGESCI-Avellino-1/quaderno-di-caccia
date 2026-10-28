@@ -18,3 +18,6 @@ class AnagraficaConfig(AppConfig):
             models.CorrezioneAnagrafica,
         ):
             auditlog.register(modello)
+        # Special-category data: the reason stays out of the audit log (which the admin
+        # shows); who changed it and when is in the access log (DEC-101).
+        auditlog.register(models.DerogaSquadriglia, exclude_fields=["motivazione"])

@@ -81,6 +81,19 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      path: '/unita/:id(\\d+)',
+      name: 'unita-dettaglio',
+      component: () => import('@/views/UnitaDettaglioView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+      meta: { richiede: 'capo' },
+    },
+    {
+      // Capi, and the technical administrator for the first capogruppo: the API decides.
+      path: '/gruppo',
+      name: 'gruppo',
+      component: () => import('@/views/GruppoView.vue'),
+    },
+    {
       path: '/importazione',
       name: 'importazione',
       component: () => import('@/views/ImportazioneView.vue'),

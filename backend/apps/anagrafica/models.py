@@ -199,6 +199,125 @@ class AppartenenzaSquadriglia(ModelloTracciato):
         verbose_name = "appartenenza a squadriglia"
         verbose_name_plural = "appartenenze a squadriglia"
 
+    def __str__(self) -> str:
+        return f"{self.persona} in {self.squadriglia}"
+
+    def clean(self) -> None:
+        if self.data_fine and self.data_fine <= self.data_inizio:
+            raise ValidationError("La data di fine deve seguire quella di inizio.")
+        if not self._state.adding:
+            return  # closing stays possible after the person left the reparto
+        squadriglia = self.squadriglia
+        if not squadriglia.attiva:
+            raise ValidationError(f"{squadriglia} è chiusa.")
+        if (
+            not Appartenenza.objects.attive(self.data_inizio)
+            .filter(persona=self.persona_id, unita=squadriglia.unita_id)
+            .filter(ruolo=RuoloAppartenenza.RAGAZZO)
+            .exists()
+        ):
+            raise ValidationError(
+                f"{self.persona} non è un ragazzo o una ragazza di {squadriglia.unita}."
+            )
+        # One patrol at a time: a change closes the previous membership first.
+        if (
+            AppartenenzaSquadriglia.objects.attive(self.data_inizio)
+            .filter(persona=self.persona_id)
+            .exclude(pk=self.pk)
+            .exists()
+        ):
+            raise ValidationError(f"{self.persona} è già in una squadriglia.")
+        # Patrols are single-sex. A missing sex (not in BuonaStrada) does not block: the
+        # unit page reports it instead.
+        persona = self.persona
+        if (
+            persona.sesso
+            and persona.sesso != squadriglia.sesso
+            and not DerogaSquadriglia.objects.valide(self.data_inizio)
+            .filter(
+                persona=persona,
+                reparto=squadriglia.unita_id,
+                sesso_squadriglia=squadriglia.sesso,
+            )
+            .exists()
+        ):
+            raise ValidationError(
+                f"{squadriglia} è {squadriglia.get_sesso_display().lower()}: per inserire "
+                f"{persona} serve un'eccezione decisa dalla Co.Ca. e registrata da un "
+                "capogruppo."
+            )
+
+
+class DerogaQuerySet(models.QuerySet):
+    def valide(self, al_giorno: date | None = None):
+        """Not revoked, and the person is still a ragazzo of that reparto: the exception
+        lasts as long as they stay there."""
+        giorno = al_giorno or date.today()
+        nel_reparto = Appartenenza.objects.attive(giorno).filter(
+            persona=models.OuterRef("persona"),
+            unita=models.OuterRef("reparto"),
+            ruolo=RuoloAppartenenza.RAGAZZO,
+        )
+        return (
+            self.filter(data_decisione__lte=giorno)
+            .filter(Q(revocata_il__isnull=True) | Q(revocata_il__gt=giorno))
+            .filter(models.Exists(nel_reparto))
+        )
+
+
+class DerogaSquadriglia(ModelloTracciato):
+    """Exception to single-sex patrols (gender identity, transition), decided by the Co.Ca.
+    and recorded by a capogruppo. Decided with the maintainer on 2026-10-28, not yet in the
+    analysis (see TODO.md).
+
+    Special-category data (GDPR art. 9), handled like health data: not in the Django admin,
+    `motivazione` excluded from the audit log, reads and changes in the access log (DEC-101),
+    never cached on devices. Visible to the capi only.
+    """
+
+    persona = models.ForeignKey(
+        Persona, on_delete=models.CASCADE, related_name="deroghe_squadriglia"
+    )
+    reparto = models.ForeignKey("organizzazione.Unita", on_delete=models.PROTECT, related_name="+")
+    # The patrols the person may join: "F" = female patrols.
+    sesso_squadriglia = models.CharField(
+        max_length=1, choices=[("M", "Maschili"), ("F", "Femminili")]
+    )
+    # Date of the Co.Ca. meeting that decided it.
+    data_decisione = models.DateField()
+    motivazione = models.TextField()
+    registrata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    # Exclusive like every period end; null = in force.
+    revocata_il = models.DateField(null=True, blank=True)
+
+    objects = DerogaQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "eccezione sulla squadriglia"
+        verbose_name_plural = "eccezioni sulla squadriglia"
+
+    def __str__(self) -> str:
+        # No reason here: __str__ ends up in logs and in the audit log.
+        return f"Eccezione sulla squadriglia per {self.persona}"
+
+    def clean(self) -> None:
+        from apps.organizzazione.models import TipoUnita
+
+        if self.reparto_id and self.reparto.tipo != TipoUnita.REPARTO:
+            raise ValidationError("Le squadriglie esistono solo nei reparti.")
+        if not self.motivazione.strip():
+            raise ValidationError("Scrivi la motivazione decisa dalla Co.Ca.")
+        if self.data_decisione and self.data_decisione > date.today():
+            raise ValidationError("La decisione della Co.Ca. non può essere nel futuro.")
+        if self.revocata_il and self.revocata_il <= self.data_decisione:
+            raise ValidationError("La revoca deve seguire la decisione.")
+
 
 class StatoCorrezione(models.TextChoices):
     IN_ATTESA = "IN_ATTESA", "In attesa di BuonaStrada"

@@ -139,12 +139,17 @@ class RuoloIncarico(models.TextChoices):
     CAPOGRUPPO = "CAPOGRUPPO", "Capogruppo"
     TESORIERE_GRUPPO = "TESORIERE_GRUPPO", "Tesoriere di gruppo"
     CAPO_UNITA = "CAPO_UNITA", "Capo unità"
+    # The capi serving a unit (DEC-09, DEC-10). An Incarico, not an Appartenenza: capi
+    # belong to the Co.Ca. from the BuonaStrada import, and a second CAPO membership
+    # would look to the import like a change of unit.
+    STAFF = "STAFF", "Staff di unità"
     TESORIERE_UNITA = "TESORIERE_UNITA", "Tesoriere di unità"
     CSQ = "CSQ", "Capo squadriglia"
     VCSQ = "VCSQ", "Vice capo squadriglia"
 
 
 # Maximum number of simultaneous holders. None = depends on the unit (diarchy).
+# Roles missing here (STAFF) have no limit.
 TITOLARI_MASSIMI = {
     RuoloIncarico.CAPOGRUPPO: 2,  # diarchy (DEC-18)
     RuoloIncarico.TESORIERE_GRUPPO: 2,
@@ -155,7 +160,7 @@ TITOLARI_MASSIMI = {
 }
 
 RUOLI_DI_GRUPPO = {RuoloIncarico.CAPOGRUPPO, RuoloIncarico.TESORIERE_GRUPPO}
-RUOLI_DI_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.TESORIERE_UNITA}
+RUOLI_DI_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.STAFF}
 RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
 
 
@@ -207,7 +212,10 @@ class Incarico(ModelloTracciato):
             raise ValidationError("Un incarico di squadriglia richiede la squadriglia.")
         if self.data_fine and self.data_fine <= self.data_inizio:
             raise ValidationError("La data di fine deve seguire quella di inizio.")
-        massimo = self.titolari_massimi()
+        if self._state.adding:
+            # Only on appointment: closing the role of someone who has meanwhile left
+            # the service must stay possible (DEC-20).
+            self._controlla_titolare(ruolo)
         concorrenti = (
             Incarico.objects.attivi(self.data_inizio)
             .filter(
@@ -218,13 +226,60 @@ class Incarico(ModelloTracciato):
             )
             .exclude(pk=self.pk)
         )
-        if concorrenti.count() >= massimo:
+        if concorrenti.filter(persona=self.persona_id).exists():
+            raise ValidationError(f"{self.persona} ha già questo incarico.")
+        massimo = self.titolari_massimi()
+        if massimo is not None and concorrenti.count() >= massimo:
             raise ValidationError(
                 f"Il ruolo {self.get_ruolo_display()} ammette al massimo {massimo} titolari."
             )
 
-    def titolari_massimi(self) -> int:
-        massimo = TITOLARI_MASSIMI[RuoloIncarico(self.ruolo)]
+    def titolari_massimi(self) -> int | None:
+        """Holders allowed at the same time; None = no limit (staff)."""
+        ruolo = RuoloIncarico(self.ruolo)
+        if ruolo not in TITOLARI_MASSIMI:
+            return None
+        massimo = TITOLARI_MASSIMI[ruolo]
         if massimo is None:
             return 2 if self.unita and self.unita.diarchia else 1
         return massimo
+
+    def _controlla_titolare(self, ruolo: RuoloIncarico) -> None:
+        """Who may hold the role on its start date: roles of capi go to capi (DEC-09,
+        DEC-10, DEC-11); a R/S unit treasurer may be a rover or scolta of that unit
+        (DEC-11); CSQ and VCSQ are members of their patrol (DEC-13, DEC-14)."""
+        from apps.anagrafica.models import (
+            Appartenenza,
+            AppartenenzaSquadriglia,
+            RuoloAppartenenza,
+        )
+
+        if not self.persona_id:
+            return
+        attive = Appartenenza.objects.attive(self.data_inizio).filter(persona=self.persona_id)
+        e_capo = attive.filter(ruolo=RuoloAppartenenza.CAPO).exists()
+        if ruolo in RUOLI_DI_SQUADRIGLIA:
+            if not attive.filter(
+                ruolo=RuoloAppartenenza.RAGAZZO, unita=self.squadriglia.unita_id
+            ).exists():
+                raise ValidationError(
+                    f"{self.persona} non è un ragazzo o una ragazza di {self.squadriglia.unita}."
+                )
+            if (
+                not AppartenenzaSquadriglia.objects.attive(self.data_inizio)
+                .filter(persona=self.persona_id, squadriglia=self.squadriglia_id)
+                .exists()
+            ):
+                raise ValidationError(f"{self.persona} non fa parte di {self.squadriglia}.")
+            return
+        if ruolo == RuoloIncarico.TESORIERE_UNITA and self.unita.branca == Branca.RS:
+            if e_capo or attive.filter(ruolo=RuoloAppartenenza.RAGAZZO, unita=self.unita).exists():
+                return
+            raise ValidationError(
+                f"{self.persona} non è un capo né un rover o una scolta di {self.unita}."
+            )
+        if not e_capo:
+            raise ValidationError(
+                f"{self.persona} non risulta capo: l'incarico di "
+                f"{self.get_ruolo_display().lower()} spetta a un capo."
+            )

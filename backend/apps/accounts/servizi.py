@@ -11,8 +11,8 @@ def link_invito(invito: Invito) -> str:
 
 
 def invia_invito(invito: Invito) -> None:
-    """Email the invitation link. For children without their own address the invite goes
-    to a parent's email (DEC-25): the text names the person the account is for."""
+    """Email the invitation link; the text names the person the account is for. Every
+    account has its own address, a child's too (refines DEC-25, see api.crea_invito)."""
     scadenza = invito.scadenza.astimezone().strftime("%d/%m/%Y")
     send_mail(
         subject="Invito al Quaderno di Caccia",

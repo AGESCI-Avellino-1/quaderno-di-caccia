@@ -33,6 +33,7 @@ from apps.anagrafica.models import (
 from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
 from apps.organizzazione.models import Gruppo, TipoUnita, Unita
+from apps.organizzazione.servizi import esci_dal_reparto
 
 from .buonastrada import Genitore, RigaSocio, RisultatoParsing
 
@@ -271,9 +272,7 @@ def _appartenenza(
             )
             return
     for appartenenza in altre:
-        appartenenza.data_fine = oggi
-        appartenenza.save(update_fields=["data_fine", "aggiornato_il"])
-        r.appartenenze_chiuse.append(f"{persona} — {appartenenza.unita}")
+        _chiudi_appartenenza(appartenenza, r, oggi)
     # A change of unit starts today; a first membership starts with the associative year.
     inizio = oggi if altre else AnnoAssociativo(riga.anno_scout).inizio
     Appartenenza.objects.create(
@@ -282,14 +281,20 @@ def _appartenenza(
     r.appartenenze_aperte.append(f"{persona} — {unita}")
 
 
+def _chiudi_appartenenza(appartenenza: Appartenenza, r: Riepilogo, oggi: date) -> None:
+    """Leaving a unit; leaving a reparto also means leaving its patrol (DEC-65)."""
+    appartenenza.data_fine = oggi
+    appartenenza.save(update_fields=["data_fine", "aggiornato_il"])
+    r.appartenenze_chiuse.append(f"{appartenenza.persona} — {appartenenza.unita}")
+    r.appartenenze_chiuse += esci_dal_reparto(appartenenza.persona, appartenenza.unita, oggi)
+
+
 def _chiudi_decaduto(riga: RigaSocio, r: Riepilogo, oggi: date) -> None:
     persona = Persona.objects.filter(codice_socio=riga.codice_socio).first()
     if persona is None:
         return  # ex members are not imported (DEC-28)
     for appartenenza in Appartenenza.objects.attive(oggi).filter(persona=persona):
-        appartenenza.data_fine = oggi
-        appartenenza.save(update_fields=["data_fine", "aggiornato_il"])
-        r.appartenenze_chiuse.append(f"{persona} — {appartenenza.unita}")
+        _chiudi_appartenenza(appartenenza, r, oggi)
     if persona.stato_socio != "D":
         persona.stato_socio = "D"
         persona.save(update_fields=["stato_socio", "aggiornato_il"])

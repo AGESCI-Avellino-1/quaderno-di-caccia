@@ -163,3 +163,39 @@ def test_cambio_unita_da_buonastrada_chiude_e_apre():
     luca = Persona.objects.get(codice_socio="9000002")
     assert Appartenenza.objects.attive(OGGI).get(persona=luca).unita.tipo == TipoUnita.CLAN_FUOCO
     assert len(riepilogo.appartenenze_chiuse) == 1
+
+
+def test_chi_esce_dal_reparto_esce_dalla_squadriglia():
+    """The patrol belongs to the reparto: leaving the reparto ends the patrol membership,
+    the CSQ role and any exception for that reparto (maintainer, 2026-10-28)."""
+    from apps.anagrafica.models import AppartenenzaSquadriglia, DerogaSquadriglia
+    from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
+
+    applica(_risultato(), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    reparto = Appartenenza.objects.get(persona=giulia).unita
+    aquile = Squadriglia.objects.create(unita=reparto, nome="Aquile", sesso="F")
+    inizio = date(2026, 10, 1)
+    AppartenenzaSquadriglia.objects.create(persona=giulia, squadriglia=aquile, data_inizio=inizio)
+    Incarico.objects.create(
+        persona=giulia, ruolo=RuoloIncarico.CSQ, squadriglia=aquile, data_inizio=inizio
+    )
+    deroga = DerogaSquadriglia.objects.create(
+        persona=giulia,
+        reparto=reparto,
+        sesso_squadriglia="M",
+        data_decisione=inizio,
+        motivazione="Decisione della Co.Ca.",
+    )
+
+    decaduta = {**righe_standard()[0], "CODICE STATUS SOCIO": "D"}
+    riepilogo = applica(_risultato([decaduta]), oggi=OGGI)
+
+    assert not AppartenenzaSquadriglia.objects.attive(OGGI).filter(persona=giulia).exists()
+    assert not Incarico.objects.attivi(OGGI).filter(persona=giulia).exists()
+    deroga.refresh_from_db()
+    assert deroga.revocata_il == OGGI
+    assert any("Sq. Aquile" in riga for riga in riepilogo.appartenenze_chiuse)
+    assert any("Capo squadriglia" in riga for riga in riepilogo.appartenenze_chiuse)
+    # The exception is special-category data: never in the import summary.
+    assert not any("ccezione" in riga for riga in riepilogo.appartenenze_chiuse)

@@ -44,6 +44,39 @@ export interface PersonaDettaglio extends PersonaBreve {
   unita: string[]
 }
 
+// --- Accounts and invitations (DEC-21, DEC-24, DEC-25) ---------------------------------
+
+export interface Invito {
+  id: number
+  email: string
+  creato_il: string
+  scadenza: string
+  usato_il: string | null
+  valido: boolean
+}
+
+export interface SchedaAccount extends PersonaBreve {
+  ha_account: boolean
+  puo_invitare: boolean
+  richiede_consenso_genitore: boolean
+  /** The person's own address from the registry, proposed in the form. */
+  email: string | null
+  inviti: Invito[]
+}
+
+export interface StatoAccount {
+  persona: SchedaAccount
+  genitori: SchedaAccount[]
+  metodi_consenso: { valore: string; etichetta: string }[]
+}
+
+export interface NuovoInvito {
+  persona_id: number
+  email: string
+  consenso_genitore_da_id?: number
+  consenso_genitore_metodo?: string
+}
+
 export interface Unita {
   id: number
   nome: string
@@ -52,7 +85,123 @@ export interface Unita {
   composizione: string
   ambiente: string
   attiva: boolean
+  collegata_a: number | null
+  nota_collegamento: string
 }
+
+// --- Units, staff and roles (DEC-10, DEC-11, DEC-14, DEC-18) --------------------------
+
+export interface Scelta {
+  valore: string
+  etichetta: string
+}
+
+/** Same values as the backend TextChoices (organizzazione/models.py). */
+export const TIPI_UNITA: Scelta[] = [
+  { valore: 'BRANCO', etichetta: 'Branco' },
+  { valore: 'CERCHIO', etichetta: 'Cerchio' },
+  { valore: 'BRANCO_CERCHIO', etichetta: 'Branco/Cerchio' },
+  { valore: 'REPARTO', etichetta: 'Reparto' },
+  { valore: 'NOVIZIATO', etichetta: 'Noviziato' },
+  { valore: 'CLAN_FUOCO', etichetta: 'Clan/Fuoco' },
+  { valore: 'COMUNITA_CAPI', etichetta: 'Comunità Capi' },
+]
+export const COMPOSIZIONI: Scelta[] = [
+  { valore: 'M', etichetta: 'Maschile' },
+  { valore: 'F', etichetta: 'Femminile' },
+  { valore: 'X', etichetta: 'Mista' },
+]
+export const AMBIENTI: Scelta[] = [
+  { valore: 'NESSUNO', etichetta: 'Nessuno' },
+  { valore: 'GIUNGLA', etichetta: 'Giungla' },
+  { valore: 'BOSCO', etichetta: 'Bosco' },
+]
+
+export interface UnitaIn {
+  nome: string
+  tipo: string
+  composizione: string
+  ambiente: string
+  collegata_a: number | null
+  nota_collegamento: string
+  attiva: boolean
+}
+
+export interface Incarico {
+  id: number
+  ruolo: string
+  ruolo_nome: string
+  persona: PersonaBreve
+  data_inizio: string
+  data_fine: string | null
+}
+
+/** An active patrol membership (DEC-65). */
+export interface Membro {
+  id: number
+  persona: PersonaBreve
+  data_inizio: string
+}
+
+export interface Squadriglia {
+  id: number
+  nome: string
+  sesso: 'M' | 'F'
+  attiva: boolean
+  membri: Membro[]
+  incarichi: Incarico[]
+  /** Roles the user may assign (and close) here: the backend policy decides. */
+  nomina: Scelta[]
+}
+
+export interface UnitaDettaglio {
+  unita: Unita
+  incarichi: Incarico[]
+  squadriglie: Squadriglia[]
+  puo_modificare: boolean
+  /** Ragazzi of a reparto who are in no patrol today. */
+  senza_squadriglia: PersonaBreve[]
+  /** Single-sex check: members without a sex, or of the other sex without an exception. */
+  avvisi: string[]
+  puo_gestire_squadriglie: boolean
+  nomina: Scelta[]
+}
+
+/** Exception to single-sex patrols decided by the Co.Ca. Special-category data: capi
+ * only, never cached on the device. */
+export interface Deroga {
+  id: number
+  reparto: string
+  sesso_squadriglia: 'M' | 'F'
+  squadriglie_ammesse: string
+  data_decisione: string
+  motivazione: string
+  registrata_da: string | null
+  revocata_il: string | null
+  valida: boolean
+}
+
+export interface DerogheSquadriglia {
+  deroghe: Deroga[]
+  puo_gestire: boolean
+  /** Reparti the person belongs to (valore = unit id). */
+  reparti: Scelta[]
+}
+
+export interface NuovaDeroga {
+  reparto_id: number
+  sesso_squadriglia: string
+  data_decisione: string
+  motivazione: string
+}
+
+export interface IncarichiGruppo {
+  incarichi: Incarico[]
+  nomina: Scelta[]
+}
+
+/** Where a role is held: the group (nothing), a unit or a patrol. */
+export type DoveIncarico = { unita_id: number } | { squadriglia_id: number } | object
 
 export interface EsitoImportazione {
   id: number
@@ -155,10 +304,50 @@ export const percorsoSanitarie = (persona: number) => `/api/v1/persone/${persona
 
 export const api = {
   profilo: () => richiesta<Profilo>('/api/v1/io'),
-  unita: () => richiesta<Unita[]>('/api/v1/unita'),
+  unita: (tutte = false) => richiesta<Unita[]>(`/api/v1/unita${tutte ? '?tutte=true' : ''}`),
+  dettaglioUnita: (id: number) => richiesta<UnitaDettaglio>(`/api/v1/unita/${id}`),
+  creaUnita: (dati: UnitaIn) => richiesta<Unita>('/api/v1/unita', { metodo: 'POST', corpo: dati }),
+  modificaUnita: (id: number, dati: UnitaIn) =>
+    richiesta<Unita>(`/api/v1/unita/${id}`, { metodo: 'PUT', corpo: dati }),
+  creaSquadriglia: (unita: number, dati: { nome: string; sesso: string }) =>
+    richiesta<Squadriglia>(`/api/v1/unita/${unita}/squadriglie`, { metodo: 'POST', corpo: dati }),
+  modificaSquadriglia: (id: number, dati: { nome: string; sesso: string; attiva: boolean }) =>
+    richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
+  incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
+  capi: () => richiesta<PersonaBreve[]>('/api/v1/capi'),
+  aggiungiMembro: (squadriglia: number, persona: number) =>
+    richiesta<Membro>(`/api/v1/squadriglie/${squadriglia}/membri`, {
+      metodo: 'POST',
+      corpo: { persona_id: persona },
+    }),
+  togliMembro: (id: number) =>
+    richiesta<{ id: number; rimosso: boolean }>(`/api/v1/membri-squadriglia/${id}/termina`, {
+      metodo: 'POST',
+    }),
+  deroghe: (persona: number) =>
+    richiesta<DerogheSquadriglia>(`/api/v1/persone/${persona}/deroghe-squadriglia`),
+  registraDeroga: (persona: number, dati: NuovaDeroga) =>
+    richiesta<Deroga>(`/api/v1/persone/${persona}/deroghe-squadriglia`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  revocaDeroga: (id: number) =>
+    richiesta<Deroga>(`/api/v1/deroghe-squadriglia/${id}/revoca`, { metodo: 'POST' }),
+  nomina: (dati: { persona_id: number; ruolo: string } & DoveIncarico) =>
+    richiesta<Incarico>('/api/v1/incarichi', { metodo: 'POST', corpo: dati }),
+  terminaIncarico: (id: number) =>
+    richiesta<{ id: number; rimosso: boolean }>(`/api/v1/incarichi/${id}/termina`, {
+      metodo: 'POST',
+      corpo: {},
+    }),
   persone: (unita?: number) =>
     richiesta<PersonaElenco[]>(`/api/v1/persone${unita ? `?unita=${unita}` : ''}`),
   persona: (id: number) => richiesta<PersonaDettaglio>(`/api/v1/persone/${id}`),
+  statoAccount: (persona: number) => richiesta<StatoAccount>(`/api/v1/persone/${persona}/account`),
+  invita: (dati: NuovoInvito) =>
+    richiesta<{ id: number }>('/api/v1/inviti', { metodo: 'POST', corpo: dati }),
+  annullaInvito: (id: number) =>
+    richiesta<Invito>(`/api/v1/inviti/${id}/annulla`, { metodo: 'POST' }),
   accettaInvito: (token: string) =>
     richiesta<{ email: string; persona: string }>('/api/v1/inviti/accetta', {
       metodo: 'POST',

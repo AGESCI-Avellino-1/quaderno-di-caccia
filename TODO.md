@@ -1,0 +1,75 @@
+# TODO — stato dei lavori
+
+Legenda: ✅ fatto · 🚧 in corso · ⏳ da fare · 💤 rimandato
+
+Dettagli dei requisiti: [analisi dei requisiti](docs/analisi/analisi-requisiti.md)
+(sezione "Fasi di sviluppo"). Note tecniche: [CLAUDE.md](CLAUDE.md),
+[backend/CLAUDE.md](backend/CLAUDE.md), [frontend/CLAUDE.md](frontend/CLAUDE.md).
+
+## Fasi
+
+La precedenza va alla PWA: ogni fase si completa sulla PWA. L'app per gli store arriva
+per ultima, dopo tutte le altre fasi.
+
+| # | Fase | Stato | Note |
+| --- | --- | --- | --- |
+| 1 | Fondamenta | 🚧 | vedi dettaglio sotto |
+| 2 | Quote e cassa | ⏳ | pronto solo il catalogo `backend/data/cataloghi/modello_d_2024_2025.json` |
+| 3 | Eventi e presenze | ⏳ | — |
+| 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
+| 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
+| 6 | Dopo | ⏳ | bacheca, estratto conto, Carta di clan |
+| 7 | App negli store (Capacitor) | 💤 | ultima, dopo la fase 6; DEC-105; prima un prototipo per la regola Apple 4.2 |
+
+## Fase 1 — Fondamenta
+
+| Attività | Stato | Riferimento |
+| --- | --- | --- |
+| Modelli: persone, famiglie, unità, appartenenze, incarichi | ✅ | `apps/anagrafica`, `apps/organizzazione` |
+| Permessi (chi vede cosa) | ✅ | `apps/permessi/policy.py` (DEC-09…DEC-20) |
+| Importazione da BuonaStrada (comando, API, interfaccia) | ✅ | DEC-27…DEC-35, `apps/importazione` |
+| Inviti (API, email, comando `crea_invito`) | ✅ | `apps/accounts` |
+| Accesso: password, codice via email, passkey, Google, Apple | ✅ | DEC-21, DEC-22 |
+| PWA con dati offline cifrati, PIN e biometria | ✅ | DEC-97 |
+| Revoca e scadenza dei dispositivi | ✅ | DEC-23, `apps/dispositivi` |
+| Farmaci, allergie, intolleranze + vista "Al campo" offline | ✅ | DEC-55, `apps/sanitaria` |
+| Registro degli accessi ai dati sanitari | ✅ | DEC-101 |
+| Interfaccia per invitare (scheda persona: persona e genitori, consenso sotto i 14 anni, annullamento) | ✅ | DEC-21, DEC-24, DEC-25, `components/AccountPersona.vue` |
+| Gestione di unità, staff, incarichi e squadriglie | ✅ | DEC-10, DEC-11, DEC-14, DEC-18; pagine Unità e Capigruppo; vedi "Decisioni da riportare nell'analisi" |
+| Composizione delle squadriglie (chi è in quale squadriglia, spostamenti durante l'anno) | ✅ | DEC-30, DEC-65; pagina dell'unità |
+| Squadriglie maschili o femminili, eccezioni decise dalla Co.Ca., uscita dal reparto | ✅ | scheda persona e pagina dell'unità |
+| Correzioni ai dati inviate ai capigruppo | ⏳ | DEC-31 |
+| Avvisi per il consenso al compimento dei 18 anni | ⏳ | DEC-26 |
+| Diritti GDPR (accesso, cancellazione) | ⏳ | DEC-102 |
+
+## Decisioni da riportare nell'analisi
+
+Prese con il maintainer il 28/10/2026, ancora senza codice DEC.
+
+| Chi nomina | Chi può farlo |
+| --- | --- |
+| Capo squadriglia e vice | Tutto lo staff del reparto |
+| Capigruppo e tesoriere di gruppo | I capigruppo in carica; l'amministratore tecnico al primo avvio o se mancano |
+| Tesoriere di unità | Il capo unità e i capigruppo |
+| Creazione, chiusura e composizione delle squadriglie | Lo staff del reparto e i capigruppo |
+| Dati sanitari | Li scrivono lo staff dell'unità e i capigruppo (per tutte le unità) |
+
+| Regola | Decisione |
+| --- | --- |
+| Squadriglie maschili o femminili | Controllo all'inserimento; se il sesso manca in BuonaStrada l'inserimento è permesso e la pagina del reparto lo segnala |
+| Eccezioni (identità di genere, transizioni) | Decide la Co.Ca., registra un capogruppo con la motivazione; le vedono solo i capi, ogni lettura va nel registro accessi; valgono finché la persona resta nel reparto |
+| Uscita dal reparto | La squadriglia è organo di base del reparto: chi esce dal reparto esce dalla squadriglia (e dagli incarichi di CSQ e vice) |
+| Email degli inviti (precisa DEC-25) | Ogni account ha la sua email: un ragazzo non si invita con l'email di un genitore |
+| Registro delle modifiche nell'admin | Accettato: l'amministratore tecnico è sempre un capo o ha la delega dei capigruppo per i dati |
+
+## Punti aperti da confermare
+
+| Punto | Riferimento |
+| --- | --- |
+| Cosa vedono i genitori di un ragazzo maggiorenne | DEC-26 |
+| Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
+| Delega dei capigruppo e coordinamento con l'Ufficio Privacy nazionale | DEC-98, DEC-102 |
+| Da dove prendere il percorso di formazione dei capi | DEC-47 |
+| Esigenze alimentari non mediche (es. vegetariano) | DEC-49 |
+| Il CSQ vede i contatti dei suoi squadriglieri? | DEC-13 |
+| Procedura per l'account dai 14 anni | DEC-24 |

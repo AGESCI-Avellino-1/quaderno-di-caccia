@@ -78,11 +78,11 @@ def test_importazione_anteprima_e_applica(capogruppo, capo):
     assert again.status_code == 409
 
 
-def test_flusso_invito(capo, ragazza, genitore):
+def test_flusso_invito(capo, ragazza, genitrice_senza_account):
     risposta = _client(capo).post(
         "/api/v1/inviti",
         {
-            "persona_id": genitore.pk,
+            "persona_id": genitrice_senza_account.pk,
             "email": "nuovo.genitore@example.invalid",
         },
         content_type="application/json",

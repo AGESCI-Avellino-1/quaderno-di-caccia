@@ -2,7 +2,9 @@
 import { ref, watch } from 'vue'
 
 import { api, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
+import AccountPersona from '@/components/AccountPersona.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
@@ -89,6 +91,8 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </div>
         <SchedaSanitaria :dati="sanitarie" />
       </section>
+      <DerogheSquadriglia :id="persona.id" />
+      <AccountPersona :id="persona.id" />
     </template>
   </section>
 </template>

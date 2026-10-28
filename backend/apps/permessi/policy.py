@@ -10,7 +10,7 @@ from enum import StrEnum
 from django.db.models import Q, QuerySet
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
-from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
+from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia, Unita
 
 
 class LivelloAccesso(StrEnum):
@@ -63,6 +63,11 @@ def e_capogruppo(user) -> bool:
 def e_capo_unita(user, unita=None) -> bool:
     filtri = {"unita": unita} if unita is not None else {}
     return _ha_incarico(user, {RuoloIncarico.CAPO_UNITA}, **filtri)
+
+
+def e_staff(user, unita) -> bool:
+    """Capo serving the unit: its staff, capo unità included (DEC-09, DEC-10)."""
+    return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita=unita)
 
 
 def e_tesoriere(user) -> bool:
@@ -187,8 +192,8 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
     """Parents of a minor or the adult member write them in the app (DEC-50); a capo
     may transcribe them from the signed paper form (DEC-55).
 
-    [da verificare] "staff dell'unità" (DEC-09) is not modelled yet: the capo unità of
-    the person's unit and the capigruppo stand in for it.
+    The staff of the person's unit writes for it (DEC-09); the capigruppo for every
+    unit (confirmed by the maintainer on 2026-10-28).
     """
     propria = persona_di(user)
     if propria is not None and propria.pk == persona.pk:
@@ -198,7 +203,7 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
     if e_capogruppo(user):
         return True
     unita = Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
-    return _ha_incarico(user, {RuoloIncarico.CAPO_UNITA}, unita_id__in=unita)
+    return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita_id__in=unita)
 
 
 def puo_scaricare_campo(user) -> bool:
@@ -218,3 +223,63 @@ def puo_revocare_dispositivi_altrui(user) -> bool:
     """Capigruppo (DEC-23, DEC-97) and the technical administrator, who manages
     accounts (DEC-12)."""
     return e_capogruppo(user) or e_amministratore(user)
+
+
+# --- Units, staff and roles (DEC-10, DEC-11, DEC-14, DEC-18) ------------------------------
+# Who appoints CSQ/VCSQ, group roles and unit treasurers was decided with the
+# maintainer on 2026-10-28 (not yet in the analysis, see TODO.md).
+
+
+def puo_vedere_organizzazione(user) -> bool:
+    """Units, staff and roles: any capo (DEC-09)."""
+    return e_capo(user)
+
+
+def puo_vedere_incarichi_di_gruppo(user) -> bool:
+    """Capigruppo and group treasurers, and the list of capi to choose them from: any
+    capo, and the technical administrator, who appoints the first capogruppo."""
+    return e_capo(user) or e_amministratore(user)
+
+
+def puo_gestire_unita(user) -> bool:
+    """Create, rename, link and close units: capigruppo (DEC-10)."""
+    return e_capogruppo(user)
+
+
+def puo_gestire_squadriglie(user, unita: Unita) -> bool:
+    """Create, close and compose the patrols: the staff of the reparto and the
+    capigruppo (maintainer, 2026-10-28)."""
+    return e_capogruppo(user) or e_staff(user, unita)
+
+
+def puo_vedere_deroghe_squadriglia(user) -> bool:
+    """Exceptions to single-sex patrols (special-category data): the Co.Ca. only, never
+    ragazzi, CSQ or parents. Decided with the maintainer on 2026-10-28."""
+    return e_capo(user)
+
+
+def puo_gestire_deroghe_squadriglia(user) -> bool:
+    """The Co.Ca. decides; a capogruppo records and revokes the exception."""
+    return e_capogruppo(user)
+
+
+def puo_nominare(
+    user, ruolo: RuoloIncarico, unita: Unita | None = None, squadriglia: Squadriglia | None = None
+) -> bool:
+    """Who may open or close a role (the same rule for both)."""
+    if ruolo in {RuoloIncarico.CAPOGRUPPO, RuoloIncarico.TESORIERE_GRUPPO}:
+        # Capigruppo in office; the technical administrator only when there is none
+        # (first start, or both seats vacant).
+        if e_capogruppo(user):
+            return True
+        return (
+            e_amministratore(user)
+            and not Incarico.objects.attivi().filter(ruolo=RuoloIncarico.CAPOGRUPPO).exists()
+        )
+    if ruolo in {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}:
+        return e_capogruppo(user)  # DEC-10
+    if ruolo == RuoloIncarico.TESORIERE_UNITA:
+        return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
+    if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
+        return squadriglia is not None and e_staff(user, squadriglia.unita)  # DEC-14
+    return False

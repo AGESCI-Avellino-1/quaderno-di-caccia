@@ -12,6 +12,7 @@ from apps.anagrafica.models import Persona
 
 class Categoria(models.TextChoices):
     SANITARIE = "SANITARIE", "Informazioni sanitarie"
+    DEROGA_SQ = "DEROGA_SQ", "Eccezione sulla squadriglia"
 
 
 class Azione(models.TextChoices):

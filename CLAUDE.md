@@ -101,8 +101,8 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
   BuonaStrada does); ages computed at 30 April (DEC-37): `apps/core/anno.py`.
 - **Audit:** django-auditlog records changes to every domain model; register new models
   in the app's `apps.py`. Reads of sensitive data are logged separately
-  (`AccessoDatoSensibile`, DEC-101): today health data; extend it to every new sensitive
-  category (notes reserved to the Co.Ca., DEC-43).
+  (`AccessoDatoSensibile`, DEC-101): health data and exceptions to single-sex patrols;
+  extend it to every new sensitive category (notes reserved to the Co.Ca., DEC-43).
 
 ### Protezione sul telefono (DEC-97)
 
@@ -157,6 +157,18 @@ mise run frontend                # PWA     http://localhost:5173  (use this one)
 
 Dev emails (codes, invitations) are printed in the Django console.
 
+Other `mise` tasks: `mise run dev` (database + backend + frontend together), `mise run
+db` / `db:stop` (PostgreSQL via `$COMPOSE`), `mise run format` (autofix ruff/black/
+prettier), `mise run importa -- file.csv [--applica]` (BuonaStrada import, preview by
+default).
+
+Single tests:
+
+```bash
+cd backend  && uv run pytest tests/test_policy.py::test_name   # or -k "expr"
+cd frontend && npx vitest run src/path/file.test.ts            # npm run test:watch for watch mode
+```
+
 ### Quality gate (run before every commit; CI runs the same)
 
 ```bash
@@ -183,21 +195,43 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 
 | Phase | Content | Status |
 | --- | --- | --- |
-| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito`), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data. Missing: UI to invite and manage roles/units, correction workflow to capigruppo (DEC-31), adult-consent alerts at 18 (DEC-26), GDPR rights (DEC-102) |
+| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). Missing: correction workflow to capigruppo (DEC-31), adult-consent alerts at 18 (DEC-26), GDPR rights (DEC-102) |
 | 2. Quote e cassa | fee types, sibling discount, agevolazioni, payments, receipts, cash book on Modello D | catalog ready in `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | — |
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
 | 5. Fascicolo completo | full medical form with print and signatures (extends `apps/sanitaria`), notes with visibility, archiving | — |
 | 6. Dopo | notice board, bank statement matching, Carta di clan text | — |
 
-Deferred: store app with Capacitor (DEC-105) — the PWA must stay the reference client;
+Deferred: store app with Capacitor (DEC-105) comes last, after phase 6; the PWA has
+priority and must stay the reference client;
 check Apple guideline 4.2 with a prototype before investing (see "Punti ancora da
 verificare" in the analysis).
 
 ## Open points to confirm with the maintainer
 
-- `[da verificare]` "Staff dell'unità" (DEC-09) is not modelled: for writing health data
-  the capo unità and the capigruppo stand in for it (`policy.puo_modificare_sanitarie`).
+- "Staff dell'unità" (DEC-09) is an `Incarico` with role `STAFF`, not an `Appartenenza`:
+  capi belong to the Co.Ca. from the import, and a second CAPO membership would look to
+  the import like a change of unit. `policy.e_staff` counts the capo unità too.
+- Who appoints CSQ/VCSQ (the reparto staff), group roles (capigruppo in office; the
+  technical administrator only when there is none) and unit treasurers (capo unità and
+  capigruppo) was decided with the maintainer on 2026-10-28 and is not yet in the
+  analysis: see `TODO.md`, `policy.puo_nominare`.
+- Squadriglie (maintainer, 2026-10-28): composed by the reparto staff and the
+  capigruppo; one patrol at a time; CSQ/VCSQ are members and close their role before
+  moving; single-sex, with exceptions (`DerogaSquadriglia`) decided by the Co.Ca.,
+  recorded by a capogruppo, visible to capi only, valid while the person stays in the
+  reparto; leaving the reparto ends patrol, CSQ role and exceptions
+  (`organizzazione/servizi.esci_dal_reparto`, called by the import). Created and
+  closed by the same people (`policy.puo_gestire_squadriglie`).
+- Health data is written by the staff of the person's unit and by the capigruppo for
+  every unit (`policy.puo_modificare_sanitarie`, confirmed 2026-10-28).
+- django-auditlog's `LogEntry` is in the Django admin and stores changed values, health
+  data included. Accepted by the maintainer (2026-10-28): the technical administrator is
+  always a capo or has a delegation from the capigruppo for the data. Health data still
+  stays out of the admin itself; `DerogaSquadriglia.motivazione` stays out of the audit
+  log.
+- Every account has its own email: a child is not invited with a parent's address
+  (maintainer, 2026-10-28, refines DEC-25; `accounts/api.crea_invito`).
 - `[da verificare]` After 18 the R/S decides what parents keep seeing (DEC-26): today
   parents of an adult still read contacts and health data (`puo_vedere_dati_sensibili`);
   they can no longer write them.

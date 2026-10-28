@@ -8,7 +8,7 @@ from apps.anagrafica.models import Appartenenza
 from apps.organizzazione.models import Composizione, Incarico, RuoloIncarico, TipoUnita, Unita
 from apps.permessi import policy
 from apps.permessi.policy import LivelloAccesso
-from tests.conftest import INIZIO_ANNO, crea_persona
+from tests.conftest import INIZIO_ANNO, crea_capo
 
 pytestmark = pytest.mark.django_db
 
@@ -79,31 +79,31 @@ def test_inviti(capo, capogruppo, ragazza, genitore, estraneo):
 
 
 def test_diarchia_capogruppo_massimo_due(gruppo, capogruppo):
-    secondo = crea_persona("Carla", "Due")
+    secondo = crea_capo("Carla", "Due")
     Incarico.objects.create(
         persona=secondo, ruolo=RuoloIncarico.CAPOGRUPPO, gruppo=gruppo, data_inizio=INIZIO_ANNO
     )
     terzo = Incarico(
-        persona=crea_persona("Dario", "Tre"),
+        persona=crea_capo("Dario", "Tre"),
         ruolo=RuoloIncarico.CAPOGRUPPO,
         gruppo=gruppo,
         data_inizio=INIZIO_ANNO,
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="al massimo 2"):
         terzo.full_clean()
 
 
-def test_unita_monosessuale_un_solo_capo_unita(gruppo):
+def test_unita_monosessuale_un_solo_capo_unita(gruppo, coca):
     reparto_f = Unita.objects.create(
         gruppo=gruppo, nome="Rep F", tipo=TipoUnita.REPARTO, composizione=Composizione.FEMMINILE
     )
     Incarico.objects.create(
-        persona=crea_persona("E", "Uno"), ruolo=RuoloIncarico.CAPO_UNITA, unita=reparto_f
+        persona=crea_capo("E", "Uno"), ruolo=RuoloIncarico.CAPO_UNITA, unita=reparto_f
     )
     secondo = Incarico(
-        persona=crea_persona("F", "Due"), ruolo=RuoloIncarico.CAPO_UNITA, unita=reparto_f
+        persona=crea_capo("F", "Due"), ruolo=RuoloIncarico.CAPO_UNITA, unita=reparto_f
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="al massimo 1"):
         secondo.full_clean()
 
 

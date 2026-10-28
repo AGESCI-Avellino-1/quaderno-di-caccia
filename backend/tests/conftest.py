@@ -55,6 +55,18 @@ def crea_persona(nome: str, cognome: str, login: str | None = None, **campi) -> 
     return Persona.objects.create(nome=nome, cognome=cognome, utente=utente, **campi)
 
 
+def crea_capo(nome: str, cognome: str, login: str | None = None) -> Persona:
+    """A capo of the Co.Ca. of the (only) group, without roles."""
+    persona = crea_persona(nome, cognome, login, data_nascita=date(1985, 1, 1))
+    Appartenenza.objects.create(
+        persona=persona,
+        unita=Unita.objects.get(tipo=TipoUnita.COMUNITA_CAPI),
+        ruolo=RuoloAppartenenza.CAPO,
+        data_inizio=INIZIO_ANNO,
+    )
+    return persona
+
+
 @pytest.fixture
 def capo(coca, reparto) -> Persona:
     persona = crea_persona("Anna", "Capo", "capo@example.invalid", data_nascita=date(1990, 1, 1))
@@ -103,6 +115,14 @@ def ragazza(reparto, squadriglia) -> Persona:
 @pytest.fixture
 def genitore(ragazza) -> Persona:
     persona = crea_persona("Mario", "Genitore", "genitore@example.invalid")
+    RelazioneTutela.objects.create(tutore=persona, minore=ragazza, tipo="GENITORE")
+    return persona
+
+
+@pytest.fixture
+def genitrice_senza_account(ragazza) -> Persona:
+    """Second parent of `ragazza`, imported from BuonaStrada and not yet invited."""
+    persona = crea_persona("Lucia", "Genitore", email="lucia@example.invalid")
     RelazioneTutela.objects.create(tutore=persona, minore=ragazza, tipo="GENITORE")
     return persona
 

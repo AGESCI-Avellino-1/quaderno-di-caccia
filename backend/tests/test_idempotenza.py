@@ -17,37 +17,37 @@ def _invita(client: Client, persona_id: int, chiave: str):
     )
 
 
-def test_stessa_chiave_non_ripete_la_scrittura(capo, genitore):
+def test_stessa_chiave_non_ripete_la_scrittura(capo, genitrice_senza_account):
     client = Client()
     client.force_login(capo.utente)
     chiave = str(uuid.uuid4())
-    prima = _invita(client, genitore.pk, chiave)
-    seconda = _invita(client, genitore.pk, chiave)
+    prima = _invita(client, genitrice_senza_account.pk, chiave)
+    seconda = _invita(client, genitrice_senza_account.pk, chiave)
     assert prima.status_code == seconda.status_code == 201
     assert seconda["Idempotent-Replayed"] == "true"
     assert seconda.json() == prima.json()
     assert Invito.objects.count() == 1
 
 
-def test_chiavi_diverse_scrivono_due_volte(capo, genitore):
+def test_chiavi_diverse_scrivono_due_volte(capo, genitrice_senza_account):
     client = Client()
     client.force_login(capo.utente)
-    _invita(client, genitore.pk, str(uuid.uuid4()))
-    _invita(client, genitore.pk, str(uuid.uuid4()))
+    _invita(client, genitrice_senza_account.pk, str(uuid.uuid4()))
+    _invita(client, genitrice_senza_account.pk, str(uuid.uuid4()))
     assert Invito.objects.count() == 2
 
 
-def test_chiave_non_uuid_rifiutata(capo, genitore):
+def test_chiave_non_uuid_rifiutata(capo, genitrice_senza_account):
     client = Client()
     client.force_login(capo.utente)
-    assert _invita(client, genitore.pk, "non-un-uuid").status_code == 400
+    assert _invita(client, genitrice_senza_account.pk, "non-un-uuid").status_code == 400
 
 
-def test_chiave_riusata_su_altro_percorso(capo, genitore):
+def test_chiave_riusata_su_altro_percorso(capo, genitrice_senza_account):
     client = Client()
     client.force_login(capo.utente)
     chiave = str(uuid.uuid4())
-    _invita(client, genitore.pk, chiave)
+    _invita(client, genitrice_senza_account.pk, chiave)
     altra = client.post(
         "/api/v1/inviti/accetta",
         {"token": "x"},
@@ -68,6 +68,8 @@ def test_errori_non_memorizzati(capo, estraneo):
 
 def test_invito_non_valido_risponde_400(capo, ragazza):
     """Under-14 invitation without parental consent: a clear 400, not a 500."""
+    ragazza.utente = None  # not yet invited
+    ragazza.save()
     client = Client()
     client.force_login(capo.utente)
     risposta = _invita(client, ragazza.pk, str(uuid.uuid4()))

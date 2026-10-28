@@ -30,6 +30,12 @@ const sessione = useSessioneStore()
           <span class="text-body-secondary small">Branchi, Reparti, Clan e Co.Ca.</span>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.amministratore_tecnico && !sessione.capo" class="col-12 col-md-6">
+        <RouterLink to="/gruppo" class="card card-body h-100 text-decoration-none">
+          <strong>Capigruppo</strong>
+          <span class="text-body-secondary small">Nomina il primo capogruppo del gruppo</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.puoImportare" class="col-12 col-md-6">
         <RouterLink to="/importazione" class="card card-body h-100 text-decoration-none">
           <strong>Importa da BuonaStrada</strong>

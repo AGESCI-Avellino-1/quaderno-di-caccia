@@ -82,6 +82,8 @@ export interface NuovoInvito {
 export interface Unita {
   id: number
   nome: string
+  /** BuonaStrada code (O1, G1…): unique, unlike the name chosen by the group. */
+  codice: string
   tipo: string
   branca: string
   composizione: string
@@ -118,6 +120,13 @@ export const AMBIENTI: Scelta[] = [
   { valore: 'GIUNGLA', etichetta: 'Giungla' },
   { valore: 'BOSCO', etichetta: 'Bosco' },
 ]
+
+/** "Reparto Millennium (O1)": the name may repeat, the code does not. Only the Co.Ca.
+ * may have no name: then its type stands for it, "Comunità Capi (G1)". */
+export function nomeUnita(u: { nome: string; codice?: string; tipo?: string }): string {
+  const nome = u.nome || TIPI_UNITA.find((t) => t.valore === u.tipo)?.etichetta || ''
+  return u.codice ? `${nome} (${u.codice})` : nome
+}
 
 export interface UnitaIn {
   nome: string

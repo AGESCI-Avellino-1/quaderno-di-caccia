@@ -134,3 +134,11 @@ class Invito(ModelloTracciato):
                 raise ValidationError(
                     "Il consenso deve venire da chi esercita la responsabilità genitoriale."
                 )
+            if (
+                self.consenso_genitore_metodo == MetodoVerificaGenitore.ACCOUNT_GENITORE
+                and self.consenso_genitore_da
+                and self.consenso_genitore_da.utente_id is None
+            ):
+                raise ValidationError(
+                    "Questo genitore non ha un account: indica come è stato verificato."
+                )

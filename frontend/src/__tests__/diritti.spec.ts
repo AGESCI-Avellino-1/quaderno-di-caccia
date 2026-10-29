@@ -60,7 +60,11 @@ describe('FascicoloView', () => {
   const fascicolo = {
     persona: { id: 3, nome: 'Giulia', cognome: 'Rossi' },
     generato_il: '2026-10-29T10:00:00Z',
-    anagrafica: { Nome: 'Giulia', 'Consenso per le foto (2B)': true },
+    anagrafica: {
+      Nome: 'Giulia',
+      'Consenso per le foto (2B)': true,
+      'Data di nascita': '2013-05-10',
+    },
     unita: [{ unita: 'Reparto', ruolo: 'Ragazzo', dal: '2025-10-01', al: '' }],
     inviti: [],
     informazioni_sanitarie: null,
@@ -80,6 +84,7 @@ describe('FascicoloView', () => {
     expect(vista.text()).toContain('Fascicolo di Giulia Rossi')
     expect(vista.text()).toContain('Dati anagrafici')
     expect(vista.text()).toContain('Sì')
+    expect(vista.text()).toContain('10/05/2013')
     expect(vista.findAll('table td').map((c) => c.text())).toContain('—')
     expect(vista.text()).toContain('Nessun dato.')
 

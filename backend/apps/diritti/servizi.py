@@ -22,7 +22,7 @@ from apps.anagrafica.models import (
     RelazioneTutela,
     VisibilitaGenitori,
 )
-from apps.anagrafica.servizi import come_testo
+from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
 from apps.dispositivi.models import Dispositivo
 from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
@@ -32,7 +32,29 @@ from .models import RichiestaDiritti
 
 
 def _periodo(oggetto) -> dict:
-    return {"dal": come_testo(oggetto.data_inizio), "al": come_testo(oggetto.data_fine)}
+    return {"Dal": come_testo(oggetto.data_inizio), "Al": come_testo(oggetto.data_fine)}
+
+
+def _valore(persona: Persona, campo: str):
+    """A registry value for people: labels for codes, yes/no stays a boolean."""
+    field = Persona._meta.get_field(campo)
+    valore = getattr(persona, campo)
+    if field.choices and valore:
+        return getattr(persona, f"get_{campo}_display")()
+    if isinstance(valore, bool):
+        return valore
+    return come_testo(valore)
+
+
+def _giorno(momento) -> str:
+    return come_testo(momento and momento.date())
+
+
+def _telefono(persona: Persona) -> str:
+    numero, genitore = telefono_in_squadriglia(persona)
+    if not numero:
+        return ""
+    return f"{numero} (di {genitore.nome} {genitore.cognome})" if genitore else numero
 
 
 def fascicolo(persona: Persona) -> dict:
@@ -43,20 +65,19 @@ def fascicolo(persona: Persona) -> dict:
     return {
         "generato_il": timezone.now().isoformat(),
         "anagrafica": {
-            ETICHETTE_CAMPI[campo]: come_testo(getattr(persona, campo))
-            for campo in CAMPI_BUONASTRADA
+            ETICHETTE_CAMPI[campo]: _valore(persona, campo) for campo in CAMPI_BUONASTRADA
         }
         | {"Codice socio": persona.codice_socio or ""},
         "account": (
             {
                 "Email di accesso": utente.email,
-                "Creato il": come_testo(utente.date_joined.date()),
-                "Ultimo accesso": come_testo(utente.last_login and utente.last_login.date()),
+                "Creato il": _giorno(utente.date_joined),
+                "Ultimo accesso": _giorno(utente.last_login),
                 "Dispositivi": [
                     {
-                        "nome": d.nome,
-                        "ultimo_contatto": come_testo(d.ultimo_contatto.date()),
-                        "scollegato_il": come_testo(d.revocato_il and d.revocato_il.date()),
+                        "Nome": d.nome,
+                        "Ultimo contatto": _giorno(d.ultimo_contatto),
+                        "Scollegato il": _giorno(d.revocato_il),
                     }
                     for d in Dispositivo.objects.filter(utente=utente)
                 ],
@@ -65,30 +86,31 @@ def fascicolo(persona: Persona) -> dict:
             else None
         ),
         "genitori_e_tutori": [
-            {"nome": f"{r.tutore.nome} {r.tutore.cognome}", "relazione": r.get_tipo_display()}
+            {"Nome": f"{r.tutore.nome} {r.tutore.cognome}", "Relazione": r.get_tipo_display()}
             for r in RelazioneTutela.objects.filter(minore=persona).select_related("tutore")
         ],
         "figli_o_tutelati": [
-            {"nome": f"{r.minore.nome} {r.minore.cognome}", "relazione": r.get_tipo_display()}
+            {"Nome": f"{r.minore.nome} {r.minore.cognome}", "Relazione": r.get_tipo_display()}
             for r in RelazioneTutela.objects.filter(tutore=persona).select_related("minore")
         ],
         "unita": [
-            {"unita": str(a.unita), "ruolo": a.get_ruolo_display()} | _periodo(a)
+            {"Unità": str(a.unita), "Ruolo": a.get_ruolo_display()} | _periodo(a)
             for a in Appartenenza.objects.filter(persona=persona).select_related("unita")
         ],
         "squadriglie": [
-            {"squadriglia": str(a.squadriglia)} | _periodo(a)
+            {"Squadriglia": str(a.squadriglia)} | _periodo(a)
             for a in persona.appartenenze_squadriglia.select_related("squadriglia")
         ],
         "incarichi": [
-            {"incarico": i.get_ruolo_display(), "dove": str(i.unita or i.squadriglia or i.gruppo)}
+            {"Incarico": i.get_ruolo_display(), "Dove": str(i.unita or i.squadriglia or i.gruppo)}
             | _periodo(i)
             for i in Incarico.objects.filter(persona=persona).select_related(
                 "unita", "squadriglia", "gruppo"
             )
         ],
         "telefono_in_squadriglia": {
-            "Numero di un genitore scelto": (
+            "Numero mostrato": _telefono(persona),
+            "Numero di un genitore scelto per lui o lei": (
                 str(persona.telefono_squadriglia_da) if persona.telefono_squadriglia_da else ""
             ),
             "Nascosto agli altri ragazzi": persona.telefono_squadriglia_nascosto,
@@ -101,37 +123,37 @@ def fascicolo(persona: Persona) -> dict:
                 "Esigenze alimentari": sanitarie.esigenze_alimentari,
                 "Allergie e intolleranze": [
                     {
-                        "tipo": a.get_tipo_display(),
-                        "sostanza": a.sostanza,
-                        "gravità": a.get_gravita_display(),
-                        "reazione": a.reazione,
-                        "cosa fare": a.cosa_fare,
+                        "Tipo": a.get_tipo_display(),
+                        "Sostanza": a.sostanza,
+                        "Gravità": a.get_gravita_display(),
+                        "Reazione": a.reazione,
+                        "Cosa fare": a.cosa_fare,
                     }
                     for a in sanitarie.allergie.all()
                 ],
                 "Farmaci": [
                     {
-                        "nome": f.nome,
-                        "posologia": f.posologia,
-                        "orari": f.orari,
-                        "lo prende da solo": f.autonomo,
-                        "note": f.note,
+                        "Nome": f.nome,
+                        "Posologia": f.posologia,
+                        "Orari": f.orari,
+                        "Lo prende da solo": f.autonomo,
+                        "Note": f.note,
                     }
                     for f in sanitarie.farmaci.all()
                 ],
                 "Inserite da": sanitarie.get_inserite_da_display(),
-                "Aggiornate il": come_testo(sanitarie.aggiornato_il.date()),
+                "Aggiornate il": _giorno(sanitarie.aggiornato_il),
             }
             if sanitarie
             else None
         ),
         "eccezioni_squadriglia": [
             {
-                "reparto": str(d.reparto),
-                "squadriglie": d.get_sesso_squadriglia_display(),
-                "decisa_il": come_testo(d.data_decisione),
-                "motivazione": d.motivazione,
-                "revocata_il": come_testo(d.revocata_il),
+                "Reparto": str(d.reparto),
+                "Squadriglie": d.get_sesso_squadriglia_display(),
+                "Decisa il": come_testo(d.data_decisione),
+                "Motivazione": d.motivazione,
+                "Revocata il": come_testo(d.revocata_il),
             }
             for d in DerogaSquadriglia.objects.filter(persona=persona).select_related("reparto")
         ],
@@ -140,43 +162,43 @@ def fascicolo(persona: Persona) -> dict:
                 "Contatti e indirizzo": visibilita.contatti,
                 "Farmaci, allergie e alimentazione": visibilita.sanitarie,
                 "Scheda e attività": visibilita.scheda,
-                "Scelta il": come_testo(visibilita.decisa_il and visibilita.decisa_il.date()),
+                "Scelta il": _giorno(visibilita.decisa_il),
             }
             if visibilita and visibilita.decisa_il
             else None
         ),
         "correzioni_ai_dati": [
             {
-                "dato": ETICHETTE_CAMPI.get(c.campo, c.campo),
-                "prima": c.valore_precedente,
-                "dopo": c.valore_corretto,
-                "stato": c.get_stato_display(),
-                "il": come_testo(c.creato_il.date()),
+                "Dato": ETICHETTE_CAMPI.get(c.campo, c.campo),
+                "Prima": c.valore_precedente,
+                "Dopo": c.valore_corretto,
+                "Stato": c.get_stato_display(),
+                "Il": _giorno(c.creato_il),
             }
             for c in CorrezioneAnagrafica.objects.filter(persona=persona)
         ],
         "inviti": [
             {
-                "email": i.email,
-                "creato_il": come_testo(i.creato_il.date()),
-                "usato_il": come_testo(i.usato_il and i.usato_il.date()),
+                "Email": i.email,
+                "Creato il": _giorno(i.creato_il),
+                "Usato il": _giorno(i.usato_il),
             }
             for i in Invito.objects.filter(persona=persona)
         ],
         "accessi_ai_dati_delicati": [
             {
-                "quando": a.creato_il.isoformat(),
-                "chi": a.utente.email if a.utente else "",
-                "cosa": a.get_categoria_display(),
-                "azione": a.get_azione_display(),
+                "Quando": a.creato_il.isoformat(),
+                "Chi": a.utente.email if a.utente else "",
+                "Cosa": a.get_categoria_display(),
+                "Azione": a.get_azione_display(),
             }
             for a in AccessoDatoSensibile.objects.filter(persona=persona).select_related("utente")
         ],
         "richieste_dei_diritti": [
             {
-                "tipo": r.get_tipo_display(),
-                "ricevuta_il": come_testo(r.ricevuta_il),
-                "evasa_il": come_testo(r.evasa_il),
+                "Tipo": r.get_tipo_display(),
+                "Ricevuta il": come_testo(r.ricevuta_il),
+                "Chiusa il": come_testo(r.evasa_il),
             }
             for r in RichiestaDiritti.objects.filter(persona=persona)
         ],

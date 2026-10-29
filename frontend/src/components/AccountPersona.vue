@@ -23,6 +23,14 @@ async function carica(id: number) {
 }
 watch(() => props.id, carica, { immediate: true })
 
+// "Dall'account del genitore" only when the chosen parent has an account.
+const metodiConsenso = () => {
+  const genitore = stato.value?.genitori.find((g) => g.id === modulo.consensoDa)
+  return (stato.value?.metodi_consenso ?? []).filter(
+    (m) => m.valore !== 'ACCOUNT_GENITORE' || !!genitore?.ha_account,
+  )
+}
+
 function apri(scheda: SchedaAccount) {
   aperto.value = scheda.id
   inviato.value = null
@@ -115,6 +123,7 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
             class="form-control form-control-sm mb-1"
             aria-label="Genitore che dà il consenso"
             required
+            @change="modulo.metodo = ''"
           >
             <option :value="null" disabled>Chi ha dato il consenso</option>
             <option v-for="g in stato.genitori" :key="g.id" :value="g.id">
@@ -128,7 +137,7 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
             required
           >
             <option value="" disabled>Come è stato verificato</option>
-            <option v-for="m in stato.metodi_consenso" :key="m.valore" :value="m.valore">
+            <option v-for="m in metodiConsenso()" :key="m.valore" :value="m.valore">
               {{ m.etichetta }}
             </option>
           </select>

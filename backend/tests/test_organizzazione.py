@@ -527,3 +527,17 @@ def test_motivazione_fuori_dal_registro_delle_modifiche(capogruppo, ragazzo, rep
     voce = LogEntry.objects.get_for_model(DerogaSquadriglia).get()
     assert "motivazione" not in (voce.changes or {})
     assert "transizione" not in str(voce.changes) + str(voce.object_repr)
+
+
+def test_nome_obbligatorio_tranne_per_la_coca(gruppo):
+    from django.core.exceptions import ValidationError
+
+    with pytest.raises(ValidationError):
+        Unita(
+            gruppo=gruppo, nome=" ", tipo=TipoUnita.REPARTO, composizione=Composizione.MISTA
+        ).full_clean()
+    coca = Unita(
+        gruppo=gruppo, nome="", tipo=TipoUnita.COMUNITA_CAPI, composizione=Composizione.MISTA
+    )
+    coca.full_clean()
+    assert str(coca) == "Comunità Capi"

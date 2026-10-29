@@ -83,4 +83,32 @@ describe('AccountPersona', () => {
     ])
     expect(pannello.text()).toContain('Invito inviato a luca@example.invalid')
   })
+
+  it("offers consent through the parent's account only if the parent has one", async () => {
+    const conDueMetodi = {
+      ...stato,
+      genitori: [scheda(2, 'Lucia', { ha_account: true }), scheda(3, 'Mario')],
+      metodi_consenso: [
+        { valore: 'ACCOUNT_GENITORE', etichetta: "Dall'account del genitore collegato" },
+        { valore: 'IN_PRESENZA', etichetta: 'In presenza, davanti a un capo' },
+      ],
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => json(conDueMetodi)),
+    )
+    const pannello = mount(AccountPersona, { props: { id: 1 } })
+    await flushPromises()
+    await pannello
+      .findAll('button')
+      .find((b) => b.text() === 'Invita')!
+      .trigger('click')
+    const metodi = () =>
+      pannello.findAll('select[aria-label="Come è stato verificato"] option').map((o) => o.text())
+
+    await pannello.get('select[aria-label="Genitore che dà il consenso"]').setValue(2)
+    expect(metodi()).toContain("Dall'account del genitore collegato")
+    await pannello.get('select[aria-label="Genitore che dà il consenso"]').setValue(3)
+    expect(metodi()).not.toContain("Dall'account del genitore collegato")
+  })
 })

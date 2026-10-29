@@ -35,6 +35,10 @@ def collega_invito(request, user) -> None:
     invito.usato_il = timezone.now()
     invito.save(update_fields=["usato_il", "aggiornato_il"])
     request.session.pop(CHIAVE_SESSIONE_INVITO, None)
+    # The invitation reached this address: allauth then marks it verified (it asks
+    # after save_user, when the invitation is already consumed), so no second
+    # confirmation email and the new account is logged in at once.
+    DefaultAccountAdapter().stash_verified_email(request, user.email)
 
 
 class AccountAdapter(DefaultAccountAdapter):

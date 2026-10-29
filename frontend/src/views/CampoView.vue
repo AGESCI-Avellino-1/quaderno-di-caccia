@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { api, type Campo, type SchedaCampo, type Unita } from '@/api/qdc'
+import { api, nomeUnita, type Campo, type SchedaCampo, type Unita } from '@/api/qdc'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache, leggiDallaCache } from '@/offline/cache'
@@ -98,7 +98,7 @@ watch(scelta, async (valore) => {
       <div class="col-12 md:col-5">
         <select v-model="scelta" class="form-control" aria-label="Unità">
           <option :value="undefined" disabled>Scegli l'unità</option>
-          <option v-for="u in unita" :key="u.id" :value="u.id">{{ u.nome }}</option>
+          <option v-for="u in unita" :key="u.id" :value="u.id">{{ nomeUnita(u) }}</option>
         </select>
       </div>
       <div class="col-auto">
@@ -137,7 +137,9 @@ watch(scelta, async (valore) => {
             type="checkbox"
             role="switch"
           />
-          <label for="solo-con-dati">Solo con farmaci o allergie (e non compilati)</label>
+          <label for="solo-con-dati"
+            >Solo con farmaci, allergie o esigenze a tavola (e non compilati)</label
+          >
         </div>
       </div>
 

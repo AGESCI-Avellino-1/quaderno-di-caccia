@@ -51,16 +51,21 @@ def test_solo_i_capigruppo(ragazza, capo, genitore, csq, estraneo):
 
 
 def test_fascicolo_completo_e_registrato(ragazza, genitore, capogruppo):
+    ragazza.stato_socio = "R"
+    ragazza.consenso_foto = True
+    ragazza.save()
     _sanitarie(ragazza, genitore)
     risposta = _client(capogruppo).get(f"/api/v1/persone/{ragazza.pk}/fascicolo")
     assert risposta.status_code == 200
     dati = risposta.json()
     assert dati["anagrafica"]["Nome"] == "Giulia"
     assert dati["account"]["Email di accesso"] == "giulia@example.invalid"
-    assert dati["genitori_e_tutori"] == [{"nome": "Mario Genitore", "relazione": "Genitore"}]
+    assert dati["genitori_e_tutori"] == [{"Nome": "Mario Genitore", "Relazione": "Genitore"}]
     assert dati["informazioni_sanitarie"]["Esigenze alimentari"] == "Vegetariana"
-    assert "Aquile" in dati["squadriglie"][0]["squadriglia"]
-    assert any(a["azione"] == "Modifica" for a in dati["accessi_ai_dati_delicati"])
+    assert "Aquile" in dati["squadriglie"][0]["Squadriglia"]
+    assert dati["anagrafica"]["Stato del socio"] == "Rinnovo adesione"
+    assert dati["anagrafica"]["Consenso per le foto (2B)"] is True
+    assert any(a["Azione"] == "Modifica" for a in dati["accessi_ai_dati_delicati"])
     assert AccessoDatoSensibile.objects.filter(
         persona=ragazza, categoria=Categoria.FASCICOLO, azione=Azione.ESPORTAZIONE
     ).exists()

@@ -1,0 +1,6 @@
+{% load i18n %}{% autoescape off %}Ciao,
+
+{% block content %}{% endblock content %}
+
+Quaderno di Caccia
+{% endautoescape %}

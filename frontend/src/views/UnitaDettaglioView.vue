@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import {
   api,
+  nomeUnita,
   temaDellaBranca,
   type PersonaBreve,
   type Squadriglia,
@@ -107,7 +108,7 @@ const iniziale = (u: Unita): UnitaIn => ({
 <template>
   <section v-if="unita && dettaglio" :data-branca="temaDellaBranca(unita.branca)">
     <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
-      <h1 class="h4 mb-0">{{ unita.nome }}</h1>
+      <h1 class="h4 mb-0">{{ nomeUnita(unita) }}</h1>
       <span v-if="!unita.attiva" class="badge theme-secondary">Chiusa</span>
       <button
         v-if="dettaglio.puo_modificare && !modifica"

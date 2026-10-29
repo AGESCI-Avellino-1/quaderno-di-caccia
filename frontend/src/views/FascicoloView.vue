@@ -39,8 +39,15 @@ onMounted(async () => {
 
 const sezioni = () => Object.entries(fascicolo.value ?? {}).filter(([chiave]) => chiave in TITOLI)
 
-const testo = (v: unknown): string =>
-  v === true ? 'Sì' : v === false ? 'No' : v === null || v === '' ? '—' : String(v)
+const testo = (v: unknown): string => {
+  if (v === true) return 'Sì'
+  if (v === false) return 'No'
+  if (v === null || v === '') return '—'
+  const s = String(v)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.split('-').reverse().join('/')
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return new Date(s).toLocaleString('it-IT')
+  return s
+}
 const elenco = (v: unknown): v is Record<string, unknown>[] => Array.isArray(v)
 const oggetto = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === 'object' && !Array.isArray(v)

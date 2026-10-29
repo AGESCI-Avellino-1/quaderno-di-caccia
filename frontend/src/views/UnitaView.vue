@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
-import { api, temaDellaBranca, type Unita, type UnitaIn } from '@/api/qdc'
+import { api, nomeUnita, temaDellaBranca, type Unita, type UnitaIn } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -69,7 +69,7 @@ async function crea(dati: UnitaIn) {
         class="list-group-item list-group-item-action"
         :data-branca="temaDellaBranca(u.branca)"
       >
-        <strong>{{ u.nome }}</strong>
+        <strong>{{ nomeUnita(u) }}</strong>
         <span class="badge ms-3" style="background: var(--ag-primary); color: var(--ag-on-primary)">
           {{ u.branca }}
         </span>

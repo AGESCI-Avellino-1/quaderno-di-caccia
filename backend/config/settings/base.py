@@ -142,6 +142,8 @@ ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+# allauth's emails name the site by its host ("localhost:5173"): name the app instead.
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "Quaderno di Caccia: "
 ACCOUNT_LOGIN_BY_CODE_ENABLED = True
 ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = False
 
@@ -192,7 +194,9 @@ AXES_USERNAME_FORM_FIELD = "email"
 
 # --- Email (Django 6.1 MAILERS; EMAIL_BACKEND is deprecated) ---------------------
 MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
-DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="QdC <noreply@localhost>")
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL", default="Quaderno di Caccia <noreply@localhost>"
+)
 
 # --- QdC -------------------------------------------------------------------------
 # Invitation links expire after this many days (DEC-21).

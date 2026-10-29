@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { api, type PersonaElenco, type Unita } from '@/api/qdc'
+import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
@@ -55,7 +55,7 @@ watch(unitaScelta, caricaPersone)
       <div v-if="unita.length" class="col-12 md:col-5">
         <select v-model="unitaScelta" class="form-control" aria-label="Unità">
           <option :value="undefined">Tutte le unità</option>
-          <option v-for="u in unita" :key="u.id" :value="u.id">{{ u.nome }}</option>
+          <option v-for="u in unita" :key="u.id" :value="u.id">{{ nomeUnita(u) }}</option>
         </select>
       </div>
       <div class="col">

@@ -124,3 +124,24 @@ def test_bootstrap_primo_capogruppo(capo):
 def test_bootstrap_codice_sconosciuto(db):
     with pytest.raises(CommandError, match="importa prima"):
         call_command("crea_invito", "0000000", "x@example.invalid")
+
+
+def test_consenso_dall_account_del_genitore_solo_se_ce_l_ha(capo, ragazza, genitrice_senza_account):
+    from django.test import Client
+
+    ragazza.utente = None
+    ragazza.save()
+    client = Client()
+    client.force_login(capo.utente)
+    risposta = client.post(
+        "/api/v1/inviti",
+        {
+            "persona_id": ragazza.pk,
+            "email": "nuova@example.invalid",
+            "consenso_genitore_da_id": genitrice_senza_account.pk,
+            "consenso_genitore_metodo": "ACCOUNT_GENITORE",
+        },
+        content_type="application/json",
+    )
+    assert risposta.status_code == 400
+    assert "non ha un account" in risposta.json()["detail"]

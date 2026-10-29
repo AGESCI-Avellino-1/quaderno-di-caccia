@@ -56,6 +56,7 @@ def _gruppo() -> Gruppo:
 class UnitaOut(Schema):
     id: int
     nome: str
+    codice: str  # BuonaStrada code (O1, G1…), "" for units created in the app
     tipo: str
     branca: str
     composizione: str

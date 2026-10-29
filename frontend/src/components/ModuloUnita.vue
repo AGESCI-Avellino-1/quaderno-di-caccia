@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 
-import { AMBIENTI, COMPOSIZIONI, TIPI_UNITA, type Unita, type UnitaIn } from '@/api/qdc'
+import { AMBIENTI, COMPOSIZIONI, nomeUnita, TIPI_UNITA, type Unita, type UnitaIn } from '@/api/qdc'
 
 // Create or edit a unit (DEC-10). BuonaStrada codes are not here: the import owns them.
 const props = defineProps<{
@@ -31,8 +31,16 @@ const dati = reactive<UnitaIn>(
 <template>
   <form class="row g-3" @submit.prevent="emit('salva', { ...dati })">
     <div class="col-12 md:col-6">
-      <label class="form-label small" for="unita-nome">Nome</label>
-      <input id="unita-nome" v-model="dati.nome" class="form-control form-control-sm" required />
+      <label class="form-label small" for="unita-nome">
+        Nome<template v-if="dati.tipo === 'COMUNITA_CAPI'"> (facoltativo per la Co.Ca.)</template>
+      </label>
+      <input
+        id="unita-nome"
+        v-model="dati.nome"
+        class="form-control form-control-sm"
+        :required="dati.tipo !== 'COMUNITA_CAPI'"
+        placeholder="Es. Reparto Millennium"
+      />
     </div>
     <div class="col-6 md:col-3">
       <label class="form-label small" for="unita-tipo">Tipo</label>
@@ -62,7 +70,7 @@ const dati = reactive<UnitaIn>(
       <label class="form-label small" for="unita-collegata">Collegata a</label>
       <select id="unita-collegata" v-model="dati.collegata_a" class="form-control form-control-sm">
         <option :value="null">Nessuna</option>
-        <option v-for="u in altre" :key="u.id" :value="u.id">{{ u.nome }}</option>
+        <option v-for="u in altre" :key="u.id" :value="u.id">{{ nomeUnita(u) }}</option>
       </select>
     </div>
     <div v-if="dati.collegata_a" class="col-12 md:col-6">

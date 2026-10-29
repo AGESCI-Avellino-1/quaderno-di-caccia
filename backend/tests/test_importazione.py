@@ -36,7 +36,12 @@ def test_applica_crea_soci_unita_genitori():
     assert Persona.objects.filter(codice_socio__isnull=False).count() == 4
     assert not Persona.objects.filter(codice_socio="9000005").exists()
     assert sorted(riepilogo.unita_create) == sorted(
-        ["Reparto Femminile", "Reparto Maschile", "Clan/Fuoco", "Comunita' Capi"]
+        [
+            "Reparto Femminile (N1)",
+            "Reparto Maschile (M1)",
+            "Clan/Fuoco (T1)",
+            "Comunità Capi (G1)",
+        ]
     )
     assert len(riepilogo.genitori_creati) == 3
     gruppo = Gruppo.objects.get()
@@ -293,3 +298,18 @@ def test_chi_esce_dal_reparto_esce_dalla_squadriglia():
     assert any("Capo squadriglia" in riga for riga in riepilogo.appartenenze_chiuse)
     # The exception is special-category data: never in the import summary.
     assert not any("ccezione" in riga for riga in riepilogo.appartenenze_chiuse)
+
+
+def test_a_parita_di_data_vince_l_app():
+    giulia = _giulia_corretta()
+    [differenza] = anteprima(_risultato(), oggi=OGGI, aggiornato_al=date.today()).differenze
+    assert (differenza.proposta, differenza.scelta) == ("APP", "APP")
+    assert giulia.pk
+
+
+def test_nome_unita_con_accenti_e_codice():
+    applica(_risultato(), oggi=OGGI)
+    coca = Unita.objects.get(tipo=TipoUnita.COMUNITA_CAPI)
+    assert coca.nome == ""  # optional for the Co.Ca. only
+    assert coca.codice == "G1"
+    assert str(coca) == "Comunità Capi (G1)"

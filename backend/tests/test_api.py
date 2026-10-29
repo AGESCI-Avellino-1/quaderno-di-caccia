@@ -129,6 +129,8 @@ def test_registrazione_aperta_solo_con_invito(rf, genitore):
     invito.refresh_from_db()
     assert genitore.utente == nuovo
     assert invito.usato_il is not None
+    # The invitation reached that address: no second confirmation.
+    assert adapter.is_email_verified(richiesta, "G@example.invalid")
     assert not adapter.is_open_for_signup(richiesta)
 
 

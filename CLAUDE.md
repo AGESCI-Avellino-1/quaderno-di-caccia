@@ -250,11 +250,14 @@ verificare" in the analysis).
   `policy.campi_correggibili`; sex and place of birth count as identity (capigruppo
   only) because the codice fiscale derives from them `[da verificare]`. The daily
   summary to the capigruppo is `manage.py segnala_correzioni`, run by the host's cron.
+- Units (maintainer 2026-10-29): `nome` is the group's, may repeat, required except for
+  the Co.Ca.; the BuonaStrada code (`Unita.codice`, CUN + progressive, e.g. O1, G1) is
+  unique and shown next to it everywhere (`str(unita)`, `nomeUnita()` in the PWA).
 - Import differences (maintainer 2026-10-29): when the app and BuonaStrada disagree (open
   correction, membership with `fonte=APP`) the user chooses per difference
   (`Differenza.chiave`); the preview proposes the more recent side, comparing the
   change date in the app with `ImportazioneBuonaStrada.dati_aggiornati_al`, asked at
-  upload; a tie goes to BuonaStrada. BuonaStrada winning closes the correction as
+  upload; on the same day the app wins (maintainer, 2026-10-29). BuonaStrada winning closes the correction as
   `SUPERATA`.
 - Every account has its own email: a child is not invited with a parent's address
   (maintainer, 2026-10-28, refines DEC-25; `accounts/api.crea_invito`).

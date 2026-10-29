@@ -14,7 +14,8 @@ Rules:
   * when the app and BuonaStrada disagree (open correction, app membership) whoever
     imports chooses which wins; the preview proposes the more recent one, comparing
     the date of the change in the app with the date the BuonaStrada data were updated,
-    asked at upload (maintainer, 2026-10-29). Choosing BuonaStrada closes the
+    asked at upload; on the same day the app (maintainer, 2026-10-29). Choosing
+    BuonaStrada closes the
     correction as superseded;
   * guardians are deduplicated by codice fiscale (DEC-32, DEC-33).
 """
@@ -87,10 +88,11 @@ class Riepilogo:
         return asdict(self)
 
     def decidi(self, chiave: str, modificato_il: date) -> tuple[str, str]:
-        """(proposta, scelta) for a difference: the more recent side is proposed, a tie
-        goes to BuonaStrada, the source of truth (DEC-02); the user's choice wins."""
+        """(proposta, scelta) for a difference: the more recent side is proposed; on the
+        same day the app wins, so a correction made today is not lost to an export
+        downloaded today (maintainer, 2026-10-29); the user's choice wins."""
         aggiornato = date.fromisoformat(self.aggiornato_al) if self.aggiornato_al else None
-        proposta = APP if aggiornato is None or modificato_il > aggiornato else BUONASTRADA
+        proposta = APP if aggiornato is None or modificato_il >= aggiornato else BUONASTRADA
         return proposta, self.scelte.get(chiave, proposta)
 
 
@@ -278,6 +280,13 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
     return persona
 
 
+def _con_accenti(testo: str) -> str:
+    """BuonaStrada writes accented capitals as a backtick: COMUNITA` CAPI."""
+    for vocale, accentata in zip("AEIOU", "ÀÈÌÒÙ", strict=True):
+        testo = testo.replace(f"{vocale}`", accentata)
+    return testo.replace("`", "'")
+
+
 def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
     if riga.tipo_unita is None:
         return None
@@ -294,7 +303,13 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
     if unita is None:
         unita = Unita.objects.create(
             gruppo=gruppo,
-            nome=riga.tipo_unita_testo.replace("`", "'").title(),
+            # BuonaStrada has no unit names: a provisional one from the type, that the
+            # group replaces; the Co.Ca. may stay without (maintainer, 2026-10-29).
+            nome=(
+                ""
+                if riga.tipo_unita == TipoUnita.COMUNITA_CAPI
+                else _con_accenti(riga.tipo_unita_testo).title()
+            ),
             tipo=riga.tipo_unita,
             composizione=riga.composizione,
             ambiente=riga.ambiente,
@@ -302,7 +317,7 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
             progressivo=riga.progressivo,
             durata_anni=riga.durata_anni,
         )
-        r.unita_create.append(unita.nome)
+        r.unita_create.append(str(unita))
     return unita
 
 

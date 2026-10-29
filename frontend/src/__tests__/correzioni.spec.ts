@@ -1,7 +1,7 @@
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { valoreLeggibile } from '@/api/qdc'
+import { nomeUnita, valoreLeggibile } from '@/api/qdc'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import CorrezioniView from '@/views/CorrezioniView.vue'
 
@@ -67,6 +67,14 @@ describe('valoreLeggibile', () => {
     expect(valoreLeggibile('True')).toBe('Sì')
     expect(valoreLeggibile('2013-05-04')).toBe('04/05/2013')
     expect(valoreLeggibile('R', [{ valore: 'R', etichetta: 'Rinnovo' }])).toBe('Rinnovo')
+  })
+})
+
+describe('nomeUnita', () => {
+  it('adds the BuonaStrada code; a Co.Ca. without a name shows its type', () => {
+    expect(nomeUnita({ nome: 'Reparto Millennium', codice: 'O1' })).toBe('Reparto Millennium (O1)')
+    expect(nomeUnita({ nome: '', codice: 'G1', tipo: 'COMUNITA_CAPI' })).toBe('Comunità Capi (G1)')
+    expect(nomeUnita({ nome: 'Noviziato', codice: '' })).toBe('Noviziato')
   })
 })
 

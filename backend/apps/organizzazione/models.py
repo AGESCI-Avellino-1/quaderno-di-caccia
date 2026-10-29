@@ -73,7 +73,9 @@ class Gruppo(ModelloTracciato):
 
 class Unita(ModelloTracciato):
     gruppo = models.ForeignKey(Gruppo, on_delete=models.PROTECT, related_name="unita")
-    nome = models.CharField(max_length=120)
+    # Given by the group, not by BuonaStrada, and it may repeat (e.g. "Reparto
+    # Millennium"); optional only for the Co.Ca. (maintainer, 2026-10-29).
+    nome = models.CharField(max_length=120, blank=True)
     tipo = models.CharField(max_length=20, choices=TipoUnita.choices)
     composizione = models.CharField(max_length=1, choices=Composizione.choices)
     ambiente = models.CharField(max_length=10, choices=Ambiente.choices, default=Ambiente.NESSUNO)
@@ -100,7 +102,20 @@ class Unita(ModelloTracciato):
         ]
 
     def __str__(self) -> str:
-        return self.nome
+        # The name is the group's and may repeat; the BuonaStrada code does not.
+        nome = self.nome or self.get_tipo_display()
+        return f"{nome} ({self.codice})" if self.codice else nome
+
+    def clean(self) -> None:
+        if not self.nome.strip() and self.tipo != TipoUnita.COMUNITA_CAPI:
+            raise ValidationError("Dai un nome all'unità: solo la Co.Ca. può non averlo.")
+
+    @property
+    def codice(self) -> str:
+        """BuonaStrada unit code, e.g. O1 for a reparto, G1 for the Co.Ca."""
+        if not self.codice_unita:
+            return ""
+        return f"{self.codice_unita}{self.progressivo or ''}"
 
     @property
     def branca(self) -> Branca:

@@ -173,6 +173,7 @@ class MovimentoIn(Schema):
     voce_id: str = ""
     unita_id: int | None = None
     cassa_destinazione_id: int | None = None
+    evento_id: int | None = None
     # Base64 (optionally a data: URL), so the record can wait in the offline queue.
     giustificativo: str = ""
 
@@ -197,6 +198,8 @@ class MovimentoOut(Schema):
     stornato: bool
     motivo_storno: str
     da_quote: bool
+    evento_id: int | None
+    evento: str | None
     registrato_da: str | None
     creato_il: datetime
 
@@ -222,6 +225,8 @@ def _movimento_out(m: Movimento) -> dict:
         "stornato": hasattr(m, "storno"),
         "motivo_storno": m.motivo_storno,
         "da_quote": m.pagamento_id is not None,
+        "evento_id": m.evento_id,
+        "evento": m.evento.titolo if m.evento_id else None,
         "registrato_da": _nome_utente(m.registrato_da),
         "creato_il": m.creato_il,
     }
@@ -236,7 +241,9 @@ def movimenti(request, cassa: int | None = None, anno: int | None = None, unita:
         elenco = elenco.filter(cassa_id=cassa) | elenco.filter(cassa_destinazione_id=cassa)
     if unita is not None:
         elenco = elenco.filter(unita_id=unita)
-    elenco = elenco.select_related("cassa", "cassa_destinazione", "registrato_da__persona")
+    elenco = elenco.select_related(
+        "cassa", "cassa_destinazione", "registrato_da__persona", "evento"
+    )
     return [_movimento_out(m) for m in elenco.order_by("-data", "-pk")]
 
 
@@ -250,6 +257,9 @@ def registra_movimento(request, dati: MovimentoIn):
         policy.puo_registrare_movimenti(utente, unita_id)
     ):
         raise HttpError(403, "Non puoi registrare movimenti su questa cassa per questa unità.")
+    evento = None
+    if dati.evento_id is not None:
+        evento = get_object_or_404(policy.eventi_visibili(utente), pk=dati.evento_id)
     destinazione = None
     if dati.cassa_destinazione_id:
         destinazione = get_object_or_404(Cassa, pk=dati.cassa_destinazione_id)
@@ -266,6 +276,7 @@ def registra_movimento(request, dati: MovimentoIn):
             unita=Unita.objects.filter(pk=unita_id).first() if unita_id else None,
             cassa_destinazione=destinazione,
             giustificativo=servizi.giustificativo_da_testo(dati.giustificativo),
+            evento=evento,
             utente=utente,
         )
     except ValidationError as errore:

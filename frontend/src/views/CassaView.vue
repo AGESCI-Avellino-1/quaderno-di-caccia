@@ -9,6 +9,7 @@ import {
   nomeUnita,
   PERCORSO_MOVIMENTI,
   type Cassa,
+  type Evento,
   type CassaIn,
   type ModelloD,
   type Movimento,
@@ -43,6 +44,8 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 const casse = ref<Cassa[]>([])
 const voci = ref<VoceModelloD[]>([])
 const unita = ref<Unita[]>([])
+// Events a movement may belong to (a fundraising, a camp): those of the year shown.
+const eventi = ref<Evento[]>([])
 const scelta = ref<number | null>(null)
 const movimenti = ref<Movimento[]>([])
 const copiaDel = ref<string | null>(null)
@@ -108,6 +111,20 @@ onMounted(async () => {
   await Promise.all([caricaSpese(), caricaRendiconto()])
 })
 watch([scelta, anno], caricaMovimenti, { immediate: true })
+watch(
+  anno,
+  async (fine) => {
+    try {
+      const dati = await leggiConCache(`eventi:anno:${fine}`, () =>
+        api.eventi({ dal: `${fine - 1}-10-01`, al: `${fine}-09-30` }),
+      )
+      eventi.value = dati.dati.filter((e) => !e.riunione && !e.annullato)
+    } catch {
+      eventi.value = []
+    }
+  },
+  { immediate: true },
+)
 watch(anno, caricaRendiconto)
 watch(vista, (nuova) => {
   esito.value = ''
@@ -125,6 +142,7 @@ const nuovo = reactive({
   voce_id: '',
   unita_id: null as number | null,
   cassa_destinazione_id: null as number | null,
+  evento_id: null as number | null,
   giustificativo: '',
   nomeFile: '',
 })
@@ -142,6 +160,7 @@ function apriNuovo() {
     voce_id: '',
     unita_id: cassa.value?.unita_id ?? null,
     cassa_destinazione_id: null,
+    evento_id: null,
     giustificativo: '',
     nomeFile: '',
   })
@@ -173,6 +192,7 @@ async function registra() {
     voce_id: nuovo.tipo === 'GIROCONTO' ? '' : nuovo.voce_id,
     unita_id: nuovo.unita_id,
     cassa_destinazione_id: nuovo.tipo === 'GIROCONTO' ? nuovo.cassa_destinazione_id : null,
+    evento_id: nuovo.tipo === 'GIROCONTO' ? null : nuovo.evento_id,
     giustificativo: nuovo.giustificativo,
   }
   const risultato = await esegui(() =>
@@ -453,6 +473,19 @@ async function salvaCassa() {
                 </option>
               </select>
             </div>
+            <div v-if="nuovo.tipo !== 'GIROCONTO' && eventi.length" class="md:col-6">
+              <label class="form-label small" for="mov-evento">Per l'evento (facoltativo)</label>
+              <select
+                id="mov-evento"
+                v-model="nuovo.evento_id"
+                class="form-control form-control-sm"
+              >
+                <option :value="null">Nessuno</option>
+                <option v-for="e in eventi" :key="e.id" :value="e.id">
+                  {{ e.titolo }} ({{ new Date(e.inizio).toLocaleDateString('it-IT') }})
+                </option>
+              </select>
+            </div>
             <div v-if="cassa.tipo === 'BANCA'" class="md:col-6">
               <label class="form-label small" for="mov-unita">Per l'unità</label>
               <select id="mov-unita" v-model="nuovo.unita_id" class="form-control form-control-sm">
@@ -565,6 +598,7 @@ async function salvaCassa() {
                 }}</template
               >
               <template v-if="cassa.tipo === 'BANCA'"> · {{ nomeDellUnita(m.unita_id) }}</template>
+              <template v-if="m.evento"> · {{ m.evento }}</template>
               <template v-if="m.registrato_da"> · {{ m.registrato_da }}</template>
             </div>
             <div v-if="m.storno_di" class="small">Storno: {{ m.motivo_storno }}</div>

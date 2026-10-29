@@ -11,6 +11,7 @@ import {
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
+import RendicontoEvento from '@/components/RendicontoEvento.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache, salvaInCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
@@ -183,6 +184,12 @@ const STATI: [StatoPresenza, string][] = [
       :puo-gestire="evento.puo_gestire && !evento.annullato"
       :in-famiglia="evento.mie.length > 0"
       @cambiata="carica"
+    />
+
+    <RendicontoEvento
+      v-if="evento.puo_gestire || evento.partecipanti.length"
+      :evento="evento.id"
+      :campo="evento.tipo === 'CAMPO'"
     />
 
     <!-- The family -->

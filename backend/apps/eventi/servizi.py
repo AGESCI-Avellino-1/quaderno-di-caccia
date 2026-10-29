@@ -289,3 +289,114 @@ def imposta_alta_squadriglia(reparto: Unita, anno: int, persone: list[Persona]) 
     ).delete()
     for persona in persone:
         MembroAltaSquadriglia.objects.get_or_create(reparto=reparto, persona=persona, anno=anno)
+
+
+# --- Budget and accounts of an event (DEC-90, DEC-91) -----------------------------------------
+
+
+def numero_partecipanti(evento: Evento) -> int:
+    return evento.partecipazioni.filter(stato=StatoPartecipazione.INVITATO).count()
+
+
+def staff_al_campo(evento: Evento) -> int:
+    """All the staff of the units involved (maintainer, 2026-10-29)."""
+    giorno = giorno_evento(evento)
+    return (
+        Incarico.objects.attivi(giorno)
+        .filter(
+            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
+            unita__in=unita_coinvolte(evento),
+        )
+        .values("persona_id")
+        .distinct()
+        .count()
+    )
+
+
+def fissa_budget(
+    evento: Evento, quota=None, contributo=None, totale=None, quota_staff=None
+) -> None:
+    """Two of the three, the third is computed (DEC-91); the staff's contribution per
+    head apart, zero when not given."""
+    from decimal import Decimal
+
+    dati = [v for v in (quota, contributo, totale) if v is not None]
+    if len(dati) != 2:
+        raise ValidationError("Indica due valori su tre: il terzo lo calcola l'app.")
+    quota_staff = quota_staff if quota_staff is not None else Decimal("0")
+    if any(v < 0 for v in [*dati, quota_staff]):
+        raise ValidationError("I valori del budget non possono essere negativi.")
+    evento.budget_quota, evento.budget_contributo, evento.budget_totale = quota, contributo, totale
+    evento.budget_quota_staff = quota_staff
+    evento.save(
+        update_fields=[
+            "budget_quota",
+            "budget_contributo",
+            "budget_totale",
+            "budget_quota_staff",
+            "aggiornato_il",
+        ]
+    )
+
+
+def budget(evento: Evento) -> dict | None:
+    """totale = quota × participants + quota_staff × staff + contributo, the missing one
+    computed on today's numbers. The staff's contribution counts in the budget only
+    (maintainer, 2026-10-29)."""
+    from decimal import ROUND_HALF_UP, Decimal
+
+    quota, contributo, totale = evento.budget_quota, evento.budget_contributo, evento.budget_totale
+    if [quota, contributo, totale].count(None) != 1:
+        return None
+    n = numero_partecipanti(evento)
+    staff = staff_al_campo(evento)
+    dello_staff = evento.budget_quota_staff * staff
+    if totale is None:
+        totale = quota * n + dello_staff + contributo
+        calcolato = "totale"
+    elif contributo is None:
+        contributo = totale - quota * n - dello_staff
+        calcolato = "contributo"
+    else:
+        resta = totale - contributo - dello_staff
+        quota = (resta / n).quantize(Decimal("0.01"), ROUND_HALF_UP) if n else None
+        calcolato = "quota"
+    return {
+        "partecipanti": n,
+        "staff": staff,
+        "quota_staff": evento.budget_quota_staff,
+        "quota": quota,
+        "contributo": contributo,
+        "totale": totale,
+        "calcolato": calcolato,
+    }
+
+
+def rendiconto(evento: Evento) -> dict:
+    """What came in and went out for the event (its movements in the cash book,
+    reversals included), and its fees: due, collected, covered by the group's cash
+    (DEC-82: in a camp's budget the agevolazioni are a contribution from the cash)."""
+    from decimal import Decimal
+
+    from apps.cassa.models import TipoMovimento
+    from apps.quote.models import Quota
+
+    zero = Decimal("0")
+    movimenti = evento.movimenti.all()
+    entrate = sum(
+        movimenti.filter(tipo=TipoMovimento.ENTRATA).values_list("importo", flat=True), zero
+    )
+    uscite = sum(
+        movimenti.filter(tipo=TipoMovimento.USCITA).values_list("importo", flat=True), zero
+    )
+    quote = (
+        Quota.objects.valide().filter(tipo__evento=evento).select_related("agevolazione", "tipo")
+    )
+    return {
+        "entrate": entrate,
+        "uscite": uscite,
+        "saldo": entrate - uscite,
+        "quote_dovute": sum((q.dovuto for q in quote), zero),
+        "quote_incassate": sum((q.pagato for q in quote), zero),
+        "agevolazioni": sum((q.agevolata for q in quote), zero),
+    }

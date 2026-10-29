@@ -69,6 +69,7 @@ def registra(
     cassa_destinazione: Cassa | None = None,
     giustificativo: ContentFile | None = None,
     pagamento=None,
+    evento=None,
 ) -> Movimento:
     _controlla_data(data)
     if not cassa.attiva:
@@ -95,6 +96,7 @@ def registra(
         unita=unita,
         cassa_destinazione=cassa_destinazione if tipo == TipoMovimento.GIROCONTO else None,
         pagamento=pagamento,
+        evento=evento,
         registrato_da=utente,
     )
     if giustificativo is not None:
@@ -126,6 +128,7 @@ def storna(movimento: Movimento, utente, motivo: str) -> Movimento:
         unita=movimento.unita,
         cassa_destinazione=movimento.cassa_destinazione,
         pagamento=movimento.pagamento,
+        evento=movimento.evento,
         storno_di=movimento,
         motivo_storno=motivo.strip(),
         registrato_da=utente,
@@ -225,15 +228,17 @@ def cassa_per_pagamento(pagamento, righe) -> Cassa | None:
 
 
 def registra_pagamento(pagamento, righe, utente, cassa: Cassa | None = None) -> list[Movimento]:
-    """One income per category and unit: the national fee, the group fee and the
-    monthly fee go to different lines of the Modello D."""
+    """One income per category, unit and event: the national fee, the group fee and
+    the monthly fee go to different lines of the Modello D; an event's fees to the
+    event (its budget, DEC-91)."""
     cassa = cassa or cassa_per_pagamento(pagamento, righe)
     if cassa is None:
         return []
     gruppi: dict[tuple, Decimal] = defaultdict(lambda: ZERO)
     for riga in righe:
         voce = voce_quota(riga.quota.tipo.categoria)
-        gruppi[(voce.id, unita_del_socio(riga.quota.persona))] += riga.importo
+        chiave = (voce.id, unita_del_socio(riga.quota.persona), riga.quota.tipo.evento)
+        gruppi[chiave] += riga.importo
     return [
         registra(
             cassa=cassa,
@@ -244,9 +249,10 @@ def registra_pagamento(pagamento, righe, utente, cassa: Cassa | None = None) -> 
             voce_id=voce_id,
             unita=unita,
             pagamento=pagamento,
+            evento=evento,
             utente=utente,
         )
-        for (voce_id, unita), importo in gruppi.items()
+        for (voce_id, unita, evento), importo in gruppi.items()
     ]
 
 

@@ -115,6 +115,15 @@ class Movimento(ModelloTracciato):
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="storno"
     )
     motivo_storno = models.CharField(max_length=300, blank=True)
+    # The event it belongs to: a fundraising's income and costs (DEC-90), a camp's
+    # expenses and fees (DEC-91).
+    evento = models.ForeignKey(
+        "eventi.Evento",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="movimenti",
+    )
     pagamento = models.ForeignKey(
         "quote.Pagamento",
         null=True,

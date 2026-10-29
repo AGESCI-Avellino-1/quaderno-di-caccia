@@ -111,6 +111,14 @@ class Evento(ModelloTracciato):
     # Notes the parents and the capi read, the ragazzi do not (a patrol's mission).
     note_genitori = models.TextField(blank=True)
     cerchia = models.CharField(max_length=8, choices=Cerchia.choices, default=Cerchia.TUTTI)
+    # Camp budget (DEC-91): two of the three are set, the third follows from the number
+    # of participants: totale = quota × participants + quota_staff × staff + contributo.
+    # The staff (all the staff of the units involved) has its own contribution per head,
+    # also zero, counted in the budget only (maintainer, 2026-10-29).
+    budget_quota = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    budget_contributo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    budget_totale = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    budget_quota_staff = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     riunione = models.ForeignKey(
         RiunioneRicorrente, null=True, blank=True, on_delete=models.CASCADE, related_name="eventi"
     )

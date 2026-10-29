@@ -40,6 +40,8 @@ const uscita: Movimento = {
   stornato: false,
   motivo_storno: '',
   da_quote: false,
+  evento_id: null,
+  evento: null,
   registrato_da: 'Anna Capo',
   creato_il: '2026-01-15T10:00:00Z',
 }

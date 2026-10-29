@@ -764,3 +764,62 @@ def feed_calendario(request, token: str):
     )
     risposta["Cache-Control"] = "private, max-age=900"
     return risposta
+
+
+# --- Budget and accounts (DEC-90, DEC-91) ---------------------------------------------------
+
+
+class BudgetIn(Schema):
+    quota: Decimal | None = None
+    contributo: Decimal | None = None
+    totale: Decimal | None = None
+    quota_staff: Decimal = Decimal("0")
+
+
+class BudgetOut(Schema):
+    partecipanti: int
+    staff: int
+    quota_staff: Decimal
+    quota: Decimal | None
+    contributo: Decimal
+    totale: Decimal
+    calcolato: str
+
+
+class RendicontoOut(Schema):
+    budget: BudgetOut | None
+    entrate: Decimal
+    uscite: Decimal
+    saldo: Decimal
+    quote_dovute: Decimal
+    quote_incassate: Decimal
+    agevolazioni: Decimal
+    puo_gestire: bool
+
+
+def _rendiconto(request, evento: Evento) -> dict:
+    return {
+        "budget": servizi.budget(evento),
+        **servizi.rendiconto(evento),
+        "puo_gestire": policy.puo_gestire_evento(request.auth, evento),
+    }
+
+
+@router.get("/eventi/{evento_id}/rendiconto", response=RendicontoOut)
+def rendiconto(request, evento_id: int):
+    """The event's capi and the Co.Ca. (the money of the group is the Co.Ca.'s)."""
+    evento = _evento(request, evento_id)
+    if not (policy.puo_gestire_evento(request.auth, evento) or policy.e_capo_censito(request.auth)):
+        raise HttpError(403, "Budget e rendiconto li vedono i capi.")
+    return _rendiconto(request, evento)
+
+
+@router.put("/eventi/{evento_id}/budget", response=RendicontoOut)
+def fissa_budget(request, evento_id: int, dati: BudgetIn):
+    evento = _evento(request, evento_id)
+    _gestore_quote(request, evento)
+    try:
+        servizi.fissa_budget(evento, dati.quota, dati.contributo, dati.totale, dati.quota_staff)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return _rendiconto(request, evento)

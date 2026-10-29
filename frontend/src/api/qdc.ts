@@ -755,6 +755,7 @@ export interface MovimentoIn {
   voce_id: string
   unita_id: number | null
   cassa_destinazione_id: number | null
+  evento_id: number | null
   /** Base64 data URL: the record can wait, encrypted, in the offline queue. */
   giustificativo: string
 }
@@ -779,6 +780,8 @@ export interface Movimento {
   stornato: boolean
   motivo_storno: string
   da_quote: boolean
+  evento_id: number | null
+  evento: string | null
   registrato_da: string | null
   creato_il: string
 }
@@ -904,6 +907,29 @@ export interface QuotaPartecipante {
   pagato: string
   residuo: string
   annullata: boolean
+}
+
+export interface BudgetEvento {
+  partecipanti: number
+  /** All the staff of the units involved, with their own contribution per head. */
+  staff: number
+  quota_staff: string
+  quota: string | null
+  contributo: string
+  totale: string
+  /** Which of the three the app computed. */
+  calcolato: 'quota' | 'contributo' | 'totale'
+}
+
+export interface RendicontoEvento {
+  budget: BudgetEvento | null
+  entrate: string
+  uscite: string
+  saldo: string
+  quote_dovute: string
+  quote_incassate: string
+  agevolazioni: string
+  puo_gestire: boolean
 }
 
 export interface SituazioneQuoteEvento {
@@ -1251,6 +1277,21 @@ export const api = {
     evento: number,
     dati: { nome: string; rate: RataEvento[]; sconto_famiglia: string },
   ) => richiesta<Evento>(`/api/v1/eventi/${evento}/quota`, { metodo: 'PUT', corpo: dati }),
+  rendicontoEvento: (evento: number) =>
+    richiesta<RendicontoEvento>(`/api/v1/eventi/${evento}/rendiconto`),
+  fissaBudget: (
+    evento: number,
+    dati: {
+      quota: string | null
+      contributo: string | null
+      totale: string | null
+      quota_staff: string
+    },
+  ) =>
+    richiesta<RendicontoEvento>(`/api/v1/eventi/${evento}/budget`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
   quoteEvento: (evento: number) =>
     richiesta<SituazioneQuoteEvento[]>(`/api/v1/eventi/${evento}/quote`),
   importoPartecipante: (evento: number, quota: number, importo: string) =>

@@ -298,9 +298,7 @@ def dettaglio_unita(request, unita_id: int):
         "squadriglie": squadriglie,
         "senza_squadriglia": list(senza_squadriglia),
         "avvisi": (
-            ["L'unità non ha ancora un nome: daglielo con «Modifica»."]
-            if unita.senza_nome
-            else []
+            ["L'unità non ha ancora un nome: daglielo con «Modifica»."] if unita.senza_nome else []
         )
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + _avvisi_maggiore_eta(unita),

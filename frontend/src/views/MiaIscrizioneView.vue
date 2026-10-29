@@ -31,6 +31,8 @@ const tema = {
   APPROVATA: 'theme-info',
   SOSPESA: 'theme-danger',
   COMPLETATA: 'theme-success',
+  INSERITA: 'theme-success',
+  RECEPITA: 'theme-success',
   RIFIUTATA: 'theme-secondary',
 }
 const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.stato === 'SOSPESA'
@@ -65,7 +67,10 @@ const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.st
         <CompletaIscrizione :id="r.id" @cambiata="aggiornata" />
         <ModuliIscrizione :id="r.id" @cambiata="aggiornata" @aggiorna="ricarica" />
       </template>
-      <p v-else-if="r.stato === 'COMPLETATA'" class="mb-0">
+      <p v-else-if="r.stato === 'RECEPITA'" class="mb-0">
+        Iscrizione conclusa: il socio è in BuonaStrada, con il codice socio definitivo.
+      </p>
+      <p v-else-if="r.stato === 'COMPLETATA' || r.stato === 'INSERITA'" class="mb-0">
         Iscrizione completa: il gruppo la inserirà in BuonaStrada, che darà il codice socio
         definitivo.
       </p>

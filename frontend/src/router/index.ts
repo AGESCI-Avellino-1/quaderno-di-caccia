@@ -108,6 +108,12 @@ const router = createRouter({
     },
     {
       // Capigruppo: the API decides.
+      path: '/iscrizioni-buonastrada',
+      name: 'iscrizioni-buonastrada',
+      component: () => import('@/views/IscrizioniBuonaStradaView.vue'),
+    },
+    {
+      // Capigruppo: the API decides.
       path: '/modulistica',
       name: 'modulistica',
       component: () => import('@/views/ModulisticaView.vue'),

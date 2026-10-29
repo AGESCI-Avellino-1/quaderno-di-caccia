@@ -29,6 +29,7 @@ from .models import (
     CAMPI_SOCIO_OBBLIGATORI,
     DA_COMPLETARE,
     DIMENSIONE_MASSIMA,
+    NON_RECEPITE,
     AllegatoIscrizione,
     CodiceIscrizione,
     RichiestaIscrizione,
@@ -347,3 +348,84 @@ def verifica_moduli(richiesta: RichiestaIscrizione, utente, consensi: dict[str, 
     richiesta.moduli_verificati_da = utente
     richiesta.save(update_fields=["moduli_verificati_il", "moduli_verificati_da", "aggiornato_il"])
     aggiorna_stato(richiesta)
+
+
+# --- Into BuonaStrada ------------------------------------------------------------------
+
+
+def segna_inserita(richiesta: RichiestaIscrizione, utente) -> None:
+    """A capogruppo entered the member in BuonaStrada (by hand, on its portal)."""
+    if richiesta.stato != StatoIscrizione.COMPLETATA:
+        raise ValidationError("Si segnano come inserite solo le iscrizioni complete.")
+    richiesta.stato = StatoIscrizione.INSERITA
+    richiesta.inserita_il = timezone.now()
+    richiesta.inserita_da = utente
+    richiesta.save(update_fields=["stato", "inserita_il", "inserita_da", "aggiornato_il"])
+
+
+def recepisci(persona: Persona) -> list[RichiestaIscrizione]:
+    """The import found the member in BuonaStrada (by codice fiscale): BuonaStrada wins,
+    the registration is closed whatever its state, a suspended account is active again."""
+    richieste = list(RichiestaIscrizione.objects.filter(persona=persona, stato__in=NON_RECEPITE))
+    for richiesta in richieste:
+        richiesta.stato = StatoIscrizione.RECEPITA
+        richiesta.recepita_il = timezone.now()
+        richiesta.save(update_fields=["stato", "recepita_il", "aggiornato_il"])
+    return richieste
+
+
+COLONNE = (
+    "Codice provvisorio",
+    "Cognome",
+    "Nome",
+    "Sesso",
+    "Data di nascita",
+    "Luogo di nascita",
+    "Codice fiscale",
+    "Indirizzo",
+    "Comune",
+    "Provincia",
+    "CAP",
+    "Email",
+    "Cellulare",
+    "Unità",
+    "Consensi 2A/2B/2C/riviste",
+    "Genitore",
+    "Codice fiscale del genitore",
+    "Email del genitore",
+    "Cellulare del genitore",
+    "Stato",
+)
+
+
+def _si_no(valore) -> str:
+    return {True: "sì", False: "no"}.get(valore, "—")
+
+
+def riga_per_buonastrada(richiesta: RichiestaIscrizione) -> list[str]:
+    """The data to copy into BuonaStrada, in plain text."""
+    s = richiesta.persona
+    g = genitore(richiesta)
+    consensi = "/".join(_si_no(getattr(s, c)) for c in CONSENSI)
+    return [
+        s.codice_socio or "",
+        s.cognome,
+        s.nome,
+        s.sesso,
+        s.data_nascita.strftime("%d/%m/%Y") if s.data_nascita else "",
+        s.luogo_nascita,
+        s.codice_fiscale or "",
+        f"{s.indirizzo} {s.civico}".strip(),
+        s.comune,
+        s.provincia,
+        s.cap,
+        s.email,
+        s.cellulare,
+        str(richiesta.unita),
+        consensi,
+        f"{g.nome} {g.cognome}" if g else "",
+        (g.codice_fiscale or "") if g else "",
+        g.email if g else "",
+        g.cellulare if g else "",
+        richiesta.get_stato_display(),
+    ]

@@ -18,7 +18,7 @@ from apps.organizzazione.models import Unita
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
-from . import servizi
+from . import esportazione, servizi
 from .models import (
     CAMPI_SOCIO,
     DA_COMPLETARE,
@@ -37,6 +37,7 @@ router = Router(tags=["iscrizioni"])
 # Codes can be guessed only by trying: few attempts per hour from the same address.
 LIMITI = [AnonRateThrottle("30/h"), AuthRateThrottle("60/h")]
 CHIAVE_SESSIONE_ISCRIZIONE = servizi.CHIAVE_SESSIONE_ISCRIZIONE
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 def _salva(oggetto) -> None:
@@ -494,4 +495,72 @@ def verifica_moduli(request, richiesta_id: int, dati: Verifica):
     richiesta = _richiesta_decidibile(request, richiesta_id)
     _errore(servizi.verifica_moduli, richiesta, request.auth, dati.dict())
     registra_accessi(request, [richiesta.persona], Categoria.MODULI, Azione.MODIFICA)
+    return _richiesta_out(richiesta)
+
+
+# --- Into BuonaStrada (capigruppo) ----------------------------------------------------
+
+
+class DaInserire(Schema):
+    id: int
+    colonne: list[str]
+    valori: list[str]
+    stato: str
+
+
+def _da_inserire(request) -> list[RichiestaIscrizione]:
+    if not policy.puo_gestire_iscrizioni_buonastrada(request.auth):
+        raise HttpError(403, "L'inserimento in BuonaStrada lo curano i capigruppo.")
+    return list(
+        RichiestaIscrizione.objects.filter(
+            stato__in=[StatoIscrizione.COMPLETATA, StatoIscrizione.INSERITA]
+        )
+        .select_related("unita", "persona")
+        .order_by("stato", "cognome", "nome")
+    )
+
+
+@router.get("/iscrizioni-buonastrada", response=list[DaInserire])
+def iscrizioni_buonastrada(request):
+    richieste = _da_inserire(request)
+    registra_accessi(request, [r.persona for r in richieste], Categoria.ISCRIZIONI, Azione.LETTURA)
+    return [
+        {
+            "id": r.pk,
+            "colonne": list(servizi.COLONNE),
+            "valori": servizi.riga_per_buonastrada(r),
+            "stato": r.stato,
+        }
+        for r in richieste
+    ]
+
+
+@router.get("/iscrizioni-buonastrada.{formato}")
+def esporta_iscrizioni(request, formato: str):
+    if formato not in {"xlsx", "pdf"}:
+        raise HttpError(404, "Formato non disponibile.")
+    richieste = _da_inserire(request)
+    righe = [servizi.riga_per_buonastrada(r) for r in richieste]
+    registra_accessi(
+        request, [r.persona for r in richieste], Categoria.ISCRIZIONI, Azione.ESPORTAZIONE
+    )
+    contenuto, tipo = (
+        (esportazione.xlsx(righe), XLSX)
+        if formato == "xlsx"
+        else (esportazione.pdf(righe), "application/pdf")
+    )
+    risposta = HttpResponse(contenuto, content_type=tipo)
+    nome = f"iscrizioni-buonastrada-{date.today().isoformat()}.{formato}"
+    risposta["Content-Disposition"] = f'attachment; filename="{nome}"'
+    return risposta
+
+
+@router.post("/iscrizioni/{richiesta_id}/inserita", response=RichiestaOut)
+def segna_inserita(request, richiesta_id: int):
+    if not policy.puo_gestire_iscrizioni_buonastrada(request.auth):
+        raise HttpError(403, "L'inserimento in BuonaStrada lo curano i capigruppo.")
+    richiesta = get_object_or_404(
+        RichiestaIscrizione.objects.select_related("unita"), pk=richiesta_id
+    )
+    _errore(servizi.segna_inserita, richiesta, request.auth)
     return _richiesta_out(richiesta)

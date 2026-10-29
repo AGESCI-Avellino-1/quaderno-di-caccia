@@ -15,6 +15,7 @@ class Categoria(models.TextChoices):
     DEROGA_SQ = "DEROGA_SQ", "Eccezione sulla squadriglia"
     FASCICOLO = "FASCICOLO", "Fascicolo completo"
     MODULI = "MODULI", "Moduli firmati"
+    ISCRIZIONI = "ISCRIZIONI", "Dati per BuonaStrada"
 
 
 class Azione(models.TextChoices):

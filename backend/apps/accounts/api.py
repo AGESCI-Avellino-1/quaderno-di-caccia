@@ -36,6 +36,8 @@ class Profilo(Schema):
     # Joining from the app: own requests, and requests this user decides (waiting).
     mie_iscrizioni: int
     iscrizioni_da_decidere: int
+    # Capigruppo: completed registrations to enter in BuonaStrada.
+    iscrizioni_da_inserire: int
     capo_in_attesa: bool
     tutelati: list[PersonaBreve]
 
@@ -59,6 +61,11 @@ def profilo(request):
         "iscrizioni_da_decidere": RichiestaIscrizione.objects.filter(
             unita__in=policy.unita_da_approvare(user), stato=StatoIscrizione.IN_ATTESA
         ).count(),
+        "iscrizioni_da_inserire": (
+            RichiestaIscrizione.objects.filter(stato=StatoIscrizione.COMPLETATA).count()
+            if policy.puo_gestire_iscrizioni_buonastrada(user)
+            else 0
+        ),
         "capo_in_attesa": policy.e_capo_in_attesa(user),
         "tutelati": list(policy.tutelati(user)),
     }

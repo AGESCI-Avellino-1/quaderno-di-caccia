@@ -30,6 +30,8 @@ export interface Profilo {
   /** Joining from the app: own requests, and waiting requests this user decides. */
   mie_iscrizioni: number
   iscrizioni_da_decidere: number
+  /** Capigruppo: completed registrations to enter in BuonaStrada. */
+  iscrizioni_da_inserire?: number
   /** A capo not yet in BuonaStrada: no sensitive data of other members. */
   capo_in_attesa: boolean
   tutelati: PersonaBreve[]
@@ -236,6 +238,8 @@ export interface EsitoImportazione {
     unita_create: string[]
     appartenenze_aperte: string[]
     appartenenze_chiuse: string[]
+    /** Members who joined from the app, now with their real code. Missing in older imports. */
+    iscrizioni_recepite?: string[]
     /** Corrections BuonaStrada now has: closed (DEC-31). Missing in older imports. */
     correzioni_recepite?: string[]
     differenze: {
@@ -317,7 +321,8 @@ export interface DatiIscrizione {
   genitore_codice_fiscale: string
 }
 
-export type StatoIscrizione = 'IN_ATTESA' | 'APPROVATA' | 'SOSPESA' | 'COMPLETATA' | 'RIFIUTATA'
+export type StatoIscrizione =
+  'IN_ATTESA' | 'APPROVATA' | 'SOSPESA' | 'COMPLETATA' | 'INSERITA' | 'RECEPITA' | 'RIFIUTATA'
 
 export interface RichiestaIscrizione {
   id: number
@@ -374,6 +379,16 @@ export interface Consensi {
   consenso_commerciale: boolean
   consenso_riviste: boolean
 }
+
+export interface DaInserire {
+  id: number
+  colonne: string[]
+  valori: string[]
+  stato: 'COMPLETATA' | 'INSERITA'
+}
+
+export const esportazioneBuonaStrada = (formato: 'xlsx' | 'pdf') =>
+  `/api/v1/iscrizioni-buonastrada.${formato}`
 
 export const fileModulo = (id: number) => `/api/v1/modulistica/${id}/file`
 export const fileModuloFirmato = (id: number) => `/api/v1/moduli-firmati/${id}/file`
@@ -674,6 +689,9 @@ export const api = {
       metodo: 'POST',
       corpo: consensi,
     }),
+  iscrizioniBuonaStrada: () => richiesta<DaInserire[]>('/api/v1/iscrizioni-buonastrada'),
+  segnaInserita: (id: number) =>
+    richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${id}/inserita`, { metodo: 'POST' }),
   rifiutaIscrizione: (id: number, motivo: string) =>
     richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${id}/rifiuta`, {
       metodo: 'POST',

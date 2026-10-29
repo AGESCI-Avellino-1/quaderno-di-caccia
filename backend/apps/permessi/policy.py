@@ -459,3 +459,9 @@ def unita_da_approvare(user) -> QuerySet[Unita]:
 def puo_gestire_modulistica(user) -> bool:
     """Blank forms for the families: the capigruppo."""
     return e_capogruppo(user)
+
+
+def puo_gestire_iscrizioni_buonastrada(user) -> bool:
+    """The list of registrations to enter in BuonaStrada, its exports, "inserita": the
+    capigruppo (maintainer, 2026-10-29)."""
+    return e_capogruppo(user)

@@ -506,3 +506,89 @@ def test_fascicolo_e_cancellazione_includono_le_iscrizioni(approvata, genitore_n
     import os
 
     assert not os.path.exists(percorso)
+
+
+# --- Into BuonaStrada (step 4) ----------------------------------------------------------
+
+
+@pytest.fixture
+def completata(approvata, genitore_nuovo, capo):
+    servizi.completa(approvata, DATI_COMPLETI)
+    _moduli_verificati(approvata, genitore_nuovo, capo)
+    approvata.refresh_from_db()
+    assert approvata.stato == StatoIscrizione.COMPLETATA
+    return approvata
+
+
+def test_elenco_ed_esportazioni_per_i_capigruppo(completata, capogruppo, capo):
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    from apps.permessi.models import AccessoDatoSensibile, Azione, Categoria
+
+    assert _client(capo).get("/api/v1/iscrizioni-buonastrada").status_code == 403
+    assert _client(capo).get("/api/v1/iscrizioni-buonastrada.xlsx").status_code == 403
+    client = _client(capogruppo)
+    [voce] = client.get("/api/v1/iscrizioni-buonastrada").json()
+    dati = dict(zip(voce["colonne"], voce["valori"], strict=True))
+    assert dati["Codice fiscale"] == CF_FIGLIO and dati["Cellulare del genitore"] == "3471112222"
+    assert dati["Consensi 2A/2B/2C/riviste"] == "sì/no/no/no"
+    assert client.get("/api/v1/io").json()["iscrizioni_da_inserire"] == 1
+
+    xlsx = client.get("/api/v1/iscrizioni-buonastrada.xlsx")
+    foglio = load_workbook(BytesIO(xlsx.content)).active
+    assert foglio["G2"].value == CF_FIGLIO and foglio["A1"].value == "Codice provvisorio"
+    pdf = client.get("/api/v1/iscrizioni-buonastrada.pdf")
+    assert pdf["Content-Type"] == "application/pdf" and pdf.content.startswith(b"%PDF")
+    assert "attachment" in pdf["Content-Disposition"]
+    assert client.get("/api/v1/iscrizioni-buonastrada.csv").status_code == 404
+    assert (
+        AccessoDatoSensibile.objects.filter(
+            categoria=Categoria.ISCRIZIONI, azione=Azione.ESPORTAZIONE
+        ).count()
+        == 2
+    )
+
+    assert (
+        _post(client, f"/api/v1/iscrizioni/{completata.pk}/inserita").json()["stato"] == "INSERITA"
+    )
+    assert _post(client, f"/api/v1/iscrizioni/{completata.pk}/inserita").status_code == 400
+
+
+def test_pdf_con_caratteri_speciali(completata):
+    from apps.iscrizioni.esportazione import pdf
+
+    riga = servizi.riga_per_buonastrada(completata)
+    riga[1] = "D'Amico <b>& Figli"
+    assert pdf([riga]).startswith(b"%PDF")
+
+
+def test_l_importazione_sostituisce_il_codice_provvisorio(completata, genitore_nuovo):
+    from apps.importazione.buonastrada import leggi_ricerca_soci
+    from apps.importazione.servizi import applica
+    from tests.export_sintetico import costruisci_csv, riga
+
+    figlia = completata.persona
+    provvisorio = figlia.codice_socio
+    export = [
+        riga(
+            **{
+                "CODICE SOCIO": "9000077",
+                "NOME": "Marta",
+                "COGNOME": "Bianco",
+                "SESSO": "F",
+                "DATA NASCITA": figlia.data_nascita.strftime("%d/%m/%Y"),
+                "CODICE FISCALE": CF_FIGLIO,
+                "BRANCA": "Branca E/G",
+                "TIPO UNITA": "REPARTO FEMMINILE",
+                "CUN": "N",
+            }
+        )
+    ]
+    riepilogo = applica(leggi_ricerca_soci(costruisci_csv(export)))
+    figlia.refresh_from_db()
+    completata.refresh_from_db()
+    assert figlia.codice_socio == "9000077"
+    assert completata.stato == StatoIscrizione.RECEPITA
+    assert riepilogo.iscrizioni_recepite == [f"Bianco Marta: {provvisorio} → 9000077"]

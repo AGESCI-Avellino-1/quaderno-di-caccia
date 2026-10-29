@@ -37,9 +37,15 @@ from apps.anagrafica.models import (
     RuoloAppartenenza,
     TipoTutela,
 )
-from apps.anagrafica.servizi import come_testo, recepisci_correzione, supera_correzione
+from apps.anagrafica.servizi import (
+    come_testo,
+    e_codice_provvisorio,
+    recepisci_correzione,
+    supera_correzione,
+)
 from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
+from apps.iscrizioni.servizi import recepisci
 from apps.organizzazione.models import Gruppo, TipoUnita, Unita
 from apps.organizzazione.servizi import esci_dal_reparto
 
@@ -79,6 +85,8 @@ class Riepilogo:
     appartenenze_chiuse: list[str] = field(default_factory=list)
     differenze: list[Differenza] = field(default_factory=list)
     correzioni_recepite: list[str] = field(default_factory=list)
+    # Members who joined from the app, now in BuonaStrada with their real code.
+    iscrizioni_recepite: list[str] = field(default_factory=list)
     avvisi: list[dict] = field(default_factory=list)
     # When BuonaStrada's data were last updated (asked at upload) and the choices made.
     aggiornato_al: str | None = None
@@ -272,6 +280,10 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
         persona.save()
         r.persone_create.append(str(persona))
         return persona
+    if e_codice_provvisorio(persona.codice_socio):
+        # Joined from the app: BuonaStrada's code replaces the provisional one.
+        recepisci(persona)
+        r.iscrizioni_recepite.append(f"{persona}: {persona.codice_socio} → {riga.codice_socio}")
     persona.codice_socio = riga.codice_socio
     if _aggiorna_campi(persona, valori, r, riga.codice_socio):
         r.persone_aggiornate.append(str(persona))

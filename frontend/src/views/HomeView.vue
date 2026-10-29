@@ -85,6 +85,17 @@ onMounted(async () => {
         </RouterLink>
       </div>
       <div v-if="sessione.capogruppo" class="col-12 md:col-6">
+        <RouterLink to="/iscrizioni-buonastrada" class="card card-body h-100 text-decoration-none">
+          <strong>
+            Iscrizioni da inserire in BuonaStrada
+            <span v-if="sessione.profilo.iscrizioni_da_inserire" class="badge theme-warning ms-1">{{
+              sessione.profilo.iscrizioni_da_inserire
+            }}</span>
+          </strong>
+          <span class="fg-2 small">Nuovi soci completi, da copiare in BuonaStrada</span>
+        </RouterLink>
+      </div>
+      <div v-if="sessione.capogruppo" class="col-12 md:col-6">
         <RouterLink to="/modulistica" class="card card-body h-100 text-decoration-none">
           <strong>Modulistica</strong>
           <span class="fg-2 small">Moduli da firmare per le iscrizioni</span>

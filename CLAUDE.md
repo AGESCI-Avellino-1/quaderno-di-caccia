@@ -250,7 +250,7 @@ verificare" in the analysis).
   `policy.campi_correggibili`; sex and place of birth count as identity (capigruppo
   only) because the codice fiscale derives from them `[da verificare]`. The daily
   summary to the capigruppo is `manage.py segnala_correzioni`, run by the host's cron.
-- Joining from the app (maintainer 2026-10-29, no DEC code yet): sign-up is open with an
+- Joining from the app (maintainer 2026-10-29, no DEC code yet; built): sign-up is open with an
   invitation (DEC-21) **or** a registration code (`apps/iscrizioni`, kept in the
   session until the allauth sign-up, `accounts.adapters`). Approval gives a provisional
   codice socio `9` + 9 digits (`anagrafica.servizi.nuovo_codice_provvisorio`); the import
@@ -262,7 +262,9 @@ verificare" in the analysis).
   upload blank PDFs (`ModuloVuoto`), the family uploads scans (`AllegatoIscrizione`,
   PDF/JPEG/PNG ≤ 10 MB checked on the first bytes, random file names, served only by the
   API with `Categoria.MODULI` in the access log), who approves verifies and ticks the
-  consents. Step 4 (list for BuonaStrada, XLSX/PDF, import closing) to do.
+  consents. Capigruppo list `/iscrizioni-buonastrada` (+ `.xlsx`/`.pdf`, openpyxl and
+  reportlab, never stored), "inserita"; the import (`_persona`) replaces the provisional
+  code and closes the registration (`iscrizioni.servizi.recepisci`).
 - Units (maintainer 2026-10-29): `nome` is the group's, may repeat, required except for
   the Co.Ca.; the BuonaStrada code (`Unita.codice`, CUN + progressive, e.g. O1, G1) is
   unique and shown next to it everywhere (`str(unita)`, `nomeUnita()` in the PWA).

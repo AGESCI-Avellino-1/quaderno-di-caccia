@@ -76,11 +76,15 @@ class StatoIscrizione(models.TextChoices):
     APPROVATA = "APPROVATA", "Accolta: dati e moduli da completare"
     SOSPESA = "SOSPESA", "Sospesa: scaduto il termine per completare"
     COMPLETATA = "COMPLETATA", "Completa: da inserire in BuonaStrada"
+    INSERITA = "INSERITA", "Inserita in BuonaStrada: in attesa dell'importazione"
+    RECEPITA = "RECEPITA", "In BuonaStrada, con il codice socio definitivo"
     RIFIUTATA = "RIFIUTATA", "Non accolta"
 
 
 # Accepted but not yet complete: the family still has something to do.
 DA_COMPLETARE = (StatoIscrizione.APPROVATA, StatoIscrizione.SOSPESA)
+# Accepted and not yet found in a BuonaStrada import.
+NON_RECEPITE = (*DA_COMPLETARE, StatoIscrizione.COMPLETATA, StatoIscrizione.INSERITA)
 
 # BuonaStrada fields asked to complete the registration [da verificare: which ones
 # BuonaStrada really requires to enter a member].
@@ -134,6 +138,12 @@ class RichiestaIscrizione(ModelloTracciato):
     moduli_verificati_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    # A capogruppo entered the member in BuonaStrada; the import then finds them.
+    inserita_il = models.DateTimeField(null=True, blank=True)
+    inserita_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    recepita_il = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "richiesta di iscrizione"

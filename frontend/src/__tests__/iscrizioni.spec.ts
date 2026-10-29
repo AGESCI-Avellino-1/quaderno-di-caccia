@@ -7,6 +7,7 @@ import CompletaIscrizione from '@/components/CompletaIscrizione.vue'
 import ModuliIscrizione from '@/components/ModuliIscrizione.vue'
 import { useSessioneStore } from '@/stores/sessione'
 import IscrizioneView from '@/views/IscrizioneView.vue'
+import IscrizioniBuonaStradaView from '@/views/IscrizioniBuonaStradaView.vue'
 import IscrizioniView from '@/views/IscrizioniView.vue'
 
 import { risposta } from './aiuti'
@@ -260,5 +261,44 @@ describe('ModuliIscrizione', () => {
     })
     expect(pannello.text()).toContain('Moduli verificati dai capi')
     expect(pannello.emitted('cambiata')).toHaveLength(1)
+  })
+})
+
+describe('IscrizioniBuonaStradaView', () => {
+  it('shows the data to copy, the exports and marks as entered', async () => {
+    let inserita = false
+    const chiamate = stubFetch((_url, metodo) => {
+      if (metodo === 'POST') {
+        inserita = true
+        return [200, { id: 4, stato: 'INSERITA' }]
+      }
+      return [
+        200,
+        [
+          {
+            id: 4,
+            colonne: ['Codice provvisorio', 'Cognome', 'Nome', 'Codice fiscale'],
+            valori: ['9000000001', 'Bianco', 'Marta', 'BNCMRA14A41A509Q'],
+            stato: inserita ? 'INSERITA' : 'COMPLETATA',
+          },
+        ],
+      ]
+    })
+    const vista = mount(IscrizioniBuonaStradaView)
+    await flushPromises()
+    expect(vista.text()).toContain('Bianco Marta')
+    expect(vista.text()).toContain('BNCMRA14A41A509Q')
+    const link = vista.findAll('a').map((a) => a.attributes('href'))
+    expect(link).toEqual([
+      '/api/v1/iscrizioni-buonastrada.xlsx',
+      '/api/v1/iscrizioni-buonastrada.pdf',
+    ])
+    await vista
+      .findAll('button')
+      .find((b) => b.text() === 'Segna come inserita')!
+      .trigger('click')
+    await flushPromises()
+    expect(chiamate[0]).toMatchObject({ url: '/api/v1/iscrizioni/4/inserita', metodo: 'POST' })
+    expect(vista.text()).toContain("inserita, in attesa dell'importazione")
   })
 })

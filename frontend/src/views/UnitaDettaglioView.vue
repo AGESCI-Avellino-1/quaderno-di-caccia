@@ -12,6 +12,7 @@ import {
   type UnitaDettaglio,
   type UnitaIn,
 } from '@/api/qdc'
+import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
@@ -148,6 +149,8 @@ const iniziale = (u: Unita): UnitaIn => ({
         @cambiato="carica()"
       />
     </section>
+
+    <CodiciIscrizione :unita="unita.id" />
 
     <section v-if="unita.tipo === 'REPARTO'" class="card card-body mb-5">
       <div class="d-flex align-items-center mb-3">

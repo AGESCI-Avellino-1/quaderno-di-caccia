@@ -54,7 +54,12 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <dl class="row">
         <template v-if="persona.codice_socio">
           <dt class="col-5 md:col-3">Codice socio</dt>
-          <dd class="col-7 md:col-9">{{ persona.codice_socio }}</dd>
+          <dd class="col-7 md:col-9">
+            {{ persona.codice_socio }}
+            <span v-if="persona.codice_provvisorio" class="badge theme-warning ms-1">
+              provvisorio, in attesa di BuonaStrada
+            </span>
+          </dd>
         </template>
         <template v-if="persona.data_nascita">
           <dt class="col-5 md:col-3">Data di nascita</dt>

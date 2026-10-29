@@ -3,7 +3,8 @@
 
 Codes such as DEC-31, R-05, PP-D belong in comments and docstrings only: never in the
 UI, API messages, emails, labels or command output (maintainer's rule). This checks
-Python string literals (docstrings excluded) and Vue/TS/HTML outside comments.
+Python string literals (docstrings and raw strings, i.e. regular expressions, excluded)
+and Vue/TS/HTML outside comments.
 
     python3 scripts/controlla-codici.py
 """
@@ -26,6 +27,9 @@ def _python(percorso: Path) -> list[str]:
     sorgente = percorso.read_text(encoding="utf-8")
     for tok in tokenize.generate_tokens(io.StringIO(sorgente).readline):
         if tok.type in (tokenize.STRING, getattr(tokenize, "FSTRING_START", -1)):
+            if "r" in tok.string.split(tok.string.lstrip("rRbBuUfF")[:1])[0].lower():
+                precedente = tok.type
+                continue  # raw strings are regular expressions, never shown to users
             docstring = precedente in APERTURE and tok.type == tokenize.STRING
             if not docstring and CODICE.search(tok.line if tok.type != tokenize.STRING else tok.string):
                 trovati.append(f"{percorso.relative_to(RADICE)}:{tok.start[0]}")

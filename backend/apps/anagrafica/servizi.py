@@ -8,6 +8,7 @@ from django.utils import timezone
 from .models import (
     CAMPI_BUONASTRADA,
     STATI_APERTI,
+    ContatoreCodiceProvvisorio,
     CorrezioneAnagrafica,
     Persona,
     StatoCorrezione,
@@ -22,6 +23,38 @@ def fratelli(persona: Persona) -> QuerySet[Persona]:
     """
     tutori = persona.tutori.values_list("tutore_id", flat=True)
     return Persona.objects.filter(tutori__tutore_id__in=tutori).exclude(pk=persona.pk).distinct()
+
+
+# --- Provisional codice socio (maintainer, 2026-10-29) ---------------------------------
+# A member who joins from the app has no codice socio until the group enters them in
+# BuonaStrada: they get 9 followed by a zero-padded progressive, 10 digits in all.
+# Real codes have about 7 digits, so the two never clash; the import replaces the
+# provisional code with the real one (found by codice fiscale): BuonaStrada wins.
+
+
+def codice_fiscale_valido(codice: str) -> bool:
+    """Format only (16 characters, letters and digits in their places): BuonaStrada
+    checks it for real when the member is entered."""
+    import re
+
+    return bool(
+        re.fullmatch(
+            r"[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]",
+            codice or "",
+        )
+    )
+
+
+def e_codice_provvisorio(codice: str | None) -> bool:
+    return bool(codice) and len(codice) == 10 and codice.startswith("9") and codice.isdigit()
+
+
+@transaction.atomic
+def nuovo_codice_provvisorio() -> str:
+    contatore, _ = ContatoreCodiceProvvisorio.objects.select_for_update().get_or_create(pk=1)
+    contatore.ultimo += 1
+    contatore.save(update_fields=["ultimo"])
+    return f"9{contatore.ultimo:09d}"
 
 
 # --- Corrections to BuonaStrada data (DEC-31) ---------------------------------------

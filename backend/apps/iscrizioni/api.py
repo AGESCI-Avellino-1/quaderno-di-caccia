@@ -1,0 +1,290 @@
+"""Joining from the app: codes, requests, approval (maintainer, 2026-10-29)."""
+
+import io
+from dataclasses import asdict
+from datetime import date, datetime
+
+import segno
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from ninja import Router, Schema, Status
+from ninja.errors import HttpError
+from ninja.throttling import AnonRateThrottle, AuthRateThrottle
+
+from apps.organizzazione.models import Unita
+from apps.permessi import policy
+
+from . import servizi
+from .models import (
+    CodiceIscrizione,
+    RichiestaIscrizione,
+    StatoIscrizione,
+    TipoCodice,
+    normalizza_codice,
+)
+
+router = Router(tags=["iscrizioni"])
+
+# Codes can be guessed only by trying: few attempts per hour from the same address.
+LIMITI = [AnonRateThrottle("30/h"), AuthRateThrottle("60/h")]
+CHIAVE_SESSIONE_ISCRIZIONE = servizi.CHIAVE_SESSIONE_ISCRIZIONE
+
+
+def _salva(oggetto) -> None:
+    try:
+        oggetto.full_clean()
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    oggetto.save()
+
+
+def _errore(funzione, *args):
+    try:
+        return funzione(*args)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+
+
+# --- Codes (capi) ---------------------------------------------------------------------
+
+
+class CodiceOut(Schema):
+    id: int
+    codice: str
+    link: str
+    tipo: str
+    tipo_nome: str
+    scadenza: date
+    usi: int
+    valido: bool
+    creato_il: datetime
+
+
+class CodiceIn(Schema):
+    tipo: TipoCodice
+    scadenza: date
+
+
+class CodiciUnita(Schema):
+    puo_creare: bool
+    codici: list[CodiceOut]
+
+
+def _link(codice: CodiceIscrizione) -> str:
+    return f"{settings.FRONTEND_URL}/iscrizione/{codice.codice}"
+
+
+def _codice_out(c: CodiceIscrizione) -> dict:
+    return {
+        "id": c.pk,
+        "codice": c.codice,
+        "link": _link(c),
+        "tipo": c.tipo,
+        "tipo_nome": c.get_tipo_display(),
+        "scadenza": c.scadenza,
+        "usi": c.usi,
+        "valido": c.valido,
+        "creato_il": c.creato_il,
+    }
+
+
+@router.get("/unita/{unita_id}/codici-iscrizione", response=CodiciUnita)
+def codici_unita(request, unita_id: int):
+    unita = get_object_or_404(Unita, pk=unita_id)
+    if not policy.puo_creare_codici(request.auth, unita):
+        return {"puo_creare": False, "codici": []}
+    codici = CodiceIscrizione.objects.filter(unita=unita).select_related("unita")[:50]
+    return {"puo_creare": True, "codici": [_codice_out(c) for c in codici]}
+
+
+@router.post("/unita/{unita_id}/codici-iscrizione", response={201: CodiceOut})
+def crea_codice(request, unita_id: int, dati: CodiceIn):
+    unita = get_object_or_404(Unita, pk=unita_id)
+    if not policy.puo_creare_codici(request.auth, unita):
+        raise HttpError(403, "Non puoi creare codici di iscrizione per questa unità.")
+    codice = CodiceIscrizione(
+        unita=unita, tipo=dati.tipo, scadenza=dati.scadenza, creato_da=request.auth
+    )
+    _salva(codice)
+    return Status(201, _codice_out(codice))
+
+
+def _codice_gestibile(request, codice_id: int) -> CodiceIscrizione:
+    codice = get_object_or_404(CodiceIscrizione.objects.select_related("unita"), pk=codice_id)
+    if not policy.puo_creare_codici(request.auth, codice.unita):
+        raise HttpError(404, "Codice non trovato.")
+    return codice
+
+
+@router.post("/codici-iscrizione/{codice_id}/disattiva", response=CodiceOut)
+def disattiva_codice(request, codice_id: int):
+    codice = _codice_gestibile(request, codice_id)
+    codice.attivo = False
+    codice.save(update_fields=["attivo", "aggiornato_il"])
+    return _codice_out(codice)
+
+
+@router.get("/codici-iscrizione/{codice_id}/qr.svg")
+def qr_codice(request, codice_id: int):
+    """The QR code of the link, to print or show on a phone."""
+    codice = _codice_gestibile(request, codice_id)
+    svg = io.BytesIO()
+    segno.make(_link(codice), error="m").save(svg, kind="svg", scale=8, border=2, xmldecl=False)
+    return HttpResponse(svg.getvalue(), content_type="image/svg+xml")
+
+
+# --- Using a code (public, then the account) -----------------------------------------
+
+
+class InfoCodice(Schema):
+    codice: str
+    unita: str
+    per_capi: bool
+
+
+class DatiIscrizioneIn(Schema):
+    nome: str
+    cognome: str
+    data_nascita: date
+    codice_fiscale: str
+    email: str = ""
+    genitore_nome: str = ""
+    genitore_cognome: str = ""
+    genitore_codice_fiscale: str = ""
+
+
+class EsitoRichiesta(Schema):
+    # True: the request waits in this browser session until the account is created.
+    serve_account: bool
+    richiesta_id: int | None = None
+
+
+def _codice_valido(testo: str) -> CodiceIscrizione:
+    codice = (
+        CodiceIscrizione.objects.select_related("unita")
+        .filter(codice=normalizza_codice(testo))
+        .first()
+    )
+    if codice is None or not codice.valido:
+        raise HttpError(404, "Codice di iscrizione non valido o scaduto.")
+    return codice
+
+
+@router.get("/iscrizione/{codice}", response=InfoCodice, auth=None, throttle=LIMITI)
+def info_codice(request, codice: str):
+    c = _codice_valido(codice)
+    return {"codice": c.codice, "unita": str(c.unita), "per_capi": c.per_capi}
+
+
+@router.post("/iscrizione/{codice}", response=EsitoRichiesta, auth=None, throttle=LIMITI)
+def chiedi_iscrizione(request, codice: str, dati: DatiIscrizioneIn):
+    """With an account: the request is created now. Without: it is kept in this browser
+    session and created when the account is (accounts.adapters)."""
+    c = _codice_valido(codice)
+    valori = servizi.DatiIscrizione(**dati.dict())
+    utente = request.user
+    if getattr(utente, "is_authenticated", False):
+        richiesta = _errore(servizi.crea_richiesta, c, valori, utente)
+        return {"serve_account": False, "richiesta_id": richiesta.pk}
+    _errore(servizi.prepara, c, valori)
+    dati_sessione = asdict(valori.pulisci())
+    dati_sessione["data_nascita"] = valori.data_nascita.isoformat()
+    request.session[CHIAVE_SESSIONE_ISCRIZIONE] = {"codice": c.codice, "dati": dati_sessione}
+    return {"serve_account": True}
+
+
+# --- Requests -------------------------------------------------------------------------
+
+
+class RichiestaOut(Schema):
+    id: int
+    unita: str
+    unita_id: int
+    stato: str
+    stato_nome: str
+    nome: str
+    cognome: str
+    data_nascita: date
+    codice_fiscale: str
+    email: str
+    per_minore: bool
+    genitore: str | None
+    richiesta_da: str | None
+    creata_il: datetime
+    scadenza_completamento: date | None
+    motivo_rifiuto: str
+    persona_id: int | None
+
+
+class Decisione(Schema):
+    scadenza_completamento: date | None = None
+    motivo: str = ""
+
+
+def _richiesta_out(r: RichiestaIscrizione) -> dict:
+    return {
+        "id": r.pk,
+        "unita": str(r.unita),
+        "unita_id": r.unita_id,
+        "stato": r.stato,
+        "stato_nome": r.get_stato_display(),
+        "nome": r.nome,
+        "cognome": r.cognome,
+        "data_nascita": r.data_nascita,
+        "codice_fiscale": r.codice_fiscale,
+        "email": r.email,
+        "per_minore": r.per_minore,
+        "genitore": f"{r.genitore_nome} {r.genitore_cognome}".strip() or None,
+        "richiesta_da": r.utente.email if r.utente else None,
+        "creata_il": r.creato_il,
+        "scadenza_completamento": r.scadenza_completamento,
+        "motivo_rifiuto": r.motivo_rifiuto,
+        "persona_id": r.persona_id,
+    }
+
+
+@router.get("/mie-iscrizioni", response=list[RichiestaOut])
+def mie_iscrizioni(request):
+    """The requests made from this account (the only thing a waiting account sees)."""
+    richieste = RichiestaIscrizione.objects.filter(utente=request.auth).select_related(
+        "unita", "utente"
+    )
+    return [_richiesta_out(r) for r in richieste]
+
+
+@router.get("/iscrizioni", response=list[RichiestaOut])
+def richieste_da_decidere(request, tutte: bool = False):
+    unita = policy.unita_da_approvare(request.auth)
+    richieste = RichiestaIscrizione.objects.filter(unita__in=unita).select_related(
+        "unita", "utente"
+    )
+    if not tutte:
+        richieste = richieste.filter(stato=StatoIscrizione.IN_ATTESA)
+    return [_richiesta_out(r) for r in richieste[:200]]
+
+
+def _richiesta_decidibile(request, richiesta_id: int) -> RichiestaIscrizione:
+    richiesta = get_object_or_404(
+        RichiestaIscrizione.objects.select_related("unita", "utente"), pk=richiesta_id
+    )
+    if not policy.puo_approvare_iscrizione(request.auth, richiesta.unita):
+        raise HttpError(404, "Richiesta non trovata.")
+    return richiesta
+
+
+@router.post("/iscrizioni/{richiesta_id}/approva", response=RichiestaOut)
+def approva(request, richiesta_id: int, dati: Decisione):
+    richiesta = _richiesta_decidibile(request, richiesta_id)
+    if dati.scadenza_completamento is None:
+        raise HttpError(400, "Indica entro quando completare dati e moduli.")
+    _errore(servizi.approva, richiesta, request.auth, dati.scadenza_completamento)
+    return _richiesta_out(richiesta)
+
+
+@router.post("/iscrizioni/{richiesta_id}/rifiuta", response=RichiestaOut)
+def rifiuta(request, richiesta_id: int, dati: Decisione):
+    richiesta = _richiesta_decidibile(request, richiesta_id)
+    _errore(servizi.rifiuta, richiesta, request.auth, dati.motivo)
+    return _richiesta_out(richiesta)

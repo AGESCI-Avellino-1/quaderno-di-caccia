@@ -11,6 +11,7 @@ from apps.core.api import router as core_router
 from apps.diritti.api import router as diritti_router
 from apps.dispositivi.api import router as dispositivi_router
 from apps.importazione.api import router as importazione_router
+from apps.iscrizioni.api import router as iscrizioni_router
 from apps.organizzazione.api import router as organizzazione_router
 from apps.sanitaria.api import router as sanitaria_router
 
@@ -33,3 +34,4 @@ api.add_router("/", importazione_router)
 api.add_router("/", dispositivi_router)
 api.add_router("/", sanitaria_router)
 api.add_router("/", diritti_router)
+api.add_router("/", iscrizioni_router)

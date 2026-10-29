@@ -18,7 +18,7 @@ from apps.anagrafica.models import (
     RuoloAppartenenza,
     VisibilitaGenitori,
 )
-from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia, Unita
+from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia, TipoUnita, Unita
 
 
 class LivelloAccesso(StrEnum):
@@ -55,6 +55,21 @@ def e_capo(user, al_giorno: date | None = None) -> bool:
         .filter(persona=persona, ruolo=RuoloAppartenenza.CAPO)
         .exists()
     )
+
+
+def e_capo_in_attesa(user) -> bool:
+    """A capo who joined from the app and is not yet in BuonaStrada (provisional codice
+    socio): sees the organisation and the names, never other members' sensitive data
+    (maintainer, 2026-10-29)."""
+    from apps.anagrafica.servizi import e_codice_provvisorio
+
+    persona = persona_di(user)
+    return persona is not None and e_codice_provvisorio(persona.codice_socio) and e_capo(user)
+
+
+def e_capo_censito(user) -> bool:
+    """A capo who may see sensitive data: in BuonaStrada."""
+    return e_capo(user) and not e_capo_in_attesa(user)
 
 
 def _ha_incarico(user, ruoli: set[RuoloIncarico], **filtri) -> bool:
@@ -153,10 +168,22 @@ def genitori_vedono(persona: Persona, categoria: str) -> bool:
     return scelta is None or getattr(scelta, categoria)
 
 
+def _livello_personale(user, persona: Persona) -> LivelloAccesso:
+    """The access level ignoring the capo role: own data, children."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return LivelloAccesso.PROPRIO
+    if tutelati(user).filter(pk=persona.pk).exists():
+        return LivelloAccesso.TUTORE
+    return LivelloAccesso.NESSUNO
+
+
 def _vede(user, persona: Persona, categoria: str) -> bool:
     livello = livello_accesso(user, persona)
     if livello == LivelloAccesso.COMPLETO:
-        return True
+        if not e_capo_in_attesa(user):
+            return True
+        livello = _livello_personale(user, persona)  # a capo in attesa: as a parent
     if livello == LivelloAccesso.TUTORE:
         return genitori_vedono(persona, categoria)
     return livello == LivelloAccesso.PROPRIO and not persona.e_minorenne()
@@ -246,6 +273,8 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
 
 
 def _staff_della_persona(user, persona: Persona) -> bool:
+    if e_capo_in_attesa(user):
+        return False  # sensitive data and corrections wait for BuonaStrada
     unita = Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
     return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita_id__in=unita)
 
@@ -309,13 +338,13 @@ def puo_gestire_correzioni(user) -> bool:
 
 
 def puo_scaricare_campo(user) -> bool:
-    """Offline download of a unit's essentials: capi only (DEC-95)."""
-    return e_capo(user)
+    """Offline download of a unit's essentials: capi only (DEC-95), once in BuonaStrada."""
+    return e_capo_censito(user)
 
 
 def puo_vedere_registro_accessi(user) -> bool:
     """The log of reads of sensitive data is for the Co.Ca. (DEC-101)."""
-    return e_capo(user)
+    return e_capo_censito(user)
 
 
 # --- Devices (DEC-23, DEC-97) -------------------------------------------------------------
@@ -357,7 +386,7 @@ def puo_gestire_squadriglie(user, unita: Unita) -> bool:
 def puo_vedere_deroghe_squadriglia(user) -> bool:
     """Exceptions to single-sex patrols (special-category data): the Co.Ca. only, never
     ragazzi, CSQ or parents. Decided with the maintainer on 2026-10-28."""
-    return e_capo(user)
+    return e_capo_censito(user)
 
 
 def puo_gestire_deroghe_squadriglia(user) -> bool:
@@ -385,3 +414,36 @@ def puo_nominare(
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
         return squadriglia is not None and e_staff(user, squadriglia.unita)  # DEC-14
     return False
+
+
+# --- Joining from the app (maintainer, 2026-10-29) --------------------------------------
+
+
+def puo_creare_codici(user, unita: Unita) -> bool:
+    """Registration codes: the unit staff for their unit, the capigruppo for any; for
+    the Co.Ca. only the capigruppo."""
+    if e_capogruppo(user):
+        return True
+    if unita.tipo == TipoUnita.COMUNITA_CAPI or e_capo_in_attesa(user):
+        return False
+    return e_staff(user, unita)
+
+
+def puo_approvare_iscrizione(user, unita: Unita) -> bool:
+    """Ragazzi: the unit staff or the capigruppo; capi (Co.Ca.): the capigruppo."""
+    return puo_creare_codici(user, unita)
+
+
+def unita_da_approvare(user) -> QuerySet[Unita]:
+    """Units whose registration requests the user decides."""
+    if e_capogruppo(user):
+        return Unita.objects.all()
+    if e_capo_in_attesa(user):
+        return Unita.objects.none()
+    persona = persona_di(user)
+    if persona is None:
+        return Unita.objects.none()
+    ids = Incarico.objects.attivi().filter(
+        persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}
+    )
+    return Unita.objects.filter(pk__in=ids.values("unita_id")).exclude(tipo=TipoUnita.COMUNITA_CAPI)

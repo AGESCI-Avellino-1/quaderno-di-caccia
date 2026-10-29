@@ -5,6 +5,7 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
+from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.permessi import policy
 
 from .adapters import CHIAVE_SESSIONE_INVITO
@@ -32,6 +33,10 @@ class Profilo(Schema):
     squadriglie_guidate: list[int]
     # Patrols the user is a member of (shows "La mia squadriglia").
     squadriglie: list[int]
+    # Joining from the app: own requests, and requests this user decides (waiting).
+    mie_iscrizioni: int
+    iscrizioni_da_decidere: int
+    capo_in_attesa: bool
     tutelati: list[PersonaBreve]
 
 
@@ -50,6 +55,11 @@ def profilo(request):
         "amministratore_tecnico": policy.e_amministratore(user),
         "squadriglie_guidate": list(policy.squadriglie_guidate(user).values_list("id", flat=True)),
         "squadriglie": list(policy.squadriglie_di(user).values_list("id", flat=True)),
+        "mie_iscrizioni": RichiestaIscrizione.objects.filter(utente=user).count(),
+        "iscrizioni_da_decidere": RichiestaIscrizione.objects.filter(
+            unita__in=policy.unita_da_approvare(user), stato=StatoIscrizione.IN_ATTESA
+        ).count(),
+        "capo_in_attesa": policy.e_capo_in_attesa(user),
         "tutelati": list(policy.tutelati(user)),
     }
 

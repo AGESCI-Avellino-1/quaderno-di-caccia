@@ -94,6 +94,25 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Joining from the app with a registration code: reachable without an account.
+      path: '/iscrizione/:codice',
+      name: 'iscrizione',
+      component: () => import('@/views/IscrizioneView.vue'),
+      meta: { pubblica: true },
+      props: true,
+    },
+    {
+      path: '/mia-iscrizione',
+      name: 'mia-iscrizione',
+      component: () => import('@/views/MiaIscrizioneView.vue'),
+    },
+    {
+      // Unit staff and capigruppo: the API lists only what this user decides.
+      path: '/iscrizioni',
+      name: 'iscrizioni',
+      component: () => import('@/views/IscrizioniView.vue'),
+    },
+    {
       // Capigruppo: the API decides (DEC-102).
       path: '/diritti',
       name: 'diritti',

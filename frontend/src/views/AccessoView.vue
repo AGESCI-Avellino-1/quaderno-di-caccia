@@ -12,6 +12,9 @@ type Modo = 'password' | 'codice'
 
 const route = useRoute()
 const router = useRouter()
+const codiceIscrizione = ref('')
+const usaCodice = () =>
+  router.push({ name: 'iscrizione', params: { codice: codiceIscrizione.value.trim() } })
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 
@@ -165,7 +168,20 @@ const provider = (nome: 'google' | 'apple') =>
           Accedi con Apple
         </button>
       </div>
-      <p class="small fg-2 mt-5">Non hai un account? Ti serve un invito dai capi del tuo gruppo.</p>
+      <p class="small fg-2 mt-5 mb-1">
+        Non hai un account? Ti serve un invito, oppure un codice di iscrizione dai capi.
+      </p>
+      <form class="d-flex gap-3" @submit.prevent="usaCodice">
+        <input
+          v-model="codiceIscrizione"
+          class="form-control form-control-sm"
+          aria-label="Codice di iscrizione"
+          placeholder="Codice di iscrizione"
+          autocapitalize="characters"
+          required
+        />
+        <button type="submit" class="btn btn-sm btn-outline theme-primary">Usa</button>
+      </form>
     </template>
   </section>
 </template>

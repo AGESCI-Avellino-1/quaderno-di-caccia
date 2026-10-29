@@ -475,3 +475,16 @@ class VisibilitaGenitori(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Visibilità ai genitori di {self.persona}"
+
+
+class ContatoreCodiceProvvisorio(models.Model):
+    """Last provisional codice socio given to a member joining from the app, before
+    BuonaStrada assigns the real one (maintainer, 2026-10-29). A single row."""
+
+    ultimo = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "contatore dei codici socio provvisori"
+
+    def __str__(self) -> str:
+        return f"Ultimo codice provvisorio: {self.ultimo}"

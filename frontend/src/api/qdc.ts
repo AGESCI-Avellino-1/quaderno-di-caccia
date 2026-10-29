@@ -27,6 +27,11 @@ export interface Profilo {
   squadriglie_guidate: number[]
   /** Patrols the user is a member of. */
   squadriglie: number[]
+  /** Joining from the app: own requests, and waiting requests this user decides. */
+  mie_iscrizioni: number
+  iscrizioni_da_decidere: number
+  /** A capo not yet in BuonaStrada: no sensitive data of other members. */
+  capo_in_attesa: boolean
   tutelati: PersonaBreve[]
 }
 
@@ -38,6 +43,8 @@ export interface PersonaDettaglio extends PersonaBreve {
   livello_accesso: 'squadriglia' | 'tutore' | 'proprio' | 'completo'
   data_nascita: string | null
   codice_socio: string | null
+  /** Joined from the app, not yet in BuonaStrada. */
+  codice_provvisorio?: boolean
   email: string | null
   cellulare: string | null
   indirizzo: string | null
@@ -278,6 +285,62 @@ export interface ImpostazioneTelefono {
   genitori: Scelta[]
 }
 
+// --- Joining from the app (registration codes) ----------------------------------------
+
+export interface CodiceIscrizione {
+  id: number
+  codice: string
+  /** Link to share; the QR code encodes it. */
+  link: string
+  tipo: 'UNITA' | 'PERSONALE'
+  tipo_nome: string
+  scadenza: string
+  usi: number
+  valido: boolean
+  creato_il: string
+}
+
+export interface InfoCodice {
+  codice: string
+  unita: string
+  per_capi: boolean
+}
+
+export interface DatiIscrizione {
+  nome: string
+  cognome: string
+  data_nascita: string
+  codice_fiscale: string
+  email: string
+  genitore_nome: string
+  genitore_cognome: string
+  genitore_codice_fiscale: string
+}
+
+export type StatoIscrizione = 'IN_ATTESA' | 'APPROVATA' | 'RIFIUTATA'
+
+export interface RichiestaIscrizione {
+  id: number
+  unita: string
+  unita_id: number
+  stato: StatoIscrizione
+  stato_nome: string
+  nome: string
+  cognome: string
+  data_nascita: string
+  codice_fiscale: string
+  email: string
+  per_minore: boolean
+  genitore: string | null
+  richiesta_da: string | null
+  creata_il: string
+  scadenza_completamento: string | null
+  motivo_rifiuto: string
+  persona_id: number | null
+}
+
+export const qrCodice = (id: number) => `/api/v1/codici-iscrizione/${id}/qr.svg`
+
 // --- What the parents of an adult see (DEC-26) ----------------------------------------
 
 export interface SceltaVisibilita {
@@ -505,6 +568,37 @@ export const api = {
     richiesta<ImpostazioneTelefono>(`/api/v1/persone/${persona}/telefono-squadriglia`, {
       metodo: 'PUT',
       corpo: dati,
+    }),
+  codiciIscrizione: (unita: number) =>
+    richiesta<{ puo_creare: boolean; codici: CodiceIscrizione[] }>(
+      `/api/v1/unita/${unita}/codici-iscrizione`,
+    ),
+  creaCodiceIscrizione: (unita: number, dati: { tipo: string; scadenza: string }) =>
+    richiesta<CodiceIscrizione>(`/api/v1/unita/${unita}/codici-iscrizione`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  disattivaCodice: (id: number) =>
+    richiesta<CodiceIscrizione>(`/api/v1/codici-iscrizione/${id}/disattiva`, { metodo: 'POST' }),
+  infoCodice: (codice: string) =>
+    richiesta<InfoCodice>(`/api/v1/iscrizione/${encodeURIComponent(codice)}`),
+  chiediIscrizione: (codice: string, dati: DatiIscrizione) =>
+    richiesta<{ serve_account: boolean; richiesta_id: number | null }>(
+      `/api/v1/iscrizione/${encodeURIComponent(codice)}`,
+      { metodo: 'POST', corpo: dati },
+    ),
+  mieIscrizioni: () => richiesta<RichiestaIscrizione[]>('/api/v1/mie-iscrizioni'),
+  iscrizioniDaDecidere: (tutte = false) =>
+    richiesta<RichiestaIscrizione[]>(`/api/v1/iscrizioni${tutte ? '?tutte=true' : ''}`),
+  approvaIscrizione: (id: number, scadenza: string) =>
+    richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${id}/approva`, {
+      metodo: 'POST',
+      corpo: { scadenza_completamento: scadenza },
+    }),
+  rifiutaIscrizione: (id: number, motivo: string) =>
+    richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${id}/rifiuta`, {
+      metodo: 'POST',
+      corpo: { motivo },
     }),
   visibilitaGenitori: (persona: number) =>
     richiesta<VisibilitaGenitori>(`/api/v1/persone/${persona}/visibilita-genitori`),

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.dispositivi",
     "apps.sanitaria",
     "apps.diritti",
+    "apps.iscrizioni",
 ]
 
 MIDDLEWARE = [

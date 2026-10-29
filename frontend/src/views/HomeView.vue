@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { api } from '@/api/qdc'
 import { useSessioneStore } from '@/stores/sessione'
@@ -8,7 +8,13 @@ import { useSessioneStore } from '@/stores/sessione'
 const sessione = useSessioneStore()
 // Capigruppo: corrections waiting to be forwarded (DEC-31). Online only; no count offline.
 const daInoltrare = ref<number | null>(null)
+const router = useRouter()
 onMounted(async () => {
+  // An account waiting for approval has nothing else to see.
+  if (!sessione.profilo?.persona && sessione.profilo?.mie_iscrizioni) {
+    await router.replace('/mia-iscrizione')
+    return
+  }
   if (!sessione.capogruppo) return
   try {
     daInoltrare.value = (await api.correzioni()).filter((c) => c.stato === 'IN_ATTESA').length
@@ -21,6 +27,12 @@ onMounted(async () => {
 <template>
   <section v-if="sessione.profilo">
     <h1 class="h4 mb-5">Ciao {{ sessione.profilo.persona?.nome ?? sessione.profilo.email }}</h1>
+    <div v-if="sessione.profilo.capo_in_attesa" class="alert theme-info small" role="status">
+      <div>
+        Sei iscritto dall'app e non ancora in BuonaStrada: fino ad allora non vedi i contatti, i
+        dati sanitari e gli altri dati delicati dei soci.
+      </div>
+    </div>
     <div class="row g-5">
       <div v-if="sessione.capo" class="col-12 md:col-6">
         <RouterLink to="/campo" class="card card-body h-100 text-decoration-none">
@@ -53,6 +65,23 @@ onMounted(async () => {
             <span v-if="daInoltrare" class="badge theme-warning ms-1">{{ daInoltrare }}</span>
           </strong>
           <span class="fg-2 small">Dati corretti nell'app, da mandare alla segreteria</span>
+        </RouterLink>
+      </div>
+      <div v-if="sessione.profilo.iscrizioni_da_decidere" class="col-12 md:col-6">
+        <RouterLink to="/iscrizioni" class="card card-body h-100 text-decoration-none">
+          <strong>
+            Richieste di iscrizione
+            <span class="badge theme-warning ms-1">{{
+              sessione.profilo.iscrizioni_da_decidere
+            }}</span>
+          </strong>
+          <span class="fg-2 small">Nuovi soci da accogliere</span>
+        </RouterLink>
+      </div>
+      <div v-if="sessione.profilo.mie_iscrizioni" class="col-12 md:col-6">
+        <RouterLink to="/mia-iscrizione" class="card card-body h-100 text-decoration-none">
+          <strong>La mia iscrizione</strong>
+          <span class="fg-2 small">Stato delle richieste, dati e moduli da completare</span>
         </RouterLink>
       </div>
       <div v-if="sessione.capogruppo" class="col-12 md:col-6">

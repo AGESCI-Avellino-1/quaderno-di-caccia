@@ -43,12 +43,20 @@ def collega_invito(request, user) -> None:
 
 class AccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request) -> bool:
-        return invito_in_sessione(request) is not None
+        """An invitation, or a registration code from the app (maintainer, 2026-10-29)."""
+        from apps.iscrizioni.servizi import in_sessione
+
+        return invito_in_sessione(request) is not None or in_sessione(request) is not None
 
     def save_user(self, request, user, form, commit=True):
+        from apps.iscrizioni.servizi import richiesta_da_sessione
+
         user = super().save_user(request, user, form, commit=commit)
         if commit:
-            collega_invito(request, user)
+            if invito_in_sessione(request) is not None:
+                collega_invito(request, user)
+            else:
+                richiesta_da_sessione(request, user)
         return user
 
 

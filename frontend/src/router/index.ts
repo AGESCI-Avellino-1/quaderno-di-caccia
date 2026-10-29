@@ -198,7 +198,12 @@ router.beforeEach(async (verso) => {
   if (verso.meta.pubblica) return true
   if (!sessione.autenticato) return { name: 'accesso', query: { prossima: verso.fullPath } }
   // First login on this device: choose PIN or "solo online" before anything else.
-  if (cassaforte.stato.value === 'da_configurare' && verso.name !== 'protezione') {
+  // An account still waiting for its registration has no data to protect yet.
+  if (
+    cassaforte.stato.value === 'da_configurare' &&
+    sessione.profilo?.persona &&
+    verso.name !== 'protezione'
+  ) {
     return { name: 'protezione', query: { prossima: verso.fullPath } }
   }
   if (verso.meta.richiede === 'capo' && !sessione.capo) return { name: 'home' }

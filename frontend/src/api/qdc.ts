@@ -30,6 +30,8 @@ export interface Profilo {
   /** Joining from the app: own requests, and waiting requests this user decides. */
   mie_iscrizioni: number
   iscrizioni_da_decidere: number
+  /** Accepted registrations whose signed forms wait for this user's check. */
+  iscrizioni_da_verificare?: number
   /** Capigruppo: completed registrations to enter in BuonaStrada. */
   iscrizioni_da_inserire?: number
   /** A capo not yet in BuonaStrada: no sensitive data of other members. */

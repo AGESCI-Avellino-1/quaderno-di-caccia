@@ -592,3 +592,10 @@ def test_l_importazione_sostituisce_il_codice_provvisorio(completata, genitore_n
     assert figlia.codice_socio == "9000077"
     assert completata.stato == StatoIscrizione.RECEPITA
     assert riepilogo.iscrizioni_recepite == [f"Bianco Marta: {provvisorio} → 9000077"]
+
+
+def test_profilo_conta_i_moduli_da_verificare(approvata, genitore_nuovo, capo):
+    assert _client(capo).get("/api/v1/io").json()["iscrizioni_da_verificare"] == 0
+    _carica(_client(genitore_nuovo), approvata)
+    _carica(_client(genitore_nuovo), approvata)  # two scans, one registration
+    assert _client(capo).get("/api/v1/io").json()["iscrizioni_da_verificare"] == 1

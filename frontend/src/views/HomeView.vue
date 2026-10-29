@@ -10,6 +10,8 @@ const sessione = useSessioneStore()
 const daInoltrare = ref<number | null>(null)
 const router = useRouter()
 onMounted(async () => {
+  // The counters on the cards change while the app is open: read the profile again.
+  if (navigator.onLine) await sessione.carica()
   // An account waiting for approval has nothing else to see.
   if (!sessione.profilo?.persona && sessione.profilo?.mie_iscrizioni) {
     await router.replace('/mia-iscrizione')
@@ -67,15 +69,22 @@ onMounted(async () => {
           <span class="fg-2 small">Dati corretti nell'app, da mandare alla segreteria</span>
         </RouterLink>
       </div>
-      <div v-if="sessione.profilo.iscrizioni_da_decidere" class="col-12 md:col-6">
+      <div
+        v-if="sessione.profilo.iscrizioni_da_decidere || sessione.profilo.iscrizioni_da_verificare"
+        class="col-12 md:col-6"
+      >
         <RouterLink to="/iscrizioni" class="card card-body h-100 text-decoration-none">
           <strong>
             Richieste di iscrizione
-            <span class="badge theme-warning ms-1">{{
+            <span v-if="sessione.profilo.iscrizioni_da_decidere" class="badge theme-warning ms-1">{{
               sessione.profilo.iscrizioni_da_decidere
             }}</span>
           </strong>
-          <span class="fg-2 small">Nuovi soci da accogliere</span>
+          <span class="fg-2 small">
+            Nuovi soci da accogliere<template v-if="sessione.profilo.iscrizioni_da_verificare"
+              >, moduli da verificare ({{ sessione.profilo.iscrizioni_da_verificare }})</template
+            >
+          </span>
         </RouterLink>
       </div>
       <div v-if="sessione.profilo.mie_iscrizioni" class="col-12 md:col-6">

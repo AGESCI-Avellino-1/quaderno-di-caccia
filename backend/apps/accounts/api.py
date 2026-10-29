@@ -5,7 +5,7 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
-from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
+from apps.iscrizioni.models import DA_COMPLETARE, RichiestaIscrizione, StatoIscrizione
 from apps.permessi import policy
 
 from .adapters import CHIAVE_SESSIONE_INVITO
@@ -36,6 +36,8 @@ class Profilo(Schema):
     # Joining from the app: own requests, and requests this user decides (waiting).
     mie_iscrizioni: int
     iscrizioni_da_decidere: int
+    # Accepted registrations with signed forms waiting for this user's check.
+    iscrizioni_da_verificare: int
     # Capigruppo: completed registrations to enter in BuonaStrada.
     iscrizioni_da_inserire: int
     capo_in_attesa: bool
@@ -61,6 +63,14 @@ def profilo(request):
         "iscrizioni_da_decidere": RichiestaIscrizione.objects.filter(
             unita__in=policy.unita_da_approvare(user), stato=StatoIscrizione.IN_ATTESA
         ).count(),
+        "iscrizioni_da_verificare": RichiestaIscrizione.objects.filter(
+            unita__in=policy.unita_da_approvare(user),
+            stato__in=DA_COMPLETARE,
+            moduli_verificati_il__isnull=True,
+            allegati__isnull=False,
+        )
+        .distinct()
+        .count(),
         "iscrizioni_da_inserire": (
             RichiestaIscrizione.objects.filter(stato=StatoIscrizione.COMPLETATA).count()
             if policy.puo_gestire_iscrizioni_buonastrada(user)

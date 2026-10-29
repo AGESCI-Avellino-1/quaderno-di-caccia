@@ -296,6 +296,12 @@ def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
     return e_capogruppo(user) or _staff_della_persona(user, persona)
 
 
+def puo_gestire_diritti(user) -> bool:
+    """Requests from data subjects, the full export and erasure: the capigruppo
+    (DEC-98, DEC-102; maintainer 2026-10-29)."""
+    return e_capogruppo(user)
+
+
 def puo_gestire_correzioni(user) -> bool:
     """The capigruppo forward corrections to the regional office or discard them
     (DEC-31)."""

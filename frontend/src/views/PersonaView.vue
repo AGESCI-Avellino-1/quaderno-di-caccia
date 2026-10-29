@@ -11,8 +11,10 @@ import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
 import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
+import { useSessioneStore } from '@/stores/sessione'
 
 const props = defineProps<{ id: number }>()
+const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const persona = ref<PersonaDettaglio | null>(null)
 const copiaDel = ref<string | null>(null)
@@ -96,6 +98,11 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
+      <p v-if="sessione.capogruppo" class="small">
+        <RouterLink :to="{ name: 'fascicolo', params: { id: persona.id } }">
+          Fascicolo completo e cancellazione (richieste dell'interessato)
+        </RouterLink>
+      </p>
     </template>
   </section>
 </template>

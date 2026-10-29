@@ -13,7 +13,7 @@ per ultima, dopo tutte le altre fasi.
 
 | # | Fase | Stato | Note |
 | --- | --- | --- | --- |
-| 1 | Fondamenta | 🚧 | vedi dettaglio sotto |
+| 1 | Fondamenta | ✅ | vedi dettaglio sotto; da provare nel browser |
 | 2 | Quote e cassa | ⏳ | pronto solo il catalogo `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3 | Eventi e presenze | ⏳ | — |
 | 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
@@ -40,7 +40,7 @@ per ultima, dopo tutte le altre fasi.
 | Squadriglie maschili o femminili, eccezioni decise dalla Co.Ca., uscita dal reparto | ✅ | scheda persona e pagina dell'unità |
 | Correzioni ai dati inviate ai capigruppo (scheda persona, pagina Correzioni, email giornaliera, chiusura all'importazione) | ✅ | DEC-31, `apps/anagrafica/servizi.py`, comando `segnala_correzioni` |
 | Ai 18 anni: scelta di cosa vedono i genitori, avvisi via email, avviso ai capi se manca l'account | ✅ | DEC-26, `anagrafica.VisibilitaGenitori`, comando `avvisa_maggiore_eta` |
-| Diritti GDPR (accesso, cancellazione) | ⏳ | DEC-102 |
+| Diritti GDPR: registro delle richieste, fascicolo completo (JSON e pagina stampabile), cancellazione | ✅ | DEC-102, `apps/diritti` |
 | Contatti in squadriglia (pagina "La mia squadriglia" anche offline, numero del genitore, numero nascosto) | ✅ | DEC-13, `anagrafica/api.py`, `components/TelefonoSquadriglia.vue` |
 | Esigenze alimentari non mediche nella scheda e nella vista "Al campo" | ✅ | DEC-49, `sanitaria.InformazioniSanitarie.esigenze_alimentari` |
 
@@ -76,7 +76,7 @@ dell'analisi), da realizzare:
 | Differenze tra app e BuonaStrada all'importazione | Chi importa indica la data di aggiornamento dei dati di BuonaStrada; per ogni differenza (dati corretti nell'app, unità assegnate nell'app) sceglie quale dato vince, con proposto il più recente (a parità, BuonaStrada). Se vince BuonaStrada la correzione si chiude come "superata da BuonaStrada" | DEC-31, DEC-34 |
 | Percorso di formazione dei capi | Inserito a mano dal capo o da un capogruppo; da BuonaStrada solo il livello | DEC-47 |
 | Esigenze alimentari non mediche | Nella scheda personale, trattate come i dati sanitari (anche le religiose, dato particolare GDPR): stesse persone, offline al campo, registro accessi | DEC-49 |
-| Delega e diritti GDPR | La delega dei capigruppo copre l'app: si realizzano accesso, rettifica, cancellazione, esportazione, gestite dai capigruppo, che le girano al nazionale | DEC-98, DEC-102 |
+| Delega e diritti GDPR | La delega dei capigruppo copre l'app: si realizzano accesso, rettifica, cancellazione, esportazione, gestite dai capigruppo, che le girano al nazionale. Fascicolo e cancellazione solo dai capigruppo; fascicolo in JSON e pagina leggibile; la cancellazione toglie i dati che esistono solo nell'app e rende anonimo chi non è più socio (né genitore di un socio), tenendo i periodi nelle unità; registro delle richieste con scadenza a un mese | DEC-98, DEC-102 |
 
 ## Punti aperti da confermare
 

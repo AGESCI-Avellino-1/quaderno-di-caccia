@@ -211,7 +211,7 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 
 | Phase | Content | Status |
 | --- | --- | --- |
-| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31), patrol phones (DEC-13), non-medical dietary needs with the health essentials (DEC-49), what parents of an adult see and the alerts at 18 (DEC-26). Missing: GDPR rights (DEC-102) |
+| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **built** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31), patrol phones (DEC-13), non-medical dietary needs with the health essentials (DEC-49), what parents of an adult see and the alerts at 18 (DEC-26), requests from data subjects with full export and erasure (DEC-102). Not yet tried in a browser end to end |
 | 2. Quote e cassa | fee types, sibling discount, agevolazioni, payments, receipts, cash book on Modello D | catalog ready in `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | — |
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
@@ -269,7 +269,10 @@ verificare" in the analysis).
   (`policy.puo_impostare_telefono_squadriglia`). Order: own BuonaStrada mobile, parent
   or guardian chosen for the child, family number, none (`servizi.telefono_in_squadriglia`).
 - Decided on 2026-10-29, not built yet (details in `TODO.md`): accounts from 14 by invitation without parental approval
-  (DEC-24, as built); capi training entered by hand (DEC-47); the
-  capigruppo delegation covers the app (DEC-98, DEC-102).
+  (DEC-24, as built); capi training entered by hand (DEC-47, phase 5).
+- Data subjects' rights (DEC-102, maintainer 2026-10-29): `apps/diritti`, capigruppo
+  only. Erasure removes the app-only data and their audit history; an ex member who is
+  not a parent of a member is anonymised, keeping the periods in units; the access log
+  stays. New sensitive data = add it to `diritti.servizi.fascicolo` and `cancella`.
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

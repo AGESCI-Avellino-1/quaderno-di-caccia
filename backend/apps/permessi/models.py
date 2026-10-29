@@ -13,12 +13,15 @@ from apps.anagrafica.models import Persona
 class Categoria(models.TextChoices):
     SANITARIE = "SANITARIE", "Informazioni sanitarie"
     DEROGA_SQ = "DEROGA_SQ", "Eccezione sulla squadriglia"
+    FASCICOLO = "FASCICOLO", "Fascicolo completo"
 
 
 class Azione(models.TextChoices):
     LETTURA = "LETTURA", "Lettura"
     SCARICO_OFFLINE = "SCARICO_OFFLINE", "Scaricate sul dispositivo"
     MODIFICA = "MODIFICA", "Modifica"
+    ESPORTAZIONE = "ESPORTAZIONE", "Esportazione per un diritto dell'interessato"
+    CANCELLAZIONE = "CANCELLAZIONE", "Cancellazione per un diritto dell'interessato"
 
 
 class AccessoDatoSensibile(models.Model):

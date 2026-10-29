@@ -283,6 +283,49 @@ export interface VisibilitaGenitori extends SceltaVisibilita {
   genitori: string[]
 }
 
+// --- Requests from data subjects (DEC-102) --------------------------------------------
+
+export const TIPI_RICHIESTA: Scelta[] = [
+  { valore: 'ACCESSO', etichetta: 'Accesso ai dati' },
+  { valore: 'ESPORTAZIONE', etichetta: 'Copia dei dati (portabilità)' },
+  { valore: 'RETTIFICA', etichetta: 'Rettifica' },
+  { valore: 'CANCELLAZIONE', etichetta: 'Cancellazione' },
+  { valore: 'ALTRO', etichetta: 'Altro (limitazione, opposizione…)' },
+]
+
+export interface RichiestaDiritti {
+  id: number
+  persona: PersonaBreve
+  tipo: string
+  tipo_nome: string
+  richiedente: string
+  ricevuta_il: string
+  /** Answer due by (one month). */
+  scadenza: string
+  note: string
+  inoltrata_nazionale_il: string | null
+  evasa_il: string | null
+  registrata_da: string | null
+}
+
+export interface NuovaRichiesta {
+  persona_id: number
+  tipo: string
+  richiedente: string
+  ricevuta_il: string
+  note: string
+}
+
+export interface AnteprimaCancellazione {
+  anonimizza: boolean
+  /** Why the registry data stay, when they do. */
+  motivo_anagrafica: string | null
+  voci: string[]
+}
+
+/** Everything the app holds about a person: sections of values, lists or nothing. */
+export type Fascicolo = { persona: PersonaBreve; generato_il: string } & Record<string, unknown>
+
 // --- Corrections to BuonaStrada data (DEC-31) ------------------------------------------
 
 export type StatoCorrezione = 'IN_ATTESA' | 'INOLTRATA' | 'RECEPITA' | 'SUPERATA' | 'SCARTATA'
@@ -460,6 +503,25 @@ export const api = {
     richiesta<VisibilitaGenitori>(`/api/v1/persone/${persona}/visibilita-genitori`, {
       metodo: 'PUT',
       corpo: dati,
+    }),
+  richiesteDiritti: () => richiesta<RichiestaDiritti[]>('/api/v1/richieste-diritti'),
+  registraRichiesta: (dati: NuovaRichiesta) =>
+    richiesta<RichiestaDiritti>('/api/v1/richieste-diritti', { metodo: 'POST', corpo: dati }),
+  aggiornaRichiesta: (
+    id: number,
+    dati: { inoltrata_nazionale_il?: string | null; evasa_il?: string | null },
+  ) =>
+    richiesta<RichiestaDiritti>(`/api/v1/richieste-diritti/${id}`, {
+      metodo: 'PATCH',
+      corpo: dati,
+    }),
+  fascicolo: (persona: number) => richiesta<Fascicolo>(`/api/v1/persone/${persona}/fascicolo`),
+  anteprimaCancellazione: (persona: number) =>
+    richiesta<AnteprimaCancellazione>(`/api/v1/persone/${persona}/cancellazione`),
+  cancella: (persona: number, cognome: string) =>
+    richiesta<AnteprimaCancellazione>(`/api/v1/persone/${persona}/cancellazione`, {
+      metodo: 'POST',
+      corpo: { cognome },
     }),
   correzioniPersona: (persona: number) =>
     richiesta<SchedaCorrezioni>(`/api/v1/persone/${persona}/correzioni`),

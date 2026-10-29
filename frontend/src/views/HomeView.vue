@@ -55,6 +55,12 @@ onMounted(async () => {
           <span class="fg-2 small">Dati corretti nell'app, da mandare alla segreteria</span>
         </RouterLink>
       </div>
+      <div v-if="sessione.capogruppo" class="col-12 md:col-6">
+        <RouterLink to="/diritti" class="card card-body h-100 text-decoration-none">
+          <strong>Richieste degli interessati</strong>
+          <span class="fg-2 small">Accesso, copia e cancellazione dei dati</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.puoImportare" class="col-12 md:col-6">
         <RouterLink to="/importazione" class="card card-body h-100 text-decoration-none">
           <strong>Importa da BuonaStrada</strong>

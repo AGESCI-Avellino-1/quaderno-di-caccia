@@ -94,6 +94,18 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Capigruppo: the API decides (DEC-102).
+      path: '/diritti',
+      name: 'diritti',
+      component: () => import('@/views/DirittiView.vue'),
+    },
+    {
+      path: '/persone/:id(\\d+)/fascicolo',
+      name: 'fascicolo',
+      component: () => import('@/views/FascicoloView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // Patrol members: the API decides (DEC-13).
       path: '/squadriglia',
       name: 'squadriglia',

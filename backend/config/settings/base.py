@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.permessi",
     "apps.dispositivi",
     "apps.sanitaria",
+    "apps.diritti",
 ]
 
 MIDDLEWARE = [

@@ -63,3 +63,16 @@ body {
   background-color: p.$agesci-giallo-oro;
   color: p.$agesci-nero;
 }
+
+// Printing (e.g. the full personal file, saved as PDF): only the page content.
+@media print {
+  .qdc-intestazione,
+  .qdc-barra-offline,
+  .qdc-non-stampare {
+    display: none !important;
+  }
+
+  body {
+    background-color: p.$agesci-bianco;
+  }
+}

@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 import pytest
 from django.test import Client
 
@@ -67,14 +69,21 @@ def test_importazione_anteprima_e_applica(capogruppo, capo):
         return SimpleUploadedFile("RicercaSoci.csv", costruisci_csv(righe_standard()))
 
     assert _client(capo).post("/api/v1/importazioni", {"file": file_csv()}).status_code == 403
+    futura = date.today() + timedelta(days=1)
+    rifiutata = _client(capogruppo).post(
+        "/api/v1/importazioni", {"file": file_csv(), "aggiornato_al": futura.isoformat()}
+    )
+    assert rifiutata.status_code == 400
     risposta = _client(capogruppo).post("/api/v1/importazioni", {"file": file_csv()})
     assert risposta.status_code == 201, risposta.content
     importazione = risposta.json()
     assert importazione["stato"] == "ANTEPRIMA"
     assert len(importazione["riepilogo"]["persone_create"]) == 4
-    applicata = _client(capogruppo).post(f"/api/v1/importazioni/{importazione['id']}/applica")
+    assert importazione["dati_aggiornati_al"] == date.today().isoformat()
+    url = f"/api/v1/importazioni/{importazione['id']}/applica"
+    applicata = _client(capogruppo).post(url, {"scelte": {}}, content_type="application/json")
     assert applicata.json()["stato"] == "APPLICATA"
-    again = _client(capogruppo).post(f"/api/v1/importazioni/{importazione['id']}/applica")
+    again = _client(capogruppo).post(url, {}, content_type="application/json")
     assert again.status_code == 409
 
 

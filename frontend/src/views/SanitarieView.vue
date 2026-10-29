@@ -25,6 +25,7 @@ const esito = ref<string | null>(null)
 const modulo = reactive<SanitarieIn>({
   nessuna_allergia: false,
   nessun_farmaco: false,
+  esigenze_alimentari: '',
   allergie: [],
   farmaci: [],
 })
@@ -42,6 +43,8 @@ onMounted(async () => {
     }
     modulo.nessuna_allergia = sanitarie.dati.nessuna_allergia
     modulo.nessun_farmaco = sanitarie.dati.nessun_farmaco
+    // Copies saved before this field existed do not have it.
+    modulo.esigenze_alimentari = sanitarie.dati.esigenze_alimentari ?? ''
     modulo.allergie = sanitarie.dati.allergie.map((a) => ({ ...a }))
     modulo.farmaci = sanitarie.dati.farmaci.map((f) => ({ ...f }))
     caricata.value = true
@@ -254,6 +257,24 @@ async function salva() {
         >
           Aggiungi farmaco
         </button>
+      </fieldset>
+
+      <fieldset class="card card-body">
+        <legend class="h6">Esigenze alimentari</legend>
+        <label class="form-label small" for="esigenze-alimentari">
+          Altre esigenze a tavola, non mediche
+        </label>
+        <input
+          id="esigenze-alimentari"
+          v-model="modulo.esigenze_alimentari"
+          class="form-control"
+          maxlength="300"
+          placeholder="Es. vegetariano, niente carne di maiale"
+        />
+        <p class="form-text mb-0">
+          Scrivi solo cosa non mangia: non serve spiegare il motivo. Lo vedono i capi, come allergie
+          e farmaci.
+        </p>
       </fieldset>
 
       <p class="small fg-2 mb-0">

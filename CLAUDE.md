@@ -211,7 +211,7 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 
 | Phase | Content | Status |
 | --- | --- | --- |
-| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31). Missing: adult-consent alerts at 18 (DEC-26), GDPR rights (DEC-102), patrol contacts (DEC-13), non-medical dietary needs (DEC-49) |
+| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31), patrol phones (DEC-13), non-medical dietary needs with the health essentials (DEC-49), what parents of an adult see and the alerts at 18 (DEC-26). Missing: GDPR rights (DEC-102) |
 | 2. Quote e cassa | fee types, sibling discount, agevolazioni, payments, receipts, cash book on Modello D | catalog ready in `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | — |
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
@@ -250,16 +250,26 @@ verificare" in the analysis).
   `policy.campi_correggibili`; sex and place of birth count as identity (capigruppo
   only) because the codice fiscale derives from them `[da verificare]`. The daily
   summary to the capigruppo is `manage.py segnala_correzioni`, run by the host's cron.
+- Import differences (maintainer 2026-10-29): when the app and BuonaStrada disagree (open
+  correction, membership with `fonte=APP`) the user chooses per difference
+  (`Differenza.chiave`); the preview proposes the more recent side, comparing the
+  change date in the app with `ImportazioneBuonaStrada.dati_aggiornati_al`, asked at
+  upload; a tie goes to BuonaStrada. BuonaStrada winning closes the correction as
+  `SUPERATA`.
 - Every account has its own email: a child is not invited with a parent's address
   (maintainer, 2026-10-28, refines DEC-25; `accounts/api.crea_invito`).
-- After 18 (DEC-26, maintainer 2026-10-29): until the R/S decides, parents keep seeing
-  what they saw (`puo_vedere_dati_sensibili`) but no longer write it; the R/S and the
-  parents get an alert. Not built yet.
-- Decided on 2026-10-29, not built yet (details in `TODO.md`): patrol contacts (DEC-13:
-  every member sees the others' phone, the CSQ also the parents'; VCSQ like a member;
-  hideable by the parent); accounts from 14 by invitation without parental approval
-  (DEC-24, as built); non-medical dietary needs in the personal file, treated like
-  health data (DEC-49); capi training entered by hand (DEC-47); the
+- After 18 (DEC-26, maintainer 2026-10-29): `VisibilitaGenitori` (contatti, sanitarie,
+  scheda; same for all parents), read through `policy.genitori_vedono`; everything
+  visible until the R/S chooses; parents never write an adult's data. Alerts one month
+  before and on the day: `manage.py avvisa_maggiore_eta` (cron). Fee link: phase 2.
+- Patrol phones (DEC-13, maintainer 2026-10-29): `GET /mia-squadriglia` (members see
+  each other's phone, the CSQ also the parents'; VCSQ like a member; phones only);
+  `Persona.telefono_squadriglia_da` / `_nascosto` / `telefono_per_i_figli` (on the
+  parent), set by parents of a minor, the adult, unit staff and capigruppo
+  (`policy.puo_impostare_telefono_squadriglia`). Order: own BuonaStrada mobile, parent
+  or guardian chosen for the child, family number, none (`servizi.telefono_in_squadriglia`).
+- Decided on 2026-10-29, not built yet (details in `TODO.md`): accounts from 14 by invitation without parental approval
+  (DEC-24, as built); capi training entered by hand (DEC-47); the
   capigruppo delegation covers the app (DEC-98, DEC-102).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Medicines, allergies and intolerances (DEC-48 core). Severe allergies come first and
+// Medicines, allergies and intolerances (DEC-48 core), dietary needs (DEC-49). Severe allergies come first and
 // stand out: at camp this is read in a hurry.
 import { computed } from 'vue'
 
@@ -53,6 +53,13 @@ const classeGravita = {
         </li>
       </ul>
       <p v-else class="small fg-2 mb-1">Farmaci non indicati.</p>
+
+      <template v-if="dati.esigenze_alimentari">
+        <h3 v-if="!compatta" class="h6 mt-3">Esigenze alimentari</h3>
+        <p class="small mb-1">
+          <span v-if="compatta" class="fw-semibold">A tavola: </span>{{ dati.esigenze_alimentari }}
+        </p>
+      </template>
 
       <p v-if="!compatta && dati.aggiornate_il" class="small fg-2 mb-0">
         Aggiornate il {{ new Date(dati.aggiornate_il).toLocaleDateString('it-IT') }}

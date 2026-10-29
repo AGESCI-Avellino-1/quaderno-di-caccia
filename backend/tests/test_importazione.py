@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -107,7 +107,7 @@ def test_correzione_in_attesa_non_sovrascritta():
     riepilogo = applica(_risultato(), oggi=OGGI)
     giulia.refresh_from_db()
     assert giulia.cellulare == "3339999999"
-    assert [d.campo for d in riepilogo.differenze] == ["cellulare"]
+    assert [d.campo for d in riepilogo.differenze] == ["Cellulare"]
     assert CorrezioneAnagrafica.objects.get().stato == "IN_ATTESA"
 
 
@@ -149,8 +149,83 @@ def test_unita_assegnata_nell_app_non_sovrascritta():
     riepilogo = applica(_risultato(), oggi=OGGI)
     assert Appartenenza.objects.attive(OGGI).get(persona=paolo).unita == altra
     assert any(
-        d.campo == "unità" and d.valore_buonastrada == str(clan) for d in riepilogo.differenze
+        d.campo == "Unità" and d.valore_buonastrada == str(clan) for d in riepilogo.differenze
     )
+
+
+def _paolo_nel_clan_bis():
+    applica(_risultato(), oggi=OGGI)
+    paolo = Persona.objects.get(codice_socio="9000003")
+    altra = Unita.objects.create(
+        gruppo=Gruppo.objects.get(), nome="Clan bis", tipo=TipoUnita.CLAN_FUOCO, composizione="X"
+    )
+    Appartenenza.objects.filter(persona=paolo).update(data_fine=OGGI)
+    Appartenenza.objects.create(
+        persona=paolo,
+        unita=altra,
+        ruolo=RuoloAppartenenza.RAGAZZO,
+        data_inizio=OGGI,
+        fonte=FonteDato.APP,
+    )
+    return paolo
+
+
+def test_proposto_il_dato_piu_recente():
+    giulia = _giulia_corretta()
+    ieri, domani = date.today() - timedelta(days=1), date.today() + timedelta(days=1)
+
+    [vecchio] = anteprima(_risultato(), oggi=OGGI, aggiornato_al=ieri).differenze
+    assert (vecchio.proposta, vecchio.scelta) == ("APP", "APP")
+    assert vecchio.chiave == f"{giulia.pk}:cellulare"
+    assert vecchio.data_app == date.today().isoformat()
+
+    [nuovo] = anteprima(_risultato(), oggi=OGGI, aggiornato_al=domani).differenze
+    assert (nuovo.proposta, nuovo.scelta) == ("BUONASTRADA", "BUONASTRADA")
+    assert CorrezioneAnagrafica.objects.get().stato == "IN_ATTESA"  # preview only
+
+
+def test_scelta_buonastrada_supera_la_correzione():
+    giulia = _giulia_corretta()
+    chiave = f"{giulia.pk}:cellulare"
+    riepilogo = applica(
+        _risultato(),
+        oggi=OGGI,
+        aggiornato_al=date.today() - timedelta(days=1),
+        scelte={chiave: "BUONASTRADA"},
+    )
+    giulia.refresh_from_db()
+    assert giulia.cellulare != "3339999999"
+    assert riepilogo.differenze[0].scelta == "BUONASTRADA"
+    assert CorrezioneAnagrafica.objects.get().stato == "SUPERATA"
+
+
+def test_scelta_app_mantiene_la_correzione():
+    giulia = _giulia_corretta()
+    applica(
+        _risultato(),
+        oggi=OGGI,
+        aggiornato_al=date.today() + timedelta(days=1),
+        scelte={f"{giulia.pk}:cellulare": "APP"},
+    )
+    giulia.refresh_from_db()
+    assert giulia.cellulare == "3339999999"
+    assert CorrezioneAnagrafica.objects.get().stato == "IN_ATTESA"
+
+
+def test_scelta_buonastrada_per_l_unita():
+    paolo = _paolo_nel_clan_bis()
+    clan = Unita.objects.get(tipo=TipoUnita.CLAN_FUOCO, nome__icontains="clan", codice_unita__gt="")
+    chiave = f"{paolo.pk}:unita:RAGAZZO"
+    riepilogo = applica(_risultato(), oggi=OGGI, scelte={chiave: "BUONASTRADA"})
+    assert Appartenenza.objects.attive(OGGI).get(persona=paolo).unita == clan
+    assert [d.scelta for d in riepilogo.differenze] == ["BUONASTRADA"]
+
+
+def _giulia_corretta():
+    applica(_risultato(), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    correggi_campo(giulia, "cellulare", "3339999999")
+    return giulia
 
 
 def test_novizio_collocato_nel_noviziato_se_esiste():

@@ -7,6 +7,8 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
+import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
+import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
@@ -79,7 +81,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       </dl>
       <section v-if="sanitarie" class="card card-body mb-5">
         <div class="d-flex align-items-center">
-          <h2 class="h5 mb-0">Farmaci, allergie e intolleranze</h2>
+          <h2 class="h5 mb-0">Farmaci, allergie e alimentazione</h2>
           <RouterLink
             v-if="sanitarie.puo_modificare"
             :to="{ name: 'sanitarie', params: { id: persona.id } }"
@@ -89,7 +91,9 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </div>
         <SchedaSanitaria :dati="sanitarie" />
       </section>
+      <VisibilitaGenitori :id="persona.id" />
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
+      <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
     </template>

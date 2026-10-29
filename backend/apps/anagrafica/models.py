@@ -60,6 +60,22 @@ class Persona(ModelloTracciato):
         related_name="persona",
     )
     ultima_importazione = models.DateTimeField(null=True, blank=True)
+    # Phone shown to the other members of the patrol (DEC-13, maintainer 2026-10-29),
+    # see anagrafica.servizi.telefono_in_squadriglia: the child's own BuonaStrada mobile
+    # if any, else the parent chosen for this child, else the parent chosen for all the
+    # children without a phone. The number can be hidden from the members (never from
+    # the CSQ).
+    telefono_squadriglia_da = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Genitore di cui mostrare il cellulare in squadriglia, se manca il proprio.",
+    )
+    telefono_squadriglia_nascosto = models.BooleanField(default=False)
+    # On a parent: their mobile is the patrol number of every child without one.
+    telefono_per_i_figli = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "persona"
@@ -355,6 +371,7 @@ class StatoCorrezione(models.TextChoices):
     IN_ATTESA = "IN_ATTESA", "Da inoltrare alla segreteria"
     INOLTRATA = "INOLTRATA", "Inoltrata alla segreteria"
     RECEPITA = "RECEPITA", "Recepita da BuonaStrada"
+    SUPERATA = "SUPERATA", "Superata da BuonaStrada"
     SCARTATA = "SCARTATA", "Scartata"
 
 
@@ -429,3 +446,32 @@ class CorrezioneAnagrafica(ModelloTracciato):
             raise ValidationError(f"Il campo {self.campo} non è gestito da BuonaStrada.")
         if self.stato == StatoCorrezione.SCARTATA and not self.motivo_scarto.strip():
             raise ValidationError("Scrivi il motivo dello scarto.")
+
+
+class VisibilitaGenitori(ModelloTracciato):
+    """What the parents of an adult member still see (DEC-26).
+
+    At 18 the R/S decides, by category, for all parents alike; until they do, the
+    parents keep seeing everything (maintainer, 2026-10-29). Parents never write the
+    data of an adult. The link to the fees is phase 2.
+    """
+
+    persona = models.OneToOneField(
+        Persona, on_delete=models.CASCADE, related_name="visibilita_genitori"
+    )
+    contatti = models.BooleanField(default=True, help_text="Contatti e indirizzo.")
+    sanitarie = models.BooleanField(default=True, help_text="Farmaci, allergie, alimentazione.")
+    scheda = models.BooleanField(
+        default=True, help_text="Dati della scheda e attività (progressione, presenze)."
+    )
+    decisa_il = models.DateTimeField(null=True, blank=True)
+    # Alerts already sent (management command avvisa_maggiore_eta).
+    avviso_mese_prima = models.DateField(null=True, blank=True)
+    avviso_compleanno = models.DateField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "visibilità ai genitori"
+        verbose_name_plural = "visibilità ai genitori"
+
+    def __str__(self) -> str:
+        return f"Visibilità ai genitori di {self.persona}"

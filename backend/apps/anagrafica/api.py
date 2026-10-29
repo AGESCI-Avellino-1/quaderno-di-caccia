@@ -2,9 +2,11 @@ from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
 
+from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
 from apps.permessi import policy
 from apps.permessi.policy import LivelloAccesso
 
@@ -14,9 +16,11 @@ from .models import (
     ETICHETTE_CAMPI,
     STATI_APERTI,
     Appartenenza,
+    AppartenenzaSquadriglia,
     CorrezioneAnagrafica,
     Persona,
     StatoCorrezione,
+    VisibilitaGenitori,
 )
 
 router = Router(tags=["anagrafica"])
@@ -66,9 +70,12 @@ def dettaglio_persona(request, persona_id: int):
         "nome": persona.nome,
         "cognome": persona.cognome,
         "livello_accesso": livello.value,
-        "unita": [str(a.unita) for a in Appartenenza.objects.attive().filter(persona=persona)],
     }
-    if livello != LivelloAccesso.SQUADRIGLIA:
+    scheda = policy.puo_vedere_scheda(request.auth, persona)
+    if scheda or livello == LivelloAccesso.SQUADRIGLIA:
+        attive = Appartenenza.objects.attive().filter(persona=persona)
+        dati["unita"] = [str(a.unita) for a in attive]
+    if scheda:
         dati |= {
             "data_nascita": persona.data_nascita,
             "codice_socio": persona.codice_socio,
@@ -272,3 +279,200 @@ def scarta(request, correzione_id: int, dati: Scarto):
     except ValidationError as errore:
         raise HttpError(400, " ".join(errore.messages)) from errore
     return _correzione_out(correzione) | {"persona": correzione.persona}
+
+
+# --- Phones within the patrol (DEC-13, maintainer 2026-10-29) ------------------------
+
+
+class TelefonoMembro(Schema):
+    id: int
+    nome: str
+    cognome: str
+    incarico: str | None  # "Capo squadriglia", "Vice capo squadriglia"
+    telefono: str | None
+    # Name of the parent whose number it is, when the child has none of their own.
+    del_genitore: str | None
+
+
+class TelefonoGenitore(Schema):
+    figlio_id: int
+    nome: str
+    cognome: str
+    telefono: str
+
+
+class MiaSquadriglia(Schema):
+    id: int
+    nome: str
+    reparto: str
+    sono_capo: bool
+    membri: list[TelefonoMembro]
+    genitori: list[TelefonoGenitore]  # for the CSQ only
+
+
+class ImpostazioneTelefono(Schema):
+    in_squadriglia: bool
+    proprio: str  # the person's own mobile from BuonaStrada, "" if none: it wins
+    genitore_id: int | None  # parent chosen for this child
+    famiglia_id: int | None  # parent chosen for all the children without a phone
+    nascosto: bool
+    genitori: list[Scelta]  # valore = parent id, etichetta = "Mario Rossi (333…)"
+
+
+class NuovaImpostazioneTelefono(Schema):
+    genitore_id: int | None = None
+    per_tutti_i_figli: bool = False
+    nascosto: bool = False
+
+
+def _membri(squadriglia: Squadriglia, capo: bool) -> tuple[list[dict], list[dict]]:
+    oggi = date.today()
+    persone = [
+        a.persona
+        for a in AppartenenzaSquadriglia.objects.attive(oggi)
+        .filter(squadriglia=squadriglia)
+        .select_related("persona__telefono_squadriglia_da")
+        .order_by("persona__cognome", "persona__nome")
+    ]
+    incarichi = dict(
+        Incarico.objects.attivi()
+        .filter(squadriglia=squadriglia, ruolo__in=[RuoloIncarico.CSQ, RuoloIncarico.VCSQ])
+        .values_list("persona_id", "ruolo")
+    )
+    membri, genitori = [], []
+    for p in persone:
+        numero, genitore = servizi.telefono_in_squadriglia(p)
+        visibile = capo or not p.telefono_squadriglia_nascosto
+        ruolo = incarichi.get(p.pk)
+        membri.append(
+            {
+                "id": p.pk,
+                "nome": p.nome,
+                "cognome": p.cognome,
+                "incarico": RuoloIncarico(ruolo).label if ruolo else None,
+                "telefono": (numero or None) if visibile else None,
+                "del_genitore": genitore.nome if genitore and visibile and numero else None,
+            }
+        )
+        if capo:
+            genitori += [
+                {"figlio_id": p.pk, "nome": g.nome, "cognome": g.cognome, "telefono": g.cellulare}
+                for g in servizi.genitori_con_telefono(p).order_by("cognome", "nome")
+            ]
+    return membri, genitori
+
+
+@router.get("/mia-squadriglia", response=list[MiaSquadriglia])
+def mie_squadriglie(request):
+    """Phones of the patrol for its members: each member sees the others' phone, the
+    CSQ also the parents' (DEC-13, maintainer 2026-10-29). Phones only, no email."""
+    guidate = set(policy.squadriglie_guidate(request.auth).values_list("pk", flat=True))
+    risultato = []
+    for sq in policy.squadriglie_di(request.auth).select_related("unita").order_by("nome"):
+        capo = sq.pk in guidate
+        membri, genitori = _membri(sq, capo)
+        risultato.append(
+            {
+                "id": sq.pk,
+                "nome": sq.nome,
+                "reparto": sq.unita.nome,
+                "sono_capo": capo,
+                "membri": membri,
+                "genitori": genitori,
+            }
+        )
+    return risultato
+
+
+def _impostazione(persona: Persona) -> dict:
+    return {
+        "in_squadriglia": AppartenenzaSquadriglia.objects.attive().filter(persona=persona).exists(),
+        "proprio": persona.cellulare,
+        "genitore_id": persona.telefono_squadriglia_da_id,
+        "famiglia_id": getattr(servizi.telefono_di_famiglia(persona), "pk", None),
+        "nascosto": persona.telefono_squadriglia_nascosto,
+        "genitori": [
+            {"valore": str(g.pk), "etichetta": f"{g.nome} {g.cognome} ({g.cellulare})"}
+            for g in servizi.genitori_con_telefono(persona).order_by("cognome", "nome")
+        ],
+    }
+
+
+def _persona_per_telefono(request, persona_id: int) -> Persona:
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_impostare_telefono_squadriglia(request.auth, persona):
+        raise HttpError(404, "Persona non trovata.")
+    return persona
+
+
+@router.get("/persone/{persona_id}/telefono-squadriglia", response=ImpostazioneTelefono)
+def telefono_squadriglia(request, persona_id: int):
+    return _impostazione(_persona_per_telefono(request, persona_id))
+
+
+@router.put("/persone/{persona_id}/telefono-squadriglia", response=ImpostazioneTelefono)
+def imposta_telefono_squadriglia(request, persona_id: int, dati: NuovaImpostazioneTelefono):
+    persona = _persona_per_telefono(request, persona_id)
+    genitore = Persona.objects.filter(pk=dati.genitore_id).first() if dati.genitore_id else None
+    try:
+        servizi.imposta_telefono_squadriglia(
+            persona, genitore, dati.nascosto, per_tutti_i_figli=dati.per_tutti_i_figli
+        )
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    return _impostazione(persona)
+
+
+# --- What the parents of an adult see (DEC-26) ----------------------------------------
+
+
+class VisibilitaGenitoriIO(Schema):
+    contatti: bool = True
+    sanitarie: bool = True
+    scheda: bool = True
+
+
+class VisibilitaGenitoriOut(VisibilitaGenitoriIO):
+    decisa_il: datetime | None
+    genitori: list[str]  # names of the parents concerned
+
+
+def _visibilita(persona: Persona) -> dict:
+    scelta = VisibilitaGenitori.objects.filter(persona=persona).first()
+    genitori = Persona.objects.filter(
+        tutele__minore=persona, tutele__responsabilita_genitoriale=True
+    ).order_by("cognome", "nome")
+    return {
+        "contatti": scelta.contatti if scelta else True,
+        "sanitarie": scelta.sanitarie if scelta else True,
+        "scheda": scelta.scheda if scelta else True,
+        "decisa_il": scelta.decisa_il if scelta else None,
+        "genitori": [f"{g.nome} {g.cognome}" for g in genitori],
+    }
+
+
+def _persona_adulta(request, persona_id: int) -> Persona:
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_scegliere_visibilita_genitori(request.auth, persona):
+        raise HttpError(404, "Persona non trovata.")
+    return persona
+
+
+@router.get("/persone/{persona_id}/visibilita-genitori", response=VisibilitaGenitoriOut)
+def visibilita_genitori(request, persona_id: int):
+    return _visibilita(_persona_adulta(request, persona_id))
+
+
+@router.put("/persone/{persona_id}/visibilita-genitori", response=VisibilitaGenitoriOut)
+def scegli_visibilita_genitori(request, persona_id: int, dati: VisibilitaGenitoriIO):
+    persona = _persona_adulta(request, persona_id)
+    VisibilitaGenitori.objects.update_or_create(
+        persona=persona,
+        defaults={
+            "contatti": dati.contatti,
+            "sanitarie": dati.sanitarie,
+            "scheda": dati.scheda,
+            "decisa_il": timezone.now(),
+        },
+    )
+    return _visibilita(persona)

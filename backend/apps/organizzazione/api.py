@@ -14,6 +14,7 @@ from apps.anagrafica.models import (
     Persona,
     RuoloAppartenenza,
 )
+from apps.core.anno import compie_anni
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
@@ -194,6 +195,28 @@ class UnitaDettaglio(Schema):
     nomina: list[Scelta]
 
 
+def _avvisi_maggiore_eta(unita: Unita) -> list[str]:
+    """Members turning 18 within a month, or since a month, without an account: at 18
+    they choose what their parents see, so the capi should invite them (DEC-26)."""
+    oggi = date.today()
+    avvisi = []
+    for a in (
+        Appartenenza.objects.attive()
+        .filter(unita=unita, ruolo=RuoloAppartenenza.RAGAZZO, persona__utente__isnull=True)
+        .exclude(persona__data_nascita__isnull=True)
+        .select_related("persona")
+        .order_by("persona__cognome", "persona__nome")
+    ):
+        giorno = compie_anni(a.persona.data_nascita, 18)
+        if abs((giorno - oggi).days) <= 30:
+            verbo = "ha compiuto" if giorno <= oggi else "compie"
+            avvisi.append(
+                f"{a.persona} {verbo} 18 anni il {giorno.strftime('%d/%m/%Y')} e non ha un "
+                "account: invitalo, così sceglie cosa possono vedere i genitori."
+            )
+    return avvisi
+
+
 def _avvisi_squadriglie(unita: Unita) -> list[str]:
     """Check the composition against single-sex patrols: members without a sex in
     BuonaStrada, and members of the other sex without a valid Co.Ca. exception (e.g.
@@ -272,7 +295,8 @@ def dettaglio_unita(request, unita_id: int):
         "incarichi": list(_incarichi(unita=unita)),
         "squadriglie": squadriglie,
         "senza_squadriglia": list(senza_squadriglia),
-        "avvisi": _avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [],
+        "avvisi": (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
+        + _avvisi_maggiore_eta(unita),
         "puo_modificare": policy.puo_gestire_unita(utente),
         "puo_gestire_squadriglie": unita.tipo == TipoUnita.REPARTO
         and policy.puo_gestire_squadriglie(utente, unita),

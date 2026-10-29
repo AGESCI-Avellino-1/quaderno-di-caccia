@@ -17,6 +17,9 @@ class ImportazioneBuonaStrada(ModelloTracciato):
     nome_file = models.CharField(max_length=200)
     sha256 = models.CharField(max_length=64)
     anno_scout = models.PositiveSmallIntegerField(null=True, blank=True)
+    # When the data in BuonaStrada were last updated, as stated by who uploads: decides
+    # which side the preview proposes when the app and BuonaStrada disagree.
+    dati_aggiornati_al = models.DateField(null=True, blank=True)
     stato = models.CharField(
         max_length=10, choices=StatoImportazione.choices, default=StatoImportazione.ANTEPRIMA
     )

@@ -16,6 +16,7 @@ from apps.anagrafica.models import (
     Appartenenza,
     Persona,
     RuoloAppartenenza,
+    VisibilitaGenitori,
 )
 from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia, Unita
 
@@ -142,12 +143,43 @@ def persone_visibili(user) -> QuerySet[Persona]:
     return Persona.objects.filter(pk__in=ids)
 
 
-def puo_vedere_dati_sensibili(user, persona: Persona) -> bool:
-    """Health data, contacts, notes reserved to the Co.Ca. (DEC-09, DEC-16, DEC-50)."""
-    livello = livello_accesso(user, persona)
-    if livello in {LivelloAccesso.COMPLETO, LivelloAccesso.TUTORE}:
+def genitori_vedono(persona: Persona, categoria: str) -> bool:
+    """Whether the parents of `persona` still see a category: always for a minor; for an
+    adult, what they chose, everything until they choose (DEC-26). `categoria` is a
+    field of VisibilitaGenitori: contatti, sanitarie, scheda."""
+    if persona.e_minorenne():
         return True
+    scelta = VisibilitaGenitori.objects.filter(persona=persona).first()
+    return scelta is None or getattr(scelta, categoria)
+
+
+def _vede(user, persona: Persona, categoria: str) -> bool:
+    livello = livello_accesso(user, persona)
+    if livello == LivelloAccesso.COMPLETO:
+        return True
+    if livello == LivelloAccesso.TUTORE:
+        return genitori_vedono(persona, categoria)
     return livello == LivelloAccesso.PROPRIO and not persona.e_minorenne()
+
+
+def puo_vedere_dati_sensibili(user, persona: Persona) -> bool:
+    """Contacts and address (DEC-09, DEC-16); parents of an adult as chosen (DEC-26)."""
+    return _vede(user, persona, "contatti")
+
+
+def puo_vedere_scheda(user, persona: Persona) -> bool:
+    """Base data of the personal file and, later, activities: hidden from the parents of
+    an adult who chose so (DEC-26). Name and surname stay visible."""
+    livello = livello_accesso(user, persona)
+    if livello == LivelloAccesso.TUTORE:
+        return genitori_vedono(persona, "scheda")
+    return livello not in {LivelloAccesso.NESSUNO, LivelloAccesso.SQUADRIGLIA}
+
+
+def puo_scegliere_visibilita_genitori(user, persona: Persona) -> bool:
+    """Only the adult member themself (DEC-26)."""
+    propria = persona_di(user)
+    return propria is not None and propria.pk == persona.pk and not persona.e_minorenne()
 
 
 def puo_importare(user) -> bool:
@@ -191,8 +223,9 @@ def tema_branca(user) -> str:
 
 
 def puo_vedere_sanitarie(user, persona: Persona) -> bool:
-    """Capi, parents with parental responsibility, the adult member (DEC-09, DEC-16)."""
-    return puo_vedere_dati_sensibili(user, persona)
+    """Capi, parents with parental responsibility, the adult member (DEC-09, DEC-16);
+    parents of an adult as chosen (DEC-26)."""
+    return _vede(user, persona, "sanitarie")
 
 
 def puo_modificare_sanitarie(user, persona: Persona) -> bool:
@@ -236,6 +269,31 @@ def campi_correggibili(user, persona: Persona) -> set[str]:
     if genitore or _staff_della_persona(user, persona):
         campi |= set(CAMPI_BUONASTRADA) - set(CAMPI_IDENTITA)
     return campi
+
+
+def squadriglie_di(user) -> QuerySet[Squadriglia]:
+    """Patrols the user is a member of today, CSQ and VCSQ included (DEC-13)."""
+    persona = persona_di(user)
+    if persona is None:
+        return Squadriglia.objects.none()
+    oggi = date.today()
+    return Squadriglia.objects.filter(
+        Q(membri__persona=persona)
+        & Q(membri__data_inizio__lte=oggi)
+        & (Q(membri__data_fine__isnull=True) | Q(membri__data_fine__gt=oggi))
+    ).distinct()
+
+
+def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
+    """Which phone the patrol sees and whether to hide it (DEC-13, maintainer
+    2026-10-29): the parents of a minor, the adult member, the staff of the unit and the
+    capigruppo."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return not persona.e_minorenne()
+    if persona.e_minorenne() and tutelati(user).filter(pk=persona.pk).exists():
+        return True
+    return e_capogruppo(user) or _staff_della_persona(user, persona)
 
 
 def puo_gestire_correzioni(user) -> bool:

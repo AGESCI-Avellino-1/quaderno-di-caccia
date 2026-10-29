@@ -72,3 +72,12 @@ def eta_in_data(data_nascita: date, giorno: date) -> int:
     if (giorno.month, giorno.day) < (data_nascita.month, data_nascita.day):
         anni -= 1
     return anni
+
+
+def compie_anni(data_nascita: date, anni: int) -> date:
+    """The day someone turns `anni`, consistent with eta_in_data (born on 29 February:
+    1 March in a common year)."""
+    try:
+        return data_nascita.replace(year=data_nascita.year + anni)
+    except ValueError:
+        return date(data_nascita.year + anni, 3, 1)

@@ -25,6 +25,8 @@ export interface Profilo {
   tesoriere: boolean
   amministratore_tecnico: boolean
   squadriglie_guidate: number[]
+  /** Patrols the user is a member of. */
+  squadriglie: number[]
   tutelati: PersonaBreve[]
 }
 
@@ -203,9 +205,14 @@ export interface IncarichiGruppo {
 /** Where a role is held: the group (nothing), a unit or a patrol. */
 export type DoveIncarico = { unita_id: number } | { squadriglia_id: number } | object
 
+/** Which side wins when the app and BuonaStrada disagree. */
+export type Lato = 'APP' | 'BUONASTRADA'
+
 export interface EsitoImportazione {
   id: number
   stato: 'ANTEPRIMA' | 'APPLICATA' | 'ANNULLATA'
+  /** When the BuonaStrada data were updated, as stated at upload. */
+  dati_aggiornati_al: string | null
   riepilogo: {
     persone_create: string[]
     persone_aggiornate: string[]
@@ -221,14 +228,64 @@ export interface EsitoImportazione {
       valore_app: string
       valore_buonastrada: string
       motivo: string
+      /** Missing in older imports, made before the choice existed. */
+      chiave?: string
+      data_app?: string | null
+      proposta?: Lato
+      scelta?: Lato
     }[]
     avvisi: { gravita: string; messaggio: string; riga: number | null }[]
   }
 }
 
+// --- Phones within the patrol (DEC-13) ------------------------------------------------
+
+export interface TelefonoMembro extends PersonaBreve {
+  incarico: string | null
+  telefono: string | null
+  /** First name of the parent whose phone it is, when the child has none. */
+  del_genitore: string | null
+}
+
+export interface MiaSquadriglia {
+  id: number
+  nome: string
+  reparto: string
+  sono_capo: boolean
+  membri: TelefonoMembro[]
+  /** Parents' phones: for the capo squadriglia only. */
+  genitori: { figlio_id: number; nome: string; cognome: string; telefono: string }[]
+}
+
+export interface ImpostazioneTelefono {
+  in_squadriglia: boolean
+  /** The child's own BuonaStrada mobile, "" if none: when present it is the one shown. */
+  proprio: string
+  /** Parent or guardian chosen for this child. */
+  genitore_id: number | null
+  /** Parent or guardian chosen for all the children without a phone. */
+  famiglia_id: number | null
+  nascosto: boolean
+  genitori: Scelta[]
+}
+
+// --- What the parents of an adult see (DEC-26) ----------------------------------------
+
+export interface SceltaVisibilita {
+  contatti: boolean
+  sanitarie: boolean
+  scheda: boolean
+}
+
+export interface VisibilitaGenitori extends SceltaVisibilita {
+  decisa_il: string | null
+  /** Names of the parents concerned. */
+  genitori: string[]
+}
+
 // --- Corrections to BuonaStrada data (DEC-31) ------------------------------------------
 
-export type StatoCorrezione = 'IN_ATTESA' | 'INOLTRATA' | 'RECEPITA' | 'SCARTATA'
+export type StatoCorrezione = 'IN_ATTESA' | 'INOLTRATA' | 'RECEPITA' | 'SUPERATA' | 'SCARTATA'
 
 export interface Correzione {
   id: number
@@ -299,6 +356,8 @@ export interface Farmaco {
 export interface SanitarieIn {
   nessuna_allergia: boolean
   nessun_farmaco: boolean
+  /** Non-medical dietary needs (vegetarian…): the need, never the reason. */
+  esigenze_alimentari: string
   allergie: Allergia[]
   farmaci: Farmaco[]
 }
@@ -384,6 +443,24 @@ export const api = {
     }),
   revocaDeroga: (id: number) =>
     richiesta<Deroga>(`/api/v1/deroghe-squadriglia/${id}/revoca`, { metodo: 'POST' }),
+  miaSquadriglia: () => richiesta<MiaSquadriglia[]>('/api/v1/mia-squadriglia'),
+  telefonoSquadriglia: (persona: number) =>
+    richiesta<ImpostazioneTelefono>(`/api/v1/persone/${persona}/telefono-squadriglia`),
+  impostaTelefonoSquadriglia: (
+    persona: number,
+    dati: { genitore_id: number | null; per_tutti_i_figli: boolean; nascosto: boolean },
+  ) =>
+    richiesta<ImpostazioneTelefono>(`/api/v1/persone/${persona}/telefono-squadriglia`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  visibilitaGenitori: (persona: number) =>
+    richiesta<VisibilitaGenitori>(`/api/v1/persone/${persona}/visibilita-genitori`),
+  scegliVisibilitaGenitori: (persona: number, dati: SceltaVisibilita) =>
+    richiesta<VisibilitaGenitori>(`/api/v1/persone/${persona}/visibilita-genitori`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
   correzioniPersona: (persona: number) =>
     richiesta<SchedaCorrezioni>(`/api/v1/persone/${persona}/correzioni`),
   correggi: (persona: number, dati: { campo: string; valore: string }) =>
@@ -420,9 +497,10 @@ export const api = {
       metodo: 'POST',
       corpo: { token },
     }),
-  caricaExport: (file: File) => {
+  caricaExport: (file: File, aggiornatoAl: string) => {
     const dati = new FormData()
     dati.append('file', file)
+    dati.append('aggiornato_al', aggiornatoAl)
     return richiesta<EsitoImportazione>('/api/v1/importazioni', { metodo: 'POST', corpo: dati })
   },
   sanitarie: (persona: number) => richiesta<Sanitarie>(percorsoSanitarie(persona)),
@@ -437,6 +515,9 @@ export const api = {
     richiesta<{ revocato: boolean }>(`/api/v1/dispositivi/${id}/stato`),
   revocaDispositivo: (id: string) =>
     richiesta<Dispositivo>(`/api/v1/dispositivi/${id}/revoca`, { metodo: 'POST' }),
-  applicaImportazione: (id: number) =>
-    richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, { metodo: 'POST' }),
+  applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
+    richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
+      metodo: 'POST',
+      corpo: { scelte },
+    }),
 }

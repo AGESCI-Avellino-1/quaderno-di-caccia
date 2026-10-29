@@ -119,8 +119,78 @@ def scarta_correzione(correzione: CorrezioneAnagrafica, utente, motivo: str) -> 
     persona.save(update_fields=[correzione.campo, "aggiornato_il"])
 
 
+def supera_correzione(correzione: CorrezioneAnagrafica) -> None:
+    """At import time BuonaStrada's value was chosen over the app's (maintainer,
+    2026-10-29): the correction closes, whoever made it sees it on the person page."""
+    correzione.stato = StatoCorrezione.SUPERATA
+    correzione.chiusa_il = timezone.now()
+    correzione.save()
+
+
 def recepisci_correzione(correzione: CorrezioneAnagrafica) -> None:
     """The import found the corrected value in BuonaStrada (DEC-31)."""
     correzione.stato = StatoCorrezione.RECEPITA
     correzione.chiusa_il = timezone.now()
     correzione.save()
+
+
+# --- Phones within the patrol (DEC-13, maintainer 2026-10-29) ------------------------
+
+
+def genitori_con_telefono(persona: Persona) -> QuerySet[Persona]:
+    """Parents and legal guardians with parental responsibility and a mobile number:
+    the only numbers a child may share in the patrol (maintainer, 2026-10-29)."""
+    return Persona.objects.filter(
+        tutele__minore=persona, tutele__responsabilita_genitoriale=True
+    ).exclude(cellulare="")
+
+
+def telefono_di_famiglia(persona: Persona) -> Persona | None:
+    """The parent whose mobile is shared by all their children without one."""
+    return (
+        genitori_con_telefono(persona)
+        .filter(telefono_per_i_figli=True)
+        .order_by("cognome", "nome")
+        .first()
+    )
+
+
+def telefono_in_squadriglia(persona: Persona) -> tuple[str, Persona | None]:
+    """The number the patrol uses for `persona` and, if it is a parent's, whose.
+
+    BuonaStrada counts when it has the child's mobile (minors need not have one, and
+    below R/S it cannot be entered); otherwise the parent chosen for this child, then
+    the parent chosen for the whole family; otherwise no number (maintainer,
+    2026-10-29). Hiding is not applied here: the CSQ sees the number anyway.
+    """
+    if persona.cellulare:
+        return persona.cellulare, None
+    genitore = persona.telefono_squadriglia_da
+    if genitore is None or not genitore.cellulare:
+        genitore = telefono_di_famiglia(persona)
+    if genitore is not None:
+        return genitore.cellulare, genitore
+    return "", None
+
+
+@transaction.atomic
+def imposta_telefono_squadriglia(
+    persona: Persona, genitore: Persona | None, nascosto: bool, per_tutti_i_figli: bool = False
+) -> None:
+    """`per_tutti_i_figli`: the parent's mobile becomes the family number, for every
+    child of theirs without a phone (the other guardians stop being it)."""
+    genitori = genitori_con_telefono(persona)
+    if genitore is not None and not genitori.filter(pk=genitore.pk).exists():
+        raise ValidationError("Si può scegliere solo il cellulare di un genitore o tutore.")
+    if per_tutti_i_figli and genitore is not None:
+        figli = Persona.objects.filter(tutori__tutore=genitore)
+        Persona.objects.filter(tutele__minore__in=figli).exclude(pk=genitore.pk).update(
+            telefono_per_i_figli=False
+        )
+        Persona.objects.filter(pk=genitore.pk).update(telefono_per_i_figli=True)
+        genitore = None  # the family number applies
+    persona.telefono_squadriglia_da = genitore
+    persona.telefono_squadriglia_nascosto = nascosto
+    persona.save(
+        update_fields=["telefono_squadriglia_da", "telefono_squadriglia_nascosto", "aggiornato_il"]
+    )

@@ -26,8 +26,12 @@ watch(() => props.id, carica, { immediate: true })
 
 const campo = computed(() => scheda.value?.campi.find((c) => c.campo === scelto.value))
 const aperte = computed(() => scheda.value?.campi.filter((c) => c.correzione) ?? [])
+// Not accepted: discarded by a capogruppo, or BuonaStrada's value chosen at import.
 const scartate = computed(
-  () => scheda.value?.chiuse.filter((c) => c.stato === 'SCARTATA').slice(0, 5) ?? [],
+  () =>
+    scheda.value?.chiuse
+      .filter((c) => c.stato === 'SCARTATA' || c.stato === 'SUPERATA')
+      .slice(0, 5) ?? [],
 )
 
 watch(campo, (c) => (valore.value = c?.valore ?? ''))
@@ -162,12 +166,15 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
     <div v-for="c in scartate" :key="c.id" class="border-top pt-3 mt-1 small">
       <div class="d-flex flex-wrap align-items-baseline gap-3">
         <strong>{{ c.etichetta }}</strong>
-        <span class="badge theme-secondary">Correzione scartata</span>
+        <span class="badge theme-secondary">{{
+          c.stato === 'SUPERATA' ? 'Correzione superata da BuonaStrada' : 'Correzione scartata'
+        }}</span>
       </div>
       <div class="fg-2">
         {{ valoreLeggibile(c.valore_corretto) }} non è stato accettato<template v-if="c.chiusa_il">
           il {{ data(c.chiusa_il) }}</template
-        >: {{ c.motivo_scarto }}
+        ><template v-if="c.motivo_scarto">: {{ c.motivo_scarto }}</template
+        ><template v-else>: all'importazione è stato tenuto il dato di BuonaStrada.</template>
       </div>
     </div>
   </section>

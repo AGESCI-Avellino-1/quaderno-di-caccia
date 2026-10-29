@@ -39,10 +39,10 @@ per ultima, dopo tutte le altre fasi.
 | Composizione delle squadriglie (chi è in quale squadriglia, spostamenti durante l'anno) | ✅ | DEC-30, DEC-65; pagina dell'unità |
 | Squadriglie maschili o femminili, eccezioni decise dalla Co.Ca., uscita dal reparto | ✅ | scheda persona e pagina dell'unità |
 | Correzioni ai dati inviate ai capigruppo (scheda persona, pagina Correzioni, email giornaliera, chiusura all'importazione) | ✅ | DEC-31, `apps/anagrafica/servizi.py`, comando `segnala_correzioni` |
-| Avvisi per il consenso al compimento dei 18 anni | ⏳ | DEC-26 |
+| Ai 18 anni: scelta di cosa vedono i genitori, avvisi via email, avviso ai capi se manca l'account | ✅ | DEC-26, `anagrafica.VisibilitaGenitori`, comando `avvisa_maggiore_eta` |
 | Diritti GDPR (accesso, cancellazione) | ⏳ | DEC-102 |
-| Contatti in squadriglia (telefoni tra squadriglieri, genitori per il CSQ) | ⏳ | DEC-13 |
-| Esigenze alimentari non mediche nella scheda e nella vista "Al campo" | ⏳ | DEC-49 |
+| Contatti in squadriglia (pagina "La mia squadriglia" anche offline, numero del genitore, numero nascosto) | ✅ | DEC-13, `anagrafica/api.py`, `components/TelefonoSquadriglia.vue` |
+| Esigenze alimentari non mediche nella scheda e nella vista "Al campo" | ✅ | DEC-49, `sanitaria.InformazioniSanitarie.esigenze_alimentari` |
 
 ## Decisioni da riportare nell'analisi
 
@@ -69,10 +69,11 @@ dell'analisi), da realizzare:
 
 | Punto | Decisione | Rif. |
 | --- | --- | --- |
-| Contatti in squadriglia | Ogni squadrigliere vede il solo telefono degli altri squadriglieri. Il CSQ vede anche i contatti dei genitori di tutta la squadriglia; il vice CSQ vede come uno squadrigliere. Chi non ha un cellulare suo condivide il numero di un genitore, scelto dal genitore. Il genitore (o il ragazzo maggiorenne) può nascondere il numero agli squadriglieri; il CSQ lo vede comunque | DEC-13 |
+| Contatti in squadriglia | Ogni squadrigliere vede il solo telefono degli altri squadriglieri. Il CSQ vede anche i contatti dei genitori di tutta la squadriglia; il vice CSQ vede come uno squadrigliere. Numero mostrato: il cellulare del ragazzo in BuonaStrada se c'è (i minorenni non sono obbligati ad averlo, e sotto la branca R/S non si può inserire); altrimenti quello di un genitore o tutore scelto per quel figlio; altrimenti quello scelto per tutti i figli senza cellulare; altrimenti nessuno. Il genitore (o il ragazzo maggiorenne) può nascondere il numero agli squadriglieri; il CSQ lo vede comunque. Numero e visibilità li impostano genitore, maggiorenne, staff dell'unità e capigruppo. Solo telefono, anche per i genitori visti dal CSQ; copia cifrata sul telefono per le uscite | DEC-13 |
 | Account dai 14 anni | Invito del capo unità o di un capogruppo, senza approvazione del genitore (come già fatto) | DEC-24 |
-| Ai 18 anni | Finché l'R/S non decide, i genitori continuano a vedere quello che vedevano (senza modificarlo). Avviso all'R/S e ai genitori | DEC-26 |
+| Ai 18 anni | Finché l'R/S non decide, i genitori continuano a vedere quello che vedevano (senza modificarlo). L'R/S sceglie per categoria (contatti e indirizzo; farmaci, allergie e alimentazione; scheda e attività), uguale per tutti i genitori. Email all'R/S e ai genitori un mese prima e il giorno dei 18 anni; se non ha un account, la pagina dell'unità lo segnala ai capi. Il collegamento del genitore alle quote arriva con la fase 2 | DEC-26 |
 | Correzioni ai dati di BuonaStrada | Le fanno il genitore (dati suoi e dei figli), il maggiorenne (i suoi), lo staff dell'unità e i capigruppo (ragazzi dell'unità). Contatti e indirizzo tutti; nome, codice fiscale e data di nascita solo i capigruppo. Consensi, stato socio, formazione e nomina: genitore (figli), staff dell'unità (suoi soci), capigruppo; l'amministratore tecnico corregge tutto. I capigruppo vedono l'elenco, inoltrano loro alla segreteria e segnano "inoltrata"; la correzione si chiude quando l'importazione la ritrova in BuonaStrada. Un capogruppo può scartarla con un motivo: torna il valore di prima. Email riassuntiva ai capigruppo, al massimo una al giorno | DEC-31 |
+| Differenze tra app e BuonaStrada all'importazione | Chi importa indica la data di aggiornamento dei dati di BuonaStrada; per ogni differenza (dati corretti nell'app, unità assegnate nell'app) sceglie quale dato vince, con proposto il più recente (a parità, BuonaStrada). Se vince BuonaStrada la correzione si chiude come "superata da BuonaStrada" | DEC-31, DEC-34 |
 | Percorso di formazione dei capi | Inserito a mano dal capo o da un capogruppo; da BuonaStrada solo il livello | DEC-47 |
 | Esigenze alimentari non mediche | Nella scheda personale, trattate come i dati sanitari (anche le religiose, dato particolare GDPR): stesse persone, offline al campo, registro accessi | DEC-49 |
 | Delega e diritti GDPR | La delega dei capigruppo copre l'app: si realizzano accesso, rettifica, cancellazione, esportazione, gestite dai capigruppo, che le girano al nazionale | DEC-98, DEC-102 |

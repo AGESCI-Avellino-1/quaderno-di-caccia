@@ -35,6 +35,7 @@ class FarmacoIO(Schema):
 class SanitarieIn(Schema):
     nessuna_allergia: bool = False
     nessun_farmaco: bool = False
+    esigenze_alimentari: str = ""
     allergie: list[AllergiaIO] = []
     farmaci: list[FarmacoIO] = []
 
@@ -43,6 +44,7 @@ class SanitarieOut(Schema):
     compilate: bool
     nessuna_allergia: bool = False
     nessun_farmaco: bool = False
+    esigenze_alimentari: str = ""
     allergie: list[AllergiaIO] = []
     farmaci: list[FarmacoIO] = []
     inserite_da: str | None = None
@@ -57,6 +59,7 @@ def _sanitarie(info: InformazioniSanitarie | None) -> dict:
         "compilate": True,
         "nessuna_allergia": info.nessuna_allergia,
         "nessun_farmaco": info.nessun_farmaco,
+        "esigenze_alimentari": info.esigenze_alimentari,
         "allergie": [
             {
                 "tipo": a.tipo,
@@ -117,6 +120,10 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
     for farmaco in dati.farmaci:
         if not farmaco.nome.strip() or not farmaco.posologia.strip():
             raise HttpError(400, "Per ogni farmaco indica nome e posologia.")
+    if len(dati.esigenze_alimentari.strip()) > 300:
+        raise HttpError(
+            400, "Le esigenze alimentari vanno scritte in breve (al massimo 300 caratteri)."
+        )
 
     propria = policy.persona_di(request.auth)
     if propria is not None and propria.pk == persona.pk:
@@ -132,6 +139,7 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
         )
         info.nessuna_allergia = dati.nessuna_allergia
         info.nessun_farmaco = dati.nessun_farmaco
+        info.esigenze_alimentari = dati.esigenze_alimentari.strip()
         info.inserite_da = inserite_da
         info.aggiornate_da = request.auth
         info.save()

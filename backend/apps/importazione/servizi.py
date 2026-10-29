@@ -7,11 +7,15 @@ Rules:
   * only members with status R or S are imported; D closes active memberships (DEC-28);
   * nobody is deactivated just because they are missing from the file (partial exports,
     census period when everyone is S);
-  * BuonaStrada-owned fields are updated unless a correction is open: then the app
-    value stays and the difference is reported; once BuonaStrada has the corrected value
-    the correction is closed as received (DEC-31);
-  * a membership created in the app (fonte=APP, e.g. noviziato) is never overwritten:
-    the difference is reported (DEC-34);
+  * BuonaStrada-owned fields are updated unless a correction is open; once BuonaStrada
+    has the corrected value the correction is closed as received (DEC-31);
+  * a membership created in the app (fonte=APP, e.g. noviziato) is not overwritten
+    silently (DEC-34);
+  * when the app and BuonaStrada disagree (open correction, app membership) whoever
+    imports chooses which wins; the preview proposes the more recent one, comparing
+    the date of the change in the app with the date the BuonaStrada data were updated,
+    asked at upload (maintainer, 2026-10-29). Choosing BuonaStrada closes the
+    correction as superseded;
   * guardians are deduplicated by codice fiscale (DEC-32, DEC-33).
 """
 
@@ -32,7 +36,7 @@ from apps.anagrafica.models import (
     RuoloAppartenenza,
     TipoTutela,
 )
-from apps.anagrafica.servizi import come_testo, recepisci_correzione
+from apps.anagrafica.servizi import come_testo, recepisci_correzione, supera_correzione
 from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
 from apps.organizzazione.models import Gruppo, TipoUnita, Unita
@@ -45,6 +49,10 @@ class GruppoNonCorrispondente(ValueError):
     """The export belongs to a different group than this installation."""
 
 
+APP = "APP"
+BUONASTRADA = "BUONASTRADA"
+
+
 @dataclass
 class Differenza:
     codice_socio: str
@@ -53,6 +61,11 @@ class Differenza:
     valore_app: str
     valore_buonastrada: str
     motivo: str
+    # Stable between preview and apply: what the user's choice refers to.
+    chiave: str = ""
+    data_app: str | None = None  # ISO date of the change made in the app
+    proposta: str = APP  # the more recent of the two
+    scelta: str = APP  # what this run did
 
 
 @dataclass
@@ -66,17 +79,32 @@ class Riepilogo:
     differenze: list[Differenza] = field(default_factory=list)
     correzioni_recepite: list[str] = field(default_factory=list)
     avvisi: list[dict] = field(default_factory=list)
+    # When BuonaStrada's data were last updated (asked at upload) and the choices made.
+    aggiornato_al: str | None = None
+    scelte: dict[str, str] = field(default_factory=dict)
 
     def come_dict(self) -> dict:
         return asdict(self)
+
+    def decidi(self, chiave: str, modificato_il: date) -> tuple[str, str]:
+        """(proposta, scelta) for a difference: the more recent side is proposed, a tie
+        goes to BuonaStrada, the source of truth (DEC-02); the user's choice wins."""
+        aggiornato = date.fromisoformat(self.aggiornato_al) if self.aggiornato_al else None
+        proposta = APP if aggiornato is None or modificato_il > aggiornato else BUONASTRADA
+        return proposta, self.scelte.get(chiave, proposta)
 
 
 class _Anteprima(Exception):
     """Internal signal used to roll back the preview transaction."""
 
 
-def anteprima(risultato: RisultatoParsing, oggi: date | None = None) -> Riepilogo:
-    riepilogo = Riepilogo()
+def anteprima(
+    risultato: RisultatoParsing,
+    oggi: date | None = None,
+    aggiornato_al: date | None = None,
+    scelte: dict[str, str] | None = None,
+) -> Riepilogo:
+    riepilogo = _riepilogo(aggiornato_al, scelte)
     try:
         with transaction.atomic():
             _esegui(risultato, riepilogo, oggi or date.today())
@@ -86,14 +114,26 @@ def anteprima(risultato: RisultatoParsing, oggi: date | None = None) -> Riepilog
     return riepilogo
 
 
-def applica(risultato: RisultatoParsing, oggi: date | None = None) -> Riepilogo:
-    riepilogo = Riepilogo()
+def applica(
+    risultato: RisultatoParsing,
+    oggi: date | None = None,
+    aggiornato_al: date | None = None,
+    scelte: dict[str, str] | None = None,
+) -> Riepilogo:
+    riepilogo = _riepilogo(aggiornato_al, scelte)
     with transaction.atomic():
         _esegui(risultato, riepilogo, oggi or date.today())
     return riepilogo
 
 
 # --- implementation --------------------------------------------------------------------
+
+
+def _riepilogo(aggiornato_al: date | None, scelte: dict[str, str] | None) -> Riepilogo:
+    return Riepilogo(
+        aggiornato_al=aggiornato_al.isoformat() if aggiornato_al else None,
+        scelte={k: v for k, v in (scelte or {}).items() if v in (APP, BUONASTRADA)},
+    )
 
 
 def _esegui(risultato: RisultatoParsing, r: Riepilogo, oggi: date) -> None:
@@ -166,17 +206,30 @@ def _aggiorna_campi(persona: Persona, valori: dict, r: Riepilogo, codice_socio: 
         if attuale == nuovo:
             continue
         if correzione is not None and correzione.aperta:
+            chiave = f"{persona.pk}:{campo}"
+            modificata = correzione.aggiornato_il.date()
+            proposta, scelta = r.decidi(chiave, modificata)
             r.differenze.append(
                 Differenza(
                     codice_socio,
                     str(persona),
-                    campo,
-                    str(attuale),
-                    str(nuovo),
-                    "Correzione in attesa di BuonaStrada: valore dell'app mantenuto.",
+                    ETICHETTE_CAMPI.get(campo, campo),
+                    come_testo(attuale),
+                    come_testo(nuovo),
+                    (
+                        "Corretto nell'app: resta il valore dell'app."
+                        if scelta == APP
+                        else "Vince BuonaStrada: la correzione fatta nell'app è superata."
+                    ),
+                    chiave=chiave,
+                    data_app=modificata.isoformat(),
+                    proposta=proposta,
+                    scelta=scelta,
                 )
             )
-            continue
+            if scelta == APP:
+                continue
+            supera_correzione(correzione)
         setattr(persona, campo, nuovo)
         cambiato = True
     return cambiato
@@ -267,17 +320,29 @@ def _appartenenza(
     altre = list(attive.exclude(unita=unita))
     for appartenenza in altre:
         if appartenenza.fonte == FonteDato.APP:
+            chiave = f"{persona.pk}:unita:{ruolo}"
+            modificata = appartenenza.aggiornato_il.date()
+            proposta, scelta = r.decidi(chiave, modificata)
             r.differenze.append(
                 Differenza(
                     riga.codice_socio,
                     str(persona),
-                    "unità",
+                    "Unità",
                     str(appartenenza.unita),
                     str(unita),
-                    "Unità assegnata nell'app: non sovrascritta dall'importazione.",
+                    (
+                        "Unità assegnata nell'app: resta quella dell'app."
+                        if scelta == APP
+                        else "Vince BuonaStrada: si chiude l'unità assegnata nell'app."
+                    ),
+                    chiave=chiave,
+                    data_app=modificata.isoformat(),
+                    proposta=proposta,
+                    scelta=scelta,
                 )
             )
-            return
+            if scelta == APP:
+                return
     for appartenenza in altre:
         _chiudi_appartenenza(appartenenza, r, oggi)
     # A change of unit starts today; a first membership starts with the associative year.

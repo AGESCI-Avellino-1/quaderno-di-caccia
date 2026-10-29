@@ -94,6 +94,12 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Patrol members: the API decides (DEC-13).
+      path: '/squadriglia',
+      name: 'squadriglia',
+      component: () => import('@/views/SquadrigliaView.vue'),
+    },
+    {
       // Capigruppo: the API decides (DEC-31).
       path: '/correzioni',
       name: 'correzioni',

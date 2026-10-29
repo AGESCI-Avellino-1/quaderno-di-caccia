@@ -163,7 +163,8 @@ docker compose exec web python manage.py createsuperuser
 
 Le migrazioni si applicano all'avvio del container `web`. Una volta al giorno va
 lanciato l'avviso ai capigruppo sulle correzioni da inoltrare (ad esempio da `crontab`):
-`docker compose exec -T web python manage.py segnala_correzioni`. Per il backup del database:
+`docker compose exec -T web python manage.py segnala_correzioni`, e l'avviso a chi
+compie 18 anni: `docker compose exec -T web python manage.py avvisa_maggiore_eta`. Per il backup del database:
 `scripts/backup-db.sh` (il file contiene dati di minori: va conservato cifrato).
 
 ## Dati personali e sicurezza

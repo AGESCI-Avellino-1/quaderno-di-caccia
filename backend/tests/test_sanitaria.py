@@ -17,6 +17,7 @@ DATI = {
         {"tipo": "INTOLLERANZA", "sostanza": "Lattosio", "gravita": "LIEVE"},
     ],
     "farmaci": [{"nome": "Ventolin", "posologia": "2 spruzzi al bisogno", "autonomo": True}],
+    "esigenze_alimentari": " Vegetariana ",
 }
 
 
@@ -41,6 +42,7 @@ def test_il_genitore_compila_il_capo_legge(genitore, ragazza, capo):
     assert letto["compilate"] is True
     assert [a["sostanza"] for a in letto["allergie"]] == ["Arachidi", "Lattosio"]
     assert letto["farmaci"][0]["autonomo"] is True
+    assert letto["esigenze_alimentari"] == "Vegetariana"
     assert letto["puo_modificare"] is True  # capo unità of her reparto
     assert AccessoDatoSensibile.objects.filter(
         persona=ragazza, azione=Azione.LETTURA, utente=capo.utente
@@ -60,6 +62,11 @@ def test_dati_contraddittori_rifiutati(genitore, ragazza):
     risposta = _scrivi(_client(genitore), ragazza, {"nessuna_allergia": True, **DATI})
     assert risposta.status_code == 400
     assert "nessuna allergia" in risposta.json()["detail"]
+
+
+def test_esigenze_alimentari_brevi(genitore, ragazza):
+    risposta = _scrivi(_client(genitore), ragazza, {"esigenze_alimentari": "x" * 301})
+    assert risposta.status_code == 400
 
 
 def test_trascrizione_del_capo(capo, ragazza):
@@ -93,6 +100,7 @@ def test_scarico_per_il_campo_solo_su_dispositivo_registrato(capo, ragazza, geni
     assert risposta.status_code == 200
     scheda = next(p for p in risposta.json()["persone"] if p["id"] == ragazza.pk)
     assert scheda["sanitarie"]["allergie"][0]["gravita"] == "GRAVE"
+    assert scheda["sanitarie"]["esigenze_alimentari"] == "Vegetariana"  # offline at camp
     assert {c["cellulare"] for c in scheda["contatti"]} >= {ragazza.cellulare}
     assert AccessoDatoSensibile.objects.filter(
         persona=ragazza, azione=Azione.SCARICO_OFFLINE

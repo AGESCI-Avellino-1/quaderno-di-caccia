@@ -17,7 +17,7 @@ Read the root `CLAUDE.md` first.
 | `apps/permessi/policy.py` | **The only place that decides visibility and actions** |
 | `apps/permessi/models.py` | `AccessoDatoSensibile` + `registra_accessi()`: log of reads/downloads/changes of sensitive data (DEC-101) |
 | `apps/dispositivi` | `Dispositivo`, revocation, middleware that logs out revoked devices and sends `X-QdC-Offline-Fino-Al` (DEC-23, DEC-97) |
-| `apps/sanitaria` | Medicines, allergies, intolerances (DEC-48 core, DEC-55); `/persone/{id}/sanitarie`, `/campo/{unita}` for the offline download. **Not in the admin** |
+| `apps/sanitaria` | Medicines, allergies, intolerances (DEC-48 core, DEC-55), non-medical dietary needs (DEC-49, same rules and log); `/persone/{id}/sanitarie`, `/campo/{unita}` for the offline download. **Not in the admin** |
 | `data/cataloghi/` | Modello D, specialità, brevetti as JSON (not loaded into the DB yet; see its README) |
 | `tests/` | pytest; `conftest.py` fixtures, `export_sintetico.py` fake BuonaStrada export |
 
@@ -72,5 +72,6 @@ uv run python manage.py importa_buonastrada RicercaSoci.csv            # preview
 uv run python manage.py importa_buonastrada RicercaSoci.csv --applica  # write
 uv run python manage.py crea_invito <codice_socio> <email> --capogruppo  # first start
 uv run python manage.py segnala_correzioni   # daily email to the capigruppo (cron), DEC-31
+uv run python manage.py avvisa_maggiore_eta  # daily alerts for members turning 18 (cron), DEC-26
 uv run python manage.py createsuperuser   # technical admin (DEC-12): sees no educational data
 ```

@@ -30,6 +30,8 @@ class Profilo(Schema):
     tesoriere: bool
     amministratore_tecnico: bool
     squadriglie_guidate: list[int]
+    # Patrols the user is a member of (shows "La mia squadriglia").
+    squadriglie: list[int]
     tutelati: list[PersonaBreve]
 
 
@@ -47,6 +49,7 @@ def profilo(request):
         "tesoriere": policy.e_tesoriere(user),
         "amministratore_tecnico": policy.e_amministratore(user),
         "squadriglie_guidate": list(policy.squadriglie_guidate(user).values_list("id", flat=True)),
+        "squadriglie": list(policy.squadriglie_di(user).values_list("id", flat=True)),
         "tutelati": list(policy.tutelati(user)),
     }
 

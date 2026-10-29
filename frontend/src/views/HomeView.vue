@@ -61,6 +61,12 @@ onMounted(async () => {
           <span class="fg-2 small">Carica l'export "Ricerca soci" (CSV)</span>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.squadriglie?.length" class="col-12 md:col-6">
+        <RouterLink to="/squadriglia" class="card card-body h-100 text-decoration-none">
+          <strong>La mia squadriglia</strong>
+          <span class="fg-2 small">I numeri di telefono, anche senza rete</span>
+        </RouterLink>
+      </div>
       <div v-for="tutelato in sessione.profilo.tutelati" :key="tutelato.id" class="col-12 md:col-6">
         <RouterLink
           :to="{ name: 'persona', params: { id: tutelato.id } }"

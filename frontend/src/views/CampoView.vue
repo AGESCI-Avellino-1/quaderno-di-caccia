@@ -31,7 +31,10 @@ const eta = (nascita: string | null) => {
   return anni
 }
 
-const haDati = (p: SchedaCampo) => p.sanitarie.allergie.length > 0 || p.sanitarie.farmaci.length > 0
+const haDati = (p: SchedaCampo) =>
+  p.sanitarie.allergie.length > 0 ||
+  p.sanitarie.farmaci.length > 0 ||
+  !!p.sanitarie.esigenze_alimentari
 const haGrave = (p: SchedaCampo) => p.sanitarie.allergie.some((a) => a.gravita === 'GRAVE')
 
 const persone = computed(() => {

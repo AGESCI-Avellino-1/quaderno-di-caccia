@@ -1,7 +1,7 @@
 """Health essentials needed at camp (DEC-48 core, DEC-55, DEC-95).
 
-Only medicines, allergies and intolerances live here, anticipated to phase 1 because
-the capi need them offline at camp. The full medical form (tessera sanitaria, emergency
+Only medicines, allergies, intolerances and non-medical dietary needs live here,
+anticipated to phase 1 because the capi need them offline at camp. The full medical form (tessera sanitaria, emergency
 contacts, printing, signatures: DEC-48..DEC-54) is phase 5 and will extend this app.
 """
 
@@ -29,6 +29,10 @@ class InformazioniSanitarie(ModelloTracciato):
     # must know which of the two it is.
     nessuna_allergia = models.BooleanField(default=False)
     nessun_farmaco = models.BooleanField(default=False)
+    # Non-medical dietary needs (vegetarian, no pork…), DEC-49. A religious need is a
+    # special category of data: kept here, with the same access rules and log as health
+    # data (maintainer, 2026-10-29). The form asks for the need, not the reason.
+    esigenze_alimentari = models.CharField(max_length=300, blank=True)
     aggiornate_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )

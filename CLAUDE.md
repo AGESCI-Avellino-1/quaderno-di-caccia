@@ -247,18 +247,21 @@ verificare" in the analysis).
   stays out of the admin itself; `DerogaSquadriglia.motivazione` stays out of the audit
   log.
 - Corrections (DEC-31, maintainer 2026-10-29): who corrects which field is
-  `policy.campi_correggibili`; sex and place of birth count as identity (capigruppo
-  only) because the codice fiscale derives from them `[da verificare]`. The daily
-  summary to the capigruppo is `manage.py segnala_correzioni`, run by the host's cron.
+  `policy.campi_correggibili` (sex and place of birth: unit staff and capigruppo; the
+  adult also their own consents); capigruppo and the technical administrator forward
+  or discard (`puo_gestire_correzioni`). The daily summary to the capigruppo is
+  `manage.py segnala_correzioni`, run by the host's cron (`deploy/cron/qdc.crontab`).
 - Joining from the app (maintainer 2026-10-29, no DEC code yet; built): sign-up is open with an
   invitation (DEC-21) **or** a registration code (`apps/iscrizioni`, kept in the
   session until the allauth sign-up, `accounts.adapters`). Approval gives a provisional
   codice socio `9` + 9 digits (`anagrafica.servizi.nuovo_codice_provvisorio`); the import
   replaces it by codice fiscale. `policy.e_capo_in_attesa`: a capo with a provisional
   code sees no sensitive data (`_vede`, staff checks, camp, exceptions, access log).
-  Completion by a deadline set at approval (`servizi.completa`, fields
-  `CAMPI_SOCIO_OBBLIGATORI` `[da verificare]`); past it `promemoria_iscrizioni` suspends:
-  `policy.persona_di` returns None for a suspended account. Signed forms: capigruppo
+  Completion by a deadline set at approval (`servizi.completa`, `mancanti`: the data
+  BuonaStrada requires, the parents single or both, adults' mobile and email); past it
+  `promemoria_iscrizioni` suspends only that member: the family no longer sees them
+  (`policy.tutelati` excludes them; an adult who joined themself gets `persona_di` None).
+  Signed forms: capigruppo
   upload blank PDFs (`ModuloVuoto`), the family uploads scans (`AllegatoIscrizione`,
   PDF/JPEG/PNG ≤ 10 MB checked on the first bytes, random file names, served only by the
   API with `Categoria.MODULI` in the access log), who approves verifies and ticks the
@@ -268,6 +271,9 @@ verificare" in the analysis).
 - Units (maintainer 2026-10-29): `nome` is the group's, may repeat, required except for
   the Co.Ca.; the BuonaStrada code (`Unita.codice`, CUN + progressive, e.g. O1, G1) is
   unique and shown next to it everywhere (`str(unita)`, `nomeUnita()` in the PWA).
+  Units created by the import have `nome_provvisorio` (a warning) until renamed.
+- Decisions of 28–29/10 without a DEC code yet: draft for the analysis in
+  `docs/analisi/decisioni-da-numerare.md`.
 - Import differences (maintainer 2026-10-29): when the app and BuonaStrada disagree (open
   correction, membership with `fonte=APP`) the user chooses per difference
   (`Differenza.chiave`); the preview proposes the more recent side, comparing the

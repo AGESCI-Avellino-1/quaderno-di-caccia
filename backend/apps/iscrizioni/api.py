@@ -304,6 +304,14 @@ def rifiuta(request, richiesta_id: int, dati: Decisione):
 # --- Completion -------------------------------------------------------------------------
 
 
+class AltroGenitore(Schema):
+    nome: str = ""
+    cognome: str = ""
+    codice_fiscale: str = ""
+    cellulare: str = ""
+    email: str = ""
+
+
 class Completamento(Schema):
     sesso: str = ""
     luogo_nascita: str = ""
@@ -312,8 +320,14 @@ class Completamento(Schema):
     comune: str = ""
     provincia: str = ""
     cap: str = ""
+    # The member's own: required for an adult, optional for a minor.
+    cellulare: str = ""
+    email: str = ""
     # For a minor: the parent's mobile; None when the member is an adult.
     cellulare_genitore: str | None = None
+    # For a minor: one parent with exclusive custody, or both (then the other one).
+    genitore_unico: bool | None = None
+    altro_genitore: AltroGenitore | None = None
 
 
 class StatoCompletamento(Completamento):
@@ -336,8 +350,21 @@ def _richiesta_da_completare(request, richiesta_id: int) -> RichiestaIscrizione:
 def _completamento(richiesta: RichiestaIscrizione) -> dict:
     socio = richiesta.persona
     padre_o_madre = servizi.genitore(richiesta)
+    altro = servizi.altro_genitore(richiesta)
     return {campo: getattr(socio, campo) for campo in CAMPI_SOCIO} | {
         "cellulare_genitore": padre_o_madre.cellulare if padre_o_madre else None,
+        "genitore_unico": richiesta.genitore_unico,
+        "altro_genitore": (
+            {
+                "nome": altro.nome,
+                "cognome": altro.cognome,
+                "codice_fiscale": altro.codice_fiscale or "",
+                "cellulare": altro.cellulare,
+                "email": altro.email,
+            }
+            if altro
+            else None
+        ),
         "richiesta": _richiesta_out(richiesta),
     }
 

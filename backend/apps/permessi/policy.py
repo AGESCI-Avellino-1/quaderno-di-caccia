@@ -11,8 +11,10 @@ from django.db.models import Q, QuerySet
 
 from apps.anagrafica.models import (
     CAMPI_BUONASTRADA,
+    CAMPI_CONSENSO,
     CAMPI_CONTATTO,
     CAMPI_IDENTITA,
+    CAMPI_IDENTITA_STAFF,
     Appartenenza,
     Persona,
     RuoloAppartenenza,
@@ -32,16 +34,23 @@ class LivelloAccesso(StrEnum):
 
 
 def persona_di(user) -> Persona | None:
-    """The person behind an account. None also for an account suspended because its
-    registration was not completed in time: it sees nothing but that (maintainer,
-    2026-10-29)."""
+    """The person behind an account. None also when that person joined from the app and
+    the deadline to complete passed: the account sees only its registration until then
+    (maintainer, 2026-10-29)."""
     if not getattr(user, "is_authenticated", False):
         return None
-    from apps.iscrizioni.servizi import account_sospeso
-
-    if account_sospeso(user):
+    persona = Persona.objects.filter(utente=user).first()
+    if persona is not None and persona.pk in _sospese(user):
         return None
-    return Persona.objects.filter(utente=user).first()
+    return persona
+
+
+def _sospese(user) -> set[int]:
+    """Members whose registration from this account is suspended: only those are
+    hidden, the rest of the account works (maintainer, 2026-10-29)."""
+    from apps.iscrizioni.servizi import persone_sospese
+
+    return persone_sospese(user)
 
 
 def e_amministratore(user) -> bool:
@@ -118,9 +127,11 @@ def tutelati(user) -> QuerySet[Persona]:
     persona = persona_di(user)
     if persona is None:
         return Persona.objects.none()
-    return Persona.objects.filter(
-        tutori__tutore=persona, tutori__responsabilita_genitoriale=True
-    ).distinct()
+    return (
+        Persona.objects.filter(tutori__tutore=persona, tutori__responsabilita_genitoriale=True)
+        .exclude(pk__in=_sospese(user))
+        .distinct()
+    )
 
 
 def _membri_squadriglie(squadriglie: QuerySet[Squadriglia]) -> QuerySet[Persona]:
@@ -291,19 +302,21 @@ def campi_correggibili(user, persona: Persona) -> set[str]:
     decided by the maintainer on 2026-10-29).
 
     The technical administrator and the capigruppo: every field of every member. The
-    staff of the person's unit and the parents of a minor: everything but identity
-    (name, sex, birth, codice fiscale). The adult member: their own contacts and
-    address. Parents of an adult no longer write (DEC-26).
+    staff of the person's unit: everything but name, date of birth and codice fiscale.
+    The parents of a minor: everything but identity (name, sex, birth, codice
+    fiscale). The adult member: their own contacts, address and consents. Parents of
+    an adult no longer write (DEC-26).
     """
     if e_amministratore(user) or e_capogruppo(user):
         return set(CAMPI_BUONASTRADA)
     campi: set[str] = set()
     propria = persona_di(user)
     if propria is not None and propria.pk == persona.pk and not persona.e_minorenne():
-        campi |= set(CAMPI_CONTATTO)
-    genitore = persona.e_minorenne() and tutelati(user).filter(pk=persona.pk).exists()
-    if genitore or _staff_della_persona(user, persona):
+        campi |= set(CAMPI_CONTATTO) | set(CAMPI_CONSENSO)
+    if persona.e_minorenne() and tutelati(user).filter(pk=persona.pk).exists():
         campi |= set(CAMPI_BUONASTRADA) - set(CAMPI_IDENTITA)
+    if _staff_della_persona(user, persona):
+        campi |= set(CAMPI_BUONASTRADA) - set(CAMPI_IDENTITA) | set(CAMPI_IDENTITA_STAFF)
     return campi
 
 
@@ -339,9 +352,9 @@ def puo_gestire_diritti(user) -> bool:
 
 
 def puo_gestire_correzioni(user) -> bool:
-    """The capigruppo forward corrections to the regional office or discard them
-    (DEC-31)."""
-    return e_capogruppo(user)
+    """The capigruppo, and the technical administrator, forward corrections to the
+    regional office or discard them (DEC-31; maintainer 2026-10-29)."""
+    return e_capogruppo(user) or e_amministratore(user)
 
 
 def puo_scaricare_campo(user) -> bool:

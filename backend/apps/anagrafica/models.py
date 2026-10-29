@@ -126,11 +126,18 @@ CAMPI_BUONASTRADA = (
 )
 
 # Who may correct which field (DEC-31, maintainer 2026-10-29), see
-# policy.campi_correggibili: contacts and address also by the adult member themself;
-# identity only by the capigruppo. Sex and place of birth go with identity because the
-# codice fiscale is derived from them [da verificare].
+# policy.campi_correggibili: contacts, address and consents also by the adult member
+# themself; sex and place of birth by the unit staff too, not by the parents; the rest
+# of identity only by the capigruppo.
 CAMPI_CONTATTO = ("indirizzo", "civico", "comune", "provincia", "cap", "email", "cellulare")
+CAMPI_CONSENSO = (
+    "consenso_iscrizione",
+    "consenso_foto",
+    "consenso_commerciale",
+    "consenso_riviste",
+)
 CAMPI_IDENTITA = ("nome", "cognome", "sesso", "data_nascita", "luogo_nascita", "codice_fiscale")
+CAMPI_IDENTITA_STAFF = ("sesso", "luogo_nascita")
 
 ETICHETTE_CAMPI = {
     "nome": "Nome",

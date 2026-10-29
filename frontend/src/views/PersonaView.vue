@@ -59,6 +59,9 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             <span v-if="persona.codice_provvisorio" class="badge theme-warning ms-1">
               provvisorio, in attesa di BuonaStrada
             </span>
+            <span v-if="persona.iscrizione_sospesa" class="badge theme-danger ms-1">
+              iscrizione sospesa: scaduto il termine per completarla
+            </span>
           </dd>
         </template>
         <template v-if="persona.data_nascita">

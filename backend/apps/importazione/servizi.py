@@ -322,6 +322,7 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
                 if riga.tipo_unita == TipoUnita.COMUNITA_CAPI
                 else _con_accenti(riga.tipo_unita_testo).title()
             ),
+            nome_provvisorio=riga.tipo_unita != TipoUnita.COMUNITA_CAPI,
             tipo=riga.tipo_unita,
             composizione=riga.composizione,
             ambiente=riga.ambiente,

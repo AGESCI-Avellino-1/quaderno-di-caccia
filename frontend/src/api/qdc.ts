@@ -49,6 +49,8 @@ export interface PersonaDettaglio extends PersonaBreve {
   codice_socio: string | null
   /** Joined from the app, not yet in BuonaStrada. */
   codice_provvisorio?: boolean
+  /** Joined from the app and the deadline to complete passed. */
+  iscrizione_sospesa?: boolean
   email: string | null
   cellulare: string | null
   indirizzo: string | null
@@ -95,6 +97,8 @@ export interface Unita {
   nome: string
   /** BuonaStrada code (O1, G1…): unique, unlike the name chosen by the group. */
   codice: string
+  /** Name given by the import from the unit type, until the group names it. */
+  nome_provvisorio?: boolean
   tipo: string
   branca: string
   composizione: string
@@ -356,8 +360,22 @@ export interface Completamento {
   comune: string
   provincia: string
   cap: string
+  /** The member's own: required for an adult, optional for a minor. */
+  cellulare: string
+  email: string
   /** For a minor, the parent's mobile; null for an adult member. */
   cellulare_genitore: string | null
+  /** For a minor: one parent with exclusive custody, or both (null: not said yet). */
+  genitore_unico: boolean | null
+  altro_genitore: AltroGenitore | null
+}
+
+export interface AltroGenitore {
+  nome: string
+  cognome: string
+  codice_fiscale: string
+  cellulare: string
+  email: string
 }
 
 export const qrCodice = (id: number) => `/api/v1/codici-iscrizione/${id}/qr.svg`

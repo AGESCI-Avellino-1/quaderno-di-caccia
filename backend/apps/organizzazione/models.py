@@ -76,6 +76,9 @@ class Unita(ModelloTracciato):
     # Given by the group, not by BuonaStrada, and it may repeat (e.g. "Reparto
     # Millennium"); optional only for the Co.Ca. (maintainer, 2026-10-29).
     nome = models.CharField(max_length=120, blank=True)
+    # Given by the import from the unit type: shown as a warning until the group names
+    # the unit (maintainer, 2026-10-29).
+    nome_provvisorio = models.BooleanField(default=False)
     tipo = models.CharField(max_length=20, choices=TipoUnita.choices)
     composizione = models.CharField(max_length=1, choices=Composizione.choices)
     ambiente = models.CharField(max_length=10, choices=Ambiente.choices, default=Ambiente.NESSUNO)

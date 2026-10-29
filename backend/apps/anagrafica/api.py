@@ -44,6 +44,8 @@ class PersonaDettaglio(Schema):
     codice_socio: str | None = None
     # Joined from the app, not yet in BuonaStrada.
     codice_provvisorio: bool = False
+    # Joined from the app and the deadline to complete passed (shown to the capi).
+    iscrizione_sospesa: bool = False
     email: str | None = None
     cellulare: str | None = None
     indirizzo: str | None = None
@@ -82,6 +84,7 @@ def dettaglio_persona(request, persona_id: int):
             "data_nascita": persona.data_nascita,
             "codice_socio": persona.codice_socio,
             "codice_provvisorio": servizi.e_codice_provvisorio(persona.codice_socio),
+            "iscrizione_sospesa": persona.iscrizioni.filter(stato="SOSPESA").exists(),
             "consenso_foto": persona.consenso_foto,
         }
     if policy.puo_vedere_dati_sensibili(request.auth, persona):

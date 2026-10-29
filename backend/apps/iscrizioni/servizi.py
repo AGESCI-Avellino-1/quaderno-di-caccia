@@ -19,12 +19,13 @@ from apps.anagrafica.models import (
     RuoloAppartenenza,
     TipoTutela,
 )
-from apps.anagrafica.servizi import nuovo_codice_provvisorio
+from apps.anagrafica.servizi import codice_fiscale_valido, nuovo_codice_provvisorio
 from apps.core.anno import eta_in_data
 from apps.core.models import FonteDato
 from apps.organizzazione.models import TipoUnita
 
 from .models import (
+    CAMPI_ADULTO_OBBLIGATORI,
     CAMPI_SOCIO,
     CAMPI_SOCIO_OBBLIGATORI,
     DA_COMPLETARE,
@@ -236,6 +237,23 @@ def genitore(richiesta: RichiestaIscrizione) -> Persona | None:
     return Persona.objects.filter(codice_fiscale=richiesta.genitore_codice_fiscale).first()
 
 
+def altro_genitore(richiesta: RichiestaIscrizione) -> Persona | None:
+    """The other parent or guardian of a minor, when the family declared both."""
+    chi_iscrive = genitore(richiesta)
+    if richiesta.persona is None or chi_iscrive is None:
+        return None
+    return (
+        Persona.objects.filter(tutele__minore=richiesta.persona)
+        .exclude(pk=chi_iscrive.pk)
+        .order_by("pk")
+        .first()
+    )
+
+
+def _dati_mancanti(persona: Persona, campi: dict[str, str]) -> list[str]:
+    return [etichetta for campo, etichetta in campi.items() if not getattr(persona, campo)]
+
+
 def mancanti(richiesta: RichiestaIscrizione) -> list[str]:
     """What is still missing to complete the registration, in words."""
     socio = richiesta.persona
@@ -243,8 +261,31 @@ def mancanti(richiesta: RichiestaIscrizione) -> list[str]:
         return []
     voci = [ETICHETTE_CAMPI[c] for c in CAMPI_SOCIO_OBBLIGATORI if not getattr(socio, c)]
     padre_o_madre = genitore(richiesta)
-    if padre_o_madre is not None and not padre_o_madre.cellulare:
-        voci.append("Cellulare del genitore")
+    if padre_o_madre is None:  # an adult
+        voci += [ETICHETTE_CAMPI[c] for c in CAMPI_ADULTO_OBBLIGATORI if not getattr(socio, c)]
+    else:
+        voci += [
+            f"{v} del genitore"
+            for v in _dati_mancanti(padre_o_madre, {"cellulare": "Cellulare", "email": "Email"})
+        ]
+        if richiesta.genitore_unico is None:
+            voci.append("Genitore singolo o entrambi i genitori")
+        elif not richiesta.genitore_unico:
+            altro = altro_genitore(richiesta)
+            if altro is None:
+                voci.append("Dati dell'altro genitore")
+            else:
+                voci += [
+                    f"{v} dell'altro genitore"
+                    for v in _dati_mancanti(
+                        altro,
+                        {
+                            "codice_fiscale": "Codice fiscale",
+                            "cellulare": "Cellulare",
+                            "email": "Email",
+                        },
+                    )
+                ]
     if not richiesta.allegati.exists():
         voci.append("Moduli firmati da caricare")
     elif richiesta.moduli_verificati_il is None:
@@ -271,6 +312,10 @@ def completa(richiesta: RichiestaIscrizione, dati: dict) -> None:
         if campo in dati:
             setattr(socio, campo, (dati[campo] or "").strip())
     socio.provincia = socio.provincia.upper()
+    socio.email = socio.email.lower()
+    padre_o_madre = genitore(richiesta)
+    if padre_o_madre is not None and socio.email and socio.email == padre_o_madre.email.lower():
+        raise ValidationError("L'email del ragazzo deve essere sua, non quella del genitore.")
     if socio.cap and not (socio.cap.isdigit() and len(socio.cap) == 5):
         raise ValidationError("Il CAP ha 5 cifre.")
     if socio.provincia and not (socio.provincia.isalpha() and len(socio.provincia) == 2):
@@ -278,17 +323,59 @@ def completa(richiesta: RichiestaIscrizione, dati: dict) -> None:
     altri = [f.name for f in Persona._meta.fields if f.name not in CAMPI_SOCIO]
     socio.full_clean(exclude=altri)
     socio.save()
-    padre_o_madre = genitore(richiesta)
-    if padre_o_madre is not None and "cellulare_genitore" in dati:
-        padre_o_madre.cellulare = (dati["cellulare_genitore"] or "").strip()
-        padre_o_madre.save(update_fields=["cellulare", "aggiornato_il"])
+    if padre_o_madre is not None:
+        if "cellulare_genitore" in dati:
+            padre_o_madre.cellulare = (dati["cellulare_genitore"] or "").strip()
+            padre_o_madre.save(update_fields=["cellulare", "aggiornato_il"])
+        if dati.get("genitore_unico") is not None:
+            _genitori(
+                richiesta, padre_o_madre, bool(dati["genitore_unico"]), dati.get("altro_genitore")
+            )
     aggiorna_stato(richiesta)
 
 
-def account_sospeso(utente) -> bool:
-    """The deadline passed without completing: the account waits again, it sees only
-    its own registration (maintainer, 2026-10-29)."""
-    return RichiestaIscrizione.objects.filter(utente=utente, stato=StatoIscrizione.SOSPESA).exists()
+def _genitori(richiesta, chi_iscrive: Persona, unico: bool, altro: dict | None) -> None:
+    """One parent with exclusive custody, or both: as BuonaStrada records them."""
+    socio = richiesta.persona
+    richiesta.genitore_unico = unico
+    richiesta.save(update_fields=["genitore_unico", "aggiornato_il"])
+    RelazioneTutela.objects.filter(tutore=chi_iscrive, minore=socio).update(
+        tipo=TipoTutela.UNICO_GENITORE if unico else TipoTutela.GENITORE
+    )
+    if unico or not altro:
+        return
+    codice_fiscale = (altro.get("codice_fiscale") or "").strip().upper()
+    if not codice_fiscale_valido(codice_fiscale):
+        raise ValidationError("Il codice fiscale dell'altro genitore non è valido.")
+    if codice_fiscale in {chi_iscrive.codice_fiscale, socio.codice_fiscale}:
+        raise ValidationError("Il codice fiscale dell'altro genitore è già usato qui.")
+    nome, cognome = (altro.get("nome") or "").strip(), (altro.get("cognome") or "").strip()
+    if not (nome and cognome):
+        raise ValidationError("Scrivi nome e cognome dell'altro genitore.")
+    precedente = altro_genitore(richiesta)
+    if precedente is not None and precedente.codice_fiscale != codice_fiscale:
+        RelazioneTutela.objects.filter(tutore=precedente, minore=socio).delete()
+    persona = _persona(nome, cognome, codice_fiscale)
+    # Contacts as given by the family, unless BuonaStrada's are there already.
+    for campo in ("cellulare", "email"):
+        valore = (altro.get(campo) or "").strip()
+        if valore and not getattr(persona, campo):
+            setattr(persona, campo, valore.lower() if campo == "email" else valore)
+    persona.full_clean(exclude=[f.name for f in Persona._meta.fields if f.name not in ("email",)])
+    persona.save()
+    RelazioneTutela.objects.get_or_create(
+        tutore=persona, minore=socio, defaults={"tipo": TipoTutela.GENITORE}
+    )
+
+
+def persone_sospese(utente) -> set[int]:
+    """Members whose registration from this account passed its deadline incomplete:
+    the family no longer sees them until it completes (maintainer, 2026-10-29)."""
+    return set(
+        RichiestaIscrizione.objects.filter(
+            utente=utente, stato=StatoIscrizione.SOSPESA, persona__isnull=False
+        ).values_list("persona_id", flat=True)
+    )
 
 
 # --- Signed forms --------------------------------------------------------------------

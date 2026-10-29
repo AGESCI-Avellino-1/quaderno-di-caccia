@@ -313,3 +313,19 @@ def test_nome_unita_con_accenti_e_codice():
     assert coca.nome == ""  # optional for the Co.Ca. only
     assert coca.codice == "G1"
     assert str(coca) == "Comunità Capi (G1)"
+
+
+def test_nome_provvisorio_delle_unita_importate():
+    from django.test import Client
+
+    from tests.conftest import crea_capo
+
+    applica(_risultato(), oggi=OGGI)
+    reparto = Unita.objects.get(tipo=TipoUnita.REPARTO, nome="Reparto Femminile")
+    coca = Unita.objects.get(tipo=TipoUnita.COMUNITA_CAPI)
+    assert reparto.nome_provvisorio and not coca.nome_provvisorio
+    capo = crea_capo("Carlo", "Prova", "carlo@example.invalid")
+    client = Client()
+    client.force_login(capo.utente)
+    avvisi = client.get(f"/api/v1/unita/{reparto.pk}").json()["avvisi"]
+    assert any("provvisorio" in a for a in avvisi)

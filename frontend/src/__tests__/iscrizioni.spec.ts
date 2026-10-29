@@ -302,3 +302,39 @@ describe('IscrizioniBuonaStradaView', () => {
     expect(vista.text()).toContain("inserita, in attesa dell'importazione")
   })
 })
+
+describe('CompletaIscrizione, genitori', () => {
+  it('asks the other parent when both parents are declared', async () => {
+    const chiamate = stubFetch((_url, metodo) => [
+      200,
+      {
+        sesso: 'F',
+        luogo_nascita: 'Avellino',
+        indirizzo: 'Via Roma',
+        civico: '1',
+        comune: 'Avellino',
+        provincia: 'AV',
+        cap: '83100',
+        cellulare: '',
+        email: '',
+        cellulare_genitore: '3471112222',
+        genitore_unico: null,
+        altro_genitore: null,
+        richiesta: { id: 5, stato: metodo === 'PUT' ? 'APPROVATA' : 'APPROVATA', mancanti: [] },
+      },
+    ])
+    const modulo = mount(CompletaIscrizione, { props: { id: 5 } })
+    await flushPromises()
+    expect(modulo.find('#altro-cf-5').exists()).toBe(false)
+    await modulo.get('#entrambi-5').trigger('change')
+    await modulo.get('#altro-nome-5').setValue('Anna')
+    await modulo.get('#altro-cognome-5').setValue('Rossi')
+    await modulo.get('#altro-cf-5').setValue('RSSNNA82A41A509B')
+    await modulo.get('form').trigger('submit')
+    await flushPromises()
+    expect(chiamate[0]!.corpo).toMatchObject({
+      genitore_unico: false,
+      altro_genitore: { nome: 'Anna', cognome: 'Rossi', codice_fiscale: 'RSSNNA82A41A509B' },
+    })
+  })
+})

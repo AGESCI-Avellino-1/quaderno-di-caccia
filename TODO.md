@@ -27,11 +27,12 @@ per ultima, dopo tutte le altre fasi.
 
 | Attività | Chi | Stato |
 | --- | --- | --- |
-| Confermare le scelte segnate `[da verificare]`: quali campi BuonaStrada sono obbligatori per inserire un socio (oggi: sesso, luogo di nascita, indirizzo, comune, provincia, CAP; cellulare del genitore); promemoria dell'iscrizione 7 giorni prima della scadenza; sospensione dell'intero account (anche per gli altri figli già soci); all'importazione i dati di BuonaStrada vincono su quelli inseriti con l'iscrizione; sesso e luogo di nascita trattati come dati d'identità nelle correzioni; il maggiorenne non corregge i propri consensi; inoltro e scarto delle correzioni solo ai capigruppo (non all'amministratore tecnico) | maintainer | ⏳ |
-| Riportare nell'analisi le decisioni del 28 e 29/10 (tabelle sotto), per dar loro un codice DEC | maintainer | ⏳ |
-| In produzione, programmare con cron i comandi giornalieri `segnala_correzioni`, `avvisa_maggiore_eta`, `promemoria_iscrizioni` (righe nel README) | chi installa | ⏳ |
-| Prove nel browser non ancora fatte: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza rete, passkey, Google e Apple | sviluppo | ⏳ |
-| Proposta da decidere: avviso nella pagina dell'unità finché ha il nome provvisorio dato dall'importazione | maintainer | ⏳ |
+| Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada (nome, cognome, CF, sesso, data e luogo di nascita, indirizzo, comune, provincia, CAP; per il maggiorenne cellulare ed email; per il minore i genitori, singolo o entrambi, con CF, cellulare ed email; i consensi dai moduli); promemoria 7 giorni prima; sospensione solo del nuovo socio; all'importazione vince BuonaStrada; sesso e luogo di nascita correggibili anche dallo staff; il maggiorenne corregge anche i suoi consensi; correzioni gestite anche dall'amministratore tecnico | maintainer | ✅ applicate |
+| Riportare nell'analisi le decisioni del 28 e 29/10, per dar loro un codice DEC: bozza pronta in [docs/analisi/decisioni-da-numerare.md](docs/analisi/decisioni-da-numerare.md) | maintainer | ⏳ |
+| In produzione, programmare i comandi giornalieri: esempio pronto in [deploy/cron/qdc.crontab](deploy/cron/qdc.crontab) | chi installa | ⏳ |
+| Avviso nella pagina dell'unità finché ha il nome provvisorio dato dall'importazione | sviluppo | ✅ |
+| Prove nel browser non ancora fatte: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza rete | sviluppo | ⏳ |
+| Prove che servono un telefono o account esterni veri: passkey e impronta, accesso con Google e Apple | maintainer | ⏳ |
 
 ### 2. Fase 2 — Quote e cassa
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { api } from '@/api/qdc'
@@ -8,6 +8,10 @@ import { useSessioneStore } from '@/stores/sessione'
 const sessione = useSessioneStore()
 // Capigruppo: corrections waiting to be forwarded (DEC-31). Online only; no count offline.
 const daInoltrare = ref<number | null>(null)
+// Capigruppo and the technical administrator handle corrections (the API decides).
+const gestisceCorrezioni = computed(
+  () => sessione.capogruppo || !!sessione.profilo?.amministratore_tecnico,
+)
 const router = useRouter()
 onMounted(async () => {
   // The counters on the cards change while the app is open: read the profile again.
@@ -17,7 +21,7 @@ onMounted(async () => {
     await router.replace('/mia-iscrizione')
     return
   }
-  if (!sessione.capogruppo) return
+  if (!gestisceCorrezioni.value) return
   try {
     daInoltrare.value = (await api.correzioni()).filter((c) => c.stato === 'IN_ATTESA').length
   } catch {
@@ -60,7 +64,7 @@ onMounted(async () => {
           <span class="fg-2 small">Nomina il primo capogruppo del gruppo</span>
         </RouterLink>
       </div>
-      <div v-if="sessione.capogruppo" class="col-12 md:col-6">
+      <div v-if="gestisceCorrezioni" class="col-12 md:col-6">
         <RouterLink to="/correzioni" class="card card-body h-100 text-decoration-none">
           <strong>
             Correzioni da inoltrare

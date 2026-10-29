@@ -161,12 +161,17 @@ docker compose up -d --build
 docker compose exec web python manage.py createsuperuser
 ```
 
-Le migrazioni si applicano all'avvio del container `web`. Una volta al giorno va
-lanciato l'avviso ai capigruppo sulle correzioni da inoltrare (ad esempio da `crontab`):
-`docker compose exec -T web python manage.py segnala_correzioni`, l'avviso a chi
-compie 18 anni: `docker compose exec -T web python manage.py avvisa_maggiore_eta`, e
-gli avvisi sulle iscrizioni dall'app: `docker compose exec -T web python manage.py promemoria_iscrizioni`. Per il backup del database:
-`scripts/backup-db.sh` (il file contiene dati di minori: va conservato cifrato).
+Le migrazioni si applicano all'avvio del container `web`.
+
+Tre comandi vanno lanciati una volta al giorno: il riepilogo delle correzioni da
+inoltrare ai capigruppo (`segnala_correzioni`), gli avvisi a chi compie 18 anni
+(`avvisa_maggiore_eta`) e gli avvisi sulle iscrizioni dall'app
+(`promemoria_iscrizioni`). L'esempio pronto è in
+[`deploy/cron/qdc.crontab`](deploy/cron/qdc.crontab): si copia con `crontab -e`
+correggendo il percorso dell'installazione (con Podman, `podman compose`).
+
+Per il backup del database: `scripts/backup-db.sh` (il file contiene dati di minori: va
+conservato cifrato).
 
 ## Dati personali e sicurezza
 

@@ -55,7 +55,8 @@ const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.st
       <template v-else-if="daCompletare(r)">
         <p class="mb-1">
           <template v-if="r.stato === 'SOSPESA'">
-            È scaduto il termine: finché non completi, l'app ti mostra solo questa pagina.
+            È scaduto il termine: finché non completi, nell'app vedi solo questa iscrizione e non la
+            scheda di {{ r.nome }}.
           </template>
           <template v-else-if="r.scadenza_completamento">
             Iscrizione accolta. Completa entro il

@@ -5,7 +5,9 @@ import { api, type Completamento, type RichiestaIscrizione } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
 // The data still missing after the approval, written straight on the member (BuonaStrada
-// has no record of them yet). Online only.
+// has no record of them yet). What BuonaStrada requires (maintainer, 2026-10-29): an
+// adult's mobile and email; for a minor the parents, one with exclusive custody or both,
+// with codice fiscale, mobile and email. Online only.
 const props = defineProps<{ id: number }>()
 const emit = defineEmits<{ cambiata: [richiesta: RichiestaIscrizione] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -17,8 +19,18 @@ const dati = reactive<Completamento>({
   comune: '',
   provincia: '',
   cap: '',
+  cellulare: '',
+  email: '',
   cellulare_genitore: null,
+  genitore_unico: null,
+  altro_genitore: null,
 })
+const vuoto = { nome: '', cognome: '', codice_fiscale: '', cellulare: '', email: '' }
+
+function scegliGenitori(unico: boolean) {
+  dati.genitore_unico = unico
+  if (!unico && !dati.altro_genitore) dati.altro_genitore = { ...vuoto }
+}
 const caricato = ref(false)
 const salvato = ref(false)
 
@@ -99,15 +111,134 @@ async function salva() {
         inputmode="numeric"
       />
     </div>
-    <div v-if="dati.cellulare_genitore !== null" class="col-12 sm:col-6">
-      <label class="form-label small" :for="`cellulare-${id}`">Il tuo cellulare (genitore)</label>
-      <input
-        :id="`cellulare-${id}`"
-        v-model="dati.cellulare_genitore"
-        type="tel"
-        class="form-control form-control-sm"
-      />
-    </div>
+    <template v-if="dati.cellulare_genitore === null">
+      <div class="col-12 sm:col-6">
+        <label class="form-label small" :for="`socio-cellulare-${id}`">Il tuo cellulare</label>
+        <input
+          :id="`socio-cellulare-${id}`"
+          v-model="dati.cellulare"
+          type="tel"
+          class="form-control form-control-sm"
+        />
+      </div>
+      <div class="col-12 sm:col-6">
+        <label class="form-label small" :for="`socio-email-${id}`">La tua email</label>
+        <input
+          :id="`socio-email-${id}`"
+          v-model="dati.email"
+          type="email"
+          class="form-control form-control-sm"
+        />
+      </div>
+    </template>
+    <template v-else>
+      <div class="col-12 sm:col-6">
+        <label class="form-label small" :for="`socio-cellulare-${id}`">
+          Cellulare del ragazzo (se ne ha uno)
+        </label>
+        <input
+          :id="`socio-cellulare-${id}`"
+          v-model="dati.cellulare"
+          type="tel"
+          class="form-control form-control-sm"
+        />
+      </div>
+      <div class="col-12 sm:col-6">
+        <label class="form-label small" :for="`socio-email-${id}`">
+          Email del ragazzo (sua, non del genitore)
+        </label>
+        <input
+          :id="`socio-email-${id}`"
+          v-model="dati.email"
+          type="email"
+          class="form-control form-control-sm"
+        />
+      </div>
+      <div class="col-12 sm:col-6">
+        <label class="form-label small" :for="`cellulare-${id}`">Il tuo cellulare (genitore)</label>
+        <input
+          :id="`cellulare-${id}`"
+          v-model="dati.cellulare_genitore"
+          type="tel"
+          class="form-control form-control-sm"
+        />
+      </div>
+      <fieldset class="col-12">
+        <legend class="form-label small">I genitori, come in BuonaStrada</legend>
+        <div class="d-flex flex-wrap gap-5">
+          <div class="form-field">
+            <input
+              :id="`unico-${id}`"
+              type="radio"
+              class="radio"
+              :name="`genitori-${id}`"
+              :checked="dati.genitore_unico === true"
+              @change="scegliGenitori(true)"
+            />
+            <label class="small" :for="`unico-${id}`">
+              Genitore singolo (affidamento esclusivo)
+            </label>
+          </div>
+          <div class="form-field">
+            <input
+              :id="`entrambi-${id}`"
+              type="radio"
+              class="radio"
+              :name="`genitori-${id}`"
+              :checked="dati.genitore_unico === false"
+              @change="scegliGenitori(false)"
+            />
+            <label class="small" :for="`entrambi-${id}`">Entrambi i genitori o tutori</label>
+          </div>
+        </div>
+      </fieldset>
+      <template v-if="dati.genitore_unico === false && dati.altro_genitore">
+        <div class="col-12 sm:col-6">
+          <label class="form-label small" :for="`altro-nome-${id}`">Nome dell'altro genitore</label>
+          <input
+            :id="`altro-nome-${id}`"
+            v-model="dati.altro_genitore.nome"
+            class="form-control form-control-sm"
+          />
+        </div>
+        <div class="col-12 sm:col-6">
+          <label class="form-label small" :for="`altro-cognome-${id}`">Cognome</label>
+          <input
+            :id="`altro-cognome-${id}`"
+            v-model="dati.altro_genitore.cognome"
+            class="form-control form-control-sm"
+          />
+        </div>
+        <div class="col-12 sm:col-4">
+          <label class="form-label small" :for="`altro-cf-${id}`">Codice fiscale</label>
+          <input
+            :id="`altro-cf-${id}`"
+            v-model="dati.altro_genitore.codice_fiscale"
+            class="form-control form-control-sm"
+            maxlength="16"
+            autocapitalize="characters"
+          />
+        </div>
+        <div class="col-12 sm:col-4">
+          <label class="form-label small" :for="`altro-cellulare-${id}`">Cellulare</label>
+          <input
+            :id="`altro-cellulare-${id}`"
+            v-model="dati.altro_genitore.cellulare"
+            type="tel"
+            class="form-control form-control-sm"
+          />
+        </div>
+        <div class="col-12 sm:col-4">
+          <label class="form-label small" :for="`altro-email-${id}`">Email</label>
+          <input
+            :id="`altro-email-${id}`"
+            v-model="dati.altro_genitore.email"
+            type="email"
+            class="form-control form-control-sm"
+          />
+        </div>
+      </template>
+    </template>
     <div class="col-12 d-flex align-items-center gap-3">
       <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
         Salva

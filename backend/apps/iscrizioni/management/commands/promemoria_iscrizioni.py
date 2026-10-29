@@ -2,7 +2,8 @@
 
 - to who approves: new requests waiting (one email each, count and link only);
 - to the family: a reminder some days before the deadline to complete;
-- at the deadline, if still incomplete: the account is suspended and told so.
+- at the deadline, if still incomplete: the registration is suspended (the family no
+  longer sees that member until it completes) and told so.
 
 Run once a day from the host's scheduler, e.g.:
 
@@ -20,7 +21,7 @@ from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.iscrizioni.servizi import mancanti
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 
-# [da verificare] how many days before the deadline the family is reminded.
+# How many days before the deadline the family is reminded (maintainer, 2026-10-29).
 PREAVVISO = timedelta(days=7)
 
 
@@ -80,8 +81,8 @@ class Command(BaseCommand):
                         {email},
                         "iscrizione sospesa",
                         f"il {giorno} è scaduto il termine per completare l'iscrizione di "
-                        f"{richiesta.nome}. Fino a quando non la completi, l'app ti mostra "
-                        f"solo l'iscrizione:\n{link}/mia-iscrizione\n",
+                        f"{richiesta.nome}. Fino a quando non la completi, nell'app vedi "
+                        f"solo l'iscrizione e non la sua scheda:\n{link}/mia-iscrizione\n",
                     )
             elif scadenza - PREAVVISO <= oggi < scadenza and not richiesta.promemoria_il:
                 richiesta.promemoria_il = oggi

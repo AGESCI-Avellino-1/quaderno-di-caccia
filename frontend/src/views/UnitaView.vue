@@ -70,6 +70,9 @@ async function crea(dati: UnitaIn) {
         :data-branca="temaDellaBranca(u.branca)"
       >
         <strong>{{ nomeUnita(u) }}</strong>
+        <span v-if="u.nome_provvisorio" class="badge badge-outline theme-warning ms-1">
+          nome provvisorio
+        </span>
         <span class="badge ms-3" style="background: var(--ag-primary); color: var(--ag-on-primary)">
           {{ u.branca }}
         </span>

@@ -1,0 +1,11 @@
+# Daily jobs of the Quaderno di Caccia (install with `crontab -e` on the host, as the
+# user that runs docker/podman compose). Adjust the path to the installation.
+#
+#   segnala_correzioni     summary of the corrections to forward, to the capigruppo
+#   avvisa_maggiore_eta    alerts to members turning 18 and their parents
+#   promemoria_iscrizioni  new registration requests, reminders, suspensions
+#
+# Times are spread out so the emails do not leave all together.
+15 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py segnala_correzioni
+20 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py avvisa_maggiore_eta
+25 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_iscrizioni

@@ -86,10 +86,23 @@ DA_COMPLETARE = (StatoIscrizione.APPROVATA, StatoIscrizione.SOSPESA)
 # Accepted and not yet found in a BuonaStrada import.
 NON_RECEPITE = (*DA_COMPLETARE, StatoIscrizione.COMPLETATA, StatoIscrizione.INSERITA)
 
-# BuonaStrada fields asked to complete the registration [da verificare: which ones
-# BuonaStrada really requires to enter a member].
-CAMPI_SOCIO = ("sesso", "luogo_nascita", "indirizzo", "civico", "comune", "provincia", "cap")
+# What BuonaStrada requires to enter a member (maintainer, 2026-10-29): name, surname,
+# codice fiscale and birth date are asked with the request; the rest here. An adult
+# also needs mobile and email; for a minor, the parents (one, with exclusive custody, or
+# both) with codice fiscale, mobile and email; the consents come from the signed forms.
+CAMPI_SOCIO = (
+    "sesso",
+    "luogo_nascita",
+    "indirizzo",
+    "civico",
+    "comune",
+    "provincia",
+    "cap",
+    "cellulare",
+    "email",
+)
 CAMPI_SOCIO_OBBLIGATORI = ("sesso", "luogo_nascita", "indirizzo", "comune", "provincia", "cap")
+CAMPI_ADULTO_OBBLIGATORI = ("cellulare", "email")
 
 
 class RichiestaIscrizione(ModelloTracciato):
@@ -126,6 +139,9 @@ class RichiestaIscrizione(ModelloTracciato):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     motivo_rifiuto = models.TextField(blank=True)
+    # A minor's parents, as BuonaStrada asks: one with exclusive custody (True) or both
+    # (False); None until the family says.
+    genitore_unico = models.BooleanField(null=True, blank=True)
     # By when the family completes the data and the signed forms.
     scadenza_completamento = models.DateField(null=True, blank=True)
     completata_il = models.DateTimeField(null=True, blank=True)

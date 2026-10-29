@@ -344,6 +344,7 @@ DATI_COMPLETI = {
     "provincia": "av",
     "cap": "83100",
     "cellulare_genitore": "3471112222",
+    "genitore_unico": True,
 }
 
 
@@ -389,11 +390,12 @@ def test_promemoria_e_sospensione(approvata, genitore_nuovo, capo):
     approvata.refresh_from_db()
     assert approvata.stato == StatoIscrizione.SOSPESA
     assert "sospesa" in mail.outbox[-1].subject
-    # The account waits again: nothing but its registration.
-    assert policy.persona_di(genitore_nuovo) is None
+    # Only that member is hidden from the family; the account works for the rest.
+    assert policy.persona_di(genitore_nuovo) is not None
     client = _client(genitore_nuovo)
     figlia = approvata.persona
     assert client.get(f"/api/v1/persone/{figlia.pk}").status_code == 404
+    assert _client(capo).get(f"/api/v1/persone/{figlia.pk}").json()["iscrizione_sospesa"]
     assert client.get("/api/v1/mie-iscrizioni").json()[0]["stato"] == "SOSPESA"
 
     # Completing late gives everything back.
@@ -599,3 +601,94 @@ def test_profilo_conta_i_moduli_da_verificare(approvata, genitore_nuovo, capo):
     _carica(_client(genitore_nuovo), approvata)
     _carica(_client(genitore_nuovo), approvata)  # two scans, one registration
     assert _client(capo).get("/api/v1/io").json()["iscrizioni_da_verificare"] == 1
+
+
+# --- What BuonaStrada requires (maintainer, 2026-10-29) ---------------------------------
+
+
+def test_entrambi_i_genitori_servono_i_dati_dell_altro(approvata, genitore_nuovo):
+    from apps.anagrafica.models import TipoTutela
+
+    url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
+    client = _client(genitore_nuovo)
+    senza_scelta = {k: v for k, v in DATI_COMPLETI.items() if k != "genitore_unico"}
+    assert (
+        "Genitore singolo o entrambi i genitori"
+        in _put(client, url, senza_scelta).json()["richiesta"]["mancanti"]
+    )
+
+    entrambi = {**senza_scelta, "genitore_unico": False}
+    assert "Dati dell'altro genitore" in _put(client, url, entrambi).json()["richiesta"]["mancanti"]
+    altro = {"nome": "Anna", "cognome": "Rossi", "codice_fiscale": "RSSNNA82A41A509B"}
+    stato = _put(client, url, {**entrambi, "altro_genitore": altro}).json()
+    assert {"Cellulare dell'altro genitore", "Email dell'altro genitore"} <= set(
+        stato["richiesta"]["mancanti"]
+    )
+    completo = {**altro, "cellulare": "3480000001", "email": "anna.rossi@example.invalid"}
+    stato = _put(client, url, {**entrambi, "altro_genitore": completo}).json()
+    assert stato["altro_genitore"]["codice_fiscale"] == "RSSNNA82A41A509B"
+    assert stato["richiesta"]["mancanti"] == ["Moduli firmati da caricare"]
+    figlia = approvata.persona
+    assert sorted(figlia.tutori.values_list("tipo", flat=True)) == [TipoTutela.GENITORE] * 2
+
+    sbagliato = {**completo, "codice_fiscale": CF_GENITORE}
+    assert _put(client, url, {**entrambi, "altro_genitore": sbagliato}).status_code == 400
+
+
+def test_genitore_singolo(approvata, genitore_nuovo):
+    from apps.anagrafica.models import TipoTutela
+
+    _put(_client(genitore_nuovo), f"/api/v1/iscrizioni/{approvata.pk}/completamento", DATI_COMPLETI)
+    [tipo] = approvata.persona.tutori.values_list("tipo", flat=True)
+    assert tipo == TipoTutela.UNICO_GENITORE
+
+
+def test_email_del_ragazzo_non_quella_del_genitore(approvata, genitore_nuovo):
+    url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
+    dati = {**DATI_COMPLETI, "email": "LUIGI.bianco@example.invalid"}
+    assert _put(_client(genitore_nuovo), url, dati).status_code == 400
+
+
+def test_un_adulto_deve_dare_cellulare_ed_email(capo_nuovo, capogruppo):
+    from apps.iscrizioni.models import RichiestaIscrizione
+
+    richiesta = RichiestaIscrizione.objects.get(persona=capo_nuovo)
+    capo_nuovo.email = ""
+    capo_nuovo.save()
+    assert {"Cellulare", "Email"} <= set(servizi.mancanti(richiesta))
+    servizi.completa(
+        richiesta, {**DATI_COMPLETI, "cellulare": "3401234567", "email": "a@example.invalid"}
+    )
+    assert "Cellulare" not in servizi.mancanti(richiesta)
+    assert "Email" not in servizi.mancanti(richiesta)
+
+
+def test_sospeso_solo_il_nuovo_figlio(codice_reparto, genitore, ragazza, capo):
+    from django.core.management import call_command
+
+    dati = servizi.DatiIscrizione(
+        **{
+            **_dati_figlio(genitore_codice_fiscale="GNTMRA80A01A509X"),
+            "data_nascita": nato_anni_fa(11),
+        }
+    )
+    genitore.codice_fiscale = "GNTMRA80A01A509X"
+    genitore.save()
+    richiesta = servizi.crea_richiesta(codice_reparto, dati, genitore.utente)
+    servizi.approva(richiesta, capo.utente, DOMANI)
+    call_command("promemoria_iscrizioni", oggi=DOMANI)
+    richiesta.refresh_from_db()
+    assert richiesta.stato == StatoIscrizione.SOSPESA
+
+    client = _client(genitore)
+    assert client.get(f"/api/v1/persone/{ragazza.pk}").status_code == 200  # the other child
+    assert client.get(f"/api/v1/persone/{richiesta.persona_id}").status_code == 404
+
+
+def test_un_adulto_sospeso_torna_in_attesa(capo_nuovo):
+    from apps.iscrizioni.models import RichiestaIscrizione
+
+    utente = capo_nuovo.utente
+    RichiestaIscrizione.objects.filter(persona=capo_nuovo).update(stato=StatoIscrizione.SOSPESA)
+    assert policy.persona_di(utente) is None
+    assert not policy.e_capo(utente)

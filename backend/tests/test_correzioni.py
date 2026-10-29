@@ -29,6 +29,14 @@ pytestmark = pytest.mark.django_db
 
 TUTTI = set(CAMPI_BUONASTRADA)
 SENZA_IDENTITA = TUTTI - set(CAMPI_IDENTITA)
+# The unit staff also corrects sex and place of birth (maintainer, 2026-10-29).
+STAFF = SENZA_IDENTITA | {"sesso", "luogo_nascita"}
+CONTATTI_E_CONSENSI = set(CAMPI_CONTATTO) | {
+    "consenso_iscrizione",
+    "consenso_foto",
+    "consenso_commerciale",
+    "consenso_riviste",
+}
 
 
 def _client(chi) -> Client:
@@ -69,8 +77,8 @@ def test_chi_corregge_i_dati_di_una_ragazza(
     campi = policy.campi_correggibili
     assert campi(capogruppo.utente, ragazza) == TUTTI
     assert campi(amministratore, ragazza) == TUTTI
-    assert campi(capo.utente, ragazza) == SENZA_IDENTITA  # capo unità of her reparto
-    assert campi(staff.utente, ragazza) == SENZA_IDENTITA
+    assert campi(capo.utente, ragazza) == STAFF  # capo unità of her reparto
+    assert campi(staff.utente, ragazza) == STAFF
     assert campi(genitore.utente, ragazza) == SENZA_IDENTITA
     assert campi(ragazza.utente, ragazza) == set()  # a minor: her parents do it
     assert campi(csq.utente, ragazza) == set()
@@ -78,9 +86,9 @@ def test_chi_corregge_i_dati_di_una_ragazza(
     assert campi(estraneo.utente, ragazza) == set()
 
 
-def test_un_adulto_corregge_solo_i_suoi_contatti(capo, genitore, ragazza):
-    assert policy.campi_correggibili(capo.utente, capo) == set(CAMPI_CONTATTO)
-    assert policy.campi_correggibili(genitore.utente, genitore) == set(CAMPI_CONTATTO)
+def test_un_adulto_corregge_i_suoi_contatti_e_consensi(capo, genitore, ragazza):
+    assert policy.campi_correggibili(capo.utente, capo) == CONTATTI_E_CONSENSI
+    assert policy.campi_correggibili(genitore.utente, genitore) == CONTATTI_E_CONSENSI
     assert policy.campi_correggibili(ragazza.utente, genitore) == set()
 
 
@@ -88,14 +96,16 @@ def test_genitore_di_un_maggiorenne_non_corregge(genitore, ragazza):
     ragazza.data_nascita = date(2000, 1, 1)
     ragazza.save()
     assert policy.campi_correggibili(genitore.utente, ragazza) == set()
-    assert policy.campi_correggibili(ragazza.utente, ragazza) == set(CAMPI_CONTATTO)
+    assert policy.campi_correggibili(ragazza.utente, ragazza) == CONTATTI_E_CONSENSI
 
 
-def test_solo_i_capigruppo_gestiscono_le_correzioni(capogruppo, capo, genitore, amministratore):
+def test_capigruppo_e_amministratore_gestiscono_le_correzioni(
+    capogruppo, capo, genitore, amministratore
+):
     assert policy.puo_gestire_correzioni(capogruppo.utente)
     assert not policy.puo_gestire_correzioni(capo.utente)
     assert not policy.puo_gestire_correzioni(genitore.utente)
-    assert not policy.puo_gestire_correzioni(amministratore)
+    assert policy.puo_gestire_correzioni(amministratore)
 
 
 # --- Service ------------------------------------------------------------------------------

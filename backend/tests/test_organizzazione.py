@@ -541,3 +541,13 @@ def test_nome_obbligatorio_tranne_per_la_coca(gruppo):
     )
     coca.full_clean()
     assert str(coca) == "Comunità Capi"
+
+
+def test_dare_il_nome_toglie_il_provvisorio(capogruppo, reparto):
+    reparto.nome_provvisorio = True
+    reparto.save()
+    dati = {"nome": "Reparto Millennium", "tipo": "REPARTO", "composizione": "X"}
+    risposta = _client(capogruppo).put(
+        f"/api/v1/unita/{reparto.pk}", dati, content_type="application/json"
+    )
+    assert risposta.json()["nome_provvisorio"] is False

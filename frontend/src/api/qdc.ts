@@ -878,6 +878,38 @@ export interface Evento {
   motivo_annullamento: string
   mie: MiaPartecipazione[]
   puo_gestire: boolean
+  /** The event's fee, also in instalments (DEC-77); null: no fee. */
+  quota: QuotaEvento | null
+}
+
+export interface RataEvento {
+  descrizione: string
+  importo: string
+  scadenza: string
+}
+
+export interface QuotaEvento {
+  nome: string
+  rate: RataEvento[]
+  totale: string
+  sconto_famiglia: string
+}
+
+export interface QuotaPartecipante {
+  quota_id: number
+  descrizione: string
+  scadenza: string
+  importo: string
+  dovuto: string
+  pagato: string
+  residuo: string
+  annullata: boolean
+}
+
+export interface SituazioneQuoteEvento {
+  persona_id: number
+  persona: string
+  quote: QuotaPartecipante[]
 }
 
 export interface Partecipante {
@@ -1206,6 +1238,17 @@ export const api = {
     }),
   togliRiunioni: (id: number) =>
     richiesta<RiunioneRicorrente>(`/api/v1/riunioni/${id}`, { metodo: 'DELETE' }),
+  fissaQuotaEvento: (
+    evento: number,
+    dati: { nome: string; rate: RataEvento[]; sconto_famiglia: string },
+  ) => richiesta<Evento>(`/api/v1/eventi/${evento}/quota`, { metodo: 'PUT', corpo: dati }),
+  quoteEvento: (evento: number) =>
+    richiesta<SituazioneQuoteEvento[]>(`/api/v1/eventi/${evento}/quote`),
+  importoPartecipante: (evento: number, quota: number, importo: string) =>
+    richiesta<QuotaPartecipante>(`/api/v1/eventi/${evento}/quote/${quota}`, {
+      metodo: 'PUT',
+      corpo: { importo },
+    }),
   delega: (squadriglia: number) => richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`),
   delegaA: (squadriglia: number, persona_id: number) =>
     richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, {

@@ -10,6 +10,7 @@ import {
   type StatoPresenza,
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import QuotaEvento from '@/components/QuotaEvento.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache, salvaInCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
@@ -175,6 +176,14 @@ const STATI: [StatoPresenza, string][] = [
         <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
       </div>
     </div>
+
+    <QuotaEvento
+      :evento="evento.id"
+      :quota="evento.quota"
+      :puo-gestire="evento.puo_gestire && !evento.annullato"
+      :in-famiglia="evento.mie.length > 0"
+      @cambiata="carica"
+    />
 
     <!-- The family -->
     <section v-if="evento.mie.length" class="mb-5">

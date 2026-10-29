@@ -88,6 +88,8 @@ def emetti(tipo: TipoQuota, oggi: date | None = None) -> list[Quota]:
     A monthly fee is owed by who belongs to a matching unit on the first day of the
     month, so who joins mid-year pays from the next months on. A yearly fee is owed
     by who belonged at any time from the start of the year to today."""
+    if tipo.categoria == CategoriaQuota.EVENTO:
+        return emetti_evento(tipo)
     oggi = oggi or date.today()
     anno = tipo.anno_associativo
     nuove = []
@@ -118,6 +120,85 @@ def emetti(tipo: TipoQuota, oggi: date | None = None) -> list[Quota]:
                 )
             )
     return nuove
+
+
+# An event's fee (DEC-77) ------------------------------------------------------------------
+
+# The reason written on the fees withdrawn by the app: only those come back by themselves
+# when the member takes part again.
+MOTIVO_ASSENZA = "Non partecipa all'evento"
+
+
+def emetti_evento(tipo: TipoQuota) -> list[Quota]:
+    """Every instalment at once, to every participant (invited, not "not taking part",
+    not excluded): families see all the due dates from the start. The family discount,
+    if any, goes on the last instalment (the balance) [da verificare]."""
+    from apps.eventi.models import StatoPartecipazione
+
+    evento = tipo.evento
+    partecipanti = Persona.objects.filter(
+        partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
+    )
+    periodi = tipo.periodi()
+    ultimo = periodi[-1][0] if periodi else None
+    giorno = timezone.localdate(evento.inizio)
+    nuove = []
+    for persona in partecipanti:
+        famiglia = tipo.sconto_famiglia and soci_della_famiglia(persona, giorno) >= 2
+        for periodo, scadenza in periodi:
+            esistente = Quota.objects.filter(tipo=tipo, persona=persona, periodo=periodo).first()
+            if esistente is not None:
+                if esistente.annullata_il and esistente.motivo_annullamento == MOTIVO_ASSENZA:
+                    esistente.annullata_il = None
+                    esistente.annullata_da = None
+                    esistente.motivo_annullamento = ""
+                    esistente.save()
+                continue
+            importo = tipo.importo_del_periodo(periodo)
+            sconto = min(tipo.sconto_famiglia, importo) if famiglia and periodo == ultimo else ZERO
+            nuove.append(
+                Quota.objects.create(
+                    tipo=tipo,
+                    persona=persona,
+                    periodo=periodo,
+                    scadenza=scadenza,
+                    importo=importo,
+                    sconto=sconto,
+                )
+            )
+    return nuove
+
+
+def allinea_quote_evento(evento) -> None:
+    """After a change of participants: who takes part gets the fees, who does not (or
+    is not invited) has the unpaid ones withdrawn. Fees already paid in part stay:
+    the staff decides (a refund, a cancellation)."""
+    from apps.eventi.models import StatoPartecipazione
+
+    tipo = getattr(evento, "quota", None)
+    if tipo is None:
+        return
+    emetti_evento(tipo)
+    assenti = evento.partecipazioni.exclude(stato=StatoPartecipazione.INVITATO).values("persona_id")
+    for quota in Quota.objects.valide().filter(tipo=tipo, persona_id__in=assenti):
+        if not quota.pagato:
+            quota.annullata_il = timezone.now()
+            quota.motivo_annullamento = MOTIVO_ASSENZA
+            quota.save()
+
+
+def imposta_importo(quota: Quota, importo: Decimal) -> None:
+    """DEC-77: the amount of an event's fee may change per person, down to zero."""
+    if quota.tipo.categoria != CategoriaQuota.EVENTO:
+        raise ValidationError("Solo le quote degli eventi si cambiano per persona.")
+    if importo < 0:
+        raise ValidationError("L'importo non può essere negativo.")
+    sconto = min(quota.sconto, importo)
+    if importo - sconto - quota.agevolata < quota.pagato:
+        raise ValidationError("La famiglia ha già pagato più di questo importo.")
+    quota.importo = importo
+    quota.sconto = sconto
+    quota.save()
 
 
 def emetti_tutte(oggi: date | None = None) -> int:

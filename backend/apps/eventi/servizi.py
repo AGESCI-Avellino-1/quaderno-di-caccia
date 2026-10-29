@@ -84,10 +84,18 @@ def allinea_partecipanti(evento: Evento) -> None:
     """Add who became a member of the units involved since the event was created. Who
     left stays: their record (and their fees) are history."""
     gia = Partecipazione.objects.filter(evento=evento).values("persona_id")
-    Partecipazione.objects.bulk_create(
+    nuove = Partecipazione.objects.bulk_create(
         Partecipazione(evento=evento, persona=persona)
         for persona in previsti(evento).exclude(pk__in=gia)
     )
+    if nuove:
+        _allinea_quote(evento)
+
+
+def _allinea_quote(evento: Evento) -> None:
+    from apps.quote.servizi import allinea_quote_evento
+
+    allinea_quote_evento(evento)
 
 
 @transaction.atomic
@@ -155,6 +163,7 @@ def non_partecipa(partecipazione: Partecipazione, utente, si: bool = True) -> No
     partecipazione.stato = StatoPartecipazione.NON_PARTECIPA if si else StatoPartecipazione.INVITATO
     partecipazione.cambiato_da = utente
     partecipazione.save()
+    _allinea_quote(partecipazione.evento)
 
 
 def non_invitare(partecipazione: Partecipazione, utente, motivo: str) -> None:
@@ -166,6 +175,7 @@ def non_invitare(partecipazione: Partecipazione, utente, motivo: str) -> None:
     partecipazione.motivo = motivo.strip()
     partecipazione.cambiato_da = utente
     partecipazione.save()
+    _allinea_quote(partecipazione.evento)
 
 
 def reinvita(partecipazione: Partecipazione, utente) -> None:
@@ -173,6 +183,7 @@ def reinvita(partecipazione: Partecipazione, utente) -> None:
     partecipazione.motivo = ""
     partecipazione.cambiato_da = utente
     partecipazione.save()
+    _allinea_quote(partecipazione.evento)
 
 
 # --- Attendance (DEC-78) ----------------------------------------------------------------------

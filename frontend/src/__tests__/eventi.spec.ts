@@ -31,6 +31,7 @@ function evento(campi: Partial<DettaglioEvento>): DettaglioEvento {
     motivo_annullamento: '',
     mie: [],
     puo_gestire: false,
+    quota: null,
     partecipanti: [],
     puo_presenze: false,
     puo_non_invitare: false,

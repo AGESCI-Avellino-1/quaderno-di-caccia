@@ -9,7 +9,10 @@ Decided with the maintainer on 2026-10-29 (not yet in the analysis):
   (siblings, a parent with their children, spouses), never on the national fee;
 - a payment may cover several fees of the same family, also in part (deposits), with
   one receipt per payment;
-- camp, outing and external event fees come with the events (phase 3).
+- camp, outing and external event fees come with the events (phase 3): set by the
+  capi of the event, also in instalments (e.g. two deposits on fixed dates and the
+  balance before leaving), each instalment a fee with its due date (maintainer,
+  2026-10-29).
 """
 
 from datetime import date
@@ -50,11 +53,12 @@ def _euro(**campi) -> models.DecimalField:
 
 
 class CategoriaQuota(models.TextChoices):
-    """DEC-80; camps, outings and external events come with phase 3."""
+    """DEC-80; BuonaCaccia's external events come later."""
 
     CENSIMENTO = "CENSIMENTO", "Censimento (quota nazionale)"
     GRUPPO = "GRUPPO", "Quota di gruppo"
     MENSILE = "MENSILE", "Quota mensile di unità"
+    EVENTO = "EVENTO", "Quota di un evento"  # DEC-77
 
 
 class Destinatari(models.TextChoices):
@@ -79,6 +83,12 @@ class TipoQuota(ModelloTracciato):
     scadenza = models.DateField(null=True, blank=True)
     mesi = models.JSONField(default=list, blank=True)
     giorno_scadenza = models.PositiveSmallIntegerField(null=True, blank=True)
+    # An event's fee (DEC-77): owed by its participants, in one or more instalments
+    # [{"descrizione": "Primo acconto", "importo": "50.00", "scadenza": "2026-05-01"}].
+    evento = models.OneToOneField(
+        "eventi.Evento", null=True, blank=True, on_delete=models.CASCADE, related_name="quota"
+    )
+    rate = models.JSONField(default=list, blank=True)
 
     class Meta:
         verbose_name = "tipo di quota"
@@ -98,7 +108,9 @@ class TipoQuota(ModelloTracciato):
             errori.append("La quota nazionale non ha lo sconto per la famiglia.")
         if self.importo is not None and self.sconto_famiglia > self.importo:
             errori.append("Lo sconto per la famiglia non può superare l'importo.")
-        if self.categoria == CategoriaQuota.MENSILE:
+        if self.categoria == CategoriaQuota.EVENTO:
+            errori += self._errori_rate()
+        elif self.categoria == CategoriaQuota.MENSILE:
             if not self.mesi or any(m not in MESI_ANNO for m in self.mesi):
                 errori.append("Indica i mesi della quota mensile.")
             if not self.giorno_scadenza or not 1 <= self.giorno_scadenza <= 28:
@@ -111,10 +123,44 @@ class TipoQuota(ModelloTracciato):
         if errori:
             raise ValidationError(errori)
 
+    def _errori_rate(self) -> list[str]:
+        if self.evento_id is None:
+            return ["La quota di un evento va collegata all'evento."]
+        if not self.rate:
+            return ["Indica almeno una rata."]
+        errori, scadenze = [], set()
+        for rata in self.rate:
+            try:
+                importo = Decimal(str(rata["importo"]))
+                scadenza = date.fromisoformat(str(rata["scadenza"]))
+            except KeyError, ValueError, ArithmeticError:
+                return ["Ogni rata ha un importo e una scadenza."]
+            if importo <= 0:
+                errori.append("Gli importi delle rate devono essere positivi.")
+            if scadenza in scadenze:
+                errori.append("Due rate non possono scadere lo stesso giorno.")
+            scadenze.add(scadenza)
+        if not errori and self.sconto_famiglia > Decimal(str(self.rate_ordinate()[-1]["importo"])):
+            errori.append("Lo sconto per la famiglia non può superare l'ultima rata.")
+        return errori
+
+    def rate_ordinate(self) -> list[dict]:
+        return sorted(self.rate, key=lambda r: str(r["scadenza"]))
+
+    def importo_del_periodo(self, periodo: date) -> Decimal:
+        if self.categoria == CategoriaQuota.EVENTO:
+            for rata in self.rate:
+                if date.fromisoformat(str(rata["scadenza"])) == periodo:
+                    return Decimal(str(rata["importo"]))
+        return self.importo
+
     def periodi(self) -> list[tuple[date, date]]:
         """(period, due date) pairs. A yearly fee has one period, the start of the year;
-        a monthly fee one per month, in the order of the year."""
+        a monthly fee one per month, in the order of the year; an event's fee one per
+        instalment, the period being its due date."""
         anno = self.anno_associativo
+        if self.categoria == CategoriaQuota.EVENTO:
+            return [(date.fromisoformat(str(r["scadenza"])),) * 2 for r in self.rate_ordinate()]
         if self.categoria != CategoriaQuota.MENSILE:
             return [(anno.inizio, self.scadenza)]
         periodi = []
@@ -167,6 +213,18 @@ class Quota(ModelloTracciato):
     def descrizione(self) -> str:
         if self.tipo.categoria == CategoriaQuota.MENSILE:
             return f"{self.tipo.nome}, {NOMI_MESI[self.periodo.month - 1]} {self.periodo.year}"
+        if self.tipo.categoria == CategoriaQuota.EVENTO:
+            rata = next(
+                (
+                    r
+                    for r in self.tipo.rate
+                    if date.fromisoformat(str(r["scadenza"])) == self.periodo
+                ),
+                None,
+            )
+            if rata and len(self.tipo.rate) > 1:
+                return f"{self.tipo.nome}, {rata.get('descrizione') or 'rata'}"
+            return self.tipo.nome
         return str(self.tipo)
 
     @property

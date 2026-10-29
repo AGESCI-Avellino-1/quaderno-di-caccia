@@ -1,6 +1,7 @@
 """Events, recurring meetings, participants and attendance (see models)."""
 
 from datetime import date, datetime, time
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -60,6 +61,21 @@ class MiaPartecipazione(Schema):
     puo_segnalare: bool
 
 
+class RataIO(Schema):
+    descrizione: str = ""
+    importo: Decimal
+    scadenza: date
+
+
+class QuotaEvento(Schema):
+    """The event's fee as everyone sees it (DEC-77): the instalments and the total."""
+
+    nome: str
+    rate: list[RataIO]
+    totale: Decimal
+    sconto_famiglia: Decimal
+
+
 class EventoOut(Schema):
     id: int
     titolo: str
@@ -85,6 +101,7 @@ class EventoOut(Schema):
     # The user's own and their children's participation (families).
     mie: list[MiaPartecipazione]
     puo_gestire: bool
+    quota: QuotaEvento | None
 
 
 def _mie(user, evento: Evento) -> list[dict]:
@@ -132,6 +149,19 @@ def _evento_out(user, evento: Evento) -> dict:
         "motivo_annullamento": evento.motivo_annullamento,
         "mie": _mie(user, evento),
         "puo_gestire": policy.puo_gestire_evento(user, evento),
+        "quota": _quota_evento(evento),
+    }
+
+
+def _quota_evento(evento: Evento) -> dict | None:
+    tipo = getattr(evento, "quota", None)
+    if tipo is None:
+        return None
+    return {
+        "nome": tipo.nome,
+        "rate": tipo.rate_ordinate(),
+        "totale": tipo.importo,
+        "sconto_famiglia": tipo.sconto_famiglia,
     }
 
 
@@ -535,3 +565,144 @@ def scegli_alta_squadriglia(request, unita_id: int, dati: AltaSquadrigliaIn):
     except ValidationError as errore:
         raise _errore(errore) from errore
     return alta_squadriglia(request, unita_id, dati.anno)
+
+
+# --- The event's fee, also in instalments (DEC-77) -----------------------------------------
+
+
+class QuotaEventoIn(Schema):
+    nome: str = ""
+    rate: list[RataIO]
+    sconto_famiglia: Decimal = Decimal("0")
+
+
+def _gestore_quote(request, evento: Evento) -> None:
+    if policy.e_capo_in_attesa(request.auth) or not policy.puo_gestire_evento(request.auth, evento):
+        raise HttpError(403, "La quota la fissano i capi dell'evento.")
+
+
+@router.put("/eventi/{evento_id}/quota", response=EventoOut)
+def fissa_quota(request, evento_id: int, dati: QuotaEventoIn):
+    """Fees already issued keep their amount; a new instalment is issued to everyone,
+    an instalment taken away withdraws the unpaid fees."""
+    from django.db import transaction
+
+    from apps.core.anno import AnnoAssociativo
+    from apps.quote import servizi as quote
+    from apps.quote.models import CategoriaQuota, Destinatari, Quota, TipoQuota
+
+    evento = _evento(request, evento_id)
+    _gestore_quote(request, evento)
+    tipo = getattr(evento, "quota", None) or TipoQuota(
+        evento=evento,
+        categoria=CategoriaQuota.EVENTO,
+        destinatari=Destinatari.TUTTI,
+        anno=AnnoAssociativo.da_data(timezone.localdate(evento.inizio)).anno_fine,
+    )
+    tipo.nome = dati.nome.strip() or f"Quota {evento.titolo}"[:120]
+    tipo.rate = [
+        {
+            "descrizione": r.descrizione.strip(),
+            "importo": str(r.importo),
+            "scadenza": r.scadenza.isoformat(),
+        }
+        for r in dati.rate
+    ]
+    tipo.importo = sum((r.importo for r in dati.rate), Decimal("0"))
+    tipo.sconto_famiglia = dati.sconto_famiglia
+    try:
+        tipo.full_clean()
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    with transaction.atomic():
+        tipo.save()
+        scadenze = {r.scadenza for r in dati.rate}
+        for tolta in Quota.objects.valide().filter(tipo=tipo).exclude(periodo__in=scadenze):
+            if not tolta.pagato:
+                quote.annulla_quota(tolta, request.auth, "Rata tolta dall'evento")
+        quote.emetti_evento(tipo)
+        quote.allinea_quote_evento(evento)
+    evento.refresh_from_db()
+    return _evento_out(request.auth, evento)
+
+
+class QuotaPersona(Schema):
+    quota_id: int
+    descrizione: str
+    scadenza: date
+    importo: Decimal
+    dovuto: Decimal
+    pagato: Decimal
+    residuo: Decimal
+    annullata: bool
+
+
+class SituazioneQuote(Schema):
+    persona_id: int
+    persona: str
+    quote: list[QuotaPersona]
+
+
+@router.get("/eventi/{evento_id}/quote", response=list[SituazioneQuote])
+def quote_evento(request, evento_id: int):
+    """Who paid what: the event's managers and the Co.Ca. (DEC-92)."""
+    from apps.quote.models import Quota
+
+    evento = _evento(request, evento_id)
+    if not (policy.puo_gestire_evento(request.auth, evento) or policy.e_capo_censito(request.auth)):
+        raise HttpError(403, "Le quote dell'evento le vedono i capi.")
+    tipo = getattr(evento, "quota", None)
+    if tipo is None:
+        return []
+    righe: dict[int, dict] = {}
+    for q in Quota.objects.filter(tipo=tipo).select_related("persona", "tipo", "agevolazione"):
+        riga = righe.setdefault(
+            q.persona_id,
+            {
+                "persona_id": q.persona_id,
+                "persona": f"{q.persona.cognome} {q.persona.nome}",
+                "quote": [],
+            },
+        )
+        riga["quote"].append(
+            {
+                "quota_id": q.pk,
+                "descrizione": q.descrizione,
+                "scadenza": q.scadenza,
+                "importo": q.importo,
+                "dovuto": q.dovuto,
+                "pagato": q.pagato,
+                "residuo": q.residuo,
+                "annullata": q.annullata_il is not None,
+            }
+        )
+    return sorted(righe.values(), key=lambda r: r["persona"])
+
+
+class ImportoIn(Schema):
+    importo: Decimal
+
+
+@router.put("/eventi/{evento_id}/quote/{quota_id}", response=QuotaPersona)
+def importo_persona(request, evento_id: int, quota_id: int, dati: ImportoIn):
+    """DEC-77: one person's amount, down to zero."""
+    from apps.quote import servizi as quote
+    from apps.quote.models import Quota
+
+    evento = _evento(request, evento_id)
+    _gestore_quote(request, evento)
+    q = get_object_or_404(Quota, pk=quota_id, tipo__evento=evento)
+    try:
+        quote.imposta_importo(q, dati.importo)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return {
+        "quota_id": q.pk,
+        "descrizione": q.descrizione,
+        "scadenza": q.scadenza,
+        "importo": q.importo,
+        "dovuto": q.dovuto,
+        "pagato": q.pagato,
+        "residuo": q.residuo,
+        "annullata": q.annullata_il is not None,
+    }

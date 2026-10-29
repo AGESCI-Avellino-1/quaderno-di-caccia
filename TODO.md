@@ -70,6 +70,7 @@ Decisioni del maintainer (29/10/2026, da riportare nell'analisi):
 | Riunioni di squadriglia | Sono eventi di squadriglia: le inseriscono il capo squadriglia, lo staff o un membro della squadriglia delegato dal capo squadriglia (solo per inserirle); le presenze le segna il capo squadriglia (e lo staff) | DEC-75, DEC-78 |
 | Missione e attività di squadriglia | Le crea lo staff del reparto per una squadriglia; la missione ha note di dettaglio per i genitori (le leggono genitori e capi, non i ragazzi) e note per tutti | DEC-75 |
 | Consiglio Capi, Con.Ca.Vi., Alta Squadriglia | Eventi creati dallo staff per uno o più reparti del gruppo (anche tutti): invitano i capi squadriglia, capi e vice, o l'Alta Squadriglia, che lo staff sceglie anno per anno. `[da verificare]` per più reparti basta lo staff di uno di essi | DEC-75 |
+| `[da verificare]` quote degli eventi | Tutte le rate arrivano subito ai partecipanti (le famiglie vedono tutte le scadenze); lo sconto famiglia, se c'è, va sull'ultima rata (il saldo); le rate già pagate in parte restano se il socio non partecipa più (decide lo staff); il capo squadriglia crea tutti gli eventi della sua squadriglia tranne la missione | DEC-77, DEC-81 |
 | Autofinanziamento e budget dei campi | In questa fase | DEC-90, DEC-91 |
 | Eventi su BuonaCaccia | **Approfondimento dopo questa fase.** BuonaCaccia produce una liberatoria personalizzata per ogni iscritto, da capire come caricarla (il maintainer ha un'idea). Già deciso: l'iscrizione dei minorenni la gestisce lo staff dell'unità, i maggiorenni si iscrivono da soli; la parte dello staff della scheda resta nel fascicolo e la vedono solo i capi; la liberatoria serve solo per gli eventi esterni (da inviare / inviata) | DEC-68, DEC-76, DEC-89 |
 
@@ -77,7 +78,7 @@ Decisioni del maintainer (29/10/2026, da riportare nell'analisi):
 | --- | --- | --- | --- |
 | 3.1 | Eventi a quattro livelli (gruppo, branca, unità, squadriglia), unità coinvolte, partecipanti con assenze comunicate e non invitati; riunioni ricorrenti; riunioni e missione di squadriglia, delega, Consiglio Capi, Con.Ca.Vi., Alta Squadriglia | DEC-75 | ✅ |
 | 3.2 | Presenze offline (presente, assente, giustificato), foglio da stampare, dettaglio per due anni poi totali per anno (`riassumi_presenze`) | DEC-78 | ✅ |
-| 3.3 | Quote degli eventi, anche a rate, generate per i partecipanti, importo per persona | DEC-77 | ⏳ |
+| 3.3 | Quote degli eventi, anche a rate, generate per i partecipanti (tolte se non partecipa e non pagate, tornano se partecipa di nuovo), importo per persona fino a zero | DEC-77 | ✅ |
 | 3.4 | Calendario personale (iCal) ed email di eventi e scadenze | DEC-79 | ⏳ |
 | 3.5 | Autofinanziamento con entrate e uscite collegate; budget dei campi | DEC-90, DEC-91 | ⏳ |
 | 3.6 | Eventi su BuonaCaccia (dopo l'approfondimento) | DEC-68, DEC-76, DEC-89 | 💤 |

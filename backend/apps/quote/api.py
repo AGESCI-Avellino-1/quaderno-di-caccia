@@ -120,7 +120,12 @@ def _salva_tipo(tipo: TipoQuota, dati: TipoQuotaIn) -> TipoQuota:
 def tipi_quota(request, anno: int | None = None):
     if not policy.puo_vedere_situazione_quote(request.auth):
         raise HttpError(403, "Non puoi vedere le quote.")
-    tipi = TipoQuota.objects.filter(anno=_anno(anno)).prefetch_related("unita")
+    # An event's fee is set on the event (DEC-77).
+    tipi = (
+        TipoQuota.objects.filter(anno=_anno(anno))
+        .exclude(categoria=CategoriaQuota.EVENTO)
+        .prefetch_related("unita")
+    )
     return [_tipo_out(t) for t in tipi]
 
 

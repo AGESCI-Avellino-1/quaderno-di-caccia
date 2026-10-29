@@ -455,3 +455,130 @@ def test_api_delega_e_alta_squadriglia(squadriglia, csq, ragazza, staff, reparto
     ]
     fuori = {"anno": 2026, "persone": [rover.pk]}
     assert _client(staff).put(alta, fuori, content_type="application/json").status_code == 400
+
+
+# --- The event's fee, in instalments (DEC-77) -----------------------------------------------
+
+
+def _quota_campo(evento, capo, rate, sconto="0"):
+    return _client(capo).put(
+        f"/api/v1/eventi/{evento.pk}/quota",
+        {"nome": "Campo estivo", "rate": rate, "sconto_famiglia": sconto},
+        content_type="application/json",
+    )
+
+
+RATE = [
+    {"descrizione": "Primo acconto", "importo": "50.00", "scadenza": "2026-05-01"},
+    {"descrizione": "Secondo acconto", "importo": "50.00", "scadenza": "2026-06-01"},
+    {"descrizione": "Saldo", "importo": "80.00", "scadenza": "2026-07-15"},
+]
+
+
+def test_quota_a_rate_per_i_partecipanti(uscita, staff, ragazza, csq, genitore):
+    from apps.quote.models import Quota
+
+    _post(
+        genitore,
+        f"/api/v1/eventi/{uscita.pk}/partecipanti/{ragazza.pk}/partecipa",
+        {"partecipa": False},
+    )
+    risposta = _quota_campo(uscita, staff, RATE)
+    assert risposta.status_code == 200, risposta.content
+    assert risposta.json()["quota"]["totale"] == "180.00"
+    assert Quota.objects.valide().filter(persona=csq).count() == 3
+    assert not Quota.objects.filter(persona=ragazza).exists()  # not taking part
+    assert {q.descrizione for q in Quota.objects.filter(persona=csq)} == {
+        "Campo estivo, Primo acconto",
+        "Campo estivo, Secondo acconto",
+        "Campo estivo, Saldo",
+    }
+    # She takes part after all: her fees arrive; she withdraws again: they go.
+    _post(
+        genitore,
+        f"/api/v1/eventi/{uscita.pk}/partecipanti/{ragazza.pk}/partecipa",
+        {"partecipa": True},
+    )
+    assert Quota.objects.valide().filter(persona=ragazza).count() == 3
+    _post(
+        genitore,
+        f"/api/v1/eventi/{uscita.pk}/partecipanti/{ragazza.pk}/partecipa",
+        {"partecipa": False},
+    )
+    assert not Quota.objects.valide().filter(persona=ragazza).exists()
+    _post(
+        genitore,
+        f"/api/v1/eventi/{uscita.pk}/partecipanti/{ragazza.pk}/partecipa",
+        {"partecipa": True},
+    )
+    assert Quota.objects.valide().filter(persona=ragazza).count() == 3  # the same fees, back
+
+
+def test_quota_pagata_in_parte_resta_se_non_partecipa(uscita, staff, csq):
+    from decimal import Decimal
+
+    from apps.quote import servizi as quote
+    from apps.quote.models import MetodoPagamento, Quota
+
+    _quota_campo(uscita, staff, RATE)
+    acconto = Quota.objects.get(persona=csq, periodo=date(2026, 5, 1))
+    quote.registra_pagamento(
+        data=date(2026, 4, 20),
+        metodo=MetodoPagamento.CONTANTI,
+        versato_da="Genitore",
+        righe=[quote.Riga(acconto, Decimal("50"))],
+        utente=staff.utente,
+    )
+    partecipazione = Partecipazione.objects.get(evento=uscita, persona=csq)
+    servizi.non_partecipa(partecipazione, staff.utente)
+    restano = Quota.objects.valide().filter(persona=csq)
+    assert list(restano.values_list("periodo", flat=True)) == [date(2026, 5, 1)]
+
+
+def test_importo_per_persona_e_rate_cambiate(uscita, staff, csq, ragazza, genitore):
+    from apps.quote.models import Quota
+
+    _quota_campo(uscita, staff, RATE)
+    saldo = Quota.objects.get(persona=ragazza, periodo=date(2026, 7, 15))
+    url = f"/api/v1/eventi/{uscita.pk}/quote/{saldo.pk}"
+    assert (
+        _client(genitore).put(url, {"importo": "0"}, content_type="application/json").status_code
+        == 403
+    )
+    risposta = _client(staff).put(url, {"importo": "0"}, content_type="application/json")
+    assert risposta.json()["residuo"] == "0.00"
+    # One instalment less: its unpaid fees are withdrawn.
+    _quota_campo(uscita, staff, [RATE[0], RATE[2]])
+    assert Quota.objects.valide().filter(persona=csq).count() == 2
+    situazione = _client(staff).get(f"/api/v1/eventi/{uscita.pk}/quote").json()
+    assert {r["persona"] for r in situazione} == {"Csq Sara", "Esploratrice Giulia"}
+    assert _client(genitore).get(f"/api/v1/eventi/{uscita.pk}/quote").status_code == 403
+
+
+def test_quota_evento_regole(uscita, staff, csq, genitore):
+    assert _quota_campo(uscita, csq, RATE).status_code == 403
+    doppia = [RATE[0], {**RATE[1], "scadenza": RATE[0]["scadenza"]}]
+    assert _quota_campo(uscita, staff, doppia).status_code == 400
+    assert _quota_campo(uscita, staff, RATE, sconto="100").status_code == 400  # > last instalment
+    vista = _client(genitore).get(f"/api/v1/eventi/{uscita.pk}").json()
+    assert vista["quota"] is None
+
+
+def test_sconto_famiglia_sul_saldo(uscita, staff, ragazza, genitore, reparto):
+    from decimal import Decimal
+
+    from apps.quote.models import Quota
+
+    fratello = crea_persona("Luca", "Esploratore", data_nascita=nato_anni_fa(13))
+    Appartenenza.objects.create(
+        persona=fratello, unita=reparto, ruolo=RuoloAppartenenza.RAGAZZO, data_inizio=INIZIO_ANNO
+    )
+    RelazioneTutela.objects.create(tutore=genitore, minore=fratello, tipo="GENITORE")
+    servizi.allinea_partecipanti(uscita)
+    _quota_campo(uscita, staff, RATE, sconto="10")
+    sconti = dict(Quota.objects.filter(persona=ragazza).values_list("periodo", "sconto"))
+    assert sconti == {
+        date(2026, 5, 1): Decimal("0"),
+        date(2026, 6, 1): Decimal("0"),
+        date(2026, 7, 15): Decimal("10"),
+    }

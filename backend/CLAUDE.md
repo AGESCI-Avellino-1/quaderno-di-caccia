@@ -75,5 +75,6 @@ uv run python manage.py importa_buonastrada RicercaSoci.csv --applica  # write
 uv run python manage.py crea_invito <codice_socio> <email> --capogruppo  # first start
 uv run python manage.py segnala_correzioni   # daily email to the capigruppo (cron), DEC-31
 uv run python manage.py avvisa_maggiore_eta  # daily alerts for members turning 18 (cron), DEC-26
+uv run python manage.py promemoria_iscrizioni  # daily: new requests, reminders, suspension (cron)
 uv run python manage.py createsuperuser   # technical admin (DEC-12): sees no educational data
 ```

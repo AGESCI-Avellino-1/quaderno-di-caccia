@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
+import CompletaIscrizione from '@/components/CompletaIscrizione.vue'
 import { useSessioneStore } from '@/stores/sessione'
 import IscrizioneView from '@/views/IscrizioneView.vue'
 import IscrizioniView from '@/views/IscrizioniView.vue'
@@ -184,5 +185,34 @@ describe('CodiciIscrizione', () => {
     })
     expect(pannello.text()).toContain('ABCD2345')
     expect(pannello.get('img').attributes('src')).toBe('/api/v1/codici-iscrizione/9/qr.svg')
+  })
+})
+
+describe('CompletaIscrizione', () => {
+  it('saves the missing data and reports the new state', async () => {
+    const vuoti = {
+      sesso: '',
+      luogo_nascita: '',
+      indirizzo: '',
+      civico: '',
+      comune: '',
+      provincia: '',
+      cap: '',
+      cellulare_genitore: '',
+    }
+    const chiamate = stubFetch((_url, metodo) => [
+      200,
+      { ...vuoti, richiesta: { id: 4, stato: metodo === 'PUT' ? 'COMPLETATA' : 'APPROVATA' } },
+    ])
+    const modulo = mount(CompletaIscrizione, { props: { id: 4 } })
+    await flushPromises()
+    expect(modulo.find('#cellulare-4').exists()).toBe(true) // a minor: the parent's mobile
+    await modulo.get('#sesso-4').setValue('F')
+    await modulo.get('#cap-4').setValue('83100')
+    await modulo.get('form').trigger('submit')
+    await flushPromises()
+    expect(chiamate[0]).toMatchObject({ url: '/api/v1/iscrizioni/4/completamento', metodo: 'PUT' })
+    expect(chiamate[0]!.corpo).toMatchObject({ sesso: 'F', cap: '83100' })
+    expect(modulo.emitted('cambiata')![0]![0]).toMatchObject({ stato: 'COMPLETATA' })
   })
 })

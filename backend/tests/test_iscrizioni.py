@@ -300,3 +300,103 @@ def test_un_adulto_con_account_si_iscrive_con_la_sua_email(coca, capogruppo, gen
     assert risposta.json()["serve_account"] is False
     [mia] = _client(genitore).get("/api/v1/mie-iscrizioni").json()
     assert mia["email"] == "genitore@example.invalid"
+
+
+# --- Completion, reminders, suspension (step 2) ----------------------------------------
+
+
+@pytest.fixture
+def approvata(richiesta, capo):
+    servizi.approva(richiesta, capo.utente, TRA_UN_MESE)
+    richiesta.refresh_from_db()
+    mail.outbox.clear()
+    return richiesta
+
+
+DATI_COMPLETI = {
+    "sesso": "F",
+    "luogo_nascita": "Avellino",
+    "indirizzo": "Via Roma",
+    "civico": "1",
+    "comune": "Avellino",
+    "provincia": "av",
+    "cap": "83100",
+    "cellulare_genitore": "3471112222",
+}
+
+
+def _put(client, url, dati):
+    return client.put(url, dati, content_type="application/json")
+
+
+def test_la_famiglia_completa_i_dati(approvata, genitore_nuovo):
+    client = _client(genitore_nuovo)
+    url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
+    stato = client.get(url).json()
+    assert "Sesso" in stato["richiesta"]["mancanti"]
+    assert "Cellulare del genitore" in stato["richiesta"]["mancanti"]
+
+    assert _put(client, url, {**DATI_COMPLETI, "cap": "831"}).status_code == 400
+    completo = _put(client, url, DATI_COMPLETI).json()
+    assert completo["provincia"] == "AV"
+    assert completo["richiesta"]["stato"] == "COMPLETATA"
+    assert completo["richiesta"]["mancanti"] == []
+    assert Persona.objects.get(codice_fiscale=CF_GENITORE).cellulare == "3471112222"
+
+
+def test_chi_completa(approvata, capo, estraneo, genitore):
+    url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
+    assert _client(capo).get(url).status_code == 200  # who approves may help
+    for chi in (estraneo, genitore):
+        assert _client(chi).get(url).status_code == 404
+
+
+def test_promemoria_e_sospensione(approvata, genitore_nuovo):
+    from django.core.management import call_command
+
+    scadenza = approvata.scadenza_completamento
+    call_command("promemoria_iscrizioni", oggi=scadenza - timedelta(days=8))
+    assert mail.outbox == []
+    call_command("promemoria_iscrizioni", oggi=scadenza - timedelta(days=7))
+    [promemoria] = mail.outbox
+    assert "completa" in promemoria.subject and promemoria.to == ["luigi.bianco@example.invalid"]
+    call_command("promemoria_iscrizioni", oggi=scadenza - timedelta(days=3))
+    assert len(mail.outbox) == 1  # once
+
+    assert policy.persona_di(genitore_nuovo) is not None
+    call_command("promemoria_iscrizioni", oggi=scadenza)
+    approvata.refresh_from_db()
+    assert approvata.stato == StatoIscrizione.SOSPESA
+    assert "sospesa" in mail.outbox[-1].subject
+    # The account waits again: nothing but its registration.
+    assert policy.persona_di(genitore_nuovo) is None
+    client = _client(genitore_nuovo)
+    figlia = approvata.persona
+    assert client.get(f"/api/v1/persone/{figlia.pk}").status_code == 404
+    assert client.get("/api/v1/mie-iscrizioni").json()[0]["stato"] == "SOSPESA"
+
+    # Completing late gives everything back.
+    url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
+    assert _put(client, url, DATI_COMPLETI).json()["richiesta"]["stato"] == "COMPLETATA"
+    assert client.get(f"/api/v1/persone/{figlia.pk}").status_code == 200
+
+
+def test_completa_non_sospende(approvata, genitore_nuovo):
+    from django.core.management import call_command
+
+    servizi.completa(approvata, DATI_COMPLETI)
+    call_command("promemoria_iscrizioni", oggi=approvata.scadenza_completamento)
+    approvata.refresh_from_db()
+    assert approvata.stato == StatoIscrizione.COMPLETATA
+    assert mail.outbox == []
+
+
+def test_avviso_agli_approvatori(richiesta, capo, capogruppo):
+    from django.core.management import call_command
+
+    call_command("promemoria_iscrizioni")
+    destinatari = sorted(m.to[0] for m in mail.outbox)
+    assert destinatari == ["capo@example.invalid", "cg@example.invalid"]
+    assert all("Marta" not in m.body for m in mail.outbox)  # no names by email
+    call_command("promemoria_iscrizioni")
+    assert len(mail.outbox) == 2  # once

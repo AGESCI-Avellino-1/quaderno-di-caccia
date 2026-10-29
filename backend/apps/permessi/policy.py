@@ -32,7 +32,14 @@ class LivelloAccesso(StrEnum):
 
 
 def persona_di(user) -> Persona | None:
+    """The person behind an account. None also for an account suspended because its
+    registration was not completed in time: it sees nothing but that (maintainer,
+    2026-10-29)."""
     if not getattr(user, "is_authenticated", False):
+        return None
+    from apps.iscrizioni.servizi import account_sospeso
+
+    if account_sospeso(user):
         return None
     return Persona.objects.filter(utente=user).first()
 

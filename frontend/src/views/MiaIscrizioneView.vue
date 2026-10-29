@@ -2,23 +2,36 @@
 import { onMounted, ref } from 'vue'
 
 import { api, type RichiestaIscrizione } from '@/api/qdc'
+import CompletaIscrizione from '@/components/CompletaIscrizione.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useSessioneStore } from '@/stores/sessione'
 
-// The family follows its requests here. An account waiting for approval sees only
-// this page (the server gives it nothing else). Online only.
+// The family follows its requests here and completes them after the approval. An account
+// waiting for approval, or suspended because the deadline passed, sees only this page
+// (the server gives it nothing else). Online only.
 const { errore, inCorso, esegui } = useErrore()
+const sessione = useSessioneStore()
 const richieste = ref<RichiestaIscrizione[]>([])
 
 onMounted(async () => {
   richieste.value = (await esegui(() => api.mieIscrizioni())) ?? []
 })
 
+async function aggiornata(nuova: RichiestaIscrizione) {
+  const prima = richieste.value.find((r) => r.id === nuova.id)?.stato
+  richieste.value = richieste.value.map((r) => (r.id === nuova.id ? nuova : r))
+  if (prima === 'SOSPESA' && nuova.stato !== 'SOSPESA') await sessione.carica() // active again
+}
+
 const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 const tema = {
   IN_ATTESA: 'theme-warning',
-  APPROVATA: 'theme-success',
+  APPROVATA: 'theme-info',
+  SOSPESA: 'theme-danger',
+  COMPLETATA: 'theme-success',
   RIFIUTATA: 'theme-secondary',
 }
+const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.stato === 'SOSPESA'
 </script>
 
 <template>
@@ -35,12 +48,23 @@ const tema = {
       <p v-if="r.stato === 'IN_ATTESA'" class="mb-0">
         I capi dell'unità esamineranno la richiesta: riceverai un'email con la risposta.
       </p>
-      <p v-else-if="r.stato === 'APPROVATA'" class="mb-0">
-        Iscrizione accolta.
-        <template v-if="r.scadenza_completamento">
-          Entro il <strong>{{ data(r.scadenza_completamento) }}</strong> vanno completati i dati e
-          caricati i moduli firmati.
-        </template>
+      <template v-else-if="daCompletare(r)">
+        <p class="mb-1">
+          <template v-if="r.stato === 'SOSPESA'">
+            È scaduto il termine: finché non completi, l'app ti mostra solo questa pagina.
+          </template>
+          <template v-else-if="r.scadenza_completamento">
+            Iscrizione accolta. Completa entro il
+            <strong>{{ data(r.scadenza_completamento) }}</strong
+            >.
+          </template>
+        </p>
+        <p v-if="r.mancanti.length" class="small mb-0">Mancano: {{ r.mancanti.join(', ') }}.</p>
+        <CompletaIscrizione :id="r.id" @cambiata="aggiornata" />
+      </template>
+      <p v-else-if="r.stato === 'COMPLETATA'" class="mb-0">
+        Iscrizione completa: il gruppo la inserirà in BuonaStrada, che darà il codice socio
+        definitivo.
       </p>
       <p v-else class="mb-0">Non accolta: {{ r.motivo_rifiuto }}</p>
     </article>

@@ -73,8 +73,19 @@ class CodiceIscrizione(ModelloTracciato):
 
 class StatoIscrizione(models.TextChoices):
     IN_ATTESA = "IN_ATTESA", "In attesa di approvazione"
-    APPROVATA = "APPROVATA", "Approvata: da completare"
+    APPROVATA = "APPROVATA", "Accolta: dati e moduli da completare"
+    SOSPESA = "SOSPESA", "Sospesa: scaduto il termine per completare"
+    COMPLETATA = "COMPLETATA", "Completa: da inserire in BuonaStrada"
     RIFIUTATA = "RIFIUTATA", "Non accolta"
+
+
+# Accepted but not yet complete: the family still has something to do.
+DA_COMPLETARE = (StatoIscrizione.APPROVATA, StatoIscrizione.SOSPESA)
+
+# BuonaStrada fields asked to complete the registration [da verificare: which ones
+# BuonaStrada really requires to enter a member].
+CAMPI_SOCIO = ("sesso", "luogo_nascita", "indirizzo", "civico", "comune", "provincia", "cap")
+CAMPI_SOCIO_OBBLIGATORI = ("sesso", "luogo_nascita", "indirizzo", "comune", "provincia", "cap")
 
 
 class RichiestaIscrizione(ModelloTracciato):
@@ -113,6 +124,11 @@ class RichiestaIscrizione(ModelloTracciato):
     motivo_rifiuto = models.TextField(blank=True)
     # By when the family completes the data and the signed forms.
     scadenza_completamento = models.DateField(null=True, blank=True)
+    completata_il = models.DateTimeField(null=True, blank=True)
+    # Emails already sent (management command promemoria_iscrizioni).
+    segnalata_il = models.DateTimeField(null=True, blank=True)  # to the approvers
+    promemoria_il = models.DateField(null=True, blank=True)  # to the family
+    sospesa_il = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "richiesta di iscrizione"

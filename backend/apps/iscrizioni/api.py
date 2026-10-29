@@ -18,6 +18,8 @@ from apps.permessi import policy
 
 from . import servizi
 from .models import (
+    CAMPI_SOCIO,
+    DA_COMPLETARE,
     CodiceIscrizione,
     RichiestaIscrizione,
     StatoIscrizione,
@@ -216,6 +218,8 @@ class RichiestaOut(Schema):
     scadenza_completamento: date | None
     motivo_rifiuto: str
     persona_id: int | None
+    # What the family still has to complete, in words.
+    mancanti: list[str]
 
 
 class Decisione(Schema):
@@ -242,6 +246,7 @@ def _richiesta_out(r: RichiestaIscrizione) -> dict:
         "scadenza_completamento": r.scadenza_completamento,
         "motivo_rifiuto": r.motivo_rifiuto,
         "persona_id": r.persona_id,
+        "mancanti": servizi.mancanti(r) if r.stato in DA_COMPLETARE else [],
     }
 
 
@@ -288,3 +293,58 @@ def rifiuta(request, richiesta_id: int, dati: Decisione):
     richiesta = _richiesta_decidibile(request, richiesta_id)
     _errore(servizi.rifiuta, richiesta, request.auth, dati.motivo)
     return _richiesta_out(richiesta)
+
+
+# --- Completion -------------------------------------------------------------------------
+
+
+class Completamento(Schema):
+    sesso: str = ""
+    luogo_nascita: str = ""
+    indirizzo: str = ""
+    civico: str = ""
+    comune: str = ""
+    provincia: str = ""
+    cap: str = ""
+    # For a minor: the parent's mobile; None when the member is an adult.
+    cellulare_genitore: str | None = None
+
+
+class StatoCompletamento(Completamento):
+    richiesta: RichiestaOut
+
+
+def _richiesta_da_completare(request, richiesta_id: int) -> RichiestaIscrizione:
+    richiesta = get_object_or_404(
+        RichiestaIscrizione.objects.select_related("unita", "utente", "persona"),
+        pk=richiesta_id,
+    )
+    propria = request.auth is not None and richiesta.utente_id == request.auth.pk
+    if not (propria or policy.puo_approvare_iscrizione(request.auth, richiesta.unita)):
+        raise HttpError(404, "Iscrizione non trovata.")
+    if richiesta.persona is None:
+        raise HttpError(409, "La richiesta non è ancora stata accolta.")
+    return richiesta
+
+
+def _completamento(richiesta: RichiestaIscrizione) -> dict:
+    socio = richiesta.persona
+    padre_o_madre = servizi.genitore(richiesta)
+    return {campo: getattr(socio, campo) for campo in CAMPI_SOCIO} | {
+        "cellulare_genitore": padre_o_madre.cellulare if padre_o_madre else None,
+        "richiesta": _richiesta_out(richiesta),
+    }
+
+
+@router.get("/iscrizioni/{richiesta_id}/completamento", response=StatoCompletamento)
+def completamento(request, richiesta_id: int):
+    return _completamento(_richiesta_da_completare(request, richiesta_id))
+
+
+@router.put("/iscrizioni/{richiesta_id}/completamento", response=StatoCompletamento)
+def completa(request, richiesta_id: int, dati: Completamento):
+    """The family (or who approved) completes the data still missing."""
+    richiesta = _richiesta_da_completare(request, richiesta_id)
+    _errore(servizi.completa, richiesta, dati.dict(exclude_none=True))
+    richiesta.refresh_from_db()
+    return _completamento(richiesta)

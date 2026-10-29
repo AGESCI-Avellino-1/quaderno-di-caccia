@@ -11,6 +11,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from apps.anagrafica.models import (
+    ETICHETTE_CAMPI,
     Appartenenza,
     Persona,
     RelazioneTutela,
@@ -22,7 +23,14 @@ from apps.core.anno import eta_in_data
 from apps.core.models import FonteDato
 from apps.organizzazione.models import TipoUnita
 
-from .models import CodiceIscrizione, RichiestaIscrizione, StatoIscrizione
+from .models import (
+    CAMPI_SOCIO,
+    CAMPI_SOCIO_OBBLIGATORI,
+    DA_COMPLETARE,
+    CodiceIscrizione,
+    RichiestaIscrizione,
+    StatoIscrizione,
+)
 
 # The request of someone without an account yet waits here until sign-up.
 CHIAVE_SESSIONE_ISCRIZIONE = "qdc_iscrizione"
@@ -148,6 +156,7 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
     richiesta.decisa_da = utente
     richiesta.scadenza_completamento = scadenza
     richiesta.save()
+    aggiorna_stato(richiesta)  # someone already known to the app may need nothing more
     _scrivi(
         richiesta,
         "Iscrizione accolta",
@@ -210,3 +219,64 @@ def richiesta_da_sessione(request, utente) -> RichiestaIscrizione | None:
         return crea_richiesta(*salvata, utente)
     except ValidationError:
         return None  # e.g. the code was used meanwhile: the account stays, without request
+
+
+# --- Completion (maintainer, 2026-10-29) ----------------------------------------------
+
+
+def genitore(richiesta: RichiestaIscrizione) -> Persona | None:
+    """The parent who asked for a minor."""
+    if not richiesta.per_minore:
+        return None
+    return Persona.objects.filter(codice_fiscale=richiesta.genitore_codice_fiscale).first()
+
+
+def mancanti(richiesta: RichiestaIscrizione) -> list[str]:
+    """What is still missing to complete the registration, in words."""
+    socio = richiesta.persona
+    if socio is None:
+        return []
+    voci = [ETICHETTE_CAMPI[c] for c in CAMPI_SOCIO_OBBLIGATORI if not getattr(socio, c)]
+    padre_o_madre = genitore(richiesta)
+    if padre_o_madre is not None and not padre_o_madre.cellulare:
+        voci.append("Cellulare del genitore")
+    return voci
+
+
+def aggiorna_stato(richiesta: RichiestaIscrizione) -> None:
+    """Complete when nothing is missing; a suspended account is active again."""
+    if richiesta.stato in DA_COMPLETARE and not mancanti(richiesta):
+        richiesta.stato = StatoIscrizione.COMPLETATA
+        richiesta.completata_il = timezone.now()
+        richiesta.save(update_fields=["stato", "completata_il", "aggiornato_il"])
+
+
+@transaction.atomic
+def completa(richiesta: RichiestaIscrizione, dati: dict) -> None:
+    """Write the remaining BuonaStrada data. They are not corrections: BuonaStrada has
+    no record of this member yet."""
+    if richiesta.stato not in DA_COMPLETARE:
+        raise ValidationError("Questa iscrizione non è da completare.")
+    socio = richiesta.persona
+    for campo in CAMPI_SOCIO:
+        if campo in dati:
+            setattr(socio, campo, (dati[campo] or "").strip())
+    socio.provincia = socio.provincia.upper()
+    if socio.cap and not (socio.cap.isdigit() and len(socio.cap) == 5):
+        raise ValidationError("Il CAP ha 5 cifre.")
+    if socio.provincia and not (socio.provincia.isalpha() and len(socio.provincia) == 2):
+        raise ValidationError("La provincia è la sigla di 2 lettere (es. AV).")
+    altri = [f.name for f in Persona._meta.fields if f.name not in CAMPI_SOCIO]
+    socio.full_clean(exclude=altri)
+    socio.save()
+    padre_o_madre = genitore(richiesta)
+    if padre_o_madre is not None and "cellulare_genitore" in dati:
+        padre_o_madre.cellulare = (dati["cellulare_genitore"] or "").strip()
+        padre_o_madre.save(update_fields=["cellulare", "aggiornato_il"])
+    aggiorna_stato(richiesta)
+
+
+def account_sospeso(utente) -> bool:
+    """The deadline passed without completing: the account waits again, it sees only
+    its own registration (maintainer, 2026-10-29)."""
+    return RichiestaIscrizione.objects.filter(utente=utente, stato=StatoIscrizione.SOSPESA).exists()

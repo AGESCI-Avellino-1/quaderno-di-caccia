@@ -317,7 +317,7 @@ export interface DatiIscrizione {
   genitore_codice_fiscale: string
 }
 
-export type StatoIscrizione = 'IN_ATTESA' | 'APPROVATA' | 'RIFIUTATA'
+export type StatoIscrizione = 'IN_ATTESA' | 'APPROVATA' | 'SOSPESA' | 'COMPLETATA' | 'RIFIUTATA'
 
 export interface RichiestaIscrizione {
   id: number
@@ -337,6 +337,20 @@ export interface RichiestaIscrizione {
   scadenza_completamento: string | null
   motivo_rifiuto: string
   persona_id: number | null
+  /** What the family still has to complete, in words. */
+  mancanti: string[]
+}
+
+export interface Completamento {
+  sesso: string
+  luogo_nascita: string
+  indirizzo: string
+  civico: string
+  comune: string
+  provincia: string
+  cap: string
+  /** For a minor, the parent's mobile; null for an adult member. */
+  cellulare_genitore: string | null
 }
 
 export const qrCodice = (id: number) => `/api/v1/codici-iscrizione/${id}/qr.svg`
@@ -595,6 +609,15 @@ export const api = {
       metodo: 'POST',
       corpo: { scadenza_completamento: scadenza },
     }),
+  completamento: (id: number) =>
+    richiesta<Completamento & { richiesta: RichiestaIscrizione }>(
+      `/api/v1/iscrizioni/${id}/completamento`,
+    ),
+  completa: (id: number, dati: Completamento) =>
+    richiesta<Completamento & { richiesta: RichiestaIscrizione }>(
+      `/api/v1/iscrizioni/${id}/completamento`,
+      { metodo: 'PUT', corpo: dati },
+    ),
   rifiutaIscrizione: (id: number, motivo: string) =>
     richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${id}/rifiuta`, {
       metodo: 'POST',

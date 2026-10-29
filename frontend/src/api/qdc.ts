@@ -40,6 +40,8 @@ export interface Profilo {
   /** Fees: the group sets them; units whose payment situation the user may see. */
   gestisce_quote: boolean
   unita_quote: number[]
+  /** Cash book: the Co.Ca. and the unit treasurers. */
+  vede_cassa: boolean
 }
 
 export interface PersonaElenco extends PersonaBreve {
@@ -671,6 +673,8 @@ export interface PagamentoIn {
   versato_da: string
   note: string
   righe: { quota_id: number; importo: string }[]
+  /** Default: the unit's cash box for cash, else the bank account. */
+  cassa_id?: number | null
 }
 
 export interface Pagamento {
@@ -709,6 +713,113 @@ export interface Coniugi {
   persona: string
   coniuge: string
 }
+
+// --- Cash book --------------------------------------------------------------------------------
+
+export type TipoCassa = 'BANCA' | 'CONTANTI'
+export type TipoMovimento = 'ENTRATA' | 'USCITA' | 'GIROCONTO' | 'RETTIFICA'
+
+export interface VoceModelloD {
+  id: string
+  lato: 'E' | 'U'
+  riga: string
+  titolo_riga: string
+  nome: string
+}
+
+export interface CassaIn {
+  nome: string
+  tipo: TipoCassa
+  unita_id: number | null
+  saldo_iniziale: string
+  data_saldo_iniziale: string
+  attiva: boolean
+}
+
+export interface Cassa extends CassaIn {
+  id: number
+  /** Hidden from an R/S treasurer on the shared bank account. */
+  saldo: string | null
+  puo_registrare: boolean
+  senza_giustificativo: number
+}
+
+export interface MovimentoIn {
+  cassa_id: number
+  tipo: TipoMovimento
+  data: string
+  importo: string
+  descrizione: string
+  voce_id: string
+  unita_id: number | null
+  cassa_destinazione_id: number | null
+  /** Base64 data URL: the record can wait, encrypted, in the offline queue. */
+  giustificativo: string
+}
+
+export interface Movimento {
+  id: number
+  cassa_id: number
+  cassa: string
+  tipo: TipoMovimento
+  tipo_nome: string
+  data: string
+  importo: string
+  effetto: string
+  descrizione: string
+  voce_riga: string
+  voce_nome: string
+  unita_id: number | null
+  cassa_destinazione: string | null
+  ha_giustificativo: boolean
+  senza_giustificativo: boolean
+  storno_di: number | null
+  stornato: boolean
+  motivo_storno: string
+  da_quote: boolean
+  registrato_da: string | null
+  creato_il: string
+}
+
+export interface Verifica {
+  id: number
+  data: string
+  saldo_contato: string
+  saldo_app: string
+  differenza: string
+  motivo: string
+  registrata_da: string | null
+}
+
+export interface SpesaAnticipata {
+  id: number
+  capo_id: number
+  capo: string
+  data: string
+  importo: string
+  descrizione: string
+  unita_id: number | null
+  ha_giustificativo: boolean
+  stato: 'da_rimborsare' | 'rimborsata' | 'respinta'
+  rimborsata_il: string | null
+  motivo_rifiuto: string
+  puo_rimborsare: boolean
+}
+
+export interface ModelloD {
+  anno_bilancio: string
+  anno_etichetta: string
+  righe: { lato: 'E' | 'U'; riga: string; titolo: string; totale: string }[]
+  entrate: string
+  uscite: string
+  rettifiche: string
+  saldi: Cassa[]
+}
+
+export const PERCORSO_MOVIMENTI = '/api/v1/movimenti'
+export const PERCORSO_SPESE_ANTICIPATE = '/api/v1/spese-anticipate'
+export const giustificativoMovimento = (id: number) => `/api/v1/movimenti/${id}/giustificativo`
+export const giustificativoSpesa = (id: number) => `/api/v1/spese-anticipate/${id}/giustificativo`
 
 export const PERCORSO_PAGAMENTI = '/api/v1/pagamenti'
 export const ricevutaPdf = (pagamento: number) => `/api/v1/pagamenti/${pagamento}/ricevuta.pdf`
@@ -953,6 +1064,42 @@ export const api = {
       metodo: 'PUT',
       corpo: { link_pagamento },
     }),
+  vociModelloD: () => richiesta<VoceModelloD[]>('/api/v1/voci-modello-d'),
+  casse: () => richiesta<Cassa[]>('/api/v1/casse'),
+  creaCassa: (dati: CassaIn) => richiesta<Cassa>('/api/v1/casse', { metodo: 'POST', corpo: dati }),
+  modificaCassa: (id: number, dati: CassaIn) =>
+    richiesta<Cassa>(`/api/v1/casse/${id}`, { metodo: 'PUT', corpo: dati }),
+  movimenti: (filtri: { cassa?: number; anno?: number; unita?: number } = {}) => {
+    const parametri = new URLSearchParams(
+      Object.entries(filtri)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, String(v)]),
+    )
+    return richiesta<Movimento[]>(`/api/v1/movimenti?${parametri}`)
+  },
+  storna: (id: number, motivo: string) =>
+    richiesta<Movimento>(`/api/v1/movimenti/${id}/storno`, { metodo: 'POST', corpo: { motivo } }),
+  aggiungiGiustificativo: (id: number, giustificativo: string) =>
+    richiesta<Movimento>(`/api/v1/movimenti/${id}/giustificativo`, {
+      metodo: 'POST',
+      corpo: { giustificativo },
+    }),
+  verifiche: (cassa: number) => richiesta<Verifica[]>(`/api/v1/casse/${cassa}/verifiche`),
+  verificaCassa: (cassa: number, dati: { data: string; saldo_contato: string; motivo: string }) =>
+    richiesta<Verifica>(`/api/v1/casse/${cassa}/verifiche`, { metodo: 'POST', corpo: dati }),
+  speseAnticipate: () => richiesta<SpesaAnticipata[]>('/api/v1/spese-anticipate'),
+  rimborsaSpesa: (id: number, cassa_id: number) =>
+    richiesta<SpesaAnticipata>(`/api/v1/spese-anticipate/${id}/rimborsa`, {
+      metodo: 'POST',
+      corpo: { cassa_id },
+    }),
+  respingiSpesa: (id: number, motivo: string) =>
+    richiesta<SpesaAnticipata>(`/api/v1/spese-anticipate/${id}/respingi`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
+  modelloD: (anno?: number) =>
+    richiesta<ModelloD>(`/api/v1/modello-d${anno ? `?anno=${anno}` : ''}`),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
       metodo: 'POST',

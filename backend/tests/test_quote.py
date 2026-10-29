@@ -280,7 +280,7 @@ def test_un_pagamento_su_piu_quote_con_acconto(quote_famiglia, staff):
 
 def test_pagamento_oltre_il_dovuto_o_di_altre_famiglie(quote_famiglia, csq, staff):
     sua, _ = quote_famiglia
-    with pytest.raises(ValidationError, match="restano da pagare 35"):
+    with pytest.raises(ValidationError, match="restano da pagare 35,00 €"):
         _paga([(sua, "36")], staff.utente)
     servizi.emetti(_annuale(nome="Altra"), oggi=GENNAIO)
     di_altri = Quota.objects.get(persona=csq, tipo__nome="Altra")

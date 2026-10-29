@@ -161,6 +161,19 @@ const router = createRouter({
       component: () => import('@/views/MieQuoteView.vue'),
     },
     {
+      // The Co.Ca. and the unit treasurers: the API decides (DEC-85…DEC-88).
+      path: '/cassa',
+      name: 'cassa',
+      component: () => import('@/views/CassaView.vue'),
+    },
+    {
+      // Expenses a capo paid out of pocket (DEC-86).
+      path: '/spese',
+      name: 'spese',
+      component: () => import('@/views/SpeseView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       path: '/importazione',
       name: 'importazione',
       component: () => import('@/views/ImportazioneView.vue'),

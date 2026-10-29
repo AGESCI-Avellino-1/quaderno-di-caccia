@@ -6,6 +6,7 @@ import {
   euro,
   PERCORSO_PAGAMENTI,
   ricevutaPdf,
+  type Cassa,
   type MetodoPagamento,
   type Pagamento,
   type Quota,
@@ -25,6 +26,8 @@ const { errore, inCorso, esegui } = useErrore()
 const dati = ref<QuotePersona | null>(null)
 const copiaDel = ref<string | null>(null)
 const pagamenti = ref<Pagamento[]>([])
+// Cash boxes the user may record on; empty = the default box (unit cash or the bank).
+const casse = ref<Cassa[]>([])
 const esito = ref('')
 
 const oggi = () => new Date().toLocaleDateString('sv')
@@ -34,6 +37,7 @@ const modulo = reactive({
   metodo: 'CONTANTI' as MetodoPagamento,
   versato_da: '',
   note: '',
+  cassa_id: null as number | null,
   importi: {} as Record<number, string>,
 })
 const agevolazione = reactive({ quota: 0, importo: '', decisa_il: oggi(), nota: '' })
@@ -53,6 +57,15 @@ async function carica(id: number) {
   } catch {
     pagamenti.value = [] // offline: the payments list needs the network
   }
+  if (dati.value?.puo_registrare) {
+    try {
+      casse.value = (await leggiConCache('casse', () => api.casse())).dati.filter(
+        (c) => c.puo_registrare && c.attiva,
+      )
+    } catch {
+      casse.value = []
+    }
+  }
 }
 watch(() => props.id, carica, { immediate: true })
 
@@ -71,6 +84,7 @@ function apriPagamento() {
   modulo.aperto = true
   modulo.data = oggi()
   modulo.note = ''
+  modulo.cassa_id = null
   modulo.importi = {}
   esito.value = ''
 }
@@ -94,6 +108,7 @@ async function registra() {
         versato_da: modulo.versato_da,
         note: modulo.note,
         righe,
+        cassa_id: modulo.cassa_id,
       },
       // Stored in clear in the queue: no names.
       descrizione: `Pagamento di ${euro(totale.value)} (scheda n. ${props.id})`,
@@ -374,6 +389,15 @@ async function reinvia(id: number) {
               placeholder="Nome e cognome, per la ricevuta"
               required
             />
+          </div>
+          <div v-if="casse.length" class="col-12">
+            <label class="form-label small" for="paga-cassa">In quale cassa entrano</label>
+            <select id="paga-cassa" v-model="modulo.cassa_id" class="form-control form-control-sm">
+              <option :value="null">
+                Automatica: contanti nella cassa dell'unità, il resto nel conto
+              </option>
+              <option v-for="c in casse" :key="c.id" :value="c.id">{{ c.nome }}</option>
+            </select>
           </div>
           <div class="col-12">
             <label class="form-label small" for="paga-note">Note (vanno sulla ricevuta)</label>

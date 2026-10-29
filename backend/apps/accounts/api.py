@@ -45,6 +45,8 @@ class Profilo(Schema):
     # Fees: the group sets them; units whose payment situation the user may see.
     gestisce_quote: bool
     unita_quote: list[int]
+    # Cash book: who sees it, and who keeps cash (units, or the whole group).
+    vede_cassa: bool
 
 
 @router.get("/io", response=Profilo)
@@ -83,6 +85,7 @@ def profilo(request):
         "tutelati": list(policy.tutelati(user)),
         "gestisce_quote": policy.puo_gestire_quote(user),
         "unita_quote": policy.unita_situazione_quote(user),
+        "vede_cassa": policy.puo_vedere_cassa(user),
     }
 
 

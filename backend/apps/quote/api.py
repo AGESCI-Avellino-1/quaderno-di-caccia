@@ -363,6 +363,9 @@ class PagamentoIn(Schema):
     versato_da: str
     note: str = ""
     righe: list[RigaIn]
+    # The cash box the money goes to; default: the unit's cash box for cash, else the
+    # bank account.
+    cassa_id: int | None = None
 
 
 class RigaOut(Schema):
@@ -432,6 +435,13 @@ def registra_pagamento(request, dati: PagamentoIn):
     for quota in quote.values():
         if not policy.puo_registrare_pagamenti(utente, quota.persona):
             raise HttpError(403, f"Non puoi registrare pagamenti per {quota.persona.nome}.")
+    cassa = None
+    if dati.cassa_id is not None:
+        from apps.cassa.models import Cassa
+
+        cassa = get_object_or_404(Cassa, pk=dati.cassa_id)
+        if not policy.puo_registrare_in_cassa(utente, cassa):
+            raise HttpError(403, "Non puoi registrare incassi in quella cassa.")
     try:
         pagamento = servizi.registra_pagamento(
             data=dati.data,
@@ -440,6 +450,7 @@ def registra_pagamento(request, dati: PagamentoIn):
             note=dati.note,
             righe=[servizi.Riga(quote[r.quota_id], r.importo) for r in dati.righe],
             utente=utente,
+            cassa=cassa,
         )
     except ValidationError as errore:
         raise HttpError(400, " ".join(errore.messages)) from errore

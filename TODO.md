@@ -8,18 +8,19 @@ Dettagli dei requisiti: [analisi dei requisiti](docs/analisi/analisi-requisiti.m
 
 ## Fasi
 
-La precedenza va alla PWA: ogni fase si completa sulla PWA. L'app per gli store arriva
-per ultima, dopo tutte le altre fasi.
+La precedenza va alla PWA: ogni fase si completa sulla PWA. L'app per gli store è in
+standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 
 | # | Fase | Stato | Note |
 | --- | --- | --- | --- |
 | 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
-| 2 | Quote e cassa | ⏳ | **la prossima**; pronto il catalogo `backend/data/cataloghi/modello_d_2024_2025.json` |
+| 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
 | 3 | Eventi e presenze | ⏳ | — |
 | 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
 | 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto, Carta di clan |
-| 7 | App negli store (Capacitor) | 💤 | ultima, dopo la fase 6; DEC-105; prima un prototipo per la regola Apple 4.2 |
+| 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
+| 8 | Realizzazione documentazione di uso | ⏳ | installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
 
 ## Prossimi passi
 
@@ -48,9 +49,9 @@ bancario è della fase 6 (DEC-93).
 | 2.4 | Pagamenti registrati (contanti, bonifico, altro; link di pagamento), anche offline come registrazioni da accodare | DEC-83, DEC-96 | ✅ |
 | 2.5 | Ricevute PDF non fiscali, numerate per anno associativo, inviate al genitore | DEC-84 | ✅ |
 | 2.6 | Vista del genitore: quote dovute e pagate con sconti e agevolazioni; chi non ha pagato lo vedono solo Co.Ca. e famiglia; il genitore resta collegato alle quote del figlio maggiorenne finché questo non lo scollega | DEC-16, DEC-92, DEC-26 | ✅ |
-| 2.7 | Prima nota per cassa: conto bancario e casse contanti per unità, configurabili; giroconti | DEC-85, DEC-88 | ⏳ |
-| 2.8 | Uscite con foto del giustificativo, anche offline; rimborsi ai capi | DEC-86 | ⏳ |
-| 2.9 | Categorie del Modello D dal catalogo; quote anticipate su BuonaCaccia in A.2 | DEC-87, DEC-89 | ⏳ |
+| 2.7 | Prima nota per cassa: conto bancario e casse contanti per unità, configurabili; giroconti | DEC-85, DEC-88 | ✅ |
+| 2.8 | Uscite con foto del giustificativo, anche offline; rimborsi ai capi | DEC-86 | ✅ |
+| 2.9 | Categorie del Modello D dal catalogo, rendiconto con i totali da ricopiare; le quote anticipate su BuonaCaccia (A.2) arrivano con gli eventi esterni della fase 3 | DEC-87, DEC-89 | ✅ |
 | 2.10 | Autofinanziamento come evento e budget dei campi (dopo la fase 3) | DEC-90, DEC-91 | 💤 |
 
 ### 3. Fasi successive
@@ -112,7 +113,15 @@ Prese con il maintainer il 29/10/2026, ancora senza codice DEC:
 | Agevolazioni | Le registrano i capigruppo e il tesoriere di gruppo (capo); la famiglia vede l'importo, la nota resta alla Co.Ca. | DEC-82 |
 | Pagamenti | Li registrano tesoriere di gruppo, capigruppo, tesoriere di unità, capo unità e staff dell'unità del socio; un pagamento si ripartisce su più quote della stessa famiglia, anche in parte (acconti); una ricevuta per pagamento | DEC-83, DEC-84 |
 | Campi, uscite, eventi esterni | Rimandati alla fase 3, con le rate a scadenze fisse per campo estivo e Vacanze di Branco/Cerchio | DEC-80 |
-| `[da verificare]` | Un capo non ancora in BuonaStrada non vede le quote degli altri; i pagamenti sbagliati si annullano (il numero di ricevuta resta, segnato annullato), non si modificano; li annullano capigruppo e tesoriere di gruppo | — |
+| Casse | Un solo conto bancario del gruppo: ogni movimento indica l'unità (anche quelli con la carta di unità); una cassa contanti per unità; le configurano capigruppo e tesoriere di gruppo | DEC-85 |
+| Chi registra in prima nota | Tesoriere di gruppo e capigruppo su tutte le casse; tesoriere di unità e capo unità per la loro unità | DEC-11, DEC-85 |
+| Chi vede la prima nota | La Co.Ca. tutto (anche il rendiconto); il tesoriere R/S ragazzo solo i movimenti della sua unità, non il saldo del conto bancario | DEC-11 |
+| Incassi delle quote | Entrano da soli: contanti nella cassa dell'unità del socio, il resto nel conto (chi registra può scegliere); voce A.1 per censimento e quota di gruppo, A.2 per la mensile; annullare il pagamento storna i movimenti | DEC-83, DEC-87 |
+| Correzioni | Un movimento non si modifica: si storna con un motivo e si registra di nuovo | DEC-96 |
+| Saldi | Saldo iniziale per cassa, poi verifiche di cassa del tesoriere o del capo unità: una differenza diventa una rettifica motivata (fuori dal Modello D) | DEC-11 |
+| Rimborsi ai capi | Il capo registra la spesa anticipata con la foto; diventa un'uscita (Rimborsi spese volontari) quando il tesoriere la rimborsa | DEC-86 |
+| Giustificativi | Foto facoltativa; le uscite senza giustificativo restano segnalate e la foto si può aggiungere dopo | DEC-86 |
+| `[da verificare]` | Un capo non ancora in BuonaStrada non vede le quote degli altri; i pagamenti sbagliati si annullano (il numero di ricevuta resta, segnato annullato), non si modificano; li annullano capigruppo e tesoriere di gruppo; le rettifiche delle verifiche di cassa restano fuori dai totali del Modello D (mostrate a parte) e non si stornano (si fa una nuova verifica); il conto del gruppo lo verificano capigruppo e tesoriere di gruppo; un pagamento registrato prima di configurare le casse non entra in prima nota | — |
 
 ## Punti aperti da confermare
 

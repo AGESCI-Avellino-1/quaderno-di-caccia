@@ -45,3 +45,4 @@ deploy/nginx-docker/acme/
 .DS_Store
 Thumbs.db
 .vscode/
+ignored/

@@ -568,3 +568,78 @@ def puo_vedere_agevolazione_di(user, persona: Persona) -> bool:
 
 def puo_registrare_agevolazioni(user) -> bool:
     return e_capo_censito(user) and puo_gestire_quote(user)
+
+
+# --- Cash book (DEC-11, DEC-85…DEC-88) ------------------------------------------------------
+# Decided with the maintainer on 2026-10-29 (not yet in the analysis): the group sets up
+# the cash boxes; the group treasurer and the capigruppo record on all of them, the unit
+# treasurer and the capo unità for their unit; the Co.Ca. sees everything, an R/S
+# treasurer only their unit.
+
+
+def _unita_tesoreria(user) -> set[int]:
+    """Units whose cash the user keeps: unit treasurer or capo unità."""
+    persona = persona_di(user)
+    if persona is None or e_capo_in_attesa(user):
+        return set()
+    return set(
+        Incarico.objects.attivi()
+        .filter(
+            persona=persona, ruolo__in={RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.CAPO_UNITA}
+        )
+        .values_list("unita_id", flat=True)
+    )
+
+
+def puo_gestire_casse(user) -> bool:
+    """Create cash boxes and set their initial balance: the group."""
+    return puo_gestire_quote(user)
+
+
+def puo_registrare_movimenti(user, unita_id: int | None) -> bool:
+    """On the movements of a unit (its cash box, or bank movements for it). Movements
+    of the group as a whole: the group only."""
+    if e_capo_in_attesa(user):
+        return False
+    if puo_gestire_casse(user):
+        return True
+    return unita_id is not None and unita_id in _unita_tesoreria(user)
+
+
+def puo_registrare_in_cassa(user, cassa) -> bool:
+    """Record on a box at all: its unit's keepers, the group; for the shared bank
+    account, whoever keeps any unit (the movement then says which unit)."""
+    if cassa.unita_id is not None:
+        return puo_registrare_movimenti(user, cassa.unita_id)
+    if cassa.tipo == "BANCA":
+        return puo_gestire_casse(user) or bool(_unita_tesoreria(user))
+    return puo_gestire_casse(user)
+
+
+def unita_cassa_visibili(user) -> set[int] | None:
+    """None = every unit (the Co.Ca.); otherwise the units of an R/S treasurer."""
+    if e_capo_censito(user):
+        return None
+    persona = persona_di(user)
+    if persona is None:
+        return set()
+    return set(
+        Incarico.objects.attivi()
+        .filter(persona=persona, ruolo=RuoloIncarico.TESORIERE_UNITA)
+        .values_list("unita_id", flat=True)
+    )
+
+
+def puo_vedere_cassa(user) -> bool:
+    visibili = unita_cassa_visibili(user)
+    return visibili is None or bool(visibili)
+
+
+def puo_registrare_spesa_anticipata(user, capo: Persona) -> bool:
+    """A capo records their own expense; the treasurers may do it for them."""
+    if e_capo_in_attesa(user):
+        return False
+    propria = persona_di(user)
+    if propria is not None and propria.pk == capo.pk and e_capo(user):
+        return True
+    return puo_gestire_casse(user) or bool(_unita_tesoreria(user))

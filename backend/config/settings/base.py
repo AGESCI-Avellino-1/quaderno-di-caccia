@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.diritti",
     "apps.iscrizioni",
     "apps.quote",
+    "apps.cassa",
 ]
 
 MIDDLEWARE = [

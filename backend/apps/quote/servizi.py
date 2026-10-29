@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela, RuoloAppartenenza
 from apps.core.anno import AnnoAssociativo
+from apps.core.euro import euro
 
 from .models import (
     ZERO,
@@ -157,9 +158,11 @@ def registra_pagamento(
     righe: list[Riga],
     utente,
     note: str = "",
+    cassa=None,
 ) -> Pagamento:
     """Record a payment spread over fees of one family. The total is the sum of the
-    lines: every euro received goes to a fee."""
+    lines: every euro received goes to a fee. The money enters the cash book by itself
+    (`cassa`, or the default box for the method)."""
     if not righe:
         raise ValidationError("Scegli almeno una quota.")
     if not versato_da.strip():
@@ -186,7 +189,7 @@ def registra_pagamento(
             if riga.importo > quota.residuo:
                 raise ValidationError(
                     f"Per {quota.descrizione} di {quota.persona.nome} restano da pagare "
-                    f"{quota.residuo} €."
+                    f"{euro(quota.residuo)}."
                 )
         anno = AnnoAssociativo.da_data(data).anno_fine
         contatore, _ = ContatoreRicevute.objects.select_for_update().get_or_create(anno=anno)
@@ -208,6 +211,9 @@ def registra_pagamento(
             RipartizionePagamento(pagamento=pagamento, quota=r.quota, importo=r.importo)
             for r in righe
         )
+        from apps.cassa.servizi import registra_pagamento as in_prima_nota
+
+        in_prima_nota(pagamento, righe, utente, cassa)
     return pagamento
 
 
@@ -220,7 +226,11 @@ def annulla_pagamento(pagamento: Pagamento, utente, motivo: str) -> None:
     pagamento.annullato_il = timezone.now()
     pagamento.annullato_da = utente
     pagamento.motivo_annullamento = motivo.strip()
-    pagamento.save()
+    with transaction.atomic():
+        pagamento.save()
+        from apps.cassa.servizi import storna_pagamento
+
+        storna_pagamento(pagamento, utente)
 
 
 def persone_del_pagamento(pagamento: Pagamento) -> QuerySet[Persona]:
@@ -261,7 +271,7 @@ def invia_ricevuta(pagamento: Pagamento) -> bool:
         subject=f"Ricevuta n. {pagamento.numero}",
         body=(
             "Ciao,\n\n"
-            f"in allegato la ricevuta del pagamento di {pagamento.importo} € del "
+            f"in allegato la ricevuta del pagamento di {euro(pagamento.importo)} del "
             f"{pagamento.data.strftime('%d/%m/%Y')}. Non è una ricevuta fiscale.\n\n"
             "La trovi anche nell'app, alla pagina Quote."
         ),

@@ -79,6 +79,18 @@ onMounted(async () => {
           </span>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.vede_cassa" class="col-12 md:col-6">
+        <RouterLink to="/cassa" class="card card-body h-100 text-decoration-none">
+          <strong>Prima nota</strong>
+          <span class="fg-2 small">Casse, movimenti, rimborsi e rendiconto</span>
+        </RouterLink>
+      </div>
+      <div v-if="sessione.capo && !sessione.profilo.capo_in_attesa" class="col-12 md:col-6">
+        <RouterLink to="/spese" class="card card-body h-100 text-decoration-none">
+          <strong>Le mie spese</strong>
+          <span class="fg-2 small">Quello che hai pagato per il gruppo, da farti rimborsare</span>
+        </RouterLink>
+      </div>
       <div
         v-if="sessione.profilo.persona || sessione.profilo.tutelati.length"
         class="col-12 md:col-6"

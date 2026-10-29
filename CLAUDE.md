@@ -217,8 +217,9 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
 | 5. Fascicolo completo | full medical form with print and signatures (extends `apps/sanitaria`), notes with visibility, archiving | — |
 | 6. Dopo | notice board, bank statement matching, Carta di clan text | — |
+| 8. Documentazione di uso | installation guide (for groups running their own copy) and user guide for Avellino 1, on the PWA (no store app) | — (analysis when we get there) |
 
-Deferred: store app with Capacitor (DEC-105) comes last, after phase 6; the PWA has
+On hold: store app with Capacitor (DEC-105, phase 7), to be evaluated later (maintainer, 2026-10-29); the PWA has
 priority and must stay the reference client;
 check Apple guideline 4.2 with a prototype before investing (see "Punti ancora da
 verificare" in the analysis).

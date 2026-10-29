@@ -7,6 +7,7 @@ from ninja.security import django_auth
 
 from apps.accounts.api import router as accounts_router
 from apps.anagrafica.api import router as anagrafica_router
+from apps.cassa.api import router as cassa_router
 from apps.core.api import router as core_router
 from apps.diritti.api import router as diritti_router
 from apps.dispositivi.api import router as dispositivi_router
@@ -37,3 +38,4 @@ api.add_router("/", sanitaria_router)
 api.add_router("/", diritti_router)
 api.add_router("/", iscrizioni_router)
 api.add_router("/", quote_router)
+api.add_router("/", cassa_router)

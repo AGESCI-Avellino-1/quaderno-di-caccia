@@ -10,13 +10,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from apps.core.euro import euro as _euro
 from apps.organizzazione.models import Gruppo
 
 from .models import Pagamento
-
-
-def _euro(valore) -> str:
-    return f"{valore:.2f} €".replace(".", ",")
 
 
 def pdf(pagamento: Pagamento) -> bytes:

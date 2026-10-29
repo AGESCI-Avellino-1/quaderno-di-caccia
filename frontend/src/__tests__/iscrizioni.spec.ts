@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
 import CompletaIscrizione from '@/components/CompletaIscrizione.vue'
+import ModuliIscrizione from '@/components/ModuliIscrizione.vue'
 import { useSessioneStore } from '@/stores/sessione'
 import IscrizioneView from '@/views/IscrizioneView.vue'
 import IscrizioniView from '@/views/IscrizioniView.vue'
@@ -214,5 +215,50 @@ describe('CompletaIscrizione', () => {
     expect(chiamate[0]).toMatchObject({ url: '/api/v1/iscrizioni/4/completamento', metodo: 'PUT' })
     expect(chiamate[0]!.corpo).toMatchObject({ sesso: 'F', cap: '83100' })
     expect(modulo.emitted('cambiata')![0]![0]).toMatchObject({ stato: 'COMPLETATA' })
+  })
+})
+
+describe('ModuliIscrizione', () => {
+  const moduli = (verificati = false) => ({
+    allegati: [
+      {
+        id: 3,
+        nome_file: 'consensi.pdf',
+        tipo_contenuto: 'application/pdf',
+        caricato_il: '2026-10-29T10:00:00Z',
+      },
+    ],
+    verificati_il: verificati ? '2026-10-30T10:00:00Z' : null,
+    puo_verificare: true,
+  })
+
+  it('lets who approves report the consents', async () => {
+    let verificato = false
+    const chiamate = stubFetch((url, metodo) => {
+      if (url === '/api/v1/modulistica') return [200, { puo_gestire: false, moduli: [] }]
+      if (metodo === 'POST') {
+        verificato = true
+        return [200, { id: 4, stato: 'COMPLETATA', mancanti: [] }]
+      }
+      return [200, moduli(verificato)]
+    })
+    const pannello = mount(ModuliIscrizione, { props: { id: 4 } })
+    await flushPromises()
+    expect(pannello.find('a[href="/api/v1/moduli-firmati/3/file"]').exists()).toBe(true)
+    await pannello.get('#consenso_iscrizione-4').setValue(true)
+    await pannello.findAll('form')[1]!.trigger('submit')
+    await flushPromises()
+    expect(chiamate[0]).toEqual({
+      url: '/api/v1/iscrizioni/4/verifica-moduli',
+      metodo: 'POST',
+      corpo: {
+        consenso_iscrizione: true,
+        consenso_foto: false,
+        consenso_commerciale: false,
+        consenso_riviste: false,
+      },
+    })
+    expect(pannello.text()).toContain('Moduli verificati dai capi')
+    expect(pannello.emitted('cambiata')).toHaveLength(1)
   })
 })

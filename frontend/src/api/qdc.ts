@@ -355,6 +355,36 @@ export interface Completamento {
 
 export const qrCodice = (id: number) => `/api/v1/codici-iscrizione/${id}/qr.svg`
 
+export interface ModuloVuoto {
+  id: number
+  titolo: string
+  attivo: boolean
+}
+
+export interface ModuliFirmati {
+  allegati: { id: number; nome_file: string; tipo_contenuto: string; caricato_il: string }[]
+  verificati_il: string | null
+  /** Who approves checks the forms and reports the consents. */
+  puo_verificare: boolean
+}
+
+export interface Consensi {
+  consenso_iscrizione: boolean
+  consenso_foto: boolean
+  consenso_commerciale: boolean
+  consenso_riviste: boolean
+}
+
+export const fileModulo = (id: number) => `/api/v1/modulistica/${id}/file`
+export const fileModuloFirmato = (id: number) => `/api/v1/moduli-firmati/${id}/file`
+
+function conFile(campi: Record<string, string>, file: File): FormData {
+  const dati = new FormData()
+  for (const [nome, valore] of Object.entries(campi)) dati.append(nome, valore)
+  dati.append('file', file)
+  return dati
+}
+
 // --- What the parents of an adult see (DEC-26) ----------------------------------------
 
 export interface SceltaVisibilita {
@@ -618,6 +648,32 @@ export const api = {
       `/api/v1/iscrizioni/${id}/completamento`,
       { metodo: 'PUT', corpo: dati },
     ),
+  modulistica: () =>
+    richiesta<{ puo_gestire: boolean; moduli: ModuloVuoto[] }>('/api/v1/modulistica'),
+  caricaModulo: (titolo: string, file: File) =>
+    richiesta<ModuloVuoto>('/api/v1/modulistica', {
+      metodo: 'POST',
+      corpo: conFile({ titolo }, file),
+    }),
+  attivaModulo: (id: number, attivo: boolean) =>
+    richiesta<ModuloVuoto>(`/api/v1/modulistica/${id}/attivo`, {
+      metodo: 'POST',
+      corpo: { attivo },
+    }),
+  moduliFirmati: (iscrizione: number) =>
+    richiesta<ModuliFirmati>(`/api/v1/iscrizioni/${iscrizione}/moduli`),
+  caricaModuloFirmato: (iscrizione: number, file: File) =>
+    richiesta<ModuliFirmati>(`/api/v1/iscrizioni/${iscrizione}/moduli`, {
+      metodo: 'POST',
+      corpo: conFile({}, file),
+    }),
+  togliModuloFirmato: (id: number) =>
+    richiesta<ModuliFirmati>(`/api/v1/moduli-firmati/${id}`, { metodo: 'DELETE' }),
+  verificaModuli: (iscrizione: number, consensi: Consensi) =>
+    richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${iscrizione}/verifica-moduli`, {
+      metodo: 'POST',
+      corpo: consensi,
+    }),
   rifiutaIscrizione: (id: number, motivo: string) =>
     richiesta<RichiestaIscrizione>(`/api/v1/iscrizioni/${id}/rifiuta`, {
       metodo: 'POST',

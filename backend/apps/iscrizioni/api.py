@@ -7,24 +7,29 @@ from datetime import date, datetime
 import segno
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
-from ninja import Router, Schema, Status
+from ninja import File, Form, Router, Schema, Status
 from ninja.errors import HttpError
+from ninja.files import UploadedFile
 from ninja.throttling import AnonRateThrottle, AuthRateThrottle
 
 from apps.organizzazione.models import Unita
 from apps.permessi import policy
+from apps.permessi.models import Azione, Categoria, registra_accessi
 
 from . import servizi
 from .models import (
     CAMPI_SOCIO,
     DA_COMPLETARE,
+    AllegatoIscrizione,
     CodiceIscrizione,
+    ModuloVuoto,
     RichiestaIscrizione,
     StatoIscrizione,
     TipoCodice,
     normalizza_codice,
+    tipo_file,
 )
 
 router = Router(tags=["iscrizioni"])
@@ -348,3 +353,145 @@ def completa(request, richiesta_id: int, dati: Completamento):
     _errore(servizi.completa, richiesta, dati.dict(exclude_none=True))
     richiesta.refresh_from_db()
     return _completamento(richiesta)
+
+
+# --- Blank forms (capigruppo) and signed forms -------------------------------------
+
+
+class ModuloOut(Schema):
+    id: int
+    titolo: str
+    attivo: bool
+
+
+class Modulistica(Schema):
+    puo_gestire: bool
+    moduli: list[ModuloOut]
+
+
+@router.get("/modulistica", response=Modulistica)
+def modulistica(request):
+    """Blank forms: every account may download them (they hold no personal data)."""
+    gestisce = policy.puo_gestire_modulistica(request.auth)
+    moduli = ModuloVuoto.objects.all() if gestisce else ModuloVuoto.objects.filter(attivo=True)
+    return {"puo_gestire": gestisce, "moduli": list(moduli)}
+
+
+@router.post("/modulistica", response={201: ModuloOut})
+def carica_modulo(request, titolo: Form[str], file: File[UploadedFile]):
+    if not policy.puo_gestire_modulistica(request.auth):
+        raise HttpError(403, "La modulistica la curano i capigruppo.")
+    if not titolo.strip():
+        raise HttpError(400, "Scrivi il titolo del modulo.")
+    if tipo_file(file.read(8)) != "application/pdf":
+        raise HttpError(400, "Il modulo vuoto va caricato in PDF.")
+    file.seek(0)
+    modulo = ModuloVuoto.objects.create(titolo=titolo.strip(), file=file, caricato_da=request.auth)
+    return Status(201, modulo)
+
+
+class Attivo(Schema):
+    attivo: bool
+
+
+@router.post("/modulistica/{modulo_id}/attivo", response=ModuloOut)
+def attiva_modulo(request, modulo_id: int, dati: Attivo):
+    if not policy.puo_gestire_modulistica(request.auth):
+        raise HttpError(403, "La modulistica la curano i capigruppo.")
+    modulo = get_object_or_404(ModuloVuoto, pk=modulo_id)
+    modulo.attivo = dati.attivo
+    modulo.save(update_fields=["attivo", "aggiornato_il"])
+    return modulo
+
+
+@router.get("/modulistica/{modulo_id}/file")
+def scarica_modulo(request, modulo_id: int):
+    modulo = get_object_or_404(ModuloVuoto, pk=modulo_id, attivo=True)
+    return FileResponse(modulo.file.open("rb"), as_attachment=True, filename=f"{modulo.titolo}.pdf")
+
+
+class AllegatoOut(Schema):
+    id: int
+    nome_file: str
+    tipo_contenuto: str
+    caricato_il: datetime
+
+
+class Moduli(Schema):
+    allegati: list[AllegatoOut]
+    verificati_il: datetime | None
+    puo_verificare: bool
+
+
+class Verifica(Schema):
+    consenso_iscrizione: bool = False
+    consenso_foto: bool = False
+    consenso_commerciale: bool = False
+    consenso_riviste: bool = False
+
+
+def _moduli(request, richiesta: RichiestaIscrizione) -> dict:
+    return {
+        "allegati": [
+            {
+                "id": a.pk,
+                "nome_file": a.nome_file,
+                "tipo_contenuto": a.tipo_contenuto,
+                "caricato_il": a.creato_il,
+            }
+            for a in richiesta.allegati.all()
+        ],
+        "verificati_il": richiesta.moduli_verificati_il,
+        "puo_verificare": policy.puo_approvare_iscrizione(request.auth, richiesta.unita),
+    }
+
+
+@router.get("/iscrizioni/{richiesta_id}/moduli", response=Moduli)
+def moduli_firmati(request, richiesta_id: int):
+    return _moduli(request, _richiesta_da_completare(request, richiesta_id))
+
+
+@router.post("/iscrizioni/{richiesta_id}/moduli", response=Moduli)
+def carica_moduli(request, richiesta_id: int, file: File[UploadedFile]):
+    richiesta = _richiesta_da_completare(request, richiesta_id)
+    _errore(servizi.carica_allegato, richiesta, file, request.auth)
+    return _moduli(request, richiesta)
+
+
+def _allegato(request, allegato_id: int) -> AllegatoIscrizione:
+    allegato = get_object_or_404(
+        AllegatoIscrizione.objects.select_related("richiesta__unita", "richiesta__persona"),
+        pk=allegato_id,
+    )
+    _richiesta_da_completare(request, allegato.richiesta_id)  # same rules as the request
+    return allegato
+
+
+@router.get("/moduli-firmati/{allegato_id}/file")
+def scarica_modulo_firmato(request, allegato_id: int):
+    """A signed scan: the family that uploaded it, who approves; capi reads go to the
+    access log."""
+    allegato = _allegato(request, allegato_id)
+    if allegato.richiesta.utente_id != request.auth.pk:
+        registra_accessi(request, [allegato.richiesta.persona], Categoria.MODULI, Azione.LETTURA)
+    return FileResponse(
+        allegato.file.open("rb"), content_type=allegato.tipo_contenuto, filename=allegato.nome_file
+    )
+
+
+@router.delete("/moduli-firmati/{allegato_id}", response=Moduli)
+def togli_modulo_firmato(request, allegato_id: int):
+    allegato = _allegato(request, allegato_id)
+    richiesta = allegato.richiesta
+    _errore(servizi.togli_allegato, allegato)
+    return _moduli(request, richiesta)
+
+
+@router.post("/iscrizioni/{richiesta_id}/verifica-moduli", response=RichiestaOut)
+def verifica_moduli(request, richiesta_id: int, dati: Verifica):
+    """A capo of the unit (or a capogruppo) checked the signed forms and reports the
+    consents."""
+    richiesta = _richiesta_decidibile(request, richiesta_id)
+    _errore(servizi.verifica_moduli, richiesta, request.auth, dati.dict())
+    registra_accessi(request, [richiesta.persona], Categoria.MODULI, Azione.MODIFICA)
+    return _richiesta_out(richiesta)

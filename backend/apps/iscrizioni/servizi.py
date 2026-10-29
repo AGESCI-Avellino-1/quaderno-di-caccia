@@ -1,5 +1,6 @@
 """Registration requests: creation, approval, rejection (maintainer, 2026-10-29)."""
 
+import uuid
 from dataclasses import dataclass
 from datetime import date
 
@@ -27,9 +28,12 @@ from .models import (
     CAMPI_SOCIO,
     CAMPI_SOCIO_OBBLIGATORI,
     DA_COMPLETARE,
+    DIMENSIONE_MASSIMA,
+    AllegatoIscrizione,
     CodiceIscrizione,
     RichiestaIscrizione,
     StatoIscrizione,
+    tipo_file,
 )
 
 # The request of someone without an account yet waits here until sign-up.
@@ -240,6 +244,10 @@ def mancanti(richiesta: RichiestaIscrizione) -> list[str]:
     padre_o_madre = genitore(richiesta)
     if padre_o_madre is not None and not padre_o_madre.cellulare:
         voci.append("Cellulare del genitore")
+    if not richiesta.allegati.exists():
+        voci.append("Moduli firmati da caricare")
+    elif richiesta.moduli_verificati_il is None:
+        voci.append("Verifica dei moduli da parte dei capi")
     return voci
 
 
@@ -280,3 +288,62 @@ def account_sospeso(utente) -> bool:
     """The deadline passed without completing: the account waits again, it sees only
     its own registration (maintainer, 2026-10-29)."""
     return RichiestaIscrizione.objects.filter(utente=utente, stato=StatoIscrizione.SOSPESA).exists()
+
+
+# --- Signed forms --------------------------------------------------------------------
+
+CONSENSI = ("consenso_iscrizione", "consenso_foto", "consenso_commerciale", "consenso_riviste")
+
+
+def carica_allegato(richiesta: RichiestaIscrizione, file, utente) -> AllegatoIscrizione:
+    """A scan of a signed form: PDF, JPEG or PNG up to 10 MB, checked on its first bytes.
+    Stored under a random name: the original name may contain the person's."""
+    if richiesta.stato not in DA_COMPLETARE:
+        raise ValidationError("I moduli si caricano finché l'iscrizione è da completare.")
+    if file.size > DIMENSIONE_MASSIMA:
+        raise ValidationError("Il file è troppo grande: al massimo 10 MB.")
+    tipo = tipo_file(file.read(8))
+    file.seek(0)
+    if tipo is None:
+        raise ValidationError("Carica un PDF o una foto (JPEG o PNG).")
+    estensione = {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png"}[tipo]
+    nome_originale = (file.name or "modulo")[-200:]
+    file.name = f"{uuid.uuid4().hex}{estensione}"
+    allegato = AllegatoIscrizione.objects.create(
+        richiesta=richiesta,
+        file=file,
+        nome_file=nome_originale,
+        tipo_contenuto=tipo,
+        caricato_da=utente,
+    )
+    if richiesta.moduli_verificati_il is not None:  # a new form needs a new check
+        richiesta.moduli_verificati_il = None
+        richiesta.moduli_verificati_da = None
+        richiesta.save(update_fields=["moduli_verificati_il", "moduli_verificati_da"])
+    return allegato
+
+
+def togli_allegato(allegato: AllegatoIscrizione) -> None:
+    richiesta = allegato.richiesta
+    if richiesta.stato not in DA_COMPLETARE or richiesta.moduli_verificati_il is not None:
+        raise ValidationError("I moduli già verificati non si tolgono.")
+    allegato.file.delete(save=False)
+    allegato.delete()
+
+
+@transaction.atomic
+def verifica_moduli(richiesta: RichiestaIscrizione, utente, consensi: dict[str, bool]) -> None:
+    """A capo checked the signed forms: the consents go on the member (BuonaStrada has
+    no record of them yet); only then the forms count as done."""
+    if richiesta.stato not in DA_COMPLETARE:
+        raise ValidationError("Questa iscrizione non è da completare.")
+    if not richiesta.allegati.exists():
+        raise ValidationError("Non ci sono moduli caricati da verificare.")
+    socio = richiesta.persona
+    for campo in CONSENSI:
+        setattr(socio, campo, bool(consensi.get(campo, False)))
+    socio.save(update_fields=[*CONSENSI, "aggiornato_il"])
+    richiesta.moduli_verificati_il = timezone.now()
+    richiesta.moduli_verificati_da = utente
+    richiesta.save(update_fields=["moduli_verificati_il", "moduli_verificati_da", "aggiornato_il"])
+    aggiorna_stato(richiesta)

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import { api, type RichiestaIscrizione } from '@/api/qdc'
+import ModuliIscrizione from '@/components/ModuliIscrizione.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // Registration requests to decide: the unit staff for their units, the capigruppo for
@@ -18,11 +19,16 @@ const tra30giorni = () => {
 const scadenza = ref(tra30giorni())
 const motivo = ref('')
 const oggi = new Date().toLocaleDateString('sv')
+// Also the accepted ones still to complete: their signed forms are checked here.
+const accolte = ref(false)
 
 async function carica() {
-  richieste.value = (await esegui(() => api.iscrizioniDaDecidere())) ?? []
+  const tutte = (await esegui(() => api.iscrizioniDaDecidere(accolte.value))) ?? []
+  richieste.value = accolte.value
+    ? tutte.filter((r) => ['IN_ATTESA', 'APPROVATA', 'SOSPESA'].includes(r.stato))
+    : tutte
 }
-onMounted(carica)
+watch(accolte, carica, { immediate: true })
 
 function apri(id: number, azione: 'approva' | 'rifiuta') {
   aperta.value = { id, azione }
@@ -51,6 +57,10 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       Chi si iscrive dall'app con un codice. Accolta la richiesta, il socio entra nell'unità con un
       codice socio provvisorio, finché il gruppo non lo inserisce in BuonaStrada.
     </p>
+    <div class="form-field mb-5">
+      <input id="anche-accolte" v-model="accolte" type="checkbox" class="switch" role="switch" />
+      <label for="anche-accolte">Anche quelle accolte, da completare</label>
+    </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <p v-if="!inCorso && !richieste.length" class="fg-2">Nessuna richiesta da esaminare.</p>
     <ul class="list-group">
@@ -66,6 +76,18 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div class="fg-2 small">
           Richiesta da {{ r.richiesta_da ?? '—' }} il {{ data(r.creata_il) }}
         </div>
+        <template v-if="r.stato !== 'IN_ATTESA'">
+          <div class="small">
+            <span class="badge" :class="r.stato === 'SOSPESA' ? 'theme-danger' : 'theme-info'">{{
+              r.stato_nome
+            }}</span>
+            <template v-if="r.scadenza_completamento">
+              entro il {{ data(r.scadenza_completamento) }}</template
+            >
+            <template v-if="r.mancanti.length"> · mancano: {{ r.mancanti.join(', ') }}</template>
+          </div>
+          <ModuliIscrizione :id="r.id" @cambiata="carica" @aggiorna="carica" />
+        </template>
 
         <form
           v-if="aperta?.id === r.id"
@@ -106,7 +128,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </button>
           <button type="button" class="btn btn-sm btn-link" @click="aperta = null">Annulla</button>
         </form>
-        <div v-else class="d-flex gap-3 mt-3">
+        <div v-else-if="r.stato === 'IN_ATTESA'" class="d-flex gap-3 mt-3">
           <button
             type="button"
             class="btn btn-sm btn-solid theme-primary"

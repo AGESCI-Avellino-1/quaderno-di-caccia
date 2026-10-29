@@ -30,6 +30,7 @@ const TITOLI: Record<string, string> = {
   correzioni_ai_dati: 'Correzioni ai dati',
   inviti: 'Inviti',
   accessi_ai_dati_delicati: 'Chi ha visto i dati delicati',
+  iscrizioni_dall_app: "Iscrizioni dall'app",
   richieste_dei_diritti: 'Richieste fatte',
 }
 

@@ -258,8 +258,11 @@ verificare" in the analysis).
   code sees no sensitive data (`_vede`, staff checks, camp, exceptions, access log).
   Completion by a deadline set at approval (`servizi.completa`, fields
   `CAMPI_SOCIO_OBBLIGATORI` `[da verificare]`); past it `promemoria_iscrizioni` suspends:
-  `policy.persona_di` returns None for a suspended account. Steps 3–4 (signed forms,
-  list for BuonaStrada) to do.
+  `policy.persona_di` returns None for a suspended account. Signed forms: capigruppo
+  upload blank PDFs (`ModuloVuoto`), the family uploads scans (`AllegatoIscrizione`,
+  PDF/JPEG/PNG ≤ 10 MB checked on the first bytes, random file names, served only by the
+  API with `Categoria.MODULI` in the access log), who approves verifies and ticks the
+  consents. Step 4 (list for BuonaStrada, XLSX/PDF, import closing) to do.
 - Units (maintainer 2026-10-29): `nome` is the group's, may repeat, required except for
   the Co.Ca.; the BuonaStrada code (`Unita.codice`, CUN + progressive, e.g. O1, G1) is
   unique and shown next to it everywhere (`str(unita)`, `nomeUnita()` in the PWA).

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 
 import { api, type RichiestaIscrizione } from '@/api/qdc'
 import CompletaIscrizione from '@/components/CompletaIscrizione.vue'
+import ModuliIscrizione from '@/components/ModuliIscrizione.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -13,9 +14,10 @@ const { errore, inCorso, esegui } = useErrore()
 const sessione = useSessioneStore()
 const richieste = ref<RichiestaIscrizione[]>([])
 
-onMounted(async () => {
+async function ricarica() {
   richieste.value = (await esegui(() => api.mieIscrizioni())) ?? []
-})
+}
+onMounted(ricarica)
 
 async function aggiornata(nuova: RichiestaIscrizione) {
   const prima = richieste.value.find((r) => r.id === nuova.id)?.stato
@@ -61,6 +63,7 @@ const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.st
         </p>
         <p v-if="r.mancanti.length" class="small mb-0">Mancano: {{ r.mancanti.join(', ') }}.</p>
         <CompletaIscrizione :id="r.id" @cambiata="aggiornata" />
+        <ModuliIscrizione :id="r.id" @cambiata="aggiornata" @aggiorna="ricarica" />
       </template>
       <p v-else-if="r.stato === 'COMPLETATA'" class="mb-0">
         Iscrizione completa: il gruppo la inserirà in BuonaStrada, che darà il codice socio

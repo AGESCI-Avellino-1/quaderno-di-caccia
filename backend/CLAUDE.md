@@ -17,7 +17,7 @@ Read the root `CLAUDE.md` first.
 | `apps/permessi/policy.py` | **The only place that decides visibility and actions** |
 | `apps/permessi/models.py` | `AccessoDatoSensibile` + `registra_accessi()`: log of reads/downloads/changes of sensitive data (DEC-101) |
 | `apps/dispositivi` | `Dispositivo`, revocation, middleware that logs out revoked devices and sends `X-QdC-Offline-Fino-Al` (DEC-23, DEC-97) |
-| `apps/iscrizioni` | Joining from the app: `CodiceIscrizione` (unit/personal, QR via segno), `RichiestaIscrizione` (waiting → approved with provisional codice socio / rejected), `servizi.approva` |
+| `apps/iscrizioni` | Joining from the app: `CodiceIscrizione` (unit/personal, QR via segno), `RichiestaIscrizione` (waiting → approved with provisional codice socio → completed / suspended / rejected), `ModuloVuoto`, `AllegatoIscrizione` (scans: API only, never the admin) |
 | `apps/diritti` | Requests from data subjects (DEC-102): register, `/persone/{id}/fascicolo` (full export), erasure/anonymisation (`servizi.cancella`). Capigruppo only |
 | `apps/sanitaria` | Medicines, allergies, intolerances (DEC-48 core, DEC-55), non-medical dietary needs (DEC-49, same rules and log); `/persone/{id}/sanitarie`, `/campo/{unita}` for the offline download. **Not in the admin** |
 | `data/cataloghi/` | Modello D, specialità, brevetti as JSON (not loaded into the DB yet; see its README) |

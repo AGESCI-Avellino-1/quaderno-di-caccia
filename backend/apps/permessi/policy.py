@@ -454,3 +454,8 @@ def unita_da_approvare(user) -> QuerySet[Unita]:
         persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}
     )
     return Unita.objects.filter(pk__in=ids.values("unita_id")).exclude(tipo=TipoUnita.COMUNITA_CAPI)
+
+
+def puo_gestire_modulistica(user) -> bool:
+    """Blank forms for the families: the capigruppo."""
+    return e_capogruppo(user)

@@ -24,6 +24,7 @@ from apps.anagrafica.models import (
 )
 from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
 from apps.dispositivi.models import Dispositivo
+from apps.iscrizioni.models import RichiestaIscrizione
 from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
 from apps.sanitaria.models import InformazioniSanitarie
@@ -194,6 +195,15 @@ def fascicolo(persona: Persona) -> dict:
             }
             for a in AccessoDatoSensibile.objects.filter(persona=persona).select_related("utente")
         ],
+        "iscrizioni_dall_app": [
+            {
+                "Unità": str(r.unita),
+                "Stato": r.get_stato_display(),
+                "Richiesta il": _giorno(r.creato_il),
+                "Moduli firmati": ", ".join(a.nome_file for a in r.allegati.all()),
+            }
+            for r in RichiestaIscrizione.objects.filter(persona=persona).select_related("unita")
+        ],
         "richieste_dei_diritti": [
             {
                 "Tipo": r.get_tipo_display(),
@@ -223,6 +233,7 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Scelte sul telefono in squadriglia e su cosa vedono i genitori",
         "Correzioni ai dati di BuonaStrada",
         "Account, dispositivi e inviti",
+        "Iscrizioni dall'app e moduli firmati caricati",
         "Storico delle modifiche di questi dati",
     ]
     if motivo is None:
@@ -254,6 +265,13 @@ def cancella(persona: Persona) -> dict:
             _cancella_storico(oggetti)
             for oggetto in oggetti:
                 oggetto.delete()
+        iscrizioni = list(RichiestaIscrizione.objects.filter(persona=persona))
+        for richiesta in iscrizioni:
+            allegati = list(richiesta.allegati.all())
+            _cancella_storico([*allegati, richiesta])
+            for allegato in allegati:
+                allegato.file.delete(save=False)
+            richiesta.delete()
         if persona.utente_id:
             utente = persona.utente
             persona.utente = None

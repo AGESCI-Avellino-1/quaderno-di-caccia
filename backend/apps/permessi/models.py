@@ -14,6 +14,7 @@ class Categoria(models.TextChoices):
     SANITARIE = "SANITARIE", "Informazioni sanitarie"
     DEROGA_SQ = "DEROGA_SQ", "Eccezione sulla squadriglia"
     FASCICOLO = "FASCICOLO", "Fascicolo completo"
+    MODULI = "MODULI", "Moduli firmati"
 
 
 class Azione(models.TextChoices):

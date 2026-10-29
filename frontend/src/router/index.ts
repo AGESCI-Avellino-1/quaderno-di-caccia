@@ -107,6 +107,12 @@ const router = createRouter({
       component: () => import('@/views/MiaIscrizioneView.vue'),
     },
     {
+      // Capigruppo: the API decides.
+      path: '/modulistica',
+      name: 'modulistica',
+      component: () => import('@/views/ModulisticaView.vue'),
+    },
+    {
       // Unit staff and capigruppo: the API lists only what this user decides.
       path: '/iscrizioni',
       name: 'iscrizioni',

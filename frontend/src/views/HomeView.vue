@@ -85,6 +85,12 @@ onMounted(async () => {
         </RouterLink>
       </div>
       <div v-if="sessione.capogruppo" class="col-12 md:col-6">
+        <RouterLink to="/modulistica" class="card card-body h-100 text-decoration-none">
+          <strong>Modulistica</strong>
+          <span class="fg-2 small">Moduli da firmare per le iscrizioni</span>
+        </RouterLink>
+      </div>
+      <div v-if="sessione.capogruppo" class="col-12 md:col-6">
         <RouterLink to="/diritti" class="card card-body h-100 text-decoration-none">
           <strong>Richieste degli interessati</strong>
           <span class="fg-2 small">Accesso, copia e cancellazione dei dati</span>

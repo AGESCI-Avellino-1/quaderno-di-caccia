@@ -129,6 +129,11 @@ class RichiestaIscrizione(ModelloTracciato):
     segnalata_il = models.DateTimeField(null=True, blank=True)  # to the approvers
     promemoria_il = models.DateField(null=True, blank=True)  # to the family
     sospesa_il = models.DateField(null=True, blank=True)
+    # A member of the unit staff (or a capogruppo) checked the signed forms.
+    moduli_verificati_il = models.DateTimeField(null=True, blank=True)
+    moduli_verificati_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
 
     class Meta:
         verbose_name = "richiesta di iscrizione"
@@ -167,3 +172,58 @@ class RichiestaIscrizione(ModelloTracciato):
                 )
         elif self.data_nascita and not self.email:
             raise ValidationError("Scrivi l'email.")
+
+
+# --- Signed forms (maintainer, 2026-10-29) --------------------------------------------
+
+DIMENSIONE_MASSIMA = 10 * 1024 * 1024
+# First bytes of the accepted files: PDF, JPEG, PNG.
+FIRME_FILE = {b"%PDF": "application/pdf", b"\xff\xd8\xff": "image/jpeg", b"\x89PNG": "image/png"}
+
+
+def tipo_file(inizio: bytes) -> str | None:
+    """The content type from the first bytes, None if not an accepted kind."""
+    return next((tipo for firma, tipo in FIRME_FILE.items() if inizio.startswith(firma)), None)
+
+
+class ModuloVuoto(ModelloTracciato):
+    """Blank forms (privacy notice, consents…) the family downloads, signs by hand and
+    uploads again. The capigruppo keep them up to date."""
+
+    titolo = models.CharField(max_length=120)
+    file = models.FileField(upload_to="modulistica/")
+    attivo = models.BooleanField(default=True)
+    caricato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "modulo vuoto"
+        verbose_name_plural = "modulistica"
+        ordering = ["titolo"]
+
+    def __str__(self) -> str:
+        return self.titolo
+
+
+class AllegatoIscrizione(ModelloTracciato):
+    """A scan of a signed form. Personal data with signatures: never in the admin, read
+    only through the API (policy, access log), kept while the member is in the group."""
+
+    richiesta = models.ForeignKey(
+        RichiestaIscrizione, on_delete=models.CASCADE, related_name="allegati"
+    )
+    file = models.FileField(upload_to="iscrizioni/%Y/")
+    nome_file = models.CharField(max_length=200)
+    tipo_contenuto = models.CharField(max_length=40)
+    caricato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "modulo firmato"
+        verbose_name_plural = "moduli firmati"
+        ordering = ["creato_il"]
+
+    def __str__(self) -> str:
+        return f"{self.nome_file} ({self.richiesta})"

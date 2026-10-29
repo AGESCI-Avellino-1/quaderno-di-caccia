@@ -305,6 +305,28 @@ def test_un_adulto_con_account_si_iscrive_con_la_sua_email(coca, capogruppo, gen
 # --- Completion, reminders, suspension (step 2) ----------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def file_temporanei(settings, tmp_path):
+    settings.MEDIA_ROOT = str(tmp_path)
+
+
+PDF = b"%PDF-1.4 modulo firmato"
+
+
+def _carica(client, richiesta, contenuto=PDF, nome="consensi.pdf"):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    return client.post(
+        f"/api/v1/iscrizioni/{richiesta.pk}/moduli", {"file": SimpleUploadedFile(nome, contenuto)}
+    )
+
+
+def _moduli_verificati(richiesta, famiglia, capo):
+    assert _carica(_client(famiglia), richiesta).status_code == 200
+    url = f"/api/v1/iscrizioni/{richiesta.pk}/verifica-moduli"
+    return _post(_client(capo), url, {"consenso_iscrizione": True, "consenso_foto": False})
+
+
 @pytest.fixture
 def approvata(richiesta, capo):
     servizi.approva(richiesta, capo.utente, TRA_UN_MESE)
@@ -339,8 +361,7 @@ def test_la_famiglia_completa_i_dati(approvata, genitore_nuovo):
     assert _put(client, url, {**DATI_COMPLETI, "cap": "831"}).status_code == 400
     completo = _put(client, url, DATI_COMPLETI).json()
     assert completo["provincia"] == "AV"
-    assert completo["richiesta"]["stato"] == "COMPLETATA"
-    assert completo["richiesta"]["mancanti"] == []
+    assert completo["richiesta"]["mancanti"] == ["Moduli firmati da caricare"]
     assert Persona.objects.get(codice_fiscale=CF_GENITORE).cellulare == "3471112222"
 
 
@@ -351,7 +372,7 @@ def test_chi_completa(approvata, capo, estraneo, genitore):
         assert _client(chi).get(url).status_code == 404
 
 
-def test_promemoria_e_sospensione(approvata, genitore_nuovo):
+def test_promemoria_e_sospensione(approvata, genitore_nuovo, capo):
     from django.core.management import call_command
 
     scadenza = approvata.scadenza_completamento
@@ -377,14 +398,16 @@ def test_promemoria_e_sospensione(approvata, genitore_nuovo):
 
     # Completing late gives everything back.
     url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
-    assert _put(client, url, DATI_COMPLETI).json()["richiesta"]["stato"] == "COMPLETATA"
+    _put(client, url, DATI_COMPLETI)
+    assert _moduli_verificati(approvata, genitore_nuovo, capo).json()["stato"] == "COMPLETATA"
     assert client.get(f"/api/v1/persone/{figlia.pk}").status_code == 200
 
 
-def test_completa_non_sospende(approvata, genitore_nuovo):
+def test_completa_non_sospende(approvata, genitore_nuovo, capo):
     from django.core.management import call_command
 
     servizi.completa(approvata, DATI_COMPLETI)
+    _moduli_verificati(approvata, genitore_nuovo, capo)
     call_command("promemoria_iscrizioni", oggi=approvata.scadenza_completamento)
     approvata.refresh_from_db()
     assert approvata.stato == StatoIscrizione.COMPLETATA
@@ -400,3 +423,86 @@ def test_avviso_agli_approvatori(richiesta, capo, capogruppo):
     assert all("Marta" not in m.body for m in mail.outbox)  # no names by email
     call_command("promemoria_iscrizioni")
     assert len(mail.outbox) == 2  # once
+
+
+# --- Signed forms (step 3) -------------------------------------------------------------
+
+
+def test_modulistica_dei_capigruppo(capogruppo, capo, genitore):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    def carica(chi, contenuto=PDF):
+        return _client(chi).post(
+            "/api/v1/modulistica",
+            {"titolo": "Consensi", "file": SimpleUploadedFile("c.pdf", contenuto)},
+        )
+
+    assert carica(capo).status_code == 403
+    assert carica(capogruppo, b"non un pdf").status_code == 400
+    modulo = carica(capogruppo).json()
+    lista = _client(genitore).get("/api/v1/modulistica").json()
+    assert lista["puo_gestire"] is False and [m["titolo"] for m in lista["moduli"]] == ["Consensi"]
+    scaricato = _client(genitore).get(f"/api/v1/modulistica/{modulo['id']}/file")
+    assert b"".join(scaricato.streaming_content).startswith(b"%PDF")
+    _post(_client(capogruppo), f"/api/v1/modulistica/{modulo['id']}/attivo", {"attivo": False})
+    assert _client(genitore).get("/api/v1/modulistica").json()["moduli"] == []
+
+
+def test_scansioni_e_verifica(approvata, genitore_nuovo, capo, estraneo):
+    from apps.permessi.models import AccessoDatoSensibile, Categoria
+
+    famiglia = _client(genitore_nuovo)
+    assert _carica(famiglia, approvata, b"MZ eseguibile", "virus.exe").status_code == 400
+    caricato = _carica(famiglia, approvata, b"\x89PNG foto", "Marta Bianco.png").json()
+    [allegato] = caricato["allegati"]
+    assert allegato["nome_file"] == "Marta Bianco.png"
+    salvato = approvata.allegati.get()
+    assert "Marta" not in salvato.file.name  # stored under a random name
+
+    url_file = f"/api/v1/moduli-firmati/{allegato['id']}/file"
+    assert _client(estraneo).get(url_file).status_code == 404
+    assert famiglia.get(url_file).status_code == 200
+    assert not AccessoDatoSensibile.objects.filter(categoria=Categoria.MODULI).exists()
+    assert _client(capo).get(url_file).status_code == 200
+    assert AccessoDatoSensibile.objects.filter(
+        categoria=Categoria.MODULI, utente=capo.utente
+    ).exists()
+
+    url = f"/api/v1/iscrizioni/{approvata.pk}/verifica-moduli"
+    assert _post(famiglia, url, {"consenso_iscrizione": True}).status_code == 404  # not theirs
+    verificata = _post(_client(capo), url, {"consenso_iscrizione": True, "consenso_riviste": True})
+    assert "Verifica dei moduli da parte dei capi" not in verificata.json()["mancanti"]
+    figlia = approvata.persona
+    figlia.refresh_from_db()
+    assert (figlia.consenso_iscrizione, figlia.consenso_foto, figlia.consenso_riviste) == (
+        True,
+        False,
+        True,
+    )
+    # Verified forms stay; a new upload needs a new check.
+    assert famiglia.delete(f"/api/v1/moduli-firmati/{allegato['id']}").status_code == 400
+    _carica(famiglia, approvata)
+    approvata.refresh_from_db()
+    assert approvata.moduli_verificati_il is None
+
+
+def test_dati_e_moduli_completano(approvata, genitore_nuovo, capo):
+    _put(_client(genitore_nuovo), f"/api/v1/iscrizioni/{approvata.pk}/completamento", DATI_COMPLETI)
+    risposta = _moduli_verificati(approvata, genitore_nuovo, capo).json()
+    assert risposta["stato"] == "COMPLETATA" and risposta["mancanti"] == []
+
+
+def test_fascicolo_e_cancellazione_includono_le_iscrizioni(approvata, genitore_nuovo, capogruppo):
+    from apps.diritti.servizi import cancella, fascicolo
+    from apps.iscrizioni.models import AllegatoIscrizione
+
+    _carica(_client(genitore_nuovo), approvata)
+    figlia = approvata.persona
+    [voce] = fascicolo(figlia)["iscrizioni_dall_app"]
+    assert voce["Moduli firmati"] == "consensi.pdf"
+    percorso = approvata.allegati.get().file.path
+    cancella(figlia)
+    assert not AllegatoIscrizione.objects.exists()
+    import os
+
+    assert not os.path.exists(percorso)

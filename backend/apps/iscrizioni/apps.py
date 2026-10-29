@@ -12,3 +12,5 @@ class IscrizioniConfig(AppConfig):
 
         auditlog.register(models.CodiceIscrizione)
         auditlog.register(models.RichiestaIscrizione)
+        auditlog.register(models.ModuloVuoto)
+        auditlog.register(models.AllegatoIscrizione)

@@ -13,6 +13,7 @@ import {
   type UnitaIn,
 } from '@/api/qdc'
 import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
+import AltaSquadriglia from '@/components/AltaSquadriglia.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
@@ -54,6 +55,11 @@ async function candidatiUnita(ruolo: string) {
 }
 // CSQ and VCSQ: members of their own patrol (DEC-13, DEC-14).
 const candidatiDi = (s: Squadriglia) => async () => s.membri.map((m) => m.persona)
+// The ragazzi of a reparto: patrol members and who is in no patrol yet.
+const ragazziDelReparto = computed(() => [
+  ...(dettaglio.value?.squadriglie.flatMap((s) => s.membri.map((m) => m.persona)) ?? []),
+  ...(dettaglio.value?.senza_squadriglia ?? []),
+])
 
 const squadriglieAttive = computed(() => dettaglio.value?.squadriglie.filter((s) => s.attiva) ?? [])
 
@@ -292,6 +298,11 @@ const iniziale = (u: Unita): UnitaIn => ({
         </ul>
       </div>
     </section>
+    <AltaSquadriglia
+      v-if="unita.tipo === 'REPARTO'"
+      :reparto="unita.id"
+      :ragazzi="ragazziDelReparto"
+    />
   </section>
   <div v-else-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
 </template>

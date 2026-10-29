@@ -47,6 +47,8 @@ class Profilo(Schema):
     unita_quote: list[int]
     # Cash book: who sees it, and who keeps cash (units, or the whole group).
     vede_cassa: bool
+    # Patrols whose meetings the user may create as the CSQ's delegate.
+    squadriglie_delegate: list[int]
 
 
 @router.get("/io", response=Profilo)
@@ -86,6 +88,7 @@ def profilo(request):
         "gestisce_quote": policy.puo_gestire_quote(user),
         "unita_quote": policy.unita_situazione_quote(user),
         "vede_cassa": policy.puo_vedere_cassa(user),
+        "squadriglie_delegate": policy.squadriglie_delegate(user),
     }
 
 

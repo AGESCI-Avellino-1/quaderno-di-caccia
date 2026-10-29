@@ -42,6 +42,8 @@ export interface Profilo {
   unita_quote: number[]
   /** Cash book: the Co.Ca. and the unit treasurers. */
   vede_cassa: boolean
+  /** Patrols whose meetings the user may create as the CSQ's delegate. */
+  squadriglie_delegate: number[]
 }
 
 export interface PersonaElenco extends PersonaBreve {
@@ -816,6 +818,109 @@ export interface ModelloD {
   saldi: Cassa[]
 }
 
+// --- Events and attendance ---------------------------------------------------------------------
+
+export type TipoEvento =
+  'RIUNIONE' | 'USCITA' | 'CAMPO' | 'AUTOFINANZIAMENTO' | 'MISSIONE' | 'ALTRO'
+/** Who of the reparti involved is invited: all, CSQ, CSQ and VCSQ, Alta Squadriglia. */
+export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ'
+export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA'
+export type StatoPartecipazione = 'INVITATO' | 'NON_PARTECIPA' | 'NON_INVITATO'
+export type StatoPresenza = 'PRESENTE' | 'ASSENTE' | 'GIUSTIFICATO'
+
+export interface EventoIn {
+  titolo: string
+  tipo: TipoEvento
+  livello: LivelloEvento
+  branca: string | null
+  unita: number[]
+  squadriglia_id: number | null
+  inizio: string
+  fine: string
+  luogo: string
+  descrizione: string
+  /** A patrol's mission: for the parents and the capi, not the ragazzi. */
+  note_genitori: string
+  cerchia: Cerchia
+}
+
+export interface MiaPartecipazione {
+  persona_id: number
+  persona: string
+  stato: StatoPartecipazione
+  /** The staff's reason when not invited: the family reads it. */
+  motivo: string
+  puo_segnalare: boolean
+}
+
+export interface Evento {
+  id: number
+  titolo: string
+  tipo: TipoEvento
+  tipo_nome: string
+  livello: LivelloEvento
+  livello_nome: string
+  branca: string
+  unita: number[]
+  unita_nomi: string[]
+  squadriglia_id: number | null
+  squadriglia: string | null
+  inizio: string
+  fine: string
+  luogo: string
+  descrizione: string
+  /** null: not for this user (the ragazzi). */
+  note_genitori: string | null
+  cerchia: Cerchia
+  cerchia_nome: string
+  riunione: boolean
+  annullato: boolean
+  motivo_annullamento: string
+  mie: MiaPartecipazione[]
+  puo_gestire: boolean
+}
+
+export interface Partecipante {
+  persona_id: number
+  cognome: string
+  nome: string
+  stato: StatoPartecipazione
+  motivo: string
+  presenza: StatoPresenza | null
+}
+
+export interface DettaglioEvento extends Evento {
+  partecipanti: Partecipante[]
+  puo_presenze: boolean
+  puo_non_invitare: boolean
+}
+
+export interface RiunioneRicorrente {
+  id: number
+  giorno_settimana: number
+  ora_inizio: string
+  ora_fine: string
+  luogo: string
+  dal: string
+  al: string
+  riunioni: number
+}
+
+export interface Delega {
+  persona_id: number | null
+  persona: string | null
+  puo_delegare: boolean
+}
+
+export interface AltaSquadriglia {
+  anno: number
+  persone: number[]
+  puo_scegliere: boolean
+}
+
+export const percorsoPresenze = (evento: number) => `/api/v1/eventi/${evento}/presenze`
+export const foglioPresenze = (evento: number) => `/api/v1/eventi/${evento}/foglio-presenze.pdf`
+
 export const PERCORSO_MOVIMENTI = '/api/v1/movimenti'
 export const PERCORSO_SPESE_ANTICIPATE = '/api/v1/spese-anticipate'
 export const giustificativoMovimento = (id: number) => `/api/v1/movimenti/${id}/giustificativo`
@@ -1063,6 +1168,58 @@ export const api = {
     richiesta<{ link_pagamento: string }>('/api/v1/quote/impostazioni', {
       metodo: 'PUT',
       corpo: { link_pagamento },
+    }),
+  eventi: (filtri: { dal?: string; al?: string; unita?: number } = {}) => {
+    const parametri = new URLSearchParams(
+      Object.entries(filtri)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, String(v)]),
+    )
+    return richiesta<Evento[]>(`/api/v1/eventi?${parametri}`)
+  },
+  evento: (id: number) => richiesta<DettaglioEvento>(`/api/v1/eventi/${id}`),
+  creaEvento: (dati: EventoIn) =>
+    richiesta<Evento>('/api/v1/eventi', { metodo: 'POST', corpo: dati }),
+  modificaEvento: (id: number, dati: EventoIn) =>
+    richiesta<Evento>(`/api/v1/eventi/${id}`, { metodo: 'PUT', corpo: dati }),
+  annullaEvento: (id: number, motivo: string) =>
+    richiesta<Evento>(`/api/v1/eventi/${id}/annulla`, { metodo: 'POST', corpo: { motivo } }),
+  partecipa: (evento: number, persona: number, partecipa: boolean) =>
+    richiesta<Evento>(`/api/v1/eventi/${evento}/partecipanti/${persona}/partecipa`, {
+      metodo: 'POST',
+      corpo: { partecipa },
+    }),
+  nonInvitare: (evento: number, persona: number, motivo: string) =>
+    richiesta<DettaglioEvento>(`/api/v1/eventi/${evento}/partecipanti/${persona}/non-invitare`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
+  reinvita: (evento: number, persona: number) =>
+    richiesta<DettaglioEvento>(`/api/v1/eventi/${evento}/partecipanti/${persona}/reinvita`, {
+      metodo: 'POST',
+    }),
+  riunioni: (unita: number) => richiesta<RiunioneRicorrente[]>(`/api/v1/unita/${unita}/riunioni`),
+  creaRiunioni: (unita: number, dati: Omit<RiunioneRicorrente, 'id' | 'riunioni'>) =>
+    richiesta<RiunioneRicorrente>(`/api/v1/unita/${unita}/riunioni`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  togliRiunioni: (id: number) =>
+    richiesta<RiunioneRicorrente>(`/api/v1/riunioni/${id}`, { metodo: 'DELETE' }),
+  delega: (squadriglia: number) => richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`),
+  delegaA: (squadriglia: number, persona_id: number) =>
+    richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, {
+      metodo: 'PUT',
+      corpo: { persona_id },
+    }),
+  revocaDelega: (squadriglia: number) =>
+    richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, { metodo: 'DELETE' }),
+  altaSquadriglia: (reparto: number) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`),
+  scegliAltaSquadriglia: (reparto: number, anno: number, persone: number[]) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`, {
+      metodo: 'PUT',
+      corpo: { anno, persone },
     }),
   vociModelloD: () => richiesta<VoceModelloD[]>('/api/v1/voci-modello-d'),
   casse: () => richiesta<Cassa[]>('/api/v1/casse'),

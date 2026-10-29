@@ -64,6 +64,11 @@ body {
   color: p.$agesci-nero;
 }
 
+// Texts written by people (event descriptions, notes): keep their line breaks.
+.testo-a-capo {
+  white-space: pre-line;
+}
+
 // Printing (e.g. the full personal file, saved as PDF): only the page content.
 @media print {
   .qdc-intestazione,

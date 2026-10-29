@@ -15,7 +15,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | --- | --- | --- | --- |
 | 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
-| 3 | Eventi e presenze | ⏳ | — |
+| 3 | Eventi e presenze | 🔨 | **in corso**: vedi "Fase 3" sotto |
 | 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
 | 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
@@ -54,18 +54,36 @@ bancario è della fase 6 (DEC-93).
 | 2.9 | Categorie del Modello D dal catalogo, rendiconto con i totali da ricopiare; le quote anticipate su BuonaCaccia (A.2) arrivano con gli eventi esterni della fase 3 | DEC-87, DEC-89 | ✅ |
 | 2.10 | Autofinanziamento come evento e budget dei campi (dopo la fase 3) | DEC-90, DEC-91 | 💤 |
 
-### 3. Fasi successive
+### 3. Fase 3 — Eventi e presenze
 
-Eventi e presenze (fase 3), Progressione Personale (fase 4), fascicolo completo con
-scheda medica e percorso di formazione dei capi inserito a mano (fase 5, DEC-47), poi la
-fase 6 e l'app negli store: vedi la tabella "Fasi".
+Decisioni del maintainer (29/10/2026, da riportare nell'analisi):
 
-Per la fase 3 (maintainer, 29/10/2026, da riportare nell'analisi): le quote di campi e
-uscite, rimandate dalla fase 2, arrivano con gli eventi. La quota del campo estivo (E/G)
-e delle Vacanze di Branco/Cerchio (L/C) si può configurare "a rate", con passi a
-scadenze fissate: di solito due rate a date stabilite più il saldo prima della
-partenza. Ogni rata sarà una quota con la sua scadenza, e i pagamenti con acconti e la
-ripartizione su più quote della fase 2 valgono anche per le rate.
+| Punto | Decisione | Precisa |
+| --- | --- | --- |
+| Partecipanti | Di default tutti i soci delle unità coinvolte (per un evento di gruppo, tutto il gruppo) | DEC-75 |
+| Assenza | La famiglia (o il maggiorenne) comunica che il socio non partecipa | DEC-75 |
+| Non invitato | Lo staff (la Co.Ca. per gli eventi di gruppo) può non invitare un socio, con un motivo (di solito il patto di corresponsabilità); la famiglia vede l'esclusione e il motivo | DEC-75 |
+| Presenze | Presente, assente o giustificato, segnate solo dai capi, anche offline; alle riunioni ricorrenti e a ogni altro evento (per i campi la presenza all'evento, non giorno per giorno) | DEC-78 |
+| Quote degli eventi | Le fissano i capi dell'evento, anche a rate (es. due acconti a date fisse più il saldo prima della partenza); ogni rata è una quota con la sua scadenza; importo modificabile per persona | DEC-77 |
+| Email | Nuovo evento, modifiche e annullamenti, promemoria delle scadenze delle quote; le notifiche push in una fase successiva | DEC-79, DEC-108 |
+| Calendario | Un link personale segreto per ogni utente, rigenerabile, con solo titolo, date e luogo degli eventi suoi e dei figli | DEC-79 |
+| Riunioni di squadriglia | Sono eventi di squadriglia: le inseriscono il capo squadriglia, lo staff o un membro della squadriglia delegato dal capo squadriglia (solo per inserirle); le presenze le segna il capo squadriglia (e lo staff) | DEC-75, DEC-78 |
+| Missione e attività di squadriglia | Le crea lo staff del reparto per una squadriglia; la missione ha note di dettaglio per i genitori (le leggono genitori e capi, non i ragazzi) e note per tutti | DEC-75 |
+| Consiglio Capi, Con.Ca.Vi., Alta Squadriglia | Eventi creati dallo staff per uno o più reparti del gruppo (anche tutti): invitano i capi squadriglia, capi e vice, o l'Alta Squadriglia, che lo staff sceglie anno per anno. `[da verificare]` per più reparti basta lo staff di uno di essi | DEC-75 |
+| Autofinanziamento e budget dei campi | In questa fase | DEC-90, DEC-91 |
+| Eventi su BuonaCaccia | **Approfondimento dopo questa fase.** BuonaCaccia produce una liberatoria personalizzata per ogni iscritto, da capire come caricarla (il maintainer ha un'idea). Già deciso: l'iscrizione dei minorenni la gestisce lo staff dell'unità, i maggiorenni si iscrivono da soli; la parte dello staff della scheda resta nel fascicolo e la vedono solo i capi; la liberatoria serve solo per gli eventi esterni (da inviare / inviata) | DEC-68, DEC-76, DEC-89 |
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| 3.1 | Eventi a quattro livelli (gruppo, branca, unità, squadriglia), unità coinvolte, partecipanti con assenze comunicate e non invitati; riunioni ricorrenti; riunioni e missione di squadriglia, delega, Consiglio Capi, Con.Ca.Vi., Alta Squadriglia | DEC-75 | ✅ |
+| 3.2 | Presenze offline (presente, assente, giustificato), foglio da stampare, dettaglio per due anni poi totali per anno (`riassumi_presenze`) | DEC-78 | ✅ |
+| 3.3 | Quote degli eventi, anche a rate, generate per i partecipanti, importo per persona | DEC-77 | ⏳ |
+| 3.4 | Calendario personale (iCal) ed email di eventi e scadenze | DEC-79 | ⏳ |
+| 3.5 | Autofinanziamento con entrate e uscite collegate; budget dei campi | DEC-90, DEC-91 | ⏳ |
+| 3.6 | Eventi su BuonaCaccia (dopo l'approfondimento) | DEC-68, DEC-76, DEC-89 | 💤 |
+
+Dopo: Progressione Personale (fase 4), fascicolo completo con scheda medica e percorso di
+formazione dei capi inserito a mano (fase 5, DEC-47), poi la fase 6: vedi la tabella "Fasi".
 
 ## Fase 1 — Fondamenta
 

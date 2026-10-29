@@ -161,6 +161,18 @@ const router = createRouter({
       component: () => import('@/views/MieQuoteView.vue'),
     },
     {
+      // Events of the user and their children; every event for the capi (DEC-75).
+      path: '/eventi',
+      name: 'eventi',
+      component: () => import('@/views/EventiView.vue'),
+    },
+    {
+      path: '/eventi/:id(\\d+)',
+      name: 'evento',
+      component: () => import('@/views/EventoView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // The Co.Ca. and the unit treasurers: the API decides (DEC-85…DEC-88).
       path: '/cassa',
       name: 'cassa',

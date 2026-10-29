@@ -643,3 +643,211 @@ def puo_registrare_spesa_anticipata(user, capo: Persona) -> bool:
     if propria is not None and propria.pk == capo.pk and e_capo(user):
         return True
     return puo_gestire_casse(user) or bool(_unita_tesoreria(user))
+
+
+# --- Events and attendance (DEC-75, DEC-78) ---------------------------------------------------
+# Decided with the maintainer on 2026-10-29 (not yet in the analysis): the family (or the
+# adult member) says the member will not take part; the staff (the Co.Ca. for group
+# events) may not invite a member, with a reason; attendance is marked by capi only.
+
+
+def _staff_di_tutte(user, unita_ids) -> bool:
+    unita_ids = set(unita_ids)
+    if not unita_ids:
+        return False
+    persona = persona_di(user)
+    if persona is None:
+        return False
+    proprie = set(
+        Incarico.objects.attivi()
+        .filter(persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+        .values_list("unita_id", flat=True)
+    )
+    return unita_ids <= proprie
+
+
+def _delegato(user, squadriglia) -> bool:
+    from apps.eventi.models import DelegaSquadriglia
+
+    persona = persona_di(user)
+    return (
+        persona is not None
+        and DelegaSquadriglia.objects.filter(
+            squadriglia=squadriglia, persona=persona, revocata_il__isnull=True
+        ).exists()
+    )
+
+
+def puo_creare_evento(
+    user,
+    livello: str,
+    unita_ids=(),
+    branca: str = "",
+    squadriglia=None,
+    tipo: str = "",
+    cerchia: str = "TUTTI",
+) -> bool:
+    """DEC-75: group events the capigruppo; branch events the capi of that branch; unit
+    events the unit staff; patrol events the CSQ or the reparto staff. The capigruppo
+    may create any. Maintainer, 2026-10-29: the patrol's mission only the staff; a
+    member delegated by the CSQ creates the patrol's meetings; the councils of one or
+    more reparti (Consiglio Capi, Con.Ca.Vi., Alta Squadriglia) the staff of any of
+    them [da verificare: staff of one reparto for a council of several]."""
+    from apps.organizzazione.models import BRANCA_DEL_TIPO
+
+    if e_capogruppo(user):
+        return True
+    if livello == "GRUPPO":
+        return False
+    if livello == "BRANCA":
+        tipi = [t for t, b in BRANCA_DEL_TIPO.items() if b == branca]
+        persona = persona_di(user)
+        return persona is not None and (
+            Incarico.objects.attivi()
+            .filter(
+                persona=persona,
+                ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
+                unita__tipo__in=tipi,
+            )
+            .exists()
+        )
+    if livello == "SQUADRIGLIA":
+        if squadriglia is None:
+            return False
+        if e_staff(user, squadriglia.unita):
+            return True
+        if tipo == "MISSIONE":
+            return False
+        if squadriglie_guidate(user).filter(pk=squadriglia.pk).exists():
+            return True
+        return tipo == "RIUNIONE" and _delegato(user, squadriglia)
+    if cerchia != "TUTTI":
+        return any(_staff_di_tutte(user, [u]) for u in unita_ids)
+    return _staff_di_tutte(user, unita_ids)
+
+
+def _unita_ids_evento(evento) -> list[int]:
+    from apps.eventi.servizi import unita_coinvolte
+
+    return list(unita_coinvolte(evento).values_list("pk", flat=True))
+
+
+def puo_gestire_evento(user, evento) -> bool:
+    """Change, cancel, invite or not: who could create it. A patrol event made by the
+    CSQ is managed by the CSQ and the reparto staff."""
+    return puo_creare_evento(
+        user,
+        evento.livello,
+        unita_ids=_unita_ids_evento(evento),
+        branca=evento.branca,
+        squadriglia=evento.squadriglia,
+        tipo=evento.tipo,
+        cerchia=evento.cerchia,
+    )
+
+
+def puo_segnare_presenze(user, evento) -> bool:
+    """Capi only: the staff of the units involved; any capo at a group event. The CSQ
+    marks the patrol's meetings (maintainer, 2026-10-29)."""
+    if (
+        evento.livello == "SQUADRIGLIA"
+        and evento.tipo == "RIUNIONE"
+        and squadriglie_guidate(user).filter(pk=evento.squadriglia_id).exists()
+    ):
+        return True
+    if e_capo_in_attesa(user):
+        return False
+    if e_capogruppo(user):
+        return True
+    if evento.livello == "GRUPPO":
+        return e_capo(user)
+    persona = persona_di(user)
+    if persona is None:
+        return False
+    return (
+        Incarico.objects.attivi()
+        .filter(
+            persona=persona,
+            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
+            unita_id__in=_unita_ids_evento(evento),
+        )
+        .exists()
+    )
+
+
+def puo_non_invitare(user, evento) -> bool:
+    """The staff of the event; for a group event the Co.Ca. decides and a capogruppo
+    records it."""
+    if evento.livello == "GRUPPO":
+        return e_capogruppo(user)
+    if evento.livello == "SQUADRIGLIA":
+        return e_capogruppo(user) or e_staff(user, evento.squadriglia.unita)
+    return puo_gestire_evento(user, evento)
+
+
+def eventi_visibili(user):
+    """The capi see every event; everyone else the events they or their children are
+    involved in (invited, not taking part or not invited, with the reason)."""
+    from apps.eventi.models import Evento
+
+    if e_capo(user):
+        return Evento.objects.all()
+    persone = [p.pk for p in tutelati(user) if genitori_vedono(p, "scheda")]
+    propria = persona_di(user)
+    if propria is not None:
+        persone.append(propria.pk)
+    return Evento.objects.filter(partecipazioni__persona_id__in=persone).distinct()
+
+
+def puo_vedere_partecipanti(user, evento) -> bool:
+    """The whole list: the capi; a CSQ for their patrol's events."""
+    if e_capo(user):
+        return True
+    return (
+        evento.squadriglia_id is not None
+        and squadriglie_guidate(user).filter(pk=evento.squadriglia_id).exists()
+    )
+
+
+def puo_segnalare_assenza(user, persona: Persona, evento) -> bool:
+    """The family of a minor, the adult member (and their parents while they still
+    see their activities, DEC-26); the event's managers on their behalf."""
+    livello = _livello_personale(user, persona)
+    if livello == LivelloAccesso.PROPRIO:
+        return not persona.e_minorenne()
+    if livello == LivelloAccesso.TUTORE:
+        return genitori_vedono(persona, "scheda")
+    return puo_gestire_evento(user, evento)
+
+
+def vede_note_genitori(user, evento) -> bool:
+    """A mission's notes for the parents: the capi and the parents, never the ragazzi
+    (maintainer, 2026-10-29)."""
+    if e_capo(user):
+        return True
+    figli = [p.pk for p in tutelati(user)]
+    return evento.partecipazioni.filter(persona_id__in=figli).exists()
+
+
+def puo_delegare(user, squadriglia) -> bool:
+    """The CSQ chooses the delegate; the reparto staff may do it too."""
+    return squadriglie_guidate(user).filter(pk=squadriglia.pk).exists() or e_staff(
+        user, squadriglia.unita
+    )
+
+
+def puo_scegliere_alta_squadriglia(user, reparto) -> bool:
+    return e_capogruppo(user) or e_staff(user, reparto)
+
+
+def squadriglie_delegate(user) -> list[int]:
+    from apps.eventi.models import DelegaSquadriglia
+
+    persona = persona_di(user)
+    if persona is None:
+        return []
+    return list(
+        DelegaSquadriglia.objects.filter(persona=persona, revocata_il__isnull=True).values_list(
+            "squadriglia_id", flat=True
+        )
+    )

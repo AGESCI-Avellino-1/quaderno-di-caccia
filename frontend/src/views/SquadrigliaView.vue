@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 
 import { api, type MiaSquadriglia } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
@@ -55,6 +56,7 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
         Come capo squadriglia vedi anche i numeri dei genitori e quelli che gli altri non vedono.
         Usali solo per la squadriglia.
       </p>
+      <DelegaSquadriglia :squadriglia="s.id" :membri="s.membri" />
     </section>
   </section>
 </template>

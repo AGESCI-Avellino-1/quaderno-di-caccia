@@ -938,6 +938,15 @@ export interface RiunioneRicorrente {
   riunioni: number
 }
 
+/** Optional emails; access codes, invitations, security warnings, registration and
+ * receipts are always sent. */
+export interface PreferenzeEmail {
+  eventi: boolean
+  promemoria_quote: boolean
+  maggiore_eta: boolean
+  riepiloghi: boolean
+}
+
 export interface Delega {
   persona_id: number | null
   persona: string | null
@@ -1249,6 +1258,12 @@ export const api = {
       metodo: 'PUT',
       corpo: { importo },
     }),
+  preferenzeEmail: () => richiesta<PreferenzeEmail>('/api/v1/io/email'),
+  scegliPreferenzeEmail: (dati: PreferenzeEmail) =>
+    richiesta<PreferenzeEmail>('/api/v1/io/email', { metodo: 'PUT', corpo: dati }),
+  calendario: () => richiesta<{ url: string }>('/api/v1/calendario'),
+  rigeneraCalendario: () =>
+    richiesta<{ url: string }>('/api/v1/calendario/rigenera', { metodo: 'POST' }),
   delega: (squadriglia: number) => richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`),
   delegaA: (squadriglia: number, persona_id: number) =>
     richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, {

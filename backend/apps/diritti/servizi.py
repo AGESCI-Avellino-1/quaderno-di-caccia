@@ -19,6 +19,7 @@ from apps.anagrafica.models import (
     CorrezioneAnagrafica,
     DerogaSquadriglia,
     Persona,
+    PreferenzeEmail,
     RelazioneTutela,
     VisibilitaGenitori,
 )
@@ -183,6 +184,16 @@ def fascicolo(persona: Persona) -> dict:
             }
             for q in Quota.objects.filter(persona=persona).select_related("tipo", "agevolazione")
         ],
+        "email_scelte": (
+            {
+                "Eventi": p.eventi,
+                "Promemoria delle quote": p.promemoria_quote,
+                "Avvisi dei 18 anni": p.maggiore_eta,
+                "Riepiloghi per i capi": p.riepiloghi,
+            }
+            if (p := PreferenzeEmail.objects.filter(persona=persona).first())
+            else None
+        ),
         "correzioni_ai_dati": [
             {
                 "Dato": ETICHETTE_CAMPI.get(c.campo, c.campo),
@@ -275,7 +286,13 @@ def cancella(persona: Persona) -> dict:
         if sanitarie is not None:
             _cancella_storico([*sanitarie.allergie.all(), *sanitarie.farmaci.all(), sanitarie])
             sanitarie.delete()
-        for modello in (DerogaSquadriglia, CorrezioneAnagrafica, VisibilitaGenitori, Invito):
+        for modello in (
+            DerogaSquadriglia,
+            CorrezioneAnagrafica,
+            VisibilitaGenitori,
+            PreferenzeEmail,
+            Invito,
+        ):
             oggetti = list(modello.objects.filter(persona=persona))
             _cancella_storico(oggetti)
             for oggetto in oggetti:

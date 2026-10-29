@@ -4,18 +4,20 @@ from datetime import date, datetime, time
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
+from ninja.throttling import AnonRateThrottle
 
 from apps.anagrafica.models import Persona
 from apps.organizzazione.models import Branca, Squadriglia, Unita
 from apps.permessi import policy
 
-from . import servizi
+from . import avvisi, servizi
 from .models import (
     Cerchia,
     Evento,
@@ -223,6 +225,7 @@ def crea_evento(request, dati: EventoIn):
         servizi.crea(evento, unita, request.auth)
     except ValidationError as errore:
         raise _errore(errore) from errore
+    transaction.on_commit(lambda: avvisi.nuovo(evento))
     return Status(201, _evento_out(request.auth, evento))
 
 
@@ -238,6 +241,7 @@ def modifica_evento(request, evento_id: int, dati: EventoIn):
         evento.cerchia,
     ):
         raise HttpError(400, "Il livello dell'evento non si cambia: creane uno nuovo.")
+    prima = (evento.inizio, evento.fine, evento.luogo)
     unita = _dati(request, evento, dati)
     try:
         evento.full_clean()
@@ -247,6 +251,8 @@ def modifica_evento(request, evento_id: int, dati: EventoIn):
     if evento.livello == Livello.UNITA and unita:
         evento.unita.set(unita)
     servizi.allinea_partecipanti(evento)
+    if (evento.inizio, evento.fine, evento.luogo) != prima:
+        transaction.on_commit(lambda: avvisi.modificato(evento))
     return _evento_out(request.auth, evento)
 
 
@@ -263,6 +269,7 @@ def annulla_evento(request, evento_id: int, dati: Motivo):
         servizi.annulla(evento, dati.motivo)
     except ValidationError as errore:
         raise _errore(errore) from errore
+    transaction.on_commit(lambda: avvisi.annullato(evento))
     return _evento_out(request.auth, evento)
 
 
@@ -706,3 +713,54 @@ def importo_persona(request, evento_id: int, quota_id: int, dati: ImportoIn):
         "residuo": q.residuo,
         "annullata": q.annullata_il is not None,
     }
+
+
+# --- Personal calendar (DEC-79) ---------------------------------------------------------
+
+
+class CalendarioOut(Schema):
+    url: str
+
+
+def _calendario_out(calendario) -> dict:
+    from django.conf import settings
+
+    return {"url": f"{settings.FRONTEND_URL}/api/v1/calendario/{calendario.token}.ics"}
+
+
+@router.get("/calendario", response=CalendarioOut)
+def mio_calendario(request):
+    """The secret address to add to Google Calendar or the iPhone Calendar."""
+    from .models import CalendarioPersonale
+
+    calendario, _ = CalendarioPersonale.objects.get_or_create(utente=request.auth)
+    return _calendario_out(calendario)
+
+
+@router.post("/calendario/rigenera", response=CalendarioOut)
+def rigenera_calendario(request):
+    """A new address: the old one stops working (e.g. it was shared by mistake)."""
+    from .models import CalendarioPersonale
+
+    calendario, _ = CalendarioPersonale.objects.get_or_create(utente=request.auth)
+    calendario.rigenera()
+    return _calendario_out(calendario)
+
+
+# Calendar apps check every few hours; guessing a 43-character token is hopeless.
+LIMITI_CALENDARIO = [AnonRateThrottle("120/h")]
+
+
+@router.get("/calendario/{token}.ics", auth=None, throttle=LIMITI_CALENDARIO)
+def feed_calendario(request, token: str):
+    from .calendario import eventi_del_calendario, ics
+    from .models import CalendarioPersonale
+
+    calendario = CalendarioPersonale.objects.filter(token=token).select_related("utente").first()
+    if calendario is None or not calendario.utente.is_active:
+        raise HttpError(404, "Calendario non trovato.")
+    risposta = HttpResponse(
+        ics(eventi_del_calendario(calendario.utente)), content_type="text/calendar; charset=utf-8"
+    )
+    risposta["Cache-Control"] = "private, max-age=900"
+    return risposta

@@ -274,3 +274,30 @@ class MembroAltaSquadriglia(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.persona} in Alta Squadriglia ({self.anno})"
+
+
+def _token() -> str:
+    import secrets
+
+    return secrets.token_urlsafe(32)
+
+
+class CalendarioPersonale(ModelloTracciato):
+    """The secret address of a user's calendar feed (DEC-79): calendar apps cannot log
+    in, so the long random token is the key. Regenerating it turns the old one off."""
+
+    utente = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendario"
+    )
+    token = models.CharField(max_length=64, unique=True, default=_token)
+
+    class Meta:
+        verbose_name = "calendario personale"
+        verbose_name_plural = "calendari personali"
+
+    def __str__(self) -> str:
+        return f"Calendario di {self.utente}"
+
+    def rigenera(self) -> None:
+        self.token = _token()
+        self.save(update_fields=["token", "aggiornato_il"])

@@ -17,6 +17,7 @@ from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from apps.anagrafica.preferenze import accetta, nota_a_piede
 from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.iscrizioni.servizi import mancanti
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
@@ -34,7 +35,11 @@ def _approvatori(unita) -> set[str]:
         if unita.tipo != TipoUnita.COMUNITA_CAPI
         else filtro.none()
     )
-    return {i.persona.utente.email for i in (capigruppo | staff).select_related("persona__utente")}
+    return {
+        i.persona.utente.email
+        for i in (capigruppo | staff).select_related("persona__utente")
+        if accetta(i.persona, "riepiloghi")
+    }
 
 
 def _scrivi(destinatari, oggetto: str, testo: str) -> None:
@@ -60,7 +65,7 @@ class Command(BaseCommand):
                 _approvatori(richiesta.unita),
                 "nuova richiesta di iscrizione",
                 f"c'è una nuova richiesta di iscrizione a {richiesta.unita}.\n\n"
-                f"La trovi qui:\n{link}/iscrizioni\n",
+                f"La trovi qui:\n{link}/iscrizioni" + nota_a_piede(),
             )
             richiesta.segnalata_il = timezone.now()
             richiesta.save(update_fields=["segnalata_il", "aggiornato_il"])

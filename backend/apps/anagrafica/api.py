@@ -485,3 +485,38 @@ def scegli_visibilita_genitori(request, persona_id: int, dati: VisibilitaGenitor
         },
     )
     return _visibilita(persona)
+
+
+# --- Optional emails (GDPR art. 21; maintainer, 2026-10-29) ---------------------------
+
+
+class PreferenzeEmailIO(Schema):
+    eventi: bool = True
+    promemoria_quote: bool = True
+    maggiore_eta: bool = True
+    riepiloghi: bool = True
+
+
+def _mia_persona(request) -> Persona:
+    persona = policy.persona_di(request.auth)
+    if persona is None:
+        raise HttpError(404, "Il tuo account non è ancora collegato a una persona del gruppo.")
+    return persona
+
+
+@router.get("/io/email", response=PreferenzeEmailIO)
+def mie_preferenze_email(request):
+    from .models import PreferenzeEmail
+
+    preferenze = PreferenzeEmail.objects.filter(persona=_mia_persona(request)).first()
+    return preferenze or PreferenzeEmailIO()
+
+
+@router.put("/io/email", response=PreferenzeEmailIO)
+def scegli_preferenze_email(request, dati: PreferenzeEmailIO):
+    from .models import PreferenzeEmail
+
+    preferenze, _ = PreferenzeEmail.objects.update_or_create(
+        persona=_mia_persona(request), defaults=dati.dict()
+    )
+    return preferenze

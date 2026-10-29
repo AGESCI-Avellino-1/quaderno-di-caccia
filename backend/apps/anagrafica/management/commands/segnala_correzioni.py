@@ -15,6 +15,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.anagrafica.models import CorrezioneAnagrafica, StatoCorrezione
+from apps.anagrafica.preferenze import accetta, nota_a_piede
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 
@@ -35,10 +36,11 @@ class Command(BaseCommand):
                 for i in Incarico.objects.attivi()
                 .filter(ruolo=RuoloIncarico.CAPOGRUPPO, persona__utente__isnull=False)
                 .select_related("persona__utente")
+                if accetta(i.persona, "riepiloghi")
             }
         )
         if not destinatari:
-            self.stderr.write("Nessun capogruppo con un account: nessuna email inviata.")
+            self.stderr.write("Nessun capogruppo da avvisare: nessuna email inviata.")
             return
         da_inoltrare = CorrezioneAnagrafica.objects.filter(stato=StatoCorrezione.IN_ATTESA).count()
         send_mail(
@@ -48,7 +50,7 @@ class Command(BaseCommand):
                 f"nel Quaderno di Caccia ci sono {numero} nuove correzioni ai dati di "
                 f"BuonaStrada ({da_inoltrare} in tutto da inoltrare alla segreteria).\n\n"
                 f"Le trovi qui:\n{settings.FRONTEND_URL}/correzioni\n\n"
-                f"Dopo averle inoltrate, segnalale come inoltrate nell'app.\n"
+                f"Dopo averle inoltrate, segnalale come inoltrate nell'app." + nota_a_piede()
             ),
             from_email=None,
             recipient_list=destinatari,

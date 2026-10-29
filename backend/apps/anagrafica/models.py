@@ -496,3 +496,28 @@ class ContatoreCodiceProvvisorio(models.Model):
 
     def __str__(self) -> str:
         return f"Ultimo codice provvisorio: {self.ultimo}"
+
+
+class PreferenzeEmail(ModelloTracciato):
+    """Which of the optional emails a person receives (maintainer, 2026-10-29: the right
+    to object to communications based on the group's legitimate interest, GDPR art.
+    21). On the person, not the account: parents get emails before they have one.
+    Always sent, not listed here: access codes, invitations, security warnings, the
+    registration from the app and the receipts of payments."""
+
+    persona = models.OneToOneField(
+        Persona, on_delete=models.CASCADE, related_name="preferenze_email"
+    )
+    eventi = models.BooleanField(default=True, help_text="Nuovi eventi, cambi, annullamenti.")
+    promemoria_quote = models.BooleanField(default=True, help_text="Quote in scadenza.")
+    maggiore_eta = models.BooleanField(default=True, help_text="Avvisi dei 18 anni.")
+    riepiloghi = models.BooleanField(
+        default=True, help_text="Riepiloghi per i capi: correzioni, iscrizioni da decidere."
+    )
+
+    class Meta:
+        verbose_name = "preferenze email"
+        verbose_name_plural = "preferenze email"
+
+    def __str__(self) -> str:
+        return f"Email di {self.persona}"

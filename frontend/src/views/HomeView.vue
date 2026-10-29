@@ -88,6 +88,12 @@ onMounted(async () => {
           <span class="small fg-2">Riunioni, uscite e campi; partecipazione e presenze</span>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.persona" class="col-12 md:col-6">
+        <RouterLink to="/email" class="card card-body h-100 text-decoration-none">
+          <strong>Le mie email</strong>
+          <span class="small fg-2">Scegli quali email ricevere</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.profilo.vede_cassa" class="col-12 md:col-6">
         <RouterLink to="/cassa" class="card card-body h-100 text-decoration-none">
           <strong>Prima nota</strong>

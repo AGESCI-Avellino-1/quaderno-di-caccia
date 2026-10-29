@@ -6,6 +6,7 @@
 #   promemoria_iscrizioni  new registration requests, reminders, suspensions
 #   emetti_quote           issue the fees whose period has started (monthly fees on the 1st)
 #   riassumi_presenze      attendance older than two years becomes yearly totals
+#   promemoria_quote       reminders of unpaid fees due within a week
 #
 # Times are spread out so the emails do not leave all together.
 15 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py segnala_correzioni
@@ -13,3 +14,4 @@
 25 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_iscrizioni
 5 6 * * *   cd /srv/qdc && docker compose exec -T web python manage.py emetti_quote
 40 3 * * *  cd /srv/qdc && docker compose exec -T web python manage.py riassumi_presenze
+30 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_quote

@@ -186,6 +186,11 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      path: '/email',
+      name: 'email',
+      component: () => import('@/views/EmailView.vue'),
+    },
+    {
       path: '/importazione',
       name: 'importazione',
       component: () => import('@/views/ImportazioneView.vue'),

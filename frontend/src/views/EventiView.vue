@@ -12,6 +12,7 @@ import {
   type Unita,
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import MioCalendario from '@/components/MioCalendario.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
@@ -381,6 +382,8 @@ const statoMio = {
         </div>
       </li>
     </ul>
+
+    <MioCalendario v-if="!passati" />
 
     <section v-if="sessione.capo && !passati">
       <h2 class="h5">Riunioni ricorrenti</h2>

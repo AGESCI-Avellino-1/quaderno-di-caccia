@@ -195,6 +195,8 @@ class Quota(ModelloTracciato):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     motivo_annullamento = models.CharField(max_length=300, blank=True)
+    # The reminder before the due date (DEC-79), sent once.
+    promemoria_il = models.DateField(null=True, blank=True)
 
     objects = QuotaQuerySet.as_manager()
 

@@ -17,6 +17,7 @@ from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza, VisibilitaGenitori
+from apps.anagrafica.preferenze import accetta, nota_a_piede
 from apps.core.anno import compie_anni
 
 ANTICIPO = timedelta(days=30)
@@ -94,11 +95,17 @@ class Command(BaseCommand):
                     continue
                 scelta.avviso_mese_prima = oggi
             oggetto, al_ragazzo, ai_genitori = _testi(persona, giorno, oggi)
-            if email := _email(persona):
-                send_mail(oggetto, al_ragazzo, None, [email])
+            if accetta(persona, "maggiore_eta") and (email := _email(persona)):
+                send_mail(oggetto, al_ragazzo + nota_a_piede(), None, [email])
             # One email per parent: separated parents do not see each other's address.
-            for destinatario in sorted({_email(g) for g in _genitori(persona)} - {""}):
-                send_mail(f"{persona.nome} compie 18 anni", ai_genitori, None, [destinatario])
+            genitori = [g for g in _genitori(persona) if accetta(g, "maggiore_eta")]
+            for destinatario in sorted({_email(g) for g in genitori} - {""}):
+                send_mail(
+                    f"{persona.nome} compie 18 anni",
+                    ai_genitori + nota_a_piede(),
+                    None,
+                    [destinatario],
+                )
             scelta.save()
             inviati += 1
         self.stdout.write(f"Avvisi inviati per {inviati} persone.")

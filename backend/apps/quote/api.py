@@ -394,9 +394,10 @@ class PagamentoOut(Schema):
     ricevuta_inviata_il: datetime | None
     annullato: bool
     motivo_annullamento: str = ""
+    puo_annullare: bool = False
 
 
-def _pagamento_out(pagamento: Pagamento) -> dict:
+def _pagamento_out(pagamento: Pagamento, user=None) -> dict:
     registrato = pagamento.registrato_da
     persona = getattr(registrato, "persona", None) if registrato else None
     return {
@@ -421,6 +422,11 @@ def _pagamento_out(pagamento: Pagamento) -> dict:
         "ricevuta_inviata_il": pagamento.ricevuta_inviata_il,
         "annullato": pagamento.annullato_il is not None,
         "motivo_annullamento": pagamento.motivo_annullamento,
+        "puo_annullare": (
+            user is not None
+            and pagamento.annullato_il is None
+            and policy.puo_annullare_pagamento(user, pagamento)
+        ),
     }
 
 
@@ -460,7 +466,7 @@ def registra_pagamento(request, dati: PagamentoIn):
     except ValidationError as errore:
         raise HttpError(400, " ".join(errore.messages)) from errore
     transaction.on_commit(lambda: servizi.invia_ricevuta(pagamento))
-    return Status(201, _pagamento_out(pagamento))
+    return Status(201, _pagamento_out(pagamento, utente))
 
 
 def _pagamento_visibile(request, pagamento_id: int) -> Pagamento:
@@ -477,7 +483,7 @@ def pagamenti_persona(request, persona_id: int, anno: int | None = None):
     pagamenti = Pagamento.objects.filter(
         righe__quota__persona=persona, anno_ricevuta=_anno(anno)
     ).distinct()
-    return [_pagamento_out(p) for p in pagamenti]
+    return [_pagamento_out(p, request.auth) for p in pagamenti]
 
 
 @router.get("/pagamenti/{pagamento_id}/ricevuta.pdf")
@@ -497,19 +503,23 @@ def reinvia_ricevuta(request, pagamento_id: int):
         raise HttpError(403, "Non puoi inviare questa ricevuta.")
     if not servizi.invia_ricevuta(pagamento):
         raise HttpError(400, "Nessun indirizzo email a cui inviarla.")
-    return _pagamento_out(pagamento)
+    return _pagamento_out(pagamento, request.auth)
 
 
 @router.post("/pagamenti/{pagamento_id}/annulla", response=PagamentoOut)
 def annulla_pagamento(request, pagamento_id: int, dati: Motivo):
-    if not policy.puo_annullare_pagamenti(request.auth):
-        raise HttpError(403, "I pagamenti li annullano i capigruppo e il tesoriere di gruppo.")
     pagamento = get_object_or_404(Pagamento, pk=pagamento_id)
+    if not policy.puo_annullare_pagamento(request.auth, pagamento):
+        raise HttpError(
+            403,
+            "I pagamenti li annullano i capigruppo e il tesoriere di gruppo; chi li ha "
+            "registrati, finché la cassa non è stata verificata.",
+        )
     try:
         servizi.annulla_pagamento(pagamento, request.auth, dati.motivo)
     except ValidationError as errore:
         raise HttpError(400, " ".join(errore.messages)) from errore
-    return _pagamento_out(pagamento)
+    return _pagamento_out(pagamento, request.auth)
 
 
 # --- The family's page (DEC-16, DEC-92) ----------------------------------------------------
@@ -537,7 +547,7 @@ def mie_quote(request, anno: int | None = None):
     gruppo = Gruppo.objects.first()
     return {
         "quote": [_quota_out(utente, q) for q in _quote(persone, anno) if not q.annullata_il],
-        "pagamenti": [_pagamento_out(p) for p in pagamenti],
+        "pagamenti": [_pagamento_out(p, request.auth) for p in pagamenti],
         "link_pagamento": gruppo.link_pagamento if gruppo else "",
     }
 

@@ -204,3 +204,41 @@ def test_promemoria_quote_una_volta(reparto, staff, ragazza, genitore, csq):
     mail.outbox.clear()
     call_command("promemoria_quote")
     assert mail.outbox == []
+
+
+def test_tre_viste_del_calendario_per_i_capi(
+    reparto, coca, clan_e_staff, staff, capogruppo, ragazza
+):
+    clan, staff_clan = clan_e_staff
+    del_reparto = _uscita(reparto, staff, titolo="Reparto")
+    del_clan = _uscita(clan, staff_clan, titolo="Clan")
+    di_coca = _uscita(coca, capogruppo, titolo="Co.Ca.")
+
+    def titoli(utente, vista):
+        return set(calendario.eventi_del_calendario(utente, vista).values_list("titolo", flat=True))
+
+    assert titoli(staff.utente, "unita") == {"Reparto"}
+    assert titoli(staff.utente, "coca") == {"Reparto", "Co.Ca."}
+    assert titoli(staff.utente, "gruppo") == {"Reparto", "Clan", "Co.Ca."}
+    # A capogruppo who serves no unit: nothing in the narrowest view.
+    assert titoli(capogruppo.utente, "unita") == set()
+    assert titoli(capogruppo.utente, "coca") == {"Co.Ca."}
+    del del_reparto, del_clan, di_coca
+    viste = _client(staff).get("/api/v1/calendario").json()["viste"]
+    assert [v["vista"] for v in viste] == ["unita", "coca", "gruppo"]
+    assert viste[1]["url"].endswith("?vista=coca")
+    assert _client(ragazza).get("/api/v1/calendario").json()["viste"] == []
+
+
+@pytest.fixture
+def clan_e_staff(gruppo, coca):
+    from apps.organizzazione.models import Composizione, TipoUnita, Unita
+
+    clan = Unita.objects.create(
+        gruppo=gruppo, nome="Hirpinia", tipo=TipoUnita.CLAN_FUOCO, composizione=Composizione.MISTA
+    )
+    persona = crea_capo("Carla", "Clan", "carla@example.invalid")
+    Incarico.objects.create(
+        persona=persona, ruolo=RuoloIncarico.STAFF, unita=clan, data_inizio=INIZIO_ANNO
+    )
+    return clan, persona

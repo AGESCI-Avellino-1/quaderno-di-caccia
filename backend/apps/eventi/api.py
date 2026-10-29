@@ -718,14 +718,30 @@ def importo_persona(request, evento_id: int, quota_id: int, dati: ImportoIn):
 # --- Personal calendar (DEC-79) ---------------------------------------------------------
 
 
-class CalendarioOut(Schema):
+class VistaCalendario(Schema):
+    vista: str
+    nome: str
     url: str
 
 
-def _calendario_out(calendario) -> dict:
+class CalendarioOut(Schema):
+    url: str
+    # A capo's three views (maintainer, 2026-10-29); empty for everyone else.
+    viste: list[VistaCalendario]
+
+
+def _calendario_out(request, calendario) -> dict:
     from django.conf import settings
 
-    return {"url": f"{settings.FRONTEND_URL}/api/v1/calendario/{calendario.token}.ics"}
+    from .calendario import VISTE
+
+    base = f"{settings.FRONTEND_URL}/api/v1/calendario/{calendario.token}.ics"
+    viste = (
+        [{"vista": v, "nome": n, "url": f"{base}?vista={v}"} for v, n in VISTE.items()]
+        if policy.e_capo(request.auth)
+        else []
+    )
+    return {"url": base, "viste": viste}
 
 
 @router.get("/calendario", response=CalendarioOut)
@@ -734,7 +750,7 @@ def mio_calendario(request):
     from .models import CalendarioPersonale
 
     calendario, _ = CalendarioPersonale.objects.get_or_create(utente=request.auth)
-    return _calendario_out(calendario)
+    return _calendario_out(request, calendario)
 
 
 @router.post("/calendario/rigenera", response=CalendarioOut)
@@ -744,7 +760,7 @@ def rigenera_calendario(request):
 
     calendario, _ = CalendarioPersonale.objects.get_or_create(utente=request.auth)
     calendario.rigenera()
-    return _calendario_out(calendario)
+    return _calendario_out(request, calendario)
 
 
 # Calendar apps check every few hours; guessing a 43-character token is hopeless.
@@ -752,7 +768,7 @@ LIMITI_CALENDARIO = [AnonRateThrottle("120/h")]
 
 
 @router.get("/calendario/{token}.ics", auth=None, throttle=LIMITI_CALENDARIO)
-def feed_calendario(request, token: str):
+def feed_calendario(request, token: str, vista: str = "unita"):
     from .calendario import eventi_del_calendario, ics
     from .models import CalendarioPersonale
 
@@ -760,7 +776,8 @@ def feed_calendario(request, token: str):
     if calendario is None or not calendario.utente.is_active:
         raise HttpError(404, "Calendario non trovato.")
     risposta = HttpResponse(
-        ics(eventi_del_calendario(calendario.utente)), content_type="text/calendar; charset=utf-8"
+        ics(eventi_del_calendario(calendario.utente, vista)),
+        content_type="text/calendar; charset=utf-8",
     )
     risposta["Cache-Control"] = "private, max-age=900"
     return risposta

@@ -483,7 +483,7 @@ def puo_gestire_iscrizioni_buonastrada(user) -> bool:
 # Decided with the maintainer on 2026-10-29 (not yet in the analysis): only the group
 # sets the fees; payments are recorded by the treasurers, the capigruppo, and the capo
 # unità and staff of the member's unit; agevolazioni by the capigruppo and the group
-# treasurer. A capo not yet in BuonaStrada sees no fees of others [da verificare].
+# treasurer. A capo not yet in BuonaStrada sees no fees of others (confirmed 2026-10-29).
 
 
 def _unita_della_persona(persona: Persona) -> QuerySet:
@@ -548,8 +548,19 @@ def puo_registrare_pagamenti(user, persona: Persona) -> bool:
     )
 
 
-def puo_annullare_pagamenti(user) -> bool:
-    return puo_gestire_quote(user)
+def puo_annullare_pagamento(user, pagamento) -> bool:
+    """The capigruppo and the group treasurer; who recorded it, until a cash check of
+    a box it went into (maintainer, 2026-10-29)."""
+    if puo_gestire_quote(user):
+        return True
+    if pagamento.registrato_da_id is None or pagamento.registrato_da_id != user.pk:
+        return False
+    from apps.cassa.models import VerificaCassa
+
+    casse = pagamento.movimenti.values("cassa_id")
+    return not VerificaCassa.objects.filter(
+        cassa_id__in=casse, creato_il__gt=pagamento.creato_il
+    ).exists()
 
 
 def puo_vedere_agevolazioni(user) -> bool:
@@ -692,7 +703,7 @@ def puo_creare_evento(
     may create any. Maintainer, 2026-10-29: the patrol's mission only the staff; a
     member delegated by the CSQ creates the patrol's meetings; the councils of one or
     more reparti (Consiglio Capi, Con.Ca.Vi., Alta Squadriglia) the staff of any of
-    them [da verificare: staff of one reparto for a council of several]."""
+    them (confirmed 2026-10-29)."""
     from apps.organizzazione.models import BRANCA_DEL_TIPO
 
     if e_capogruppo(user):

@@ -132,7 +132,7 @@ MOTIVO_ASSENZA = "Non partecipa all'evento"
 def emetti_evento(tipo: TipoQuota) -> list[Quota]:
     """Every instalment at once, to every participant (invited, not "not taking part",
     not excluded): families see all the due dates from the start. The family discount,
-    if any, goes on the last instalment (the balance) [da verificare]."""
+    if any, goes on the last instalment (the balance) (confirmed 2026-10-29)."""
     from apps.eventi.models import StatoPartecipazione
 
     evento = tipo.evento

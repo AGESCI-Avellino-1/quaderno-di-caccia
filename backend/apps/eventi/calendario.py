@@ -6,31 +6,49 @@ from datetime import UTC, datetime
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
-from apps.organizzazione.models import Incarico, RuoloIncarico
+from apps.organizzazione.models import Branca, Incarico, RuoloIncarico, TipoUnita
 from apps.permessi import policy
 
-from .models import Evento, StatoPartecipazione
+from .models import Evento, Livello, StatoPartecipazione
+
+# A capo chooses among three views (maintainer, 2026-10-29); everyone else has one.
+VISTE = {
+    "unita": "Solo la mia unità",
+    "coca": "Co.Ca. e la mia unità",
+    "gruppo": "Tutto il gruppo",
+}
 
 
-def eventi_del_calendario(utente) -> QuerySet[Evento]:
-    """Events the user or their children are invited to (taking part), and, for a
-    capo, the events of the units they serve."""
+def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
+    """Always the events the user's children take part in. Anyone else: the events
+    they take part in. A capo, by view: the events of the units they serve; also
+    those of the Co.Ca. and of the whole group; or every event of the group (their own
+    participation as a member of the Co.Ca. is the second view, not the first)."""
     persone = [p.pk for p in policy.tutelati(utente) if policy.genitori_vedono(p, "scheda")]
     propria = policy.persona_di(utente)
-    filtro = Q(pk__in=[])
-    if propria is not None:
+    capo = propria is not None and policy.e_capo(utente)
+    if propria is not None and not capo:
         persone.append(propria.pk)
-        unita = Incarico.objects.attivi().filter(
-            persona=propria,
-            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
-        )
-        filtro |= Q(unita__in=unita.values("unita_id")) | Q(
-            squadriglia__unita__in=unita.values("unita_id")
-        )
-    filtro |= Q(
+    filtro = Q(
         partecipazioni__persona_id__in=persone,
         partecipazioni__stato=StatoPartecipazione.INVITATO,
     )
+    if capo:
+        if vista == "gruppo":
+            return Evento.objects.all().order_by("inizio")
+        servite = Incarico.objects.attivi().filter(
+            persona=propria,
+            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
+        )
+        filtro |= Q(unita__in=servite.values("unita_id")) | Q(
+            squadriglia__unita__in=servite.values("unita_id")
+        )
+        if vista == "coca":
+            filtro |= (
+                Q(livello=Livello.GRUPPO)
+                | Q(unita__tipo=TipoUnita.COMUNITA_CAPI)
+                | Q(livello=Livello.BRANCA, branca=Branca.COCA)
+            )
     return Evento.objects.filter(filtro).distinct().order_by("inizio")
 
 

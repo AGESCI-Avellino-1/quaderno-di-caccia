@@ -271,6 +271,21 @@ async function rimborsa() {
 
 // --- Cash boxes (the group) -------------------------------------------------------------
 
+// Fee payments recorded before the boxes were set up (maintainer, 2026-10-29).
+const fuori = ref<{ pagamenti: number; importo: string } | null>(null)
+const cassaRiporto = ref<number | null>(null)
+watch(vista, async (nuova) => {
+  if (nuova !== 'casse' || !gestisce.value) return
+  fuori.value = (await esegui(() => api.fuoriPrimaNota())) ?? null
+})
+async function riporta() {
+  const esitoRiporto = await esegui(() => api.riportaInPrimaNota(cassaRiporto.value))
+  if (!esitoRiporto) return
+  esito.value = `${esitoRiporto.riportati} pagamenti riportati in prima nota.`
+  fuori.value = (await esegui(() => api.fuoriPrimaNota())) ?? null
+  await caricaCasse()
+}
+
 const modificaCassa = ref<(CassaIn & { id: number | null }) | null>(null)
 function apriCassa(c: Cassa | null) {
   modificaCassa.value = c
@@ -820,6 +835,30 @@ async function salvaCassa() {
         carta) e una cassa contanti per unità. Il saldo iniziale non si cambia dopo i primi
         movimenti.
       </p>
+      <div v-if="fuori?.pagamenti" class="alert theme-warning small">
+        <div>
+          {{ fuori.pagamenti }} pagamenti di quote ({{ euro(fuori.importo) }}) sono stati registrati
+          prima di configurare le casse e non sono in prima nota.
+          <form class="d-flex flex-wrap align-items-end gap-3 mt-3" @submit.prevent="riporta">
+            <div>
+              <label class="form-label small" for="riporto-cassa">In quale cassa</label>
+              <select
+                id="riporto-cassa"
+                v-model="cassaRiporto"
+                class="form-control form-control-sm"
+              >
+                <option :value="null">
+                  Automatica: contanti nella cassa dell'unità, il resto nel conto
+                </option>
+                <option v-for="c in casse" :key="c.id" :value="c.id">{{ c.nome }}</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+              Riportali in prima nota
+            </button>
+          </form>
+        </div>
+      </div>
       <button
         v-if="!modificaCassa"
         type="button"

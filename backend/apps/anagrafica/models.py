@@ -42,7 +42,7 @@ class Persona(ModelloTracciato):
     stato_socio = models.CharField(max_length=1, choices=StatoSocio.choices, blank=True)
     # Consents imported from BuonaStrada (DEC-30, consents table in the requirements).
     consenso_iscrizione = models.BooleanField(null=True, blank=True)  # CONSENSO 2A
-    consenso_foto = models.BooleanField(null=True, blank=True)  # CONSENSO 2B [da verificare]
+    consenso_foto = models.BooleanField(null=True, blank=True)  # CONSENSO 2B (confirmed 22/10)
     consenso_commerciale = models.BooleanField(null=True, blank=True)  # CONSENSO 2C
     consenso_riviste = models.BooleanField(null=True, blank=True)  # CONSENSO RIVISTE
     # Leader data (DEC-35).

@@ -438,7 +438,7 @@ async function reinvia(id: number) {
               Invia di nuovo
             </button>
             <button
-              v-if="dati.puo_gestire && !p.annullato"
+              v-if="p.puo_annullare"
               type="button"
               class="btn btn-sm btn-link"
               @click="Object.assign(annullamento, { tipo: 'pagamento', id: p.id, motivo: '' })"

@@ -563,3 +563,41 @@ def modello_d(request, anno: int | None = None):
         "anno_etichetta": periodo.etichetta,
         "saldi": [_cassa_out(request.auth, c) for c in Cassa.objects.all()],
     }
+
+
+# --- Fee payments recorded before the boxes were set up -------------------------------------
+
+
+class FuoriPrimaNota(Schema):
+    pagamenti: int
+    importo: Decimal
+
+
+class Riporto(Schema):
+    cassa_id: int | None = None
+
+
+class Riportati(Schema):
+    riportati: int
+
+
+@router.get("/pagamenti-fuori-prima-nota", response=FuoriPrimaNota)
+def fuori_prima_nota(request):
+    if not policy.puo_gestire_casse(request.auth):
+        raise HttpError(403, "Le casse le configurano i capigruppo e il tesoriere di gruppo.")
+    pagamenti = servizi.pagamenti_fuori_prima_nota()
+    return {
+        "pagamenti": pagamenti.count(),
+        "importo": sum(pagamenti.values_list("importo", flat=True), Decimal("0")),
+    }
+
+
+@router.post("/pagamenti-fuori-prima-nota", response=Riportati)
+def riporta(request, dati: Riporto):
+    if not policy.puo_gestire_casse(request.auth):
+        raise HttpError(403, "Le casse le configurano i capigruppo e il tesoriere di gruppo.")
+    cassa = get_object_or_404(Cassa, pk=dati.cassa_id) if dati.cassa_id else None
+    try:
+        return {"riportati": servizi.riporta_in_prima_nota(request.auth, cassa)}
+    except ValidationError as errore:
+        raise _errore(errore) from errore

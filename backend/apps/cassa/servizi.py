@@ -256,6 +256,26 @@ def registra_pagamento(pagamento, righe, utente, cassa: Cassa | None = None) -> 
     ]
 
 
+def pagamenti_fuori_prima_nota():
+    """Fee payments recorded before the cash boxes were set up: no movement."""
+    from apps.quote.models import Pagamento
+
+    return Pagamento.objects.filter(annullato_il__isnull=True, movimenti__isnull=True).distinct()
+
+
+@transaction.atomic
+def riporta_in_prima_nota(utente, cassa: Cassa | None = None) -> int:
+    """Each one into `cassa`, or the default box for its method, with its own date
+    (maintainer, 2026-10-29). A payment dated before a box's initial balance cannot
+    go into that box."""
+    riportati = 0
+    for pagamento in pagamenti_fuori_prima_nota().prefetch_related("righe__quota__tipo"):
+        righe = list(pagamento.righe.select_related("quota__tipo", "quota__persona"))
+        if registra_pagamento(pagamento, righe, utente, cassa):
+            riportati += 1
+    return riportati
+
+
 def storna_pagamento(pagamento, utente) -> None:
     for movimento in pagamento.movimenti.filter(storno_di__isnull=True):
         if not hasattr(movimento, "storno"):

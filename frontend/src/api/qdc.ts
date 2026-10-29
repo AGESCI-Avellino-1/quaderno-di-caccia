@@ -693,6 +693,8 @@ export interface Pagamento {
   ricevuta_inviata_il: string | null
   annullato: boolean
   motivo_annullamento: string
+  /** The capigruppo and group treasurer; who recorded it, until a cash check. */
+  puo_annullare: boolean
 }
 
 export interface MieQuote {
@@ -971,6 +973,13 @@ export interface PreferenzeEmail {
   promemoria_quote: boolean
   maggiore_eta: boolean
   riepiloghi: boolean
+}
+
+/** The personal calendar; a capo has three views (their unit; Co.Ca. and their unit;
+ * the whole group), everyone else one. */
+export interface Calendario {
+  url: string
+  viste: { vista: string; nome: string; url: string }[]
 }
 
 export interface Delega {
@@ -1302,9 +1311,16 @@ export const api = {
   preferenzeEmail: () => richiesta<PreferenzeEmail>('/api/v1/io/email'),
   scegliPreferenzeEmail: (dati: PreferenzeEmail) =>
     richiesta<PreferenzeEmail>('/api/v1/io/email', { metodo: 'PUT', corpo: dati }),
-  calendario: () => richiesta<{ url: string }>('/api/v1/calendario'),
+  calendario: () => richiesta<Calendario>('/api/v1/calendario'),
   rigeneraCalendario: () =>
-    richiesta<{ url: string }>('/api/v1/calendario/rigenera', { metodo: 'POST' }),
+    richiesta<Calendario>('/api/v1/calendario/rigenera', { metodo: 'POST' }),
+  fuoriPrimaNota: () =>
+    richiesta<{ pagamenti: number; importo: string }>('/api/v1/pagamenti-fuori-prima-nota'),
+  riportaInPrimaNota: (cassa_id: number | null) =>
+    richiesta<{ riportati: number }>('/api/v1/pagamenti-fuori-prima-nota', {
+      metodo: 'POST',
+      corpo: { cassa_id },
+    }),
   delega: (squadriglia: number) => richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`),
   delegaA: (squadriglia: number, persona_id: number) =>
     richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, {

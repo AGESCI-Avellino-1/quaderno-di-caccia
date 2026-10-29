@@ -376,3 +376,34 @@ def test_api_spese_anticipate(contanti, staff, capo, reparto):
     )
     assert fatto.json()["stato"] == "rimborsata"
     assert contanti.saldo() == Decimal("42")
+
+
+def test_chi_ha_registrato_annulla_finche_non_c_e_una_verifica(
+    quote_ragazza, contanti, staff, capo
+):
+    from apps.permessi import policy
+
+    censimento, mensile = quote_ragazza
+    primo = _paga([(censimento, "40")], MetodoPagamento.CONTANTI, staff.utente)
+    assert policy.puo_annullare_pagamento(staff.utente, primo)
+    assert not policy.puo_annullare_pagamento(capo.utente, primo)  # not theirs
+    servizi.verifica(
+        contanti, data=GENNAIO, saldo_contato=contanti.saldo(GENNAIO), motivo="", utente=capo.utente
+    )
+    assert not policy.puo_annullare_pagamento(staff.utente, primo)
+
+
+def test_pagamenti_registrati_prima_delle_casse(quote_ragazza, staff, capogruppo, reparto):
+    censimento, _ = quote_ragazza
+    vecchio = _paga([(censimento, "40")], MetodoPagamento.CONTANTI, staff.utente)
+    assert not vecchio.movimenti.exists()  # no box yet
+    contanti = Cassa.objects.create(
+        nome="Contanti", tipo=TipoCassa.CONTANTI, unita=reparto, data_saldo_iniziale=INIZIO_ANNO
+    )
+    url = "/api/v1/pagamenti-fuori-prima-nota"
+    assert _client(staff).get(url).status_code == 403
+    assert _client(capogruppo).get(url).json() == {"pagamenti": 1, "importo": "40.00"}
+    assert _post(capogruppo, url, {}).json() == {"riportati": 1}
+    assert contanti.saldo() == Decimal("40")
+    assert vecchio.movimenti.get().data == GENNAIO
+    assert _post(capogruppo, url, {}).json() == {"riportati": 0}

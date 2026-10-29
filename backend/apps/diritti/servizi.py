@@ -27,6 +27,7 @@ from apps.dispositivi.models import Dispositivo
 from apps.iscrizioni.models import RichiestaIscrizione
 from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
+from apps.quote.models import Quota
 from apps.sanitaria.models import InformazioniSanitarie
 
 from .models import RichiestaDiritti
@@ -163,11 +164,25 @@ def fascicolo(persona: Persona) -> dict:
                 "Contatti e indirizzo": visibilita.contatti,
                 "Farmaci, allergie e alimentazione": visibilita.sanitarie,
                 "Scheda e attività": visibilita.scheda,
+                "Quote e pagamenti": visibilita.quote,
                 "Scelta il": _giorno(visibilita.decisa_il),
             }
             if visibilita and visibilita.decisa_il
             else None
         ),
+        # Payments are accounting records: exported here, kept by an erasure.
+        "quote": [
+            {
+                "Quota": q.descrizione,
+                "Scadenza": come_testo(q.scadenza),
+                "Importo": str(q.importo),
+                "Sconto famiglia": str(q.sconto),
+                "Agevolazione": str(q.agevolata),
+                "Pagato": str(q.pagato),
+                "Annullata": bool(q.annullata_il),
+            }
+            for q in Quota.objects.filter(persona=persona).select_related("tipo", "agevolazione")
+        ],
         "correzioni_ai_dati": [
             {
                 "Dato": ETICHETTE_CAMPI.get(c.campo, c.campo),

@@ -42,6 +42,9 @@ class Profilo(Schema):
     iscrizioni_da_inserire: int
     capo_in_attesa: bool
     tutelati: list[PersonaBreve]
+    # Fees: the group sets them; units whose payment situation the user may see.
+    gestisce_quote: bool
+    unita_quote: list[int]
 
 
 @router.get("/io", response=Profilo)
@@ -78,6 +81,8 @@ def profilo(request):
         ),
         "capo_in_attesa": policy.e_capo_in_attesa(user),
         "tutelati": list(policy.tutelati(user)),
+        "gestisce_quote": policy.puo_gestire_quote(user),
+        "unita_quote": policy.unita_situazione_quote(user),
     }
 
 

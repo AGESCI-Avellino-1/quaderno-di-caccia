@@ -179,7 +179,7 @@ def persone_visibili(user) -> QuerySet[Persona]:
 def genitori_vedono(persona: Persona, categoria: str) -> bool:
     """Whether the parents of `persona` still see a category: always for a minor; for an
     adult, what they chose, everything until they choose (DEC-26). `categoria` is a
-    field of VisibilitaGenitori: contatti, sanitarie, scheda."""
+    field of VisibilitaGenitori: contatti, sanitarie, scheda, quote."""
     if persona.e_minorenne():
         return True
     scelta = VisibilitaGenitori.objects.filter(persona=persona).first()
@@ -477,3 +477,94 @@ def puo_gestire_iscrizioni_buonastrada(user) -> bool:
     """The list of registrations to enter in BuonaStrada, its exports, "inserita": the
     capigruppo (DEC-127)."""
     return e_capogruppo(user)
+
+
+# --- Fees and payments (DEC-11, DEC-16, DEC-80…DEC-84, DEC-92) ----------------------------
+# Decided with the maintainer on 2026-10-29 (not yet in the analysis): only the group
+# sets the fees; payments are recorded by the treasurers, the capigruppo, and the capo
+# unità and staff of the member's unit; agevolazioni by the capigruppo and the group
+# treasurer. A capo not yet in BuonaStrada sees no fees of others [da verificare].
+
+
+def _unita_della_persona(persona: Persona) -> QuerySet:
+    return Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
+
+
+def puo_gestire_quote(user) -> bool:
+    """Fee types, issue, cancellation, spouses for the discount: the group only."""
+    return e_capogruppo(user) or _ha_incarico(user, {RuoloIncarico.TESORIERE_GRUPPO})
+
+
+def puo_vedere_situazione_quote(user, unita: Unita | None = None) -> bool:
+    """Who paid and who did not: the Co.Ca. (DEC-92) and, for their unit, its treasurer
+    even if an R/S (DEC-11)."""
+    if e_capo_censito(user):
+        return True
+    if unita is None:
+        return False
+    return _ha_incarico(user, {RuoloIncarico.TESORIERE_UNITA}, unita=unita)
+
+
+def unita_situazione_quote(user) -> list[int]:
+    """Units whose payment situation the user may see (menus of the PWA)."""
+    if e_capo_censito(user):
+        return list(Unita.objects.filter(attiva=True).values_list("pk", flat=True))
+    persona = persona_di(user)
+    if persona is None:
+        return []
+    return list(
+        Incarico.objects.attivi()
+        .filter(persona=persona, ruolo=RuoloIncarico.TESORIERE_UNITA)
+        .values_list("unita_id", flat=True)
+    )
+
+
+def puo_vedere_quote(user, persona: Persona) -> bool:
+    """The fees of one member: the Co.Ca., the treasurer of their unit, the member,
+    their parents (of an adult while still linked, DEC-26)."""
+    if e_capo_censito(user):
+        return True
+    livello = _livello_personale(user, persona)
+    if livello == LivelloAccesso.PROPRIO:
+        return True
+    if livello == LivelloAccesso.TUTORE:
+        return genitori_vedono(persona, "quote")
+    return _ha_incarico(
+        user, {RuoloIncarico.TESORIERE_UNITA}, unita_id__in=_unita_della_persona(persona)
+    )
+
+
+def puo_registrare_pagamenti(user, persona: Persona) -> bool:
+    """Treasurers and capigruppo; capo unità and staff of the member's unit (they take
+    the cash at meetings). A treasurer may be an R/S (DEC-11)."""
+    if e_capo_in_attesa(user):
+        return False
+    if puo_gestire_quote(user):
+        return True
+    return _ha_incarico(
+        user,
+        {RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF},
+        unita_id__in=_unita_della_persona(persona),
+    )
+
+
+def puo_annullare_pagamenti(user) -> bool:
+    return puo_gestire_quote(user)
+
+
+def puo_vedere_agevolazioni(user) -> bool:
+    """The Co.Ca. decides and sees them; never an R/S treasurer (DEC-82, DEC-11). The
+    family sees the amount on its own fees (serialised separately)."""
+    return e_capo_censito(user)
+
+
+def puo_vedere_agevolazione_di(user, persona: Persona) -> bool:
+    """The agevolazione on one member's fee: the Co.Ca., and the family on its own
+    fees (DEC-82)."""
+    if puo_vedere_agevolazioni(user):
+        return True
+    return _livello_personale(user, persona) != LivelloAccesso.NESSUNO
+
+
+def puo_registrare_agevolazioni(user) -> bool:
+    return e_capo_censito(user) and puo_gestire_quote(user)

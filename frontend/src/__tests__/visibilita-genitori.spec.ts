@@ -9,6 +9,7 @@ const stato = {
   contatti: true,
   sanitarie: true,
   scheda: true,
+  quote: true,
   decisa_il: null,
   genitori: ['Mario Rossi', 'Lucia Rossi'],
 }
@@ -43,6 +44,6 @@ describe('VisibilitaGenitori', () => {
     await pannello.get('#visibile-contatti').setValue(false)
     await pannello.get('form').trigger('submit')
     await flushPromises()
-    expect(corpi).toEqual([{ contatti: false, sanitarie: true, scheda: true }])
+    expect(corpi).toEqual([{ contatti: false, sanitarie: true, scheda: true, quote: true }])
   })
 })

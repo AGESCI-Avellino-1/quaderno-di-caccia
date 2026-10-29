@@ -42,12 +42,12 @@ bancario è della fase 6 (DEC-93).
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
-| 2.1 | Tipi di quota: censimento (quota nazionale), quota di gruppo, quota mensile di unità, campi e uscite, eventi esterni; importi per anno associativo | DEC-80 | ⏳ |
-| 2.2 | Sconto fratelli automatico, attivabile per tipo di quota, mai sulla quota nazionale | DEC-81, DEC-33 | ⏳ |
-| 2.3 | Agevolazioni: la cassa di gruppo copre in tutto o in parte una quota; chi la decide e chi la vede (il tesoriere R/S no) | DEC-82, DEC-11 | ⏳ |
-| 2.4 | Pagamenti registrati (contanti, bonifico, altro; link di pagamento), anche offline come registrazioni da accodare | DEC-83, DEC-96 | ⏳ |
-| 2.5 | Ricevute PDF non fiscali, numerate per anno associativo, inviate al genitore | DEC-84 | ⏳ |
-| 2.6 | Vista del genitore: quote dovute e pagate con sconti e agevolazioni; chi non ha pagato lo vedono solo Co.Ca. e famiglia; il genitore resta collegato alle quote del figlio maggiorenne finché questo non lo scollega | DEC-16, DEC-92, DEC-26 | ⏳ |
+| 2.1 | Tipi di quota: censimento (quota nazionale), quota di gruppo, quota mensile di unità (una quota per mese); importi per anno associativo; li fissa solo il gruppo; campi, uscite ed eventi esterni con la fase 3 | DEC-80 | ✅ |
+| 2.2 | Sconto famiglia automatico: importo fisso per tipo di quota, su ogni socio quando il nucleo (fratelli, genitori e figli, coniugi) ha almeno due soci; mai sulla quota nazionale | DEC-81, DEC-33 | ✅ |
+| 2.3 | Agevolazioni: la cassa di gruppo copre in tutto o in parte una quota; chi la decide e chi la vede (il tesoriere R/S no) | DEC-82, DEC-11 | ✅ |
+| 2.4 | Pagamenti registrati (contanti, bonifico, altro; link di pagamento), anche offline come registrazioni da accodare | DEC-83, DEC-96 | ✅ |
+| 2.5 | Ricevute PDF non fiscali, numerate per anno associativo, inviate al genitore | DEC-84 | ✅ |
+| 2.6 | Vista del genitore: quote dovute e pagate con sconti e agevolazioni; chi non ha pagato lo vedono solo Co.Ca. e famiglia; il genitore resta collegato alle quote del figlio maggiorenne finché questo non lo scollega | DEC-16, DEC-92, DEC-26 | ✅ |
 | 2.7 | Prima nota per cassa: conto bancario e casse contanti per unità, configurabili; giroconti | DEC-85, DEC-88 | ⏳ |
 | 2.8 | Uscite con foto del giustificativo, anche offline; rimborsi ai capi | DEC-86 | ⏳ |
 | 2.9 | Categorie del Modello D dal catalogo; quote anticipate su BuonaCaccia in A.2 | DEC-87, DEC-89 | ⏳ |
@@ -58,6 +58,13 @@ bancario è della fase 6 (DEC-93).
 Eventi e presenze (fase 3), Progressione Personale (fase 4), fascicolo completo con
 scheda medica e percorso di formazione dei capi inserito a mano (fase 5, DEC-47), poi la
 fase 6 e l'app negli store: vedi la tabella "Fasi".
+
+Per la fase 3 (maintainer, 29/10/2026, da riportare nell'analisi): le quote di campi e
+uscite, rimandate dalla fase 2, arrivano con gli eventi. La quota del campo estivo (E/G)
+e delle Vacanze di Branco/Cerchio (L/C) si può configurare "a rate", con passi a
+scadenze fissate: di solito due rate a date stabilite più il saldo prima della
+partenza. Ogni rata sarà una quota con la sua scadenza, e i pagamenti con acconti e la
+ripartizione su più quote della fase 2 valgono anche per le rate.
 
 ## Fase 1 — Fondamenta
 
@@ -91,6 +98,21 @@ ruoli e squadriglie DEC-110…DEC-115 e DEC-131…DEC-133, account DEC-116…DEC
 iscrizione dall'app DEC-120…DEC-127, unità DEC-128, correzioni e importazione
 DEC-129, DEC-130, formazione dei capi DEC-134 (fase 5), esigenze alimentari DEC-135,
 diritti GDPR DEC-136.
+
+## Decisioni della fase 2 da riportare nell'analisi
+
+Prese con il maintainer il 29/10/2026, ancora senza codice DEC:
+
+| Punto | Decisione | Precisa |
+| --- | --- | --- |
+| Chi fissa le quote | Solo il gruppo (capigruppo e tesoriere di gruppo), per tutti i tipi, anche la mensile di unità | DEC-80 |
+| A chi si applica | Per ogni tipo si sceglie: tutti i soci, solo i ragazzi, solo i capi, le unità indicate | DEC-80 |
+| Quota mensile | Una quota per ogni mese scelto, con un giorno di scadenza; chi entra a metà anno paga dai mesi successivi | DEC-80 |
+| Sconto famiglia | Importo fisso in euro per tipo di quota, tolto alla quota di ogni socio quando il nucleo familiare ha almeno due soci; il nucleo comprende fratelli, genitore socio e figli soci, coniugi soci (anche senza figli soci, indicati a mano); mai sulla quota nazionale | DEC-81 |
+| Agevolazioni | Le registrano i capigruppo e il tesoriere di gruppo (capo); la famiglia vede l'importo, la nota resta alla Co.Ca. | DEC-82 |
+| Pagamenti | Li registrano tesoriere di gruppo, capigruppo, tesoriere di unità, capo unità e staff dell'unità del socio; un pagamento si ripartisce su più quote della stessa famiglia, anche in parte (acconti); una ricevuta per pagamento | DEC-83, DEC-84 |
+| Campi, uscite, eventi esterni | Rimandati alla fase 3, con le rate a scadenze fisse per campo estivo e Vacanze di Branco/Cerchio | DEC-80 |
+| `[da verificare]` | Un capo non ancora in BuonaStrada non vede le quote degli altri; i pagamenti sbagliati si annullano (il numero di ricevuta resta, segnato annullato), non si modificano; li annullano capigruppo e tesoriere di gruppo | — |
 
 ## Punti aperti da confermare
 

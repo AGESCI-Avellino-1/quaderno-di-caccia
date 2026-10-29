@@ -4,8 +4,10 @@
 #   segnala_correzioni     summary of the corrections to forward, to the capigruppo
 #   avvisa_maggiore_eta    alerts to members turning 18 and their parents
 #   promemoria_iscrizioni  new registration requests, reminders, suspensions
+#   emetti_quote           issue the fees whose period has started (monthly fees on the 1st)
 #
 # Times are spread out so the emails do not leave all together.
 15 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py segnala_correzioni
 20 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py avvisa_maggiore_eta
 25 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_iscrizioni
+5 6 * * *   cd /srv/qdc && docker compose exec -T web python manage.py emetti_quote

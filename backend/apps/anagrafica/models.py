@@ -459,7 +459,7 @@ class VisibilitaGenitori(ModelloTracciato):
 
     At 18 the R/S decides, by category, for all parents alike; until they do, the
     parents keep seeing everything (DEC-119). Parents never write the
-    data of an adult. The link to the fees is phase 2.
+    data of an adult.
     """
 
     persona = models.OneToOneField(
@@ -470,6 +470,8 @@ class VisibilitaGenitori(ModelloTracciato):
     scheda = models.BooleanField(
         default=True, help_text="Dati della scheda e attività (progressione, presenze)."
     )
+    # DEC-26: the parent stays linked to the fees until the R/S unlinks them.
+    quote = models.BooleanField(default=True, help_text="Quote, pagamenti e ricevute.")
     decisa_il = models.DateTimeField(null=True, blank=True)
     # Alerts already sent (management command avvisa_maggiore_eta).
     avviso_mese_prima = models.DateField(null=True, blank=True)

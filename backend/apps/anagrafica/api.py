@@ -436,6 +436,7 @@ class VisibilitaGenitoriIO(Schema):
     contatti: bool = True
     sanitarie: bool = True
     scheda: bool = True
+    quote: bool = True
 
 
 class VisibilitaGenitoriOut(VisibilitaGenitoriIO):
@@ -452,6 +453,7 @@ def _visibilita(persona: Persona) -> dict:
         "contatti": scelta.contatti if scelta else True,
         "sanitarie": scelta.sanitarie if scelta else True,
         "scheda": scelta.scheda if scelta else True,
+        "quote": scelta.quote if scelta else True,
         "decisa_il": scelta.decisa_il if scelta else None,
         "genitori": [f"{g.nome} {g.cognome}" for g in genitori],
     }
@@ -478,6 +480,7 @@ def scegli_visibilita_genitori(request, persona_id: int, dati: VisibilitaGenitor
             "contatti": dati.contatti,
             "sanitarie": dati.sanitarie,
             "scheda": dati.scheda,
+            "quote": dati.quote,
             "decisa_il": timezone.now(),
         },
     )

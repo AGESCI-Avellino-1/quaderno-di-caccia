@@ -13,6 +13,7 @@ from apps.dispositivi.api import router as dispositivi_router
 from apps.importazione.api import router as importazione_router
 from apps.iscrizioni.api import router as iscrizioni_router
 from apps.organizzazione.api import router as organizzazione_router
+from apps.quote.api import router as quote_router
 from apps.sanitaria.api import router as sanitaria_router
 
 # Browser client: session cookie + CSRF. Store app (Capacitor): X-Session-Token.
@@ -35,3 +36,4 @@ api.add_router("/", dispositivi_router)
 api.add_router("/", sanitaria_router)
 api.add_router("/", diritti_router)
 api.add_router("/", iscrizioni_router)
+api.add_router("/", quote_router)

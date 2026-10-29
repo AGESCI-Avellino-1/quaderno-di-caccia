@@ -62,6 +62,8 @@ class Gruppo(ModelloTracciato):
     # Reference date for age (DEC-37), default 30 April.
     mese_riferimento_eta = models.PositiveSmallIntegerField(default=4)
     giorno_riferimento_eta = models.PositiveSmallIntegerField(default=30)
+    # A link where families pay outside the app, e.g. paypal.me (DEC-83).
+    link_pagamento = models.URLField(blank=True)
 
     class Meta:
         verbose_name = "gruppo"

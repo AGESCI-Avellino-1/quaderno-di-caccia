@@ -64,6 +64,30 @@ onMounted(async () => {
           <span class="fg-2 small">Nomina il primo capogruppo del gruppo</span>
         </RouterLink>
       </div>
+      <div
+        v-if="sessione.profilo.gestisce_quote || sessione.profilo.unita_quote.length"
+        class="col-12 md:col-6"
+      >
+        <RouterLink to="/quote" class="card card-body h-100 text-decoration-none">
+          <strong>Quote</strong>
+          <span class="fg-2 small">
+            {{
+              sessione.profilo.gestisce_quote
+                ? 'Tipi di quota, emissione e chi ha pagato'
+                : 'Chi ha pagato nelle unità'
+            }}
+          </span>
+        </RouterLink>
+      </div>
+      <div
+        v-if="sessione.profilo.persona || sessione.profilo.tutelati.length"
+        class="col-12 md:col-6"
+      >
+        <RouterLink to="/mie-quote" class="card card-body h-100 text-decoration-none">
+          <strong>Le mie quote</strong>
+          <span class="fg-2 small">Quote da pagare, pagamenti e ricevute</span>
+        </RouterLink>
+      </div>
       <div v-if="gestisceCorrezioni" class="col-12 md:col-6">
         <RouterLink to="/correzioni" class="card card-body h-100 text-decoration-none">
           <strong>

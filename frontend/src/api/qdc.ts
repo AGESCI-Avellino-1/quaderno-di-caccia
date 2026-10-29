@@ -37,6 +37,9 @@ export interface Profilo {
   /** A capo not yet in BuonaStrada: no sensitive data of other members. */
   capo_in_attesa: boolean
   tutelati: PersonaBreve[]
+  /** Fees: the group sets them; units whose payment situation the user may see. */
+  gestisce_quote: boolean
+  unita_quote: number[]
 }
 
 export interface PersonaElenco extends PersonaBreve {
@@ -428,6 +431,7 @@ export interface SceltaVisibilita {
   contatti: boolean
   sanitarie: boolean
   scheda: boolean
+  quote: boolean
 }
 
 export interface VisibilitaGenitori extends SceltaVisibilita {
@@ -604,6 +608,114 @@ export interface Dispositivo {
   revocato_il: string | null
   corrente: boolean
   offline_fino_al: string
+}
+
+// --- Fees and payments (amounts are decimal strings, e.g. "12.50") --------------------------
+
+export type CategoriaQuota = 'CENSIMENTO' | 'GRUPPO' | 'MENSILE'
+export type Destinatari = 'TUTTI' | 'RAGAZZI' | 'CAPI' | 'UNITA'
+export type MetodoPagamento = 'CONTANTI' | 'BONIFICO' | 'ALTRO'
+
+export interface TipoQuotaIn {
+  nome: string
+  categoria: CategoriaQuota
+  anno: number
+  importo: string
+  sconto_famiglia: string
+  destinatari: Destinatari
+  unita: number[]
+  scadenza: string | null
+  mesi: number[]
+  giorno_scadenza: number | null
+}
+
+export interface TipoQuota extends TipoQuotaIn {
+  id: number
+  categoria_nome: string
+  destinatari_nome: string
+  anno_etichetta: string
+  emesse: number
+}
+
+export interface Quota {
+  id: number
+  persona_id: number
+  persona: string
+  descrizione: string
+  categoria: CategoriaQuota
+  periodo: string
+  scadenza: string
+  importo: string
+  sconto: string
+  /** Seen by the Co.Ca. and by the family on its own fees; the note only by the Co.Ca. */
+  agevolazione: { importo: string; decisa_il: string; nota: string } | null
+  dovuto: string
+  pagato: string
+  residuo: string
+  annullata: boolean
+  motivo_annullamento: string
+}
+
+export interface QuotePersona {
+  quote: Quota[]
+  /** Open fees of the rest of the family, to record one payment over several. */
+  famiglia: Quota[]
+  puo_registrare: boolean
+  puo_gestire: boolean
+  puo_agevolare: boolean
+}
+
+export interface PagamentoIn {
+  data: string
+  metodo: MetodoPagamento
+  versato_da: string
+  note: string
+  righe: { quota_id: number; importo: string }[]
+}
+
+export interface Pagamento {
+  id: number
+  numero: string
+  data: string
+  importo: string
+  metodo: MetodoPagamento
+  metodo_nome: string
+  versato_da: string
+  note: string
+  righe: { quota_id: number; persona: string; descrizione: string; importo: string }[]
+  registrato_da: string | null
+  ricevuta_inviata_il: string | null
+  annullato: boolean
+  motivo_annullamento: string
+}
+
+export interface MieQuote {
+  quote: Quota[]
+  pagamenti: Pagamento[]
+  link_pagamento: string
+}
+
+export interface RigaSituazione {
+  persona_id: number
+  persona: string
+  dovuto: string
+  pagato: string
+  residuo: string
+  scadute: number
+}
+
+export interface Coniugi {
+  id: number
+  persona: string
+  coniuge: string
+}
+
+export const PERCORSO_PAGAMENTI = '/api/v1/pagamenti'
+export const ricevutaPdf = (pagamento: number) => `/api/v1/pagamenti/${pagamento}/ricevuta.pdf`
+
+/** "12.50" → "12,50 €" */
+export function euro(valore: string | number): string {
+  return `${Number(valore).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 }
 
 export const percorsoSanitarie = (persona: number) => `/api/v1/persone/${persona}/sanitarie`
@@ -799,6 +911,48 @@ export const api = {
     richiesta<{ revocato: boolean }>(`/api/v1/dispositivi/${id}/stato`),
   revocaDispositivo: (id: string) =>
     richiesta<Dispositivo>(`/api/v1/dispositivi/${id}/revoca`, { metodo: 'POST' }),
+  tipiQuota: (anno?: number) =>
+    richiesta<TipoQuota[]>(`/api/v1/quote/tipi${anno ? `?anno=${anno}` : ''}`),
+  creaTipoQuota: (dati: TipoQuotaIn) =>
+    richiesta<TipoQuota>('/api/v1/quote/tipi', { metodo: 'POST', corpo: dati }),
+  modificaTipoQuota: (id: number, dati: TipoQuotaIn) =>
+    richiesta<TipoQuota>(`/api/v1/quote/tipi/${id}`, { metodo: 'PUT', corpo: dati }),
+  emettiQuote: (id: number) =>
+    richiesta<{ emesse: number }>(`/api/v1/quote/tipi/${id}/emetti`, { metodo: 'POST' }),
+  quotePersona: (persona: number, anno?: number) =>
+    richiesta<QuotePersona>(`/api/v1/persone/${persona}/quote${anno ? `?anno=${anno}` : ''}`),
+  pagamentiPersona: (persona: number, anno?: number) =>
+    richiesta<Pagamento[]>(`/api/v1/persone/${persona}/pagamenti${anno ? `?anno=${anno}` : ''}`),
+  annullaQuota: (id: number, motivo: string) =>
+    richiesta<Quota>(`/api/v1/quote/${id}/annulla`, { metodo: 'POST', corpo: { motivo } }),
+  agevola: (id: number, dati: { importo: string; decisa_il: string; nota: string }) =>
+    richiesta<Quota>(`/api/v1/quote/${id}/agevolazione`, { metodo: 'PUT', corpo: dati }),
+  togliAgevolazione: (id: number) =>
+    richiesta<Quota>(`/api/v1/quote/${id}/agevolazione`, { metodo: 'DELETE' }),
+  situazioneQuote: (unita: number, anno?: number) =>
+    richiesta<RigaSituazione[]>(
+      `/api/v1/quote/situazione?unita=${unita}${anno ? `&anno=${anno}` : ''}`,
+    ),
+  reinviaRicevuta: (id: number) =>
+    richiesta<Pagamento>(`/api/v1/pagamenti/${id}/invia`, { metodo: 'POST' }),
+  annullaPagamento: (id: number, motivo: string) =>
+    richiesta<Pagamento>(`/api/v1/pagamenti/${id}/annulla`, { metodo: 'POST', corpo: { motivo } }),
+  mieQuote: (anno?: number) =>
+    richiesta<MieQuote>(`/api/v1/mie-quote${anno ? `?anno=${anno}` : ''}`),
+  coniugi: () => richiesta<Coniugi[]>('/api/v1/quote/coniugi'),
+  aggiungiConiugi: (persona_id: number, coniuge_id: number) =>
+    richiesta<Coniugi>('/api/v1/quote/coniugi', {
+      metodo: 'POST',
+      corpo: { persona_id, coniuge_id },
+    }),
+  togliConiugi: (id: number) =>
+    richiesta<void>(`/api/v1/quote/coniugi/${id}`, { metodo: 'DELETE' }),
+  impostazioniQuote: () => richiesta<{ link_pagamento: string }>('/api/v1/quote/impostazioni'),
+  salvaImpostazioniQuote: (link_pagamento: string) =>
+    richiesta<{ link_pagamento: string }>('/api/v1/quote/impostazioni', {
+      metodo: 'PUT',
+      corpo: { link_pagamento },
+    }),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
       metodo: 'POST',

@@ -6,6 +6,7 @@ import AccountPersona from '@/components/AccountPersona.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
+import QuotePersona from '@/components/QuotePersona.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
 import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
@@ -103,6 +104,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       </section>
       <VisibilitaGenitori :id="persona.id" />
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
+      <QuotePersona :id="persona.id" />
       <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />

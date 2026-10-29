@@ -149,6 +149,18 @@ const router = createRouter({
       component: () => import('@/views/CorrezioniView.vue'),
     },
     {
+      // Group, Co.Ca. and unit treasurers: the API decides (DEC-80…DEC-84, DEC-92).
+      path: '/quote',
+      name: 'quote',
+      component: () => import('@/views/QuoteView.vue'),
+    },
+    {
+      // The family's own fees: the API decides (DEC-16).
+      path: '/mie-quote',
+      name: 'mie-quote',
+      component: () => import('@/views/MieQuoteView.vue'),
+    },
+    {
       path: '/importazione',
       name: 'importazione',
       component: () => import('@/views/ImportazioneView.vue'),

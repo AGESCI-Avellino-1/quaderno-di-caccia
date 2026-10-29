@@ -10,18 +10,24 @@ import { useErrore } from '@/composables/useErrore'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const stato = ref<VisibilitaGenitori | null>(null)
-const scelte = reactive({ contatti: true, sanitarie: true, scheda: true })
+const scelte = reactive({ contatti: true, sanitarie: true, scheda: true, quote: true })
 const salvato = ref(false)
 
 const voci = [
   { chiave: 'contatti', etichetta: 'Contatti e indirizzo' },
   { chiave: 'sanitarie', etichetta: 'Farmaci, allergie e alimentazione' },
   { chiave: 'scheda', etichetta: 'La mia scheda e le attività (unità, presenze, progressione)' },
+  { chiave: 'quote', etichetta: 'Le mie quote, i pagamenti e le ricevute' },
 ] as const
 
 function mostra(dati: VisibilitaGenitori) {
   stato.value = dati
-  Object.assign(scelte, { contatti: dati.contatti, sanitarie: dati.sanitarie, scheda: dati.scheda })
+  Object.assign(scelte, {
+    contatti: dati.contatti,
+    sanitarie: dati.sanitarie,
+    scheda: dati.scheda,
+    quote: dati.quote,
+  })
 }
 
 watch(

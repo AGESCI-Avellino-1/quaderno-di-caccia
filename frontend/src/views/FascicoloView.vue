@@ -27,6 +27,7 @@ const TITOLI: Record<string, string> = {
   informazioni_sanitarie: 'Farmaci, allergie e alimentazione',
   eccezioni_squadriglia: 'Eccezioni sulla squadriglia',
   visibilita_ai_genitori: 'Cosa vedono i genitori',
+  quote: 'Quote e pagamenti',
   correzioni_ai_dati: 'Correzioni ai dati',
   inviti: 'Inviti',
   accessi_ai_dati_delicati: 'Chi ha visto i dati delicati',

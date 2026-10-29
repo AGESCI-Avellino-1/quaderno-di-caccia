@@ -87,9 +87,10 @@ DA_COMPLETARE = (StatoIscrizione.APPROVATA, StatoIscrizione.SOSPESA)
 NON_RECEPITE = (*DA_COMPLETARE, StatoIscrizione.COMPLETATA, StatoIscrizione.INSERITA)
 
 # What BuonaStrada requires to enter a member (maintainer, 2026-10-29): name, surname,
-# codice fiscale and birth date are asked with the request; the rest here. An adult
-# also needs mobile and email; for a minor, the parents (one, with exclusive custody, or
-# both) with codice fiscale, mobile and email; the consents come from the signed forms.
+# codice fiscale and birth date are asked with the request; the rest here. Their own
+# mobile and email for an adult (any unit) and for a minor in Clan/Fuoco or Noviziato;
+# for a minor, the parents (one, with exclusive custody, or both) with codice fiscale,
+# mobile and email; the consents come from the signed forms.
 CAMPI_SOCIO = (
     "sesso",
     "luogo_nascita",
@@ -102,7 +103,8 @@ CAMPI_SOCIO = (
     "email",
 )
 CAMPI_SOCIO_OBBLIGATORI = ("sesso", "luogo_nascita", "indirizzo", "comune", "provincia", "cap")
-CAMPI_ADULTO_OBBLIGATORI = ("cellulare", "email")
+CAMPI_CONTATTO_OBBLIGATORI = ("cellulare", "email")
+UNITA_CONTATTI_OBBLIGATORI = (TipoUnita.CLAN_FUOCO, TipoUnita.NOVIZIATO)
 
 
 class RichiestaIscrizione(ModelloTracciato):
@@ -168,6 +170,11 @@ class RichiestaIscrizione(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Iscrizione di {self.cognome} {self.nome} a {self.unita}"
+
+    @property
+    def contatti_obbligatori(self) -> bool:
+        """Own mobile and email: adults, and minors in Clan/Fuoco or Noviziato."""
+        return not self.per_minore or self.unita.tipo in UNITA_CONTATTI_OBBLIGATORI
 
     @property
     def per_minore(self) -> bool:

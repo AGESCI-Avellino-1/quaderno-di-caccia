@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ErroreApi } from '@/api/http'
 import { leggiConCache } from '@/offline/cache'
 import type { DatabaseQdc } from '@/offline/db'
 import { accoda, inviaCoda, scrivi } from '@/offline/outbox'
@@ -129,6 +130,15 @@ describe('cache di lettura', () => {
     )
     expect(offline.dati).toEqual({ v: 1 })
     expect(offline.copiaDel).not.toBeNull()
+  })
+
+  it('un gateway che non raggiunge il server vale come offline, un 404 no', async () => {
+    await leggiConCache('k', async () => ({ v: 1 }), database)
+    const giu = await leggiConCache('k', () => Promise.reject(new ErroreApi(502, {})), database)
+    expect(giu.dati).toEqual({ v: 1 })
+    await expect(
+      leggiConCache('k', () => Promise.reject(new ErroreApi(404, {})), database),
+    ).rejects.toBeInstanceOf(ErroreApi)
   })
 })
 

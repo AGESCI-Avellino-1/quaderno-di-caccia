@@ -692,3 +692,24 @@ def test_un_adulto_sospeso_torna_in_attesa(capo_nuovo):
     RichiestaIscrizione.objects.filter(persona=capo_nuovo).update(stato=StatoIscrizione.SOSPESA)
     assert policy.persona_di(utente) is None
     assert not policy.e_capo(utente)
+
+
+def test_contatti_propri_obbligatori_per_i_minori_in_clan(gruppo, capo, genitore_nuovo):
+    from apps.organizzazione.models import Composizione, TipoUnita, Unita
+
+    clan = Unita.objects.create(
+        gruppo=gruppo, nome="Hirpinia", tipo=TipoUnita.CLAN_FUOCO, composizione=Composizione.MISTA
+    )
+    Incarico.objects.create(
+        persona=capo, ruolo=RuoloIncarico.CAPO_UNITA, unita=clan, data_inizio=INIZIO_ANNO
+    )
+    codice = CodiceIscrizione.objects.create(unita=clan, tipo="UNITA", scadenza=TRA_UN_MESE)
+    dati = servizi.DatiIscrizione(**{**_dati_figlio(), "data_nascita": nato_anni_fa(17)})
+    richiesta = servizi.crea_richiesta(codice, dati, genitore_nuovo)
+    servizi.approva(richiesta, capo.utente, TRA_UN_MESE)
+    assert {"Cellulare", "Email"} <= set(servizi.mancanti(richiesta))
+
+
+def test_contatti_propri_facoltativi_per_i_minori_in_reparto(approvata):
+    assert not approvata.contatti_obbligatori
+    assert "Cellulare" not in servizi.mancanti(approvata)

@@ -25,7 +25,7 @@ from apps.core.models import FonteDato
 from apps.organizzazione.models import TipoUnita
 
 from .models import (
-    CAMPI_ADULTO_OBBLIGATORI,
+    CAMPI_CONTATTO_OBBLIGATORI,
     CAMPI_SOCIO,
     CAMPI_SOCIO_OBBLIGATORI,
     DA_COMPLETARE,
@@ -260,10 +260,10 @@ def mancanti(richiesta: RichiestaIscrizione) -> list[str]:
     if socio is None:
         return []
     voci = [ETICHETTE_CAMPI[c] for c in CAMPI_SOCIO_OBBLIGATORI if not getattr(socio, c)]
+    if richiesta.contatti_obbligatori:
+        voci += [ETICHETTE_CAMPI[c] for c in CAMPI_CONTATTO_OBBLIGATORI if not getattr(socio, c)]
     padre_o_madre = genitore(richiesta)
-    if padre_o_madre is None:  # an adult
-        voci += [ETICHETTE_CAMPI[c] for c in CAMPI_ADULTO_OBBLIGATORI if not getattr(socio, c)]
-    else:
+    if padre_o_madre is not None:
         voci += [
             f"{v} del genitore"
             for v in _dati_mancanti(padre_o_madre, {"cellulare": "Cellulare", "email": "Email"})

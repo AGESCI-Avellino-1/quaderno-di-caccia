@@ -361,9 +361,10 @@ export interface Completamento {
   comune: string
   provincia: string
   cap: string
-  /** The member's own: required for an adult, optional for a minor. */
+  /** The member's own: required for adults and minors in Clan/Fuoco or Noviziato. */
   cellulare: string
   email: string
+  contatti_obbligatori?: boolean
   /** For a minor, the parent's mobile; null for an adult member. */
   cellulare_genitore: string | null
   /** For a minor: one parent with exclusive custody, or both (null: not said yet). */

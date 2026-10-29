@@ -21,6 +21,7 @@ const dati = reactive<Completamento>({
   cap: '',
   cellulare: '',
   email: '',
+  contatti_obbligatori: false,
   cellulare_genitore: null,
   genitore_unico: null,
   altro_genitore: null,
@@ -134,7 +135,7 @@ async function salva() {
     <template v-else>
       <div class="col-12 sm:col-6">
         <label class="form-label small" :for="`socio-cellulare-${id}`">
-          Cellulare del ragazzo (se ne ha uno)
+          Cellulare del ragazzo{{ dati.contatti_obbligatori ? '' : ' (se ne ha uno)' }}
         </label>
         <input
           :id="`socio-cellulare-${id}`"
@@ -145,7 +146,9 @@ async function salva() {
       </div>
       <div class="col-12 sm:col-6">
         <label class="form-label small" :for="`socio-email-${id}`">
-          Email del ragazzo (sua, non del genitore)
+          Email del ragazzo (sua, non del genitore){{
+            dati.contatti_obbligatori ? '' : ', se ne ha una'
+          }}
         </label>
         <input
           :id="`socio-email-${id}`"

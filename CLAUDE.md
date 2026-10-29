@@ -258,7 +258,8 @@ verificare" in the analysis).
   replaces it by codice fiscale. `policy.e_capo_in_attesa`: a capo with a provisional
   code sees no sensitive data (`_vede`, staff checks, camp, exceptions, access log).
   Completion by a deadline set at approval (`servizi.completa`, `mancanti`: the data
-  BuonaStrada requires, the parents single or both, adults' mobile and email); past it
+  BuonaStrada requires, the parents single or both, own mobile and email for adults and
+  for minors in Clan/Fuoco or Noviziato); past it
   `promemoria_iscrizioni` suspends only that member: the family no longer sees them
   (`policy.tutelati` excludes them; an adult who joined themself gets `persona_di` None).
   Signed forms: capigruppo

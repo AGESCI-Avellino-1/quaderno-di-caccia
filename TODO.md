@@ -13,7 +13,7 @@ per ultima, dopo tutte le altre fasi.
 
 | # | Fase | Stato | Note |
 | --- | --- | --- | --- |
-| 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026, restano alcune verifiche (vedi "Prossimi passi") |
+| 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
 | 2 | Quote e cassa | ⏳ | **la prossima**; pronto il catalogo `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3 | Eventi e presenze | ⏳ | — |
 | 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
@@ -27,11 +27,11 @@ per ultima, dopo tutte le altre fasi.
 
 | Attività | Chi | Stato |
 | --- | --- | --- |
-| Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada (nome, cognome, CF, sesso, data e luogo di nascita, indirizzo, comune, provincia, CAP; per il maggiorenne cellulare ed email; per il minore i genitori, singolo o entrambi, con CF, cellulare ed email; i consensi dai moduli); promemoria 7 giorni prima; sospensione solo del nuovo socio; all'importazione vince BuonaStrada; sesso e luogo di nascita correggibili anche dallo staff; il maggiorenne corregge anche i suoi consensi; correzioni gestite anche dall'amministratore tecnico | maintainer | ✅ applicate |
+| Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada (nome, cognome, CF, sesso, data e luogo di nascita, indirizzo, comune, provincia, CAP; cellulare ed email propri per il maggiorenne e per il minore in clan/fuoco o noviziato; per il minore i genitori, singolo o entrambi, con CF, cellulare ed email; i consensi dai moduli); promemoria 7 giorni prima; sospensione solo del nuovo socio; all'importazione vince BuonaStrada; sesso e luogo di nascita correggibili anche dallo staff; il maggiorenne corregge anche i suoi consensi; correzioni gestite anche dall'amministratore tecnico | maintainer | ✅ applicate |
 | Riportare nell'analisi le decisioni del 28 e 29/10, per dar loro un codice DEC: bozza pronta in [docs/analisi/decisioni-da-numerare.md](docs/analisi/decisioni-da-numerare.md) | maintainer | ⏳ |
 | In produzione, programmare i comandi giornalieri: esempio pronto in [deploy/cron/qdc.crontab](deploy/cron/qdc.crontab) | chi installa | ⏳ |
 | Avviso nella pagina dell'unità finché non ha un nome (le unità importate nascono senza); unità mostrate come "Tipo Nome (Codice)" | sviluppo | ✅ |
-| Prove nel browser non ancora fatte: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza rete | sviluppo | ⏳ |
+| Prove nel browser: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza server (copia cifrata) | sviluppo | ✅ 29/10 |
 | Prove che servono un telefono o account esterni veri: passkey e impronta, accesso con Google e Apple | maintainer | ⏳ |
 
 ### 2. Fase 2 — Quote e cassa

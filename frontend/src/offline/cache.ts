@@ -39,6 +39,8 @@ export async function leggiDallaCache<T>(
   return { dati: await decifraValore<T>(voce.valore, chiave), copiaDel: voce.aggiornata_il }
 }
 
+const SERVER_IRRAGGIUNGIBILE = new Set([502, 503, 504])
+
 export async function leggiConCache<T>(
   chiave: string,
   carica: () => Promise<T>,
@@ -49,8 +51,10 @@ export async function leggiConCache<T>(
     await salvaInCache(chiave, dati, database)
     return { dati, copiaDel: null }
   } catch (errore) {
-    // HTTP answers (403, 404...) are real answers: never mask them with old data.
-    if (errore instanceof ErroreApi) {
+    // HTTP answers (403, 404...) are real answers: never mask them with old data. A
+    // gateway that cannot reach the server (502, 503, 504: backend restarting, weak
+    // network behind a proxy) is not an answer: use the copy as when offline.
+    if (errore instanceof ErroreApi && !SERVER_IRRAGGIUNGIBILE.has(errore.stato)) {
       if (errore.stato === 403 || errore.stato === 404) await database.cache.delete(chiave)
       throw errore
     }

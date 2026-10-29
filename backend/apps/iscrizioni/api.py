@@ -320,9 +320,10 @@ class Completamento(Schema):
     comune: str = ""
     provincia: str = ""
     cap: str = ""
-    # The member's own: required for an adult, optional for a minor.
+    # The member's own: required for adults and minors in Clan/Fuoco or Noviziato.
     cellulare: str = ""
     email: str = ""
+    contatti_obbligatori: bool = False
     # For a minor: the parent's mobile; None when the member is an adult.
     cellulare_genitore: str | None = None
     # For a minor: one parent with exclusive custody, or both (then the other one).
@@ -353,6 +354,7 @@ def _completamento(richiesta: RichiestaIscrizione) -> dict:
     altro = servizi.altro_genitore(richiesta)
     return {campo: getattr(socio, campo) for campo in CAMPI_SOCIO} | {
         "cellulare_genitore": padre_o_madre.cellulare if padre_o_madre else None,
+        "contatti_obbligatori": richiesta.contatti_obbligatori,
         "genitore_unico": richiesta.genitore_unico,
         "altro_genitore": (
             {

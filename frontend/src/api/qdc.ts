@@ -213,6 +213,8 @@ export interface EsitoImportazione {
     unita_create: string[]
     appartenenze_aperte: string[]
     appartenenze_chiuse: string[]
+    /** Corrections BuonaStrada now has: closed (DEC-31). Missing in older imports. */
+    correzioni_recepite?: string[]
     differenze: {
       persona: string
       campo: string
@@ -222,6 +224,55 @@ export interface EsitoImportazione {
     }[]
     avvisi: { gravita: string; messaggio: string; riga: number | null }[]
   }
+}
+
+// --- Corrections to BuonaStrada data (DEC-31) ------------------------------------------
+
+export type StatoCorrezione = 'IN_ATTESA' | 'INOLTRATA' | 'RECEPITA' | 'SCARTATA'
+
+export interface Correzione {
+  id: number
+  campo: string
+  etichetta: string
+  /** Values as text: dates YYYY-MM-DD, yes/no "True"/"False", "" when empty. */
+  valore_precedente: string
+  valore_corretto: string
+  stato: StatoCorrezione
+  stato_nome: string
+  creata_il: string
+  richiesta_da: string | null
+  inoltrata_il: string | null
+  chiusa_il: string | null
+  motivo_scarto: string
+}
+
+export interface CorrezioneElenco extends Correzione {
+  persona: { id: number; nome: string; cognome: string; codice_socio: string | null }
+}
+
+export interface CampoCorreggibile {
+  campo: string
+  etichetta: string
+  tipo: 'testo' | 'data' | 'numero' | 'si_no' | 'scelta'
+  valore: string
+  scelte: Scelta[]
+  /** The open correction, if any: the value is "in attesa di BuonaStrada". */
+  correzione: Correzione | null
+}
+
+/** A correction value for people: "Sì"/"No", dd/mm/yyyy, the choice label, "—". */
+export function valoreLeggibile(testo: string, scelte: Scelta[] = []): string {
+  if (testo === '') return '—'
+  if (testo === 'True') return 'Sì'
+  if (testo === 'False') return 'No'
+  const data = /^(\d{4})-(\d{2})-(\d{2})$/.exec(testo)
+  if (data) return `${data[3]}/${data[2]}/${data[1]}`
+  return scelte.find((s) => s.valore === testo)?.etichetta ?? testo
+}
+
+export interface SchedaCorrezioni {
+  campi: CampoCorreggibile[]
+  chiuse: Correzione[]
 }
 
 // --- Health essentials (DEC-48 core, DEC-55) -------------------------------------------
@@ -333,6 +384,22 @@ export const api = {
     }),
   revocaDeroga: (id: number) =>
     richiesta<Deroga>(`/api/v1/deroghe-squadriglia/${id}/revoca`, { metodo: 'POST' }),
+  correzioniPersona: (persona: number) =>
+    richiesta<SchedaCorrezioni>(`/api/v1/persone/${persona}/correzioni`),
+  correggi: (persona: number, dati: { campo: string; valore: string }) =>
+    richiesta<SchedaCorrezioni>(`/api/v1/persone/${persona}/correzioni`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  correzioni: (aperte = true) =>
+    richiesta<CorrezioneElenco[]>(`/api/v1/correzioni${aperte ? '' : '?aperte=false'}`),
+  inoltraCorrezione: (id: number) =>
+    richiesta<CorrezioneElenco>(`/api/v1/correzioni/${id}/inoltra`, { metodo: 'POST' }),
+  scartaCorrezione: (id: number, motivo: string) =>
+    richiesta<CorrezioneElenco>(`/api/v1/correzioni/${id}/scarta`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
   nomina: (dati: { persona_id: number; ruolo: string } & DoveIncarico) =>
     richiesta<Incarico>('/api/v1/incarichi', { metodo: 'POST', corpo: dati }),
   terminaIncarico: (id: number) =>

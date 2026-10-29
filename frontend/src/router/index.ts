@@ -94,6 +94,12 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Capigruppo: the API decides (DEC-31).
+      path: '/correzioni',
+      name: 'correzioni',
+      component: () => import('@/views/CorrezioniView.vue'),
+    },
+    {
       path: '/importazione',
       name: 'importazione',
       component: () => import('@/views/ImportazioneView.vue'),

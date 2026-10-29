@@ -90,6 +90,7 @@ depends = ["test:backend", "test:frontend"]
 [tasks.lint]
 description = "Lint e formattazione (come la CI)"
 run = [
+  "python3 scripts/controlla-codici.py",
   "cd backend && uv run ruff check . && uv run black --check .",
   "cd frontend && npm run lint && npm run format:check && npm run typecheck",
 ]

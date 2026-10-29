@@ -20,6 +20,7 @@ const conteggi = computed(() => {
     ['Unità nuove', r.unita_create.length],
     ['Appartenenze aperte', r.appartenenze_aperte.length],
     ['Appartenenze chiuse', r.appartenenze_chiuse.length],
+    ['Correzioni recepite da BuonaStrada', r.correzioni_recepite?.length ?? 0],
   ] as const
 })
 

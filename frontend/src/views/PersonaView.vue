@@ -4,6 +4,7 @@ import { ref, watch } from 'vue'
 import { api, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
 import AccountPersona from '@/components/AccountPersona.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -27,16 +28,13 @@ async function caricaSanitarie(id: number) {
 
 // What is shown depends on the access level computed by the backend (policy.py):
 // fields the user may not see arrive as null and are simply not rendered.
-watch(
-  () => props.id,
-  async (id) => {
-    const letto = await esegui(() => leggiConCache(`persona:${id}`, () => api.persona(id)))
-    persona.value = letto?.dati ?? null
-    copiaDel.value = letto?.copiaDel ?? null
-    if (letto) await caricaSanitarie(id)
-  },
-  { immediate: true },
-)
+async function carica(id: number) {
+  const letto = await esegui(() => leggiConCache(`persona:${id}`, () => api.persona(id)))
+  persona.value = letto?.dati ?? null
+  copiaDel.value = letto?.copiaDel ?? null
+  if (letto) await caricaSanitarie(id)
+}
+watch(() => props.id, carica, { immediate: true })
 
 const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 </script>
@@ -91,6 +89,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </div>
         <SchedaSanitaria :dati="sanitarie" />
       </section>
+      <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
     </template>

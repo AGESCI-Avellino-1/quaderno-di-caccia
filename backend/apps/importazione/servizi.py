@@ -7,8 +7,9 @@ Rules:
   * only members with status R or S are imported; D closes active memberships (DEC-28);
   * nobody is deactivated just because they are missing from the file (partial exports,
     census period when everyone is S);
-  * BuonaStrada-owned fields are updated unless a correction is pending: then the app
-    value stays and the difference is reported (DEC-31);
+  * BuonaStrada-owned fields are updated unless a correction is open: then the app
+    value stays and the difference is reported; once BuonaStrada has the corrected value
+    the correction is closed as received (DEC-31);
   * a membership created in the app (fonte=APP, e.g. noviziato) is never overwritten:
     the difference is reported (DEC-34);
   * guardians are deduplicated by codice fiscale (DEC-32, DEC-33).
@@ -22,14 +23,16 @@ from django.utils import timezone
 
 from apps.anagrafica.models import (
     CAMPI_BUONASTRADA,
+    ETICHETTE_CAMPI,
+    STATI_APERTI,
     Appartenenza,
     CorrezioneAnagrafica,
     Persona,
     RelazioneTutela,
     RuoloAppartenenza,
-    StatoCorrezione,
     TipoTutela,
 )
+from apps.anagrafica.servizi import come_testo, recepisci_correzione
 from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
 from apps.organizzazione.models import Gruppo, TipoUnita, Unita
@@ -61,6 +64,7 @@ class Riepilogo:
     appartenenze_aperte: list[str] = field(default_factory=list)
     appartenenze_chiuse: list[str] = field(default_factory=list)
     differenze: list[Differenza] = field(default_factory=list)
+    correzioni_recepite: list[str] = field(default_factory=list)
     avvisi: list[dict] = field(default_factory=list)
 
     def come_dict(self) -> dict:
@@ -138,27 +142,30 @@ def _gruppo(riga: RigaSocio) -> Gruppo:
     return gruppo
 
 
-def _correzioni_in_attesa(persona: Persona) -> set[str]:
+def _correzioni_aperte(persona: Persona) -> dict[str, CorrezioneAnagrafica]:
     if persona.pk is None:
-        return set()
-    return set(
-        CorrezioneAnagrafica.objects.filter(
-            persona=persona, stato=StatoCorrezione.IN_ATTESA
-        ).values_list("campo", flat=True)
-    )
+        return {}
+    return {
+        c.campo: c
+        for c in CorrezioneAnagrafica.objects.filter(persona=persona, stato__in=STATI_APERTI)
+    }
 
 
 def _aggiorna_campi(persona: Persona, valori: dict, r: Riepilogo, codice_socio: str) -> bool:
-    """Write BuonaStrada values, respecting pending corrections. Returns True if changed."""
-    bloccati = _correzioni_in_attesa(persona)
+    """Write BuonaStrada values, respecting open corrections. Returns True if changed."""
+    aperte = _correzioni_aperte(persona)
     cambiato = False
     for campo, nuovo in valori.items():
         if campo not in CAMPI_BUONASTRADA:
             continue
         attuale = getattr(persona, campo)
+        correzione = aperte.get(campo)
+        if correzione is not None and come_testo(nuovo) == correzione.valore_corretto:
+            recepisci_correzione(correzione)
+            r.correzioni_recepite.append(f"{persona}: {ETICHETTE_CAMPI.get(campo, campo)}")
         if attuale == nuovo:
             continue
-        if campo in bloccati:
+        if correzione is not None and correzione.aperta:
             r.differenze.append(
                 Differenza(
                     codice_socio,

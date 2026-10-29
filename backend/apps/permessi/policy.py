@@ -9,7 +9,14 @@ from enum import StrEnum
 
 from django.db.models import Q, QuerySet
 
-from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
+from apps.anagrafica.models import (
+    CAMPI_BUONASTRADA,
+    CAMPI_CONTATTO,
+    CAMPI_IDENTITA,
+    Appartenenza,
+    Persona,
+    RuoloAppartenenza,
+)
 from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia, Unita
 
 
@@ -202,8 +209,39 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
         return True
     if e_capogruppo(user):
         return True
+    return _staff_della_persona(user, persona)
+
+
+def _staff_della_persona(user, persona: Persona) -> bool:
     unita = Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
     return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita_id__in=unita)
+
+
+def campi_correggibili(user, persona: Persona) -> set[str]:
+    """BuonaStrada fields the user may correct in the app (DEC-31; who corrects what was
+    decided by the maintainer on 2026-10-29).
+
+    The technical administrator and the capigruppo: every field of every member. The
+    staff of the person's unit and the parents of a minor: everything but identity
+    (name, sex, birth, codice fiscale). The adult member: their own contacts and
+    address. Parents of an adult no longer write (DEC-26).
+    """
+    if e_amministratore(user) or e_capogruppo(user):
+        return set(CAMPI_BUONASTRADA)
+    campi: set[str] = set()
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk and not persona.e_minorenne():
+        campi |= set(CAMPI_CONTATTO)
+    genitore = persona.e_minorenne() and tutelati(user).filter(pk=persona.pk).exists()
+    if genitore or _staff_della_persona(user, persona):
+        campi |= set(CAMPI_BUONASTRADA) - set(CAMPI_IDENTITA)
+    return campi
+
+
+def puo_gestire_correzioni(user) -> bool:
+    """The capigruppo forward corrections to the regional office or discard them
+    (DEC-31)."""
+    return e_capogruppo(user)
 
 
 def puo_scaricare_campo(user) -> bool:

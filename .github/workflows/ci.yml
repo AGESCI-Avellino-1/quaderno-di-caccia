@@ -36,13 +36,14 @@ jobs:
       DATABASE_URL: postgres://qdc:qdc@localhost:5432/qdc
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
       - run: uv sync --locked
       - name: Lint
         run: |
+          python3 ../scripts/controlla-codici.py
           uv run ruff check .
           uv run black --check .
       - name: Migrations up to date

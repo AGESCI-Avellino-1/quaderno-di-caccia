@@ -38,7 +38,7 @@ per ultima, dopo tutte le altre fasi.
 | Gestione di unità, staff, incarichi e squadriglie | ✅ | DEC-10, DEC-11, DEC-14, DEC-18; pagine Unità e Capigruppo; vedi "Decisioni da riportare nell'analisi" |
 | Composizione delle squadriglie (chi è in quale squadriglia, spostamenti durante l'anno) | ✅ | DEC-30, DEC-65; pagina dell'unità |
 | Squadriglie maschili o femminili, eccezioni decise dalla Co.Ca., uscita dal reparto | ✅ | scheda persona e pagina dell'unità |
-| Correzioni ai dati inviate ai capigruppo | ⏳ | DEC-31 |
+| Correzioni ai dati inviate ai capigruppo (scheda persona, pagina Correzioni, email giornaliera, chiusura all'importazione) | ✅ | DEC-31, `apps/anagrafica/servizi.py`, comando `segnala_correzioni` |
 | Avvisi per il consenso al compimento dei 18 anni | ⏳ | DEC-26 |
 | Diritti GDPR (accesso, cancellazione) | ⏳ | DEC-102 |
 | Contatti in squadriglia (telefoni tra squadriglieri, genitori per il CSQ) | ⏳ | DEC-13 |
@@ -72,7 +72,7 @@ dell'analisi), da realizzare:
 | Contatti in squadriglia | Ogni squadrigliere vede il solo telefono degli altri squadriglieri. Il CSQ vede anche i contatti dei genitori di tutta la squadriglia; il vice CSQ vede come uno squadrigliere. Chi non ha un cellulare suo condivide il numero di un genitore, scelto dal genitore. Il genitore (o il ragazzo maggiorenne) può nascondere il numero agli squadriglieri; il CSQ lo vede comunque | DEC-13 |
 | Account dai 14 anni | Invito del capo unità o di un capogruppo, senza approvazione del genitore (come già fatto) | DEC-24 |
 | Ai 18 anni | Finché l'R/S non decide, i genitori continuano a vedere quello che vedevano (senza modificarlo). Avviso all'R/S e ai genitori | DEC-26 |
-| Correzioni ai dati di BuonaStrada | Le fanno il genitore (dati suoi e dei figli), il maggiorenne (i suoi), lo staff dell'unità e i capigruppo (ragazzi dell'unità). Contatti e indirizzo tutti; nome, codice fiscale e data di nascita solo i capigruppo. I capigruppo vedono l'elenco, inoltrano loro alla segreteria e segnano "inoltrata"; la correzione si chiude quando l'importazione la ritrova in BuonaStrada | DEC-31 |
+| Correzioni ai dati di BuonaStrada | Le fanno il genitore (dati suoi e dei figli), il maggiorenne (i suoi), lo staff dell'unità e i capigruppo (ragazzi dell'unità). Contatti e indirizzo tutti; nome, codice fiscale e data di nascita solo i capigruppo. Consensi, stato socio, formazione e nomina: genitore (figli), staff dell'unità (suoi soci), capigruppo; l'amministratore tecnico corregge tutto. I capigruppo vedono l'elenco, inoltrano loro alla segreteria e segnano "inoltrata"; la correzione si chiude quando l'importazione la ritrova in BuonaStrada. Un capogruppo può scartarla con un motivo: torna il valore di prima. Email riassuntiva ai capigruppo, al massimo una al giorno | DEC-31 |
 | Percorso di formazione dei capi | Inserito a mano dal capo o da un capogruppo; da BuonaStrada solo il livello | DEC-47 |
 | Esigenze alimentari non mediche | Nella scheda personale, trattate come i dati sanitari (anche le religiose, dato particolare GDPR): stesse persone, offline al campo, registro accessi | DEC-49 |
 | Delega e diritti GDPR | La delega dei capigruppo copre l'app: si realizzano accesso, rettifica, cancellazione, esportazione, gestite dai capigruppo, che le girano al nazionale | DEC-98, DEC-102 |

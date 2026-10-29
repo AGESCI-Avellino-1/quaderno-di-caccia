@@ -109,6 +109,38 @@ CAMPI_BUONASTRADA = (
     "data_nomina",
 )
 
+# Who may correct which field (DEC-31, maintainer 2026-10-29), see
+# policy.campi_correggibili: contacts and address also by the adult member themself;
+# identity only by the capigruppo. Sex and place of birth go with identity because the
+# codice fiscale is derived from them [da verificare].
+CAMPI_CONTATTO = ("indirizzo", "civico", "comune", "provincia", "cap", "email", "cellulare")
+CAMPI_IDENTITA = ("nome", "cognome", "sesso", "data_nascita", "luogo_nascita", "codice_fiscale")
+
+ETICHETTE_CAMPI = {
+    "nome": "Nome",
+    "cognome": "Cognome",
+    "sesso": "Sesso",
+    "data_nascita": "Data di nascita",
+    "luogo_nascita": "Luogo di nascita",
+    "codice_fiscale": "Codice fiscale",
+    "indirizzo": "Indirizzo",
+    "civico": "Numero civico",
+    "comune": "Comune",
+    "provincia": "Provincia",
+    "cap": "CAP",
+    "email": "Email",
+    "cellulare": "Cellulare",
+    "stato_socio": "Stato del socio",
+    "consenso_iscrizione": "Consenso per l'iscrizione (2A)",
+    "consenso_foto": "Consenso per le foto (2B)",
+    "consenso_commerciale": "Consenso commerciale (2C)",
+    "consenso_riviste": "Consenso per le riviste",
+    "livello_formazione": "Livello di formazione",
+    "anno_ingresso_coca": "Anno di ingresso in Co.Ca.",
+    "numero_nomina": "Numero di nomina a capo",
+    "data_nomina": "Data di nomina a capo",
+}
+
 
 class TipoTutela(models.TextChoices):
     GENITORE = "GENITORE", "Genitore"
@@ -320,16 +352,24 @@ class DerogaSquadriglia(ModelloTracciato):
 
 
 class StatoCorrezione(models.TextChoices):
-    IN_ATTESA = "IN_ATTESA", "In attesa di BuonaStrada"
+    IN_ATTESA = "IN_ATTESA", "Da inoltrare alla segreteria"
+    INOLTRATA = "INOLTRATA", "Inoltrata alla segreteria"
     RECEPITA = "RECEPITA", "Recepita da BuonaStrada"
     SCARTATA = "SCARTATA", "Scartata"
+
+
+# Still "in attesa di BuonaStrada": the app value wins over imports (DEC-31).
+STATI_APERTI = (StatoCorrezione.IN_ATTESA, StatoCorrezione.INOLTRATA)
 
 
 class CorrezioneAnagrafica(ModelloTracciato):
     """A correction to a BuonaStrada-owned field made in the app (DEC-31).
 
     The corrected value is applied immediately to the Persona; while the correction
-    is pending, imports do not overwrite the field and report the difference.
+    is open, imports do not overwrite the field and report the difference. The
+    capigruppo forward it to the regional office themselves and mark it INOLTRATA; the
+    import closes it (RECEPITA) when BuonaStrada has the same value. A capogruppo may
+    discard it (SCARTATA, with a reason): the previous value comes back.
     """
 
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="correzioni")
@@ -346,6 +386,25 @@ class CorrezioneAnagrafica(ModelloTracciato):
         on_delete=models.SET_NULL,
         related_name="+",
     )
+    inoltrata_il = models.DateTimeField(null=True, blank=True)
+    inoltrata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    chiusa_il = models.DateTimeField(null=True, blank=True)
+    chiusa_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    motivo_scarto = models.TextField(blank=True)
+    # Set when the daily summary email to the capigruppo has mentioned it.
+    segnalata_il = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "correzione anagrafica"
@@ -353,11 +412,20 @@ class CorrezioneAnagrafica(ModelloTracciato):
         constraints = [
             models.UniqueConstraint(
                 fields=["persona", "campo"],
-                condition=Q(stato="IN_ATTESA"),
-                name="una_correzione_in_attesa_per_campo",
+                condition=Q(stato__in=["IN_ATTESA", "INOLTRATA"]),
+                name="una_correzione_aperta_per_campo",
             ),
         ]
+
+    def __str__(self) -> str:
+        return f"{self.persona}: {ETICHETTE_CAMPI.get(self.campo, self.campo)}"
+
+    @property
+    def aperta(self) -> bool:
+        return self.stato in STATI_APERTI
 
     def clean(self) -> None:
         if self.campo not in CAMPI_BUONASTRADA:
             raise ValidationError(f"Il campo {self.campo} non è gestito da BuonaStrada.")
+        if self.stato == StatoCorrezione.SCARTATA and not self.motivo_scarto.strip():
+            raise ValidationError("Scrivi il motivo dello scarto.")

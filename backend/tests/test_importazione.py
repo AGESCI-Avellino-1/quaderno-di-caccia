@@ -111,6 +111,25 @@ def test_correzione_in_attesa_non_sovrascritta():
     assert CorrezioneAnagrafica.objects.get().stato == "IN_ATTESA"
 
 
+def test_correzione_recepita_da_buonastrada():
+    applica(_risultato(), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    correggi_campo(giulia, "cellulare", "3339999999")
+    righe = righe_standard()
+    righe[0] = {**righe[0], "CELLULARE": "3339999999"}  # the office applied it
+
+    assert anteprima(_risultato(righe), oggi=OGGI).correzioni_recepite == [
+        "Rossi Giulia: Cellulare"
+    ]
+    assert CorrezioneAnagrafica.objects.get().stato == "IN_ATTESA"  # preview: unchanged
+
+    riepilogo = applica(_risultato(righe), oggi=OGGI)
+    assert riepilogo.differenze == []
+    correzione = CorrezioneAnagrafica.objects.get()
+    assert correzione.stato == "RECEPITA"
+    assert correzione.chiusa_il is not None
+
+
 def test_unita_assegnata_nell_app_non_sovrascritta():
     applica(_risultato(), oggi=OGGI)
     paolo = Persona.objects.get(codice_socio="9000003")

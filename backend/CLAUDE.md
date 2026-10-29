@@ -12,7 +12,7 @@ Read the root `CLAUDE.md` first.
 | `apps/core` | `anno.py` (associative year, ages, DEC-37), `date_parziali.py` (partial dates, DEC-70), `ModelloTracciato`, `FonteDato`, idempotency middleware (DEC-96) |
 | `apps/accounts` | `User` (email login, `amministratore_tecnico`), `Invito` (DEC-21, DEC-24), allauth adapters, `/io`, `/inviti`, `crea_invito` command |
 | `apps/organizzazione` | `Gruppo`, `Unita`, `Squadriglia`, `Incarico` (roles with diarchy, DEC-18; `STAFF` = the capi serving a unit, no holder limit; `clean()` checks who may hold each role); API for units, patrols, roles, `/capi` |
-| `apps/anagrafica` | `Persona` (one identity for life, DEC-57), `RelazioneTutela`, `Appartenenza`, `AppartenenzaSquadriglia`, `CorrezioneAnagrafica` (DEC-31), `fratelli()` (DEC-33) |
+| `apps/anagrafica` | `Persona` (one identity for life, DEC-57), `RelazioneTutela`, `Appartenenza`, `AppartenenzaSquadriglia`, `CorrezioneAnagrafica` (DEC-31: open = IN_ATTESA/INOLTRATA; `servizi.correggi_campo`, `scarta_correzione`), `fratelli()` (DEC-33) |
 | `apps/importazione` | BuonaStrada parser (`buonastrada.py`, pure, no DB), import service (`servizi.py`: `anteprima`/`applica`), `importa_buonastrada` command |
 | `apps/permessi/policy.py` | **The only place that decides visibility and actions** |
 | `apps/permessi/models.py` | `AccessoDatoSensibile` + `registra_accessi()`: log of reads/downloads/changes of sensitive data (DEC-101) |
@@ -71,5 +71,6 @@ Read the root `CLAUDE.md` first.
 uv run python manage.py importa_buonastrada RicercaSoci.csv            # preview
 uv run python manage.py importa_buonastrada RicercaSoci.csv --applica  # write
 uv run python manage.py crea_invito <codice_socio> <email> --capogruppo  # first start
+uv run python manage.py segnala_correzioni   # daily email to the capigruppo (cron), DEC-31
 uv run python manage.py createsuperuser   # technical admin (DEC-12): sees no educational data
 ```

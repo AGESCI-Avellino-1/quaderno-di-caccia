@@ -161,7 +161,9 @@ docker compose up -d --build
 docker compose exec web python manage.py createsuperuser
 ```
 
-Le migrazioni si applicano all'avvio del container `web`. Per il backup del database:
+Le migrazioni si applicano all'avvio del container `web`. Una volta al giorno va
+lanciato l'avviso ai capigruppo sulle correzioni da inoltrare (ad esempio da `crontab`):
+`docker compose exec -T web python manage.py segnala_correzioni`. Per il backup del database:
 `scripts/backup-db.sh` (il file contiene dati di minori: va conservato cifrato).
 
 ## Dati personali e sicurezza

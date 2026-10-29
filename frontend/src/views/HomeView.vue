@@ -1,9 +1,21 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import { api } from '@/api/qdc'
 import { useSessioneStore } from '@/stores/sessione'
 
 const sessione = useSessioneStore()
+// Capigruppo: corrections waiting to be forwarded (DEC-31). Online only; no count offline.
+const daInoltrare = ref<number | null>(null)
+onMounted(async () => {
+  if (!sessione.capogruppo) return
+  try {
+    daInoltrare.value = (await api.correzioni()).filter((c) => c.stato === 'IN_ATTESA').length
+  } catch {
+    daInoltrare.value = null
+  }
+})
 </script>
 
 <template>
@@ -32,6 +44,15 @@ const sessione = useSessioneStore()
         <RouterLink to="/gruppo" class="card card-body h-100 text-decoration-none">
           <strong>Capigruppo</strong>
           <span class="fg-2 small">Nomina il primo capogruppo del gruppo</span>
+        </RouterLink>
+      </div>
+      <div v-if="sessione.capogruppo" class="col-12 md:col-6">
+        <RouterLink to="/correzioni" class="card card-body h-100 text-decoration-none">
+          <strong>
+            Correzioni da inoltrare
+            <span v-if="daInoltrare" class="badge theme-warning ms-1">{{ daInoltrare }}</span>
+          </strong>
+          <span class="fg-2 small">Dati corretti nell'app, da mandare alla segreteria</span>
         </RouterLink>
       </div>
       <div v-if="sessione.puoImportare" class="col-12 md:col-6">

@@ -67,6 +67,10 @@ original document, with discussion, is
   Do not translate them.
 - Everything the user reads (UI, API error messages, emails): **Italian**, plain words,
   no unexplained acronyms (the users are capi and parents, not developers).
+- **Codes from the analysis** (`DEC-31`, and the question codes such as `V-02`, `N-19`,
+  `O-05`, `R-08`, `PP-D`) go only in comments and docstrings. Never in anything a user
+  can see or receive: UI, API messages, emails, labels, choices, command output, test
+  names. `scripts/controlla-codici.py` (run by `mise run lint` and CI) enforces it.
 - Conversation with the maintainer (explanations, questions, summaries): **Italian**.
   Only code and comments are in English.
 
@@ -207,7 +211,7 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 
 | Phase | Content | Status |
 | --- | --- | --- |
-| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). Missing: correction workflow to capigruppo (DEC-31), adult-consent alerts at 18 (DEC-26), GDPR rights (DEC-102) |
+| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **in progress** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31). Missing: adult-consent alerts at 18 (DEC-26), GDPR rights (DEC-102), patrol contacts (DEC-13), non-medical dietary needs (DEC-49) |
 | 2. Quote e cassa | fee types, sibling discount, agevolazioni, payments, receipts, cash book on Modello D | catalog ready in `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | — |
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
@@ -242,6 +246,10 @@ verificare" in the analysis).
   always a capo or has a delegation from the capigruppo for the data. Health data still
   stays out of the admin itself; `DerogaSquadriglia.motivazione` stays out of the audit
   log.
+- Corrections (DEC-31, maintainer 2026-10-29): who corrects which field is
+  `policy.campi_correggibili`; sex and place of birth count as identity (capigruppo
+  only) because the codice fiscale derives from them `[da verificare]`. The daily
+  summary to the capigruppo is `manage.py segnala_correzioni`, run by the host's cron.
 - Every account has its own email: a child is not invited with a parent's address
   (maintainer, 2026-10-28, refines DEC-25; `accounts/api.crea_invito`).
 - After 18 (DEC-26, maintainer 2026-10-29): until the R/S decides, parents keep seeing
@@ -251,8 +259,7 @@ verificare" in the analysis).
   every member sees the others' phone, the CSQ also the parents'; VCSQ like a member;
   hideable by the parent); accounts from 14 by invitation without parental approval
   (DEC-24, as built); non-medical dietary needs in the personal file, treated like
-  health data (DEC-49); corrections workflow (DEC-31: who corrects what, list with
-  "inoltrata" mark for the capigruppo); capi training entered by hand (DEC-47); the
+  health data (DEC-49); capi training entered by hand (DEC-47); the
   capigruppo delegation covers the app (DEC-98, DEC-102).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

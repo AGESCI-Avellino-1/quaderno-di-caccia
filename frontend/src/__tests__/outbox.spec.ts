@@ -132,7 +132,8 @@ describe('cache di lettura', () => {
   })
 })
 
-describe('collegamento con il server (DEC-97)', () => {
+// DEC-97
+describe('collegamento con il server', () => {
   it('la revoca del dispositivo cancella tutto', async () => {
     const scollega = collegaCassaforte()
     try {

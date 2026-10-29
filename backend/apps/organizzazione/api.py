@@ -57,7 +57,7 @@ class UnitaOut(Schema):
     id: int
     nome: str
     codice: str  # BuonaStrada code (O1, G1…), "" for units created in the app
-    nome_provvisorio: bool
+    senza_nome: bool
     tipo: str
     branca: str
     composizione: str
@@ -102,8 +102,6 @@ def _applica_unita(unita: Unita, dati: UnitaIn) -> Unita:
         unita.collegata_a = get_object_or_404(Unita, pk=dati.collegata_a, gruppo=unita.gruppo)
     else:
         unita.collegata_a = None
-    if dati.nome.strip() != unita.nome:
-        unita.nome_provvisorio = False  # the group gave its name
     unita.nome = dati.nome.strip()
     unita.tipo = dati.tipo
     unita.composizione = dati.composizione
@@ -300,8 +298,8 @@ def dettaglio_unita(request, unita_id: int):
         "squadriglie": squadriglie,
         "senza_squadriglia": list(senza_squadriglia),
         "avvisi": (
-            ["Il nome è provvisorio, dato dall'importazione: dai all'unità il suo nome."]
-            if unita.nome_provvisorio
+            ["L'unità non ha ancora un nome: daglielo con «Modifica»."]
+            if unita.senza_nome
             else []
         )
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])

@@ -37,8 +37,8 @@ def test_applica_crea_soci_unita_genitori():
     assert not Persona.objects.filter(codice_socio="9000005").exists()
     assert sorted(riepilogo.unita_create) == sorted(
         [
-            "Reparto Femminile (N1)",
-            "Reparto Maschile (M1)",
+            "Reparto (N1)",
+            "Reparto (M1)",
             "Clan/Fuoco (T1)",
             "Comunità Capi (G1)",
         ]
@@ -219,7 +219,7 @@ def test_scelta_app_mantiene_la_correzione():
 
 def test_scelta_buonastrada_per_l_unita():
     paolo = _paolo_nel_clan_bis()
-    clan = Unita.objects.get(tipo=TipoUnita.CLAN_FUOCO, nome__icontains="clan", codice_unita__gt="")
+    clan = Unita.objects.get(tipo=TipoUnita.CLAN_FUOCO, codice_unita="T")
     chiave = f"{paolo.pk}:unita:RAGAZZO"
     riepilogo = applica(_risultato(), oggi=OGGI, scelte={chiave: "BUONASTRADA"})
     assert Appartenenza.objects.attive(OGGI).get(persona=paolo).unita == clan
@@ -307,25 +307,28 @@ def test_a_parita_di_data_vince_l_app():
     assert giulia.pk
 
 
-def test_nome_unita_con_accenti_e_codice():
+def test_nome_unita_tipo_nome_codice():
     applica(_risultato(), oggi=OGGI)
     coca = Unita.objects.get(tipo=TipoUnita.COMUNITA_CAPI)
-    assert coca.nome == ""  # optional for the Co.Ca. only
-    assert coca.codice == "G1"
+    assert coca.nome == "" and coca.codice == "G1"
     assert str(coca) == "Comunità Capi (G1)"
+    coca.nome = "Fenice"
+    assert str(coca) == "Comunità Capi Fenice (G1)"
 
 
-def test_nome_provvisorio_delle_unita_importate():
+def test_unita_importate_senza_nome():
     from django.test import Client
 
     from tests.conftest import crea_capo
 
     applica(_risultato(), oggi=OGGI)
-    reparto = Unita.objects.get(tipo=TipoUnita.REPARTO, nome="Reparto Femminile")
+    reparto = Unita.objects.get(tipo=TipoUnita.REPARTO, codice_unita="N")
     coca = Unita.objects.get(tipo=TipoUnita.COMUNITA_CAPI)
-    assert reparto.nome_provvisorio and not coca.nome_provvisorio
+    assert reparto.senza_nome and not coca.senza_nome  # the Co.Ca. may have no name
     capo = crea_capo("Carlo", "Prova", "carlo@example.invalid")
     client = Client()
     client.force_login(capo.utente)
     avvisi = client.get(f"/api/v1/unita/{reparto.pk}").json()["avvisi"]
-    assert any("provvisorio" in a for a in avvisi)
+    assert any("non ha ancora un nome" in a for a in avvisi)
+    reparto.nome = "Millennium"
+    assert str(reparto) == "Reparto Millennium (N1)"

@@ -72,9 +72,13 @@ describe('valoreLeggibile', () => {
 
 describe('nomeUnita', () => {
   it('adds the BuonaStrada code; a Co.Ca. without a name shows its type', () => {
-    expect(nomeUnita({ nome: 'Reparto Millennium', codice: 'O1' })).toBe('Reparto Millennium (O1)')
+    expect(nomeUnita({ nome: 'Hirpinia', codice: 'T1', tipo: 'CLAN_FUOCO' })).toBe(
+      'Clan/Fuoco Hirpinia (T1)',
+    )
     expect(nomeUnita({ nome: '', codice: 'G1', tipo: 'COMUNITA_CAPI' })).toBe('Comunità Capi (G1)')
-    expect(nomeUnita({ nome: 'Noviziato', codice: '' })).toBe('Noviziato')
+    expect(nomeUnita({ nome: 'Arcobaleno', codice: '', tipo: 'NOVIZIATO' })).toBe(
+      'Noviziato Arcobaleno',
+    )
   })
 })
 

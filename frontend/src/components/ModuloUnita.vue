@@ -39,7 +39,7 @@ const dati = reactive<UnitaIn>(
         v-model="dati.nome"
         class="form-control form-control-sm"
         :required="dati.tipo !== 'COMUNITA_CAPI'"
-        placeholder="Es. Reparto Millennium"
+        placeholder="Es. Millennium"
       />
     </div>
     <div class="col-6 md:col-3">

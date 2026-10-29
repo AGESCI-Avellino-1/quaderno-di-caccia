@@ -97,8 +97,8 @@ export interface Unita {
   nome: string
   /** BuonaStrada code (O1, G1…): unique, unlike the name chosen by the group. */
   codice: string
-  /** Name given by the import from the unit type, until the group names it. */
-  nome_provvisorio?: boolean
+  /** Created by the import: the group has still to name it. */
+  senza_nome?: boolean
   tipo: string
   branca: string
   composizione: string
@@ -136,11 +136,12 @@ export const AMBIENTI: Scelta[] = [
   { valore: 'BOSCO', etichetta: 'Bosco' },
 ]
 
-/** "Reparto Millennium (O1)": the name may repeat, the code does not. Only the Co.Ca.
- * may have no name: then its type stands for it, "Comunità Capi (G1)". */
-export function nomeUnita(u: { nome: string; codice?: string; tipo?: string }): string {
-  const nome = u.nome || TIPI_UNITA.find((t) => t.valore === u.tipo)?.etichetta || ''
-  return u.codice ? `${nome} (${u.codice})` : nome
+/** Type, name, code: "Clan/Fuoco Hirpinia (T1)" (maintainer, 2026-10-29). The name is
+ * the group's and may repeat or be missing; the BuonaStrada code does not. */
+export function nomeUnita(u: { nome: string; codice?: string; tipo: string }): string {
+  const tipo = TIPI_UNITA.find((t) => t.valore === u.tipo)?.etichetta ?? ''
+  const testo = `${tipo} ${u.nome}`.trim()
+  return u.codice ? `${testo} (${u.codice})` : testo
 }
 
 export interface UnitaIn {

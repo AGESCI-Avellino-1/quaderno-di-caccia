@@ -126,6 +126,14 @@ const iniziale = (u: Unita): UnitaIn => ({
     </p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
+    <div v-if="dettaglio?.avvisi.length" class="alert theme-warning small" role="status">
+      <div>
+        <strong>Da controllare</strong>
+        <ul class="mb-0 ps-5">
+          <li v-for="(a, i) in dettaglio.avvisi" :key="i">{{ a }}</li>
+        </ul>
+      </div>
+    </div>
 
     <div v-if="modifica" class="card card-body mb-5">
       <ModuloUnita
@@ -197,14 +205,6 @@ const iniziale = (u: Unita): UnitaIn => ({
           </button>
         </div>
       </form>
-      <div v-if="dettaglio.avvisi.length" class="alert theme-warning small" role="status">
-        <div>
-          <strong>Da controllare</strong>
-          <ul class="mb-0 ps-5">
-            <li v-for="(a, i) in dettaglio.avvisi" :key="i">{{ a }}</li>
-          </ul>
-        </div>
-      </div>
       <p v-if="!dettaglio.squadriglie.length" class="fg-2 small mb-0">Nessuna squadriglia.</p>
       <div
         v-for="s in dettaglio.squadriglie"

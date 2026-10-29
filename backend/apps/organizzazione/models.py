@@ -76,9 +76,6 @@ class Unita(ModelloTracciato):
     # Given by the group, not by BuonaStrada, and it may repeat (e.g. "Reparto
     # Millennium"); optional only for the Co.Ca. (maintainer, 2026-10-29).
     nome = models.CharField(max_length=120, blank=True)
-    # Given by the import from the unit type: shown as a warning until the group names
-    # the unit (maintainer, 2026-10-29).
-    nome_provvisorio = models.BooleanField(default=False)
     tipo = models.CharField(max_length=20, choices=TipoUnita.choices)
     composizione = models.CharField(max_length=1, choices=Composizione.choices)
     ambiente = models.CharField(max_length=10, choices=Ambiente.choices, default=Ambiente.NESSUNO)
@@ -105,9 +102,15 @@ class Unita(ModelloTracciato):
         ]
 
     def __str__(self) -> str:
-        # The name is the group's and may repeat; the BuonaStrada code does not.
-        nome = self.nome or self.get_tipo_display()
-        return f"{nome} ({self.codice})" if self.codice else nome
+        """Type, name, code: "Clan/Fuoco Hirpinia (T1)" (maintainer, 2026-10-29). The
+        name is the group's and may repeat or be missing; the BuonaStrada code does not."""
+        testo = f"{self.get_tipo_display()} {self.nome}".strip()
+        return f"{testo} ({self.codice})" if self.codice else testo
+
+    @property
+    def senza_nome(self) -> bool:
+        """Created by the import: the group has still to name it (the Co.Ca. may not)."""
+        return not self.nome.strip() and self.tipo != TipoUnita.COMUNITA_CAPI
 
     def clean(self) -> None:
         if not self.nome.strip() and self.tipo != TipoUnita.COMUNITA_CAPI:

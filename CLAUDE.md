@@ -270,8 +270,9 @@ verificare" in the analysis).
   code and closes the registration (`iscrizioni.servizi.recepisci`).
 - Units (maintainer 2026-10-29): `nome` is the group's, may repeat, required except for
   the Co.Ca.; the BuonaStrada code (`Unita.codice`, CUN + progressive, e.g. O1, G1) is
-  unique and shown next to it everywhere (`str(unita)`, `nomeUnita()` in the PWA).
-  Units created by the import have `nome_provvisorio` (a warning) until renamed.
+  unique. A unit is always shown as type, name, code: "Clan/Fuoco Hirpinia (T1)"
+  (`str(unita)`, `nomeUnita()` in the PWA). Units created by the import have no name
+  (`Unita.senza_nome`, a warning on the unit page) until the group gives one.
 - Decisions of 28–29/10 without a DEC code yet: draft for the analysis in
   `docs/analisi/decisioni-da-numerare.md`.
 - Import differences (maintainer 2026-10-29): when the app and BuonaStrada disagree (open

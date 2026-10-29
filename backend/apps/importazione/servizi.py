@@ -292,13 +292,6 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
     return persona
 
 
-def _con_accenti(testo: str) -> str:
-    """BuonaStrada writes accented capitals as a backtick: COMUNITA` CAPI."""
-    for vocale, accentata in zip("AEIOU", "ÀÈÌÒÙ", strict=True):
-        testo = testo.replace(f"{vocale}`", accentata)
-    return testo.replace("`", "'")
-
-
 def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
     if riga.tipo_unita is None:
         return None
@@ -315,14 +308,9 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
     if unita is None:
         unita = Unita.objects.create(
             gruppo=gruppo,
-            # BuonaStrada has no unit names: a provisional one from the type, that the
-            # group replaces; the Co.Ca. may stay without (maintainer, 2026-10-29).
-            nome=(
-                ""
-                if riga.tipo_unita == TipoUnita.COMUNITA_CAPI
-                else _con_accenti(riga.tipo_unita_testo).title()
-            ),
-            nome_provvisorio=riga.tipo_unita != TipoUnita.COMUNITA_CAPI,
+            # BuonaStrada has no unit names: the group gives one (shown as a warning
+            # until then); the Co.Ca. may stay without (maintainer, 2026-10-29).
+            nome="",
             tipo=riga.tipo_unita,
             composizione=riga.composizione,
             ambiente=riga.ambiente,

@@ -1,9 +1,14 @@
 name: CI
 
 on:
+  # Documentation-only changes do not need a run (saves minutes on a private repo).
   push:
     branches: [main]
+    paths-ignore: ["**/*.md", "docs/**"]
   pull_request:
+    paths-ignore: ["**/*.md", "docs/**"]
+  # Run by hand from the Actions tab (or `gh workflow run CI`).
+  workflow_dispatch:
 
 permissions:
   contents: read

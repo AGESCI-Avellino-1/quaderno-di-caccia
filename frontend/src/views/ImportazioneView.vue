@@ -40,15 +40,15 @@ async function applica() {
 
 <template>
   <section>
-    <h1 class="h4 mb-3">Importa da BuonaStrada</h1>
-    <p class="small text-body-secondary">
+    <h1 class="h4 mb-5">Importa da BuonaStrada</h1>
+    <p class="small fg-2">
       Su BuonaStrada: <em>Ricerca soci</em> → esporta in CSV. Il file resta riservato: lo vede solo
       chi può importare.
     </p>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div class="d-flex flex-wrap gap-2 mb-3">
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div class="d-flex flex-wrap gap-3 mb-5">
       <input class="form-control" type="file" accept=".csv,text/csv" @change="scegli" />
-      <button class="btn btn-primary" :disabled="!file || inCorso" @click="anteprima">
+      <button class="btn btn-solid theme-primary" :disabled="!file || inCorso" @click="anteprima">
         Anteprima
       </button>
     </div>
@@ -56,7 +56,7 @@ async function applica() {
     <template v-if="esito">
       <div
         class="alert"
-        :class="esito.stato === 'APPLICATA' ? 'alert-success' : 'alert-info'"
+        :class="esito.stato === 'APPLICATA' ? 'theme-success' : 'theme-info'"
         role="status"
       >
         {{
@@ -76,7 +76,7 @@ async function applica() {
 
       <template v-if="esito.riepilogo.differenze.length">
         <h2 class="h6">Differenze da verificare</h2>
-        <p class="small text-body-secondary">
+        <p class="small fg-2">
           Dati corretti nell'app e diversi da BuonaStrada: l'app non li sovrascrive. Vanno allineati
           su BuonaStrada.
         </p>
@@ -99,7 +99,7 @@ async function applica() {
 
       <button
         v-if="esito.stato === 'ANTEPRIMA'"
-        class="btn btn-primary"
+        class="btn btn-solid theme-primary"
         :disabled="inCorso"
         @click="applica"
       >

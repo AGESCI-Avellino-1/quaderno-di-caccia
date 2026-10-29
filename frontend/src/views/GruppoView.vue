@@ -25,8 +25,8 @@ const capi = () => api.capi()
 
 <template>
   <section>
-    <h1 class="h4 mb-3">Capigruppo e tesorieri di gruppo</h1>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+    <h1 class="h4 mb-5">Capigruppo e tesorieri di gruppo</h1>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
     <div v-if="dati" class="card card-body">
       <ElencoIncarichi

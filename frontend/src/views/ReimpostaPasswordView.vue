@@ -24,16 +24,16 @@ async function reimposta() {
 
 <template>
   <section class="mx-auto" style="max-width: 26rem">
-    <h1 class="h4 mb-3">Reimposta password</h1>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-if="fatto" class="alert alert-success" role="status">
-      {{ fatto }} <RouterLink to="/accesso">Torna all'accesso</RouterLink>
+    <h1 class="h4 mb-5">Reimposta password</h1>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-if="fatto" class="alert theme-success" role="status">
+      <div>{{ fatto }} <RouterLink to="/accesso">Torna all'accesso</RouterLink></div>
     </div>
-    <form v-else-if="!props.chiave" class="vstack gap-2" @submit.prevent="richiedi">
+    <form v-else-if="!props.chiave" class="vstack gap-3" @submit.prevent="richiedi">
       <input v-model="email" class="form-control" type="email" placeholder="Email" required />
-      <button class="btn btn-primary" :disabled="inCorso">Invia il link</button>
+      <button class="btn btn-solid theme-primary" :disabled="inCorso">Invia il link</button>
     </form>
-    <form v-else class="vstack gap-2" @submit.prevent="reimposta">
+    <form v-else class="vstack gap-3" @submit.prevent="reimposta">
       <input
         v-model="password"
         class="form-control"
@@ -43,7 +43,7 @@ async function reimposta() {
         minlength="8"
         required
       />
-      <button class="btn btn-primary" :disabled="inCorso">Salva</button>
+      <button class="btn btn-solid theme-primary" :disabled="inCorso">Salva</button>
     </form>
   </section>
 </template>

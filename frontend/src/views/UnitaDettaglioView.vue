@@ -106,13 +106,13 @@ const iniziale = (u: Unita): UnitaIn => ({
 
 <template>
   <section v-if="unita && dettaglio" :data-branca="temaDellaBranca(unita.branca)">
-    <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+    <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
       <h1 class="h4 mb-0">{{ unita.nome }}</h1>
-      <span v-if="!unita.attiva" class="badge text-bg-secondary">Chiusa</span>
+      <span v-if="!unita.attiva" class="badge theme-secondary">Chiusa</span>
       <button
         v-if="dettaglio.puo_modificare && !modifica"
         type="button"
-        class="btn btn-sm btn-outline-primary ms-auto"
+        class="btn btn-sm btn-outline theme-primary ms-auto"
         @click="apriModifica"
       >
         Modifica
@@ -120,14 +120,12 @@ const iniziale = (u: Unita): UnitaIn => ({
     </div>
     <p class="small">
       <RouterLink :to="{ name: 'persone', query: { unita: unita.id } }">Chi ne fa parte</RouterLink>
-      <span v-if="unita.nota_collegamento" class="text-body-secondary">
-        · {{ unita.nota_collegamento }}</span
-      >
+      <span v-if="unita.nota_collegamento" class="fg-2"> · {{ unita.nota_collegamento }}</span>
     </p>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
 
-    <div v-if="modifica" class="card card-body mb-3">
+    <div v-if="modifica" class="card card-body mb-5">
       <ModuloUnita
         :iniziale="iniziale(unita)"
         :altre="altre"
@@ -138,7 +136,7 @@ const iniziale = (u: Unita): UnitaIn => ({
       />
     </div>
 
-    <section class="card card-body mb-3">
+    <section class="card card-body mb-5">
       <h2 class="h5">Staff e incarichi</h2>
       <ElencoIncarichi
         :incarichi="dettaglio.incarichi"
@@ -150,20 +148,20 @@ const iniziale = (u: Unita): UnitaIn => ({
       />
     </section>
 
-    <section v-if="unita.tipo === 'REPARTO'" class="card card-body mb-3">
-      <div class="d-flex align-items-center mb-2">
+    <section v-if="unita.tipo === 'REPARTO'" class="card card-body mb-5">
+      <div class="d-flex align-items-center mb-3">
         <h2 class="h5 mb-0">Squadriglie</h2>
         <button
           v-if="dettaglio.puo_gestire_squadriglie && !nuovaSquadriglia.aperta"
           type="button"
-          class="btn btn-sm btn-outline-primary ms-auto"
+          class="btn btn-sm btn-outline theme-primary ms-auto"
           @click="nuovaSquadriglia.aperta = true"
         >
           Nuova squadriglia
         </button>
       </div>
-      <form v-if="nuovaSquadriglia.aperta" class="row g-2 mb-3" @submit.prevent="creaSquadriglia">
-        <div class="col-12 col-sm-6">
+      <form v-if="nuovaSquadriglia.aperta" class="row g-3 mb-5" @submit.prevent="creaSquadriglia">
+        <div class="col-12 sm:col-6">
           <input
             v-model="nuovaSquadriglia.nome"
             class="form-control form-control-sm"
@@ -172,18 +170,20 @@ const iniziale = (u: Unita): UnitaIn => ({
             required
           />
         </div>
-        <div class="col-6 col-sm-3">
+        <div class="col-6 sm:col-3">
           <select
             v-model="nuovaSquadriglia.sesso"
-            class="form-select form-select-sm"
+            class="form-control form-control-sm"
             aria-label="Maschile o femminile"
           >
             <option value="F">Femminile</option>
             <option value="M">Maschile</option>
           </select>
         </div>
-        <div class="col-6 col-sm-3 d-flex gap-1">
-          <button type="submit" class="btn btn-sm btn-primary" :disabled="inCorso">Crea</button>
+        <div class="col-6 sm:col-3 d-flex gap-1">
+          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+            Crea
+          </button>
           <button
             type="button"
             class="btn btn-sm btn-link"
@@ -193,27 +193,25 @@ const iniziale = (u: Unita): UnitaIn => ({
           </button>
         </div>
       </form>
-      <div v-if="dettaglio.avvisi.length" class="alert alert-warning small" role="status">
-        <strong>Da controllare</strong>
-        <ul class="mb-0 ps-3">
-          <li v-for="(a, i) in dettaglio.avvisi" :key="i">{{ a }}</li>
-        </ul>
+      <div v-if="dettaglio.avvisi.length" class="alert theme-warning small" role="status">
+        <div>
+          <strong>Da controllare</strong>
+          <ul class="mb-0 ps-5">
+            <li v-for="(a, i) in dettaglio.avvisi" :key="i">{{ a }}</li>
+          </ul>
+        </div>
       </div>
-      <p v-if="!dettaglio.squadriglie.length" class="text-body-secondary small mb-0">
-        Nessuna squadriglia.
-      </p>
+      <p v-if="!dettaglio.squadriglie.length" class="fg-2 small mb-0">Nessuna squadriglia.</p>
       <div
         v-for="s in dettaglio.squadriglie"
         :key="s.id"
-        class="border-top pt-2 mt-2"
+        class="border-top pt-3 mt-3"
         :class="{ 'opacity-75': !s.attiva }"
       >
-        <div class="d-flex align-items-center gap-2 mb-1">
+        <div class="d-flex align-items-center gap-3 mb-1">
           <strong>Sq. {{ s.nome }}</strong>
-          <span class="text-body-secondary small">{{
-            s.sesso === 'F' ? 'femminile' : 'maschile'
-          }}</span>
-          <span v-if="!s.attiva" class="badge text-bg-secondary">Chiusa</span>
+          <span class="fg-2 small">{{ s.sesso === 'F' ? 'femminile' : 'maschile' }}</span>
+          <span v-if="!s.attiva" class="badge theme-secondary">Chiusa</span>
           <button
             v-if="dettaglio.puo_gestire_squadriglie"
             type="button"
@@ -224,18 +222,18 @@ const iniziale = (u: Unita): UnitaIn => ({
             {{ s.attiva ? 'chiudi' : 'riapri' }}
           </button>
         </div>
-        <ul v-if="s.attiva" class="list-unstyled small mb-2">
+        <ul v-if="s.attiva" class="list-unstyled small mb-3">
           <li
             v-for="m in s.membri"
             :key="m.id"
-            class="d-flex align-items-center flex-wrap gap-2 py-1"
+            class="d-flex align-items-center flex-wrap gap-3 py-1"
           >
             <RouterLink :to="{ name: 'persona', params: { id: m.persona.id } }">
               {{ m.persona.nome }} {{ m.persona.cognome }}
             </RouterLink>
             <select
               v-if="dettaglio.puo_gestire_squadriglie"
-              class="form-select form-select-sm w-auto ms-auto"
+              class="form-control form-control-sm w-auto ms-auto"
               :aria-label="`Sposta ${m.persona.nome} ${m.persona.cognome}`"
               :disabled="inCorso"
               @change="sposta($event, m.persona.id, m.id)"
@@ -251,7 +249,7 @@ const iniziale = (u: Unita): UnitaIn => ({
               <option value="fuori">Nessuna squadriglia</option>
             </select>
           </li>
-          <li v-if="!s.membri.length" class="text-body-secondary">Nessun membro.</li>
+          <li v-if="!s.membri.length" class="fg-2">Nessun membro.</li>
         </ul>
         <ElencoIncarichi
           v-if="s.attiva"
@@ -263,20 +261,20 @@ const iniziale = (u: Unita): UnitaIn => ({
           @cambiato="carica()"
         />
       </div>
-      <div v-if="dettaglio.senza_squadriglia.length" class="border-top pt-2 mt-2">
+      <div v-if="dettaglio.senza_squadriglia.length" class="border-top pt-3 mt-3">
         <strong>Senza squadriglia</strong>
         <ul class="list-unstyled small mb-0">
           <li
             v-for="p in dettaglio.senza_squadriglia"
             :key="p.id"
-            class="d-flex align-items-center flex-wrap gap-2 py-1"
+            class="d-flex align-items-center flex-wrap gap-3 py-1"
           >
             <RouterLink :to="{ name: 'persona', params: { id: p.id } }">
               {{ p.nome }} {{ p.cognome }}
             </RouterLink>
             <select
               v-if="dettaglio.puo_gestire_squadriglie && squadriglieAttive.length"
-              class="form-select form-select-sm w-auto ms-auto"
+              class="form-control form-control-sm w-auto ms-auto"
               :aria-label="`Metti ${p.nome} ${p.cognome} in una squadriglia`"
               :disabled="inCorso"
               @change="sposta($event, p.id)"
@@ -291,5 +289,5 @@ const iniziale = (u: Unita): UnitaIn => ({
       </div>
     </section>
   </section>
-  <div v-else-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+  <div v-else-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
 </template>

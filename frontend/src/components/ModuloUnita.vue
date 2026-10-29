@@ -29,43 +29,43 @@ const dati = reactive<UnitaIn>(
 </script>
 
 <template>
-  <form class="row g-2" @submit.prevent="emit('salva', { ...dati })">
-    <div class="col-12 col-md-6">
+  <form class="row g-3" @submit.prevent="emit('salva', { ...dati })">
+    <div class="col-12 md:col-6">
       <label class="form-label small" for="unita-nome">Nome</label>
       <input id="unita-nome" v-model="dati.nome" class="form-control form-control-sm" required />
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 md:col-3">
       <label class="form-label small" for="unita-tipo">Tipo</label>
-      <select id="unita-tipo" v-model="dati.tipo" class="form-select form-select-sm">
+      <select id="unita-tipo" v-model="dati.tipo" class="form-control form-control-sm">
         <option v-for="t in TIPI_UNITA" :key="t.valore" :value="t.valore">{{ t.etichetta }}</option>
       </select>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 md:col-3">
       <label class="form-label small" for="unita-composizione">Composizione</label>
       <select
         id="unita-composizione"
         v-model="dati.composizione"
-        class="form-select form-select-sm"
+        class="form-control form-control-sm"
       >
         <option v-for="c in COMPOSIZIONI" :key="c.valore" :value="c.valore">
           {{ c.etichetta }}
         </option>
       </select>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 md:col-3">
       <label class="form-label small" for="unita-ambiente">Ambiente</label>
-      <select id="unita-ambiente" v-model="dati.ambiente" class="form-select form-select-sm">
+      <select id="unita-ambiente" v-model="dati.ambiente" class="form-control form-control-sm">
         <option v-for="a in AMBIENTI" :key="a.valore" :value="a.valore">{{ a.etichetta }}</option>
       </select>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 md:col-3">
       <label class="form-label small" for="unita-collegata">Collegata a</label>
-      <select id="unita-collegata" v-model="dati.collegata_a" class="form-select form-select-sm">
+      <select id="unita-collegata" v-model="dati.collegata_a" class="form-control form-control-sm">
         <option :value="null">Nessuna</option>
         <option v-for="u in altre" :key="u.id" :value="u.id">{{ u.nome }}</option>
       </select>
     </div>
-    <div v-if="dati.collegata_a" class="col-12 col-md-6">
+    <div v-if="dati.collegata_a" class="col-12 md:col-6">
       <label class="form-label small" for="unita-nota">Nota sul collegamento</label>
       <input
         id="unita-nota"
@@ -75,13 +75,13 @@ const dati = reactive<UnitaIn>(
       />
     </div>
     <div v-if="iniziale" class="col-12">
-      <div class="form-check">
-        <input id="unita-attiva" v-model="dati.attiva" type="checkbox" class="form-check-input" />
-        <label class="form-check-label small" for="unita-attiva">Unità attiva</label>
+      <div class="form-field">
+        <input id="unita-attiva" v-model="dati.attiva" type="checkbox" class="check" />
+        <label class="small" for="unita-attiva">Unità attiva</label>
       </div>
     </div>
-    <div class="col-12 d-flex gap-2">
-      <button type="submit" class="btn btn-sm btn-primary" :disabled="inCorso">
+    <div class="col-12 d-flex gap-3">
+      <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
         {{ etichetta }}
       </button>
       <button type="button" class="btn btn-sm btn-link" @click="emit('annulla')">Annulla</button>

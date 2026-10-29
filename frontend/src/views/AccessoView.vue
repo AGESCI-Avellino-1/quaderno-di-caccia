@@ -58,11 +58,11 @@ const provider = (nome: 'google' | 'apple') =>
 
 <template>
   <section class="mx-auto" style="max-width: 26rem">
-    <h1 class="h4 mb-3">Accedi</h1>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-if="avviso" class="alert alert-info" role="status">{{ avviso }}</div>
+    <h1 class="h4 mb-5">Accedi</h1>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-if="avviso" class="alert theme-info" role="status">{{ avviso }}</div>
 
-    <form v-if="secondoFattore" class="vstack gap-2" @submit.prevent="confermaTotp">
+    <form v-if="secondoFattore" class="vstack gap-3" @submit.prevent="confermaTotp">
       <label class="form-label" for="totp">Codice dell'app di autenticazione</label>
       <input
         id="totp"
@@ -72,21 +72,21 @@ const provider = (nome: 'google' | 'apple') =>
         autocomplete="one-time-code"
         required
       />
-      <button class="btn btn-primary" :disabled="inCorso">Conferma</button>
+      <button class="btn btn-solid theme-primary" :disabled="inCorso">Conferma</button>
     </form>
 
     <template v-else>
       <button
         v-if="passkeyDisponibile"
         type="button"
-        class="btn btn-primary w-100 mb-3"
+        class="btn btn-solid theme-primary w-100 mb-5"
         :disabled="inCorso"
         @click="passkey"
       >
         Accedi con passkey
       </button>
 
-      <ul class="nav nav-tabs mb-3">
+      <ul class="nav nav-tabs mb-5">
         <li class="nav-item">
           <button
             type="button"
@@ -109,7 +109,7 @@ const provider = (nome: 'google' | 'apple') =>
         </li>
       </ul>
 
-      <form v-if="modo === 'password'" class="vstack gap-2" @submit.prevent="accedi">
+      <form v-if="modo === 'password'" class="vstack gap-3" @submit.prevent="accedi">
         <input
           v-model="email"
           class="form-control"
@@ -126,13 +126,13 @@ const provider = (nome: 'google' | 'apple') =>
           autocomplete="current-password"
           required
         />
-        <button class="btn btn-primary" :disabled="inCorso">Accedi</button>
+        <button class="btn btn-solid theme-primary" :disabled="inCorso">Accedi</button>
         <RouterLink :to="{ name: 'reimposta-password' }" class="small"
           >Password dimenticata?</RouterLink
         >
       </form>
 
-      <form v-else-if="!codiceInviato" class="vstack gap-2" @submit.prevent="chiediCodice">
+      <form v-else-if="!codiceInviato" class="vstack gap-3" @submit.prevent="chiediCodice">
         <input
           v-model="email"
           class="form-control"
@@ -141,10 +141,10 @@ const provider = (nome: 'google' | 'apple') =>
           autocomplete="username"
           required
         />
-        <button class="btn btn-primary" :disabled="inCorso">Inviami il codice</button>
+        <button class="btn btn-solid theme-primary" :disabled="inCorso">Inviami il codice</button>
       </form>
 
-      <form v-else class="vstack gap-2" @submit.prevent="confermaCodice">
+      <form v-else class="vstack gap-3" @submit.prevent="confermaCodice">
         <p class="small mb-1">Abbiamo inviato un codice a {{ email }}.</p>
         <input
           v-model="codice"
@@ -153,21 +153,19 @@ const provider = (nome: 'google' | 'apple') =>
           autocomplete="one-time-code"
           required
         />
-        <button class="btn btn-primary" :disabled="inCorso">Accedi</button>
+        <button class="btn btn-solid theme-primary" :disabled="inCorso">Accedi</button>
       </form>
 
       <hr />
-      <div class="vstack gap-2">
-        <button type="button" class="btn btn-outline-secondary" @click="provider('google')">
+      <div class="vstack gap-3">
+        <button type="button" class="btn btn-outline theme-secondary" @click="provider('google')">
           Accedi con Google
         </button>
-        <button type="button" class="btn btn-outline-secondary" @click="provider('apple')">
+        <button type="button" class="btn btn-outline theme-secondary" @click="provider('apple')">
           Accedi con Apple
         </button>
       </div>
-      <p class="small text-body-secondary mt-3">
-        Non hai un account? Ti serve un invito dai capi del tuo gruppo.
-      </p>
+      <p class="small fg-2 mt-5">Non hai un account? Ti serve un invito dai capi del tuo gruppo.</p>
     </template>
   </section>
 </template>

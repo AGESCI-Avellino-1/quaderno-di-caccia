@@ -58,18 +58,18 @@ async function esciECancella() {
 
 <template>
   <section class="mx-auto text-center" style="max-width: 22rem">
-    <h1 class="h4 mb-3">App bloccata</h1>
+    <h1 class="h4 mb-5">App bloccata</h1>
     <p class="small">Inserisci il PIN per vedere i dati salvati su questo telefono.</p>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <button
       v-if="biometriaAttiva"
       type="button"
-      class="btn btn-primary w-100 mb-3"
+      class="btn btn-solid theme-primary w-100 mb-5"
       @click="conBiometria"
     >
       Sblocca con impronta o volto
     </button>
-    <form class="vstack gap-2" @submit.prevent="conPin">
+    <form class="vstack gap-3" @submit.prevent="conPin">
       <input
         v-model="pin"
         class="form-control form-control-lg text-center"
@@ -80,11 +80,11 @@ async function esciECancella() {
         aria-label="PIN"
         required
       />
-      <button class="btn btn-primary" :disabled="inCorso || !pin">
+      <button class="btn btn-solid theme-primary" :disabled="inCorso || !pin">
         {{ inCorso ? 'Verifica…' : 'Sblocca' }}
       </button>
     </form>
-    <button type="button" class="btn btn-link btn-sm mt-3" @click="esciECancella">
+    <button type="button" class="btn btn-link btn-sm mt-5" @click="esciECancella">
       Non sei tu? Esci e cancella i dati da questo telefono
     </button>
   </section>

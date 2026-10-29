@@ -64,29 +64,29 @@ const oggi = () => new Date().toLocaleDateString('sv')
 </script>
 
 <template>
-  <section v-if="visibile && stato" class="card card-body mb-3">
+  <section v-if="visibile && stato" class="card card-body mb-5">
     <div class="d-flex align-items-center">
       <h2 class="h5 mb-0">Eccezioni sulla squadriglia</h2>
       <button
         v-if="puoRegistrare && !aperto"
         type="button"
-        class="btn btn-sm btn-outline-primary ms-auto"
+        class="btn btn-sm btn-outline theme-primary ms-auto"
         @click="apri"
       >
         Registra
       </button>
     </div>
-    <p class="form-text mb-2">
+    <p class="form-text mb-3">
       Decise dalla Co.Ca., visibili solo ai capi. Ogni lettura resta nel registro degli accessi.
     </p>
-    <div v-if="errore" class="alert alert-danger py-2 small" role="alert">{{ errore }}</div>
+    <div v-if="errore" class="alert theme-danger py-3 small" role="alert">{{ errore }}</div>
 
-    <div v-for="d in stato.deroghe" :key="d.id" class="border-top pt-2 mt-1 small">
-      <div class="d-flex flex-wrap align-items-baseline gap-2">
+    <div v-for="d in stato.deroghe" :key="d.id" class="border-top pt-3 mt-1 small">
+      <div class="d-flex flex-wrap align-items-baseline gap-3">
         <strong>Squadriglie {{ d.squadriglie_ammesse.toLowerCase() }}</strong>
         <span>di {{ d.reparto }}</span>
-        <span v-if="d.valida" class="badge text-bg-success">In vigore</span>
-        <span v-else class="badge text-bg-secondary">Non in vigore</span>
+        <span v-if="d.valida" class="badge theme-success">In vigore</span>
+        <span v-else class="badge theme-secondary">Non in vigore</span>
         <template v-if="stato.puo_gestire && d.valida">
           <button
             v-if="daRevocare !== d.id"
@@ -100,7 +100,7 @@ const oggi = () => new Date().toLocaleDateString('sv')
             Revocare da oggi?
             <button
               type="button"
-              class="btn btn-sm btn-danger py-0"
+              class="btn btn-sm btn-solid theme-danger py-0"
               :disabled="inCorso"
               @click="revoca(d.id)"
             >
@@ -112,7 +112,7 @@ const oggi = () => new Date().toLocaleDateString('sv')
           </span>
         </template>
       </div>
-      <div class="text-body-secondary">
+      <div class="fg-2">
         Decisa in Co.Ca. il {{ data(d.data_decisione) }}
         <template v-if="d.registrata_da">, registrata da {{ d.registrata_da }}</template>
         <template v-if="d.revocata_il">, revocata il {{ data(d.revocata_il) }}</template>
@@ -123,23 +123,23 @@ const oggi = () => new Date().toLocaleDateString('sv')
       </details>
     </div>
 
-    <form v-if="aperto" class="row g-2 mt-1" @submit.prevent="registra">
-      <div class="col-12 col-sm-6">
+    <form v-if="aperto" class="row g-3 mt-1" @submit.prevent="registra">
+      <div class="col-12 sm:col-6">
         <label class="form-label small" for="deroga-reparto">Reparto</label>
-        <select id="deroga-reparto" v-model="modulo.reparto" class="form-select form-select-sm">
+        <select id="deroga-reparto" v-model="modulo.reparto" class="form-control form-control-sm">
           <option v-for="r in stato.reparti" :key="r.valore" :value="r.valore">
             {{ r.etichetta }}
           </option>
         </select>
       </div>
-      <div class="col-6 col-sm-3">
+      <div class="col-6 sm:col-3">
         <label class="form-label small" for="deroga-sesso">Può entrare nelle squadriglie</label>
-        <select id="deroga-sesso" v-model="modulo.sesso" class="form-select form-select-sm">
+        <select id="deroga-sesso" v-model="modulo.sesso" class="form-control form-control-sm">
           <option value="F">femminili</option>
           <option value="M">maschili</option>
         </select>
       </div>
-      <div class="col-6 col-sm-3">
+      <div class="col-6 sm:col-3">
         <label class="form-label small" for="deroga-data">Decisa in Co.Ca. il</label>
         <input
           id="deroga-data"
@@ -163,8 +163,10 @@ const oggi = () => new Date().toLocaleDateString('sv')
           Scrivi solo quello che serve: è un dato delicato, lo leggono tutti i capi.
         </p>
       </div>
-      <div class="col-12 d-flex gap-2">
-        <button type="submit" class="btn btn-sm btn-primary" :disabled="inCorso">Registra</button>
+      <div class="col-12 d-flex gap-3">
+        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+          Registra
+        </button>
         <button type="button" class="btn btn-sm btn-link" @click="aperto = false">Annulla</button>
       </div>
     </form>

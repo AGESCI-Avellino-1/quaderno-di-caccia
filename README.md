@@ -190,8 +190,7 @@ aprire una issue pubblica.
 ## Licenze
 
 - Codice: [MIT](LICENSE) © 2026 Andrea Bruno.
-- Colori e variabili del tema (`frontend/src/theme/_palette.scss`, `_branche.scss`,
-  `_prefix.scss`): da
+- Colori e variabili del tema (`frontend/src/theme/_palette.scss`, `_branche.scss`): da
   [django-agesci-campania-theme](https://github.com/AGESCI-Campania/django-agesci-campania-theme),
   licenza MIT (copia in `frontend/src/theme/LICENSE-django-agesci-campania-theme`).
 - Carattere Titillium Web: SIL Open Font License 1.1

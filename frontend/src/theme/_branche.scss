@@ -1,13 +1,20 @@
 // =============================================================
 //  Branche / ambiti AGESCI -> colore primario
-//  Ogni "tema" rimappa le CSS custom properties di Bootstrap 5
-//  (o di CoreUI 5: il prefisso --bs-/--cui- viene da _prefix.scss)
-//  in base all'attributo [data-branca] sul tag <html> o <body>.
+//  Ogni "tema" rimappa i token "primary" di Bootstrap 6 (--bs-primary-*)
+//  e le variabili --ag-* in base all'attributo [data-branca] sul tag
+//  <html> o <body>.
+//
+//  Bootstrap 6 deriva TUTTO il colore primario da questi token:
+//  .theme-primary (bottoni, badge, alert, list-group, menu attivi…) li
+//  legge via --bs-theme-*, i link da --bs-primary-base, il focus ring da
+//  --bs-primary-focus-ring. Non servono piu' le decine di override
+//  --bs-btn-* della v2 ne' le varianti -rgb (rimosse da Bootstrap 6).
+//  Il CSS di questo tema e' fuori dai @layer di Bootstrap, quindi vince
+//  sempre sui suoi default.
 // =============================================================
 @use "sass:color";
 @use "sass:map";
 @use "palette" as p;
-@use "prefix" as pf;
 
 // Mappa: nome ambito -> colore dominante
 $branche: (
@@ -30,20 +37,23 @@ $branche: (
 
 // Genera le variabili tematiche per un dato colore primario
 @mixin tema-primario($primario) {
-  --#{pf.$prefix}primary: #{$primario};
-  --#{pf.$prefix}primary-rgb: #{color.channel($primario, "red", $space: rgb)}, #{color.channel($primario, "green", $space: rgb)}, #{color.channel($primario, "blue", $space: rgb)};
+  // Token Bootstrap 6 (il tema e' solo "chiaro": data-bs-theme="light" su <html>)
+  --bs-primary-base: #{$primario};
+  --bs-primary-bg: #{$primario};
+  --bs-primary-fg: #{$primario};
+  --bs-primary-fg-emphasis: #{color.adjust($primario, $lightness: -20%)};
+  --bs-primary-bg-subtle: #{color.adjust($primario, $lightness: 42%)};
+  --bs-primary-bg-muted: #{color.adjust($primario, $lightness: 32%)};
+  --bs-primary-border: #{color.adjust($primario, $lightness: 18%)};
+  --bs-primary-focus-ring: color-mix(in srgb, #{$primario} 50%, white);
+  --bs-primary-contrast: #{on-color($primario)};
 
+  // Variabili del tema, usate dai componenti AGESCI (header, sidebar, hero…)
   --ag-primary: #{$primario};
   --ag-primary-hover: #{color.adjust($primario, $lightness: -8%)};
   --ag-primary-active: #{color.adjust($primario, $lightness: -14%)};
   --ag-primary-subtle: #{color.adjust($primario, $lightness: 42%)};
   --ag-on-primary: #{on-color($primario)};
-
-  --#{pf.$prefix}link-color: #{$primario};
-  --#{pf.$prefix}link-color-rgb: #{color.channel($primario, "red", $space: rgb)}, #{color.channel($primario, "green", $space: rgb)}, #{color.channel($primario, "blue", $space: rgb)};
-  --#{pf.$prefix}link-hover-color: #{color.adjust($primario, $lightness: -12%)};
-
-  --#{pf.$prefix}btn-focus-shadow-rgb: #{color.channel($primario, "red", $space: rgb)}, #{color.channel($primario, "green", $space: rgb)}, #{color.channel($primario, "blue", $space: rgb)};
 }
 
 // Applica il tema di default su :root

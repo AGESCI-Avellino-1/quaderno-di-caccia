@@ -56,20 +56,20 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
 </script>
 
 <template>
-  <section v-if="stato" class="card card-body mb-3">
+  <section v-if="stato" class="card card-body mb-5">
     <h2 class="h5">Accesso all'app</h2>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-if="inviato" class="alert alert-success" role="status">{{ inviato }}</div>
-    <div v-for="s in schede()" :key="s.id" class="border-top pt-2 mt-2">
-      <div class="d-flex align-items-center flex-wrap gap-2">
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-if="inviato" class="alert theme-success" role="status">{{ inviato }}</div>
+    <div v-for="s in schede()" :key="s.id" class="border-top pt-3 mt-3">
+      <div class="d-flex align-items-center flex-wrap gap-3">
         <strong>{{ s.nome }} {{ s.cognome }}</strong>
-        <span v-if="s.id !== stato.persona.id" class="text-body-secondary small">genitore</span>
-        <span v-if="s.ha_account" class="badge text-bg-success">Ha un account</span>
-        <span v-else class="badge text-bg-secondary">Nessun account</span>
+        <span v-if="s.id !== stato.persona.id" class="fg-2 small">genitore</span>
+        <span v-if="s.ha_account" class="badge theme-success">Ha un account</span>
+        <span v-else class="badge theme-secondary">Nessun account</span>
         <button
           v-if="!s.ha_account && s.puo_invitare && aperto !== s.id"
           type="button"
-          class="btn btn-sm btn-outline-primary ms-auto"
+          class="btn btn-sm btn-outline theme-primary ms-auto"
           @click="apri(s)"
         >
           Invita
@@ -91,7 +91,7 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
         </li>
       </ul>
 
-      <form v-if="aperto === s.id" class="mt-2" @submit.prevent="invia(s)">
+      <form v-if="aperto === s.id" class="mt-3" @submit.prevent="invia(s)">
         <label :for="`email-${s.id}`" class="form-label small">Email a cui mandare l'invito</label>
         <input
           :id="`email-${s.id}`"
@@ -106,13 +106,13 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
           del genitore.
         </p>
 
-        <fieldset v-if="s.richiede_consenso_genitore" class="mt-2">
+        <fieldset v-if="s.richiede_consenso_genitore" class="mt-3">
           <legend class="small fw-semibold mb-1">
             Ha meno di 14 anni: serve il consenso di un genitore
           </legend>
           <select
             v-model="modulo.consensoDa"
-            class="form-select form-select-sm mb-1"
+            class="form-control form-control-sm mb-1"
             aria-label="Genitore che dà il consenso"
             required
           >
@@ -123,7 +123,7 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
           </select>
           <select
             v-model="modulo.metodo"
-            class="form-select form-select-sm"
+            class="form-control form-control-sm"
             aria-label="Come è stato verificato"
             required
           >
@@ -134,8 +134,8 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
           </select>
         </fieldset>
 
-        <div class="d-flex gap-2 mt-2">
-          <button type="submit" class="btn btn-sm btn-primary" :disabled="inCorso">
+        <div class="d-flex gap-3 mt-3">
+          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
             Invia invito
           </button>
           <button type="button" class="btn btn-sm btn-link" @click="aperto = null">Annulla</button>

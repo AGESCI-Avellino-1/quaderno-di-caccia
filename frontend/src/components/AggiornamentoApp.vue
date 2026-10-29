@@ -9,13 +9,17 @@ const { needRefresh, updateServiceWorker } = useRegisterSW()
 <template>
   <div
     v-if="needRefresh"
-    class="toast show position-fixed bottom-0 end-0 m-3"
+    class="toast show position-fixed bottom-0 end-0 m-5"
     role="alert"
     aria-live="assertive"
   >
-    <div class="toast-body d-flex align-items-center gap-2">
+    <div class="toast-body d-flex align-items-center gap-3">
       <span>È disponibile una nuova versione.</span>
-      <button type="button" class="btn btn-sm btn-primary" @click="updateServiceWorker(true)">
+      <button
+        type="button"
+        class="btn btn-sm btn-solid theme-primary"
+        @click="updateServiceWorker(true)"
+      >
         Aggiorna
       </button>
       <button type="button" class="btn btn-sm btn-link" @click="needRefresh = false">

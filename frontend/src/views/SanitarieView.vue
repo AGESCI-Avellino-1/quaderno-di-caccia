@@ -107,43 +107,41 @@ async function salva() {
 <template>
   <section style="max-width: 44rem">
     <h1 class="h4 mb-1">Farmaci, allergie e intolleranze</h1>
-    <p class="text-body-secondary">{{ nome }}</p>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-if="esito" class="alert alert-info" role="status">{{ esito }}</div>
+    <p class="fg-2">{{ nome }}</p>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-if="esito" class="alert theme-info" role="status">{{ esito }}</div>
 
-    <form v-if="caricata" class="vstack gap-3" @submit.prevent="salva">
+    <form v-if="caricata" class="vstack gap-5" @submit.prevent="salva">
       <fieldset class="card card-body">
         <legend class="h6">Allergie e intolleranze</legend>
-        <div class="form-check mb-2">
+        <div class="form-field mb-3">
           <input
             id="nessuna-allergia"
             v-model="modulo.nessuna_allergia"
-            class="form-check-input"
+            class="check"
             type="checkbox"
             @change="nessuna('allergie', modulo.nessuna_allergia)"
           />
-          <label class="form-check-label" for="nessuna-allergia"
-            >Nessuna allergia o intolleranza</label
-          >
+          <label for="nessuna-allergia">Nessuna allergia o intolleranza</label>
         </div>
-        <div v-for="(a, i) in modulo.allergie" :key="i" class="border rounded p-2 mb-2">
-          <div class="row g-2">
-            <div class="col-6 col-md-3">
+        <div v-for="(a, i) in modulo.allergie" :key="i" class="border rounded p-3 mb-3">
+          <div class="row g-3">
+            <div class="col-6 md:col-3">
               <label class="form-label small mb-0" :for="`tipo-${i}`">Tipo</label>
-              <select :id="`tipo-${i}`" v-model="a.tipo" class="form-select form-select-sm">
+              <select :id="`tipo-${i}`" v-model="a.tipo" class="form-control form-control-sm">
                 <option value="ALLERGIA">Allergia</option>
                 <option value="INTOLLERANZA">Intolleranza</option>
               </select>
             </div>
-            <div class="col-6 col-md-4">
+            <div class="col-6 md:col-4">
               <label class="form-label small mb-0" :for="`gravita-${i}`">Gravità</label>
-              <select :id="`gravita-${i}`" v-model="a.gravita" class="form-select form-select-sm">
+              <select :id="`gravita-${i}`" v-model="a.gravita" class="form-control form-control-sm">
                 <option value="LIEVE">Lieve</option>
                 <option value="MODERATA">Moderata</option>
                 <option value="GRAVE">Grave: rischio per la vita</option>
               </select>
             </div>
-            <div class="col-12 col-md-5">
+            <div class="col-12 md:col-5">
               <label class="form-label small mb-0" :for="`sostanza-${i}`">A cosa</label>
               <input
                 :id="`sostanza-${i}`"
@@ -153,7 +151,7 @@ async function salva() {
                 required
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 md:col-6">
               <label class="form-label small mb-0" :for="`reazione-${i}`">Cosa succede</label>
               <input
                 :id="`reazione-${i}`"
@@ -161,7 +159,7 @@ async function salva() {
                 class="form-control form-control-sm"
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 md:col-6">
               <label class="form-label small mb-0" :for="`cosa-fare-${i}`">Cosa fare</label>
               <input
                 :id="`cosa-fare-${i}`"
@@ -173,7 +171,7 @@ async function salva() {
           </div>
           <button
             type="button"
-            class="btn btn-sm btn-link text-danger px-0"
+            class="btn btn-sm btn-link fg-danger px-0"
             @click="modulo.allergie.splice(i, 1)"
           >
             Togli
@@ -181,7 +179,7 @@ async function salva() {
         </div>
         <button
           type="button"
-          class="btn btn-sm btn-outline-primary align-self-start"
+          class="btn btn-sm btn-outline theme-primary align-self-start"
           @click="aggiungiAllergia"
         >
           Aggiungi allergia o intolleranza
@@ -190,19 +188,19 @@ async function salva() {
 
       <fieldset class="card card-body">
         <legend class="h6">Farmaci</legend>
-        <div class="form-check mb-2">
+        <div class="form-field mb-3">
           <input
             id="nessun-farmaco"
             v-model="modulo.nessun_farmaco"
-            class="form-check-input"
+            class="check"
             type="checkbox"
             @change="nessuna('farmaci', modulo.nessun_farmaco)"
           />
-          <label class="form-check-label" for="nessun-farmaco">Nessun farmaco</label>
+          <label for="nessun-farmaco">Nessun farmaco</label>
         </div>
-        <div v-for="(f, i) in modulo.farmaci" :key="i" class="border rounded p-2 mb-2">
-          <div class="row g-2">
-            <div class="col-12 col-md-6">
+        <div v-for="(f, i) in modulo.farmaci" :key="i" class="border rounded p-3 mb-3">
+          <div class="row g-3">
+            <div class="col-12 md:col-6">
               <label class="form-label small mb-0" :for="`farmaco-${i}`">Farmaco</label>
               <input
                 :id="`farmaco-${i}`"
@@ -211,7 +209,7 @@ async function salva() {
                 required
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 md:col-6">
               <label class="form-label small mb-0" :for="`posologia-${i}`">Quanto</label>
               <input
                 :id="`posologia-${i}`"
@@ -221,7 +219,7 @@ async function salva() {
                 required
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 md:col-6">
               <label class="form-label small mb-0" :for="`orari-${i}`">Quando</label>
               <input
                 :id="`orari-${i}`"
@@ -230,27 +228,20 @@ async function salva() {
                 placeholder="Es. a colazione e a cena"
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 md:col-6">
               <label class="form-label small mb-0" :for="`note-${i}`">Note</label>
               <input :id="`note-${i}`" v-model="f.note" class="form-control form-control-sm" />
             </div>
             <div class="col-12">
-              <div class="form-check">
-                <input
-                  :id="`autonomo-${i}`"
-                  v-model="f.autonomo"
-                  class="form-check-input"
-                  type="checkbox"
-                />
-                <label class="form-check-label small" :for="`autonomo-${i}`"
-                  >Lo prende da solo, senza un capo</label
-                >
+              <div class="form-field">
+                <input :id="`autonomo-${i}`" v-model="f.autonomo" class="check" type="checkbox" />
+                <label class="small" :for="`autonomo-${i}`">Lo prende da solo, senza un capo</label>
               </div>
             </div>
           </div>
           <button
             type="button"
-            class="btn btn-sm btn-link text-danger px-0"
+            class="btn btn-sm btn-link fg-danger px-0"
             @click="modulo.farmaci.splice(i, 1)"
           >
             Togli
@@ -258,17 +249,19 @@ async function salva() {
         </div>
         <button
           type="button"
-          class="btn btn-sm btn-outline-primary align-self-start"
+          class="btn btn-sm btn-outline theme-primary align-self-start"
           @click="aggiungiFarmaco"
         >
           Aggiungi farmaco
         </button>
       </fieldset>
 
-      <p class="small text-body-secondary mb-0">
+      <p class="small fg-2 mb-0">
         Le prescrizioni del medico restano sulla scheda cartacea firmata, da consegnare ai capi.
       </p>
-      <button class="btn btn-primary align-self-start" :disabled="inCorso">Salva</button>
+      <button class="btn btn-solid theme-primary align-self-start" :disabled="inCorso">
+        Salva
+      </button>
     </form>
   </section>
 </template>

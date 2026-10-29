@@ -4,7 +4,7 @@ defineProps<{ del: string | null }>()
 </script>
 
 <template>
-  <p v-if="del" class="small text-body-secondary">
+  <p v-if="del" class="small fg-2">
     Copia salvata sul dispositivo il {{ new Date(del).toLocaleString('it-IT') }}
   </p>
 </template>

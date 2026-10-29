@@ -39,9 +39,9 @@ const provider = (nome: 'google' | 'apple') =>
 
 <template>
   <section class="mx-auto" style="max-width: 26rem">
-    <h1 class="h4 mb-3">Invito al Quaderno di Caccia</h1>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-if="verificaInviata" class="alert alert-success" role="status">
+    <h1 class="h4 mb-5">Invito al Quaderno di Caccia</h1>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-if="verificaInviata" class="alert theme-success" role="status">
       Ti abbiamo inviato un'email: apri il link per confermare l'indirizzo e completare
       l'iscrizione.
     </div>
@@ -51,7 +51,7 @@ const provider = (nome: 'google' | 'apple') =>
         <strong>{{ invito.email }}</strong
         >.
       </p>
-      <form class="vstack gap-2" @submit.prevent="registrati">
+      <form class="vstack gap-3" @submit.prevent="registrati">
         <label class="form-label" for="nuova-password">Scegli una password</label>
         <input
           id="nuova-password"
@@ -62,15 +62,15 @@ const provider = (nome: 'google' | 'apple') =>
           minlength="8"
           required
         />
-        <button class="btn btn-primary" :disabled="inCorso">Crea l'account</button>
+        <button class="btn btn-solid theme-primary" :disabled="inCorso">Crea l'account</button>
       </form>
       <hr />
       <p class="small">Oppure usa un account esistente con la stessa email:</p>
-      <div class="vstack gap-2">
-        <button type="button" class="btn btn-outline-secondary" @click="provider('google')">
+      <div class="vstack gap-3">
+        <button type="button" class="btn btn-outline theme-secondary" @click="provider('google')">
           Continua con Google
         </button>
-        <button type="button" class="btn btn-outline-secondary" @click="provider('apple')">
+        <button type="button" class="btn btn-outline theme-secondary" @click="provider('apple')">
           Continua con Apple
         </button>
       </div>

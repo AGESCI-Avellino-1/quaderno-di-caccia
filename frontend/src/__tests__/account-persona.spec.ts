@@ -60,7 +60,7 @@ describe('AccountPersona', () => {
 
     expect(pannello.text()).toContain('Nessun account')
     expect(pannello.text()).toContain('Ha un account')
-    await pannello.get('button.btn-outline-primary').trigger('click')
+    await pannello.get('button.btn-outline.theme-primary').trigger('click')
     // Their own address is proposed and the only parent preselected (DEC-24).
     expect((pannello.get('input[type=email]').element as HTMLInputElement).value).toBe(
       'luca@example.invalid',

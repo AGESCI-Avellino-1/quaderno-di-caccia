@@ -22,23 +22,23 @@ const motivo = (o: OperazioneInCoda) =>
 
 <template>
   <section>
-    <h1 class="h4 mb-3">Modifiche in sospeso</h1>
-    <button class="btn btn-primary mb-3" :disabled="!online" @click="invia()">Invia ora</button>
-    <p v-if="!operazioni.length" class="text-body-secondary">Tutto inviato.</p>
+    <h1 class="h4 mb-5">Modifiche in sospeso</h1>
+    <button class="btn btn-solid theme-primary mb-5" :disabled="!online" @click="invia()">
+      Invia ora
+    </button>
+    <p v-if="!operazioni.length" class="fg-2">Tutto inviato.</p>
     <ul class="list-group">
       <li v-for="o in operazioni" :key="o.id" class="list-group-item">
         <div class="d-flex justify-content-between">
           <span>{{ o.descrizione }}</span>
-          <small class="text-body-secondary">{{
-            new Date(o.creata_il).toLocaleString('it-IT')
-          }}</small>
+          <small class="fg-2">{{ new Date(o.creata_il).toLocaleString('it-IT') }}</small>
         </div>
         <template v-if="o.stato === 'errore'">
-          <p class="small text-danger mb-1">{{ motivo(o) }}</p>
-          <button class="btn btn-sm btn-outline-primary me-2" @click="riprova(o.id!)">
+          <p class="small fg-danger mb-1">{{ motivo(o) }}</p>
+          <button class="btn btn-sm btn-outline theme-primary me-3" @click="riprova(o.id!)">
             Riprova
           </button>
-          <button class="btn btn-sm btn-outline-danger" @click="scarta(o.id!)">Scarta</button>
+          <button class="btn btn-sm btn-outline theme-danger" @click="scarta(o.id!)">Scarta</button>
         </template>
       </li>
     </ul>

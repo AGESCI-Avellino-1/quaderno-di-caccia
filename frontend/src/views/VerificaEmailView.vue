@@ -25,10 +25,10 @@ onMounted(async () => {
 
 <template>
   <section class="mx-auto" style="max-width: 26rem">
-    <h1 class="h4 mb-3">Conferma email</h1>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-else-if="confermata" class="alert alert-success" role="status">
-      Indirizzo confermato. <RouterLink to="/accesso">Accedi</RouterLink>
+    <h1 class="h4 mb-5">Conferma email</h1>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-else-if="confermata" class="alert theme-success" role="status">
+      <div>Indirizzo confermato. <RouterLink to="/accesso">Accedi</RouterLink></div>
     </div>
     <p v-else>Verifica in corso…</p>
   </section>

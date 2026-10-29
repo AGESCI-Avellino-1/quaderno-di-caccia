@@ -48,12 +48,12 @@ watch(unitaScelta, caricaPersone)
 
 <template>
   <section>
-    <h1 class="h4 mb-3">Persone</h1>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+    <h1 class="h4 mb-5">Persone</h1>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
-    <div class="row g-2 mb-3">
-      <div v-if="unita.length" class="col-12 col-md-5">
-        <select v-model="unitaScelta" class="form-select" aria-label="Unità">
+    <div class="row g-3 mb-5">
+      <div v-if="unita.length" class="col-12 md:col-5">
+        <select v-model="unitaScelta" class="form-control" aria-label="Unità">
           <option :value="undefined">Tutte le unità</option>
           <option v-for="u in unita" :key="u.id" :value="u.id">{{ u.nome }}</option>
         </select>
@@ -62,7 +62,7 @@ watch(unitaScelta, caricaPersone)
         <input v-model="filtro" class="form-control" type="search" placeholder="Cerca per nome" />
       </div>
     </div>
-    <p v-if="inCorso" class="text-body-secondary">Caricamento…</p>
+    <p v-if="inCorso" class="fg-2">Caricamento…</p>
     <div v-else class="list-group">
       <RouterLink
         v-for="p in visibili"
@@ -71,9 +71,9 @@ watch(unitaScelta, caricaPersone)
         class="list-group-item list-group-item-action d-flex justify-content-between"
       >
         <span>{{ p.cognome }} {{ p.nome }}</span>
-        <span v-if="p.codice_socio" class="text-body-secondary small">{{ p.codice_socio }}</span>
+        <span v-if="p.codice_socio" class="fg-2 small">{{ p.codice_socio }}</span>
       </RouterLink>
-      <p v-if="!visibili.length" class="text-body-secondary">Nessuna persona.</p>
+      <p v-if="!visibili.length" class="fg-2">Nessuna persona.</p>
     </div>
   </section>
 </template>

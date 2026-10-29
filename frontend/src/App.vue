@@ -41,8 +41,8 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
 
 <template>
   <header class="qdc-intestazione shadow-sm">
-    <nav class="container d-flex align-items-center gap-3 py-2">
-      <RouterLink to="/" class="d-flex align-items-center gap-2 fw-bold">
+    <nav class="container d-flex align-items-center gap-5 py-3">
+      <RouterLink to="/" class="d-flex align-items-center gap-3 fw-bold">
         <img src="/icons/icon-192.png" alt="" width="32" height="32" class="rounded" />
         <span>Quaderno di Caccia</span>
       </RouterLink>
@@ -51,18 +51,18 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
         <button
           v-if="stato === 'sbloccata'"
           type="button"
-          class="btn btn-sm btn-outline-light"
+          class="btn btn-sm btn-outline"
           title="Blocca l'app: per riaprirla servirà il PIN"
           @click="bloccaOra"
         >
           Blocca
         </button>
-        <button type="button" class="btn btn-sm btn-outline-light" @click="esci">Esci</button>
+        <button type="button" class="btn btn-sm btn-outline" @click="esci">Esci</button>
       </template>
     </nav>
   </header>
   <BarraOffline />
-  <main class="container py-3">
+  <main class="container py-5">
     <RouterView />
   </main>
   <AggiornamentoApp />

@@ -66,7 +66,7 @@ describe('ElencoIncarichi', () => {
     // Closing asks for confirmation inline (no browser dialog).
     await elenco.findAll('li')[1]!.get('button').trigger('click')
     expect(elenco.text()).toContain('Chiudere da oggi?')
-    await elenco.get('button.btn-danger').trigger('click')
+    await elenco.get('button.theme-danger').trigger('click')
     await flushPromises()
 
     expect(chiamate).toEqual([

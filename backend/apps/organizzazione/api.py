@@ -417,8 +417,8 @@ def modifica_squadriglia(request, squadriglia_id: int, dati: SquadrigliaIn):
 
 
 # --- Patrol members (DEC-30, DEC-65) ------------------------------------------------------
-# [da verificare] Who composes the patrols is not in the analysis: the same people who
-# create them (policy.puo_gestire_squadriglie).
+# Composed by the same people who create them (policy.puo_gestire_squadriglie),
+# confirmed by the maintainer on 2026-10-28.
 
 
 def _chiudi_periodo(oggetto, fine: date) -> bool:

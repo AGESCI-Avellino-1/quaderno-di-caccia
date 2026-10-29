@@ -50,12 +50,12 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 
 <template>
   <div>
-    <div v-if="errore" class="alert alert-danger py-2 small" role="alert">{{ errore }}</div>
-    <ul class="list-unstyled mb-2">
-      <li v-for="i in incarichi" :key="i.id" class="d-flex flex-wrap align-items-baseline gap-2">
-        <span class="text-body-secondary small">{{ i.ruolo_nome }}</span>
+    <div v-if="errore" class="alert theme-danger py-3 small" role="alert">{{ errore }}</div>
+    <ul class="list-unstyled mb-3">
+      <li v-for="i in incarichi" :key="i.id" class="d-flex flex-wrap align-items-baseline gap-3">
+        <span class="fg-2 small">{{ i.ruolo_nome }}</span>
         <span>{{ i.persona.nome }} {{ i.persona.cognome }}</span>
-        <span class="text-body-secondary small">dal {{ data(i.data_inizio) }}</span>
+        <span class="fg-2 small">dal {{ data(i.data_inizio) }}</span>
         <template v-if="gestibili.has(i.ruolo)">
           <button
             v-if="daChiudere !== i.id"
@@ -69,7 +69,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             Chiudere da oggi?
             <button
               type="button"
-              class="btn btn-sm btn-danger py-0"
+              class="btn btn-sm btn-solid theme-danger py-0"
               :disabled="inCorso"
               @click="chiudi(i.id)"
             >
@@ -81,28 +81,33 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </span>
         </template>
       </li>
-      <li v-if="!incarichi.length" class="text-body-secondary small">
+      <li v-if="!incarichi.length" class="fg-2 small">
         {{ vuoto ?? 'Nessun incarico.' }}
       </li>
     </ul>
 
-    <form v-if="nomina.length" class="row g-2 align-items-end" @submit.prevent="assegna">
-      <div class="col-12 col-sm-4">
-        <select v-model="ruolo" class="form-select form-select-sm" aria-label="Incarico">
+    <form v-if="nomina.length" class="row g-3 align-items-end" @submit.prevent="assegna">
+      <div class="col-12 sm:col-4">
+        <select v-model="ruolo" class="form-control form-control-sm" aria-label="Incarico">
           <option value="">Assegna un incarico…</option>
           <option v-for="n in nomina" :key="n.valore" :value="n.valore">{{ n.etichetta }}</option>
         </select>
       </div>
-      <div v-if="ruolo" class="col-12 col-sm-5">
-        <select v-model="persona" class="form-select form-select-sm" aria-label="Persona" required>
+      <div v-if="ruolo" class="col-12 sm:col-5">
+        <select
+          v-model="persona"
+          class="form-control form-control-sm"
+          aria-label="Persona"
+          required
+        >
           <option :value="null" disabled>Chi</option>
           <option v-for="p in elenco" :key="p.id" :value="p.id">
             {{ p.cognome }} {{ p.nome }}
           </option>
         </select>
       </div>
-      <div v-if="ruolo" class="col-12 col-sm-3">
-        <button type="submit" class="btn btn-sm btn-primary w-100" :disabled="inCorso">
+      <div v-if="ruolo" class="col-12 sm:col-3">
+        <button type="submit" class="btn btn-sm btn-solid theme-primary w-100" :disabled="inCorso">
           Assegna
         </button>
       </div>

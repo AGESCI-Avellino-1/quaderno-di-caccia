@@ -80,18 +80,20 @@ watch(scelta, async (valore) => {
 
 <template>
   <section>
-    <h1 class="h4 mb-3">Al campo</h1>
-    <div v-if="!puoSalvare" class="alert alert-warning">
-      Su questo telefono non salvi dati: senza rete non li vedrai.
-      <RouterLink :to="{ name: 'protezione', query: { prossima: '/campo' } }"
-        >Attiva la protezione con PIN</RouterLink
-      >
+    <h1 class="h4 mb-5">Al campo</h1>
+    <div v-if="!puoSalvare" class="alert theme-warning">
+      <div>
+        Su questo telefono non salvi dati: senza rete non li vedrai.
+        <RouterLink :to="{ name: 'protezione', query: { prossima: '/campo' } }"
+          >Attiva la protezione con PIN</RouterLink
+        >
+      </div>
     </div>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
 
-    <div class="row g-2 mb-3">
-      <div class="col-12 col-md-5">
-        <select v-model="scelta" class="form-select" aria-label="Unità">
+    <div class="row g-3 mb-5">
+      <div class="col-12 md:col-5">
+        <select v-model="scelta" class="form-control" aria-label="Unità">
           <option :value="undefined" disabled>Scegli l'unità</option>
           <option v-for="u in unita" :key="u.id" :value="u.id">{{ u.nome }}</option>
         </select>
@@ -99,7 +101,7 @@ watch(scelta, async (valore) => {
       <div class="col-auto">
         <button
           type="button"
-          class="btn btn-primary"
+          class="btn btn-solid theme-primary"
           :disabled="scelta === undefined || inCorso"
           @click="aggiorna"
         >
@@ -109,14 +111,14 @@ watch(scelta, async (valore) => {
     </div>
 
     <template v-if="campo">
-      <p class="small text-body-secondary">
+      <p class="small fg-2">
         {{ campo.unita }} · scaricati il
         {{ new Date(copiaDel ?? campo.scaricato_il).toLocaleString('it-IT') }}
         <template v-if="nonCompilate">
           · <strong>{{ nonCompilate }} senza farmaci e allergie compilati</strong></template
         >
       </p>
-      <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+      <div class="d-flex flex-wrap gap-5 align-items-center mb-5">
         <input
           v-model="filtro"
           class="form-control"
@@ -124,31 +126,30 @@ watch(scelta, async (valore) => {
           type="search"
           placeholder="Cerca per nome"
         />
-        <div class="form-check form-switch">
+        <div class="form-field">
           <input
             id="solo-con-dati"
             v-model="soloConDati"
-            class="form-check-input"
+            class="switch"
             type="checkbox"
+            role="switch"
           />
-          <label class="form-check-label" for="solo-con-dati"
-            >Solo con farmaci o allergie (e non compilati)</label
-          >
+          <label for="solo-con-dati">Solo con farmaci o allergie (e non compilati)</label>
         </div>
       </div>
 
-      <div class="row g-3">
-        <div v-for="p in persone" :key="p.id" class="col-12 col-lg-6">
+      <div class="row g-5">
+        <div v-for="p in persone" :key="p.id" class="col-12 lg:col-6">
           <article class="card h-100" :class="{ 'border-danger border-2': haGrave(p) }">
             <div class="card-body">
               <h2 class="h6 mb-1">
                 {{ p.cognome }} {{ p.nome }}
-                <span v-if="eta(p.data_nascita) !== null" class="text-body-secondary fw-normal">
+                <span v-if="eta(p.data_nascita) !== null" class="fg-2 fw-normal">
                   · {{ eta(p.data_nascita) }} anni</span
                 >
               </h2>
               <SchedaSanitaria :dati="p.sanitarie" compatta />
-              <ul v-if="p.contatti.length" class="list-unstyled small mb-0 mt-2">
+              <ul v-if="p.contatti.length" class="list-unstyled small mb-0 mt-3">
                 <li v-for="(c, i) in p.contatti" :key="i">
                   {{ c.nome }} ({{ c.relazione }}):
                   <a :href="`tel:${c.cellulare}`">{{ c.cellulare }}</a>
@@ -159,7 +160,7 @@ watch(scelta, async (valore) => {
         </div>
       </div>
     </template>
-    <p v-else-if="scelta !== undefined && !inCorso" class="text-body-secondary">
+    <p v-else-if="scelta !== undefined && !inCorso" class="fg-2">
       Nessuna copia su questo telefono: scaricala finché c'è rete.
     </p>
   </section>

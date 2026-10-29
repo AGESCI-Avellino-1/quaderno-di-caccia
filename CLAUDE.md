@@ -138,13 +138,25 @@ breaks the parser, add the case to `tests/export_sintetico.py` first.
 
 ### Theme
 
-Colours come from **django-agesci-campania-theme 2.7.0**
-(<https://github.com/AGESCI-Campania/django-agesci-campania-theme>):
-`frontend/src/theme/_palette.scss`, `_branche.scss`, `_prefix.scss` are copied **byte
-for byte** (excluded from Prettier). To update: copy the three files from the new
-release, never edit them here. The branch colour is chosen with
-`<html data-branca="lc|eg|rs|capi|generico">` (DEC-72); components use
-`var(--ag-primary)` and friends, never hard-coded colours. Font: Titillium Web, bundled
+Colours come from **django-agesci-campania-theme 3.0.0a2**
+(<https://github.com/AGESCI-Campania/django-agesci-campania-theme>), the line built on
+**Bootstrap 6** (`bootstrap@6.0.0-alpha.1`, pinned): the maintainer chose the alpha on
+purpose, to avoid a second migration later. `frontend/src/theme/_palette.scss` and
+`_branche.scss` are copied **byte for byte** (excluded from Prettier). To update: copy
+the two files from the new release, never edit them here. The branch colour is chosen
+with `<html data-branca="lc|eg|rs|capi|generico">` (DEC-72); components use
+`var(--ag-primary)` and friends, never hard-coded colours.
+
+Bootstrap 6 is **not** Bootstrap 5: before writing markup read the theme's AI rules
+(<https://django-agesci-campania-theme.readthedocs.io/it/latest/llms-full.txt>) and
+check a class exists in `frontend/node_modules/bootstrap/dist/css/bootstrap.css`. In
+short: colours via `theme-*` (`btn btn-solid theme-primary`, `btn-outline`,
+`alert theme-danger`, `badge theme-success`); text `fg-*` (`fg-2` for secondary text);
+responsive prefixes `md:col-6`; spacing scale 1, 3, 5, 7, 12 (= v5 1–5); `<select
+class="form-control">`; checkboxes/switches are `input.check` / `input.switch` inside
+`.form-field`; `.alert` is a flex box, so wrap mixed content in one `<div>`; the theme is
+light only (`data-bs-theme="light"`). Minimum browsers: Chrome/Edge 130, Firefox 132,
+Safari 18. Font: Titillium Web, bundled
 (SIL OFL, `frontend/src/assets/fonts/OFL.txt`) so it works offline.
 
 ## Working on it
@@ -232,8 +244,15 @@ verificare" in the analysis).
   log.
 - Every account has its own email: a child is not invited with a parent's address
   (maintainer, 2026-10-28, refines DEC-25; `accounts/api.crea_invito`).
-- `[da verificare]` After 18 the R/S decides what parents keep seeing (DEC-26): today
-  parents of an adult still read contacts and health data (`puo_vedere_dati_sensibili`);
-  they can no longer write them.
+- After 18 (DEC-26, maintainer 2026-10-29): until the R/S decides, parents keep seeing
+  what they saw (`puo_vedere_dati_sensibili`) but no longer write it; the R/S and the
+  parents get an alert. Not built yet.
+- Decided on 2026-10-29, not built yet (details in `TODO.md`): patrol contacts (DEC-13:
+  every member sees the others' phone, the CSQ also the parents'; VCSQ like a member;
+  hideable by the parent); accounts from 14 by invitation without parental approval
+  (DEC-24, as built); non-medical dietary needs in the personal file, treated like
+  health data (DEC-49); corrections workflow (DEC-31: who corrects what, list with
+  "inoltrata" mark for the capigruppo); capi training entered by hand (DEC-47); the
+  capigruppo delegation covers the app (DEC-98, DEC-102).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

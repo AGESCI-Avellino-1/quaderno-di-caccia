@@ -43,49 +43,49 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 
 <template>
   <section>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <p v-if="inCorso" class="text-body-secondary">Caricamento…</p>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <p v-if="inCorso" class="fg-2">Caricamento…</p>
     <template v-if="persona">
       <h1 class="h4 mb-1">{{ persona.nome }} {{ persona.cognome }}</h1>
-      <p class="text-body-secondary small">{{ persona.unita.join(' · ') }}</p>
+      <p class="fg-2 small">{{ persona.unita.join(' · ') }}</p>
       <CopiaLocale :del="copiaDel" />
       <dl class="row">
         <template v-if="persona.codice_socio">
-          <dt class="col-5 col-md-3">Codice socio</dt>
-          <dd class="col-7 col-md-9">{{ persona.codice_socio }}</dd>
+          <dt class="col-5 md:col-3">Codice socio</dt>
+          <dd class="col-7 md:col-9">{{ persona.codice_socio }}</dd>
         </template>
         <template v-if="persona.data_nascita">
-          <dt class="col-5 col-md-3">Data di nascita</dt>
-          <dd class="col-7 col-md-9">{{ formattaData(persona.data_nascita) }}</dd>
+          <dt class="col-5 md:col-3">Data di nascita</dt>
+          <dd class="col-7 md:col-9">{{ formattaData(persona.data_nascita) }}</dd>
         </template>
         <template v-if="persona.email">
-          <dt class="col-5 col-md-3">Email</dt>
-          <dd class="col-7 col-md-9">
+          <dt class="col-5 md:col-3">Email</dt>
+          <dd class="col-7 md:col-9">
             <a :href="`mailto:${persona.email}`">{{ persona.email }}</a>
           </dd>
         </template>
         <template v-if="persona.cellulare">
-          <dt class="col-5 col-md-3">Cellulare</dt>
-          <dd class="col-7 col-md-9">
+          <dt class="col-5 md:col-3">Cellulare</dt>
+          <dd class="col-7 md:col-9">
             <a :href="`tel:${persona.cellulare}`">{{ persona.cellulare }}</a>
           </dd>
         </template>
         <template v-if="persona.indirizzo">
-          <dt class="col-5 col-md-3">Indirizzo</dt>
-          <dd class="col-7 col-md-9">{{ persona.indirizzo }} {{ persona.comune }}</dd>
+          <dt class="col-5 md:col-3">Indirizzo</dt>
+          <dd class="col-7 md:col-9">{{ persona.indirizzo }} {{ persona.comune }}</dd>
         </template>
         <template v-if="persona.consenso_foto !== null">
-          <dt class="col-5 col-md-3">Consenso foto</dt>
-          <dd class="col-7 col-md-9">{{ persona.consenso_foto ? 'Sì' : 'No' }}</dd>
+          <dt class="col-5 md:col-3">Consenso foto</dt>
+          <dd class="col-7 md:col-9">{{ persona.consenso_foto ? 'Sì' : 'No' }}</dd>
         </template>
       </dl>
-      <section v-if="sanitarie" class="card card-body mb-3">
+      <section v-if="sanitarie" class="card card-body mb-5">
         <div class="d-flex align-items-center">
           <h2 class="h5 mb-0">Farmaci, allergie e intolleranze</h2>
           <RouterLink
             v-if="sanitarie.puo_modificare"
             :to="{ name: 'sanitarie', params: { id: persona.id } }"
-            class="btn btn-sm btn-outline-primary ms-auto"
+            class="btn btn-sm btn-outline theme-primary ms-auto"
             >{{ sanitarie.compilate ? 'Modifica' : 'Compila' }}</RouterLink
           >
         </div>

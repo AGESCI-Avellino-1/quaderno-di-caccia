@@ -39,20 +39,20 @@ async function crea(dati: UnitaIn) {
 
 <template>
   <section>
-    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+    <div class="d-flex align-items-center flex-wrap gap-3 mb-5">
       <h1 class="h4 mb-0">Unità</h1>
       <button
         v-if="sessione.capogruppo && !nuova"
         type="button"
-        class="btn btn-sm btn-outline-primary ms-auto"
+        class="btn btn-sm btn-outline theme-primary ms-auto"
         @click="nuova = true"
       >
         Nuova unità
       </button>
     </div>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
-    <div v-if="nuova" class="card card-body mb-3">
+    <div v-if="nuova" class="card card-body mb-5">
       <ModuloUnita
         :altre="unita"
         :in-corso="inCorso"
@@ -61,7 +61,7 @@ async function crea(dati: UnitaIn) {
         @annulla="nuova = false"
       />
     </div>
-    <div class="list-group mb-2">
+    <div class="list-group mb-3">
       <RouterLink
         v-for="u in unita"
         :key="u.id"
@@ -70,16 +70,16 @@ async function crea(dati: UnitaIn) {
         :data-branca="temaDellaBranca(u.branca)"
       >
         <strong>{{ u.nome }}</strong>
-        <span class="badge ms-2" style="background: var(--ag-primary); color: var(--ag-on-primary)">
+        <span class="badge ms-3" style="background: var(--ag-primary); color: var(--ag-on-primary)">
           {{ u.branca }}
         </span>
-        <span v-if="!u.attiva" class="badge text-bg-secondary ms-1">Chiusa</span>
+        <span v-if="!u.attiva" class="badge theme-secondary ms-1">Chiusa</span>
       </RouterLink>
     </div>
-    <div class="d-flex flex-wrap gap-3 small">
-      <div class="form-check">
-        <input id="anche-chiuse" v-model="ancheChiuse" type="checkbox" class="form-check-input" />
-        <label class="form-check-label" for="anche-chiuse">Mostra anche le unità chiuse</label>
+    <div class="d-flex flex-wrap gap-5 small">
+      <div class="form-field">
+        <input id="anche-chiuse" v-model="ancheChiuse" type="checkbox" class="check" />
+        <label for="anche-chiuse">Mostra anche le unità chiuse</label>
       </div>
       <RouterLink :to="{ name: 'gruppo' }">Capigruppo e tesorieri di gruppo</RouterLink>
     </div>

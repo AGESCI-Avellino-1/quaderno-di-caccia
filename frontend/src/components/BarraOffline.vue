@@ -14,7 +14,7 @@ const sessione = useSessioneStore()
     class="qdc-barra-offline small py-1"
     role="status"
   >
-    <div class="container d-flex flex-wrap gap-3">
+    <div class="container d-flex flex-wrap gap-5">
       <span v-if="!online">
         Sei offline<template v-if="sessione.profiloDel">
           · dati del {{ new Date(sessione.profiloDel).toLocaleString('it-IT') }}</template

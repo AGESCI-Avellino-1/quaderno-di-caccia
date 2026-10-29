@@ -41,6 +41,8 @@ per ultima, dopo tutte le altre fasi.
 | Correzioni ai dati inviate ai capigruppo | ⏳ | DEC-31 |
 | Avvisi per il consenso al compimento dei 18 anni | ⏳ | DEC-26 |
 | Diritti GDPR (accesso, cancellazione) | ⏳ | DEC-102 |
+| Contatti in squadriglia (telefoni tra squadriglieri, genitori per il CSQ) | ⏳ | DEC-13 |
+| Esigenze alimentari non mediche nella scheda e nella vista "Al campo" | ⏳ | DEC-49 |
 
 ## Decisioni da riportare nell'analisi
 
@@ -62,14 +64,21 @@ Prese con il maintainer il 28/10/2026, ancora senza codice DEC.
 | Email degli inviti (precisa DEC-25) | Ogni account ha la sua email: un ragazzo non si invita con l'email di un genitore |
 | Registro delle modifiche nell'admin | Accettato: l'amministratore tecnico è sempre un capo o ha la delega dei capigruppo per i dati |
 
+Prese con il maintainer il 29/10/2026 (chiudono i "Punti ancora da verificare"
+dell'analisi), da realizzare:
+
+| Punto | Decisione | Rif. |
+| --- | --- | --- |
+| Contatti in squadriglia | Ogni squadrigliere vede il solo telefono degli altri squadriglieri. Il CSQ vede anche i contatti dei genitori di tutta la squadriglia; il vice CSQ vede come uno squadrigliere. Chi non ha un cellulare suo condivide il numero di un genitore, scelto dal genitore. Il genitore (o il ragazzo maggiorenne) può nascondere il numero agli squadriglieri; il CSQ lo vede comunque | DEC-13 |
+| Account dai 14 anni | Invito del capo unità o di un capogruppo, senza approvazione del genitore (come già fatto) | DEC-24 |
+| Ai 18 anni | Finché l'R/S non decide, i genitori continuano a vedere quello che vedevano (senza modificarlo). Avviso all'R/S e ai genitori | DEC-26 |
+| Correzioni ai dati di BuonaStrada | Le fanno il genitore (dati suoi e dei figli), il maggiorenne (i suoi), lo staff dell'unità e i capigruppo (ragazzi dell'unità). Contatti e indirizzo tutti; nome, codice fiscale e data di nascita solo i capigruppo. I capigruppo vedono l'elenco, inoltrano loro alla segreteria e segnano "inoltrata"; la correzione si chiude quando l'importazione la ritrova in BuonaStrada | DEC-31 |
+| Percorso di formazione dei capi | Inserito a mano dal capo o da un capogruppo; da BuonaStrada solo il livello | DEC-47 |
+| Esigenze alimentari non mediche | Nella scheda personale, trattate come i dati sanitari (anche le religiose, dato particolare GDPR): stesse persone, offline al campo, registro accessi | DEC-49 |
+| Delega e diritti GDPR | La delega dei capigruppo copre l'app: si realizzano accesso, rettifica, cancellazione, esportazione, gestite dai capigruppo, che le girano al nazionale | DEC-98, DEC-102 |
+
 ## Punti aperti da confermare
 
 | Punto | Riferimento |
 | --- | --- |
-| Cosa vedono i genitori di un ragazzo maggiorenne | DEC-26 |
 | Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
-| Delega dei capigruppo e coordinamento con l'Ufficio Privacy nazionale | DEC-98, DEC-102 |
-| Da dove prendere il percorso di formazione dei capi | DEC-47 |
-| Esigenze alimentari non mediche (es. vegetariano) | DEC-49 |
-| Il CSQ vede i contatti dei suoi squadriglieri? | DEC-13 |
-| Procedura per l'account dai 14 anni | DEC-24 |

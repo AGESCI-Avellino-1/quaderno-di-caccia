@@ -80,7 +80,7 @@ async function soloOnline() {
 
 <template>
   <section class="mx-auto" style="max-width: 30rem">
-    <h1 class="h4 mb-3">Proteggi i dati su questo telefono</h1>
+    <h1 class="h4 mb-5">Proteggi i dati su questo telefono</h1>
     <p>
       Per funzionare anche senza rete, l'app salva su questo telefono una copia dei dati che puoi
       vedere: contatti, e per i capi farmaci e allergie dei ragazzi. Sono dati di minori: la copia
@@ -92,19 +92,21 @@ async function soloOnline() {
       <li>Se perdi il telefono, tu o un capogruppo potete scollegarlo a distanza.</li>
       <li>Se il telefono non si collega per molti giorni, la copia si cancella da sola.</li>
     </ul>
-    <div v-if="giaConfigurata" class="alert alert-warning small">
+    <div v-if="giaConfigurata" class="alert theme-warning small">
       Impostando un nuovo PIN la copia attuale sul telefono viene cancellata e riscaricata.
     </div>
-    <div v-if="errore" class="alert alert-danger" role="alert">{{ errore }}</div>
-    <div v-if="avviso" class="alert alert-warning" role="status">
-      {{ avviso }}
-      <RouterLink :to="prossima()" class="d-block mt-1">Continua con il solo PIN</RouterLink>
+    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <div v-if="avviso" class="alert theme-warning" role="status">
+      <div>
+        {{ avviso }}
+        <RouterLink :to="prossima()" class="d-block mt-1">Continua con il solo PIN</RouterLink>
+      </div>
     </div>
 
-    <form v-if="!avviso" class="vstack gap-2" @submit.prevent="attiva">
+    <form v-if="!avviso" class="vstack gap-3" @submit.prevent="attiva">
       <label class="form-label mb-0" for="nome-dispositivo">Nome di questo dispositivo</label>
       <input id="nome-dispositivo" v-model="nome" class="form-control" maxlength="80" required />
-      <label class="form-label mb-0 mt-2" for="pin"
+      <label class="form-label mb-0 mt-3" for="pin"
         >PIN (almeno {{ LUNGHEZZA_MINIMA_PIN }} cifre)</label
       >
       <input
@@ -127,20 +129,22 @@ async function soloOnline() {
         autocomplete="new-password"
         required
       />
-      <div v-if="biometriaPossibile" class="form-check mt-2">
-        <input id="biometria" v-model="conBiometria" class="form-check-input" type="checkbox" />
-        <label class="form-check-label" for="biometria">Sblocca anche con impronta o volto</label>
+      <div v-if="biometriaPossibile" class="form-field mt-3">
+        <input id="biometria" v-model="conBiometria" class="check" type="checkbox" />
+        <label for="biometria">Sblocca anche con impronta o volto</label>
       </div>
-      <button class="btn btn-primary mt-2" :disabled="inCorso">Attiva la protezione</button>
+      <button class="btn btn-solid theme-primary mt-3" :disabled="inCorso">
+        Attiva la protezione
+      </button>
     </form>
 
     <hr />
-    <p class="small mb-2">
+    <p class="small mb-3">
       Preferisci non salvare niente su questo telefono (ad esempio se non è tuo)? L'app funzionerà
       solo con la rete.
       <template v-if="sessione.capo"> Al campo, senza rete, non avrai i dati dei ragazzi.</template>
     </p>
-    <button type="button" class="btn btn-outline-secondary btn-sm" @click="soloOnline">
+    <button type="button" class="btn btn-outline theme-secondary btn-sm" @click="soloOnline">
       Usa solo online
     </button>
   </section>

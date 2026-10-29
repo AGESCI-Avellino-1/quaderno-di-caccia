@@ -70,7 +70,7 @@ describe('DerogheSquadriglia', () => {
     )
     const pannello = mount(DerogheSquadriglia, { props: { id: 1 } })
     await flushPromises()
-    await pannello.get('button.btn-outline-primary').trigger('click')
+    await pannello.get('button.btn-outline.theme-primary').trigger('click')
     await pannello.get('#deroga-sesso').setValue('M')
     await pannello.get('#deroga-data').setValue('2026-10-20')
     await pannello.get('#deroga-motivazione').setValue('Decisione della Co.Ca.')

@@ -1,9 +1,11 @@
 // =============================================================
 //  QdC theme.
-//  _palette.scss and _branche.scss are copied from django-agesci-campania-theme 2.7.0
-//  (MIT, AGESCI Campania) together with _prefix.scss ("bs-" = Bootstrap), byte for byte. Keep them in sync with
-//  the Django package: never invent colours, never hardcode them in components —
-//  use var(--ag-primary) and friends. The branch is chosen with <html data-branca>.
+//  _palette.scss and _branche.scss are copied byte for byte from
+//  django-agesci-campania-theme 3.0.0a2 (MIT, AGESCI Campania; Bootstrap 6). Keep them in
+//  sync with the Django package: never invent colours, never hardcode them in components —
+//  use var(--ag-primary), theme-primary and friends. The branch is chosen with
+//  <html data-branca>. Bootstrap 6 lives in @layer: this file is unlayered and wins, so
+//  never set an unconditional `display` here (it would beat d-none).
 // =============================================================
 @use 'palette' as p;
 
@@ -46,46 +48,15 @@ body {
   text-decoration: none;
 }
 
-.btn-primary {
-  --bs-btn-bg: var(--ag-primary);
-  --bs-btn-border-color: var(--ag-primary);
-  --bs-btn-hover-bg: var(--ag-primary-hover);
-  --bs-btn-hover-border-color: var(--ag-primary-hover);
-  --bs-btn-active-bg: var(--ag-primary-active);
-  --bs-btn-active-border-color: var(--ag-primary-active);
-  --bs-btn-color: var(--ag-on-primary);
-  --bs-btn-hover-color: var(--ag-on-primary);
-  --bs-btn-active-color: var(--ag-on-primary);
-  // Disabled buttons too (e.g. while a request runs), or Bootstrap's blue shows through.
-  --bs-btn-disabled-bg: var(--ag-primary);
-  --bs-btn-disabled-border-color: var(--ag-primary);
-  --bs-btn-disabled-color: var(--ag-on-primary);
+// Header buttons sit on the branch colour: follow its text colour.
+.qdc-intestazione .btn-outline {
+  color: inherit;
+  border-color: currentColor;
+  background-color: transparent;
 }
 
-.btn-outline-primary {
-  --bs-btn-color: var(--ag-primary);
-  --bs-btn-border-color: var(--ag-primary);
-  --bs-btn-hover-bg: var(--ag-primary);
-  --bs-btn-hover-border-color: var(--ag-primary);
-  --bs-btn-hover-color: var(--ag-on-primary);
-  --bs-btn-active-bg: var(--ag-primary-active);
-  --bs-btn-active-border-color: var(--ag-primary-active);
-  --bs-btn-active-color: var(--ag-on-primary);
-  --bs-btn-disabled-color: var(--ag-primary);
-  --bs-btn-disabled-border-color: var(--ag-primary);
-}
-
-// Bootstrap compiles these colours as constants: map them to the branch colour too.
-.form-check-input:checked {
-  background-color: var(--ag-primary);
-  border-color: var(--ag-primary);
-}
-
-.form-check-input:focus,
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--ag-primary);
-  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+.qdc-intestazione .btn-outline:hover {
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
 }
 
 .qdc-barra-offline {

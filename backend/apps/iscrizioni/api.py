@@ -1,4 +1,4 @@
-"""Joining from the app: codes, requests, approval (maintainer, 2026-10-29)."""
+"""Joining from the app: codes, requests, approval (DEC-120…DEC-127)."""
 
 import io
 from dataclasses import asdict

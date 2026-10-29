@@ -31,7 +31,7 @@ class InformazioniSanitarie(ModelloTracciato):
     nessun_farmaco = models.BooleanField(default=False)
     # Non-medical dietary needs (vegetarian, no pork…), DEC-49. A religious need is a
     # special category of data: kept here, with the same access rules and log as health
-    # data (maintainer, 2026-10-29). The form asks for the need, not the reason.
+    # data (DEC-135). The form asks for the need, not the reason.
     esigenze_alimentari = models.CharField(max_length=300, blank=True)
     aggiornate_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"

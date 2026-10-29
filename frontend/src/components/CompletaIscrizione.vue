@@ -5,8 +5,8 @@ import { api, type Completamento, type RichiestaIscrizione } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
 // The data still missing after the approval, written straight on the member (BuonaStrada
-// has no record of them yet). What BuonaStrada requires (maintainer, 2026-10-29): an
-// adult's mobile and email; for a minor the parents, one with exclusive custody or both,
+// has no record of them yet). What BuonaStrada requires (DEC-124): own mobile and
+// email for adults and minors in Clan/Fuoco or Noviziato; for a minor the parents, one with exclusive custody or both,
 // with codice fiscale, mobile and email. Online only.
 const props = defineProps<{ id: number }>()
 const emit = defineEmits<{ cambiata: [richiesta: RichiestaIscrizione] }>()

@@ -7,7 +7,7 @@ import { useErrore } from '@/composables/useErrore'
 // Which phone the patrol sees for this person, and whether to hide it (DEC-13): set by
 // the parents of a minor, the adult member, the unit staff and the capigruppo. The
 // backend answers 404 to anyone else. Online only.
-// Order (maintainer, 2026-10-29): the child's own BuonaStrada mobile; else the parent or
+// Order (DEC-115): the child's own BuonaStrada mobile; else the parent or
 // guardian chosen for this child; else the one chosen for all the children; else none.
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()

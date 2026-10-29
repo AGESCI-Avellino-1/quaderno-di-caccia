@@ -1,4 +1,4 @@
-"""Daily emails about registrations from the app (maintainer, 2026-10-29).
+"""Daily emails about registrations from the app (DEC-125).
 
 - to who approves: new requests waiting (one email each, count and link only);
 - to the family: a reminder some days before the deadline to complete;
@@ -21,7 +21,7 @@ from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.iscrizioni.servizi import mancanti
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 
-# How many days before the deadline the family is reminded (maintainer, 2026-10-29).
+# How many days before the deadline the family is reminded (DEC-125).
 PREAVVISO = timedelta(days=7)
 
 

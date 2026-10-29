@@ -1,4 +1,4 @@
-"""Registration requests: creation, approval, rejection (maintainer, 2026-10-29)."""
+"""Registration requests: creation, approval, rejection (DEC-120…DEC-122)."""
 
 import uuid
 from dataclasses import dataclass
@@ -227,7 +227,7 @@ def richiesta_da_sessione(request, utente) -> RichiestaIscrizione | None:
         return None  # e.g. the code was used meanwhile: the account stays, without request
 
 
-# --- Completion (maintainer, 2026-10-29) ----------------------------------------------
+# --- Completion (DEC-124, DEC-125) ----------------------------------------------------
 
 
 def genitore(richiesta: RichiestaIscrizione) -> Persona | None:
@@ -370,7 +370,7 @@ def _genitori(richiesta, chi_iscrive: Persona, unico: bool, altro: dict | None) 
 
 def persone_sospese(utente) -> set[int]:
     """Members whose registration from this account passed its deadline incomplete:
-    the family no longer sees them until it completes (maintainer, 2026-10-29)."""
+    the family no longer sees them until it completes (DEC-125)."""
     return set(
         RichiestaIscrizione.objects.filter(
             utente=utente, stato=StatoIscrizione.SOSPESA, persona__isnull=False

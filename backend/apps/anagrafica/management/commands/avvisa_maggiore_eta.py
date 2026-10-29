@@ -1,4 +1,4 @@
-"""Alerts for members turning 18 (DEC-26, maintainer 2026-10-29).
+"""Alerts for members turning 18 (DEC-26, DEC-119).
 
 At 18 the R/S decides what the parents keep seeing. One month before and on the day,
 the member and the parents get an email with the link to the choices. Run once a day

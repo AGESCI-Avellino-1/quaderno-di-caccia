@@ -60,7 +60,7 @@ class Persona(ModelloTracciato):
         related_name="persona",
     )
     ultima_importazione = models.DateTimeField(null=True, blank=True)
-    # Phone shown to the other members of the patrol (DEC-13, maintainer 2026-10-29),
+    # Phone shown to the other members of the patrol (DEC-13, DEC-115),
     # see anagrafica.servizi.telefono_in_squadriglia: the child's own BuonaStrada mobile
     # if any, else the parent chosen for this child, else the parent chosen for all the
     # children without a phone. The number can be hidden from the members (never from
@@ -125,7 +125,7 @@ CAMPI_BUONASTRADA = (
     "data_nomina",
 )
 
-# Who may correct which field (DEC-31, maintainer 2026-10-29), see
+# Who may correct which field (DEC-31, DEC-129), see
 # policy.campi_correggibili: contacts, address and consents also by the adult member
 # themself; sex and place of birth by the unit staff too, not by the parents; the rest
 # of identity only by the capigruppo.
@@ -322,8 +322,7 @@ class DerogaQuerySet(models.QuerySet):
 
 class DerogaSquadriglia(ModelloTracciato):
     """Exception to single-sex patrols (gender identity, transition), decided by the Co.Ca.
-    and recorded by a capogruppo. Decided with the maintainer on 2026-10-28, not yet in the
-    analysis (see TODO.md).
+    and recorded by a capogruppo (DEC-132).
 
     Special-category data (GDPR art. 9), handled like health data: not in the Django admin,
     `motivazione` excluded from the audit log, reads and changes in the access log (DEC-101),
@@ -459,7 +458,7 @@ class VisibilitaGenitori(ModelloTracciato):
     """What the parents of an adult member still see (DEC-26).
 
     At 18 the R/S decides, by category, for all parents alike; until they do, the
-    parents keep seeing everything (maintainer, 2026-10-29). Parents never write the
+    parents keep seeing everything (DEC-119). Parents never write the
     data of an adult. The link to the fees is phase 2.
     """
 
@@ -486,7 +485,7 @@ class VisibilitaGenitori(ModelloTracciato):
 
 class ContatoreCodiceProvvisorio(models.Model):
     """Last provisional codice socio given to a member joining from the app, before
-    BuonaStrada assigns the real one (maintainer, 2026-10-29). A single row."""
+    BuonaStrada assigns the real one (DEC-122). A single row."""
 
     ultimo = models.PositiveIntegerField(default=0)
 

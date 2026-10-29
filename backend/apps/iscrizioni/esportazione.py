@@ -1,5 +1,5 @@
-"""The list of registrations to enter in BuonaStrada as XLSX and PDF (maintainer,
-2026-10-29). Personal data: generated on request for the capigruppo, never stored."""
+"""The list of registrations to enter in BuonaStrada as XLSX and PDF (DEC-127).
+Personal data: generated on request for the capigruppo, never stored."""
 
 import io
 from datetime import date

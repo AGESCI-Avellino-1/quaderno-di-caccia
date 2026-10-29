@@ -36,7 +36,7 @@ class LivelloAccesso(StrEnum):
 def persona_di(user) -> Persona | None:
     """The person behind an account. None also when that person joined from the app and
     the deadline to complete passed: the account sees only its registration until then
-    (maintainer, 2026-10-29)."""
+    (DEC-125)."""
     if not getattr(user, "is_authenticated", False):
         return None
     persona = Persona.objects.filter(utente=user).first()
@@ -47,7 +47,7 @@ def persona_di(user) -> Persona | None:
 
 def _sospese(user) -> set[int]:
     """Members whose registration from this account is suspended: only those are
-    hidden, the rest of the account works (maintainer, 2026-10-29)."""
+    hidden, the rest of the account works (DEC-125)."""
     from apps.iscrizioni.servizi import persone_sospese
 
     return persone_sospese(user)
@@ -76,7 +76,7 @@ def e_capo(user, al_giorno: date | None = None) -> bool:
 def e_capo_in_attesa(user) -> bool:
     """A capo who joined from the app and is not yet in BuonaStrada (provisional codice
     socio): sees the organisation and the names, never other members' sensitive data
-    (maintainer, 2026-10-29)."""
+    (DEC-123)."""
     from apps.anagrafica.servizi import e_codice_provvisorio
 
     persona = persona_di(user)
@@ -278,7 +278,7 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
     may transcribe them from the signed paper form (DEC-55).
 
     The staff of the person's unit writes for it (DEC-09); the capigruppo for every
-    unit (confirmed by the maintainer on 2026-10-28).
+    unit (DEC-113).
     """
     propria = persona_di(user)
     if propria is not None and propria.pk == persona.pk:
@@ -298,8 +298,8 @@ def _staff_della_persona(user, persona: Persona) -> bool:
 
 
 def campi_correggibili(user, persona: Persona) -> set[str]:
-    """BuonaStrada fields the user may correct in the app (DEC-31; who corrects what was
-    decided by the maintainer on 2026-10-29).
+    """BuonaStrada fields the user may correct in the app (DEC-31; who corrects what:
+    DEC-129).
 
     The technical administrator and the capigruppo: every field of every member. The
     staff of the person's unit: everything but name, date of birth and codice fiscale.
@@ -334,8 +334,8 @@ def squadriglie_di(user) -> QuerySet[Squadriglia]:
 
 
 def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
-    """Which phone the patrol sees and whether to hide it (DEC-13, maintainer
-    2026-10-29): the parents of a minor, the adult member, the staff of the unit and the
+    """Which phone the patrol sees and whether to hide it (DEC-13, DEC-115):
+    the parents of a minor, the adult member, the staff of the unit and the
     capigruppo."""
     propria = persona_di(user)
     if propria is not None and propria.pk == persona.pk:
@@ -347,13 +347,13 @@ def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
 
 def puo_gestire_diritti(user) -> bool:
     """Requests from data subjects, the full export and erasure: the capigruppo
-    (DEC-98, DEC-102; maintainer 2026-10-29)."""
+    (DEC-98, DEC-102, DEC-136)."""
     return e_capogruppo(user)
 
 
 def puo_gestire_correzioni(user) -> bool:
     """The capigruppo, and the technical administrator, forward corrections to the
-    regional office or discard them (DEC-31; maintainer 2026-10-29)."""
+    regional office or discard them (DEC-31, DEC-129)."""
     return e_capogruppo(user) or e_amministratore(user)
 
 
@@ -377,8 +377,7 @@ def puo_revocare_dispositivi_altrui(user) -> bool:
 
 
 # --- Units, staff and roles (DEC-10, DEC-11, DEC-14, DEC-18) ------------------------------
-# Who appoints CSQ/VCSQ, group roles and unit treasurers was decided with the
-# maintainer on 2026-10-28 (not yet in the analysis, see TODO.md).
+# Who appoints CSQ/VCSQ, group roles and unit treasurers: DEC-111.
 
 
 def puo_vedere_organizzazione(user) -> bool:
@@ -399,13 +398,13 @@ def puo_gestire_unita(user) -> bool:
 
 def puo_gestire_squadriglie(user, unita: Unita) -> bool:
     """Create, close and compose the patrols: the staff of the reparto and the
-    capigruppo (maintainer, 2026-10-28)."""
+    capigruppo (DEC-112)."""
     return e_capogruppo(user) or e_staff(user, unita)
 
 
 def puo_vedere_deroghe_squadriglia(user) -> bool:
     """Exceptions to single-sex patrols (special-category data): the Co.Ca. only, never
-    ragazzi, CSQ or parents. Decided with the maintainer on 2026-10-28."""
+    ragazzi, CSQ or parents. DEC-132."""
     return e_capo_censito(user)
 
 
@@ -436,7 +435,7 @@ def puo_nominare(
     return False
 
 
-# --- Joining from the app (maintainer, 2026-10-29) --------------------------------------
+# --- Joining from the app (DEC-120…DEC-127) --------------------------------------------
 
 
 def puo_creare_codici(user, unita: Unita) -> bool:
@@ -476,5 +475,5 @@ def puo_gestire_modulistica(user) -> bool:
 
 def puo_gestire_iscrizioni_buonastrada(user) -> bool:
     """The list of registrations to enter in BuonaStrada, its exports, "inserita": the
-    capigruppo (maintainer, 2026-10-29)."""
+    capigruppo (DEC-127)."""
     return e_capogruppo(user)

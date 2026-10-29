@@ -14,7 +14,7 @@ Rules:
   * when the app and BuonaStrada disagree (open correction, app membership) whoever
     imports chooses which wins; the preview proposes the more recent one, comparing
     the date of the change in the app with the date the BuonaStrada data were updated,
-    asked at upload; on the same day the app (maintainer, 2026-10-29). Choosing
+    asked at upload; on the same day the app (DEC-130). Choosing
     BuonaStrada closes the
     correction as superseded;
   * guardians are deduplicated by codice fiscale (DEC-32, DEC-33).
@@ -98,7 +98,7 @@ class Riepilogo:
     def decidi(self, chiave: str, modificato_il: date) -> tuple[str, str]:
         """(proposta, scelta) for a difference: the more recent side is proposed; on the
         same day the app wins, so a correction made today is not lost to an export
-        downloaded today (maintainer, 2026-10-29); the user's choice wins."""
+        downloaded today (DEC-130); the user's choice wins."""
         aggiornato = date.fromisoformat(self.aggiornato_al) if self.aggiornato_al else None
         proposta = APP if aggiornato is None or modificato_il >= aggiornato else BUONASTRADA
         return proposta, self.scelte.get(chiave, proposta)
@@ -309,7 +309,7 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
         unita = Unita.objects.create(
             gruppo=gruppo,
             # BuonaStrada has no unit names: the group gives one (shown as a warning
-            # until then); the Co.Ca. may stay without (maintainer, 2026-10-29).
+            # until then); the Co.Ca. may stay without (DEC-128).
             nome="",
             tipo=riga.tipo_unita,
             composizione=riga.composizione,

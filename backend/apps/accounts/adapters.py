@@ -43,7 +43,7 @@ def collega_invito(request, user) -> None:
 
 class AccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request) -> bool:
-        """An invitation, or a registration code from the app (maintainer, 2026-10-29)."""
+        """An invitation, or a registration code from the app (DEC-120)."""
         from apps.iscrizioni.servizi import in_sessione
 
         return invito_in_sessione(request) is not None or in_sessione(request) is not None

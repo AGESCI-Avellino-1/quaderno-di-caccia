@@ -1,4 +1,4 @@
-"""Full export and erasure of a person's data (DEC-102; maintainer, 2026-10-29).
+"""Full export and erasure of a person's data (DEC-102, DEC-136).
 
 Export: everything the app holds about a person, as JSON (portability) that the PWA
 also shows as a printable page. Erasure: the data that exist only in the app go; an

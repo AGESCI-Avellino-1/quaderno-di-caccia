@@ -1,8 +1,7 @@
 """What follows a ragazzo leaving a reparto (DEC-65).
 
 The patrol is the basic body of the reparto: every ragazzo of the reparto is in one,
-and whoever leaves the reparto leaves the patrol (confirmed by the maintainer on
-2026-10-28).
+and whoever leaves the reparto leaves the patrol (DEC-133).
 """
 
 from datetime import date

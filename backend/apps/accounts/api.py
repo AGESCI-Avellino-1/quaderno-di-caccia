@@ -107,7 +107,7 @@ def crea_invito(request, dati: NuovoInvito):
     if User.objects.filter(email__iexact=dati.email).exists():
         raise HttpError(400, "Esiste già un account con questa email.")
     # One email per person: a child is not invited with a parent's address, which the
-    # parent needs for their own account (maintainer, 2026-10-28, refines DEC-25).
+    # parent needs for their own account (DEC-116, refines DEC-25).
     if Persona.objects.exclude(pk=persona.pk).filter(email__iexact=dati.email).exists():
         raise HttpError(
             400,

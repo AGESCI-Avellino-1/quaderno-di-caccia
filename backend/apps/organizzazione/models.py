@@ -74,7 +74,7 @@ class Gruppo(ModelloTracciato):
 class Unita(ModelloTracciato):
     gruppo = models.ForeignKey(Gruppo, on_delete=models.PROTECT, related_name="unita")
     # Given by the group, not by BuonaStrada, and it may repeat (e.g. "Reparto
-    # Millennium"); optional only for the Co.Ca. (maintainer, 2026-10-29).
+    # Millennium"); optional only for the Co.Ca. (DEC-128).
     nome = models.CharField(max_length=120, blank=True)
     tipo = models.CharField(max_length=20, choices=TipoUnita.choices)
     composizione = models.CharField(max_length=1, choices=Composizione.choices)
@@ -102,7 +102,7 @@ class Unita(ModelloTracciato):
         ]
 
     def __str__(self) -> str:
-        """Type, name, code: "Clan/Fuoco Hirpinia (T1)" (maintainer, 2026-10-29). The
+        """Type, name, code: "Clan/Fuoco Hirpinia (T1)" (DEC-128). The
         name is the group's and may repeat or be missing; the BuonaStrada code does not."""
         testo = f"{self.get_tipo_display()} {self.nome}".strip()
         return f"{testo} ({self.codice})" if self.codice else testo

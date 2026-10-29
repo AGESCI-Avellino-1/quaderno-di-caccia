@@ -287,7 +287,7 @@ def scarta(request, correzione_id: int, dati: Scarto):
     return _correzione_out(correzione) | {"persona": correzione.persona}
 
 
-# --- Phones within the patrol (DEC-13, maintainer 2026-10-29) ------------------------
+# --- Phones within the patrol (DEC-13, DEC-115) ---------------------------------
 
 
 class TelefonoMembro(Schema):
@@ -371,7 +371,7 @@ def _membri(squadriglia: Squadriglia, capo: bool) -> tuple[list[dict], list[dict
 @router.get("/mia-squadriglia", response=list[MiaSquadriglia])
 def mie_squadriglie(request):
     """Phones of the patrol for its members: each member sees the others' phone, the
-    CSQ also the parents' (DEC-13, maintainer 2026-10-29). Phones only, no email."""
+    CSQ also the parents' (DEC-13, DEC-115). Phones only, no email."""
     guidate = set(policy.squadriglie_guidate(request.auth).values_list("pk", flat=True))
     risultato = []
     for sq in policy.squadriglie_di(request.auth).select_related("unita").order_by("nome"):

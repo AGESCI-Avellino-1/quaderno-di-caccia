@@ -136,7 +136,7 @@ export const AMBIENTI: Scelta[] = [
   { valore: 'BOSCO', etichetta: 'Bosco' },
 ]
 
-/** Type, name, code: "Clan/Fuoco Hirpinia (T1)" (maintainer, 2026-10-29). The name is
+/** Type, name, code: "Clan/Fuoco Hirpinia (T1)" (DEC-128). The name is
  * the group's and may repeat or be missing; the BuonaStrada code does not. */
 export function nomeUnita(u: { nome: string; codice?: string; tipo: string }): string {
   const tipo = TIPI_UNITA.find((t) => t.valore === u.tipo)?.etichetta ?? ''

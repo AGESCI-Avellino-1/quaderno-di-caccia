@@ -266,7 +266,7 @@ def test_cambio_unita_da_buonastrada_chiude_e_apre():
 
 def test_chi_esce_dal_reparto_esce_dalla_squadriglia():
     """The patrol belongs to the reparto: leaving the reparto ends the patrol membership,
-    the CSQ role and any exception for that reparto (maintainer, 2026-10-28)."""
+    the CSQ role and any exception for that reparto (DEC-133)."""
     from apps.anagrafica.models import AppartenenzaSquadriglia, DerogaSquadriglia
     from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
 

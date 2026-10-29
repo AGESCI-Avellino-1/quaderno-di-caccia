@@ -7,8 +7,7 @@ import { useErrore } from '@/composables/useErrore'
 // Two steps (DEC-33): the file is first read in preview, nothing is saved; the capogruppo
 // checks the summary and only then applies it. Where the app and BuonaStrada disagree
 // the user picks the winner; the more recent side is proposed, comparing the date of
-// the change in the app with the date the BuonaStrada data were updated (maintainer,
-// 2026-10-29).
+// the change in the app with the date the BuonaStrada data were updated (DEC-130).
 const { errore, inCorso, esegui } = useErrore()
 const file = ref<File | null>(null)
 // Local date as YYYY-MM-DD (toISOString would give the UTC day around midnight).

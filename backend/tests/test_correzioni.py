@@ -1,7 +1,7 @@
 """Corrections to BuonaStrada data (DEC-31).
 
 Who corrects what, forwarding by the capigruppo, discarding with the previous value
-back and the daily summary: decided with the maintainer on 2026-10-29 (see TODO.md).
+back and the daily summary: DEC-129.
 """
 
 from datetime import date
@@ -29,7 +29,7 @@ pytestmark = pytest.mark.django_db
 
 TUTTI = set(CAMPI_BUONASTRADA)
 SENZA_IDENTITA = TUTTI - set(CAMPI_IDENTITA)
-# The unit staff also corrects sex and place of birth (maintainer, 2026-10-29).
+# The unit staff also corrects sex and place of birth (DEC-129).
 STAFF = SENZA_IDENTITA | {"sesso", "luogo_nascita"}
 CONTATTI_E_CONSENSI = set(CAMPI_CONTATTO) | {
     "consenso_iscrizione",

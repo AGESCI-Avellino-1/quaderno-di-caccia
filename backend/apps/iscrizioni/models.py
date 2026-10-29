@@ -1,4 +1,4 @@
-"""New members joining from the app (maintainer, 2026-10-29; no analysis code yet).
+"""New members joining from the app (DEC-120…DEC-127).
 
 A capo hands out a registration code (QR code, link or the code itself): reusable for
 a unit for a period (e.g. an open day) or personal and single use. Whoever uses it
@@ -86,7 +86,7 @@ DA_COMPLETARE = (StatoIscrizione.APPROVATA, StatoIscrizione.SOSPESA)
 # Accepted and not yet found in a BuonaStrada import.
 NON_RECEPITE = (*DA_COMPLETARE, StatoIscrizione.COMPLETATA, StatoIscrizione.INSERITA)
 
-# What BuonaStrada requires to enter a member (maintainer, 2026-10-29): name, surname,
+# What BuonaStrada requires to enter a member (DEC-124): name, surname,
 # codice fiscale and birth date are asked with the request; the rest here. Their own
 # mobile and email for an adult (any unit) and for a minor in Clan/Fuoco or Noviziato;
 # for a minor, the parents (one, with exclusive custody, or both) with codice fiscale,
@@ -207,7 +207,7 @@ class RichiestaIscrizione(ModelloTracciato):
             raise ValidationError("Scrivi l'email.")
 
 
-# --- Signed forms (maintainer, 2026-10-29) --------------------------------------------
+# --- Signed forms (DEC-126) ---------------------------------------------------------------
 
 DIMENSIONE_MASSIMA = 10 * 1024 * 1024
 # First bytes of the accepted files: PDF, JPEG, PNG.

@@ -1,7 +1,6 @@
 """Units, staff and roles (DEC-09, DEC-10, DEC-11, DEC-14, DEC-18).
 
-Who appoints CSQ/VCSQ, group roles and unit treasurers: decided with the maintainer on
-2026-10-28 (see TODO.md).
+Who appoints CSQ/VCSQ, group roles and unit treasurers: DEC-111.
 """
 
 from datetime import timedelta
@@ -411,7 +410,7 @@ def test_csq_scelto_tra_i_membri(staff, volpi, nuova_ragazza):
     assert _nomina(staff, nuova_ragazza, "CSQ", squadriglia_id=volpi.pk).status_code == 201
 
 
-# --- single-sex patrols and Co.Ca. exceptions (maintainer, 2026-10-28) -------------------
+# --- single-sex patrols and Co.Ca. exceptions (DEC-131, DEC-132) ----------------------
 
 
 @pytest.fixture

@@ -25,7 +25,7 @@ def fratelli(persona: Persona) -> QuerySet[Persona]:
     return Persona.objects.filter(tutori__tutore_id__in=tutori).exclude(pk=persona.pk).distinct()
 
 
-# --- Provisional codice socio (maintainer, 2026-10-29) ---------------------------------
+# --- Provisional codice socio (DEC-122) ------------------------------------------------
 # A member who joins from the app has no codice socio until the group enters them in
 # BuonaStrada: they get 9 followed by a zero-padded progressive, 10 digits in all.
 # Real codes have about 7 digits, so the two never clash; the import replaces the
@@ -138,7 +138,7 @@ def inoltra_correzione(correzione: CorrezioneAnagrafica, utente) -> None:
 
 @transaction.atomic
 def scarta_correzione(correzione: CorrezioneAnagrafica, utente, motivo: str) -> None:
-    """A capogruppo discards it: the previous value comes back (maintainer, 2026-10-29)."""
+    """A capogruppo discards it: the previous value comes back (DEC-129)."""
     if not correzione.aperta:
         raise ValidationError("Questa correzione è già chiusa.")
     correzione.stato = StatoCorrezione.SCARTATA
@@ -153,8 +153,8 @@ def scarta_correzione(correzione: CorrezioneAnagrafica, utente, motivo: str) -> 
 
 
 def supera_correzione(correzione: CorrezioneAnagrafica) -> None:
-    """At import time BuonaStrada's value was chosen over the app's (maintainer,
-    2026-10-29): the correction closes, whoever made it sees it on the person page."""
+    """At import time BuonaStrada's value was chosen over the app's (DEC-130):
+    the correction closes, whoever made it sees it on the person page."""
     correzione.stato = StatoCorrezione.SUPERATA
     correzione.chiusa_il = timezone.now()
     correzione.save()
@@ -167,12 +167,12 @@ def recepisci_correzione(correzione: CorrezioneAnagrafica) -> None:
     correzione.save()
 
 
-# --- Phones within the patrol (DEC-13, maintainer 2026-10-29) ------------------------
+# --- Phones within the patrol (DEC-13, DEC-115) ---------------------------------
 
 
 def genitori_con_telefono(persona: Persona) -> QuerySet[Persona]:
     """Parents and legal guardians with parental responsibility and a mobile number:
-    the only numbers a child may share in the patrol (maintainer, 2026-10-29)."""
+    the only numbers a child may share in the patrol (DEC-115)."""
     return Persona.objects.filter(
         tutele__minore=persona, tutele__responsabilita_genitoriale=True
     ).exclude(cellulare="")
@@ -193,8 +193,8 @@ def telefono_in_squadriglia(persona: Persona) -> tuple[str, Persona | None]:
 
     BuonaStrada counts when it has the child's mobile (minors need not have one, and
     below R/S it cannot be entered); otherwise the parent chosen for this child, then
-    the parent chosen for the whole family; otherwise no number (maintainer,
-    2026-10-29). Hiding is not applied here: the CSQ sees the number anyway.
+    the parent chosen for the whole family; otherwise no number
+    (DEC-115). Hiding is not applied here: the CSQ sees the number anyway.
     """
     if persona.cellulare:
         return persona.cellulare, None

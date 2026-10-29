@@ -211,7 +211,7 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 
 | Phase | Content | Status |
 | --- | --- | --- |
-| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **built** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31), patrol phones (DEC-13), non-medical dietary needs with the health essentials (DEC-49), what parents of an adult see and the alerts at 18 (DEC-26), requests from data subjects with full export and erasure (DEC-102). Not yet tried in a browser end to end |
+| 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **built** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31), patrol phones (DEC-13), non-medical dietary needs with the health essentials (DEC-49), what parents of an adult see and the alerts at 18 (DEC-26), requests from data subjects with full export and erasure (DEC-102), joining from the app (DEC-120…DEC-127). Tried in a browser end to end on 2026-10-29; left: passkey/Google/Apple on real devices, cron in production |
 | 2. Quote e cassa | fee types, sibling discount, agevolazioni, payments, receipts, cash book on Modello D | catalog ready in `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | — |
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
@@ -223,16 +223,19 @@ priority and must stay the reference client;
 check Apple guideline 4.2 with a prototype before investing (see "Punti ancora da
 verificare" in the analysis).
 
-## Open points to confirm with the maintainer
+## Decisions taken during phase 1 (DEC-110…DEC-136) and open points
 
-- "Staff dell'unità" (DEC-09) is an `Incarico` with role `STAFF`, not an `Appartenenza`:
+The decisions of 28–29/10/2026 are in the analysis as DEC-110…DEC-136; where the code
+implements them:
+
+
+- "Staff dell'unità" (DEC-09, DEC-110) is an `Incarico` with role `STAFF`, not an `Appartenenza`:
   capi belong to the Co.Ca. from the import, and a second CAPO membership would look to
   the import like a change of unit. `policy.e_staff` counts the capo unità too.
 - Who appoints CSQ/VCSQ (the reparto staff), group roles (capigruppo in office; the
   technical administrator only when there is none) and unit treasurers (capo unità and
-  capigruppo) was decided with the maintainer on 2026-10-28 and is not yet in the
-  analysis: see `TODO.md`, `policy.puo_nominare`.
-- Squadriglie (maintainer, 2026-10-28): composed by the reparto staff and the
+  capigruppo), DEC-111: `policy.puo_nominare`.
+- Squadriglie (DEC-112, DEC-131…DEC-133): composed by the reparto staff and the
   capigruppo; one patrol at a time; CSQ/VCSQ are members and close their role before
   moving; single-sex, with exceptions (`DerogaSquadriglia`) decided by the Co.Ca.,
   recorded by a capogruppo, visible to capi only, valid while the person stays in the
@@ -240,18 +243,18 @@ verificare" in the analysis).
   (`organizzazione/servizi.esci_dal_reparto`, called by the import). Created and
   closed by the same people (`policy.puo_gestire_squadriglie`).
 - Health data is written by the staff of the person's unit and by the capigruppo for
-  every unit (`policy.puo_modificare_sanitarie`, confirmed 2026-10-28).
+  every unit (DEC-113, `policy.puo_modificare_sanitarie`).
 - django-auditlog's `LogEntry` is in the Django admin and stores changed values, health
-  data included. Accepted by the maintainer (2026-10-28): the technical administrator is
+  data included (DEC-114): the technical administrator is
   always a capo or has a delegation from the capigruppo for the data. Health data still
   stays out of the admin itself; `DerogaSquadriglia.motivazione` stays out of the audit
   log.
-- Corrections (DEC-31, maintainer 2026-10-29): who corrects which field is
+- Corrections (DEC-31, DEC-129): who corrects which field is
   `policy.campi_correggibili` (sex and place of birth: unit staff and capigruppo; the
   adult also their own consents); capigruppo and the technical administrator forward
   or discard (`puo_gestire_correzioni`). The daily summary to the capigruppo is
   `manage.py segnala_correzioni`, run by the host's cron (`deploy/cron/qdc.crontab`).
-- Joining from the app (maintainer 2026-10-29, no DEC code yet; built): sign-up is open with an
+- Joining from the app (DEC-120…DEC-127): sign-up is open with an
   invitation (DEC-21) **or** a registration code (`apps/iscrizioni`, kept in the
   session until the allauth sign-up, `accounts.adapters`). Approval gives a provisional
   codice socio `9` + 9 digits (`anagrafica.servizi.nuovo_codice_provvisorio`); the import
@@ -269,34 +272,33 @@ verificare" in the analysis).
   consents. Capigruppo list `/iscrizioni-buonastrada` (+ `.xlsx`/`.pdf`, openpyxl and
   reportlab, never stored), "inserita"; the import (`_persona`) replaces the provisional
   code and closes the registration (`iscrizioni.servizi.recepisci`).
-- Units (maintainer 2026-10-29): `nome` is the group's, may repeat, required except for
+- Units (DEC-128): `nome` is the group's, may repeat, required except for
   the Co.Ca.; the BuonaStrada code (`Unita.codice`, CUN + progressive, e.g. O1, G1) is
   unique. A unit is always shown as type, name, code: "Clan/Fuoco Hirpinia (T1)"
   (`str(unita)`, `nomeUnita()` in the PWA). Units created by the import have no name
   (`Unita.senza_nome`, a warning on the unit page) until the group gives one.
-- Decisions of 28–29/10 without a DEC code yet: draft for the analysis in
-  `docs/analisi/decisioni-da-numerare.md`.
-- Import differences (maintainer 2026-10-29): when the app and BuonaStrada disagree (open
+- Import differences (DEC-130): when the app and BuonaStrada disagree (open
   correction, membership with `fonte=APP`) the user chooses per difference
   (`Differenza.chiave`); the preview proposes the more recent side, comparing the
   change date in the app with `ImportazioneBuonaStrada.dati_aggiornati_al`, asked at
-  upload; on the same day the app wins (maintainer, 2026-10-29). BuonaStrada winning closes the correction as
+  upload; on the same day the app wins. BuonaStrada winning closes the correction as
   `SUPERATA`.
 - Every account has its own email: a child is not invited with a parent's address
-  (maintainer, 2026-10-28, refines DEC-25; `accounts/api.crea_invito`).
-- After 18 (DEC-26, maintainer 2026-10-29): `VisibilitaGenitori` (contatti, sanitarie,
+  (DEC-116, supersedes DEC-25; `accounts/api.crea_invito`).
+- After 18 (DEC-26, DEC-119): `VisibilitaGenitori` (contatti, sanitarie,
   scheda; same for all parents), read through `policy.genitori_vedono`; everything
   visible until the R/S chooses; parents never write an adult's data. Alerts one month
   before and on the day: `manage.py avvisa_maggiore_eta` (cron). Fee link: phase 2.
-- Patrol phones (DEC-13, maintainer 2026-10-29): `GET /mia-squadriglia` (members see
+- Patrol phones (DEC-13, DEC-115): `GET /mia-squadriglia` (members see
   each other's phone, the CSQ also the parents'; VCSQ like a member; phones only);
   `Persona.telefono_squadriglia_da` / `_nascosto` / `telefono_per_i_figli` (on the
   parent), set by parents of a minor, the adult, unit staff and capigruppo
   (`policy.puo_impostare_telefono_squadriglia`). Order: own BuonaStrada mobile, parent
   or guardian chosen for the child, family number, none (`servizi.telefono_in_squadriglia`).
-- Decided on 2026-10-29, not built yet (details in `TODO.md`): accounts from 14 by invitation without parental approval
-  (DEC-24, as built); capi training entered by hand (DEC-47, phase 5).
-- Data subjects' rights (DEC-102, maintainer 2026-10-29): `apps/diritti`, capigruppo
+- Accounts from 14 by invitation without parental approval (DEC-117, as built); no second
+  email confirmation after an invitation (DEC-118); non-medical dietary needs with the
+  health data (DEC-135). Not built yet: capi training entered by hand (DEC-134, phase 5).
+- Data subjects' rights (DEC-102, DEC-136): `apps/diritti`, capigruppo
   only. Erasure removes the app-only data and their audit history; an ex member who is
   not a parent of a member is anonymised, keeping the periods in units; the access log
   stays. New sensitive data = add it to `diritti.servizi.fascicolo` and `cancella`.

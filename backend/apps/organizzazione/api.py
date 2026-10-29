@@ -447,7 +447,7 @@ def modifica_squadriglia(request, squadriglia_id: int, dati: SquadrigliaIn):
 
 # --- Patrol members (DEC-30, DEC-65) ------------------------------------------------------
 # Composed by the same people who create them (policy.puo_gestire_squadriglie),
-# confirmed by the maintainer on 2026-10-28.
+# DEC-112.
 
 
 def _chiudi_periodo(oggetto, fine: date) -> bool:
@@ -521,7 +521,7 @@ def togli_membro(request, appartenenza_id: int):
 
 
 # --- Exceptions to single-sex patrols ------------------------------------------------------
-# Decided with the maintainer on 2026-10-28 (see TODO.md): the Co.Ca. decides, a
+# DEC-132: the Co.Ca. decides, a
 # capogruppo records it, only capi see it; valid while the person stays in the reparto.
 # Special-category data: every read and change goes to the access log (DEC-101).
 

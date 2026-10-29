@@ -1,7 +1,7 @@
 """Requests from data subjects: access, rectification, erasure, export (DEC-102).
 
 The capigruppo answer them, as delegates of the controller, and pass them on to the
-national office (DEC-98; maintainer, 2026-10-29). The register shows what was asked,
+national office (DEC-98, DEC-136). The register shows what was asked,
 when, and when it was answered: the answer is due within a month (GDPR art. 12).
 """
 

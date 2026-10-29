@@ -1,6 +1,6 @@
 """Requests from data subjects: register, full export, erasure (DEC-102).
 
-Decided with the maintainer on 2026-10-29 (see TODO.md): only the capigruppo export
+DEC-136: only the capigruppo export
 and erase; JSON plus a readable page; erasure removes the app-only data and anonymises
 an ex member, keeping the periods in units; a register of the requests.
 """

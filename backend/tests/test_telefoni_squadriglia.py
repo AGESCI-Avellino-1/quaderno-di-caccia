@@ -1,6 +1,6 @@
 """Phones within the patrol (DEC-13).
 
-Decided with the maintainer on 2026-10-29 (see TODO.md): every member sees the other
+DEC-115: every member sees the other
 members' phone, the CSQ also the parents'; the VCSQ sees like a member; a child without
 a phone shares a parent's, chosen by the parents or the capi; the number can be hidden
 from the members, never from the CSQ. Phones only, no email.

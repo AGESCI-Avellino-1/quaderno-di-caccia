@@ -1,6 +1,6 @@
 """What the parents of an adult member see, and the alerts at 18 (DEC-26).
 
-Decided with the maintainer on 2026-10-29 (see TODO.md): the R/S chooses by category,
+DEC-119: the R/S chooses by category,
 for all parents alike; until then the parents keep seeing everything; alerts one month
 before and on the day, to the member and the parents; members without an account are
 shown to the capi on the unit page.

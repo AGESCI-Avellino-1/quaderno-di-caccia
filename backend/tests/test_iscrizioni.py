@@ -1,4 +1,4 @@
-"""Joining from the app with a registration code (maintainer, 2026-10-29).
+"""Joining from the app with a registration code (DEC-120…DEC-127).
 
 Codes reusable for a unit or personal; the parent registers a minor; the account waits
 until the unit staff (capigruppo for the Co.Ca.) approves; the member gets a provisional
@@ -603,7 +603,7 @@ def test_profilo_conta_i_moduli_da_verificare(approvata, genitore_nuovo, capo):
     assert _client(capo).get("/api/v1/io").json()["iscrizioni_da_verificare"] == 1
 
 
-# --- What BuonaStrada requires (maintainer, 2026-10-29) ---------------------------------
+# --- What BuonaStrada requires (DEC-124) ------------------------------------------------
 
 
 def test_entrambi_i_genitori_servono_i_dati_dell_altro(approvata, genitore_nuovo):

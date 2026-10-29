@@ -27,8 +27,8 @@ per ultima, dopo tutte le altre fasi.
 
 | Attività | Chi | Stato |
 | --- | --- | --- |
-| Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada (nome, cognome, CF, sesso, data e luogo di nascita, indirizzo, comune, provincia, CAP; cellulare ed email propri per il maggiorenne e per il minore in clan/fuoco o noviziato; per il minore i genitori, singolo o entrambi, con CF, cellulare ed email; i consensi dai moduli); promemoria 7 giorni prima; sospensione solo del nuovo socio; all'importazione vince BuonaStrada; sesso e luogo di nascita correggibili anche dallo staff; il maggiorenne corregge anche i suoi consensi; correzioni gestite anche dall'amministratore tecnico | maintainer | ✅ applicate |
-| Riportare nell'analisi le decisioni del 28 e 29/10, per dar loro un codice DEC: bozza pronta in [docs/analisi/decisioni-da-numerare.md](docs/analisi/decisioni-da-numerare.md) | maintainer | ⏳ |
+| Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada, promemoria, sospensione, chi corregge cosa (ora DEC-124, DEC-125, DEC-129, DEC-130) | maintainer | ✅ applicate |
+| Riportare nell'analisi le decisioni del 28 e 29/10 (DEC-110…DEC-136) | sviluppo | ✅ 29/10 |
 | In produzione, programmare i comandi giornalieri: esempio pronto in [deploy/cron/qdc.crontab](deploy/cron/qdc.crontab) | chi installa | ⏳ |
 | Avviso nella pagina dell'unità finché non ha un nome (le unità importate nascono senza); unità mostrate come "Tipo Nome (Codice)" | sviluppo | ✅ |
 | Prove nel browser: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza server (copia cifrata) | sviluppo | ✅ 29/10 |
@@ -73,7 +73,7 @@ fase 6 e l'app negli store: vedi la tabella "Fasi".
 | Farmaci, allergie, intolleranze + vista "Al campo" offline | ✅ | DEC-55, `apps/sanitaria` |
 | Registro degli accessi ai dati sanitari | ✅ | DEC-101 |
 | Interfaccia per invitare (scheda persona: persona e genitori, consenso sotto i 14 anni, annullamento) | ✅ | DEC-21, DEC-24, DEC-25, `components/AccountPersona.vue` |
-| Gestione di unità, staff, incarichi e squadriglie | ✅ | DEC-10, DEC-11, DEC-14, DEC-18; pagine Unità e Capigruppo; vedi "Decisioni da riportare nell'analisi" |
+| Gestione di unità, staff, incarichi e squadriglie | ✅ | DEC-10, DEC-11, DEC-14, DEC-18; pagine Unità e Capigruppo; DEC-110…DEC-112 |
 | Composizione delle squadriglie (chi è in quale squadriglia, spostamenti durante l'anno) | ✅ | DEC-30, DEC-65; pagina dell'unità |
 | Squadriglie maschili o femminili, eccezioni decise dalla Co.Ca., uscita dal reparto | ✅ | scheda persona e pagina dell'unità |
 | Correzioni ai dati inviate ai capigruppo (scheda persona, pagina Correzioni, email giornaliera, chiusura all'importazione) | ✅ | DEC-31, `apps/anagrafica/servizi.py`, comando `segnala_correzioni` |
@@ -83,41 +83,14 @@ fase 6 e l'app negli store: vedi la tabella "Fasi".
 | Contatti in squadriglia (pagina "La mia squadriglia" anche offline, numero del genitore, numero nascosto) | ✅ | DEC-13, `anagrafica/api.py`, `components/TelefonoSquadriglia.vue` |
 | Esigenze alimentari non mediche nella scheda e nella vista "Al campo" | ✅ | DEC-49, `sanitaria.InformazioniSanitarie.esigenze_alimentari` |
 
-## Decisioni da riportare nell'analisi
+## Decisioni prese durante la fase 1
 
-Prese con il maintainer il 28/10/2026, ancora senza codice DEC.
-
-| Chi nomina | Chi può farlo |
-| --- | --- |
-| Capo squadriglia e vice | Tutto lo staff del reparto |
-| Capigruppo e tesoriere di gruppo | I capigruppo in carica; l'amministratore tecnico al primo avvio o se mancano |
-| Tesoriere di unità | Il capo unità e i capigruppo |
-| Creazione, chiusura e composizione delle squadriglie | Lo staff del reparto e i capigruppo |
-| Dati sanitari | Li scrivono lo staff dell'unità e i capigruppo (per tutte le unità) |
-
-| Regola | Decisione |
-| --- | --- |
-| Squadriglie maschili o femminili | Controllo all'inserimento; se il sesso manca in BuonaStrada l'inserimento è permesso e la pagina del reparto lo segnala |
-| Eccezioni (identità di genere, transizioni) | Decide la Co.Ca., registra un capogruppo con la motivazione; le vedono solo i capi, ogni lettura va nel registro accessi; valgono finché la persona resta nel reparto |
-| Uscita dal reparto | La squadriglia è organo di base del reparto: chi esce dal reparto esce dalla squadriglia (e dagli incarichi di CSQ e vice) |
-| Email degli inviti (precisa DEC-25) | Ogni account ha la sua email: un ragazzo non si invita con l'email di un genitore |
-| Registro delle modifiche nell'admin | Accettato: l'amministratore tecnico è sempre un capo o ha la delega dei capigruppo per i dati |
-
-Prese con il maintainer il 29/10/2026 (chiudono i "Punti ancora da verificare"
-dell'analisi); tutte realizzate tranne il percorso di formazione dei capi (fase 5):
-
-| Punto | Decisione | Rif. |
-| --- | --- | --- |
-| Contatti in squadriglia | Ogni squadrigliere vede il solo telefono degli altri squadriglieri. Il CSQ vede anche i contatti dei genitori di tutta la squadriglia; il vice CSQ vede come uno squadrigliere. Numero mostrato: il cellulare del ragazzo in BuonaStrada se c'è (i minorenni non sono obbligati ad averlo, e sotto la branca R/S non si può inserire); altrimenti quello di un genitore o tutore scelto per quel figlio; altrimenti quello scelto per tutti i figli senza cellulare; altrimenti nessuno. Il genitore (o il ragazzo maggiorenne) può nascondere il numero agli squadriglieri; il CSQ lo vede comunque. Numero e visibilità li impostano genitore, maggiorenne, staff dell'unità e capigruppo. Solo telefono, anche per i genitori visti dal CSQ; copia cifrata sul telefono per le uscite | DEC-13 |
-| Account dai 14 anni | Invito del capo unità o di un capogruppo, senza approvazione del genitore (come già fatto) | DEC-24 |
-| Ai 18 anni | Finché l'R/S non decide, i genitori continuano a vedere quello che vedevano (senza modificarlo). L'R/S sceglie per categoria (contatti e indirizzo; farmaci, allergie e alimentazione; scheda e attività), uguale per tutti i genitori. Email all'R/S e ai genitori un mese prima e il giorno dei 18 anni; se non ha un account, la pagina dell'unità lo segnala ai capi. Il collegamento del genitore alle quote arriva con la fase 2 | DEC-26 |
-| Correzioni ai dati di BuonaStrada | Le fanno il genitore (dati suoi e dei figli), il maggiorenne (i suoi), lo staff dell'unità e i capigruppo (ragazzi dell'unità). Contatti e indirizzo tutti; nome, codice fiscale e data di nascita solo i capigruppo. Consensi, stato socio, formazione e nomina: genitore (figli), staff dell'unità (suoi soci), capigruppo; l'amministratore tecnico corregge tutto. I capigruppo vedono l'elenco, inoltrano loro alla segreteria e segnano "inoltrata"; la correzione si chiude quando l'importazione la ritrova in BuonaStrada. Un capogruppo può scartarla con un motivo: torna il valore di prima. Email riassuntiva ai capigruppo, al massimo una al giorno | DEC-31 |
-| Iscrizione dall'app | Codice di iscrizione per l'unità (riusabile fino alla scadenza) o personale (una volta), anche come link e QR code. Il genitore iscrive il figlio minorenne; il maggiorenne si iscrive da sé; in Co.Ca. solo maggiorenni. L'account resta "in attesa" finché la richiesta non è accolta: dallo staff dell'unità o dai capigruppo; per i capi solo dai capigruppo. Accolta, il socio ha un codice socio provvisorio 9 + 9 cifre (es. 9000000001) finché l'importazione da BuonaStrada non lo sostituisce (ritrovandolo dal codice fiscale). Un capo non ancora in BuonaStrada vede organizzazione e nomi, non i dati delicati. Dati minimi all'iscrizione, il resto entro una scadenza fissata all'approvazione, poi sospensione; moduli firmati caricati e verificati dallo staff; elenco per i capigruppo esportabile in XLSX e PDF | — |
-| Nome e codice delle unità | Il nome lo dà il gruppo (non è in BuonaStrada) e può ripetersi; è obbligatorio, tranne per la Co.Ca. Il codice BuonaStrada (es. O1, G1 per la Co.Ca.) è univoco. L'unità si mostra come tipo, nome e codice: "Clan/Fuoco Hirpinia (T1)". Le unità create dall'importazione nascono senza nome, segnalate finché il gruppo non lo dà | — |
-| Differenze tra app e BuonaStrada all'importazione | Chi importa indica la data di aggiornamento dei dati di BuonaStrada; per ogni differenza (dati corretti nell'app, unità assegnate nell'app) sceglie quale dato vince, con proposto il più recente (a parità, l'app). Se vince BuonaStrada la correzione si chiude come "superata da BuonaStrada" | DEC-31, DEC-34 |
-| Percorso di formazione dei capi | Inserito a mano dal capo o da un capogruppo; da BuonaStrada solo il livello | DEC-47 |
-| Esigenze alimentari non mediche | Nella scheda personale, trattate come i dati sanitari (anche le religiose, dato particolare GDPR): stesse persone, offline al campo, registro accessi | DEC-49 |
-| Delega e diritti GDPR | La delega dei capigruppo copre l'app: si realizzano accesso, rettifica, cancellazione, esportazione, gestite dai capigruppo, che le girano al nazionale. Fascicolo e cancellazione solo dai capigruppo; fascicolo in JSON e pagina leggibile; la cancellazione toglie i dati che esistono solo nell'app e rende anonimo chi non è più socio (né genitore di un socio), tenendo i periodi nelle unità; registro delle richieste con scadenza a un mese | DEC-98, DEC-102 |
+Le decisioni prese con il maintainer il 28 e 29/10/2026 sono nell'analisi come
+DEC-110…DEC-136 ([docs/analisi/analisi-requisiti.md](docs/analisi/analisi-requisiti.md)):
+ruoli e squadriglie DEC-110…DEC-115 e DEC-131…DEC-133, account DEC-116…DEC-119,
+iscrizione dall'app DEC-120…DEC-127, unità DEC-128, correzioni e importazione
+DEC-129, DEC-130, formazione dei capi DEC-134 (fase 5), esigenze alimentari DEC-135,
+diritti GDPR DEC-136.
 
 ## Punti aperti da confermare
 

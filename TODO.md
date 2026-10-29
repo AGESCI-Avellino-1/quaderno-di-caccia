@@ -13,13 +13,50 @@ per ultima, dopo tutte le altre fasi.
 
 | # | Fase | Stato | Note |
 | --- | --- | --- | --- |
-| 1 | Fondamenta | ✅ | vedi dettaglio sotto; da provare nel browser |
-| 2 | Quote e cassa | ⏳ | pronto solo il catalogo `backend/data/cataloghi/modello_d_2024_2025.json` |
+| 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026, restano alcune verifiche (vedi "Prossimi passi") |
+| 2 | Quote e cassa | ⏳ | **la prossima**; pronto il catalogo `backend/data/cataloghi/modello_d_2024_2025.json` |
 | 3 | Eventi e presenze | ⏳ | — |
 | 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
 | 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto, Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | ultima, dopo la fase 6; DEC-105; prima un prototipo per la regola Apple 4.2 |
+
+## Prossimi passi
+
+### 1. Chiudere la fase 1
+
+| Attività | Chi | Stato |
+| --- | --- | --- |
+| Confermare le scelte segnate `[da verificare]`: quali campi BuonaStrada sono obbligatori per inserire un socio (oggi: sesso, luogo di nascita, indirizzo, comune, provincia, CAP; cellulare del genitore); promemoria dell'iscrizione 7 giorni prima della scadenza; sospensione dell'intero account (anche per gli altri figli già soci); all'importazione i dati di BuonaStrada vincono su quelli inseriti con l'iscrizione; sesso e luogo di nascita trattati come dati d'identità nelle correzioni; il maggiorenne non corregge i propri consensi; inoltro e scarto delle correzioni solo ai capigruppo (non all'amministratore tecnico) | maintainer | ⏳ |
+| Riportare nell'analisi le decisioni del 28 e 29/10 (tabelle sotto), per dar loro un codice DEC | maintainer | ⏳ |
+| In produzione, programmare con cron i comandi giornalieri `segnala_correzioni`, `avvisa_maggiore_eta`, `promemoria_iscrizioni` (righe nel README) | chi installa | ⏳ |
+| Prove nel browser non ancora fatte: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza rete, passkey, Google e Apple | sviluppo | ⏳ |
+| Proposta da decidere: avviso nella pagina dell'unità finché ha il nome provvisorio dato dall'importazione | maintainer | ⏳ |
+
+### 2. Fase 2 — Quote e cassa
+
+Ordine proposto: prima quote e pagamenti (servono alle famiglie), poi la prima nota.
+Autofinanziamento e budget dei campi dipendono dagli eventi (fase 3); l'estratto conto
+bancario è della fase 6 (DEC-93).
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| 2.1 | Tipi di quota: censimento (quota nazionale), quota di gruppo, quota mensile di unità, campi e uscite, eventi esterni; importi per anno associativo | DEC-80 | ⏳ |
+| 2.2 | Sconto fratelli automatico, attivabile per tipo di quota, mai sulla quota nazionale | DEC-81, DEC-33 | ⏳ |
+| 2.3 | Agevolazioni: la cassa di gruppo copre in tutto o in parte una quota; chi la decide e chi la vede (il tesoriere R/S no) | DEC-82, DEC-11 | ⏳ |
+| 2.4 | Pagamenti registrati (contanti, bonifico, altro; link di pagamento), anche offline come registrazioni da accodare | DEC-83, DEC-96 | ⏳ |
+| 2.5 | Ricevute PDF non fiscali, numerate per anno associativo, inviate al genitore | DEC-84 | ⏳ |
+| 2.6 | Vista del genitore: quote dovute e pagate con sconti e agevolazioni; chi non ha pagato lo vedono solo Co.Ca. e famiglia; il genitore resta collegato alle quote del figlio maggiorenne finché questo non lo scollega | DEC-16, DEC-92, DEC-26 | ⏳ |
+| 2.7 | Prima nota per cassa: conto bancario e casse contanti per unità, configurabili; giroconti | DEC-85, DEC-88 | ⏳ |
+| 2.8 | Uscite con foto del giustificativo, anche offline; rimborsi ai capi | DEC-86 | ⏳ |
+| 2.9 | Categorie del Modello D dal catalogo; quote anticipate su BuonaCaccia in A.2 | DEC-87, DEC-89 | ⏳ |
+| 2.10 | Autofinanziamento come evento e budget dei campi (dopo la fase 3) | DEC-90, DEC-91 | 💤 |
+
+### 3. Fasi successive
+
+Eventi e presenze (fase 3), Progressione Personale (fase 4), fascicolo completo con
+scheda medica e percorso di formazione dei capi inserito a mano (fase 5, DEC-47), poi la
+fase 6 e l'app negli store: vedi la tabella "Fasi".
 
 ## Fase 1 — Fondamenta
 
@@ -66,7 +103,7 @@ Prese con il maintainer il 28/10/2026, ancora senza codice DEC.
 | Registro delle modifiche nell'admin | Accettato: l'amministratore tecnico è sempre un capo o ha la delega dei capigruppo per i dati |
 
 Prese con il maintainer il 29/10/2026 (chiudono i "Punti ancora da verificare"
-dell'analisi), da realizzare:
+dell'analisi); tutte realizzate tranne il percorso di formazione dei capi (fase 5):
 
 | Punto | Decisione | Rif. |
 | --- | --- | --- |

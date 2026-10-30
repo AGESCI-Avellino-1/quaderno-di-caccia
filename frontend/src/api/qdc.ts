@@ -1202,6 +1202,25 @@ export interface AvvisoIn {
 
 export const allegatoAvviso = (id: number) => `/api/v1/allegati-avviso/${id}`
 
+/** The Carta di clan as PDF versions (DEC-227…DEC-229). */
+export interface CartaClan {
+  unita: string
+  versioni: {
+    id: number
+    in_vigore_dal: string | null
+    corrente: boolean
+    nota: string
+    caricata_da: string
+    caricata_il: string
+    firme: number
+    puo_togliere: boolean
+  }[]
+  puo_proporre: boolean
+  puo_approvare: boolean
+}
+
+export const pdfCartaClan = (id: number) => `/api/v1/carta-clan/${id}/pdf`
+
 /** The personal calendar; a capo has three views (their unit; Co.Ca. and their unit;
  * the whole group), everyone else one. */
 export interface Calendario {
@@ -1672,6 +1691,8 @@ export interface PeriodoBranca {
   tappe: TappaSentiero[]
   // R/S only (DEC-67).
   firma_carta: DataParziale | null
+  /** The version of the Carta signed (DEC-229). */
+  carta_firmata: number | null
   conclusione: {
     tipo: TipoConclusione
     tipo_nome: string
@@ -1829,6 +1850,8 @@ export interface SchedaProgressione {
   tipi_conclusione: Scelta[]
   // L/C (DEC-66, DEC-184, DEC-185).
   ambiente: 'GIUNGLA' | 'BOSCO' | null
+  /** The clan whose Carta the person reads (DEC-228). */
+  carta_clan_unita: number | null
   stagioni: { id: number; nome: string; stato: StatoStagione }[]
   piccole_orme: { evento: string; inizio: string; fine: string; stato: string }[]
   puo_scrivere_voce: boolean
@@ -2254,6 +2277,19 @@ export const api = {
       corpo: { importo },
     }),
   preferenzeEmail: () => richiesta<PreferenzeEmail>('/api/v1/io/email'),
+  cartaClan: (unita: number) => richiesta<CartaClan>(`/api/v1/unita/${unita}/carta-clan`),
+  caricaCartaClan: (unita: number, file: File, nota: string, in_vigore_dal: string) =>
+    richiesta<CartaClan>(`/api/v1/unita/${unita}/carta-clan`, {
+      metodo: 'POST',
+      corpo: conFile(in_vigore_dal ? { nota, in_vigore_dal } : { nota }, file),
+    }),
+  approvaCartaClan: (id: number, in_vigore_dal: string) =>
+    richiesta<CartaClan>(`/api/v1/carta-clan/${id}/approva`, {
+      metodo: 'POST',
+      corpo: { in_vigore_dal },
+    }),
+  togliCartaClan: (id: number) =>
+    richiesta<CartaClan>(`/api/v1/carta-clan/${id}`, { metodo: 'DELETE' }),
   bacheca: (scaduti = false) =>
     richiesta<Bacheca>(`/api/v1/avvisi${scaduti ? '?scaduti=true' : ''}`),
   pubblicaAvviso: (dati: AvvisoIn) =>

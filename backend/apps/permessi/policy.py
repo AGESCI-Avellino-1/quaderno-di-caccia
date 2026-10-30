@@ -1417,3 +1417,64 @@ def puo_gestire_estratto_conto(user) -> bool:
 def puo_configurare_carte(user) -> bool:
     """Which unit each debit card belongs to: the capigruppo (DEC-224)."""
     return e_capogruppo(user) and not e_capo_in_attesa(user)
+
+
+# --- Carta di clan (DEC-227…DEC-229) -----------------------------------------------------
+
+
+def _unita_ragazzo(persona: Persona | None) -> QuerySet:
+    if persona is None:
+        return Unita.objects.none()
+    return Unita.objects.filter(
+        pk__in=Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.RAGAZZO)
+        .values("unita_id")
+    )
+
+
+def clan_letti_da(persona: Persona | None) -> set[int]:
+    """The clans a rover, a scolta or a novice belongs to: a noviziato reads the clan it
+    is linked to, or every clan of the group when it is linked to none."""
+    clan: set[int] = set()
+    for unita in _unita_ragazzo(persona):
+        if unita.tipo == TipoUnita.CLAN_FUOCO:
+            clan.add(unita.pk)
+        elif unita.tipo == TipoUnita.NOVIZIATO:
+            if unita.collegata_a_id:
+                clan.add(unita.collegata_a_id)
+            else:
+                clan |= set(
+                    Unita.objects.filter(tipo=TipoUnita.CLAN_FUOCO, attiva=True).values_list(
+                        "pk", flat=True
+                    )
+                )
+    return clan
+
+
+def puo_vedere_carta_clan(user, unita: Unita) -> bool:
+    """The versions in force: every capo, the rover, scolte and novices, their parents
+    (of an adult while they still see their activities, DEC-26)."""
+    if e_capo(user):
+        return True
+    if unita.pk in clan_letti_da(persona_di(user)):
+        return True
+    return any(
+        unita.pk in clan_letti_da(figlio)
+        for figlio in tutelati(user)
+        if genitori_vedono(figlio, "scheda")
+    )
+
+
+def puo_proporre_carta_clan(user, unita: Unita) -> bool:
+    """A new version: a rover or a scolta of the clan (as a proposal), its staff and the
+    capigruppo."""
+    if puo_approvare_carta_clan(user, unita):
+        return True
+    return _unita_ragazzo(persona_di(user)).filter(pk=unita.pk).exists()
+
+
+def puo_approvare_carta_clan(user, unita: Unita) -> bool:
+    """Putting a version in force: the clan staff and the capigruppo."""
+    if e_capo_in_attesa(user) or unita.tipo != TipoUnita.CLAN_FUOCO:
+        return False
+    return e_staff(user, unita) or e_capogruppo(user)

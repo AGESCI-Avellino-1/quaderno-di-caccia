@@ -207,6 +207,13 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // The Carta di clan: clan, novices, parents and capi; the API decides (DEC-228).
+      path: '/unita/:id(\\d+)/carta-clan',
+      name: 'carta-clan',
+      component: () => import('@/views/CartaClanView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // The reparto at a glance: capi (DEC-72).
       path: '/unita/:id(\\d+)/sentiero',
       name: 'sentiero-unita',

@@ -20,6 +20,7 @@ from apps.permessi import policy
 from . import servizi
 from .models import (
     AllegatoPP,
+    CartaClan,
     ConsegnaDistintivo,
     Fase,
     FirmaCarta,
@@ -200,6 +201,8 @@ class PeriodoOut(Schema):
     tappe: list[TappaOut]
     # R/S only (DEC-67).
     firma_carta: DataOut | None = None
+    # The version of the Carta signed, once the clan has one (DEC-229).
+    carta_firmata: int | None = None
     conclusione: ConclusioneOut | None = None
 
 
@@ -251,6 +254,8 @@ class SchedaOut(Schema):
     # L/C (DEC-66, DEC-185): GIUNGLA or BOSCO for the names; the seasons of the unit a
     # preda or volo may refer to; the Piccole Orme lived (DEC-184).
     ambiente: str | None
+    # The clan whose Carta the person reads (rover, scolta, novice; DEC-228).
+    carta_clan_unita: int | None = None
     stagioni: list[StagioneBreve]
     piccole_orme: list[PiccoleOrmeOut]
     # What the user may do (the API checks again on every command).
@@ -426,6 +431,7 @@ def _scheda(user, persona: Persona) -> dict:
                     if hasattr(p, "firma_carta")
                     else None
                 ),
+                "carta_firmata": (p.firma_carta.versione_id if hasattr(p, "firma_carta") else None),
                 "conclusione": (
                     {
                         "tipo": p.conclusione.tipo,
@@ -485,6 +491,7 @@ def _scheda(user, persona: Persona) -> dict:
         "sedi": [{"valore": v, "etichetta": e} for v, e in SedeVerifica.choices],
         "tipi_conclusione": [{"valore": v, "etichetta": e} for v, e in TipoConclusione.choices],
         "ambiente": ambiente(persona),
+        "carta_clan_unita": min(policy.clan_letti_da(persona), default=None),
         "stagioni": [
             {"id": s.pk, "nome": s.nome, "stato": s.stato}
             for s in Stagione.objects.filter(
@@ -1852,3 +1859,157 @@ def togli_allegato(request, allegato_id: int):
     allegato.file.delete(save=False)
     allegato.delete()
     return _scheda(request.auth, persona)
+
+
+# --- Carta di clan (DEC-227…DEC-229) -------------------------------------------------------
+
+
+class VersioneCartaOut(Schema):
+    id: int
+    in_vigore_dal: date | None
+    # The one in force today.
+    corrente: bool
+    nota: str
+    caricata_da: str
+    caricata_il: datetime
+    firme: int
+    puo_togliere: bool
+
+
+class CartaClanOut(Schema):
+    unita: str
+    versioni: list[VersioneCartaOut]
+    puo_proporre: bool
+    puo_approvare: bool
+
+
+def _nome_utente(utente) -> str:
+    persona = getattr(utente, "persona", None) if utente else None
+    return f"{persona.nome} {persona.cognome}" if persona else ""
+
+
+def _clan(request, unita_id: int) -> Unita:
+    unita = get_object_or_404(Unita, pk=unita_id, tipo=TipoUnita.CLAN_FUOCO)
+    if not policy.puo_vedere_carta_clan(request.auth, unita):
+        raise HttpError(404, "Unità non trovata.")
+    return unita
+
+
+def _carta_clan(request, unita: Unita) -> dict:
+    user = request.auth
+    approva = policy.puo_approvare_carta_clan(user, unita)
+    proponi = policy.puo_proporre_carta_clan(user, unita)
+    versioni = CartaClan.objects.filter(unita=unita).select_related("caricata_da__persona")
+    if not proponi:
+        # Proposals are the clan's work in progress: readers see the versions in force.
+        versioni = versioni.filter(in_vigore_dal__isnull=False)
+    corrente = servizi.versione_in_vigore(unita, servizi.oggi())
+    return {
+        "unita": str(unita),
+        "versioni": [
+            {
+                "id": c.pk,
+                "in_vigore_dal": c.in_vigore_dal,
+                "corrente": corrente is not None and c.pk == corrente.pk,
+                "nota": c.nota,
+                "caricata_da": _nome_utente(c.caricata_da),
+                "caricata_il": c.creato_il,
+                "firme": c.firme.count(),
+                "puo_togliere": c.in_vigore_dal is None
+                and (approva or c.caricata_da_id == user.pk),
+            }
+            for c in versioni
+        ],
+        "puo_proporre": proponi,
+        "puo_approvare": approva,
+    }
+
+
+@router.get("/unita/{unita_id}/carta-clan", response=CartaClanOut)
+def carta_clan(request, unita_id: int):
+    return _carta_clan(request, _clan(request, unita_id))
+
+
+@router.post("/unita/{unita_id}/carta-clan", response={201: CartaClanOut})
+def carica_carta_clan(
+    request,
+    unita_id: int,
+    file: File[UploadedFile],
+    nota: Form[str] = "",
+    in_vigore_dal: Form[date | None] = None,
+):
+    """A rover or a scolta proposes; the staff may also put it in force at once."""
+    from apps.buonacaccia.servizi import _file_con_nome_casuale
+
+    unita = _clan(request, unita_id)
+    user = request.auth
+    if not policy.puo_proporre_carta_clan(user, unita):
+        raise HttpError(403, "La Carta la caricano rover e scolte del clan e lo staff.")
+    if in_vigore_dal is not None and not policy.puo_approvare_carta_clan(user, unita):
+        raise HttpError(403, "La mettono in vigore lo staff del clan e i capigruppo.")
+    salvato, _ = _esegui(
+        _file_con_nome_casuale, file, {"application/pdf": ".pdf"}, "Carica la Carta in PDF."
+    )
+    carta = None
+    try:
+        with transaction.atomic():
+            carta = CartaClan.objects.create(
+                unita=unita, file=salvato, nota=nota.strip()[:300], caricata_da=user
+            )
+            if in_vigore_dal is not None:
+                _esegui(servizi.approva_carta, carta, in_vigore_dal, user)
+    except HttpError:
+        if carta is not None:
+            carta.file.delete(save=False)  # the row is rolled back, the file is not
+        raise
+    return Status(201, _carta_clan(request, unita))
+
+
+def _versione(request, carta_id: int) -> CartaClan:
+    carta = get_object_or_404(CartaClan.objects.select_related("unita"), pk=carta_id)
+    _clan(request, carta.unita_id)
+    if carta.in_vigore_dal is None and not policy.puo_proporre_carta_clan(
+        request.auth, carta.unita
+    ):
+        raise HttpError(404, "Carta non trovata.")
+    return carta
+
+
+class InVigoreIn(Schema):
+    in_vigore_dal: date
+
+
+@router.post("/carta-clan/{carta_id}/approva", response=CartaClanOut)
+def approva_carta_clan(request, carta_id: int, dati: InVigoreIn):
+    carta = _versione(request, carta_id)
+    if not policy.puo_approvare_carta_clan(request.auth, carta.unita):
+        raise HttpError(403, "La mettono in vigore lo staff del clan e i capigruppo.")
+    _esegui(servizi.approva_carta, carta, dati.in_vigore_dal, request.auth)
+    return _carta_clan(request, carta.unita)
+
+
+@router.delete("/carta-clan/{carta_id}", response=CartaClanOut)
+def togli_carta_clan(request, carta_id: int):
+    """Only a proposal, by who uploaded it or the staff: a version in force stays."""
+    carta = _versione(request, carta_id)
+    if carta.in_vigore_dal is not None:
+        raise HttpError(400, "Una versione in vigore resta: caricane una nuova.")
+    if not (
+        carta.caricata_da_id == request.auth.pk
+        or policy.puo_approvare_carta_clan(request.auth, carta.unita)
+    ):
+        raise HttpError(403, "La toglie chi l'ha caricata o lo staff.")
+    unita = carta.unita
+    carta.file.delete(save=False)
+    carta.delete()
+    return _carta_clan(request, unita)
+
+
+@router.get("/carta-clan/{carta_id}/pdf")
+def pdf_carta_clan(request, carta_id: int):
+    carta = _versione(request, carta_id)
+    risposta = HttpResponse(carta.file.read(), content_type="application/pdf")
+    risposta["Content-Disposition"] = f'inline; filename="carta-di-clan-{carta.pk}.pdf"'
+    risposta["Cache-Control"] = "private, no-store"
+    risposta["X-Content-Type-Options"] = "nosniff"
+    return risposta

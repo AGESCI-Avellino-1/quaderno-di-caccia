@@ -557,13 +557,44 @@ class PassaggioPersona(ModelloTracciato):
 # --- R/S: Carta di clan, Punto della Strada, conclusione (DEC-67, DEC-179…DEC-181) ----------
 
 
+class CartaClan(ModelloTracciato):
+    """One version of a clan/fuoco's Carta di clan, as a PDF (DEC-227…DEC-229). Uploaded by
+    a rover or a scolta as a proposal, or by the clan staff and the capigruppo, who put it
+    in force from a day; the versions in force stay, and every signature refers to the
+    one in force on its day (spec §17.7: a revision never changes a signature)."""
+
+    unita = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.CASCADE, related_name="carte_clan"
+    )
+    file = models.FileField(upload_to="progressione/carte/")
+    nota = models.CharField(max_length=300, blank=True)
+    caricata_da = _utente()
+    # Empty: a proposal not approved yet.
+    in_vigore_dal = _data(null=True, blank=True)
+    approvata_da = _utente()
+
+    class Meta:
+        verbose_name = "Carta di clan"
+        verbose_name_plural = "Carte di clan"
+        ordering = ["-in_vigore_dal", "-creato_il"]
+
+    def __str__(self) -> str:
+        quando = (
+            f"in vigore dal {self.in_vigore_dal:%d/%m/%Y}" if self.in_vigore_dal else "proposta"
+        )
+        return f"Carta di clan, {quando}"
+
+
 class FirmaCarta(ModelloTracciato):
     """The signature of the Carta di clan, recorded with its date only (DEC-67): the
-    event that opens the passi di competenza (V12). The text of the Carta comes later
-    (phase 6)."""
+    event that opens the passi di competenza (V12). It refers to the version in force
+    on that day, once there is one (DEC-229)."""
 
     periodo = models.OneToOneField(
         PeriodoBranca, on_delete=models.CASCADE, related_name="firma_carta"
+    )
+    versione = models.ForeignKey(
+        CartaClan, null=True, blank=True, on_delete=models.PROTECT, related_name="firme"
     )
     data = _data()
     precisione = _precisione()

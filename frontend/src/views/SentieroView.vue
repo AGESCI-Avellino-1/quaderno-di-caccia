@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import {
   api,
   percorsoNuovoImpegno,
+  pdfCartaClan,
   quandoParziale,
   testoDataParziale,
   type CataloghiPP,
@@ -402,9 +403,20 @@ async function salvaNuova() {
         <template v-else>Promessa non ancora registrata.</template>
         <template v-if="periodo.branca === 'RS'">
           <template v-if="periodo.firma_carta">
-            Carta di clan firmata {{ quandoParziale(periodo.firma_carta) }}.</template
+            Carta di clan firmata {{ quandoParziale(periodo.firma_carta)
+            }}<template v-if="periodo.carta_firmata">
+              (<a :href="pdfCartaClan(periodo.carta_firmata)" target="_blank" rel="noopener"
+                >il testo firmato</a
+              >)</template
+            >.</template
           >
           <template v-else> Carta di clan non ancora firmata.</template>
+          <RouterLink
+            v-if="scheda?.carta_clan_unita"
+            :to="{ name: 'carta-clan', params: { id: scheda.carta_clan_unita } }"
+          >
+            Leggi la Carta di clan</RouterLink
+          >
         </template>
       </p>
       <ol class="mb-3">

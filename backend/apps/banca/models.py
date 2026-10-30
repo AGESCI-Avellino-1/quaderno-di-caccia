@@ -8,7 +8,8 @@ cash book without a confirmation. The unit of a card is recognised by the last d
 of the card written in the bank's text.
 
 The bank's text of a line holds personal data (who paid, the reason): it is kept for
-matching, never logged, and stays out of the audit log.
+matching, never logged, and stays out of the audit log. It is an accounting record of
+the group: archiving or erasing a person leaves it (DEC-226).
 """
 
 from django.conf import settings

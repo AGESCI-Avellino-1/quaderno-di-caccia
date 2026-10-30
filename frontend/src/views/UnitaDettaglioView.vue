@@ -138,6 +138,12 @@ const iniziale = (u: Unita): UnitaIn => ({
           Progressione Personale
         </RouterLink>
       </template>
+      <template v-if="unita.tipo === 'CLAN_FUOCO'">
+        ·
+        <RouterLink :to="{ name: 'carta-clan', params: { id: unita.id } }"
+          >Carta di clan</RouterLink
+        >
+      </template>
       <template v-if="unita.tipo === 'REPARTO'">
         ·
         <RouterLink :to="{ name: 'imprese', params: { id: unita.id } }">

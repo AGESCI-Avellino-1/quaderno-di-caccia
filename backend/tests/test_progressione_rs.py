@@ -246,3 +246,79 @@ def test_fascicolo_e_cancellazione(capo_clan, strada, rover, capogruppo):
     assert _post(capogruppo, url, {"cognome": "Rover"}).status_code == 200
     assert not (PuntoStrada.objects.exists() or FirmaCarta.objects.exists())
     assert not PeriodoBranca.objects.filter(persona=rover).exists()
+
+
+def _pdf(nome="carta.pdf"):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    return SimpleUploadedFile(nome, b"%PDF-1.4 carta di prova")
+
+
+def test_carta_di_clan_versioni_e_firme(
+    capo_clan, capo, capogruppo, strada, rover, papa, estraneo, clan, settings, tmp_path
+):
+    """The Carta as PDF versions: a rover proposes, the staff puts it in force; every
+    signature refers to the version in force on its day (DEC-227…DEC-229, §17.7)."""
+    settings.MEDIA_ROOT = tmp_path
+    url = f"/api/v1/unita/{clan.pk}/carta-clan"
+    # A signature before any version: linked when the first version comes in force.
+    firma = _post(
+        capo_clan,
+        f"/api/v1/progressione/periodi/{strada.pk}/carta",
+        _giorno(OGGI - timedelta(days=50)),
+    )
+    assert firma.status_code == 200
+    proposta = _client(rover).post(url, {"file": _pdf(), "nota": "Revisione dopo la route"})
+    assert proposta.status_code == 201
+    versione = proposta.json()["versioni"][0]
+    assert versione["in_vigore_dal"] is None
+    # A rover cannot put it in force; parents and the other capi do not see proposals.
+    assert _client(rover).post(url, {"file": _pdf(), "in_vigore_dal": str(OGGI)}).status_code == 403
+    assert _client(papa).get(url).json()["versioni"] == []
+    assert _client(capo).get(url).json()["versioni"] == []
+    assert _client(estraneo).get(url).status_code == 404
+    approva = _post(
+        capo_clan,
+        f"/api/v1/carta-clan/{versione['id']}/approva",
+        {"in_vigore_dal": str(OGGI - timedelta(days=200))},
+    )
+    assert approva.status_code == 200
+    assert FirmaCarta.objects.get().versione_id == versione["id"]
+    # A later revision never changes the signature already made.
+    nuova = _client(capo_clan).post(url, {"file": _pdf(), "in_vigore_dal": str(OGGI)})
+    assert nuova.status_code == 201
+    assert FirmaCarta.objects.get().versione_id == versione["id"]
+    letta = _client(papa).get(url).json()
+    assert [v["corrente"] for v in letta["versioni"]] == [True, False]
+    assert _client(papa).get(f"/api/v1/carta-clan/{versione['id']}/pdf").content.startswith(b"%PDF")
+    scheda = _client(rover).get(f"/api/v1/persone/{rover.pk}/progressione").json()
+    assert scheda["periodi"][0]["carta_firmata"] == versione["id"]
+    # A version in force stays.
+    assert _client(capo_clan).delete(f"/api/v1/carta-clan/{versione['id']}").status_code == 400
+
+
+def test_carta_di_clan_chi(capo_clan, csq, ragazza, genitore, clan, settings, tmp_path):
+    from apps.permessi import policy
+
+    settings.MEDIA_ROOT = tmp_path
+    for chi in (csq, ragazza, genitore):
+        assert not policy.puo_vedere_carta_clan(chi.utente, clan)
+        assert not policy.puo_proporre_carta_clan(chi.utente, clan)
+    assert policy.puo_approvare_carta_clan(capo_clan.utente, clan)
+    # A novice reads the Carta, does not propose it.
+    noviziato = Unita.objects.create(
+        gruppo=clan.gruppo, tipo=TipoUnita.NOVIZIATO, nome="Noviziato", collegata_a=clan
+    )
+    novizio = crea_persona(
+        "Nico", "Novizio", "novizio@example.invalid", data_nascita=nato_anni_fa(16)
+    )
+    Appartenenza.objects.create(
+        persona=novizio, unita=noviziato, ruolo=RuoloAppartenenza.RAGAZZO, data_inizio=INIZIO_ANNO
+    )
+    assert policy.puo_vedere_carta_clan(novizio.utente, clan)
+    assert not policy.puo_proporre_carta_clan(novizio.utente, clan)
+    risposta = _client(capo_clan).post(
+        f"/api/v1/unita/{clan.pk}/carta-clan",
+        {"file": _pdf(), "in_vigore_dal": str(OGGI + timedelta(days=1))},
+    )
+    assert risposta.status_code == 400  # not in the future

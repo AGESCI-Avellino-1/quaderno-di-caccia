@@ -20,6 +20,7 @@ from apps.organizzazione.models import Branca
 from .models import (
     APERTI,
     ORDINE_FASI,
+    CartaClan,
     Conclusione,
     ConsegnaDistintivo,
     Fase,
@@ -966,6 +967,62 @@ def _passa(tappa: Tappa, fase: str, quando: DataParziale, utente) -> Tappa:
     )
 
 
+def clan_della_persona(persona, giorno):
+    """The clan/fuoco the person was in on that day (or is in now)."""
+    from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+    from apps.organizzazione.models import TipoUnita
+
+    for quando in (giorno, None):
+        appartenenza = (
+            Appartenenza.objects.attive(quando)
+            .filter(
+                persona=persona, ruolo=RuoloAppartenenza.RAGAZZO, unita__tipo=TipoUnita.CLAN_FUOCO
+            )
+            .select_related("unita")
+            .first()
+        )
+        if appartenenza is not None:
+            return appartenenza.unita
+    return None
+
+
+def versione_in_vigore(unita, giorno) -> CartaClan | None:
+    if unita is None or giorno is None:
+        return None
+    return (
+        CartaClan.objects.filter(unita=unita, in_vigore_dal__lte=giorno)
+        .order_by("-in_vigore_dal")
+        .first()
+    )
+
+
+def _versione_firmata(periodo: PeriodoBranca, giorno) -> CartaClan | None:
+    return versione_in_vigore(clan_della_persona(periodo.persona, giorno), giorno)
+
+
+@transaction.atomic
+def approva_carta(carta: CartaClan, dal, utente) -> CartaClan:
+    """A version in force from `dal`; the signatures of that clan not yet linked to a
+    version and made while it is in force refer to it (DEC-229). Signatures already
+    linked never change."""
+    if carta.in_vigore_dal is not None:
+        raise ValidationError("Questa versione è già in vigore.")
+    if dal > oggi():
+        raise ValidationError("La data di entrata in vigore non può essere nel futuro.")
+    if CartaClan.objects.filter(unita=carta.unita, in_vigore_dal=dal).exists():
+        raise ValidationError("Un'altra versione entra in vigore lo stesso giorno.")
+    carta.in_vigore_dal = dal
+    carta.approvata_da = utente
+    carta.save(update_fields=["in_vigore_dal", "approvata_da", "aggiornato_il"])
+    for firma in FirmaCarta.objects.filter(versione__isnull=True, data__gte=dal).select_related(
+        "periodo__persona"
+    ):
+        if _versione_firmata(firma.periodo, firma.data) == carta:
+            firma.versione = carta
+            firma.save(update_fields=["versione", "aggiornato_il"])
+    return carta
+
+
 @transaction.atomic
 def firma_carta(periodo: PeriodoBranca, quando: DataParziale, utente) -> FirmaCarta:
     """The Carta di clan, signed: from the same day the passi di competenza (V12, spec
@@ -981,7 +1038,11 @@ def firma_carta(periodo: PeriodoBranca, quando: DataParziale, utente) -> FirmaCa
         raise ValidationError("La firma è già registrata: correggi la data se è sbagliata.")
     _non_prima(quando, periodo.data_inizio, "l'ingresso nella strada")
     firma = FirmaCarta.objects.create(
-        periodo=periodo, data=quando.valore, precisione=quando.precisione, registrata_da=utente
+        periodo=periodo,
+        data=quando.valore,
+        precisione=quando.precisione,
+        registrata_da=utente,
+        versione=_versione_firmata(periodo, quando.valore),
     )
     tappa = periodo.tappa_attuale()
     if tappa is not None and tappa.fase == Fase.SCOPERTA:
@@ -994,6 +1055,9 @@ def rettifica_firma(firma: FirmaCarta, quando: DataParziale, motivo: str) -> Non
     """The Carta was signed on another day: the passi di competenza it opened move with it."""
     vecchia = firma.data
     rettifica_data(firma, "data", quando, motivo)
+    # A correction of the day, not a revision of the Carta: the version follows the day.
+    firma.versione = _versione_firmata(firma.periodo, firma.data)
+    firma.save(update_fields=["versione"])
     for tappa in firma.periodo.tappe.all():
         if tappa.fase == Fase.SCOPERTA and tappa.data_fine == vecchia:
             tappa.data_fine = tappa.completata_il = quando.valore

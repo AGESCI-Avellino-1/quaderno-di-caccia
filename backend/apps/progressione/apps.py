@@ -23,6 +23,7 @@ class ProgressioneConfig(AppConfig):
             models.Passaggio,
             models.PassaggioPersona,
             models.FirmaCarta,
+            models.CartaClan,
             models.Conclusione,
             models.Stagione,
             models.AllegatoPP,

@@ -188,8 +188,12 @@ _COMPOSIZIONI = {
 def interpreta_tipo_unita(testo: str) -> tuple[TipoUnita, Composizione] | None:
     """Map e.g. 'REPARTO FEMMINILE' -> (REPARTO, F). Unknown values return None.
 
-    Values seen in real exports: BRANCO/CERCHIO MISTO, REPARTO MISTO, REPARTO MASCHILE,
-    REPARTO FEMMINILE, CLAN/FUOCO, COMUNITA` CAPI. The others are inferred [da verificare].
+    Values seen in real exports (a whole zone, 2026-10-30): BRANCO/CERCHIO MISTO,
+    MASCHILE and FEMMINILE; REPARTO MISTO, MASCHILE and FEMMINILE; CLAN/FUOCO;
+    COMUNITA` CAPI. A single-sex BRANCO/CERCHIO is a branco (lupetti) or a cerchio
+    (coccinelle). BuonaStrada has no noviziato unit: the app creates it inside the clan.
+    BRANCO, CERCHIO, CLAN, FUOCO, NOVIZIATO alone were never seen and are kept only as
+    a fallback.
     """
     testo = " ".join(testo.upper().split())
     composizione = Composizione.MISTA
@@ -201,7 +205,11 @@ def interpreta_tipo_unita(testo: str) -> tuple[TipoUnita, Composizione] | None:
     tipo = _TIPI_UNITA.get(testo)
     if tipo is None:
         return None
-    if testo == "FUOCO":
+    if tipo == TipoUnita.BRANCO_CERCHIO and composizione == Composizione.MASCHILE:
+        tipo = TipoUnita.BRANCO
+    elif tipo == TipoUnita.BRANCO_CERCHIO and composizione == Composizione.FEMMINILE:
+        tipo = TipoUnita.CERCHIO
+    elif testo == "FUOCO":
         composizione = Composizione.FEMMINILE
     elif testo == "CLAN" and composizione == Composizione.MISTA:
         composizione = Composizione.MASCHILE
@@ -344,7 +352,8 @@ def _costruisci_riga(
         avvisa(Gravita.ERRORE, "Codice socio mancante: riga saltata.")
         return None
     stato = v.get("CODICE STATUS SOCIO", "")
-    if stato not in {"R", "S", "D"}:
+    # N: a new member this year (seen in a real export, 2026-10-30).
+    if stato not in {"N", "R", "S", "D"}:
         avvisa(Gravita.ERRORE, f"Stato socio sconosciuto '{stato}': riga saltata.")
         return None
 

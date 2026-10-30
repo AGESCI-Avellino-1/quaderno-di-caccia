@@ -18,6 +18,7 @@ from apps.core.models import FonteDato, ModelloTracciato
 class StatoSocio(models.TextChoices):
     """BuonaStrada 'CODICE STATUS SOCIO' (DEC-28)."""
 
+    NUOVA = "N", "Nuova adesione"
     RINNOVO = "R", "Rinnovo adesione"
     SOSPESO = "S", "Sospeso (in attesa di rinnovo)"
     DECADUTO = "D", "Sospeso da più di un anno"

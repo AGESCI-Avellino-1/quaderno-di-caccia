@@ -70,6 +70,9 @@ def test_avvisi_degli_ex_soci_non_mostrati():
         ("REPARTO FEMMINILE", (TipoUnita.REPARTO, Composizione.FEMMINILE)),
         ("REPARTO MISTO", (TipoUnita.REPARTO, Composizione.MISTA)),
         ("BRANCO/CERCHIO MISTO", (TipoUnita.BRANCO_CERCHIO, Composizione.MISTA)),
+        ("BRANCO/CERCHIO MASCHILE", (TipoUnita.BRANCO, Composizione.MASCHILE)),
+        ("BRANCO/CERCHIO FEMMINILE", (TipoUnita.CERCHIO, Composizione.FEMMINILE)),
+        ("REPARTO MASCHILE", (TipoUnita.REPARTO, Composizione.MASCHILE)),
         ("CLAN/FUOCO", (TipoUnita.CLAN_FUOCO, Composizione.MISTA)),
         ("COMUNITA` CAPI", (TipoUnita.COMUNITA_CAPI, Composizione.MISTA)),
         ("FUOCO", (TipoUnita.CLAN_FUOCO, Composizione.FEMMINILE)),
@@ -116,3 +119,13 @@ def test_genitori_letti_dalla_stringa_buonastrada():
 def test_genitore_illeggibile_segnalato():
     _, illeggibili = leggi_genitori("testo libero senza formato")
     assert illeggibili == ["testo libero senza formato"]
+
+
+def test_nuova_adesione_letta():
+    """A member who joined this year has status N, as active as R."""
+    righe = righe_standard()
+    righe[0]["CODICE STATUS SOCIO"] = "N"
+    righe[0]["STATUS SOCIO"] = "NUOVA ADESIONE"
+    risultato = leggi_ricerca_soci(costruisci_csv(righe), oggi=OGGI)
+    assert not any("Stato socio" in a.messaggio for a in risultato.avvisi)
+    assert len(risultato.righe) == len(righe_standard())

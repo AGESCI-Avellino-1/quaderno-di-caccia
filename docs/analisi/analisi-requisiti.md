@@ -339,9 +339,9 @@ Nessuno blocca l'inizio dello sviluppo. Quelli chiusi il 29 ottobre 2026 rimanda
 | D-U-N-S | Codice internazionale che identifica un'organizzazione, richiesto da Apple. |
 | DPIA | Valutazione d'impatto sulla protezione dei dati. |
 | EPPPI / ROSS | Eventi di Progressione Personale a Partecipazione Individuale / Route di Orientamento alle Scelte di Servizio (R/S). |
-| Liberatoria | Modulo con cui i genitori autorizzano la partecipazione di un minorenne a un evento; per gli eventi su BuonaCaccia la valida la segreteria regionale o nazionale. |
 | Giroconto | Spostamento di denaro tra due casse del gruppo: non è né entrata né uscita. |
 | iCal | Formato che mostra gli eventi in Google Calendar o nel Calendario di iPhone. |
+| Liberatoria | Modulo con cui i genitori autorizzano la partecipazione di un minorenne a un evento; per gli eventi su BuonaCaccia la valida la segreteria regionale o nazionale. |
 | Modello D | Rendiconto di cassa del Terzo Settore, con le voci indicate da AGESCI. |
 | Offline | Senza connessione a internet. |
 | Passkey | Accesso senza password, con impronta, volto o PIN del telefono. |

@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 24, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 25, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -68,7 +68,7 @@ Ogni capo vede tutto di tutti i ragazzi del gruppo; gli altri ruoli vedono solo 
 | DEC-114 | Il registro delle modifiche, anche dei dati sanitari, è visibile all'amministratore tecnico, che è sempre un capo o ha la delega dei capigruppo per i dati. | DEC-12, 28/10 |
 | DEC-115 | Contatti in squadriglia: ogni squadrigliere vede il solo telefono degli altri; il capo squadriglia anche il telefono dei genitori di tutta la squadriglia; il vice vede come uno squadrigliere. Niente email. Il numero mostrato è il cellulare del ragazzo in BuonaStrada se c'è; altrimenti quello di un genitore o tutore scelto per quel figlio; altrimenti quello scelto per tutti i figli senza cellulare; altrimenti nessuno. Il genitore (o il maggiorenne) può nasconderlo agli squadriglieri, non al capo squadriglia; lo impostano genitore, maggiorenne, staff dell'unità e capigruppo. Copia cifrata sul telefono per le uscite. | DEC-13, 29/10 |
 | DEC-165 | Gli incarichi sono di due tipi. **Di servizio**: capo unità, staff di unità e **a disposizione**, per i capi della Co.Ca. che al momento non fanno servizio in un'unità. **Aggiuntivi**: capogruppo, tesoriere di gruppo, tesoriere di unità, amministratore tecnico. Gli aggiuntivi si sommano tra loro e al servizio (lo stesso capo può essere capo unità, capogruppo, tesoriere e amministratore). Un capo può servire in più unità; "a disposizione" esclude il servizio in un'unità e finisce da sé quando il capo viene assegnato a un'unità. Lo nominano i capigruppo, che vedono l'elenco dei capi senza alcun servizio da sistemare. | DEC-09, DEC-10, DEC-110, 30/10 |
-| DEC-166 | L'amministratore tecnico (DEC-12) è un incarico aggiuntivo: il primo si crea all'installazione, poi lo nominano i capigruppo, sempre tra i capi (DEC-114). L'incarico dà i poteri dell'amministratore dentro l'app; l'accesso all'amministrazione del server resta a chi installa (vedi "Punti ancora da verificare"). | DEC-12, DEC-111, DEC-114, 30/10 |
+| DEC-166 | L'amministratore tecnico (DEC-12) è un incarico aggiuntivo: il primo si crea all'installazione, poi lo nominano i capigruppo, sempre tra i capi (DEC-114). L'incarico dà i poteri dell'amministratore dentro l'app e l'accesso all'amministrazione del server, finché dura. | DEC-12, DEC-111, DEC-114, 30/10 |
 | DEC-167 | **Usare l'app al posto di un altro**, per aiutarlo a compilare o vedere un problema come lo vede lui. Possono farlo i capigruppo e gli amministratori tecnici con chiunque abbia un account, lo staff di un'unità con i suoi ragazzi e i loro genitori (mai con altri capi); sempre e solo capi censiti in BuonaStrada, così non vedono nulla in più di quanto vede un capo (DEC-09, DEC-12). Serve un motivo; dura al massimo 30 minuti; una barra lo ricorda sempre, con "Torna a te". Si fa tutto quello che fa la persona, tranne cambiare il suo account (password, email, accessi, dispositivi) e le sue scelte personali (consensi, email da ricevere, cosa vedono i genitori, richieste per i diritti). Nulla si salva sul telefono. Lo storico delle modifiche e il registro degli accessi (DEC-101) riportano chi ha agito davvero, "al posto di" chi. La persona vede nel suo account chi ha usato l'app al suo posto, quando e perché; la Co.Ca. vede l'elenco completo. | DEC-09, DEC-12, DEC-101, 30/10 |
 
 ## Account e accesso
@@ -332,7 +332,7 @@ Nessuno blocca l'inizio dello sviluppo. Quelli chiusi il 29 ottobre 2026 rimanda
 - [x] **Account dai 14 anni.** Confermare la procedura: invito del capo unità, con o senza approvazione del genitore. (DEC-24) → **DEC-117**
 - [x] **Liberatorie di BuonaCaccia.** BuonaCaccia produce una liberatoria personalizzata per ogni iscritto: capire come caricarla nell'app (il maintainer ha un'idea). Da approfondire dopo la fase 3. (DEC-76, DEC-144) → **DEC-158…DEC-164**
 - [ ] **Email facoltative.** Confermare con l'Ufficio Privacy nazionale quali email si possono rifiutare. (DEC-157)
-- [ ] **Amministratore nominato nell'app e amministrazione del server.** Decidere se chi i capigruppo nominano amministratore tecnico debba avere anche l'accesso all'amministrazione del server (pieno accesso al database), oggi riservato a chi installa. (DEC-166)
+- [x] **Amministratore nominato nell'app e amministrazione del server.** Decidere se chi i capigruppo nominano amministratore tecnico debba avere anche l'accesso all'amministrazione del server (pieno accesso al database), oggi riservato a chi installa. (DEC-166) → **sì, DEC-166**
 
 ## Glossario essenziale
 

@@ -22,7 +22,8 @@ CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 FRONTEND_URL = env("QDC_FRONTEND_URL", default="http://localhost:5173")
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    # The admin also for the technical administrators appointed in the app (DEC-166).
+    "apps.accounts.config_amministrazione.AmministrazioneConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -111,6 +112,8 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
+    # Every model permission in the admin to the technical administrators (DEC-166).
+    "apps.accounts.amministrazione.PermessiAmministratore",
 ]
 
 AUTH_PASSWORD_VALIDATORS = [

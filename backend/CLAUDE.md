@@ -10,7 +10,7 @@ Read the root `CLAUDE.md` first.
 | `config/settings/{base,dev,test,prod}.py` | Split settings; secrets only from env (`.env` at repo root) |
 | `config/api.py` | NinjaAPI: mounts each app's `router` under `/api/v1/` |
 | `apps/core` | `anno.py` (associative year, ages, DEC-37), `date_parziali.py` (partial dates, DEC-70), `ModelloTracciato`, `FonteDato`, idempotency middleware (DEC-96) |
-| `apps/accounts` | `User` (email login, `amministratore_tecnico`), `Invito` (DEC-21, DEC-24), allauth adapters, `/io`, `/inviti`, `crea_invito` command |
+| `apps/accounts` | `User` (email login, `amministratore_tecnico`), the Django admin site and permissions for the technical administrators (`amministrazione.py`, DEC-166), `Invito` (DEC-21, DEC-24), allauth adapters, `/io`, `/inviti`, `crea_invito` command |
 | `apps/organizzazione` | `Gruppo`, `Unita`, `Squadriglia`, `Incarico` (roles with diarchy, DEC-18; `STAFF` = the capi serving a unit, no holder limit; `A_DISPOSIZIONE` = a capo serving in no unit, excludes unit service; `AMMINISTRATORE` = technical administrator appointed by the capigruppo; service roles and additional roles add up; `clean()` checks who may hold each role); API for units, patrols, roles, `/capi` |
 | `apps/anagrafica` | `Persona` (one identity for life, DEC-57), `RelazioneTutela`, `Appartenenza`, `AppartenenzaSquadriglia`, `CorrezioneAnagrafica` (DEC-31: open = IN_ATTESA/INOLTRATA; `servizi.correggi_campo`, `scarta_correzione`), `fratelli()` (DEC-33) |
 | `apps/importazione` | BuonaStrada parser (`buonastrada.py`, pure, no DB), import service (`servizi.py`: `anteprima`/`applica`), `importa_buonastrada` command |

@@ -330,9 +330,10 @@ implements them:
   unit (`organizzazione.api.crea_incarico`). The capigruppo appoint both new roles and
   see the capi with no service (`/gruppo/incarichi`, `senza_servizio`). The technical
   administrator: the first from the command line (`User.amministratore_tecnico`), then
-  an `AMMINISTRATORE` role, always a capo; `policy.e_amministratore` reads both. The
-  role gives the in-app powers only: the Django admin still needs `is_staff`, set from
-  the command line.
+  an `AMMINISTRATORE` role, always a capo; `policy.e_amministratore` reads both. Both
+  also open the Django admin with every model permission, checked on every request
+  (`accounts.amministrazione`: the admin site and a permissions-only backend; nothing
+  copied onto `is_staff`/`is_superuser`).
 - Using the app as another user (DEC-167;
   `apps/impersonazione`): capigruppo and technical administrators who are capi in
   BuonaStrada act as anyone with an account; unit staff as its ragazzi and their

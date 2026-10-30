@@ -3,9 +3,6 @@ from django.urls import include, path
 
 from config.api import api
 
-admin.site.site_header = "Quaderno di Caccia — amministrazione"
-admin.site.site_title = "QdC"
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     # Provider callbacks (Google, Apple) still need the classic allauth URLs.

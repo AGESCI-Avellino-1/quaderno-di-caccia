@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, AppartenenzaSquadriglia, Persona
 from apps.core.anno import AnnoAssociativo
+from apps.core.chiusura import controlla_anno_aperto
 from apps.organizzazione.models import BRANCA_DEL_TIPO, Incarico, RuoloIncarico, TipoUnita, Unita
 
 from .models import (
@@ -197,6 +198,7 @@ def segna_presenze(evento: Evento, segni: dict[int, StatoPresenza], utente) -> i
     """Upsert one record per member; only people involved in the event."""
     if evento.annullato_il:
         raise ValidationError("L'evento è annullato.")
+    controlla_anno_aperto(evento.inizio)  # DEC-45
     ammessi = set(evento.partecipazioni.values_list("persona_id", flat=True))
     estranei = set(segni) - ammessi
     if estranei:

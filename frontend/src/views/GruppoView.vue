@@ -5,9 +5,11 @@ import { RouterLink } from 'vue-router'
 import { api, type IncarichiGruppo } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
+import FineAnno from '@/components/FineAnno.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
+import { useSessioneStore } from '@/stores/sessione'
 
 // Additional group roles: capigruppo (diarchy, DEC-18), group treasurers, technical
 // administrators; they add up with the service (DEC-165, DEC-166). Appointed by the
@@ -26,6 +28,7 @@ async function carica() {
 onMounted(carica)
 
 const capi = () => api.capi()
+const sessione = useSessioneStore()
 </script>
 
 <template>
@@ -75,6 +78,7 @@ const capi = () => api.capi()
         />
       </div>
       <IntestazioneGruppo />
+      <FineAnno v-if="sessione.profilo?.capogruppo" />
     </template>
   </section>
 </template>

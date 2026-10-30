@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -386,3 +387,35 @@ class Incarico(ModelloTracciato):
                 f"{self.persona} non risulta capo: l'incarico di "
                 f"{self.get_ruolo_display().lower()} spetta a un capo."
             )
+
+
+class AnnoChiuso(ModelloTracciato):
+    """An associative year closed by a capogruppo (DEC-45, DEC-209): from then on its
+    attendance, Progressione, fees and cash book do not change. A capogruppo may reopen
+    it with a reason until a date of their choice (at most 30 days, DEC-210)."""
+
+    # By its end year, as BuonaStrada (2025/26 = 2026).
+    anno = models.PositiveSmallIntegerField(unique=True)
+    chiuso_il = models.DateTimeField()
+    chiuso_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    riaperto_fino_al = models.DateTimeField(null=True, blank=True)
+    motivo_riapertura = models.CharField(max_length=300, blank=True)
+    riaperto_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "anno associativo chiuso"
+        verbose_name_plural = "anni associativi chiusi"
+        ordering = ["-anno"]
+
+    def __str__(self) -> str:
+        return f"Anno {self.anno - 1}/{str(self.anno)[-2:]}"
+
+    @property
+    def riaperto(self) -> bool:
+        from django.utils import timezone
+
+        return self.riaperto_fino_al is not None and self.riaperto_fino_al > timezone.now()

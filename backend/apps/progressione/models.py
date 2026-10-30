@@ -79,6 +79,8 @@ class PeriodoBranca(ModelloTracciato):
     data_fine = _data(null=True, blank=True)
     motivo_fine = models.CharField(max_length=200, blank=True)
     registrato_da = _utente()
+    # Imported from another group's QdC: its name (DEC-46, DEC-213).
+    provenienza = models.CharField(max_length=120, blank=True)
 
     class Meta:
         verbose_name = "periodo di branca"

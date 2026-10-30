@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-import { api, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
+import { api, trasferimentoJson, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
 import AccountPersona from '@/components/AccountPersona.vue'
 import AvviaImpersonazione from '@/components/AvviaImpersonazione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
@@ -84,6 +84,15 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <RouterLink :to="{ name: 'fascicolo-anno', params: { id: persona.id } }">
             Fascicolo dell'anno
           </RouterLink>
+        </template>
+        <template v-if="sessione.profilo?.capogruppo && persona.livello_accesso === 'completo'">
+          ·
+          <a
+            :href="trasferimentoJson(persona.id)"
+            title="Per un altro gruppo che usa il Quaderno di Caccia"
+          >
+            Esporta per un altro gruppo
+          </a>
         </template>
         <template v-if="persona.fascicolo_capo">
           ·

@@ -26,6 +26,8 @@ services:
     volumes:
       # Private uploads (BuonaStrada exports, later receipts): never served directly.
       - media:/data/media
+      # Keys kept out of .env, e.g. the Drive service account (QDC_DRIVE_CREDENZIALI).
+      - ./secrets:/run/qdc-secrets:ro
     depends_on:
       db:
         condition: service_healthy

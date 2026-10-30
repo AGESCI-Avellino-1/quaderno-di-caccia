@@ -1420,6 +1420,39 @@ export interface FormazioneIn {
   note: string
 }
 
+/** Associative years: closed, reopened (DEC-45, DEC-209, DEC-210). */
+export interface AnniGruppo {
+  anni: {
+    anno: number
+    etichetta: string
+    in_corso: boolean
+    chiuso_il: string | null
+    riaperto_fino_al: string | null
+    motivo_riapertura: string
+  }[]
+  da_chiudere: number | null
+}
+
+/** Archiving two years after leaving (DEC-44, DEC-211). */
+export interface ArchivioGruppo {
+  drive_configurato: boolean
+  /** With the parents that go with them (DEC-214). */
+  da_archiviare: { id: number; nome: string; uscita: string; genitori: string[] }[]
+  archiviate: { nome: string; nome_file: string; archiviata_il: string }[]
+}
+
+export interface EsitoImportazione {
+  persona_id: number
+  persona: string
+  periodi: number
+  note: number
+  anni_di_servizio: number
+  formazione: number
+}
+
+export const trasferimentoJson = (persona: number) =>
+  `/api/v1/persone/${persona}/trasferimento.json`
+
 export const fotoProfilo = (persona: number) => `/api/v1/persone/${persona}/foto`
 export const fascicoloAnnoPdf = (persona: number, anno: number) =>
   `/api/v1/persone/${persona}/fascicolo-anno.pdf?anno=${anno}`
@@ -2249,6 +2282,22 @@ export const api = {
     }),
   togliAllegatoPP: (id: number) =>
     richiesta<SchedaProgressione>(allegatoPP(id), { metodo: 'DELETE' }),
+  anniGruppo: () => richiesta<AnniGruppo>('/api/v1/gruppo/anni'),
+  chiudiAnno: (anno: number) =>
+    richiesta<AnniGruppo>(`/api/v1/gruppo/anni/${anno}/chiudi`, { metodo: 'POST' }),
+  riapriAnno: (anno: number, fino_al: string, motivo: string) =>
+    richiesta<AnniGruppo>(`/api/v1/gruppo/anni/${anno}/riapri`, {
+      metodo: 'POST',
+      corpo: { fino_al, motivo },
+    }),
+  archivio: () => richiesta<ArchivioGruppo>('/api/v1/archivio'),
+  archivia: (persona: number) =>
+    richiesta<ArchivioGruppo>(`/api/v1/archivio/${persona}`, { metodo: 'POST' }),
+  importaTrasferimento: (file: File) =>
+    richiesta<EsitoImportazione>('/api/v1/trasferimenti', {
+      metodo: 'POST',
+      corpo: conFile({}, file),
+    }),
   fascicoloCapo: (persona: number) =>
     richiesta<FascicoloCapo>(`/api/v1/persone/${persona}/fascicolo-capo`),
   nuovoServizioPassato: (persona: number, dati: ServizioPassatoIn) =>

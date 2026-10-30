@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import Router, Schema, Status
+from ninja import File, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
@@ -15,7 +15,7 @@ from apps.core.anno import AnnoAssociativo
 from apps.core.date_parziali import PrecisioneData
 from apps.permessi import policy
 
-from . import capi, servizi, stampa
+from . import capi, servizi, stampa, trasferimento
 
 router = Router(tags=["fascicolo"])
 
@@ -307,3 +307,48 @@ def togli_formazione(request, voce_id: int):
     persona = _modificabile(request, voce.persona_id)
     voce.delete()
     return _fascicolo_capo(request, persona)
+
+
+# --- Moving a file to another group (DEC-46, DEC-213) ----------------------------------------
+
+
+@router.get("/persone/{persona_id}/trasferimento.json")
+def esporta_trasferimento(request, persona_id: int):
+    """For the other group's capogruppo; logged."""
+    import json
+
+    from apps.permessi.models import Azione, Categoria, registra_accessi
+
+    if not policy.puo_gestire_fine_anno(request.auth):
+        raise HttpError(403, "Lo esporta un capogruppo.")
+    persona = get_object_or_404(Persona, pk=persona_id)
+    registra_accessi(request, [persona], Categoria.FASCICOLO, Azione.TRASFERIMENTO)
+    risposta = HttpResponse(
+        json.dumps(trasferimento.esporta(persona), ensure_ascii=False, indent=2),
+        content_type="application/json",
+    )
+    risposta["Content-Disposition"] = f'attachment; filename="fascicolo-{persona.pk}.json"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
+
+
+class EsitoImportazione(Schema):
+    persona_id: int
+    persona: str
+    periodi: int
+    note: int
+    anni_di_servizio: int
+    formazione: int
+
+
+@router.post("/trasferimenti", response=EsitoImportazione)
+def importa_trasferimento(request, file: File[UploadedFile]):
+    """A file from another group, or the archive ZIP of someone coming back (DEC-215)."""
+    if not policy.puo_gestire_fine_anno(request.auth):
+        raise HttpError(403, "Lo importa un capogruppo.")
+    if file.size > 200 * 1024 * 1024:
+        raise HttpError(400, "Il file è troppo grande.")
+    try:
+        return trasferimento.importa(trasferimento.leggi(file.read()), request.auth)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore

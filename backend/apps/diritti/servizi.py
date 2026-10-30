@@ -532,11 +532,17 @@ def _cancella_storico(oggetti) -> None:
 
 
 @transaction.atomic
-def cancella(persona: Persona) -> dict:
+def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
     """Erase the app-only data of `persona`; anonymise an ex member. Returns what was
     done (the preview). The audit history of the erased data goes too: it holds their
-    values. The access log stays (accountability), pointing to the anonymised record."""
+    values. The access log stays (accountability), pointing to the anonymised record.
+
+    `conserva_nome`: the archiving after two years (DEC-44): name and years in the units
+    stay, to recognise who comes back; the rest of the registry data goes, and so do
+    fees, payments and attendance (DEC-211)."""
     esito = anteprima_cancellazione(persona)
+    if conserva_nome:
+        esito["anonimizza"] = True
     with disable_auditlog():
         sanitarie = InformazioniSanitarie.objects.filter(persona=persona).first()
         if sanitarie is not None:
@@ -589,12 +595,15 @@ def cancella(persona: Persona) -> dict:
         persona.telefono_squadriglia_da = None
         persona.telefono_squadriglia_nascosto = False
         persona.telefono_per_i_figli = False
+        if conserva_nome:
+            _cancella_contabilita_e_presenze(persona)
         if esito["anonimizza"]:
+            nome, cognome = persona.nome, persona.cognome
             for campo in CAMPI_BUONASTRADA:
                 field = Persona._meta.get_field(campo)
                 setattr(persona, campo, None if field.null else "")
-            persona.nome = "Persona"
-            persona.cognome = f"cancellata n. {persona.pk}"
+            persona.nome = nome if conserva_nome else "Persona"
+            persona.cognome = cognome if conserva_nome else f"cancellata n. {persona.pk}"
             persona.codice_socio = None
             tutele = list(RelazioneTutela.objects.filter(tutore=persona)) + list(
                 RelazioneTutela.objects.filter(minore=persona)
@@ -613,3 +622,30 @@ def cancella(persona: Persona) -> dict:
                 tutela.delete()
         persona.save()
     return esito
+
+
+def _cancella_contabilita_e_presenze(persona: Persona) -> None:
+    """At archiving (DEC-211): the group's accounts live in the AGESCI accounts app, the
+    archive keeps the detail. A payment that also covered someone else stays for them;
+    the cash movements stay, so past balances do not change, without the link."""
+    from apps.cassa.models import Movimento
+    from apps.eventi.models import Partecipazione, Presenza, PresenzeAnnue
+    from apps.quote.models import Pagamento, RipartizionePagamento
+
+    quote = list(Quota.objects.filter(persona=persona))
+    righe = list(RipartizionePagamento.objects.filter(quota__in=quote))
+    pagamenti = {r.pagamento_id for r in righe}
+    _cancella_storico([*quote, *righe])
+    RipartizionePagamento.objects.filter(pk__in=[r.pk for r in righe]).delete()
+    for pagamento in Pagamento.objects.filter(pk__in=pagamenti):
+        if pagamento.righe.exists():
+            continue
+        Movimento.objects.filter(pagamento=pagamento).update(
+            pagamento=None, descrizione="Incasso di quote (dati archiviati)"
+        )
+        _cancella_storico([pagamento])
+        pagamento.delete()
+    for quota in quote:
+        quota.delete()
+    for modello in (Presenza, PresenzeAnnue, Partecipazione):
+        modello.objects.filter(persona=persona).delete()

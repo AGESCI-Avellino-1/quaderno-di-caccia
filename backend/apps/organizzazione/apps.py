@@ -10,5 +10,11 @@ class OrganizzazioneConfig(AppConfig):
 
         from . import models
 
-        for modello in (models.Gruppo, models.Unita, models.Squadriglia, models.Incarico):
+        for modello in (
+            models.Gruppo,
+            models.Unita,
+            models.Squadriglia,
+            models.Incarico,
+            models.AnnoChiuso,
+        ):
             auditlog.register(modello)

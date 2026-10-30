@@ -1344,3 +1344,9 @@ def puo_modificare_fascicolo_capo(user, persona: Persona) -> bool:
     if propria is not None and propria.pk == persona.pk:
         return True
     return e_capogruppo(user) and not e_capo_in_attesa(user)
+
+
+def puo_gestire_fine_anno(user) -> bool:
+    """Closing and reopening years, archiving, moving a file to another group: the
+    capigruppo (DEC-45, DEC-44, DEC-46)."""
+    return e_capogruppo(user) and not e_capo_in_attesa(user)

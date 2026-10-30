@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 36, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 37, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -233,6 +233,13 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-206 | Il fascicolo di un capo (anni di servizio con unità e ruoli, dati di BuonaStrada su livello di formazione, ingresso in Co.Ca. e nomina, formazione) lo vede il capo stesso e tutta la Co.Ca. | DEC-47, 30/10 |
 | DEC-207 | Gli anni di servizio da quando c'è l'app si ricavano dagli incarichi; quelli precedenti li aggiungono a mano, anno per anno, il capo o un capogruppo, e restano segnati come ricostruiti. | DEC-46, DEC-47, 30/10 |
 | DEC-208 | Ogni voce di formazione inserita a mano ha tipo (come i campi BuonaCaccia: CFT, CFM, CFA, CCG, modulo formativo, altro con descrizione), data anche solo con l'anno, luogo e note; i campi di formazione segnati come eventi BuonaCaccia compaiono da soli (quelli futuri come «in programma»); il livello resta quello di BuonaStrada. | DEC-134, DEC-164, DEC-170, 30/10 |
+| DEC-209 | Un anno associativo lo chiude un capogruppo, quando rendiconto e verifiche sono fatti (mai quello in corso); da allora presenze, Progressione, quote, pagamenti e prima nota con date di quell'anno non si modificano. Dal 1° novembre l'app ricorda ai capigruppo l'anno appena finito ancora aperto. | DEC-45, 30/10 |
+| DEC-210 | Un anno chiuso lo riapre un capogruppo, con un motivo, fino a un giorno che sceglie (al massimo 30 giorni); poi si richiude da solo, o prima a mano. Chiusure e riaperture restano nello storico. | DEC-45, 30/10 |
+| DEC-211 | L'archiviazione di chi è uscito da più di due anni (e non è genitore di un socio) la conferma un capogruppo, una persona alla volta: l'app prepara uno ZIP con il fascicolo completo (JSON), un PDF per ogni anno nel gruppo, servizio e formazione dei capi, foto, allegati e moduli; lo carica sul Drive, verifica che il file sia identico e solo allora cancella. Restano nome e anni nelle unità. Si archiviano anche quote, pagamenti e presenze (i bilanci sono nell'app di bilancio AGESCI); i movimenti di cassa restano, senza il collegamento alla persona, perché i saldi degli anni passati non cambino. | DEC-44, DEC-102, 30/10 |
+| DEC-212 | Il Drive del gruppo è un Drive condiviso di Google Workspace; l'app vi accede con un account di servizio, configurato una volta da chi installa (chiave e cartella), senza autorizzazioni dal browser. | DEC-196, 30/10 |
+| DEC-213 | Esportazione verso un altro gruppo che usa QdC: la fa un capogruppo, su richiesta, in un file; contiene la Progressione Personale (senza mete riservate né parti riservate del Punto della Strada), le note non riservate (quelle condivise con il ragazzo o i genitori) e, per un capo, anni di servizio e formazione. Non contiene presenze, scheda sanitaria, regole sul rapporto con il minore né foto. Lo importa un capogruppo dell'altro gruppo: la persona si riconosce dal codice fiscale (l'anagrafica la porta BuonaStrada), i dati restano segnati con il gruppo di provenienza, un percorso aperto continua se nel nuovo gruppo non ce n'è già uno. | DEC-46, 30/10 |
+| DEC-214 | Con l'archiviazione dell'ultimo figlio vanno anche i genitori che non hanno altri figli nel gruppo (né ancora da archiviare) e non sono stati soci loro stessi: i loro dati entrano nello stesso archivio e poi si cancellano del tutto; resta solo un record anonimo per il registro degli accessi. | DEC-44, DEC-136, 30/10 |
+| DEC-215 | L'archivio contiene anche il fascicolo nel formato di scambio tra gruppi, reimportabile: se la persona rientra, anche anni dopo e anche come capo, un capogruppo carica lo ZIP dell'archivio; tornano Progressione, note non riservate, servizio e formazione dei capi, e il record con nome e anni rimasto nell'app si riunisce alla persona riportata da BuonaStrada (riconosciuta dal codice fiscale). | DEC-44, DEC-46, DEC-213, 30/10 |
 
 ## Eventi e presenze
 

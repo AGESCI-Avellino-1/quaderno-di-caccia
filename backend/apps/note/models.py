@@ -40,6 +40,8 @@ class Nota(ModelloTracciato):
     visibile_genitori = models.BooleanField(default=False)
     # Staff notes on an E/G only.
     visibile_csq = models.BooleanField(default=False)
+    # Imported from another group's QdC: its name (DEC-46, DEC-213).
+    provenienza = models.CharField(max_length=120, blank=True)
 
     class Meta:
         verbose_name = "nota"

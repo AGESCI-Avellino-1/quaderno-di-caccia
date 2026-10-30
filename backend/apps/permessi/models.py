@@ -24,6 +24,8 @@ class Azione(models.TextChoices):
     SCARICO_OFFLINE = "SCARICO_OFFLINE", "Scaricate sul dispositivo"
     MODIFICA = "MODIFICA", "Modifica"
     STAMPA = "STAMPA", "Stampa"
+    ARCHIVIAZIONE = "ARCHIVIA", "Archiviazione sul Drive del gruppo"
+    TRASFERIMENTO = "TRASFERIM", "Esportazione verso un altro gruppo"
     ESPORTAZIONE = "ESPORTAZIONE", "Esportazione per un diritto dell'interessato"
     CANCELLAZIONE = "CANCELLAZIONE", "Cancellazione per un diritto dell'interessato"
 

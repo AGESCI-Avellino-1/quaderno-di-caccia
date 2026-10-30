@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza
 from apps.core.anno import AnnoAssociativo
+from apps.core.chiusura import controlla_anno_aperto
 from apps.core.euro import euro
 from apps.iscrizioni.models import DIMENSIONE_MASSIMA, tipo_file
 
@@ -54,6 +55,7 @@ def giustificativo_da_testo(contenuto: str) -> ContentFile | None:
 def _controlla_data(giorno: date) -> None:
     if giorno > date.today():
         raise ValidationError("La data non può essere nel futuro.")
+    controlla_anno_aperto(giorno)  # DEC-45
 
 
 def registra(

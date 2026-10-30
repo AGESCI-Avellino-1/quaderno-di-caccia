@@ -46,3 +46,6 @@ deploy/nginx-docker/acme/
 Thumbs.db
 .vscode/
 ignored/
+
+# Keys of services (Drive service account): never committed.
+secrets/

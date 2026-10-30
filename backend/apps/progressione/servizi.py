@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from apps.anagrafica.models import Persona
+from apps.core.chiusura import controlla_anno_aperto
 from apps.core.date_parziali import DataParziale, PrecisioneData
 from apps.core.models import FonteDato
 from apps.organizzazione.models import Branca
@@ -95,6 +96,7 @@ def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBran
         raise ValidationError("Il percorso in questa branca è già aperto.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno dell'ingresso.")
+    controlla_anno_aperto(quando.valore)
     branca = branca_attuale(persona)
     if branca is None:
         raise ValidationError("Il percorso si apre per chi è in un'unità come ragazzo.")
@@ -148,6 +150,7 @@ def registra_promessa(periodo: PeriodoBranca, quando: DataParziale, utente) -> P
         raise ValidationError("La Promessa è già registrata: correggi la data se è sbagliata.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno della Promessa.")
+    controlla_anno_aperto(quando.valore)
     _non_prima(quando, periodo.data_inizio, "l'ingresso nel sentiero")
     return Promessa.objects.create(
         periodo=periodo, data=quando.valore, precisione=quando.precisione, registrata_da=utente
@@ -184,6 +187,7 @@ def riconosci_tappa(tappa: Tappa, quando: DataParziale, utente, *, storico: bool
         raise ValidationError("Questa tappa non è più in corso.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno.")
+    controlla_anno_aperto(quando.valore)
     _non_prima(quando, tappa.data_inizio, "l'inizio della tappa")
     if branca == Branca.LC and not storico and not _conquista_nel_momento(tappa):
         raise ValidationError(
@@ -224,6 +228,7 @@ def colloca(tappa: Tappa, fase: str, quando: DataParziale, motivazione: str, ute
         raise ValidationError("Scrivi la motivazione del collocamento.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno.")
+    controlla_anno_aperto(quando.valore)
     _non_prima(quando, tappa.data_inizio, "l'inizio della Scoperta")
     tappa.data_fine = quando.valore
     tappa.save()
@@ -252,6 +257,7 @@ def consegna_distintivo(tappa: Tappa, quando: DataParziale, utente) -> ConsegnaD
         raise ValidationError("Il distintivo di questa tappa è già consegnato.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno della consegna.")
+    controlla_anno_aperto(quando.valore)
     return ConsegnaDistintivo.objects.create(
         tappa=tappa, data=quando.valore, precisione=quando.precisione, registrata_da=utente
     )
@@ -264,6 +270,7 @@ def rettifica_data(oggetto, campo: str, quando: DataParziale, motivo: str) -> No
         raise ValidationError("Scrivi perché correggi la data.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno.")
+    controlla_anno_aperto(quando.valore, getattr(oggetto, campo))
     precisione = {"data": "precisione", "data_inizio": "precisione_inizio"}.get(
         campo, "precisione_completata"
     )
@@ -375,6 +382,7 @@ def esegui(
     if oggetto.stato not in DA[azione]:
         raise ValidationError(f"Non si può: è «{oggetto.get_stato_display().lower()}».")
     il = il or oggi()
+    controlla_anno_aperto(il)
     if il > oggi():
         raise ValidationError("La data non può essere nel futuro.")
     if azione == "concorda":
@@ -518,6 +526,7 @@ def passo_competenza(
     if percorso.stato not in DA_COMPETENZA[azione]:
         raise ValidationError(f"Non si può: è «{percorso.get_stato_display().lower()}».")
     il = il or oggi()
+    controlla_anno_aperto(il)
     if il > oggi():
         raise ValidationError("La data non può essere nel futuro.")
     if azione == "avvia":
@@ -547,6 +556,7 @@ def consegna_distintivo_competenza(percorso: PercorsoCompetenza, quando: DataPar
         raise ValidationError("Il distintivo si consegna dopo la conquista.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno della consegna.")
+    controlla_anno_aperto(quando.valore)
     percorso.distintivo_il = quando.valore
     percorso.precisione_distintivo = quando.precisione
     percorso.save()
@@ -581,6 +591,7 @@ def verifica_posto(
         raise ValidationError("Indica dove si è fatta la verifica.")
     if sede == SedeVerifica.ALTRO and not sede_descrizione.strip():
         raise ValidationError("Scrivi dove si è fatta la verifica.")
+    controlla_anno_aperto(il)
     if il > oggi():
         raise ValidationError("La data non può essere nel futuro.")
     posto.verificato_il = il
@@ -962,6 +973,7 @@ def firma_carta(periodo: PeriodoBranca, quando: DataParziale, utente) -> FirmaCa
     _strada(periodo)
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno della firma.")
+    controlla_anno_aperto(quando.valore)
     esistente = FirmaCarta.objects.filter(periodo=periodo).first()
     if esistente is not None:
         if (esistente.data, esistente.precisione) == (quando.valore, quando.precisione):
@@ -1005,6 +1017,7 @@ def avvia_responsabilita(tappa: Tappa, quando: DataParziale, utente) -> Tappa:
         raise ValidationError("Si parte dai passi di competenza in corso.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno.")
+    controlla_anno_aperto(quando.valore)
     _non_prima(quando, tappa.data_inizio, "l'inizio della competenza")
     return _passa(tappa, Fase.RESPONSABILITA, quando, utente)
 
@@ -1026,6 +1039,7 @@ def concludi(
         raise ValidationError("Scegli come si conclude.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno.")
+    controlla_anno_aperto(quando.valore)
     _non_prima(quando, periodo.data_inizio, "l'ingresso nella strada")
     conclusione = Conclusione.objects.create(
         periodo=periodo,
@@ -1056,6 +1070,7 @@ def salva_punto_strada(
     _strada(punto.periodo)
     if data > oggi():
         raise ValidationError("La data non può essere nel futuro.")
+    controlla_anno_aperto(data, punto.data if punto.pk else None)
     if any(o.periodo_id != punto.periodo_id for o in obiettivi):
         raise ValidationError("Gli obiettivi devono essere della stessa strada.")
     punto.data = data
@@ -1107,6 +1122,7 @@ def lancia_stagione(stagione: Stagione, il: date) -> Stagione:
         return stagione
     if stagione.stato != StatoStagione.PREVISTA:
         raise ValidationError("Si lancia una stagione in programma.")
+    controlla_anno_aperto(il)
     if il > oggi():
         raise ValidationError("La data non può essere nel futuro.")
     if Stagione.objects.filter(unita=stagione.unita, stato=StatoStagione.APERTA).exists():
@@ -1130,6 +1146,7 @@ def chiudi_stagione(stagione: Stagione, il: date) -> Stagione:
         return stagione
     if stagione.stato != StatoStagione.APERTA:
         raise ValidationError("Si chiude una stagione aperta.")
+    controlla_anno_aperto(il)
     if il > oggi():
         raise ValidationError("La data non può essere nel futuro.")
     if il < stagione.lancio:

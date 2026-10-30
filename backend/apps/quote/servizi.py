@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela, RuoloAppartenenza
 from apps.core.anno import AnnoAssociativo
+from apps.core.chiusura import controlla_anno_aperto
 from apps.core.euro import euro
 
 from .models import (
@@ -193,6 +194,7 @@ def imposta_importo(quota: Quota, importo: Decimal) -> None:
     """DEC-77: the amount of an event's fee may change per person, down to zero."""
     if quota.tipo.categoria not in (CategoriaQuota.EVENTO, CategoriaQuota.BUONACACCIA):
         raise ValidationError("Solo le quote degli eventi si cambiano per persona.")
+    controlla_anno_aperto(quota.periodo)
     if importo < 0:
         raise ValidationError("L'importo non può essere negativo.")
     sconto = min(quota.sconto, importo)
@@ -212,6 +214,7 @@ def emetti_tutte(oggi: date | None = None) -> int:
 def annulla_quota(quota: Quota, utente, motivo: str) -> None:
     """A fee issued by mistake, or of someone who left: payments already made on it
     must be cancelled first, so the cash and the receipts stay true."""
+    controlla_anno_aperto(quota.periodo)
     if not motivo.strip():
         raise ValidationError("Indica il motivo.")
     if quota.annullata_il:
@@ -248,6 +251,7 @@ def registra_pagamento(
     (`cassa`, or the default box for the method)."""
     if not righe:
         raise ValidationError("Scegli almeno una quota.")
+    controlla_anno_aperto(data)
     if not versato_da.strip():
         raise ValidationError("Indica chi ha pagato.")
     if data > date.today():
@@ -302,6 +306,7 @@ def registra_pagamento(
 
 def annulla_pagamento(pagamento: Pagamento, utente, motivo: str) -> None:
     """The receipt number stays used, marked cancelled: numbering has no gaps."""
+    controlla_anno_aperto(pagamento.data)
     if not motivo.strip():
         raise ValidationError("Indica il motivo.")
     if pagamento.annullato_il:

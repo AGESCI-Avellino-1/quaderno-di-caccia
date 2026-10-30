@@ -170,6 +170,26 @@ inoltrare ai capigruppo (`segnala_correzioni`), gli avvisi a chi compie 18 anni
 [`deploy/cron/qdc.crontab`](deploy/cron/qdc.crontab): si copia con `crontab -e`
 correggendo il percorso dell'installazione (con Podman, `podman compose`).
 
+Il comando `promemoria_fine_anno` (ogni giorno) ricorda ai capigruppo di chiudere l'anno
+associativo appena finito e di archiviare chi è uscito da più di due anni.
+
+### Drive del gruppo per l'archivio
+
+Due anni dopo l'uscita il fascicolo di una persona va, come file ZIP, in una cartella del
+Drive condiviso del gruppo (Google Workspace); solo dopo il caricamento verificato l'app
+cancella i dati, tenendo nome e anni nel gruppo. Per collegare il Drive, una volta:
+
+1. in Google Cloud, crea un progetto, abilita la «Google Drive API» e crea un *account di
+   servizio*; scaricane la chiave JSON;
+2. nel Drive condiviso del gruppo aggiungi l'indirizzo email dell'account di servizio come
+   *Gestore contenuti* e crea la cartella per gli archivi; copiane l'id (la parte finale
+   dell'indirizzo della cartella);
+3. metti la chiave in `secrets/drive.json` accanto a `compose.prod.yml` (la cartella
+   `secrets/` non va mai nel repository) e in `.env`:
+   `QDC_DRIVE_CREDENZIALI=/run/qdc-secrets/drive.json` e `QDC_DRIVE_CARTELLA=<id>`;
+4. riavvia `web`. Nella pagina del gruppo, sezione «Archivio», sparisce l'avviso «Drive
+   non collegato».
+
 Per il backup del database: `scripts/backup-db.sh` (il file contiene dati di minori: va
 conservato cifrato).
 

@@ -52,6 +52,8 @@ export interface Profilo {
   puo_impersonare: boolean
   /** Set while using the app as another user. */
   impersonazione: { impersonato: string; email: string; scade_il: string } | null
+  /** A ragazzo who helps run imprese (CSQ, Consiglio d'impresa): their reparto. */
+  imprese_reparto: number | null
 }
 
 export interface Impersonazione {
@@ -1303,6 +1305,7 @@ export interface Stagione {
   prede: number
   conquistate: number
   da_rileggere: string[]
+  avvisi: string[]
 }
 
 export interface StagioniUnita {
@@ -1327,6 +1330,8 @@ export interface PuntoStrada {
   sintesi: string
   servizio: string
   riservato: string | null
+  /** The rover's or scolta's own reading (DEC-188). */
+  voce: string | null
   obiettivi: number[]
 }
 
@@ -1474,6 +1479,10 @@ export interface ImpresaEG {
   dal: string
   al: string | null
   posti: PostoAzione[]
+  /** Reparto and Alta Squadriglia: the Consiglio d'impresa (DEC-187). */
+  consiglio: { id: number; nome: string }[]
+  puo_modificare: boolean
+  puo_gestire_posti: boolean
 }
 
 export interface ImpreseReparto {
@@ -1488,6 +1497,8 @@ export interface ImpreseReparto {
   }[]
   ragazzi: { id: number; nome: string }[]
   puo_gestire: boolean
+  /** The staff, or a CSQ for their patrol's imprese. */
+  puo_creare: boolean
   sedi: Scelta[]
 }
 
@@ -1509,6 +1520,7 @@ export interface SchedaProgressione {
   ambiente: 'GIUNGLA' | 'BOSCO' | null
   stagioni: { id: number; nome: string; stato: StatoStagione }[]
   piccole_orme: { evento: string; inizio: string; fine: string; stato: string }[]
+  puo_scrivere_voce: boolean
 }
 
 export interface RagazzoSentiero {
@@ -2082,6 +2094,16 @@ export const api = {
     richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/punti-strada`, {
       metodo: 'POST',
       corpo: dati,
+    }),
+  vocePuntoStrada: (id: number, testo: string) =>
+    richiesta<SchedaProgressione>(`/api/v1/punti-strada/${id}/voce`, {
+      metodo: 'PUT',
+      corpo: { testo },
+    }),
+  consiglioImpresa: (impresa: number, persone: number[]) =>
+    richiesta<ImpreseReparto>(`/api/v1/imprese/${impresa}/consiglio`, {
+      metodo: 'PUT',
+      corpo: { persone },
     }),
   modificaPuntoStrada: (id: number, dati: PuntoStradaIn) =>
     richiesta<SchedaProgressione>(`/api/v1/punti-strada/${id}`, { metodo: 'PUT', corpo: dati }),

@@ -188,12 +188,12 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
-      // Imprese, posti d'azione, specialità di squadriglia: capi (DEC-64, DEC-65).
+      // Imprese, posti d'azione, specialità di squadriglia: capi (DEC-64, DEC-65); also
+      // the CSQ and the Consiglio d'impresa, for what they run (DEC-187, the API decides).
       path: '/unita/:id(\\d+)/imprese',
       name: 'imprese',
       component: () => import('@/views/ImpreseView.vue'),
       props: (rotta) => ({ id: Number(rotta.params.id) }),
-      meta: { richiede: 'capo' },
     },
     {
       // Passages to the next branch: capi see, unit staff and capigruppo act (DEC-69).

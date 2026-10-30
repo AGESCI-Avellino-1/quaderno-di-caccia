@@ -1080,6 +1080,11 @@ def vede_riservato_punto_strada(user, persona: Persona) -> bool:
     return _livello_personale(user, persona) == LivelloAccesso.PROPRIO
 
 
+def puo_scrivere_voce_punto_strada(user, persona: Persona) -> bool:
+    """Their own reading of a Punto della Strada: the rover or scolta only (DEC-188)."""
+    return _livello_personale(user, persona) == LivelloAccesso.PROPRIO
+
+
 def puo_gestire_progressione(user, persona: Persona) -> bool:
     """Sentiero, tappe, Promessa, badges, agreeing and validating: the staff of the
     person's unit (DEC-09: a capo writes for the unit they serve)."""
@@ -1106,6 +1111,81 @@ def puo_gestire_reparto_progressione(user, reparto: Unita) -> bool:
     """Imprese, posti d'azione and specialità di squadriglia: the reparto staff
     (DEC-09, DEC-65)."""
     return not e_capo_in_attesa(user) and e_staff(user, reparto)
+
+
+# --- Imprese (DEC-65, DEC-187) ------------------------------------------------------------
+
+
+def puo_creare_impresa(user, reparto: Unita, livello: str, squadriglia=None) -> bool:
+    """The reparto staff any impresa; the CSQ the imprese of their own patrol."""
+    if puo_gestire_reparto_progressione(user, reparto):
+        return True
+    return (
+        livello == "SQUADRIGLIA"
+        and squadriglia is not None
+        and squadriglia.unita_id == reparto.pk
+        and squadriglie_guidate(user).filter(pk=squadriglia.pk).exists()
+    )
+
+
+def puo_modificare_impresa(user, impresa) -> bool:
+    """Title, dates and so on: the staff; the CSQ for their patrol's impresa."""
+    if puo_gestire_reparto_progressione(user, impresa.reparto):
+        return True
+    return bool(
+        impresa.squadriglia_id
+        and squadriglie_guidate(user).filter(pk=impresa.squadriglia_id).exists()
+    )
+
+
+def puo_gestire_posti(user, impresa) -> bool:
+    """Posti d'azione and their verification: who may change the impresa, and for a
+    reparto or Alta Squadriglia impresa its Consiglio d'impresa until it ends."""
+    if puo_modificare_impresa(user, impresa):
+        return True
+    persona = persona_di(user)
+    return (
+        persona is not None
+        and not impresa.squadriglia_id
+        and not impresa.finita
+        and impresa.consiglio.filter(pk=persona.pk).exists()
+    )
+
+
+def imprese_visibili(user, reparto: Unita):
+    """Any capo reads every impresa (DEC-09); a ragazzo only those they help run."""
+    from apps.progressione.models import Impresa
+
+    imprese = Impresa.objects.filter(reparto=reparto)
+    if e_capo_censito(user):
+        return imprese
+    persona = persona_di(user)
+    if persona is None:
+        return imprese.none()
+    return imprese.filter(
+        Q(squadriglia__in=squadriglie_guidate(user)) | Q(consiglio=persona)
+    ).distinct()
+
+
+def reparto_imprese(user) -> int | None:
+    """For a ragazzo: the reparto whose imprese page they may open (CSQ, or member of a
+    Consiglio d'impresa still running)."""
+    if e_capo_censito(user):
+        return None
+    guidata = squadriglie_guidate(user).first()
+    if guidata is not None:
+        return guidata.unita_id
+    persona = persona_di(user)
+    if persona is None:
+        return None
+    from django.utils import timezone
+
+    impresa = (
+        persona.consigli_impresa.filter(Q(al__isnull=True) | Q(al__gte=timezone.localdate()))
+        .order_by("-dal")
+        .first()
+    )
+    return impresa.reparto_id if impresa else None
 
 
 def puo_gestire_unita_progressione(user, unita: Unita) -> bool:

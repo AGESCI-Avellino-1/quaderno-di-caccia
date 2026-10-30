@@ -14,6 +14,8 @@ const props = defineProps<{
   punti: PuntoStrada[]
   obiettivi: { id: number; testo: string }[]
   gestisce: boolean
+  /** The rover or scolta adds their own reading (DEC-188). */
+  scriveVoce: boolean
 }>()
 const emit = defineEmits<{ salvata: [scheda: SchedaProgressione] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -50,6 +52,15 @@ async function salva() {
   )
   if (!scheda) return
   aperto.value = 0
+  emit('salvata', scheda)
+}
+
+// Their own reading: one Punto at a time.
+const voce = reactive({ punto: 0, testo: '' })
+async function salvaVoce() {
+  const scheda = await esegui(() => api.vocePuntoStrada(voce.punto, voce.testo))
+  if (!scheda) return
+  voce.punto = 0
   emit('salvata', scheda)
 }
 
@@ -153,6 +164,38 @@ const nomi = (ids: number[]) =>
           <span class="badge theme-inverse">riservato</span> {{ p.riservato }}
         </p>
         <p v-if="p.obiettivi.length" class="small fg-2 mb-0">Obiettivi: {{ nomi(p.obiettivi) }}.</p>
+        <p v-if="p.voce && voce.punto !== p.id" class="small testo-a-capo mb-0 mt-1">
+          <strong>La rilettura {{ scriveVoce ? 'mia' : 'del rover o della scolta' }}</strong
+          >:
+          {{ p.voce }}
+        </p>
+        <button
+          v-if="scriveVoce && voce.punto !== p.id"
+          type="button"
+          class="btn btn-sm btn-link"
+          @click="Object.assign(voce, { punto: p.id, testo: p.voce ?? '' })"
+        >
+          {{ p.voce ? 'Modifica la mia rilettura' : 'Aggiungi la mia rilettura' }}
+        </button>
+        <form v-if="voce.punto === p.id" class="mt-1" @submit.prevent="salvaVoce">
+          <label class="form-label small" :for="`voce-${p.id}`">
+            La mia rilettura (la leggono solo i capi)
+          </label>
+          <textarea
+            :id="`voce-${p.id}`"
+            v-model="voce.testo"
+            class="form-control form-control-sm mb-1"
+            rows="3"
+          />
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+              Salva
+            </button>
+            <button type="button" class="btn btn-sm btn-link" @click="voce.punto = 0">
+              Annulla
+            </button>
+          </div>
+        </form>
       </li>
     </ul>
   </section>

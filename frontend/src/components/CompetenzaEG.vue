@@ -29,7 +29,9 @@ const emit = defineEmits<{ cambiata: [inCoda: boolean] }>()
 const { errore, inCorso, esegui } = useErrore()
 const oggi = () => new Date().toLocaleDateString('sv')
 
-const aperta = ref<'' | 'modifica' | 'interrompi' | 'distintivo'>('')
+const aperta = ref<'' | 'modifica' | 'interrompi' | 'distintivo' | 'riconosci'>('')
+// The day of the conquest, not the day it is recorded (DEC-190).
+const conquistata = ref(oggi())
 const modulo = reactive({
   carta: props.voce.carta,
   maestro: props.voce.maestro,
@@ -139,8 +141,7 @@ async function distintivo() {
           <button
             type="button"
             class="btn btn-sm btn-solid theme-success"
-            :disabled="inCorso"
-            @click="passo('riconosci', { il: oggi() })"
+            @click="((conquistata = oggi()), (aperta = 'riconosci'))"
           >
             {{
               voce.tipo === 'SPECIALITA_SQ' || voce.tipo === 'SPECIALITA_LC'
@@ -260,6 +261,27 @@ async function distintivo() {
           Salva
         </button>
       </div>
+    </form>
+
+    <form
+      v-if="aperta === 'riconosci'"
+      class="d-flex flex-wrap align-items-end gap-3 mt-1"
+      @submit.prevent="passo('riconosci', { il: conquistata })"
+    >
+      <div>
+        <label class="form-label small" :for="`conq-${voce.id}`">Conquistata il</label>
+        <input
+          :id="`conq-${voce.id}`"
+          v-model="conquistata"
+          type="date"
+          :max="oggi()"
+          class="form-control form-control-sm"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-sm btn-solid theme-success" :disabled="inCorso">
+        Registra
+      </button>
     </form>
 
     <form

@@ -133,6 +133,11 @@ const COLORI: Record<string, string> = {
           <template v-if="s.chiusa_il">Chiusa il {{ data(s.chiusa_il) }}.</template>
           {{ s.prede }} prede o voli, {{ s.conquistate }} conquistati.
         </p>
+        <div v-if="s.avvisi.length" class="alert theme-warning small mb-1" role="status">
+          <div>
+            <p v-for="a in s.avvisi" :key="a" class="mb-0">{{ a }}</p>
+          </div>
+        </div>
         <div v-if="s.da_rileggere.length && s.stato !== 'PREVISTA'" class="small mb-1">
           {{ s.stato === 'CHIUSA' ? 'Da rileggere con i capi' : 'Ancora aperti' }}:
           <ul class="mb-0">

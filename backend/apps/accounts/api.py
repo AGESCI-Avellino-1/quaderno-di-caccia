@@ -76,6 +76,8 @@ class Profilo(Schema):
     # Using the app as another user: who may, and the one in progress (None if not).
     puo_impersonare: bool
     impersonazione: ImpersonazioneInCorso | None
+    # A ragazzo who helps run imprese (CSQ, Consiglio d'impresa): their reparto (DEC-187).
+    imprese_reparto: int | None
 
 
 @router.get("/io", response=Profilo)
@@ -122,6 +124,7 @@ def profilo(request):
             getattr(request, "impersonatore", None) or user
         ),
         "impersonazione": _impersonazione(request),
+        "imprese_reparto": policy.reparto_imprese(user),
     }
 
 

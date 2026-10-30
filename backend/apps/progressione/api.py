@@ -151,6 +151,8 @@ class PuntoStradaOut(Schema):
     servizio: str
     # None: the user may not read what was faced in confidence (DEC-180).
     riservato: str | None
+    # The rover's or scolta's own reading (DEC-188); None as for `riservato`.
+    voce: str | None
     obiettivi: list[int]
 
 
@@ -227,6 +229,7 @@ class SchedaOut(Schema):
     competenze: list[CompetenzaOut]
     posti_azione: list[PostoOut]
     punti_strada: list[PuntoStradaOut]
+    puo_scrivere_voce: bool
     # L/C (DEC-66, DEC-185): GIUNGLA or BOSCO for the names; the seasons of the unit a
     # preda or volo may refer to; the Piccole Orme lived (DEC-184).
     ambiente: str | None
@@ -435,6 +438,7 @@ def _scheda(user, persona: Persona) -> dict:
                 "impresa", "persona"
             )
         ],
+        "puo_scrivere_voce": policy.puo_scrivere_voce_punto_strada(user, persona),
         "punti_strada": [
             {
                 "id": ps.pk,
@@ -443,6 +447,7 @@ def _scheda(user, persona: Persona) -> dict:
                 "sintesi": ps.sintesi,
                 "servizio": ps.servizio,
                 "riservato": ps.riservato if vede_riservato else None,
+                "voce": ps.voce if vede_riservato else None,
                 "obiettivi": [o.pk for o in ps.obiettivi.all() if o.pk in visibili],
             }
             for ps in PuntoStrada.objects.filter(periodo__persona=persona).prefetch_related(
@@ -666,6 +671,21 @@ def _salva_punto(request, punto: PuntoStrada, dati: PuntoStradaIn):
 def nuovo_punto_strada(request, periodo_id: int, dati: PuntoStradaIn):
     periodo = _periodo(request, periodo_id)
     return Status(201, _salva_punto(request, PuntoStrada(periodo=periodo), dati))
+
+
+class VoceIn(Schema):
+    testo: str
+
+
+@router.put("/punti-strada/{punto_id}/voce", response=SchedaOut)
+def voce_punto_strada(request, punto_id: int, dati: VoceIn):
+    """Written by the rover or scolta only (DEC-188)."""
+    punto = get_object_or_404(PuntoStrada.objects.select_related("periodo__persona"), pk=punto_id)
+    persona = _persona(request, punto.periodo.persona_id)
+    if not policy.puo_scrivere_voce_punto_strada(request.auth, persona):
+        raise HttpError(403, "La propria rilettura la scrive il rover o la scolta.")
+    _esegui(servizi.scrivi_voce, punto, dati.testo)
+    return _scheda(request.auth, persona)
 
 
 @router.put("/punti-strada/{punto_id}", response=SchedaOut)
@@ -1102,6 +1122,10 @@ class ImpresaOut(Schema):
     dal: date
     al: date | None
     posti: list[PostoOut]
+    consiglio: list[dict]
+    # What the user may do with it (DEC-187).
+    puo_modificare: bool
+    puo_gestire_posti: bool
 
 
 class SquadrigliaCompetenze(Schema):
@@ -1118,20 +1142,45 @@ class ImpreseOut(Schema):
     imprese: list[ImpresaOut]
     squadriglie: list[SquadrigliaCompetenze]
     ragazzi: list[dict]
+    # The staff: everything; a CSQ also creates the imprese of their patrol (DEC-187).
     puo_gestire: bool
+    puo_creare: bool
     sedi: list[dict]
 
 
 def _imprese(user, reparto: Unita) -> dict:
     from apps.anagrafica.models import AppartenenzaSquadriglia
 
+    capo = policy.e_capo_censito(user)
+    gestisce = policy.puo_gestire_reparto_progressione(user, reparto)
+    guidate = policy.squadriglie_guidate(user).filter(unita=reparto)
+    imprese = (
+        policy.imprese_visibili(user, reparto)
+        .select_related("squadriglia", "reparto")
+        .prefetch_related("consiglio")
+    )
     ragazzi = Persona.objects.filter(
         pk__in=Appartenenza.objects.attive()
         .filter(unita=reparto, ruolo=RuoloAppartenenza.RAGAZZO)
         .values("persona_id")
     ).order_by("cognome", "nome")
+    persona = policy.persona_di(user)
+    if not capo and not (persona and imprese.filter(consiglio=persona).exists()):
+        # A CSQ assigns posti only within their patrol: a practical limit, not a privacy
+        # one (the ragazzi of a unit see each other's names, and patrols in a reparto, DEC-191).
+        ragazzi = ragazzi.filter(
+            pk__in=AppartenenzaSquadriglia.objects.attive()
+            .filter(squadriglia__in=guidate)
+            .values("persona_id")
+        )
     squadriglie = []
     for sq in reparto.squadriglie.filter(attiva=True).order_by("nome"):
+        if not capo:
+            if guidate.filter(pk=sq.pk).exists():
+                squadriglie.append(
+                    {"id": sq.pk, "nome": sq.nome, "competenze": [], "individuali": []}
+                )
+            continue
         membri = (
             AppartenenzaSquadriglia.objects.attive().filter(squadriglia=sq).values("persona_id")
         )
@@ -1154,7 +1203,6 @@ def _imprese(user, reparto: Unita) -> dict:
                 ],
             }
         )
-    imprese = Impresa.objects.filter(reparto=reparto).select_related("squadriglia")
     return {
         "reparto_id": reparto.pk,
         "reparto": str(reparto),
@@ -1170,20 +1218,30 @@ def _imprese(user, reparto: Unita) -> dict:
                 "dal": i.dal,
                 "al": i.al,
                 "posti": [_posto_out(p) for p in i.posti.select_related("impresa", "persona")],
+                "consiglio": [
+                    {"id": p.pk, "nome": f"{p.cognome} {p.nome}"} for p in i.consiglio.all()
+                ],
+                "puo_modificare": policy.puo_modificare_impresa(user, i),
+                "puo_gestire_posti": policy.puo_gestire_posti(user, i),
             }
             for i in imprese
         ],
         "squadriglie": squadriglie,
         "ragazzi": [{"id": p.pk, "nome": f"{p.cognome} {p.nome}"} for p in ragazzi],
-        "puo_gestire": policy.puo_gestire_reparto_progressione(user, reparto),
+        "puo_gestire": gestisce,
+        "puo_creare": gestisce or guidate.exists(),
         "sedi": [{"valore": v, "etichetta": e} for v, e in SedeVerifica.choices],
     }
 
 
 def _reparto(request, unita_id: int) -> Unita:
     reparto = get_object_or_404(Unita, pk=unita_id)
-    if not policy.e_capo_censito(request.auth):
-        raise HttpError(403, "Imprese e specialità di squadriglia le vedono i capi.")
+    if not (
+        policy.e_capo_censito(request.auth) or policy.reparto_imprese(request.auth) == reparto.pk
+    ):
+        raise HttpError(
+            403, "Le imprese le vedono i capi, i capi squadriglia e i Consigli d'impresa."
+        )
     if reparto.branca != Branca.EG:
         raise HttpError(400, "Le imprese sono del reparto.")
     return reparto
@@ -1227,18 +1285,58 @@ def _salva_impresa(impresa: Impresa, dati: ImpresaIn) -> None:
 
 @router.post("/unita/{unita_id}/imprese", response={201: ImpreseOut})
 def nuova_impresa(request, unita_id: int, dati: ImpresaIn):
+    from apps.organizzazione.models import Squadriglia
+
     reparto = _reparto(request, unita_id)
-    _gestore_reparto(request, reparto)
+    squadriglia = (
+        Squadriglia.objects.filter(pk=dati.squadriglia_id).first() if dati.squadriglia_id else None
+    )
+    if not policy.puo_creare_impresa(request.auth, reparto, dati.livello, squadriglia):
+        raise HttpError(
+            403,
+            "Le imprese le registra lo staff; il capo squadriglia quelle della sua squadriglia.",
+        )
     _salva_impresa(Impresa(reparto=reparto, creata_da=request.auth), dati)
     return Status(201, _imprese(request.auth, reparto))
 
 
+def _impresa(request, impresa_id: int) -> tuple[Impresa, Unita]:
+    impresa = get_object_or_404(Impresa.objects.select_related("reparto"), pk=impresa_id)
+    reparto = _reparto(request, impresa.reparto_id)
+    if not policy.imprese_visibili(request.auth, reparto).filter(pk=impresa.pk).exists():
+        raise HttpError(404, "Impresa non trovata.")
+    return impresa, reparto
+
+
 @router.put("/imprese/{impresa_id}", response=ImpreseOut)
 def modifica_impresa(request, impresa_id: int, dati: ImpresaIn):
-    impresa = get_object_or_404(Impresa, pk=impresa_id)
-    reparto = _reparto(request, impresa.reparto_id)
-    _gestore_reparto(request, reparto)
+    impresa, reparto = _impresa(request, impresa_id)
+    if not policy.puo_modificare_impresa(request.auth, impresa):
+        raise HttpError(403, "Non puoi modificare questa impresa.")
+    if not policy.puo_gestire_reparto_progressione(request.auth, reparto) and (
+        dati.livello != LivelloImpresa.SQUADRIGLIA or dati.squadriglia_id != impresa.squadriglia_id
+    ):
+        raise HttpError(403, "Resta un'impresa della tua squadriglia.")
     _salva_impresa(impresa, dati)
+    return _imprese(request.auth, reparto)
+
+
+class ConsiglioIn(Schema):
+    persone: list[int]
+
+
+@router.put("/imprese/{impresa_id}/consiglio", response=ImpreseOut)
+def consiglio_impresa(request, impresa_id: int, dati: ConsiglioIn):
+    """The Consiglio d'impresa of a reparto or Alta Squadriglia impresa, appointed by the
+    staff among the ragazzi of the reparto (DEC-187)."""
+    impresa, reparto = _impresa(request, impresa_id)
+    _gestore_reparto(request, reparto)
+    if impresa.livello == LivelloImpresa.SQUADRIGLIA:
+        raise HttpError(400, "L'impresa di squadriglia la guida il capo squadriglia.")
+    persone = list(servizi.ragazzi_di(reparto).filter(pk__in=dati.persone))
+    if len(persone) != len(set(dati.persone)):
+        raise HttpError(400, "Scegli ragazzi del reparto.")
+    impresa.consiglio.set(persone)
     return _imprese(request.auth, reparto)
 
 
@@ -1250,12 +1348,26 @@ class PostoIn(Schema):
 
 @router.post("/imprese/{impresa_id}/posti", response={201: ImpreseOut})
 def nuovo_posto(request, impresa_id: int, dati: PostoIn):
-    impresa = get_object_or_404(Impresa, pk=impresa_id)
-    reparto = _reparto(request, impresa.reparto_id)
-    _gestore_reparto(request, reparto)
+    from apps.anagrafica.models import AppartenenzaSquadriglia
+
+    impresa, reparto = _impresa(request, impresa_id)
+    if not policy.puo_gestire_posti(request.auth, impresa):
+        raise HttpError(403, "Non puoi assegnare posti d'azione in questa impresa.")
+    staff = policy.puo_gestire_reparto_progressione(request.auth, reparto)
     persona = get_object_or_404(Persona, pk=dati.persona_id)
     if not Appartenenza.objects.attive().filter(persona=persona, unita=reparto).exists():
         raise HttpError(400, "Scegli un ragazzo del reparto.")
+    if (
+        not staff
+        and impresa.squadriglia_id
+        and not AppartenenzaSquadriglia.objects.attive()
+        .filter(persona=persona, squadriglia=impresa.squadriglia_id)
+        .exists()
+    ):
+        raise HttpError(400, "Scegli uno della squadriglia.")
+    if dati.impegno_id and not staff:
+        # The impegni of the others are not the ragazzi's to read.
+        raise HttpError(403, "Il collegamento all'impegno lo fa lo staff.")
     if not dati.ruolo.strip():
         raise HttpError(400, "Scrivi il posto d'azione.")
     impegno = (
@@ -1278,8 +1390,9 @@ class VerificaPostoIn(Schema):
 @router.post("/posti-azione/{posto_id}/verifica", response=ImpreseOut)
 def verifica_posto(request, posto_id: int, dati: VerificaPostoIn):
     posto = get_object_or_404(PostoAzione.objects.select_related("impresa"), pk=posto_id)
-    reparto = _reparto(request, posto.impresa.reparto_id)
-    _gestore_reparto(request, reparto)
+    impresa, reparto = _impresa(request, posto.impresa_id)
+    if not policy.puo_gestire_posti(request.auth, impresa):
+        raise HttpError(403, "Non puoi registrare questa verifica.")
     _esegui(
         servizi.verifica_posto,
         posto,
@@ -1530,6 +1643,7 @@ class StagioneOut(Schema):
     conquistate: int
     # Still open: to look at again with the capi, never conquered by the closing (V04).
     da_rileggere: list[str]
+    avvisi: list[str]
 
 
 class StagioniUnita(Schema):
@@ -1558,6 +1672,7 @@ def _stagioni(user, unita: Unita) -> dict:
                     f"{p.periodo.persona.cognome} {p.periodo.persona.nome}: {p.testo}"
                     for p in servizi.da_rileggere(s)
                 ],
+                "avvisi": servizi.avvisi_stagione(s),
             }
         )
     return {

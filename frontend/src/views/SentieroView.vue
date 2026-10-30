@@ -350,14 +350,18 @@ async function salvaNuova() {
         <template v-if="ultimo.conclusione.nota">{{ ultimo.conclusione.nota }}.</template>
       </p>
       <p v-else class="mb-3">Il percorso non è ancora aperto.</p>
-      <template v-if="scheda.puo_gestire && !ultimo?.conclusione">
+      <template
+        v-if="
+          scheda.puo_gestire && (!ultimo?.conclusione || ultimo.conclusione.tipo !== 'PARTENZA')
+        "
+      >
         <button
           v-if="apertura !== 'sentiero'"
           type="button"
           class="btn btn-sm btn-solid theme-primary align-self-start"
           @click="apri('sentiero')"
         >
-          Apri il percorso
+          {{ ultimo?.conclusione ? 'Rientro: apri un nuovo percorso' : 'Apri il percorso' }}
         </button>
         <form v-else class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="apriSentiero">
           <InputDataParziale
@@ -897,6 +901,7 @@ async function salvaNuova() {
         :punti="scheda.punti_strada.filter((p) => p.periodo_id === periodo!.id)"
         :obiettivi="obiettiviAperti"
         :gestisce="scheda.puo_gestire"
+        :scrive-voce="scheda.puo_scrivere_voce"
         @salvata="
           (dati) => {
             scheda = dati

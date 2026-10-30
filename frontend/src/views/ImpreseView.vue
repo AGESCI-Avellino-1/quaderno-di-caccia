@@ -14,11 +14,14 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
+import { useSessioneStore } from '@/stores/sessione'
 
 // Imprese of the reparto, of a patrol, of the Alta Squadriglia with the posti d'azione
 // and their verification (DEC-65; artt. 32, 42–43), and the specialità di squadriglia,
 // held by the patrol, never by its members (DEC-64, V19). The reparto staff writes; any
-// capo reads. Cached for meetings without network.
+// capo reads. A CSQ runs the imprese of their patrol; the Consiglio d'impresa appointed
+// by the staff assigns and verifies the posti of a reparto or Alta Squadriglia impresa
+// (DEC-187): they see only those imprese. Cached for meetings without network.
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const dati = ref<ImpreseReparto | null>(null)
@@ -26,6 +29,7 @@ const copiaDel = ref<string | null>(null)
 const cataloghi = ref<CataloghiPP | null>(null)
 const esito = ref('')
 const oggi = () => new Date().toLocaleDateString('sv')
+const sessione = useSessioneStore()
 
 async function carica() {
   const letto = await esegui(() =>
@@ -75,6 +79,16 @@ async function nuovaImpresa() {
     'Impresa salvata.',
   )
   if (ok) Object.assign(impresa, { aperta: false, titolo: '', descrizione: '', al: '' })
+}
+
+// The staff appoints the Consiglio d'impresa among the ragazzi of the reparto.
+const consiglio = reactive({ impresa: 0, persone: [] as number[] })
+async function salvaConsiglio() {
+  const ok = await fatto(
+    () => api.consiglioImpresa(consiglio.impresa, consiglio.persone),
+    "Consiglio d'impresa salvato.",
+  )
+  if (ok) consiglio.impresa = 0
 }
 
 const posto = reactive({ impresa: 0, persona_id: 0, ruolo: '' })
@@ -138,7 +152,9 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
 <template>
   <section>
     <div class="d-flex flex-wrap align-items-baseline gap-3">
-      <h1 class="h4 mb-1">Imprese e specialità di squadriglia</h1>
+      <h1 class="h4 mb-1">
+        {{ sessione.profilo?.capo ? 'Imprese e specialità di squadriglia' : 'Imprese' }}
+      </h1>
       <CopiaLocale :del="copiaDel" />
     </div>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
@@ -148,24 +164,26 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
     <template v-if="dati">
       <p class="small fg-2">
         {{ dati.reparto }}.
-        <RouterLink :to="`/unita/${dati.reparto_id}/sentiero`">Sentiero del reparto</RouterLink>
+        <RouterLink v-if="sessione.profilo?.capo" :to="`/unita/${dati.reparto_id}/sentiero`"
+          >Sentiero del reparto</RouterLink
+        >
       </p>
 
       <section class="mb-5">
         <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
           <h2 class="h5 mb-0">Imprese</h2>
           <button
-            v-if="dati.puo_gestire && !impresa.aperta"
+            v-if="dati.puo_creare && !impresa.aperta"
             type="button"
             class="btn btn-sm btn-outline theme-primary"
-            @click="impresa.aperta = true"
+            @click="Object.assign(impresa, { aperta: true, livello: 'SQUADRIGLIA' })"
           >
             Nuova impresa
           </button>
         </div>
         <form v-if="impresa.aperta" class="card card-body mb-3" @submit.prevent="nuovaImpresa">
           <div class="row g-3">
-            <div class="col-12 md:col-6">
+            <div v-if="dati.puo_gestire" class="col-12 md:col-6">
               <label class="form-label small" for="imp-livello">Di chi</label>
               <select
                 id="imp-livello"
@@ -255,7 +273,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
                 · verificato il {{ data(p.verificato_il) }} ({{ p.sede_nome }})</template
               >
               <button
-                v-else-if="dati.puo_gestire"
+                v-else-if="i.puo_gestire_posti"
                 type="button"
                 class="btn btn-sm btn-link"
                 @click="
@@ -318,7 +336,50 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
               </form>
             </li>
           </ul>
-          <template v-if="dati.puo_gestire">
+          <p v-if="i.livello !== 'SQUADRIGLIA'" class="small mb-1">
+            <strong>Consiglio d'impresa</strong>:
+            {{ i.consiglio.length ? i.consiglio.map((c) => c.nome).join(', ') : 'non nominato' }}
+            <button
+              v-if="dati.puo_gestire && consiglio.impresa !== i.id"
+              type="button"
+              class="btn btn-sm btn-link"
+              @click="
+                Object.assign(consiglio, { impresa: i.id, persone: i.consiglio.map((c) => c.id) })
+              "
+            >
+              Nomina…
+            </button>
+          </p>
+          <form
+            v-if="consiglio.impresa === i.id"
+            class="card card-body mb-1"
+            @submit.prevent="salvaConsiglio"
+          >
+            <fieldset class="mb-3">
+              <legend class="form-label small">
+                Chi fa parte del Consiglio d'impresa (assegna e verifica i posti d'azione)
+              </legend>
+              <div v-for="r in dati.ragazzi" :key="r.id" class="form-field">
+                <input
+                  :id="`ci-${i.id}-${r.id}`"
+                  v-model="consiglio.persone"
+                  type="checkbox"
+                  class="check"
+                  :value="r.id"
+                />
+                <label class="small" :for="`ci-${i.id}-${r.id}`">{{ r.nome }}</label>
+              </div>
+            </fieldset>
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+                Salva
+              </button>
+              <button type="button" class="btn btn-sm btn-link" @click="consiglio.impresa = 0">
+                Annulla
+              </button>
+            </div>
+          </form>
+          <template v-if="i.puo_gestire_posti">
             <button
               v-if="posto.impresa !== i.id"
               type="button"
@@ -364,7 +425,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
         </div>
       </section>
 
-      <section class="mb-5">
+      <section v-if="sessione.profilo?.capo" class="mb-5">
         <h2 class="h5">Specialità di squadriglia</h2>
         <p class="small fg-2">
           Le conquista la squadriglia: i suoi membri non ricevono per questo una specialità

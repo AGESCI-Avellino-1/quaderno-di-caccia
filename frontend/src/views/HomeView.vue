@@ -194,6 +194,15 @@ onMounted(async () => {
           <span class="fg-2 small">Carica l'export "Ricerca soci" (CSV)</span>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.imprese_reparto" class="col-12 md:col-6">
+        <RouterLink
+          :to="{ name: 'imprese', params: { id: sessione.profilo.imprese_reparto } }"
+          class="card card-body h-100 text-decoration-none"
+        >
+          <strong>Imprese</strong>
+          <span class="fg-2 small">Posti d'azione e verifiche delle imprese che guidi</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.profilo.squadriglie?.length" class="col-12 md:col-6">
         <RouterLink to="/squadriglia" class="card card-body h-100 text-decoration-none">
           <strong>La mia squadriglia</strong>

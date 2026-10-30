@@ -327,6 +327,7 @@ def _progressione(persona: Persona) -> dict:
                 "Sintesi": ps.sintesi,
                 "Servizio": ps.servizio,
                 "Parte riservata": ps.riservato,
+                "La mia rilettura": ps.voce,
             }
             for periodo in periodi
             for ps in periodo.punti_strada.all()

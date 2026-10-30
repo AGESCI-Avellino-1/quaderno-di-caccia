@@ -404,6 +404,11 @@ class Impresa(ModelloTracciato):
     dal = _data()
     al = _data(null=True, blank=True)
     creata_da = _utente()
+    # Reparto and Alta Squadriglia: the ragazzi the staff appoints to run it; they
+    # assign and verify the posti d'azione until it ends (DEC-187).
+    consiglio = models.ManyToManyField(
+        "anagrafica.Persona", blank=True, related_name="consigli_impresa"
+    )
 
     class Meta:
         verbose_name = "impresa"
@@ -425,6 +430,12 @@ class Impresa(ModelloTracciato):
             errori.append("La fine deve seguire l'inizio.")
         if errori:
             raise ValidationError(errori)
+
+    @property
+    def finita(self) -> bool:
+        from django.utils import timezone
+
+        return self.al is not None and self.al < timezone.localdate()
 
 
 class PostoAzione(ModelloTracciato):
@@ -578,6 +589,9 @@ class PuntoStrada(ModelloTracciato):
     sintesi = models.TextField(blank=True)
     servizio = models.TextField(blank=True)
     riservato = models.TextField(blank=True)
+    # The rover's or scolta's own reading, written by them; read like `riservato`
+    # (DEC-188, spec §11.2 "voce del ragazzo").
+    voce = models.TextField(blank=True)
     obiettivi = models.ManyToManyField(Obiettivo, blank=True, related_name="punti_strada")
     creato_da = _utente()
 

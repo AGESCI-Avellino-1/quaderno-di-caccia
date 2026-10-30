@@ -3,6 +3,7 @@ history together; none advances anyone by itself (DEC-71, V08). A command alread
 applied is answered as done: offline replays and double sends change nothing (DEC-96,
 PP-Q)."""
 
+from calendar import monthrange
 from datetime import date
 
 from django.core.exceptions import ValidationError
@@ -97,7 +98,21 @@ def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBran
     branca = branca_attuale(persona)
     if branca is None:
         raise ValidationError("Il percorso si apre per chi è in un'unità come ragazzo.")
+    if branca == Branca.RS:
+        # Back in clan after an interruption or a transfer: a new period, the old one
+        # stays in the history; never after the Partenza (DEC-189).
+        if Conclusione.objects.filter(
+            periodo__persona=persona, tipo=TipoConclusione.PARTENZA
+        ).exists():
+            raise ValidationError("Dopo la Partenza il percorso R/S non si riapre.")
+        _non_prima_della_conclusione(persona, quando)
     return _apri_periodo(persona, branca, quando, utente)
+
+
+def _non_prima_della_conclusione(persona: Persona, quando: DataParziale) -> None:
+    ultima = Conclusione.objects.filter(periodo__persona=persona).order_by("-data").first()
+    if ultima is not None:
+        _non_prima(quando, ultima.data, "la conclusione del percorso precedente")
 
 
 def _apri_periodo(persona: Persona, branca: str, quando: DataParziale, utente) -> PeriodoBranca:
@@ -1136,3 +1151,33 @@ def annulla_stagione(stagione: Stagione) -> Stagione:
     stagione.stato = StatoStagione.ANNULLATA
     stagione.save()
     return stagione
+
+
+def scrivi_voce(punto: PuntoStrada, testo: str) -> PuntoStrada:
+    """The rover's or scolta's own reading (DEC-188); the last write wins (DEC-96)."""
+    _strada(punto.periodo)
+    punto.voce = testo.strip()
+    punto.save(update_fields=["voce", "aggiornato_il"])
+    return punto
+
+
+def avvisi_stagione(stagione: Stagione) -> list[str]:
+    """About three or four months (L/C art. 38, V04): outside two to five months the app
+    says so, never blocks (DEC-190)."""
+
+    def mesi_dopo(giorno: date, mesi: int) -> date:
+        anno, mese = divmod(giorno.month - 1 + mesi, 12)
+        anno, mese = giorno.year + anno, mese + 1
+        return giorno.replace(year=anno, month=mese, day=min(giorno.day, monthrange(anno, mese)[1]))
+
+    if stagione.stato in (StatoStagione.CHIUSA, StatoStagione.ANNULLATA):
+        return []
+    inizio, fine = stagione.inizio_previsto, stagione.fine_prevista
+    if fine < mesi_dopo(inizio, 2):
+        return ["Dura meno di due mesi: di solito una stagione ne dura tre o quattro."]
+    if fine > mesi_dopo(inizio, 5):
+        return [
+            "Dura più di cinque mesi: di solito una stagione ne dura tre o quattro e "
+            "si chiude prima delle vacanze."
+        ]
+    return []

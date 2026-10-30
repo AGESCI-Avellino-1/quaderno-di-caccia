@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 31, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 32, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -210,6 +210,12 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-183 | In L/C lo staff riconosce il momento (lupo della legge, coccinella del prato…) dopo almeno una preda o un volo conquistato in quel momento; la storia di chi c'era già si registra anche senza, dichiarandolo. Il distintivo si consegna dopo il riconoscimento. Prede e voli si riferiscono alla stagione di caccia o di volo dell'unità (in programma, aperta con il lancio, chiusa, annullata prima del lancio); la chiusura non conquista nulla e mostra cosa resta da rileggere. | DEC-66, PP V04, V05, 30/10 |
 | DEC-184 | Le Piccole Orme si riconoscono da un segno sull'evento BuonaCaccia; iscrivendo un bambino l'app avvisa, senza bloccare, se le ha già fatte, se non è nel momento della responsabilità o se l'evento dura meno di tre giorni. La partecipazione compare nella pista. | DEC-68, PP V11, 30/10 |
 | DEC-185 | Nomi di momenti, prede e voli: giungla nel branco, bosco nel cerchio; nel branco/cerchio misto secondo il bambino (lupetti giungla, coccinelle bosco); nomi generici se il sesso non è indicato. | DEC-66, DEC-72, 30/10 |
+| DEC-186 | La Progressione la scrive solo lo staff dell'unità della persona: i capigruppo la leggono ma non la scrivono nelle unità dove non fanno servizio (i passaggi restano anche a loro, DEC-174). Specialità e brevetti li apre solo lo staff. | DEC-09, DEC-113, 30/10 |
+| DEC-187 | Imprese: il capo squadriglia crea e modifica le imprese della sua squadriglia, ne assegna i posti d'azione ai suoi squadriglieri e ne registra la verifica. Le imprese di reparto e di Alta Squadriglia le crea lo staff, che ne nomina il Consiglio d'impresa tra i ragazzi del reparto: i suoi membri assegnano i posti d'azione e ne registrano la verifica finché l'impresa non è finita. Il collegamento di un posto a un impegno lo fa lo staff. CSQ e Consiglio vedono solo le imprese che guidano. | DEC-13, DEC-65, 30/10 |
+| DEC-188 | Nel Punto della Strada il rover o la scolta scrive una propria rilettura, che leggono lui o lei e i capi (come la parte riservata, DEC-180); lo staff non la scrive. | DEC-67, DEC-180, PP §11.2, 30/10 |
+| DEC-189 | Chi rientra in clan dopo un'interruzione o un trasferimento riceve un nuovo periodo R/S dalla data del rientro (con la sua Scoperta); quello concluso resta nella storia. Dopo una Partenza il percorso R/S non si riapre. | DEC-67, DEC-181, 30/10 |
+| DEC-190 | La conquista di una specialità o di un brevetto si registra con la sua data, non con quella del giorno in cui si scrive. Una stagione L/C che dura meno di due o più di cinque mesi è segnalata, senza bloccare. | DEC-62, DEC-183, PP V04, 30/10 |
+| DEC-191 | In ogni unità i ragazzi vedono sempre i nomi di tutti gli altri ragazzi dell'unità e, in reparto, la loro squadriglia: non sono dati riservati (contatti e il resto della scheda seguono DEC-13). | DEC-13, 30/10 |
 
 ## Eventi e presenze
 

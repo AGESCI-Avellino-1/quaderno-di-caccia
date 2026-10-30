@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -19,6 +21,25 @@ class PersonaBreve(Schema):
     id: int
     nome: str
     cognome: str
+
+
+class ImpersonazioneInCorso(Schema):
+    impersonato: str
+    email: str
+    scade_il: datetime
+
+
+def _impersonazione(request) -> dict | None:
+    from apps.impersonazione.servizi import nome
+
+    impersonazione = getattr(request, "impersonazione", None)
+    if impersonazione is None:
+        return None
+    return {
+        "impersonato": nome(impersonazione.impersonato),
+        "email": impersonazione.impersonato.email,
+        "scade_il": impersonazione.scade_il,
+    }
 
 
 class Profilo(Schema):
@@ -52,6 +73,9 @@ class Profilo(Schema):
     # Events on BuonaCaccia: who registers someone, who lists capi training (DEC-164).
     eventi_buonacaccia: bool
     formazione_capi: bool
+    # Using the app as another user: who may, and the one in progress (None if not).
+    puo_impersonare: bool
+    impersonazione: ImpersonazioneInCorso | None
 
 
 @router.get("/io", response=Profilo)
@@ -94,6 +118,10 @@ def profilo(request):
         "squadriglie_delegate": policy.squadriglie_delegate(user),
         "eventi_buonacaccia": policy.puo_creare_evento_buonacaccia(user),
         "formazione_capi": policy.puo_vedere_formazione_capi(user),
+        "puo_impersonare": policy.puo_impersonare_qualcuno(
+            getattr(request, "impersonatore", None) or user
+        ),
+        "impersonazione": _impersonazione(request),
     }
 
 

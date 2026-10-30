@@ -88,6 +88,15 @@ onMounted(async () => {
           <span class="small fg-2">Riunioni, uscite e campi; partecipazione e presenze</span>
         </RouterLink>
       </div>
+      <div
+        v-if="sessione.profilo.puo_impersonare && !sessione.profilo.impersonazione"
+        class="col-12 md:col-6"
+      >
+        <RouterLink to="/impersonazioni" class="card card-body h-100 text-decoration-none">
+          <strong>Usa l'app al posto di un altro</strong>
+          <span class="small fg-2">Per aiutare qualcuno a compilare o vedere un problema</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.profilo.eventi_buonacaccia" class="col-12 md:col-6">
         <RouterLink to="/buonacaccia" class="card card-body h-100 text-decoration-none">
           <strong>Eventi su BuonaCaccia</strong>

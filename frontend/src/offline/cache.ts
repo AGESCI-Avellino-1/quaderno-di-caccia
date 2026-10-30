@@ -5,6 +5,7 @@
  */
 import { ErroreApi } from '@/api/http'
 import { cifraValore, decifraValore, protetta, sbloccata } from '@/sicurezza/cassaforte'
+import { inImpersonazione } from '@/sicurezza/impersonazione'
 
 import { db as dbPredefinito, type DatabaseQdc } from './db'
 
@@ -14,7 +15,8 @@ export interface Letto<T> {
   copiaDel: string | null
 }
 
-const salvabile = () => protetta() && sbloccata()
+// Never while acting as another user: the device copy is the capo's own.
+const salvabile = () => protetta() && sbloccata() && !inImpersonazione()
 
 export async function salvaInCache(
   chiave: string,

@@ -958,3 +958,60 @@ def puo_gestire_schede_buonacaccia(user) -> bool:
 def puo_vedere_formazione_capi(user) -> bool:
     """The list of training camps for the Zona: the capigruppo (DEC-164)."""
     return e_capogruppo(user)
+
+
+# --- Using the app as another user (maintainer, 30/10/2026) ---------------------------------
+
+
+def _impersonabili_dallo_staff(user) -> QuerySet[Persona]:
+    """The ragazzi of the units the user serves and their parents, not capi."""
+    from apps.anagrafica.models import RelazioneTutela
+
+    persona = persona_di(user)
+    if persona is None:
+        return Persona.objects.none()
+    servite = (
+        Incarico.objects.attivi()
+        .filter(persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+        .values("unita_id")
+    )
+    ragazzi = (
+        Appartenenza.objects.attive()
+        .filter(unita_id__in=servite, ruolo=RuoloAppartenenza.RAGAZZO)
+        .values("persona_id")
+    )
+    genitori = RelazioneTutela.objects.filter(minore_id__in=ragazzi).values("tutore_id")
+    capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO).values("persona_id")
+    return Persona.objects.filter(Q(pk__in=ragazzi) | Q(pk__in=genitori)).exclude(pk__in=capi)
+
+
+def puo_impersonare_qualcuno(user) -> bool:
+    """For the menu: a capo in BuonaStrada who is capogruppo, technical administrator or
+    serves a unit."""
+    if not e_capo_censito(user):
+        return False
+    return (
+        e_capogruppo(user)
+        or e_amministratore(user)
+        or _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+    )
+
+
+def puo_impersonare(user, bersaglio) -> bool:
+    """Act as the account `bersaglio`: the capigruppo and the technical administrators
+    anyone with an account; the staff of a unit its ragazzi and their parents. Always a
+    capo already in BuonaStrada, so no data beyond what a capo sees (DEC-09, DEC-12)."""
+    if not getattr(user, "is_authenticated", False) or bersaglio is None:
+        return False
+    if bersaglio.pk == user.pk or not bersaglio.is_active or not e_capo_censito(user):
+        return False
+    if e_capogruppo(user) or e_amministratore(user):
+        return True
+    if bersaglio.is_superuser or bersaglio.amministratore_tecnico:
+        return False
+    return _impersonabili_dallo_staff(user).filter(utente=bersaglio).exists()
+
+
+def puo_vedere_impersonazioni(user) -> bool:
+    """The whole list of who used the app in someone else's place: the Co.Ca."""
+    return e_capo_censito(user)

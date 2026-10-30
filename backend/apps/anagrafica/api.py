@@ -13,6 +13,7 @@ from apps.permessi.policy import LivelloAccesso
 from . import servizi
 from .models import (
     CAMPI_BUONASTRADA,
+    CAMPI_CONSENSO,
     ETICHETTE_CAMPI,
     STATI_APERTI,
     Appartenenza,
@@ -236,6 +237,8 @@ def correggi(request, persona_id: int, dati: NuovaCorrezione):
         raise HttpError(404, "Persona non trovata.")
     if dati.campo not in ammessi:
         raise HttpError(403, "Questo dato lo possono correggere solo i capigruppo.")
+    if dati.campo in CAMPI_CONSENSO and getattr(request, "impersonatore", None):
+        raise HttpError(403, "I consensi li dà solo la persona, non chi usa l'app al suo posto.")
     try:
         servizi.correggi_campo(persona, dati.campo, dati.valore, richiesta_da=request.auth)
     except ValidationError as errore:

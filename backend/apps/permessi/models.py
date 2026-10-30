@@ -33,6 +33,10 @@ class AccessoDatoSensibile(models.Model):
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="accessi_sensibili")
     categoria = models.CharField(max_length=12, choices=Categoria.choices)
     azione = models.CharField(max_length=16, choices=Azione.choices)
+    # Who the user was acting as (apps.impersonazione); `utente` is the real one.
+    per_conto_di = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
     dispositivo = models.ForeignKey(
         "dispositivi.Dispositivo",
         on_delete=models.SET_NULL,
@@ -54,9 +58,11 @@ class AccessoDatoSensibile(models.Model):
 def registra_accessi(request, persone, categoria: str, azione: str) -> None:
     """One row per person: the Co.Ca. can answer "who saw my child's data?"."""
     dispositivo = getattr(request, "dispositivo", None)
+    impersonatore = getattr(request, "impersonatore", None)
     AccessoDatoSensibile.objects.bulk_create(
         AccessoDatoSensibile(
-            utente=request.auth,
+            utente=impersonatore or request.auth,
+            per_conto_di=request.auth if impersonatore else None,
             persona=persona,
             categoria=categoria,
             azione=azione,

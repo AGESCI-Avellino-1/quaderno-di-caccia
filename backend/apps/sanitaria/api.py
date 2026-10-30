@@ -280,12 +280,16 @@ def registro_accessi(request, persona_id: int):
         raise HttpError(403, "Il registro degli accessi è riservato alla Co.Ca.")
     persona = get_object_or_404(Persona, pk=persona_id)
     righe = AccessoDatoSensibile.objects.filter(persona=persona).select_related(
-        "utente", "dispositivo"
+        "utente", "per_conto_di", "dispositivo"
     )[:500]
     return [
         {
             "quando": r.creato_il,
-            "chi": r.utente.email if r.utente else None,
+            "chi": (
+                f"{r.utente.email if r.utente else '?'} al posto di {r.per_conto_di.email}"
+                if r.per_conto_di
+                else (r.utente.email if r.utente else None)
+            ),
             "azione": r.get_azione_display(),
             "categoria": r.get_categoria_display(),
             "dispositivo": r.dispositivo.nome if r.dispositivo else None,

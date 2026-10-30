@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.cassa",
     "apps.eventi",
     "apps.buonacaccia",
+    "apps.impersonazione",
 ]
 
 MIDDLEWARE = [
@@ -69,6 +70,9 @@ MIDDLEWARE = [
     "auditlog.middleware.AuditlogMiddleware",
     # Revoked devices are logged out; the offline window is renewed (DEC-97).
     "apps.dispositivi.middleware.DispositivoMiddleware",
+    # Acting as another user: after auditlog (the real user stays the author of every
+    # change) and after the device check (it applies to the real user's device).
+    "apps.impersonazione.middleware.ImpersonazioneMiddleware",
     # Replayed offline writes are answered from storage, never executed twice (DEC-96).
     "apps.core.idempotenza.IdempotenzaMiddleware",
     # Must stay last (django-axes requirement).

@@ -3,6 +3,7 @@ import { onBeforeUnmount } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import AggiornamentoApp from '@/components/AggiornamentoApp.vue'
+import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
 import BarraOffline from '@/components/BarraOffline.vue'
 import { useBloccoAutomatico } from '@/composables/useBloccoAutomatico'
 import {
@@ -49,7 +50,7 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
       <template v-if="sessione.autenticato && stato !== 'bloccata'">
         <RouterLink to="/persone" class="ms-auto">Persone</RouterLink>
         <button
-          v-if="stato === 'sbloccata'"
+          v-if="stato === 'sbloccata' && !sessione.profilo?.impersonazione"
           type="button"
           class="btn btn-sm btn-outline"
           title="Blocca l'app: per riaprirla servirà il PIN"
@@ -57,10 +58,19 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
         >
           Blocca
         </button>
-        <button type="button" class="btn btn-sm btn-outline" @click="esci">Esci</button>
+        <!-- Logging out while acting as someone else would wipe the capo's device. -->
+        <button
+          v-if="!sessione.profilo?.impersonazione"
+          type="button"
+          class="btn btn-sm btn-outline"
+          @click="esci"
+        >
+          Esci
+        </button>
       </template>
     </nav>
   </header>
+  <BarraImpersonazione />
   <BarraOffline />
   <main class="container py-5">
     <RouterView />

@@ -21,6 +21,8 @@ import {
   sbloccata,
 } from '@/sicurezza/cassaforte'
 
+import { inImpersonazione } from '@/sicurezza/impersonazione'
+
 import { db as dbPredefinito, type DatabaseQdc, type OperazioneInCoda } from './db'
 
 export interface NuovaOperazione {
@@ -61,7 +63,8 @@ export async function scrivi(
   operazione: NuovaOperazione,
   database: DatabaseQdc = dbPredefinito,
 ): Promise<EsitoScrittura> {
-  if (!protetta()) {
+  // Acting as another user: straight to the server, never in the capo's queue.
+  if (!protetta() || inImpersonazione()) {
     await richiesta(operazione.percorso, { metodo: operazione.metodo, corpo: operazione.corpo })
     return { inCoda: false }
   }
@@ -95,7 +98,8 @@ export function inviaCoda(database: DatabaseQdc = dbPredefinito): Promise<EsitoI
 
 async function svuota(database: DatabaseQdc): Promise<EsitoInvio> {
   const esito: EsitoInvio = { inviate: 0, errori: 0, interrotto: false }
-  if (!sbloccata()) return { ...esito, interrotto: true }
+  // The queue holds the capo's own writes: not sent while acting as someone else.
+  if (!sbloccata() || inImpersonazione()) return { ...esito, interrotto: true }
   const inAttesa = await database.coda.where('stato').equals('in_attesa').sortBy('id')
   for (const operazione of inAttesa) {
     try {

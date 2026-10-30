@@ -48,6 +48,27 @@ export interface Profilo {
   eventi_buonacaccia: boolean
   /** Capigruppo: the training camps of the capi, for the Zona. */
   formazione_capi: boolean
+  /** May use the app as another user (capigruppo, administrators, unit staff). */
+  puo_impersonare: boolean
+  /** Set while using the app as another user. */
+  impersonazione: { impersonato: string; email: string; scade_il: string } | null
+}
+
+export interface Impersonazione {
+  id: number
+  impersonatore: string
+  impersonato: string
+  motivo: string
+  iniziata_il: string
+  scade_il: string
+  finita_il: string | null
+}
+
+export interface CandidatoImpersonazione {
+  utente_id: number
+  persona_id: number | null
+  nome: string
+  email: string
 }
 
 export interface PersonaElenco extends PersonaBreve {
@@ -1645,6 +1666,18 @@ export const api = {
     richiesta<SchedaBC>(`/api/v1/buonacaccia/schede/${id}`, { metodo: 'PUT', corpo: dati }),
   formazioneCapi: (anno: number) =>
     richiesta<FormazioneCapo[]>(`/api/v1/buonacaccia/formazione?anno=${anno}`),
+  candidatiImpersonazione: (cerca: string) =>
+    richiesta<CandidatoImpersonazione[]>(
+      `/api/v1/impersonazione/candidati?cerca=${encodeURIComponent(cerca)}`,
+    ),
+  impersonabile: (persona: number) =>
+    richiesta<{ puo: boolean }>(`/api/v1/persone/${persona}/impersonabile`),
+  iniziaImpersonazione: (dati: { utente_id?: number; persona_id?: number; motivo: string }) =>
+    richiesta<Impersonazione>('/api/v1/impersonazione', { metodo: 'POST', corpo: dati }),
+  fineImpersonazione: () =>
+    richiesta<{ ok: boolean }>('/api/v1/impersonazione/fine', { metodo: 'POST' }),
+  impersonazioniMie: () => richiesta<Impersonazione[]>('/api/v1/impersonazioni/mie'),
+  impersonazioni: () => richiesta<Impersonazione[]>('/api/v1/impersonazioni'),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
       metodo: 'POST',

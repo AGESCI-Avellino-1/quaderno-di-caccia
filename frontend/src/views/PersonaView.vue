@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 import { api, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
 import AccountPersona from '@/components/AccountPersona.vue'
+import AvviaImpersonazione from '@/components/AvviaImpersonazione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
@@ -20,6 +21,22 @@ const { errore, inCorso, esegui } = useErrore()
 const persona = ref<PersonaDettaglio | null>(null)
 const copiaDel = ref<string | null>(null)
 const sanitarie = ref<Sanitarie | null>(null)
+// Whether the user may act as this person (online only; the API decides).
+const impersonabile = ref(false)
+
+watch(
+  () => props.id,
+  async (id) => {
+    impersonabile.value = false
+    if (!sessione.profilo?.puo_impersonare || sessione.profilo.impersonazione) return
+    try {
+      impersonabile.value = (await api.impersonabile(id)).puo
+    } catch {
+      impersonabile.value = false
+    }
+  },
+  { immediate: true },
+)
 
 // Health essentials: shown only if the backend lets this user see them (404 otherwise).
 async function caricaSanitarie(id: number) {
@@ -108,6 +125,12 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
+      <AvviaImpersonazione
+        v-if="impersonabile"
+        class="mb-5"
+        :persona="persona.id"
+        :nome="`${persona.nome} ${persona.cognome}`"
+      />
       <p v-if="sessione.capogruppo" class="small">
         <RouterLink :to="{ name: 'fascicolo', params: { id: persona.id } }">
           Fascicolo completo e cancellazione (richieste dell'interessato)

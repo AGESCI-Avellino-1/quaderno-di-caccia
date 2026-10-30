@@ -12,6 +12,7 @@ import {
   disattivaBiometria,
   stato,
 } from '@/sicurezza/cassaforte'
+import ImpersonazioniMie from '@/components/ImpersonazioniMie.vue'
 import { useSessioneStore } from '@/stores/sessione'
 
 // Own devices; a capogruppo can see and disconnect anyone's lost phone (DEC-23, DEC-97).
@@ -142,5 +143,7 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
         Nessun dispositivo registrato.
       </li>
     </ul>
+
+    <ImpersonazioniMie class="mt-5" />
   </section>
 </template>

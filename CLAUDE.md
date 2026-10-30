@@ -323,5 +323,19 @@ implements them:
   who manages the registration may also write answers and photo (paper forms). Adults: only a
   `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp given by
   the maintainer, 30/10).
+- Using the app as another user (maintainer, 30/10/2026, no analysis code yet;
+  `apps/impersonazione`): capigruppo and technical administrators who are capi in
+  BuonaStrada act as anyone with an account; unit staff as its ragazzi and their
+  parents, never capi (`policy.puo_impersonare`, checked again on every request). A
+  reason is required, 30 minutes at most, never nested. `ImpersonazioneMiddleware`
+  swaps `request.user` after auditlog's and the device middleware, so the audit log's
+  actor stays the real user and `request.impersonatore` is set;
+  `AccessoDatoSensibile` records `utente` (real) and `per_conto_di`. Blocked while it
+  lasts (`middleware.BLOCCATE`): Django admin, allauth writes, devices, the calendar
+  token, DEC-26 visibility, email choices, rights requests and full export, offline
+  downloads; consents in `anagrafica.api.correggi`. The PWA saves nothing on the
+  device and bypasses the offline queue (`sicurezza/impersonazione.ts`), hides "Esci"
+  (it would wipe the capo's device) and shows "Torna a te". The person sees the list in
+  their account (Dispositivi page); the Co.Ca. sees all of it (`/impersonazioni`).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

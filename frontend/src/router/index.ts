@@ -173,6 +173,14 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // Using the app as another user: capigruppo, administrators who are capi, unit
+      // staff (the API decides).
+      path: '/impersonazioni',
+      name: 'impersonazioni',
+      component: () => import('@/views/ImpersonazioniView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Events on BuonaCaccia: the capi's registrations to follow; adults add their own
       // events (DEC-158, DEC-164). The API decides.
       path: '/buonacaccia',

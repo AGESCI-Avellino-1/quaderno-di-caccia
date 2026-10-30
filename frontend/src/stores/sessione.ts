@@ -12,6 +12,7 @@ import { allauth } from '@/api/allauth'
 import { api, type Profilo } from '@/api/qdc'
 import { leggiConCache } from '@/offline/cache'
 import * as cassaforte from '@/sicurezza/cassaforte'
+import { impostaImpersonazione } from '@/sicurezza/impersonazione'
 
 export const useSessioneStore = defineStore('sessione', () => {
   const profilo = ref<Profilo | null>(null)
@@ -38,10 +39,17 @@ export const useSessioneStore = defineStore('sessione', () => {
         profilo.value = null
         return
       }
-      const letto = await leggiConCache('profilo', api.profilo)
-      // Another account on this device: the previous one's data must go (DEC-97).
+      // The flag is set before the copy would be saved: while acting as another user
+      // the profile (and everything else) stays off the device.
+      const letto = await leggiConCache('profilo', async () => {
+        const dati = await api.profilo()
+        impostaImpersonazione(!!dati.impersonazione)
+        return dati
+      })
+      // Another account on this device: the previous one's data must go (DEC-97). Not
+      // when a capo is acting as someone else: the device and its data stay the capo's.
       const proprietario = cassaforte.proprietario()
-      if (proprietario && proprietario !== letto.dati.email) {
+      if (proprietario && proprietario !== letto.dati.email && !letto.dati.impersonazione) {
         await cassaforte.cancella('altro_account')
       }
       profilo.value = letto.dati
@@ -57,6 +65,21 @@ export const useSessioneStore = defineStore('sessione', () => {
     profilo.value = null
     profiloDel.value = null
     pronta.value = false
+  }
+
+  /** Start acting as another user: a full reload, so no view keeps the capo's data. */
+  async function impersona(dati: { utente_id?: number; persona_id?: number; motivo: string }) {
+    await api.iniziaImpersonazione(dati)
+    window.location.assign('/')
+  }
+
+  async function tornaATe() {
+    try {
+      await api.fineImpersonazione()
+    } finally {
+      impostaImpersonazione(false)
+      window.location.assign('/')
+    }
   }
 
   async function esci() {
@@ -88,5 +111,7 @@ export const useSessioneStore = defineStore('sessione', () => {
     carica,
     dimentica,
     esci,
+    impersona,
+    tornaATe,
   }
 })

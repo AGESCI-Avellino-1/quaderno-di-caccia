@@ -260,6 +260,10 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-233 | Il manuale d'uso è diviso in sezioni complete per profilo (genitore; ragazzo E/G, capo squadriglia, R/S; capo e staff di unità; capogruppo, tesorieri, amministratore tecnico): ognuna si legge da sola; tutti vedono tutto, ma ogni funzione dice chi la può usare. | fase 8, 30/10 |
 | DEC-234 | Gli indirizzi della piattaforma nel manuale sono riferiti a qdc.avellino1.it. | fase 8, 30/10 |
 | DEC-235 | Gli screenshot vengono dall'ambiente di sviluppo con i dati di prova, prodotti da uno script automatico che entra come ogni profilo; mai dati veri. | fase 8, 30/10 |
+| DEC-236 | Il manuale ha un tono informale e dà del «tu»; gli esempi usano le persone di prova. | fase 8, 30/10 |
+| DEC-237 | La parte «ragazzo» del manuale copre E/G (con il capo squadriglia) e R/S: i bambini L/C non hanno un account; se lo avranno si aggiunge una sezione. | DEC-24, fase 8, 30/10 |
+| DEC-238 | Il manuale è una guida passo passo: ogni funzione con i passi da fare, nell'ordine, e le immagini dei passi. | fase 8, 30/10 |
+| DEC-239 | Screenshot in due formati: telefono, dentro una cornice che lo fa sembrare un telefono, e computer. | DEC-235, fase 8, 30/10 |
 
 ## Eventi e presenze
 

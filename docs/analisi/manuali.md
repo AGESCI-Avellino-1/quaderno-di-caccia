@@ -1,7 +1,7 @@
 # Manuali (fase 8): analisi
 
 Bozza del 30/10/2026, da completare con il maintainer. Le decisioni prese hanno il loro
-codice nell'analisi dei requisiti (DEC-230…DEC-235); il resto è una proposta.
+codice nell'analisi dei requisiti (DEC-230…DEC-239); l'indice è una proposta.
 
 ## Decisioni prese
 
@@ -13,6 +13,10 @@ codice nell'analisi dei requisiti (DEC-230…DEC-235); il resto è una proposta.
 | DEC-233 | Il manuale è diviso in **sezioni complete per profilo**: ognuna si legge da sola, anche ripetendo le parti comuni; tutti vedono tutto il manuale, ma ogni funzione dice chiaramente chi la può usare. Profili: genitore; ragazzo (E/G, capo squadriglia, R/S); capo e staff di unità; capogruppo, tesorieri e amministratore tecnico. |
 | DEC-234 | Gli indirizzi della piattaforma nel manuale sono riferiti a `https://qdc.avellino1.it` (non ancora attivo). |
 | DEC-235 | Gli screenshot vengono dall'ambiente di sviluppo con i dati di prova (persone inventate), prodotti da uno **script automatico** che entra come ogni profilo e rifà tutte le immagini; si rigenerano quando cambia l'interfaccia. Mai dati veri. |
+| DEC-236 | Tono informale: il manuale dà del «tu». Gli esempi usano le persone di prova dell'ambiente di sviluppo. |
+| DEC-237 | La parte «ragazzo» copre E/G (con il capo squadriglia) e R/S: i bambini L/C non hanno un account. Se in futuro lo avranno, si aggiunge una sezione. |
+| DEC-238 | Guida passo passo: ogni funzione con i passi da fare, nell'ordine, e le immagini dei passi. |
+| DEC-239 | Screenshot in due formati: telefono, dentro una cornice che lo fa sembrare un telefono, e computer. |
 
 ## Indice proposto
 
@@ -90,11 +94,8 @@ come app); come leggere il manuale: trova il tuo profilo.
 Tabella «Chi può fare cosa» (funzione × profilo), generata dalle regole del codice dove
 possibile, così non si disallinea.
 
-## Da decidere (domani)
+## Da decidere
 
-1. Tono: «tu» in tutto il manuale? Esempi con le persone di prova (Laura, Mario, Giulia…).
-2. Branche L/C: i bambini non hanno account; la parte ragazzo copre E/G e R/S. Confermare.
-3. Profondità: guida passo passo per ogni funzione o panoramica più domande frequenti?
-4. Lo script degli screenshot: formato telefono, computer o entrambi.
-5. Account Read the Docs da collegare (lo stesso del tema?) e nome del progetto.
-6. Guida di installazione: indice, dopo il manuale d'uso.
+1. Account Read the Docs da collegare (lo stesso del tema?) e nome del progetto: da
+   valutare.
+2. Guida di installazione: il suo indice, dopo il manuale d'uso (concordato).

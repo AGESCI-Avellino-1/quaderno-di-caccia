@@ -26,6 +26,8 @@ const APP = `http://localhost:${PORTA_VITE}`
 // Same as backend/apps/core/management/commands/dati_di_prova.py.
 const PASSWORD = 'manuale-di-prova'
 const PIN = '246813'
+/** Tallest phone screenshot, in CSS pixels: about one and a half screens. */
+const ALTEZZA_TELEFONO = 1300
 const DOMINIO = 'example.invalid'
 
 /** Who appears in the manual, by profile (DEC-236): the people of `dati_di_prova`. */
@@ -41,7 +43,14 @@ export const PERSONE = {
   capoCerchio: 'elena.conti',
   tesoriera: 'francesca.gallo',
   amministratore: 'davide.ricci',
+  genitoreMaggiorenne: 'antonio.russo',
 } as const
+
+/** Opens a card of the home page, e.g. a child's page. */
+const apri = (testo: string) => async (pagina: Page) => {
+  await pagina.getByRole('link', { name: testo }).first().click()
+  await pagina.waitForLoadState('networkidle')
+}
 
 interface Scena {
   /** File name under img/, without the format suffix: `genitore/accesso`. */
@@ -55,6 +64,8 @@ interface Scena {
   prepara?: (pagina: Page) => Promise<void>
   /** The whole page, not only what fits on the screen. */
   intera?: boolean
+  /** Scroll so that this text (a heading) is at the top of the screen. */
+  mostra?: string
 }
 
 const SCENE: Scena[] = [
@@ -85,6 +96,110 @@ const SCENE: Scena[] = [
     intera: true,
   },
   { nome: 'genitore/home', chi: 'genitore', percorso: '/', intera: true },
+  {
+    nome: 'genitore/figlio',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: apri('Giulia Rossi'),
+    intera: true,
+  },
+  {
+    nome: 'genitore/sentiero',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('Giulia Rossi')(pagina)
+      await apri('Sentiero (Progressione Personale)')(pagina)
+    },
+    intera: true,
+  },
+  {
+    nome: 'genitore/fascicolo-anno',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('Giulia Rossi')(pagina)
+      await apri("Fascicolo dell'anno")(pagina)
+    },
+    intera: true,
+  },
+  {
+    nome: 'genitore/correzione',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('Giulia Rossi')(pagina)
+      await pagina.getByRole('button', { name: 'Correggi un dato' }).click()
+      await pagina.getByLabel('Dato').selectOption({ label: 'Cellulare' })
+      await pagina.getByLabel('Valore giusto').fill('3331234567')
+    },
+    mostra: 'Dati di BuonaStrada',
+  },
+  {
+    nome: 'genitore/telefono-squadriglia',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: apri('Giulia Rossi'),
+    mostra: 'Telefono in squadriglia',
+  },
+  {
+    nome: 'genitore/sanitaria',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: apri('Giulia Rossi'),
+    mostra: 'Scheda sanitaria',
+  },
+  {
+    nome: 'genitore/sanitaria-modifica',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('Giulia Rossi')(pagina)
+      await apri('Modifica')(pagina)
+    },
+    intera: true,
+  },
+  { nome: 'genitore/eventi', chi: 'genitore', percorso: '/eventi', intera: true },
+  {
+    nome: 'genitore/calendario',
+    chi: 'genitore',
+    percorso: '/eventi',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Mostra il link' }).click()
+      await pagina.getByRole('button', { name: 'Copia' }).first().waitFor()
+    },
+    mostra: 'Il mio calendario',
+  },
+  {
+    nome: 'genitore/evento-recapito',
+    chi: 'genitore',
+    percorso: '/eventi',
+    prepara: async (pagina) => {
+      await apri('Uscita di reparto')(pagina)
+      await pagina.getByText('Un altro recapito per le emergenze').first().click()
+      await pagina.getByLabel('Chi chiamare').fill('Nonna Rosa')
+      await pagina.getByLabel('Telefono').fill('3339876543')
+    },
+    mostra: 'Partecipazione',
+  },
+  {
+    nome: 'genitore/evento',
+    chi: 'genitore',
+    percorso: '/eventi',
+    prepara: apri('Uscita di reparto'),
+    intera: true,
+  },
+  { nome: 'genitore/quote', chi: 'genitore', percorso: '/mie-quote', intera: true },
+  { nome: 'genitore/bacheca', chi: 'genitore', percorso: '/bacheca', intera: true },
+  { nome: 'genitore/email', chi: 'genitore', percorso: '/email', intera: true },
+  { nome: 'genitore/iscrizione', percorso: '/iscrizione/CERCHIO2027', intera: true },
+  {
+    nome: 'genitore/maggiorenne',
+    chi: 'genitoreMaggiorenne',
+    percorso: '/',
+    prepara: apri('Chiara Russo'),
+    intera: true,
+  },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },
   { nome: 'comune/dispositivi', chi: 'genitore', percorso: '/dispositivi' },
   {
@@ -136,6 +251,8 @@ function avvia(comando: string, argomenti: string[], cartella: string, env = {})
     cwd: join(RADICE, cartella),
     env: { ...process.env, ...env },
     stdio: ['ignore', 'ignore', 'inherit'],
+    // Its own process group: stopping it stops what `uv` and `npx` started too.
+    detached: true,
   })
   processi.push(figlio)
   return figlio
@@ -163,6 +280,9 @@ async function attendi(url: string): Promise<void> {
 
 const ENV_DJANGO = {
   DATABASE_URL: DATABASE,
+  // runserver opens one connection per request: kept for a minute they would exceed
+  // PostgreSQL's limit during a full run.
+  DJANGO_CONN_MAX_AGE: '0',
   DJANGO_CSRF_TRUSTED_ORIGINS: APP,
   QDC_FRONTEND_URL: APP,
 }
@@ -275,10 +395,34 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
       await pagina.waitForLoadState('networkidle')
     }
     await scena.prepara?.(pagina)
+    if (scena.mostra) {
+      await pagina
+        .getByText(scena.mostra, { exact: true })
+        .first()
+        .evaluate((el) => {
+          el.scrollIntoView({ block: 'start' })
+          window.scrollBy(0, -80)
+        })
+    }
     await pagina.mouse.move(0, 0) // no hover highlight left on a button
     await pagina.waitForTimeout(300)
-    let immagine = await pagina.screenshot({ fullPage: scena.intera ?? false })
-    if (formato.suffisso === 'telefono') immagine = await incornicia(browser, immagine)
+    let immagine: Buffer
+    if (formato.suffisso === 'telefono') {
+      // A whole page on the phone, up to ALTEZZA_TELEFONO: a taller image does not fit
+      // a PDF page and rinohtype pushes it to the next page forever.
+      const altezza = scena.intera
+        ? Math.min(
+            await pagina.evaluate(() => document.documentElement.scrollHeight),
+            ALTEZZA_TELEFONO,
+          )
+        : undefined
+      immagine = await pagina.screenshot(
+        altezza ? { fullPage: true, clip: { x: 0, y: 0, width: 390, height: altezza } } : {},
+      )
+      immagine = await incornicia(browser, immagine)
+    } else {
+      immagine = await pagina.screenshot({ fullPage: scena.intera ?? false })
+    }
     const file = join(IMMAGINI, `${scena.nome}-${formato.suffisso}.png`)
     await mkdir(dirname(file), { recursive: true })
     await writeFile(file, immagine)
@@ -302,5 +446,11 @@ async function principale(): Promise<void> {
 try {
   await principale()
 } finally {
-  for (const figlio of processi) figlio.kill()
+  for (const figlio of processi) {
+    try {
+      if (figlio.pid && figlio.exitCode === null) process.kill(-figlio.pid)
+    } catch {
+      // already gone
+    }
+  }
 }

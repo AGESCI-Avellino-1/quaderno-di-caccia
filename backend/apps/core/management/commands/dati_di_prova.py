@@ -20,11 +20,13 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.accounts.models import Invito, User
-from apps.anagrafica.models import AppartenenzaSquadriglia, Persona
+from apps.anagrafica.models import AppartenenzaSquadriglia, Persona, RelazioneTutela
 from apps.core.anno import AnnoAssociativo
 from apps.importazione.buonastrada import codice_cognome, codice_nome, leggi_ricerca_soci
 from apps.importazione.servizi import applica
 from apps.organizzazione.models import Gruppo, Incarico, RuoloIncarico, Squadriglia, Unita
+
+from ._attivita import crea_attivita
 
 PASSWORD = "manuale-di-prova"  # noqa: S105 - invented people on a development database
 DOMINIO = "example.invalid"
@@ -103,6 +105,7 @@ ACCOUNT = [
     ("Elena", "Conti"),  # capo cerchio
     ("Francesca", "Gallo"),  # cerchio staff, group treasurer
     ("Davide", "Ricci"),  # capo clan, technical administrator
+    ("Antonio", "Russo"),  # parent of Chiara, who is of age (DEC-26)
 ]
 
 
@@ -146,6 +149,8 @@ class Command(BaseCommand):
                 "DATA NASCITA": f"{nascita:%d/%m/%Y}",
                 "COMUNE NASCITA": "AVELLINO",
                 "CODICE FISCALE": codice_fiscale(cognome, nome, nascita, sesso),
+                "INDIRIZZO": "VIA DEI MILLE",
+                "CIVICO": str(10 + numero),
                 "COMUNE RESIDENZA": "AVELLINO",
                 "PROVINCIA RESIDENZA": "AV",
                 "CAP": "83100",
@@ -201,6 +206,19 @@ class Command(BaseCommand):
         incarico("Giulia Rossi", RuoloIncarico.CSQ, squadriglia=pantere)
         incarico("Matteo Greco", RuoloIncarico.CSQ, squadriglia=volpi)
 
+        # Chiara is of age: BuonaStrada no longer lists her parents, the app keeps the
+        # link from when she was a minor (DEC-26).
+        persona["Antonio Russo"] = Persona.objects.create(
+            nome="Antonio",
+            cognome="Russo",
+            sesso="M",
+            email=email("Antonio", "Russo"),
+            cellulare="3330000011",
+        )
+        RelazioneTutela.objects.create(
+            tutore=persona["Antonio Russo"], minore=persona["Chiara Russo"], tipo="GENITORE"
+        )
+
         for nome, cognome in ACCOUNT:
             indirizzo = email(nome, cognome)
             utente = User.objects.create_user(email=indirizzo, password=PASSWORD)
@@ -216,3 +234,4 @@ class Command(BaseCommand):
             token="invito-di-prova",  # noqa: S106 - a fixed link for the screenshots
             creato_da=persona["Marco Ferri"].utente,
         )
+        crea_attivita(email)

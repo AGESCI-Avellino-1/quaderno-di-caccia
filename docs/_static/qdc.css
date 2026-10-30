@@ -1,11 +1,13 @@
-/* Screenshots: the phone one (already framed) next to the computer one. MyST wraps the
-   two images in a paragraph inside the container; their widths (30% and 65%, set in the
-   pages so that the PDF gets them too) are overridden only on narrow screens. */
-.schermate > p {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-start;
+/* Screenshots: the phone one (already framed) next to the computer one, side by side in
+   the paragraph MyST wraps them in. Their widths (30% and 65%) are set in the pages, so
+   that the PDF gets them too; only narrow screens put them one under the other. */
+/* Sphinx wraps every image in a link: align both. */
+.schermate a,
+.schermate img {
+  vertical-align: top;
+}
+.schermate img.telefono {
+  margin-right: 3%;
 }
 .schermate img.computer {
   border: 1px solid var(--color-background-border);
@@ -14,6 +16,7 @@
 @media (max-width: 40rem) {
   .schermate img.telefono {
     width: 70% !important;
+    margin: 0 0 1.5rem;
   }
   .schermate img.computer {
     width: 100% !important;

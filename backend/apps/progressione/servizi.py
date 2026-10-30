@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Persona
 from apps.core.date_parziali import DataParziale, PrecisioneData
+from apps.core.models import FonteDato
 from apps.organizzazione.models import Branca
 
 from .models import (
@@ -584,11 +585,16 @@ def esegui_passaggio(passaggio: Passaggio, utente) -> Passaggio:
     branca = passaggio.unita_destinazione.branca
     for riga in passaggio.persone.select_related("persona"):
         persona = riga.persona
+        chiusure: dict = {}
         vecchio = periodo_attivo(persona)
         if vecchio is not None:
             if vecchio.data_inizio > giorno:
                 raise ValidationError(f"Il percorso di {persona} inizia dopo il passaggio.")
-            Tappa.objects.filter(periodo=vecchio, data_fine__isnull=True).update(data_fine=giorno)
+            aperta = vecchio.tappa_attuale()
+            if aperta is not None:
+                chiusure["tappa"] = aperta.pk
+                aperta.data_fine = giorno
+                aperta.save()
             vecchio.data_fine = giorno
             vecchio.motivo_fine = f"Passaggio in {passaggio.unita_destinazione}"
             vecchio.save()
@@ -596,20 +602,24 @@ def esegui_passaggio(passaggio: Passaggio, utente) -> Passaggio:
         riga.periodo_destinazione = _apri_periodo(
             persona, branca, DataParziale.giorno(giorno), utente
         )
-        riga.save()
+        chiusure.update(_squadriglia_di(persona, passaggio.unita_origine, giorno))
+        chiusure["appartenenze"] = []
         for appartenenza in Appartenenza.objects.attive(giorno).filter(
             persona=persona, unita=passaggio.unita_origine, ruolo=RuoloAppartenenza.RAGAZZO
         ):
+            chiusure["appartenenze"].append(appartenenza.pk)
             appartenenza.data_fine = giorno
             appartenenza.save(update_fields=["data_fine", "aggiornato_il"])
             esci_dal_reparto(persona, passaggio.unita_origine, giorno)
-        Appartenenza.objects.create(
+        chiusure["appartenenza_nuova"] = Appartenenza.objects.create(
             persona=persona,
             unita=passaggio.unita_destinazione,
             ruolo=RuoloAppartenenza.RAGAZZO,
             data_inizio=giorno,
             fonte=FonteDato.APP,
-        )
+        ).pk
+        riga.chiusure = chiusure
+        riga.save()
     passaggio.stato = StatoPassaggio.ESEGUITO
     passaggio.eseguito_da = utente
     passaggio.eseguito_il = timezone.now()
@@ -629,3 +639,208 @@ def annulla_passaggio(passaggio: Passaggio, motivo: str) -> None:
     passaggio.annullato_il = timezone.now()
     passaggio.motivo_annullamento = motivo.strip()[:300]
     passaggio.save()
+
+
+# --- Correcting an executed passage (spec §17.9, §18.4; DEC-178) ------------------------------
+
+
+def _imposta(righe, **campi) -> None:
+    """Save one by one, so the audit log traces every correction (spec §18.4)."""
+    for riga in righe:
+        for campo, valore in campi.items():
+            setattr(riga, campo, valore)
+        riga.save()
+
+
+def _squadriglia_di(persona: Persona, unita, giorno: date) -> dict:
+    """What leaving the reparto will close (organizzazione.servizi.esci_dal_reparto)."""
+    from apps.anagrafica.models import AppartenenzaSquadriglia, DerogaSquadriglia
+    from apps.organizzazione.models import RUOLI_DI_SQUADRIGLIA, Incarico
+
+    return {
+        "squadriglie": list(
+            AppartenenzaSquadriglia.objects.attive(giorno)
+            .filter(persona=persona, squadriglia__unita=unita)
+            .values_list("pk", flat=True)
+        ),
+        "incarichi": list(
+            Incarico.objects.attivi(giorno)
+            .filter(persona=persona, ruolo__in=RUOLI_DI_SQUADRIGLIA, squadriglia__unita=unita)
+            .values_list("pk", flat=True)
+        ),
+        "deroghe": list(
+            DerogaSquadriglia.objects.filter(
+                persona=persona, reparto=unita, revocata_il__isnull=True
+            ).values_list("pk", flat=True)
+        ),
+    }
+
+
+def registrato_nel_periodo(periodo: PeriodoBranca) -> list[str]:
+    """What the new staff has already recorded in the period opened by a passage: its
+    first phase alone is the passage's own. Every kind of record counts, also those of
+    later blocks, so nothing is lost without someone seeing it."""
+    trovati = []
+    for relazione in periodo._meta.related_objects:
+        if relazione.related_model is PassaggioPersona:
+            continue
+        accessor = relazione.get_accessor_name()
+        if relazione.one_to_one:
+            if getattr(periodo, accessor, None) is not None and hasattr(periodo, accessor):
+                trovati.append(str(relazione.related_model._meta.verbose_name))
+            continue
+        righe = getattr(periodo, accessor).all()
+        if relazione.related_model is Tappa:
+            iniziale = righe.order_by("data_inizio", "creato_il").first()
+            altre = righe.exclude(pk=iniziale.pk) if iniziale else righe
+            if altre.exists() or (
+                iniziale is not None and (iniziale.completata_il or hasattr(iniziale, "distintivo"))
+            ):
+                trovati.append("tappe o passi successivi")
+            continue
+        if righe.exists():
+            trovati.append(str(relazione.related_model._meta.verbose_name_plural))
+    return trovati
+
+
+def _controlla_rettificabile(passaggio: Passaggio, righe: list[PassaggioPersona]) -> None:
+    from apps.importazione.models import ImportazioneBuonaStrada
+
+    if passaggio.stato != StatoPassaggio.ESEGUITO:
+        raise ValidationError("Si rettifica solo un passaggio eseguito.")
+    if (
+        passaggio.eseguito_il
+        and ImportazioneBuonaStrada.objects.filter(applicata_il__gt=passaggio.eseguito_il).exists()
+    ):
+        raise ValidationError(
+            "Dopo il passaggio è stata applicata un'importazione da BuonaStrada: le unità "
+            "potrebbero essere già confermate lì. Correggi prima in BuonaStrada."
+        )
+    for riga in righe:
+        if riga.rettificata_il:
+            raise ValidationError(f"Per {riga.persona} il passaggio è già annullato.")
+        if riga.periodo_destinazione_id:
+            dati = registrato_nel_periodo(riga.periodo_destinazione)
+            if dati:
+                raise ValidationError(
+                    f"Nel nuovo percorso di {riga.persona} è già registrato: "
+                    f"{', '.join(dati)}. Va tolto prima da chi lo ha scritto."
+                )
+
+
+@transaction.atomic
+def annulla_esecuzione(
+    passaggio: Passaggio, motivo: str, utente, persone: list[Persona] | None = None
+) -> Passaggio:
+    """Undo an executed passage, for some ragazzi or all of them: the old period and its
+    phase reopen, the new one goes, the ragazzo is back in the old unit, patrol and
+    patrol roles closed by the passage reopen. Traced with the reason; the audit log
+    keeps every record that went."""
+    from apps.anagrafica.models import (
+        Appartenenza,
+        AppartenenzaSquadriglia,
+        DerogaSquadriglia,
+    )
+    from apps.organizzazione.models import Incarico
+
+    if not motivo.strip():
+        raise ValidationError("Scrivi perché si annulla.")
+    passaggio = Passaggio.objects.select_for_update().get(pk=passaggio.pk)
+    righe = list(passaggio.persone.select_related("persona", "periodo_destinazione"))
+    if persone is not None:
+        scelte = {p.pk for p in persone}
+        righe = [r for r in righe if r.persona_id in scelte]
+        if not righe:
+            raise ValidationError("Scegli per chi annullare.")
+    _controlla_rettificabile(passaggio, righe)
+    giorno = passaggio.data
+    for riga in righe:
+        c = riga.chiusure or {}
+        if riga.periodo_destinazione_id:
+            riga.periodo_destinazione.delete()
+        if riga.periodo_origine_id:
+            vecchio = riga.periodo_origine
+            vecchio.data_fine = None
+            vecchio.motivo_fine = ""
+            vecchio.save()
+            _imposta(Tappa.objects.filter(pk=c.get("tappa"), periodo=vecchio), data_fine=None)
+        nuova = Appartenenza.objects.filter(pk=c.get("appartenenza_nuova")).first()
+        if nuova is None:  # executed before the passage kept track of it
+            nuova = Appartenenza.objects.filter(
+                persona=riga.persona,
+                unita=passaggio.unita_destinazione,
+                data_inizio=giorno,
+                fonte=FonteDato.APP,
+            ).first()
+        if nuova is not None:
+            nuova.delete()
+        vecchie = c.get("appartenenze") or list(
+            Appartenenza.objects.filter(
+                persona=riga.persona, unita=passaggio.unita_origine, data_fine=giorno
+            ).values_list("pk", flat=True)
+        )
+        _imposta(Appartenenza.objects.filter(pk__in=vecchie), data_fine=None)
+        _imposta(
+            AppartenenzaSquadriglia.objects.filter(pk__in=c.get("squadriglie", [])), data_fine=None
+        )
+        _imposta(Incarico.objects.filter(pk__in=c.get("incarichi", [])), data_fine=None)
+        _imposta(DerogaSquadriglia.objects.filter(pk__in=c.get("deroghe", [])), revocata_il=None)
+        riga.periodo_destinazione = None
+        riga.rettificata_il = timezone.now()
+        riga.rettificata_da = utente
+        riga.motivo_rettifica = motivo.strip()[:300]
+        riga.save()
+    if not passaggio.persone.filter(rettificata_il__isnull=True).exists():
+        passaggio.stato = StatoPassaggio.RETTIFICATO
+        passaggio.save()
+    return passaggio
+
+
+@transaction.atomic
+def correggi_data(passaggio: Passaggio, nuova: date, motivo: str) -> Passaggio:
+    """Right ragazzi, wrong day: the end of the old periods, the start of the new ones
+    and the unit and patrol changes move together to the right day."""
+    from apps.anagrafica.models import (
+        Appartenenza,
+        AppartenenzaSquadriglia,
+        DerogaSquadriglia,
+    )
+    from apps.organizzazione.models import Incarico
+
+    if not motivo.strip():
+        raise ValidationError("Scrivi perché correggi la data.")
+    if nuova > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    passaggio = Passaggio.objects.select_for_update().get(pk=passaggio.pk)
+    righe = list(passaggio.persone.select_related("persona", "periodo_destinazione"))
+    _controlla_rettificabile(passaggio, [r for r in righe if not r.rettificata_il])
+    vecchia = passaggio.data
+    if nuova == vecchia:
+        return passaggio
+    for riga in righe:
+        if riga.rettificata_il:
+            continue
+        c = riga.chiusure or {}
+        if riga.periodo_origine_id:
+            if riga.periodo_origine.data_inizio > nuova:
+                raise ValidationError(f"Il percorso di {riga.persona} inizia dopo quella data.")
+            _imposta(Tappa.objects.filter(pk=c.get("tappa")), data_fine=nuova)
+            _imposta(PeriodoBranca.objects.filter(pk=riga.periodo_origine_id), data_fine=nuova)
+        if riga.periodo_destinazione_id:
+            _imposta(
+                PeriodoBranca.objects.filter(pk=riga.periodo_destinazione_id), data_inizio=nuova
+            )
+            _imposta(
+                Tappa.objects.filter(periodo_id=riga.periodo_destinazione_id), data_inizio=nuova
+            )
+        _imposta(Appartenenza.objects.filter(pk__in=c.get("appartenenze", [])), data_fine=nuova)
+        _imposta(Appartenenza.objects.filter(pk=c.get("appartenenza_nuova")), data_inizio=nuova)
+        _imposta(
+            AppartenenzaSquadriglia.objects.filter(pk__in=c.get("squadriglie", [])), data_fine=nuova
+        )
+        _imposta(Incarico.objects.filter(pk__in=c.get("incarichi", [])), data_fine=nuova)
+        _imposta(DerogaSquadriglia.objects.filter(pk__in=c.get("deroghe", [])), revocata_il=nuova)
+    passaggio.data = nuova
+    passaggio.nota_rettifica = motivo.strip()[:300]
+    passaggio.save()
+    return passaggio

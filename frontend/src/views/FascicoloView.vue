@@ -34,6 +34,11 @@ const TITOLI: Record<string, string> = {
   accessi_ai_dati_delicati: 'Chi ha visto i dati delicati',
   iscrizioni_dall_app: "Iscrizioni dall'app",
   eventi_buonacaccia: 'Eventi su BuonaCaccia',
+  progressione_personale: 'Progressione personale',
+  mete_e_impegni: 'Mete e impegni',
+  specialita_e_brevetti: 'Specialità e brevetti',
+  posti_d_azione: "Posti d'azione nelle imprese",
+  passaggi_di_branca: 'Passaggi di branca',
   campi_di_formazione: 'Campi di formazione capi',
   richieste_dei_diritti: 'Richieste fatte',
 }

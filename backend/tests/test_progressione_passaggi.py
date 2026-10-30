@@ -170,3 +170,100 @@ def test_da_lupetti_a_reparto(capo, capogruppo, reparto, gruppo):
     _post(capogruppo, f"/api/v1/passaggi/{passaggio['id']}/esegui")
     periodo = PeriodoBranca.objects.get(persona=lupetto)
     assert periodo.branca == "EG" and periodo.tappe.get().fase == "SCOPERTA"
+
+
+# --- Correcting an executed passage (spec §17.9, §18.4; DEC-178) ----------------------------
+
+
+def _eseguito(capo, reparto, clan, ragazza, giorno=OGGI):
+    passaggio = _prepara(capo, reparto, clan, ragazza, giorno).json()["in_uscita"][0]
+    _post(capo, f"/api/v1/passaggi/{passaggio['id']}/esegui")
+    return passaggio["id"]
+
+
+def test_annullare_l_esecuzione_rimette_tutto_com_era(capo, reparto, clan, sentiero, squadriglia):
+    from auditlog.models import LogEntry
+
+    prima_sq = AppartenenzaSquadriglia.objects.attive().get(persona=sentiero)
+    passaggio_id = _eseguito(capo, reparto, clan, sentiero)
+    url = f"/api/v1/passaggi/{passaggio_id}/annulla-esecuzione"
+    assert _post(capo, url, {"motivo": ""}).status_code == 400
+    dati = _post(capo, url, {"motivo": "Era la sorella"}).json()
+    passaggio = dati["in_uscita"][0]
+    assert passaggio["stato"] == "RETTIFICATO"
+    assert passaggio["persone"][0]["motivo_rettifica"] == "Era la sorella"
+    periodo = PeriodoBranca.objects.get()
+    assert (periodo.branca, periodo.data_fine) == ("EG", None)
+    assert Tappa.objects.filter(periodo=periodo, data_fine__isnull=True).count() == 1
+    assert Appartenenza.objects.attive().get(persona=sentiero).unita == reparto
+    assert AppartenenzaSquadriglia.objects.attive().get(persona=sentiero) == prima_sq
+    # Traced: the removed R/S period is in the audit log.
+    assert LogEntry.objects.filter(content_type__model="periodobranca", action=2).exists()
+    # Done once only.
+    assert _post(capo, url, {"motivo": "Ancora"}).status_code == 400
+
+
+def test_annullare_per_uno_solo(capo, reparto, clan, sentiero, csq):
+    _post(
+        capo,
+        f"/api/v1/persone/{csq.pk}/progressione/sentiero",
+        {"data": OGGI.isoformat(), "precisione": "GIORNO"},
+    )
+    risposta = _post(
+        capo,
+        f"/api/v1/unita/{reparto.pk}/passaggi",
+        {
+            "unita_destinazione_id": clan.pk,
+            "data": OGGI.isoformat(),
+            "persone": [{"persona_id": sentiero.pk}, {"persona_id": csq.pk}],
+        },
+    )
+    passaggio_id = risposta.json()["in_uscita"][0]["id"]
+    _post(capo, f"/api/v1/passaggi/{passaggio_id}/esegui")
+    dati = _post(
+        capo,
+        f"/api/v1/passaggi/{passaggio_id}/annulla-esecuzione",
+        {"motivo": "Resta un altro anno", "persone": [csq.pk]},
+    ).json()
+    assert dati["in_uscita"][0]["stato"] == "ESEGUITO"
+    assert Appartenenza.objects.attive().get(persona=csq).unita == reparto
+    assert Appartenenza.objects.attive().get(persona=sentiero).unita == clan
+
+
+def test_niente_rettifica_se_il_nuovo_staff_ha_scritto(capo, capogruppo, reparto, clan, sentiero):
+    passaggio_id = _eseguito(capo, reparto, clan, sentiero)
+    nuovo = PeriodoBranca.objects.get(data_fine__isnull=True)
+    servizi.registra_promessa(nuovo, servizi.DataParziale.giorno(OGGI), capogruppo.utente)
+    risposta = _post(
+        capo, f"/api/v1/passaggi/{passaggio_id}/annulla-esecuzione", {"motivo": "Errore"}
+    )
+    assert risposta.status_code == 400 and "Promess" in risposta.json()["detail"]
+    assert PeriodoBranca.objects.filter(data_fine__isnull=True).get() == nuovo
+
+
+def test_niente_rettifica_dopo_un_importazione(capo, reparto, clan, sentiero):
+    from django.utils import timezone
+
+    from apps.importazione.models import ImportazioneBuonaStrada
+
+    passaggio_id = _eseguito(capo, reparto, clan, sentiero)
+    ImportazioneBuonaStrada.objects.create(
+        nome_file="export.csv", sha256="x" * 64, applicata_il=timezone.now() + timedelta(seconds=1)
+    )
+    risposta = _post(
+        capo, f"/api/v1/passaggi/{passaggio_id}/annulla-esecuzione", {"motivo": "Errore"}
+    )
+    assert "BuonaStrada" in risposta.json()["detail"]
+
+
+def test_correggere_la_data(capo, reparto, clan, sentiero):
+    passaggio_id = _eseguito(capo, reparto, clan, sentiero)
+    giusta = OGGI - timedelta(days=3)
+    url = f"/api/v1/passaggi/{passaggio_id}/correggi-data"
+    assert _post(capo, url, {"data": giusta.isoformat(), "motivo": ""}).status_code == 400
+    dati = _post(capo, url, {"data": giusta.isoformat(), "motivo": "Era sabato"}).json()
+    assert dati["in_uscita"][0]["data"] == giusta.isoformat()
+    vecchio, nuovo = PeriodoBranca.objects.order_by("data_inizio")
+    assert vecchio.data_fine == giusta and nuovo.data_inizio == giusta
+    assert Appartenenza.objects.get(persona=sentiero, unita=clan).data_inizio == giusta
+    assert Appartenenza.objects.get(persona=sentiero, unita=reparto).data_fine == giusta

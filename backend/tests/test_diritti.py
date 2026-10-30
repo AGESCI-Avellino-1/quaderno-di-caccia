@@ -165,3 +165,47 @@ def test_non_cancella_se_stesso(capogruppo):
     url = f"/api/v1/persone/{capogruppo.pk}/cancellazione"
     risposta = _client(capogruppo).post(url, {"cognome": "Gruppo"}, "application/json")
     assert risposta.status_code == 400
+
+
+def _progressione(ragazza, capo):
+    from apps.progressione import servizi
+    from apps.progressione.models import MetaEG
+
+    oggi = servizi.DataParziale.giorno(date.today())
+    periodo = servizi.apri_sentiero(ragazza, oggi, capo.utente)
+    servizi.registra_promessa(periodo, oggi, capo.utente)
+    servizi.nuovo(
+        MetaEG, periodo, capo.utente, testo="Imparare a nuotare", dal_ragazzo=False, riservata=True
+    )
+    return periodo
+
+
+def test_la_progressione_e_nel_fascicolo(ragazza, capo, capogruppo):
+    _progressione(ragazza, capo)
+    dati = _client(capogruppo).get(f"/api/v1/persone/{ragazza.pk}/fascicolo").json()
+    periodo = dati["progressione_personale"][0]
+    assert periodo["Branca"] and periodo["Promessa"] and "Scoperta" in periodo["Tappe o passi"]
+    # A private meta is about the person: it is in their file too.
+    assert dati["mete_e_impegni"] == [
+        {
+            "Tipo": "Meta",
+            "Testo": "Imparare a nuotare",
+            "Riservata": "sì",
+            "Stato": "Bozza",
+            "Verificato il": "",
+            "Interrotto": "",
+        }
+    ]
+
+
+def test_la_cancellazione_toglie_la_progressione(ragazza, capo, capogruppo):
+    from apps.progressione.models import MetaEG, PeriodoBranca, Promessa, Tappa
+
+    _progressione(ragazza, capo)
+    client = _client(capogruppo)
+    url = f"/api/v1/persone/{ragazza.pk}/cancellazione"
+    assert any("Progressione" in v for v in client.get(url).json()["voci"])
+    assert client.post(url, {"cognome": "esploratrice"}, "application/json").status_code == 200
+    assert not PeriodoBranca.objects.filter(persona=ragazza).exists()
+    assert not (Tappa.objects.exists() or Promessa.objects.exists() or MetaEG.objects.exists())
+    assert not LogEntry.objects.filter(changes_text__icontains="Imparare a nuotare").exists()

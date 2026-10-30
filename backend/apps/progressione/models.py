@@ -452,6 +452,8 @@ class StatoPassaggio(models.TextChoices):
     PREPARATO = "PREPARATO", "Preparato"
     ESEGUITO = "ESEGUITO", "Eseguito"
     ANNULLATO = "ANNULLATO", "Annullato"
+    # Executed by mistake, then undone for everyone (spec §17.9, DEC-178).
+    RETTIFICATO = "RETTIFICATO", "Annullato dopo l'esecuzione"
 
 
 class Passaggio(ModelloTracciato):
@@ -471,13 +473,15 @@ class Passaggio(ModelloTracciato):
     data_decisione = _data(null=True, blank=True)
     data_cerimonia = _data(null=True, blank=True)
     stato = models.CharField(
-        max_length=10, choices=StatoPassaggio.choices, default=StatoPassaggio.PREPARATO
+        max_length=12, choices=StatoPassaggio.choices, default=StatoPassaggio.PREPARATO
     )
     preparato_da = _utente()
     eseguito_da = _utente()
     eseguito_il = models.DateTimeField(null=True, blank=True)
     annullato_il = models.DateTimeField(null=True, blank=True)
     motivo_annullamento = models.CharField(max_length=300, blank=True)
+    # Why the date was corrected after execution (the audit log keeps the old one).
+    nota_rettifica = models.CharField(max_length=300, blank=True)
 
     class Meta:
         verbose_name = "passaggio"
@@ -506,6 +510,13 @@ class PassaggioPersona(ModelloTracciato):
         on_delete=models.SET_NULL,
         related_name="passaggio_in_entrata",
     )
+    # What the execution closed and opened, to undo exactly that (DEC-178):
+    # {"tappa": id, "appartenenze": [ids], "appartenenza_nuova": id,
+    #  "squadriglie": [ids], "incarichi": [ids], "deroghe": [ids]}.
+    chiusure = models.JSONField(default=dict, blank=True)
+    rettificata_il = models.DateTimeField(null=True, blank=True)
+    rettificata_da = _utente()
+    motivo_rettifica = models.CharField(max_length=300, blank=True)
 
     class Meta:
         verbose_name = "ragazzo in un passaggio"

@@ -1093,6 +1093,9 @@ class PersonaPassaggioIO(Schema):
     persona_id: int
     persona: str = ""
     sintesi: str = ""
+    # Undone after execution (DEC-178), with the reason.
+    rettificata: bool = False
+    motivo_rettifica: str = ""
 
 
 class PassaggioOut(Schema):
@@ -1107,6 +1110,7 @@ class PassaggioOut(Schema):
     stato: StatoPassaggio
     stato_nome: str
     motivo_annullamento: str
+    nota_rettifica: str
     persone: list[PersonaPassaggioIO]
     puo_gestire: bool
 
@@ -1133,11 +1137,14 @@ def _passaggio_out(user, p: Passaggio) -> dict:
         "stato": p.stato,
         "stato_nome": p.get_stato_display(),
         "motivo_annullamento": p.motivo_annullamento,
+        "nota_rettifica": p.nota_rettifica,
         "persone": [
             {
                 "persona_id": r.persona_id,
                 "persona": f"{r.persona.cognome} {r.persona.nome}",
                 "sintesi": r.sintesi,
+                "rettificata": r.rettificata_il is not None,
+                "motivo_rettifica": r.motivo_rettifica,
             }
             for r in p.persone.select_related("persona")
         ],
@@ -1245,4 +1252,33 @@ def esegui_passaggio(request, passaggio_id: int):
 def annulla_passaggio(request, passaggio_id: int, dati: Motivo):
     passaggio = _passaggio(request, passaggio_id)
     _esegui(servizi.annulla_passaggio, passaggio, dati.motivo)
+    return _passaggi(request.auth, passaggio.unita_origine)
+
+
+class AnnullaEsecuzioneIn(Schema):
+    motivo: str
+    # None: everyone in the passage.
+    persone: list[int] | None = None
+
+
+@router.post("/passaggi/{passaggio_id}/annulla-esecuzione", response=PassaggiUnita)
+def annulla_esecuzione(request, passaggio_id: int, dati: AnnullaEsecuzioneIn):
+    """Executed by mistake (DEC-178): undone for some ragazzi or all, with the reason;
+    refused when the new staff already recorded something or BuonaStrada was imported
+    since."""
+    passaggio = _passaggio(request, passaggio_id)
+    persone = list(Persona.objects.filter(pk__in=dati.persone)) if dati.persone else None
+    _esegui(servizi.annulla_esecuzione, passaggio, dati.motivo, request.auth, persone)
+    return _passaggi(request.auth, passaggio.unita_origine)
+
+
+class CorreggiDataIn(Schema):
+    data: date
+    motivo: str
+
+
+@router.post("/passaggi/{passaggio_id}/correggi-data", response=PassaggiUnita)
+def correggi_data(request, passaggio_id: int, dati: CorreggiDataIn):
+    passaggio = _passaggio(request, passaggio_id)
+    _esegui(servizi.correggi_data, passaggio, dati.data, dati.motivo)
     return _passaggi(request.auth, passaggio.unita_origine)

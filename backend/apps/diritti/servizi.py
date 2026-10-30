@@ -232,6 +232,7 @@ def fascicolo(persona: Persona) -> dict:
             for r in RichiestaIscrizione.objects.filter(persona=persona).select_related("unita")
         ],
         "eventi_buonacaccia": [_iscrizione_buonacaccia(i) for i in _iscrizioni_bc(persona)],
+        **_progressione(persona),
         "campi_di_formazione": [
             {
                 "Evento": q.partecipazione.evento.titolo,
@@ -251,6 +252,131 @@ def fascicolo(persona: Persona) -> dict:
             for r in RichiestaDiritti.objects.filter(persona=persona)
         ],
     }
+
+
+def _quando(data, precisione=None) -> str:
+    from apps.core.date_parziali import DataParziale
+
+    if data is None:
+        return ""
+    return str(DataParziale(data, precisione)) if precisione else data.isoformat()
+
+
+def _progressione(persona: Persona) -> dict:
+    """The Progressione Personale, private mete included: it is all about the person."""
+    from apps.progressione.models import PassaggioPersona, PeriodoBranca, PostoAzione
+
+    periodi = list(
+        PeriodoBranca.objects.filter(persona=persona).prefetch_related(
+            "tappe", "mete", "impegni", "competenze"
+        )
+    )
+    percorso = []
+    for periodo in periodi:
+        voce = {
+            "Branca": periodo.get_branca_display(),
+            "Dal": _quando(periodo.data_inizio, periodo.precisione_inizio),
+            "Al": _quando(periodo.data_fine),
+            "Come si è chiuso": periodo.motivo_fine,
+            "Promessa": (
+                _quando(periodo.promessa.data, periodo.promessa.precisione)
+                if hasattr(periodo, "promessa")
+                else ""
+            ),
+            "Tappe o passi": "; ".join(
+                f"{t.get_fase_display()} dal {_quando(t.data_inizio, t.precisione_inizio)}"
+                + (
+                    f", riconosciuta {_quando(t.completata_il, t.precisione_completata)}"
+                    if t.completata_il
+                    else ""
+                )
+                for t in periodo.tappe.all()
+            ),
+        }
+        percorso.append(voce)
+    return {
+        "progressione_personale": percorso,
+        "mete_e_impegni": [
+            {
+                "Tipo": tipo,
+                "Testo": v.testo,
+                "Riservata": "sì" if getattr(v, "riservata", False) else "",
+                "Stato": v.get_stato_display(),
+                "Verificato il": _quando(v.verificato_il),
+                "Interrotto": v.motivo_interruzione,
+            }
+            for periodo in periodi
+            for tipo, righe in (("Meta", periodo.mete.all()), ("Impegno", periodo.impegni.all()))
+            for v in righe
+        ],
+        "specialita_e_brevetti": [
+            {
+                "Tipo": c.get_tipo_display(),
+                "Nome": c.nome,
+                "Stato": c.get_stato_display(),
+                "Carta": c.carta,
+                "Maestro": c.maestro,
+                "Conquistata": _quando(c.riconosciuto_il, c.precisione_riconosciuto),
+                "Distintivo": _quando(c.distintivo_il, c.precisione_distintivo),
+            }
+            for periodo in periodi
+            for c in periodo.competenze.all()
+        ],
+        "posti_d_azione": [
+            {
+                "Impresa": p.impresa.titolo,
+                "Ruolo": p.ruolo,
+                "Verificato il": _quando(p.verificato_il),
+            }
+            for p in PostoAzione.objects.filter(persona=persona).select_related("impresa")
+        ],
+        "passaggi_di_branca": [
+            {
+                "Da": str(r.passaggio.unita_origine),
+                "A": str(r.passaggio.unita_destinazione),
+                "Dal": _quando(r.passaggio.data),
+                "Stato": (
+                    "annullato dopo l'esecuzione"
+                    if r.rettificata_il
+                    else r.passaggio.get_stato_display()
+                ),
+                "Sintesi per i nuovi capi": r.sintesi,
+            }
+            for r in PassaggioPersona.objects.filter(persona=persona).select_related(
+                "passaggio__unita_origine", "passaggio__unita_destinazione"
+            )
+        ],
+    }
+
+
+def _cancella_progressione(persona: Persona) -> None:
+    """All of it is app-only: periods with tappe, Promessa, mete, impegni, specialità and
+    brevetti, places in the imprese, the summaries written at the passages. Patrol
+    specialità and imprese belong to the patrol and stay."""
+    from apps.progressione.models import PassaggioPersona, PeriodoBranca, PostoAzione
+
+    periodi = list(PeriodoBranca.objects.filter(persona=persona))
+    figli = []
+    for periodo in periodi:
+        for relazione in periodo._meta.related_objects:
+            if relazione.related_model is PassaggioPersona:
+                continue
+            accessor = relazione.get_accessor_name()
+            if relazione.one_to_one:
+                oggetto = getattr(periodo, accessor, None) if hasattr(periodo, accessor) else None
+                figli += [oggetto] if oggetto is not None else []
+            else:
+                figli += list(getattr(periodo, accessor).all())
+        for tappa in periodo.tappe.all():
+            if hasattr(tappa, "distintivo"):
+                figli.append(tappa.distintivo)
+    posti = list(PostoAzione.objects.filter(persona=persona))
+    passaggi = list(PassaggioPersona.objects.filter(persona=persona))
+    _cancella_storico([*figli, *periodi, *posti, *passaggi])
+    for oggetto in [*posti, *passaggi]:
+        oggetto.delete()
+    for periodo in periodi:
+        periodo.delete()
 
 
 def _iscrizioni_bc(persona: Persona):
@@ -299,6 +425,8 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Iscrizioni dall'app e moduli firmati caricati",
         "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
         "(le quote restano)",
+        "Progressione personale: tappe, Promessa, mete e impegni, specialità e brevetti, "
+        "posti d'azione nelle imprese, sintesi dei passaggi di branca",
         "Storico delle modifiche di questi dati",
     ]
     if motivo is None:
@@ -341,6 +469,7 @@ def cancella(persona: Persona) -> dict:
 
             _cancella_storico([iscrizione])
             elimina(iscrizione)
+        _cancella_progressione(persona)
         iscrizioni = list(RichiestaIscrizione.objects.filter(persona=persona))
         for richiesta in iscrizioni:
             allegati = list(richiesta.allegati.all())

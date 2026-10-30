@@ -1299,12 +1299,14 @@ export interface PeriodoBranca {
   tappe: TappaSentiero[]
 }
 
-export type StatoPassaggio = 'PREPARATO' | 'ESEGUITO' | 'ANNULLATO'
+export type StatoPassaggio = 'PREPARATO' | 'ESEGUITO' | 'ANNULLATO' | 'RETTIFICATO'
 
 export interface PersonaPassaggio {
   persona_id: number
   persona: string
   sintesi: string
+  rettificata: boolean
+  motivo_rettifica: string
 }
 
 export interface PassaggioBranca {
@@ -1319,6 +1321,7 @@ export interface PassaggioBranca {
   stato: StatoPassaggio
   stato_nome: string
   motivo_annullamento: string
+  nota_rettifica: string
   persone: PersonaPassaggio[]
   puo_gestire: boolean
 }
@@ -2088,6 +2091,16 @@ export const api = {
     richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}`, { metodo: 'PUT', corpo: dati }),
   eseguiPassaggio: (id: number) =>
     richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}/esegui`, { metodo: 'POST' }),
+  annullaEsecuzione: (id: number, motivo: string, persone: number[] | null) =>
+    richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}/annulla-esecuzione`, {
+      metodo: 'POST',
+      corpo: { motivo, persone },
+    }),
+  correggiDataPassaggio: (id: number, data: string, motivo: string) =>
+    richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}/correggi-data`, {
+      metodo: 'POST',
+      corpo: { data, motivo },
+    }),
   annullaPassaggio: (id: number, motivo: string) =>
     richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}/annulla`, {
       metodo: 'POST',

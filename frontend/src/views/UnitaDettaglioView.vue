@@ -47,8 +47,10 @@ const rs = computed(() => unita.value?.branca === 'RS')
 const breve = (p: PersonaBreve): PersonaBreve => ({ id: p.id, nome: p.nome, cognome: p.cognome })
 const ragazziDi = async (unitaId: number) => (await api.persone(unitaId)).map(breve)
 
-// Unit roles go to capi; in R/S the treasurer may also be a rover or scolta (DEC-11).
+// Unit roles go to capi; in R/S the treasurer may also be a rover or scolta (DEC-11);
+// the Consiglio degli Anziani is made of the lupetti and coccinelle (DEC-182).
 async function candidatiUnita(ruolo: string) {
+  if (ruolo === 'CONSIGLIO_ANZIANI') return ragazziDi(props.id)
   const capi = await api.capi()
   if (ruolo !== 'TESORIERE_UNITA' || !rs.value) return capi
   return [...capi, ...(await ragazziDi(props.id))]
@@ -130,11 +132,13 @@ const iniziale = (u: Unita): UnitaIn => ({
       <RouterLink :to="{ name: 'persone', query: { unita: unita.id } }">Chi ne fa parte</RouterLink>
       ·
       <RouterLink :to="{ name: 'passaggi', params: { id: unita.id } }">Passaggi</RouterLink>
-      <template v-if="unita.tipo === 'REPARTO'">
+      <template v-if="unita.tipo !== 'COMUNITA_CAPI'">
         ·
         <RouterLink :to="{ name: 'sentiero-unita', params: { id: unita.id } }">
-          Sentiero (Progressione Personale)
+          Progressione Personale
         </RouterLink>
+      </template>
+      <template v-if="unita.tipo === 'REPARTO'">
         ·
         <RouterLink :to="{ name: 'imprese', params: { id: unita.id } }">
           Imprese e specialità di squadriglia

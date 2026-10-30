@@ -153,6 +153,11 @@ const scaduta = computed(
       </span>
     </div>
     <div v-if="errore" class="alert theme-danger small mt-3" role="alert">{{ errore }}</div>
+    <div v-if="i.avvisi.length" class="alert theme-warning small mt-3" role="status">
+      <div>
+        <p v-for="a in i.avvisi" :key="a" class="mb-0">{{ a }}</p>
+      </div>
+    </div>
 
     <p class="small mb-3">
       Iscritto su BuonaCaccia il {{ data(i.iscritto_il) }}.

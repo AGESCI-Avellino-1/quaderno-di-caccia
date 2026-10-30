@@ -24,6 +24,7 @@ class ProgressioneConfig(AppConfig):
             models.PassaggioPersona,
             models.FirmaCarta,
             models.Conclusione,
+            models.Stagione,
         ):
             auditlog.register(modello)
         # What was faced in confidence stays out of the audit log, which the technical

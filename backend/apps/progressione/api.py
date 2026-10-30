@@ -5,13 +5,15 @@ from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
+from apps.buonacaccia.models import IscrizioneBuonaCaccia
 from apps.core.date_parziali import PrecisioneData
-from apps.organizzazione.models import Branca, Unita
+from apps.organizzazione.models import Branca, TipoUnita, Unita
 from apps.permessi import policy
 
 from . import servizi
@@ -31,9 +33,11 @@ from .models import (
     Promessa,
     PuntoStrada,
     SedeVerifica,
+    Stagione,
     Stato,
     StatoCompetenza,
     StatoPassaggio,
+    StatoStagione,
     Tappa,
     TipoCompetenza,
     TipoConclusione,
@@ -120,6 +124,8 @@ class MetaOut(PercorsoOut):
 class ImpegnoOut(PercorsoOut):
     criterio_verifica: str
     mete: list[int]
+    stagione_id: int | None = None
+    stagione: str = ""
 
 
 class PassaggioRiassunto(Schema):
@@ -146,6 +152,19 @@ class PuntoStradaOut(Schema):
     # None: the user may not read what was faced in confidence (DEC-180).
     riservato: str | None
     obiettivi: list[int]
+
+
+class StagioneBreve(Schema):
+    id: int
+    nome: str
+    stato: StatoStagione
+
+
+class PiccoleOrmeOut(Schema):
+    evento: str
+    inizio: date
+    fine: date
+    stato: str
 
 
 class PeriodoOut(Schema):
@@ -208,6 +227,11 @@ class SchedaOut(Schema):
     competenze: list[CompetenzaOut]
     posti_azione: list[PostoOut]
     punti_strada: list[PuntoStradaOut]
+    # L/C (DEC-66, DEC-185): GIUNGLA or BOSCO for the names; the seasons of the unit a
+    # preda or volo may refer to; the Piccole Orme lived (DEC-184).
+    ambiente: str | None
+    stagioni: list[StagioneBreve]
+    piccole_orme: list[PiccoleOrmeOut]
     # What the user may do (the API checks again on every command).
     puo_gestire: bool
     puo_proporre: bool
@@ -316,6 +340,28 @@ def _passaggio_di(periodo: PeriodoBranca) -> dict | None:
     }
 
 
+def _unita_lc(persona: Persona):
+    return Unita.objects.filter(
+        pk__in=Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.RAGAZZO)
+        .values("unita_id"),
+        tipo__in=[TipoUnita.BRANCO, TipoUnita.CERCHIO, TipoUnita.BRANCO_CERCHIO],
+    )
+
+
+def ambiente(persona: Persona) -> str | None:
+    """Giungla in a branco, bosco in a cerchio; in a mixed unit by the child (DEC-185).
+    None: generic names (sex not known, or not in L/C)."""
+    unita = _unita_lc(persona).first()
+    if unita is None:
+        return None
+    if unita.tipo == TipoUnita.BRANCO:
+        return "GIUNGLA"
+    if unita.tipo == TipoUnita.CERCHIO:
+        return "BOSCO"
+    return {"M": "GIUNGLA", "F": "BOSCO"}.get(persona.sesso)
+
+
 def _scheda(user, persona: Persona) -> dict:
     periodi = list(
         PeriodoBranca.objects.filter(persona=persona).prefetch_related("tappe__distintivo")
@@ -325,7 +371,11 @@ def _scheda(user, persona: Persona) -> dict:
         mete = mete.filter(riservata=False)
     visibili = {m.pk for m in mete}
     vede_riservato = policy.vede_riservato_punto_strada(user, persona)
-    impegni = Impegno.objects.filter(periodo__persona=persona).prefetch_related("revisioni", "mete")
+    impegni = (
+        Impegno.objects.filter(periodo__persona=persona)
+        .select_related("stagione")
+        .prefetch_related("revisioni", "mete")
+    )
     return {
         "persona_id": persona.pk,
         "persona": f"{persona.nome} {persona.cognome}",
@@ -366,6 +416,8 @@ def _scheda(user, persona: Persona) -> dict:
             {
                 **_percorso_out(i),
                 "criterio_verifica": i.criterio_verifica,
+                "stagione_id": i.stagione_id,
+                "stagione": i.stagione.nome if i.stagione_id else "",
                 # A private meta the user may not see is not even named.
                 "mete": [m.pk for m in i.mete.all() if m.pk in visibili],
             }
@@ -402,6 +454,26 @@ def _scheda(user, persona: Persona) -> dict:
         "puo_proporre_verifica": policy.puo_proporre_verifica(user, persona),
         "sedi": [{"valore": v, "etichetta": e} for v, e in SedeVerifica.choices],
         "tipi_conclusione": [{"valore": v, "etichetta": e} for v, e in TipoConclusione.choices],
+        "ambiente": ambiente(persona),
+        "stagioni": [
+            {"id": s.pk, "nome": s.nome, "stato": s.stato}
+            for s in Stagione.objects.filter(
+                unita__in=_unita_lc(persona),
+                stato__in=[StatoStagione.PREVISTA, StatoStagione.APERTA],
+            )
+        ],
+        "piccole_orme": [
+            {
+                "evento": i.partecipazione.evento.titolo,
+                "inizio": timezone.localdate(i.partecipazione.evento.inizio),
+                "fine": timezone.localdate(i.partecipazione.evento.fine),
+                "stato": i.get_stato_display(),
+            }
+            for i in IscrizioneBuonaCaccia.objects.filter(
+                partecipazione__persona=persona,
+                partecipazione__evento__buonacaccia__piccole_orme=True,
+            ).select_related("partecipazione__evento")
+        ],
     }
 
 
@@ -467,11 +539,17 @@ def _tappa(request, tappa_id: int) -> Tappa:
     return tappa
 
 
+class RiconoscimentoIn(DataIn):
+    # L/C: history of who was already there, without the conquests recorded (V05).
+    storico: bool = False
+
+
 @router.post("/progressione/tappe/{tappa_id}/riconosci", response=SchedaOut)
-def riconosci(request, tappa_id: int, dati: DataIn):
-    """Recognised in the Consiglio della Legge: the next tappa starts."""
+def riconosci(request, tappa_id: int, dati: RiconoscimentoIn):
+    """Recognised in the Consiglio della Legge (L/C: by the staff, after a conquest):
+    the next tappa or momento starts."""
     tappa = _tappa(request, tappa_id)
-    _esegui(servizi.riconosci_tappa, tappa, _quando(dati), request.auth)
+    _esegui(servizi.riconosci_tappa, tappa, _quando(dati), request.auth, storico=dati.storico)
     return _scheda(request.auth, tappa.periodo.persona)
 
 
@@ -612,6 +690,8 @@ class MetaIn(PercorsoIn):
 class ImpegnoIn(PercorsoIn):
     criterio_verifica: str = ""
     mete: list[int] = []
+    # L/C: the stagione of the preda or volo.
+    stagione_id: int | None = None
 
 
 def _sentiero_attivo(request, persona_id: int) -> tuple[Persona, PeriodoBranca]:
@@ -658,6 +738,9 @@ def nuovo_impegno(request, persona_id: int, dati: ImpegnoIn):
             termine=dati.termine,
             dal_ragazzo=_dal_ragazzo(request, persona),
             criterio_verifica=dati.criterio_verifica.strip(),
+            stagione=(
+                get_object_or_404(Stagione, pk=dati.stagione_id) if dati.stagione_id else None
+            ),
         )
         mete = list(Obiettivo.objects.filter(pk__in=dati.mete))
         _esegui(servizi.collega_mete, impegno, mete)
@@ -775,6 +858,7 @@ class RagazzoSentiero(Schema):
 
 class SentieroUnita(Schema):
     unita: str
+    branca: str
     ragazzi: list[RagazzoSentiero]
     puo_gestire: bool
 
@@ -798,8 +882,8 @@ def sentiero_unita(request, unita_id: int):
     unita = get_object_or_404(Unita, pk=unita_id)
     if not policy.e_capo_censito(request.auth):
         raise HttpError(403, "La vista dell'unità è dei capi.")
-    if unita.branca != Branca.EG:
-        raise HttpError(400, "Per ora la progressione è quella del reparto.")
+    if unita.tipo == TipoUnita.COMUNITA_CAPI:
+        raise HttpError(400, "La Comunità capi non ha progressione personale.")
     persone = Persona.objects.filter(
         pk__in=Appartenenza.objects.attive()
         .filter(unita=unita, ruolo=RuoloAppartenenza.RAGAZZO)
@@ -830,7 +914,11 @@ def sentiero_unita(request, unita_id: int):
                 "specialita": (
                     PercorsoCompetenza.objects.filter(
                         periodo=periodo,
-                        tipo=TipoCompetenza.SPECIALITA,
+                        tipo=(
+                            TipoCompetenza.SPECIALITA_LC
+                            if unita.branca == Branca.LC
+                            else TipoCompetenza.SPECIALITA
+                        ),
                         stato=StatoCompetenza.RICONOSCIUTO,
                     ).count()
                     if periodo
@@ -849,6 +937,7 @@ def sentiero_unita(request, unita_id: int):
         )
     return {
         "unita": str(unita),
+        "branca": unita.branca,
         "ragazzi": righe,
         "puo_gestire": policy.e_staff(request.auth, unita),
     }
@@ -866,6 +955,7 @@ class CataloghiOut(Schema):
     specialita: list[VoceOut]
     brevetti: list[VoceOut]
     specialita_squadriglia: list[VoceOut]
+    specialita_lc: list[VoceOut]
 
 
 @router.get("/progressione/cataloghi", response=CataloghiOut)
@@ -880,6 +970,7 @@ def cataloghi(request):
         "specialita": attive(TipoCompetenza.SPECIALITA),
         "brevetti": attive(TipoCompetenza.BREVETTO),
         "specialita_squadriglia": attive(TipoCompetenza.SPECIALITA_SQ),
+        "specialita_lc": attive(TipoCompetenza.SPECIALITA_LC),
     }
 
 
@@ -1421,3 +1512,123 @@ def correggi_data(request, passaggio_id: int, dati: CorreggiDataIn):
     passaggio = _passaggio(request, passaggio_id)
     _esegui(servizi.correggi_data, passaggio, dati.data, dati.motivo)
     return _passaggi(request.auth, passaggio.unita_origine)
+
+
+# --- L/C: stagioni di caccia o di volo (DEC-66, DEC-183; spec §4.2, §17.5) ------------------
+
+
+class StagioneOut(Schema):
+    id: int
+    nome: str
+    stato: StatoStagione
+    stato_nome: str
+    inizio_previsto: date
+    fine_prevista: date
+    lancio: date | None
+    chiusa_il: date | None
+    prede: int
+    conquistate: int
+    # Still open: to look at again with the capi, never conquered by the closing (V04).
+    da_rileggere: list[str]
+
+
+class StagioniUnita(Schema):
+    unita: str
+    stagioni: list[StagioneOut]
+    puo_gestire: bool
+
+
+def _stagioni(user, unita: Unita) -> dict:
+    righe = []
+    for s in unita.stagioni.all():
+        prede = s.prede.all()
+        righe.append(
+            {
+                "id": s.pk,
+                "nome": s.nome,
+                "stato": s.stato,
+                "stato_nome": s.get_stato_display(),
+                "inizio_previsto": s.inizio_previsto,
+                "fine_prevista": s.fine_prevista,
+                "lancio": s.lancio,
+                "chiusa_il": s.chiusa_il,
+                "prede": prede.count(),
+                "conquistate": prede.filter(stato=Stato.CONCLUSO).count(),
+                "da_rileggere": [
+                    f"{p.periodo.persona.cognome} {p.periodo.persona.nome}: {p.testo}"
+                    for p in servizi.da_rileggere(s)
+                ],
+            }
+        )
+    return {
+        "unita": str(unita),
+        "stagioni": righe,
+        "puo_gestire": policy.puo_gestire_unita_progressione(user, unita),
+    }
+
+
+def _unita_lc_capo(request, unita_id: int) -> Unita:
+    unita = get_object_or_404(Unita, pk=unita_id)
+    if not policy.e_capo_censito(request.auth):
+        raise HttpError(403, "Le stagioni le vedono i capi.")
+    if unita.branca != Branca.LC:
+        raise HttpError(400, "Le stagioni sono dei branchi e dei cerchi.")
+    return unita
+
+
+@router.get("/unita/{unita_id}/stagioni", response=StagioniUnita)
+def stagioni(request, unita_id: int):
+    return _stagioni(request.auth, _unita_lc_capo(request, unita_id))
+
+
+class StagioneIn(Schema):
+    nome: str
+    inizio_previsto: date
+    fine_prevista: date
+
+
+def _gestore_stagioni(request, unita: Unita) -> None:
+    if not policy.puo_gestire_unita_progressione(request.auth, unita):
+        raise HttpError(403, "Le stagioni le gestisce lo staff dell'unità.")
+
+
+@router.post("/unita/{unita_id}/stagioni", response={201: StagioniUnita})
+def nuova_stagione(request, unita_id: int, dati: StagioneIn):
+    unita = _unita_lc_capo(request, unita_id)
+    _gestore_stagioni(request, unita)
+    _esegui(servizi.salva_stagione, Stagione(unita=unita), request.auth, **dati.dict())
+    return Status(201, _stagioni(request.auth, unita))
+
+
+def _stagione(request, stagione_id: int) -> Stagione:
+    stagione = get_object_or_404(Stagione.objects.select_related("unita"), pk=stagione_id)
+    _unita_lc_capo(request, stagione.unita_id)
+    _gestore_stagioni(request, stagione.unita)
+    return stagione
+
+
+@router.put("/stagioni/{stagione_id}", response=StagioniUnita)
+def modifica_stagione(request, stagione_id: int, dati: StagioneIn):
+    stagione = _stagione(request, stagione_id)
+    _esegui(servizi.salva_stagione, stagione, request.auth, **dati.dict())
+    return _stagioni(request.auth, stagione.unita)
+
+
+class PassoStagioneIn(Schema):
+    il: date | None = None
+
+
+@router.post("/stagioni/{stagione_id}/{azione}", response=StagioniUnita)
+def passo_stagione(request, stagione_id: int, azione: str, dati: PassoStagioneIn):
+    """lancia (the festive launch opens it), chiudi (the actual end), annulla."""
+    stagione = _stagione(request, stagione_id)
+    il = dati.il or servizi.oggi()
+    if azione == "lancia":
+        _esegui(servizi.lancia_stagione, stagione, il)
+    elif azione == "chiudi":
+        _esegui(servizi.chiudi_stagione, stagione, il)
+    elif azione == "annulla":
+        _esegui(servizi.annulla_stagione, stagione)
+    else:
+        raise HttpError(404, "Operazione sconosciuta.")
+    return _stagioni(request.auth, stagione.unita)

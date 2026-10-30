@@ -8,7 +8,7 @@ from datetime import date
 
 from apps.anagrafica.models import AppartenenzaSquadriglia, DerogaSquadriglia, Persona
 
-from .models import RUOLI_DI_SQUADRIGLIA, Incarico, TipoUnita, Unita
+from .models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico, TipoUnita, Unita
 
 
 def _chiudi(periodo, giorno: date) -> None:
@@ -21,15 +21,22 @@ def _chiudi(periodo, giorno: date) -> None:
 
 
 def esci_dal_reparto(persona: Persona, unita: Unita, giorno: date) -> list[str]:
-    """Close patrol membership, CSQ/VCSQ roles and patrol exceptions tied to `unita`.
+    """Close patrol membership, CSQ/VCSQ roles and patrol exceptions tied to `unita`,
+    and the Consiglio degli Anziani of a branco or cerchio.
 
     Returns what was closed, for the import summary. Exceptions are not listed there:
     they are special-category data and the summary is read by the technical
     administrator too.
     """
-    if unita.tipo != TipoUnita.REPARTO:
-        return []
     chiusi = []
+    # Leaving a branco or cerchio ends the Consiglio degli Anziani (DEC-182).
+    for incarico in Incarico.objects.attivi(giorno).filter(
+        persona=persona, ruolo=RuoloIncarico.CONSIGLIO_ANZIANI, unita=unita
+    ):
+        _chiudi(incarico, giorno)
+        chiusi.append(f"{persona} — {incarico.get_ruolo_display()}")
+    if unita.tipo != TipoUnita.REPARTO:
+        return chiusi
     for membro in (
         AppartenenzaSquadriglia.objects.attive(giorno)
         .filter(persona=persona, squadriglia__unita=unita)

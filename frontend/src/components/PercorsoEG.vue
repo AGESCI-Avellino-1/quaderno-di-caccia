@@ -24,6 +24,8 @@ const props = defineProps<{
   nomiMete: Record<number, string>
   /** R/S: the mete are called obiettivi, verified outside the Consiglio della Legge. */
   rs?: boolean
+  /** L/C: prede and voli, verified with the vecchi lupi or the coccinelle anziane. */
+  lc?: boolean
 }>()
 const emit = defineEmits<{ cambiata: [inCoda: boolean] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -33,7 +35,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
 const aperta = ref<'' | 'convalida' | 'interrompi' | 'riformula' | 'storia'>('')
 const modulo = reactive({
   il: oggi(),
-  sede: props.tipo === 'mete' && !props.rs ? 'CONSIGLIO_LEGGE' : '',
+  sede: props.lc ? 'ANZIANI' : props.tipo === 'mete' && !props.rs ? 'CONSIGLIO_LEGGE' : '',
   sede_descrizione: '',
   motivo: '',
   testo: props.voce.testo,
@@ -107,6 +109,7 @@ async function riformula() {
           riservata
         </span>
         <div class="small fg-2">
+          <template v-if="impegno?.stagione">{{ impegno.stagione }}. </template>
           <template v-if="voce.termine">Entro il {{ data(voce.termine) }}. </template>
           <template v-if="impegno?.criterio_verifica">
             Come si verifica: {{ impegno.criterio_verifica }}.

@@ -52,6 +52,7 @@ const apri = () =>
     luogo: '',
     descrizione: '',
     formazione_capi: false,
+    piccole_orme: false,
     tipo_campo: null,
     specifica: '',
   })
@@ -140,6 +141,7 @@ async function crea() {
             <span class="small fg-2">
               · {{ data(e.inizio) }}<template v-if="e.luogo"> · {{ e.luogo }}</template>
               <template v-if="e.formazione_capi"> · formazione capi</template>
+              <template v-if="e.piccole_orme"> · Piccole Orme</template>
             </span>
           </li>
         </ul>
@@ -205,6 +207,12 @@ async function crea() {
               class="check"
             />
             <label class="small" for="bc-formazione">Campo di formazione capi</label>
+          </div>
+          <div v-if="!modulo.formazione_capi" class="col-12 form-field">
+            <input id="bc-po" v-model="modulo.piccole_orme" type="checkbox" class="check" />
+            <label class="small" for="bc-po">
+              Piccole Orme (si vivono una volta sola: l'app avvisa se un bambino le ha già fatte)
+            </label>
           </div>
           <template v-if="modulo.formazione_capi">
             <div class="col-12 md:col-6">

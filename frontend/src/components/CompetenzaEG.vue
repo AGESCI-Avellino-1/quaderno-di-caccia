@@ -143,7 +143,9 @@ async function distintivo() {
             @click="passo('riconosci', { il: oggi() })"
           >
             {{
-              voce.tipo === 'SPECIALITA_SQ' ? 'Conquistata' : 'Conquistata (Consiglio della Legge)'
+              voce.tipo === 'SPECIALITA_SQ' || voce.tipo === 'SPECIALITA_LC'
+                ? 'Conquistata'
+                : 'Conquistata (Consiglio della Legge)'
             }}
           </button>
           <button

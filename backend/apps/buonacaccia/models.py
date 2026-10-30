@@ -55,6 +55,9 @@ class EventoBuonaCaccia(ModelloTracciato):
         "eventi.Evento", on_delete=models.CASCADE, related_name="buonacaccia"
     )
     formazione_capi = models.BooleanField(default=False)
+    # Lived once only, in Responsabilità, at least three days (L/C art. 43, V11): the
+    # app warns, never blocks (DEC-184).
+    piccole_orme = models.BooleanField(default=False)
     tipo_campo = models.CharField(max_length=8, choices=TipoCampoFormazione.choices, blank=True)
     # The title of a module, or what "other" is.
     specifica = models.CharField(max_length=160, blank=True)
@@ -79,6 +82,8 @@ class EventoBuonaCaccia(ModelloTracciato):
             errori.append("Scegli il tipo di campo di formazione.")
         if not self.formazione_capi and self.tipo_campo:
             errori.append("Il tipo di campo vale solo per la formazione capi.")
+        if self.piccole_orme and self.formazione_capi:
+            errori.append("Le Piccole Orme non sono un campo di formazione capi.")
         if self.tipo_campo == TipoCampoFormazione.MODULO and not self.specifica.strip():
             errori.append("Scrivi il titolo del modulo formativo.")
         if self.tipo_campo == TipoCampoFormazione.ALTRO and not self.specifica.strip():

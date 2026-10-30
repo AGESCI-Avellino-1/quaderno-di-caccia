@@ -179,6 +179,9 @@ class RuoloIncarico(models.TextChoices):
     AMMINISTRATORE = "AMMINISTRATORE", "Amministratore tecnico"
     CSQ = "CSQ", "Capo squadriglia"
     VCSQ = "VCSQ", "Vice capo squadriglia"
+    # A lupetto or coccinella of a branco or cerchio, appointed by its staff (DEC-66,
+    # DEC-182).
+    CONSIGLIO_ANZIANI = "CONSIGLIO_ANZIANI", "Consiglio degli Anziani"
 
 
 # Maximum number of simultaneous holders. None = depends on the unit (diarchy).
@@ -198,7 +201,12 @@ RUOLI_DI_GRUPPO = {
     RuoloIncarico.A_DISPOSIZIONE,
     RuoloIncarico.AMMINISTRATORE,
 }
-RUOLI_DI_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.STAFF}
+RUOLI_DI_UNITA = {
+    RuoloIncarico.CAPO_UNITA,
+    RuoloIncarico.TESORIERE_UNITA,
+    RuoloIncarico.STAFF,
+    RuoloIncarico.CONSIGLIO_ANZIANI,
+}
 RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
 # Every capo of the Co.Ca. has a service: one or more units, or at disposal (not both,
 # DEC-165).
@@ -320,7 +328,8 @@ class Incarico(ModelloTracciato):
     def _controlla_titolare(self, ruolo: RuoloIncarico) -> None:
         """Who may hold the role on its start date: roles of capi go to capi (DEC-09,
         DEC-10, DEC-11); a R/S unit treasurer may be a rover or scolta of that unit
-        (DEC-11); CSQ and VCSQ are members of their patrol (DEC-13, DEC-14)."""
+        (DEC-11); CSQ and VCSQ are members of their patrol (DEC-13, DEC-14); the
+        Consiglio degli Anziani is made of the unit's lupetti and coccinelle (DEC-182)."""
         from apps.anagrafica.models import (
             Appartenenza,
             AppartenenzaSquadriglia,
@@ -345,6 +354,12 @@ class Incarico(ModelloTracciato):
             ):
                 raise ValidationError(f"{self.persona} non fa parte di {self.squadriglia}.")
             return
+        if ruolo == RuoloIncarico.CONSIGLIO_ANZIANI:
+            if self.unita.branca != Branca.LC:
+                raise ValidationError("Il Consiglio degli Anziani è di un branco o un cerchio.")
+            if attive.filter(ruolo=RuoloAppartenenza.RAGAZZO, unita=self.unita).exists():
+                return
+            raise ValidationError(f"{self.persona} non è un bambino o una bambina di {self.unita}.")
         if ruolo == RuoloIncarico.TESORIERE_UNITA and self.unita.branca == Branca.RS:
             if e_capo or attive.filter(ruolo=RuoloAppartenenza.RAGAZZO, unita=self.unita).exists():
                 return

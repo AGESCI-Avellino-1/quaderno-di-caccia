@@ -7,6 +7,7 @@ from datetime import date
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.anagrafica.models import Persona
@@ -32,9 +33,11 @@ from .models import (
     PuntoStrada,
     Revisione,
     SedeVerifica,
+    Stagione,
     Stato,
     StatoCompetenza,
     StatoPassaggio,
+    StatoStagione,
     Tappa,
     TipoCompetenza,
     TipoConclusione,
@@ -92,11 +95,8 @@ def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBran
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno dell'ingresso.")
     branca = branca_attuale(persona)
-    if branca not in (Branca.EG, Branca.RS):
-        raise ValidationError(
-            "Il percorso si apre per chi è in reparto, noviziato o clan; "
-            "per i lupetti e le coccinelle arriverà in seguito."
-        )
+    if branca is None:
+        raise ValidationError("Il percorso si apre per chi è in un'unità come ragazzo.")
     return _apri_periodo(persona, branca, quando, utente)
 
 
@@ -139,12 +139,24 @@ def registra_promessa(periodo: PeriodoBranca, quando: DataParziale, utente) -> P
     )
 
 
+def _conquista_nel_momento(tappa: Tappa) -> bool:
+    """A preda or a volo conquered during this momento (DEC-183, V05)."""
+    conquiste = Impegno.objects.filter(periodo=tappa.periodo, stato=Stato.CONCLUSO)
+    if tappa.precisione_inizio == PrecisioneData.GIORNO:
+        conquiste = conquiste.filter(verificato_il__gte=tappa.data_inizio)
+    return conquiste.exists()
+
+
 @transaction.atomic
-def riconosci_tappa(tappa: Tappa, quando: DataParziale, utente) -> Tappa:
+def riconosci_tappa(tappa: Tappa, quando: DataParziale, utente, *, storico: bool = False) -> Tappa:
     """The Consiglio della Legge recognises the tappa: the next one starts the same day;
-    after Responsabilità the sentiero goes on until the passaggio (V16). E/G only: the
-    passi R/S move with the Carta di clan and the confronto on the Partenza."""
-    if tappa.periodo.branca != Branca.EG:
+    after Responsabilità the sentiero goes on until the passaggio (V16). L/C: the staff
+    recognises the momento after at least one preda or volo conquered in it (DEC-183);
+    `storico` records the history of who was already there without it (V05). Not for
+    R/S: the passi move with the Carta di clan and the confronto on the Partenza. In an
+    L/C unit of four years the last year goes on in Responsabilità (spec §13)."""
+    branca = tappa.periodo.branca
+    if branca == Branca.RS:
         raise ValidationError("I passi R/S non si riconoscono nel Consiglio della Legge.")
     if tappa.completata_il is not None:
         if (tappa.completata_il, tappa.precisione_completata) == (
@@ -156,11 +168,15 @@ def riconosci_tappa(tappa: Tappa, quando: DataParziale, utente) -> Tappa:
     if tappa.data_fine is not None or tappa.periodo.data_fine is not None:
         raise ValidationError("Questa tappa non è più in corso.")
     if quando.valore is None:
-        raise ValidationError("Indica almeno l'anno del Consiglio della Legge.")
+        raise ValidationError("Indica almeno l'anno.")
     _non_prima(quando, tappa.data_inizio, "l'inizio della tappa")
+    if branca == Branca.LC and not storico and not _conquista_nel_momento(tappa):
+        raise ValidationError(
+            "Il momento si riconosce dopo la conquista di almeno una preda o un volo."
+        )
     tappa.completata_il = quando.valore
     tappa.precisione_completata = quando.precisione
-    tappa.sede_completamento = SedeVerifica.CONSIGLIO_LEGGE
+    tappa.sede_completamento = SedeVerifica.CONSIGLIO_LEGGE if branca == Branca.EG else ""
     tappa.completata_da = utente
     indice = ORDINE_FASI.index(Fase(tappa.fase))
     if indice == len(ORDINE_FASI) - 1:
@@ -183,7 +199,7 @@ def colloca(tappa: Tappa, fase: str, quando: DataParziale, motivazione: str, ute
     suited to them, without inventing the ones in between (spec §17.6; E/G art. 41)."""
     if tappa.fase != Fase.SCOPERTA or tappa.data_fine is not None:
         raise ValidationError("Il collocamento si fa dalla Scoperta in corso.")
-    if tappa.periodo.branca != Branca.EG:
+    if tappa.periodo.branca == Branca.RS:
         raise ValidationError("In R/S i passi seguono la firma della Carta di clan.")
     if fase not in (Fase.COMPETENZA, Fase.RESPONSABILITA):
         raise ValidationError("Scegli la tappa in cui collocarlo.")
@@ -208,7 +224,12 @@ def colloca(tappa: Tappa, fase: str, quando: DataParziale, motivazione: str, ute
 
 
 def consegna_distintivo(tappa: Tappa, quando: DataParziale, utente) -> ConsegnaDistintivo:
-    """The badge, handed over at the start of the tappa, with its own date (V06)."""
+    """The badge, with its own date: E/G at the start of the tappa (V06); L/C right
+    after the momento is recognised, never before (L/C art. 38, V05)."""
+    if tappa.periodo.branca == Branca.LC and tappa.completata_il is None:
+        raise ValidationError("In L/C il distintivo si consegna dopo il riconoscimento.")
+    if tappa.periodo.branca == Branca.RS:
+        raise ValidationError("In R/S i passi non hanno distintivo.")
     esistente = ConsegnaDistintivo.objects.filter(tappa=tappa).first()
     if esistente is not None:
         if (esistente.data, esistente.precisione) == (quando.valore, quando.precisione):
@@ -253,8 +274,12 @@ def nuovo(
     """A draft; the ragazzo's stays a draft until the staff agrees it (DEC-61)."""
     if periodo.data_fine is not None:
         raise ValidationError("Il percorso in questa branca è chiuso.")
-    if periodo.branca not in (Branca.EG, Branca.RS):
-        raise ValidationError("Per ora mete, obiettivi e impegni sono quelli di E/G e R/S.")
+    if periodo.branca == Branca.LC:
+        if modello is not Impegno:
+            raise ValidationError("In L/C si concordano prede e voli, non mete.")
+        stagione = campi.get("stagione")
+        if stagione is not None:
+            _stagione_dell_unita(stagione, periodo.persona)
     if not testo.strip():
         raise ValidationError("Scrivi il testo.")
     oggetto = modello(
@@ -339,8 +364,13 @@ def esegui(
         raise ValidationError("La data non può essere nel futuro.")
     if azione == "concorda":
         if isinstance(oggetto, Impegno) and oggetto.termine is None:
-            # E/G: an agreed impegno is limited in time (art. 32; spec §16.4).
-            raise ValidationError("Indica entro quando: un impegno è limitato nel tempo.")
+            if oggetto.periodo.branca == Branca.LC:
+                # L/C: the stagione is the time reference (spec §16.4).
+                if oggetto.stagione_id is None:
+                    raise ValidationError("Indica la stagione o entro quando.")
+            else:
+                # E/G: an agreed impegno is limited in time (art. 32; spec §16.4).
+                raise ValidationError("Indica entro quando: un impegno è limitato nel tempo.")
         oggetto.concordato_il = il
     elif azione == "avvia":
         oggetto.avviato_il = il
@@ -399,8 +429,13 @@ def nuova_competenza(
     if (tipo == TipoCompetenza.SPECIALITA_SQ) != (squadriglia is not None):
         raise ValidationError("Le specialità di squadriglia sono della squadriglia.")
     if periodo is not None:
-        if periodo.data_fine is not None or periodo.branca != Branca.EG:
-            raise ValidationError("Serve un sentiero E/G aperto.")
+        branca = Branca.LC if tipo == TipoCompetenza.SPECIALITA_LC else Branca.EG
+        if periodo.data_fine is not None or periodo.branca != branca:
+            raise ValidationError(
+                "Serve una pista o un sentiero L/C aperto."
+                if branca == Branca.LC
+                else "Serve un sentiero E/G aperto."
+            )
         doppio = PercorsoCompetenza.objects.filter(
             periodo=periodo, codice=codice, stato__in=APERTI_COMPETENZA
         )
@@ -458,8 +493,9 @@ def passo_competenza(
     il: date | None = None,
     motivo: str = "",
 ) -> PercorsoCompetenza:
-    """Spec §17.4. A personal specialità or brevetto is recognised in the Consiglio della
-    Legge (art. 36, art. 38; DEC-172); never by itself. A step already applied is done."""
+    """Spec §17.4. A personal specialità or brevetto E/G is recognised in the Consiglio
+    della Legge (art. 36, art. 38; DEC-172); a specialità L/C after the tests agreed
+    with the capi (L/C art. 41); never by itself. A step already applied is done."""
     if azione not in DA_COMPETENZA:
         raise ValidationError("Operazione sconosciuta.")
     if percorso.stato == A_COMPETENZA[azione] and azione != "prosegui":
@@ -478,7 +514,7 @@ def passo_competenza(
         percorso.riconosciuto_il = il
         percorso.precisione_riconosciuto = PrecisioneData.GIORNO
         percorso.riconosciuto_da = utente
-        if percorso.periodo_id:
+        if percorso.periodo_id and percorso.tipo != TipoCompetenza.SPECIALITA_LC:
             percorso.sede = SedeVerifica.CONSIGLIO_LEGGE
     elif azione == "interrompi":
         if not motivo.strip():
@@ -684,7 +720,7 @@ def _imposta(righe, **campi) -> None:
 def _squadriglia_di(persona: Persona, unita, giorno: date) -> dict:
     """What leaving the reparto will close (organizzazione.servizi.esci_dal_reparto)."""
     from apps.anagrafica.models import AppartenenzaSquadriglia, DerogaSquadriglia
-    from apps.organizzazione.models import RUOLI_DI_SQUADRIGLIA, Incarico
+    from apps.organizzazione.models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico
 
     return {
         "squadriglie": list(
@@ -694,7 +730,11 @@ def _squadriglia_di(persona: Persona, unita, giorno: date) -> dict:
         ),
         "incarichi": list(
             Incarico.objects.attivi(giorno)
-            .filter(persona=persona, ruolo__in=RUOLI_DI_SQUADRIGLIA, squadriglia__unita=unita)
+            .filter(
+                Q(ruolo__in=RUOLI_DI_SQUADRIGLIA, squadriglia__unita=unita)
+                | Q(ruolo=RuoloIncarico.CONSIGLIO_ANZIANI, unita=unita),
+                persona=persona,
+            )
             .values_list("pk", flat=True)
         ),
         "deroghe": list(
@@ -1013,3 +1053,86 @@ def salva_punto_strada(
     punto.save()
     punto.obiettivi.set(obiettivi)
     return punto
+
+
+# --- L/C: stagione di caccia o di volo (DEC-66, DEC-183; spec §4.2, §17.5) --------------------
+
+
+def _stagione_dell_unita(stagione: Stagione, persona: Persona) -> None:
+    if stagione.stato not in (StatoStagione.PREVISTA, StatoStagione.APERTA):
+        raise ValidationError("La stagione è chiusa.")
+    if not ragazzi_di(stagione.unita).filter(pk=persona.pk).exists():
+        raise ValidationError("La stagione è di un altro branco o cerchio.")
+
+
+def salva_stagione(
+    stagione: Stagione, utente, *, nome: str, inizio_previsto: date, fine_prevista: date
+) -> Stagione:
+    if stagione.unita.branca != Branca.LC:
+        raise ValidationError("Le stagioni sono dei branchi e dei cerchi.")
+    if stagione.stato in (StatoStagione.CHIUSA, StatoStagione.ANNULLATA):
+        raise ValidationError("La stagione è chiusa.")
+    if not nome.strip():
+        raise ValidationError("Dai un nome alla stagione.")
+    if fine_prevista <= inizio_previsto:
+        raise ValidationError("La fine prevista deve seguire l'inizio.")
+    stagione.nome = nome.strip()[:120]
+    stagione.inizio_previsto = inizio_previsto
+    stagione.fine_prevista = fine_prevista
+    if stagione.pk is None:
+        stagione.creata_da = utente
+    stagione.save()
+    return stagione
+
+
+@transaction.atomic
+def lancia_stagione(stagione: Stagione, il: date) -> Stagione:
+    """The festive launch opens it; one open season at a time in a unit."""
+    if stagione.stato == StatoStagione.APERTA and stagione.lancio == il:
+        return stagione
+    if stagione.stato != StatoStagione.PREVISTA:
+        raise ValidationError("Si lancia una stagione in programma.")
+    if il > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    if Stagione.objects.filter(unita=stagione.unita, stato=StatoStagione.APERTA).exists():
+        raise ValidationError("C'è già una stagione aperta: chiudila prima.")
+    stagione.stato = StatoStagione.APERTA
+    stagione.lancio = il
+    stagione.save()
+    return stagione
+
+
+def da_rileggere(stagione: Stagione):
+    """Prede and voli still open: never conquered by the end of the season (V04)."""
+    return stagione.prede.filter(stato__in=APERTI).select_related("periodo__persona")
+
+
+@transaction.atomic
+def chiudi_stagione(stagione: Stagione, il: date) -> Stagione:
+    """It records the actual end; what is still open stays open, to look at again with
+    the capi (spec §17.5)."""
+    if stagione.stato == StatoStagione.CHIUSA and stagione.chiusa_il == il:
+        return stagione
+    if stagione.stato != StatoStagione.APERTA:
+        raise ValidationError("Si chiude una stagione aperta.")
+    if il > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    if il < stagione.lancio:
+        raise ValidationError("La chiusura non può precedere il lancio.")
+    stagione.stato = StatoStagione.CHIUSA
+    stagione.chiusa_il = il
+    stagione.save()
+    return stagione
+
+
+def annulla_stagione(stagione: Stagione) -> Stagione:
+    """Only before the launch (spec §17.5)."""
+    if stagione.stato == StatoStagione.ANNULLATA:
+        return stagione
+    if stagione.stato != StatoStagione.PREVISTA:
+        raise ValidationError("Si annulla solo una stagione non ancora lanciata.")
+    if stagione.prede.exists():
+        raise ValidationError("Ci sono già prede o voli in questa stagione.")
+    stagione.stato = StatoStagione.ANNULLATA
+    stagione.save()
+    return stagione

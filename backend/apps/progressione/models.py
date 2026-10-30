@@ -45,6 +45,8 @@ class SedeVerifica(models.TextChoices):
     CONSIGLIO_LEGGE = "CONSIGLIO_LEGGE", "Consiglio della Legge"
     CONSIGLIO_SQUADRIGLIA = "CONSIGLIO_SQ", "Consiglio di squadriglia"
     ALTA_SQUADRIGLIA = "ALTA_SQ", "Alta Squadriglia"
+    # L/C: the conquest of prede and voli is verified with them (L/C art. 38).
+    ANZIANI = "ANZIANI", "Con i vecchi lupi o le coccinelle anziane"
     ALTRO = "ALTRO", "Altro"
 
 
@@ -239,11 +241,15 @@ class Obiettivo(Percorso):
 
 class Impegno(Percorso):
     """An impegno E/G (art. 32): concrete, verifiable, limited in time; with or without
-    a meta (V07), possibly serving several."""
+    a meta (V07), possibly serving several. Also an impegno R/S, and in L/C a preda or
+    a volo (art. 38), referred to the stagione instead of a deadline (spec §16.4)."""
 
     periodo = models.ForeignKey(PeriodoBranca, on_delete=models.CASCADE, related_name="impegni")
     criterio_verifica = models.TextField(blank=True)
     mete = models.ManyToManyField(Obiettivo, blank=True, related_name="impegni")
+    stagione = models.ForeignKey(
+        "Stagione", null=True, blank=True, on_delete=models.PROTECT, related_name="prede"
+    )
 
     class Meta(Percorso.Meta):
         verbose_name = "impegno"
@@ -295,6 +301,8 @@ class TipoCompetenza(models.TextChoices):
     SPECIALITA = "SPECIALITA", "Specialità"
     BREVETTO = "BREVETTO", "Brevetto di competenza"
     SPECIALITA_SQ = "SPECIALITA_SQ", "Specialità di squadriglia"
+    # L/C art. 41: tests agreed with the capi, never the E/G procedure (spec §17.4).
+    SPECIALITA_LC = "SPECIALITA_LC", "Specialità L/C"
 
 
 class StatoCompetenza(models.TextChoices):
@@ -610,3 +618,41 @@ class Conclusione(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.get_tipo_display()} di {self.periodo.persona}"
+
+
+# --- L/C: stagione di caccia o di volo (DEC-66, DEC-182…; spec §4.2, §17.5) ----------------
+
+
+class StatoStagione(models.TextChoices):
+    PREVISTA = "PREVISTA", "In programma"
+    APERTA = "APERTA", "Aperta"
+    CHIUSA = "CHIUSA", "Chiusa"
+    ANNULLATA = "ANNULLATA", "Annullata"
+
+
+class Stagione(ModelloTracciato):
+    """The common time of the branco or cerchio in which each child plays their prede
+    or voli: opened by a festive launch after the Promesse, about three or four months,
+    closed before the holidays (L/C art. 38). Closing it never conquers anything (V04):
+    what is still open is listed for the capi to look at again."""
+
+    unita = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.PROTECT, related_name="stagioni"
+    )
+    nome = models.CharField(max_length=120)
+    inizio_previsto = _data()
+    fine_prevista = _data()
+    stato = models.CharField(
+        max_length=10, choices=StatoStagione.choices, default=StatoStagione.PREVISTA
+    )
+    lancio = _data(null=True, blank=True)
+    chiusa_il = _data(null=True, blank=True)
+    creata_da = _utente()
+
+    class Meta:
+        verbose_name = "stagione di caccia o di volo"
+        verbose_name_plural = "stagioni di caccia o di volo"
+        ordering = ["-inizio_previsto"]
+
+    def __str__(self) -> str:
+        return self.nome

@@ -20,7 +20,14 @@ from apps.anagrafica.models import (
     RuoloAppartenenza,
     VisibilitaGenitori,
 )
-from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia, TipoUnita, Unita
+from apps.organizzazione.models import (
+    Branca,
+    Incarico,
+    RuoloIncarico,
+    Squadriglia,
+    TipoUnita,
+    Unita,
+)
 
 
 class LivelloAccesso(StrEnum):
@@ -440,6 +447,13 @@ def puo_nominare(
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
         return squadriglia is not None and e_staff(user, squadriglia.unita)  # DEC-14
+    if ruolo == RuoloIncarico.CONSIGLIO_ANZIANI:
+        return (
+            unita is not None
+            and unita.branca == Branca.LC
+            and not e_capo_in_attesa(user)
+            and e_staff(user, unita)
+        )  # DEC-182
     return False
 
 
@@ -1092,6 +1106,12 @@ def puo_gestire_reparto_progressione(user, reparto: Unita) -> bool:
     """Imprese, posti d'azione and specialità di squadriglia: the reparto staff
     (DEC-09, DEC-65)."""
     return not e_capo_in_attesa(user) and e_staff(user, reparto)
+
+
+def puo_gestire_unita_progressione(user, unita: Unita) -> bool:
+    """The common tools of a unit's progression, such as the L/C stagione di caccia o di
+    volo (DEC-66, DEC-183): its staff (DEC-09)."""
+    return puo_gestire_reparto_progressione(user, unita)
 
 
 def puo_gestire_passaggi(user, unita: Unita) -> bool:

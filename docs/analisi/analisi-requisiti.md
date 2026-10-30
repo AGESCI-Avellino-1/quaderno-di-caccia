@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 30, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 31, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -206,6 +206,10 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-179 | In R/S obiettivi e impegni li propone anche il rover o la scolta, come in E/G: restano bozze finché lo staff non li concorda, e la verifica la può chiedere lui o lei. Obiettivi R/S e mete E/G sono lo stesso oggetto, chiamato secondo la branca. | DEC-15, DEC-61, DEC-67, PP, 30/10 |
 | DEC-180 | La parte riservata del Punto della Strada (situazioni affrontate con i capi e l'assistente ecclesiastico) la vedono solo il rover o la scolta e i capi, non i genitori, anche se minorenne; la sintesi segue le regole di sempre. Resta fuori dallo storico delle modifiche. | DEC-16, DEC-26, DEC-67, PP V15, 30/10 |
 | DEC-181 | La conclusione del percorso R/S (Partenza, saluto fraterno, interruzione, trasferimento) chiude solo il periodo nella Progressione; l'appartenenza al clan la chiude BuonaStrada all'importazione. | DEC-02, DEC-67, 30/10 |
+| DEC-182 | Il Consiglio degli Anziani è un incarico nell'unità L/C, con date: lo assegna lo staff del branco o del cerchio a un suo lupetto o coccinella; finisce quando il bambino lascia l'unità. | DEC-66, 30/10 |
+| DEC-183 | In L/C lo staff riconosce il momento (lupo della legge, coccinella del prato…) dopo almeno una preda o un volo conquistato in quel momento; la storia di chi c'era già si registra anche senza, dichiarandolo. Il distintivo si consegna dopo il riconoscimento. Prede e voli si riferiscono alla stagione di caccia o di volo dell'unità (in programma, aperta con il lancio, chiusa, annullata prima del lancio); la chiusura non conquista nulla e mostra cosa resta da rileggere. | DEC-66, PP V04, V05, 30/10 |
+| DEC-184 | Le Piccole Orme si riconoscono da un segno sull'evento BuonaCaccia; iscrivendo un bambino l'app avvisa, senza bloccare, se le ha già fatte, se non è nel momento della responsabilità o se l'evento dura meno di tre giorni. La partecipazione compare nella pista. | DEC-68, PP V11, 30/10 |
+| DEC-185 | Nomi di momenti, prede e voli: giungla nel branco, bosco nel cerchio; nel branco/cerchio misto secondo il bambino (lupetti giungla, coccinelle bosco); nomi generici se il sesso non è indicato. | DEC-66, DEC-72, 30/10 |
 
 ## Eventi e presenze
 

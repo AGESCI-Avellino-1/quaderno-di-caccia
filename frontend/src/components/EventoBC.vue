@@ -115,6 +115,7 @@ const io = () => sessione.profilo?.persona?.id
     <p v-if="dettaglio.formazione_capi" class="small">
       <strong>Formazione capi</strong> · {{ dettaglio.tipo_campo_nome }}
     </p>
+    <p v-if="dettaglio.piccole_orme" class="small"><strong>Piccole Orme</strong></p>
 
     <!-- Event form -->
     <section v-if="dettaglio.iscrizioni.length || dettaglio.puo_gestire" class="mb-5">

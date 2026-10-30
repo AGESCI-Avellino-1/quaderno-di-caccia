@@ -1088,6 +1088,7 @@ export interface EventoBCIn {
   luogo: string
   descrizione: string
   formazione_capi: boolean
+  piccole_orme: boolean
   tipo_campo: TipoCampoFormazione | null
   specifica: string
 }
@@ -1099,6 +1100,7 @@ export interface EventoBCTrovato {
   fine: string
   luogo: string
   formazione_capi: boolean
+  piccole_orme: boolean
 }
 
 export interface QuotaIscrizioneBC {
@@ -1142,6 +1144,8 @@ export interface IscrizioneBC {
   foto: boolean
   /** Capi only. */
   presentazione: string | null
+  // Piccole Orme: what does not fit (lived before, not in Responsabilità, too short).
+  avvisi: string[]
   scheda_inviata_il: string | null
   pagata_il: string | null
   quota: QuotaIscrizioneBC | null
@@ -1182,6 +1186,7 @@ export interface DettaglioBC {
   descrizione: string
   annullato: boolean
   formazione_capi: boolean
+  piccole_orme: boolean
   tipo_campo: TipoCampoFormazione | ''
   tipo_campo_nome: string
   specifica: string
@@ -1278,6 +1283,38 @@ export interface MetaEG extends PercorsoPersonale {
 export interface ImpegnoEG extends PercorsoPersonale {
   criterio_verifica: string
   mete: number[]
+  // L/C: the stagione of a preda or volo.
+  stagione_id: number | null
+  stagione: string
+}
+
+export type StatoStagione = 'PREVISTA' | 'APERTA' | 'CHIUSA' | 'ANNULLATA'
+
+/** A stagione di caccia o di volo of a branco or cerchio (DEC-66, DEC-183). */
+export interface Stagione {
+  id: number
+  nome: string
+  stato: StatoStagione
+  stato_nome: string
+  inizio_previsto: string
+  fine_prevista: string
+  lancio: string | null
+  chiusa_il: string | null
+  prede: number
+  conquistate: number
+  da_rileggere: string[]
+}
+
+export interface StagioniUnita {
+  unita: string
+  stagioni: Stagione[]
+  puo_gestire: boolean
+}
+
+export interface StagioneIn {
+  nome: string
+  inizio_previsto: string
+  fine_prevista: string
 }
 
 export type TipoConclusione = 'PARTENZA' | 'SALUTO_FRATERNO' | 'INTERRUZIONE' | 'TRASFERIMENTO'
@@ -1372,7 +1409,7 @@ export interface PassaggioIn {
   persone: { persona_id: number; sintesi: string }[]
 }
 
-export type TipoCompetenza = 'SPECIALITA' | 'BREVETTO' | 'SPECIALITA_SQ'
+export type TipoCompetenza = 'SPECIALITA' | 'BREVETTO' | 'SPECIALITA_SQ' | 'SPECIALITA_LC'
 export type StatoCompetenza =
   'PROPOSTO' | 'IN_CORSO' | 'DA_VERIFICARE' | 'RICONOSCIUTO' | 'INTERROTTO'
 export type AzioneCompetenza =
@@ -1421,6 +1458,7 @@ export interface CataloghiPP {
   specialita: VoceCatalogo[]
   brevetti: VoceCatalogo[]
   specialita_squadriglia: VoceCatalogo[]
+  specialita_lc: VoceCatalogo[]
 }
 
 export type LivelloImpresa = 'REPARTO' | 'SQUADRIGLIA' | 'ALTA_SQ'
@@ -1467,6 +1505,10 @@ export interface SchedaProgressione {
   puo_proporre_verifica: boolean
   sedi: Scelta[]
   tipi_conclusione: Scelta[]
+  // L/C (DEC-66, DEC-184, DEC-185).
+  ambiente: 'GIUNGLA' | 'BOSCO' | null
+  stagioni: { id: number; nome: string; stato: StatoStagione }[]
+  piccole_orme: { evento: string; inizio: string; fine: string; stato: string }[]
 }
 
 export interface RagazzoSentiero {
@@ -1487,6 +1529,7 @@ export interface RagazzoSentiero {
 
 export interface SentieroUnita {
   unita: string
+  branca: string
   ragazzi: RagazzoSentiero[]
   puo_gestire: boolean
 }
@@ -2042,10 +2085,20 @@ export const api = {
     }),
   modificaPuntoStrada: (id: number, dati: PuntoStradaIn) =>
     richiesta<SchedaProgressione>(`/api/v1/punti-strada/${id}`, { metodo: 'PUT', corpo: dati }),
-  riconosciTappa: (tappa: number, quando: DataParziale) =>
+  riconosciTappa: (tappa: number, quando: DataParziale, storico = false) =>
     richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}/riconosci`, {
       metodo: 'POST',
-      corpo: quando,
+      corpo: { ...quando, storico },
+    }),
+  stagioni: (unita: number) => richiesta<StagioniUnita>(`/api/v1/unita/${unita}/stagioni`),
+  nuovaStagione: (unita: number, dati: StagioneIn) =>
+    richiesta<StagioniUnita>(`/api/v1/unita/${unita}/stagioni`, { metodo: 'POST', corpo: dati }),
+  modificaStagione: (id: number, dati: StagioneIn) =>
+    richiesta<StagioniUnita>(`/api/v1/stagioni/${id}`, { metodo: 'PUT', corpo: dati }),
+  passoStagione: (id: number, azione: 'lancia' | 'chiudi' | 'annulla', il: string | null) =>
+    richiesta<StagioniUnita>(`/api/v1/stagioni/${id}/${azione}`, {
+      metodo: 'POST',
+      corpo: { il },
     }),
   collocaTappa: (
     tappa: number,

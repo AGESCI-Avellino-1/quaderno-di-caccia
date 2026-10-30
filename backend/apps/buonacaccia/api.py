@@ -145,6 +145,7 @@ class EventoBCIn(Schema):
     luogo: str = ""
     descrizione: str = ""
     formazione_capi: bool = False
+    piccole_orme: bool = False
     tipo_campo: TipoCampoFormazione | None = None
     specifica: str = ""
 
@@ -156,6 +157,7 @@ class EventoTrovato(Schema):
     fine: datetime
     luogo: str
     formazione_capi: bool
+    piccole_orme: bool
 
 
 def _eventi_trovati(elenco) -> list[dict]:
@@ -167,6 +169,7 @@ def _eventi_trovati(elenco) -> list[dict]:
             "fine": e.fine,
             "luogo": e.luogo,
             "formazione_capi": getattr(getattr(e, "buonacaccia", None), "formazione_capi", False),
+            "piccole_orme": getattr(getattr(e, "buonacaccia", None), "piccole_orme", False),
         }
         for e in elenco
     ]
@@ -188,6 +191,7 @@ def _compila(evento: Evento, dettagli: EventoBuonaCaccia, dati: EventoBCIn) -> N
     evento.luogo = dati.luogo.strip()
     evento.descrizione = dati.descrizione.strip()
     dettagli.formazione_capi = dati.formazione_capi
+    dettagli.piccole_orme = dati.piccole_orme and not dati.formazione_capi
     dettagli.tipo_campo = (dati.tipo_campo or "") if dati.formazione_capi else ""
     dettagli.specifica = dati.specifica.strip() if dettagli.tipo_campo else ""
 
@@ -272,6 +276,8 @@ class IscrizioneOut(Schema):
     risposte_mancanti: list[str]
     foto: bool
     presentazione: str | None  # None: capi only
+    # Piccole Orme: what does not fit (lived before, not in Responsabilità, too short).
+    avvisi: list[str]
     scheda_inviata_il: date | None
     pagata_il: date | None
     quota: QuotaIscrizione | None
@@ -335,6 +341,7 @@ def _iscrizione_out(user, i: IscrizioneBuonaCaccia) -> dict:
         "puo_rispondere": policy.puo_rispondere_scheda(user, persona),
         "puo_scrivere_scheda": policy.puo_scrivere_scheda(user, persona),
         "puo_togliere_quota": gestisce and servizi.puo_togliere_quota(i),
+        "avvisi": servizi.avvisi_piccole_orme(i) if gestisce else [],
     }
 
 
@@ -356,6 +363,7 @@ class DettaglioBC(Schema):
     descrizione: str
     annullato: bool
     formazione_capi: bool
+    piccole_orme: bool
     tipo_campo: str
     tipo_campo_nome: str
     specifica: str
@@ -414,6 +422,7 @@ def _dettaglio(request, evento: Evento) -> dict:
         "descrizione": evento.descrizione,
         "annullato": evento.annullato_il is not None,
         "formazione_capi": dettagli.formazione_capi,
+        "piccole_orme": dettagli.piccole_orme,
         "tipo_campo": dettagli.tipo_campo,
         "tipo_campo_nome": dettagli.tipo_campo_testo if dettagli.tipo_campo else "",
         "specifica": dettagli.specifica,

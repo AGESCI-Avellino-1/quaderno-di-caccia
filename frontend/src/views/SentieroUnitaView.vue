@@ -4,10 +4,11 @@ import { RouterLink } from 'vue-router'
 
 import { api, testoDataParziale, type SentieroUnita } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import StagioniLC from '@/components/StagioniLC.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
-// The reparto at a glance (DEC-72): who has impegni to verify or drafts to agree, in
+// The unit at a glance (DEC-72); for a branco or cerchio also its stagioni (DEC-183): who has impegni to verify or drafts to agree, in
 // alphabetical order, never ranked by "level" (DEC-71, spec §12.2). Cached for meetings
 // without network (DEC-95).
 const props = defineProps<{ id: number }>()
@@ -31,17 +32,29 @@ watch(
 <template>
   <section>
     <div class="d-flex flex-wrap align-items-baseline gap-3">
-      <h1 class="h4 mb-1">Sentiero del reparto</h1>
+      <h1 class="h4 mb-1">
+        {{
+          dati?.branca === 'LC'
+            ? 'Pista e sentiero'
+            : dati?.branca === 'RS'
+              ? 'Strada'
+              : 'Sentiero del reparto'
+        }}
+      </h1>
       <CopiaLocale :del="copiaDel" />
     </div>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <template v-if="dati">
       <p class="small fg-2">
-        {{ dati.unita }}. <RouterLink :to="`/unita/${props.id}`">Pagina dell'unità</RouterLink> ·
-        <RouterLink :to="`/unita/${props.id}/imprese`"
-          >Imprese e specialità di squadriglia</RouterLink
-        >
+        {{ dati.unita }}. <RouterLink :to="`/unita/${props.id}`">Pagina dell'unità</RouterLink>
+        <template v-if="dati.branca === 'EG'">
+          ·
+          <RouterLink :to="`/unita/${props.id}/imprese`"
+            >Imprese e specialità di squadriglia</RouterLink
+          >
+        </template>
       </p>
+      <StagioniLC v-if="dati.branca === 'LC'" :unita="props.id" />
       <p v-if="!dati.ragazzi.length" class="small">Nessun ragazzo nell'unità.</p>
       <ul v-else class="list-group">
         <li v-for="r in dati.ragazzi" :key="r.persona_id" class="list-group-item">
@@ -54,19 +67,25 @@ watch(
               <span v-if="r.sentiero_aperto" class="small">
                 {{ r.tappa }} dal {{ testoDataParziale(r.tappa_dal) }}
               </span>
-              <span v-else class="small fg-2">sentiero da aprire</span>
+              <span v-else class="small fg-2">percorso da aprire</span>
             </div>
             <div v-if="r.sentiero_aperto" class="small d-flex flex-wrap gap-3">
               <span v-if="!r.promessa">Promessa da registrare</span>
-              <span v-if="!r.distintivo">distintivo da consegnare</span>
+              <span v-if="!r.distintivo && dati.branca === 'EG'">distintivo da consegnare</span>
               <span v-if="r.impegni_da_verificare" class="badge theme-warning">
                 {{ r.impegni_da_verificare }} da verificare
               </span>
               <span v-if="r.bozze" class="badge theme-secondary">{{ r.bozze }} da concordare</span>
-              <span>
+              <span v-if="dati.branca === 'EG'">
                 {{ r.impegni_in_corso }} impegni in corso · {{ r.mete_aperte }} mete ·
                 {{ r.specialita }} specialità ·
                 {{ r.brevetto ? `brevetto ${r.brevetto}` : 'nessun brevetto' }}
+              </span>
+              <span v-else-if="dati.branca === 'LC'">
+                {{ r.impegni_in_corso }} prede o voli in corso · {{ r.specialita }} specialità
+              </span>
+              <span v-else>
+                {{ r.impegni_in_corso }} impegni in corso · {{ r.mete_aperte }} obiettivi
               </span>
             </div>
           </RouterLink>

@@ -611,3 +611,44 @@ def formazione_capi(anno: int) -> list[dict]:
         }
         for p in partecipazioni
     ]
+
+
+def avvisi_piccole_orme(iscrizione: IscrizioneBuonaCaccia) -> list[str]:
+    """Piccole Orme are lived once only, by who is in Responsabilità, for at least three
+    days (L/C art. 43, V11). The app points out what does not fit and never refuses:
+    the history may be incomplete (DEC-184)."""
+    from apps.progressione.models import Fase, Tappa
+
+    evento = iscrizione.partecipazione.evento
+    dettagli = getattr(evento, "buonacaccia", None)
+    if dettagli is None or not dettagli.piccole_orme:
+        return []
+    persona = iscrizione.partecipazione.persona
+    avvisi = []
+    prima = (
+        IscrizioneBuonaCaccia.objects.filter(
+            partecipazione__persona=persona,
+            partecipazione__evento__buonacaccia__piccole_orme=True,
+            stato__in=ATTIVE,
+        )
+        .exclude(pk=iscrizione.pk)
+        .select_related("partecipazione__evento")
+    )
+    for altra in prima:
+        altro = altra.partecipazione.evento
+        avvisi.append(
+            f"Risulta già iscritto alle Piccole Orme «{altro.titolo}» del "
+            f"{timezone.localtime(altro.inizio):%d/%m/%Y}: si vivono una sola volta."
+        )
+    tappa = Tappa.objects.filter(
+        periodo__persona=persona, periodo__data_fine__isnull=True, data_fine__isnull=True
+    ).first()
+    if tappa is not None and tappa.fase != Fase.RESPONSABILITA:
+        avvisi.append(
+            f"Nella pista è in {tappa.get_fase_display()}: le Piccole Orme sono per chi "
+            "vive la Responsabilità."
+        )
+    giorni = (timezone.localdate(evento.fine) - timezone.localdate(evento.inizio)).days + 1
+    if giorni < 3:
+        avvisi.append("L'evento dura meno di tre giorni: le Piccole Orme durano almeno tre.")
+    return avvisi

@@ -14,6 +14,7 @@ FILE = {
     TipoCompetenza.SPECIALITA: "specialita_eg.json",
     TipoCompetenza.BREVETTO: "brevetti_eg.json",
     TipoCompetenza.SPECIALITA_SQ: "specialita_squadriglia.json",
+    TipoCompetenza.SPECIALITA_LC: "specialita_lc.json",
 }
 
 

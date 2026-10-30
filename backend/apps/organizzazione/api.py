@@ -310,7 +310,12 @@ def dettaglio_unita(request, unita_id: int):
         and policy.puo_gestire_squadriglie(utente, unita),
         "nomina": _nomina(
             utente,
-            (RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF, RuoloIncarico.TESORIERE_UNITA),
+            (
+                RuoloIncarico.CAPO_UNITA,
+                RuoloIncarico.STAFF,
+                RuoloIncarico.TESORIERE_UNITA,
+                RuoloIncarico.CONSIGLIO_ANZIANI,
+            ),
             unita=unita,
         ),
     }

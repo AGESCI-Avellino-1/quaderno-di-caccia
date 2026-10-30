@@ -1316,3 +1316,31 @@ def puo_vedere_fascicolo_anno(user, persona: Persona) -> bool:
     if _capo_pieno(user):
         return True
     return _livello_personale(user, persona) in (LivelloAccesso.PROPRIO, LivelloAccesso.TUTORE)
+
+
+# --- The capi's file (DEC-47, DEC-134, DEC-206) ---------------------------------------------
+
+
+def e_capo_persona(persona: Persona) -> bool:
+    """Has been a capo of the group (a CAPO membership, today or before)."""
+    return Appartenenza.objects.filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exists()
+
+
+def puo_vedere_fascicolo_capo(user, persona: Persona) -> bool:
+    """The capo themself and the whole Co.Ca. (DEC-206)."""
+    if not e_capo_persona(persona):
+        return False
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return True
+    return _capo_pieno(user)
+
+
+def puo_modificare_fascicolo_capo(user, persona: Persona) -> bool:
+    """Rebuilt years and training: the capo or a capogruppo (DEC-134, DEC-207)."""
+    if not e_capo_persona(persona):
+        return False
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return True
+    return e_capogruppo(user) and not e_capo_in_attesa(user)

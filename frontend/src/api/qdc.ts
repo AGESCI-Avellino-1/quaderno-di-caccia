@@ -94,6 +94,8 @@ export interface PersonaDettaglio extends PersonaBreve {
   /** Profile photo (DEC-201): there is one the user may see; who may upload one. */
   foto?: boolean
   puo_caricare_foto?: boolean
+  /** The capi's file (DEC-47, DEC-206), when the person has been a capo. */
+  fascicolo_capo?: boolean
 }
 
 // --- Accounts and invitations (DEC-21, DEC-24, DEC-25) ---------------------------------
@@ -1370,6 +1372,54 @@ export interface FascicoloAnno {
   anni: { anno: number; etichetta: string }[]
 }
 
+/** The capi's file (DEC-47, DEC-134, DEC-206…DEC-208). */
+export interface FascicoloCapo {
+  persona_id: number
+  persona: string
+  livello_formazione: number | null
+  anno_ingresso_coca: number | null
+  numero_nomina: string
+  data_nomina: string | null
+  anni_di_servizio: number
+  anni: {
+    anno: number
+    etichetta: string
+    ruoli: string[]
+    in_coca: boolean
+    ricostruiti: { id: number; testo: string }[]
+  }[]
+  formazione: {
+    id: number | null
+    tipo: string
+    tipo_nome: string
+    specifica: string
+    data: string
+    precisione: Precisione
+    luogo: string
+    note: string
+    da_buonacaccia: boolean
+  }[]
+  puo_modificare: boolean
+  tipi_formazione: Scelta[]
+  ruoli_passati: Scelta[]
+}
+
+export interface ServizioPassatoIn {
+  anno: number
+  unita_testo: string
+  ruolo: string
+  note: string
+}
+
+export interface FormazioneIn {
+  tipo: string
+  specifica: string
+  data: string
+  precisione: Precisione
+  luogo: string
+  note: string
+}
+
 export const fotoProfilo = (persona: number) => `/api/v1/persone/${persona}/foto`
 export const fascicoloAnnoPdf = (persona: number, anno: number) =>
   `/api/v1/persone/${persona}/fascicolo-anno.pdf?anno=${anno}`
@@ -2199,6 +2249,24 @@ export const api = {
     }),
   togliAllegatoPP: (id: number) =>
     richiesta<SchedaProgressione>(allegatoPP(id), { metodo: 'DELETE' }),
+  fascicoloCapo: (persona: number) =>
+    richiesta<FascicoloCapo>(`/api/v1/persone/${persona}/fascicolo-capo`),
+  nuovoServizioPassato: (persona: number, dati: ServizioPassatoIn) =>
+    richiesta<FascicoloCapo>(`/api/v1/persone/${persona}/fascicolo-capo/servizi`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  togliServizioPassato: (id: number) =>
+    richiesta<FascicoloCapo>(`/api/v1/servizi-passati/${id}`, { metodo: 'DELETE' }),
+  nuovaFormazione: (persona: number, dati: FormazioneIn) =>
+    richiesta<FascicoloCapo>(`/api/v1/persone/${persona}/fascicolo-capo/formazione`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  modificaFormazione: (id: number, dati: FormazioneIn) =>
+    richiesta<FascicoloCapo>(`/api/v1/formazione-capi/${id}`, { metodo: 'PUT', corpo: dati }),
+  togliFormazione: (id: number) =>
+    richiesta<FascicoloCapo>(`/api/v1/formazione-capi/${id}`, { metodo: 'DELETE' }),
   fascicoloAnno: (persona: number, anno?: number) =>
     richiesta<FascicoloAnno>(
       `/api/v1/persone/${persona}/fascicolo-anno${anno ? `?anno=${anno}` : ''}`,

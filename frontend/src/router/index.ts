@@ -173,6 +173,13 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // The capi's file: the capo and the whole Co.Ca. (DEC-206, the API decides).
+      path: '/persone/:id(\\d+)/fascicolo-capo',
+      name: 'fascicolo-capo',
+      component: () => import('@/views/FascicoloCapoView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // The file of a year: capi, the person, the parents; each section as allowed
       // (DEC-38, the API decides).
       path: '/persone/:id(\\d+)/fascicolo-anno',

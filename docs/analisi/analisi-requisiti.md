@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 35, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 36, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -230,6 +230,9 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-203 | Il fascicolo del ragazzo è una pagina per anno associativo, stampabile in PDF, con le sezioni di DEC-38; ciascuno vede solo le sezioni che può vedere. «Autorizzazioni» raccoglie i consensi di BuonaStrada, la firma della scheda sanitaria e lo stato delle liberatorie (date ed esito, senza file). | DEC-38, 30/10 |
 | DEC-204 | Il report per i passaggi è un PDF per ragazzo con il percorso nella branca, la sintesi per i nuovi capi e le presenze di quegli anni; non contiene note né regole sul rapporto con il minore. Lo leggono i capi. | DEC-41, PP §11.2, 30/10 |
 | DEC-205 | La foto profilo si ritaglia sul telefono, in un riquadro intorno alla persona: si carica solo quel riquadro, così le altre persone di una foto di gruppo non escono dal telefono. | DEC-201, 30/10 |
+| DEC-206 | Il fascicolo di un capo (anni di servizio con unità e ruoli, dati di BuonaStrada su livello di formazione, ingresso in Co.Ca. e nomina, formazione) lo vede il capo stesso e tutta la Co.Ca. | DEC-47, 30/10 |
+| DEC-207 | Gli anni di servizio da quando c'è l'app si ricavano dagli incarichi; quelli precedenti li aggiungono a mano, anno per anno, il capo o un capogruppo, e restano segnati come ricostruiti. | DEC-46, DEC-47, 30/10 |
+| DEC-208 | Ogni voce di formazione inserita a mano ha tipo (come i campi BuonaCaccia: CFT, CFM, CFA, CCG, modulo formativo, altro con descrizione), data anche solo con l'anno, luogo e note; i campi di formazione segnati come eventi BuonaCaccia compaiono da soli (quelli futuri come «in programma»); il livello resta quello di BuonaStrada. | DEC-134, DEC-164, DEC-170, 30/10 |
 
 ## Eventi e presenze
 

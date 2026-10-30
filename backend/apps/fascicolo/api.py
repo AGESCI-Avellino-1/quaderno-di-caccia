@@ -1,15 +1,21 @@
-"""The file of a year (DEC-38, DEC-203) and the passage report (DEC-41, DEC-204)."""
+"""The file of a year (DEC-38, DEC-203), the passage report (DEC-41, DEC-204) and the
+capi's file (DEC-47, DEC-206…DEC-208)."""
 
+from datetime import date
+
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from ninja import Router, Schema
+from django.utils import timezone
+from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
 from apps.core.anno import AnnoAssociativo
+from apps.core.date_parziali import PrecisioneData
 from apps.permessi import policy
 
-from . import servizi, stampa
+from . import capi, servizi, stampa
 
 router = Router(tags=["fascicolo"])
 
@@ -104,3 +110,200 @@ def report_passaggio(request, passaggio_id: int, persona_id: int):
     )
     dati = servizi.report_passaggio(request, riga)
     return _pdf(dati, riga.persona, False, f"passaggio-{passaggio_id}-{persona_id}.pdf")
+
+
+# --- The capi's file (DEC-47, DEC-134, DEC-206…DEC-208) --------------------------------------
+
+
+class RicostruitoOut(Schema):
+    id: int
+    testo: str
+
+
+class AnnoServizio(Schema):
+    anno: int
+    etichetta: str
+    ruoli: list[str]
+    in_coca: bool
+    ricostruiti: list[RicostruitoOut]
+
+
+class FormazioneOut(Schema):
+    id: int | None
+    tipo: str
+    tipo_nome: str
+    specifica: str
+    data: date
+    precisione: str
+    luogo: str
+    note: str
+    # A capi training camp recorded as a BuonaCaccia event: not changed here.
+    da_buonacaccia: bool
+
+
+class FascicoloCapo(Schema):
+    persona_id: int
+    persona: str
+    livello_formazione: int | None
+    anno_ingresso_coca: int | None
+    numero_nomina: str
+    data_nomina: date | None
+    anni_di_servizio: int
+    anni: list[AnnoServizio]
+    formazione: list[FormazioneOut]
+    puo_modificare: bool
+    tipi_formazione: list[dict]
+    ruoli_passati: list[dict]
+
+
+def _capo(request, persona_id: int) -> Persona:
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_vedere_fascicolo_capo(request.auth, persona):
+        raise HttpError(404, "Persona non trovata.")
+    return persona
+
+
+def _fascicolo_capo(request, persona: Persona) -> dict:
+    from apps.buonacaccia.models import TipoCampoFormazione
+
+    from .models import RuoloPassato
+
+    return capi.fascicolo(persona) | {
+        "puo_modificare": policy.puo_modificare_fascicolo_capo(request.auth, persona),
+        "tipi_formazione": [{"valore": v, "etichetta": e} for v, e in TipoCampoFormazione.choices],
+        "ruoli_passati": [{"valore": v, "etichetta": e} for v, e in RuoloPassato.choices],
+    }
+
+
+def _modificabile(request, persona_id: int) -> Persona:
+    persona = _capo(request, persona_id)
+    if not policy.puo_modificare_fascicolo_capo(request.auth, persona):
+        raise HttpError(403, "Lo aggiornano il capo stesso o un capogruppo.")
+    return persona
+
+
+def _salva(oggetto) -> None:
+    try:
+        oggetto.full_clean()
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    oggetto.save()
+
+
+@router.get("/persone/{persona_id}/fascicolo-capo", response=FascicoloCapo)
+def fascicolo_capo(request, persona_id: int):
+    return _fascicolo_capo(request, _capo(request, persona_id))
+
+
+class ServizioIn(Schema):
+    anno: int
+    unita_id: int | None = None
+    unita_testo: str = ""
+    ruolo: str
+    note: str = ""
+
+
+@router.post("/persone/{persona_id}/fascicolo-capo/servizi", response={201: FascicoloCapo})
+def nuovo_servizio(request, persona_id: int, dati: ServizioIn):
+    """A year before the app, rebuilt by hand (DEC-207)."""
+    from .models import ServizioPassato
+
+    persona = _modificabile(request, persona_id)
+    if not 1950 < dati.anno <= AnnoAssociativo.corrente().anno_fine:
+        raise HttpError(400, "Anno non valido.")
+    if (
+        not dati.unita_id
+        and not dati.unita_testo.strip()
+        and dati.ruolo
+        not in (
+            "CAPOGRUPPO",
+            "A_DISPOSIZIONE",
+        )
+    ):
+        raise HttpError(400, "Indica l'unità.")
+    _salva(
+        ServizioPassato(
+            persona=persona,
+            anno=dati.anno,
+            unita_id=dati.unita_id,
+            unita_testo=dati.unita_testo.strip()[:120],
+            ruolo=dati.ruolo,
+            note=dati.note.strip()[:300],
+            registrato_da=request.auth,
+        )
+    )
+    return Status(201, _fascicolo_capo(request, persona))
+
+
+@router.delete("/servizi-passati/{servizio_id}", response=FascicoloCapo)
+def togli_servizio(request, servizio_id: int):
+    from .models import ServizioPassato
+
+    servizio = get_object_or_404(ServizioPassato, pk=servizio_id)
+    persona = _modificabile(request, servizio.persona_id)
+    servizio.delete()
+    return _fascicolo_capo(request, persona)
+
+
+class FormazioneIn(Schema):
+    tipo: str
+    specifica: str = ""
+    data: date
+    precisione: PrecisioneData = PrecisioneData.GIORNO
+    luogo: str = ""
+    note: str = ""
+
+
+def _compila(formazione, dati: FormazioneIn) -> None:
+    from apps.core.date_parziali import DataParziale
+
+    valore = dati.data
+    if dati.precisione == PrecisioneData.MESE:
+        valore = valore.replace(day=1)
+    elif dati.precisione == PrecisioneData.ANNO:
+        valore = valore.replace(month=1, day=1)
+    try:
+        DataParziale(valore, dati.precisione)
+    except ValueError as errore:
+        raise HttpError(400, "Data non valida.") from errore
+    if valore > timezone.localdate():
+        raise HttpError(400, "La data non può essere nel futuro.")
+    formazione.tipo = dati.tipo
+    formazione.specifica = dati.specifica.strip()[:160]
+    formazione.data = valore
+    formazione.precisione = dati.precisione
+    formazione.luogo = dati.luogo.strip()[:120]
+    formazione.note = dati.note.strip()[:300]
+
+
+@router.post("/persone/{persona_id}/fascicolo-capo/formazione", response={201: FascicoloCapo})
+def nuova_formazione(request, persona_id: int, dati: FormazioneIn):
+    """Entered by the capo or a capogruppo (DEC-134, DEC-208)."""
+    from .models import Formazione
+
+    persona = _modificabile(request, persona_id)
+    voce = Formazione(persona=persona, registrata_da=request.auth)
+    _compila(voce, dati)
+    _salva(voce)
+    return Status(201, _fascicolo_capo(request, persona))
+
+
+@router.put("/formazione-capi/{voce_id}", response=FascicoloCapo)
+def modifica_formazione(request, voce_id: int, dati: FormazioneIn):
+    from .models import Formazione
+
+    voce = get_object_or_404(Formazione, pk=voce_id)
+    persona = _modificabile(request, voce.persona_id)
+    _compila(voce, dati)
+    _salva(voce)
+    return _fascicolo_capo(request, persona)
+
+
+@router.delete("/formazione-capi/{voce_id}", response=FascicoloCapo)
+def togli_formazione(request, voce_id: int):
+    from .models import Formazione
+
+    voce = get_object_or_404(Formazione, pk=voce_id)
+    persona = _modificabile(request, voce.persona_id)
+    voce.delete()
+    return _fascicolo_capo(request, persona)

@@ -28,6 +28,7 @@ from apps.anagrafica.models import (
 from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
 from apps.buonacaccia.models import IscrizioneBuonaCaccia, QuotaFormazione
 from apps.dispositivi.models import Dispositivo
+from apps.fascicolo.models import Formazione, ServizioPassato
 from apps.iscrizioni.models import RichiestaIscrizione
 from apps.note.models import Nota, RegoleRapporto
 from apps.organizzazione.models import Incarico
@@ -182,6 +183,19 @@ def fascicolo(persona: Persona) -> dict:
         "regole_sul_rapporto_con_il_minore": (
             persona.regole_rapporto.testo if hasattr(persona, "regole_rapporto") else ""
         ),
+        "servizio_ricostruito": [
+            {"Anno": s.anno, "Ruolo": s.get_ruolo_display(), "Unità": str(s.unita or s.unita_testo)}
+            for s in ServizioPassato.objects.filter(persona=persona).select_related("unita")
+        ],
+        "formazione_capi": [
+            {
+                "Tipo": f.get_tipo_display(),
+                "Titolo": f.specifica,
+                "Data": come_testo(f.data),
+                "Luogo": f.luogo,
+            }
+            for f in Formazione.objects.filter(persona=persona)
+        ],
         "foto_profilo": [_giorno(f.creato_il) for f in FotoProfilo.objects.filter(persona=persona)],
         "reperibilita_per_evento": [
             {"Evento": r.evento.titolo, "Chi": r.nome, "Telefono": r.telefono}
@@ -494,6 +508,7 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Correzioni ai dati di BuonaStrada",
         "Note di staff e del capo squadriglia, regole sul rapporto con il minore",
         "Foto profilo, anche quelle precedenti, e allegati alla Progressione",
+        "Anni di servizio ricostruiti e formazione inseriti a mano",
         "Account, dispositivi e inviti",
         "Iscrizioni dall'app e moduli firmati caricati",
         "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
@@ -532,7 +547,7 @@ def cancella(persona: Persona) -> dict:
         for f in foto:
             f.file.delete(save=False)
             f.delete()
-        for modello in (Nota, RegoleRapporto):
+        for modello in (Nota, RegoleRapporto, ServizioPassato, Formazione):
             oggetti = list(modello.objects.filter(persona=persona))
             _cancella_storico(oggetti)
             for oggetto in oggetti:

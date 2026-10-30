@@ -85,6 +85,12 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             Fascicolo dell'anno
           </RouterLink>
         </template>
+        <template v-if="persona.fascicolo_capo">
+          ·
+          <RouterLink :to="{ name: 'fascicolo-capo', params: { id: persona.id } }">
+            Servizio e formazione
+          </RouterLink>
+        </template>
       </p>
       <FotoProfilo v-if="online" :persona="persona" @cambiata="(nuova) => (persona = nuova)" />
       <CopiaLocale :del="copiaDel" />

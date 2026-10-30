@@ -62,6 +62,7 @@ function iscrizione(altro: Partial<IscrizioneBC> = {}): IscrizioneBC {
     quota: null,
     puo_gestire: false,
     puo_rispondere: true,
+    puo_scrivere_scheda: true,
     puo_togliere_quota: false,
     ...altro,
   }

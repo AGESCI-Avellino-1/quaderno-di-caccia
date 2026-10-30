@@ -373,7 +373,7 @@ const scaduta = computed(
       <RisposteSchedaBC
         :iscrizione="i"
         :scheda="scheda"
-        :modifica="i.puo_rispondere"
+        :modifica="i.puo_scrivere_scheda"
         @cambiata="emit('cambiata', $event)"
       />
       <template v-if="i.puo_gestire">

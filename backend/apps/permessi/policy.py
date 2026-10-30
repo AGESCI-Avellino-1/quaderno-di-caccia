@@ -938,6 +938,13 @@ def puo_rispondere_scheda(user, persona: Persona) -> bool:
     return _livello_personale(user, persona) in {LivelloAccesso.PROPRIO, LivelloAccesso.TUTORE}
 
 
+def puo_scrivere_scheda(user, persona: Persona) -> bool:
+    """Answers and photo: the family (puo_rispondere_scheda) and who manages the
+    registration, e.g. copying a paper form for a family that does not use the app
+    (maintainer, 30/10/2026)."""
+    return puo_rispondere_scheda(user, persona) or puo_gestire_iscrizione_buonacaccia(user, persona)
+
+
 def vede_presentazione_buonacaccia(user) -> bool:
     """The staff's presentation of the participant: capi only (DEC-144, DEC-161)."""
     return e_capo_censito(user)

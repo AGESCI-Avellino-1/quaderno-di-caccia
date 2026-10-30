@@ -11,7 +11,7 @@ import {
 import { useErrore } from '@/composables/useErrore'
 
 // The event form on BuonaCaccia, answered in the app by the participant or a parent
-// (DEC-161); the photo becomes a JPEG of at most 1 MB on the server (DEC-162). Saved also
+// (DEC-161), or written by who manages the registration from a paper form; the photo becomes a JPEG of at most 1 MB on the server (DEC-162). Saved also
 // when incomplete; closed once the staff filled it in on BuonaCaccia. Online only: the
 // answers and the photo are personal data that do not need to wait offline.
 const props = defineProps<{ iscrizione: IscrizioneBC; scheda: VersioneScheda; modifica: boolean }>()

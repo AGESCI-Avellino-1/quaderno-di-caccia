@@ -1119,7 +1119,10 @@ export interface IscrizioneBC {
   pagata_il: string | null
   quota: QuotaIscrizioneBC | null
   puo_gestire: boolean
+  /** The family: release form, answers. */
   puo_rispondere: boolean
+  /** Answers and photo: the family or who manages the registration. */
+  puo_scrivere_scheda: boolean
   puo_togliere_quota: boolean
 }
 

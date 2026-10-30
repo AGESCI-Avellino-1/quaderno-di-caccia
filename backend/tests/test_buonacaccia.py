@@ -113,6 +113,11 @@ def test_chi_gestisce_e_chi_vede_l_iscrizione(
     assert risponde(genitore.utente, ragazza) and risponde(ragazza.utente, ragazza)
     for nessuno in (capo, altro_capo, csq, estraneo):
         assert not risponde(nessuno.utente, ragazza)
+    scrive = policy.puo_scrivere_scheda
+    for chi in (capo, capogruppo, genitore, ragazza):
+        assert scrive(chi.utente, ragazza)
+    for nessuno in (altro_capo, csq, estraneo):
+        assert not scrive(nessuno.utente, ragazza)
     assert policy.vede_presentazione_buonacaccia(altro_capo.utente)
     assert not policy.vede_presentazione_buonacaccia(genitore.utente)
 
@@ -450,7 +455,7 @@ def _foto_grande() -> SimpleUploadedFile:
     return SimpleUploadedFile("IMG_0001.png", buffer.getvalue())
 
 
-def test_la_famiglia_risponde_e_lo_staff_ricopia(capo, genitore, ragazza, piccole_orme):
+def test_la_famiglia_risponde_e_lo_staff_ricopia(capo, altro_capo, genitore, ragazza, piccole_orme):
     scheda = _scheda(capo, piccole_orme)
     taglia, perche, nuoto, _foto = (d["id"] for d in scheda["ultima"]["domande"])
     iscrizione = _iscrivi(capo, piccole_orme, ragazza)
@@ -460,7 +465,9 @@ def test_la_famiglia_risponde_e_lo_staff_ricopia(capo, genitore, ragazza, piccol
     )
     risposta = _json(ragazza, "put", f"{url}/risposte", {"risposte": {taglia: "M", nuoto: True}})
     assert risposta.json()["risposte_mancanti"] == ["Perché vuoi partecipare?", "Una tua foto"]
-    assert _json(capo, "put", f"{url}/risposte", {"risposte": {}}).status_code == 403
+    # Who manages the registration may write them too (a paper form); another capo not.
+    assert _json(capo, "put", f"{url}/risposte", {"risposte": {taglia: "M"}}).status_code == 200
+    assert _json(altro_capo, "put", f"{url}/risposte", {"risposte": {}}).status_code == 403
     # The photo becomes a JPEG of at most 1 MB.
     risposta = _client(genitore).post(f"{url}/foto", {"file": _foto_grande()})
     assert risposta.status_code == 200, risposta.content

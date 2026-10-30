@@ -276,7 +276,8 @@ class IscrizioneOut(Schema):
     pagata_il: date | None
     quota: QuotaIscrizione | None
     puo_gestire: bool
-    puo_rispondere: bool
+    puo_rispondere: bool  # the family: release form, answers
+    puo_scrivere_scheda: bool  # answers and photo: the family or who manages it
     puo_togliere_quota: bool
 
 
@@ -332,6 +333,7 @@ def _iscrizione_out(user, i: IscrizioneBuonaCaccia) -> dict:
         "quota": _quota_out(i.quota),
         "puo_gestire": gestisce,
         "puo_rispondere": policy.puo_rispondere_scheda(user, persona),
+        "puo_scrivere_scheda": policy.puo_scrivere_scheda(user, persona),
         "puo_togliere_quota": gestisce and servizi.puo_togliere_quota(i),
     }
 
@@ -679,8 +681,10 @@ class RisposteIn(Schema):
 
 
 def _famiglia(request, iscrizione: IscrizioneBuonaCaccia) -> None:
-    if not policy.puo_rispondere_scheda(request.auth, iscrizione.partecipazione.persona):
-        raise HttpError(403, "Alla scheda rispondono il ragazzo o i suoi genitori.")
+    if not policy.puo_scrivere_scheda(request.auth, iscrizione.partecipazione.persona):
+        raise HttpError(
+            403, "Alla scheda rispondono il ragazzo, i genitori o chi gestisce l'iscrizione."
+        )
 
 
 @router.put("/buonacaccia/iscrizioni/{iscrizione_id}/risposte", response=IscrizioneOut)

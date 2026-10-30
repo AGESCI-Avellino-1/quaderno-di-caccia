@@ -1,11 +1,11 @@
 """Emails about BuonaCaccia registrations. They carry deadlines the family and the staff
 must meet for a registration already made, so they are always sent, like the
-registration from the app (not an optional kind of DEC-157) [da verificare].
+registration from the app (not an optional kind of DEC-157; maintainer, 30/10/2026).
 
-- to the family: the registration, the release form to sign, reminders before its
-  deadline (DEC-160);
-- to the staff: reminders before the 9-day deadline and the last day to cancel without
-  losing the fee (DEC-158).
+- to the family: the registration as soon as the staff records it, the release form to
+  sign, reminders before its deadline (DEC-160);
+- to the whole staff of the member's unit (the capigruppo when it has none): reminders
+  before the 9-day deadline and the last day to cancel without losing the fee (DEC-158).
 
 Reminders go 2 days before and on the day (maintainer, 30/10/2026), each once.
 """

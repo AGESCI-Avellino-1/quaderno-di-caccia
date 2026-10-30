@@ -316,9 +316,11 @@ implements them:
   capi reads of release forms logged as `MODULI`. The photo becomes a JPEG ≤ 1 MB with
   Pillow, metadata dropped. Fees: `CategoriaQuota.BUONACACCIA`, one `Quota` per
   registration, no family discount, never issued by `emetti` nor reminded by
-  `promemoria_quote` (maintainer, 30/10: the app only shows them unpaid). Reminders 2
-  days before and on the day, always sent (`[da verificare]` whether they should be an
-  optional kind of DEC-157): `manage.py promemoria_buonacaccia` (cron). Adults: only a
+  `promemoria_quote` (maintainer, 30/10: the app only shows them unpaid). Emails to the
+  family at registration and reminders 2 days before and on the day, to the family and
+  to the whole unit staff, always sent, not an optional kind of DEC-157 (maintainer,
+  30/10): `manage.py promemoria_buonacaccia` (cron). The family answers the event form;
+  who manages the registration may also write answers and photo (paper forms). Adults: only a
   `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp given by
   the maintainer, 30/10).
 - Device revocation and idempotency work with the browser session only; the store app

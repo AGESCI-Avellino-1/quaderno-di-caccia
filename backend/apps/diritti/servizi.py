@@ -30,7 +30,7 @@ from apps.iscrizioni.models import RichiestaIscrizione
 from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
 from apps.quote.models import Quota
-from apps.sanitaria.models import InformazioniSanitarie
+from apps.sanitaria.models import InformazioniSanitarie, ReperibilitaEvento
 
 from .models import RichiestaDiritti
 
@@ -145,12 +145,29 @@ def fascicolo(persona: Persona) -> dict:
                     }
                     for f in sanitarie.farmaci.all()
                 ],
+                "Tessera sanitaria": sanitarie.tessera_sanitaria,
+                "Reperibilità per emergenze": " ".join(
+                    x for x in (sanitarie.reperibilita_nome, sanitarie.reperibilita_telefono) if x
+                ),
+                "Vaccinazione antitetanica": {True: "sì", False: "no"}.get(
+                    sanitarie.antitetanica, "non indicata"
+                ),
+                "Ulteriori note sanitarie": sanitarie.note_sanitarie,
+                "Gruppo sanguigno": sanitarie.gruppo_sanguigno,
+                "Medico curante": sanitarie.medico_curante,
+                "Altre vaccinazioni": sanitarie.altre_vaccinazioni,
+                "Modulo firmato il": come_testo(sanitarie.firmata_il),
+                "Prescrizione consegnata il": come_testo(sanitarie.prescrizione_consegnata_il),
                 "Inserite da": sanitarie.get_inserite_da_display(),
                 "Aggiornate il": _giorno(sanitarie.aggiornato_il),
             }
             if sanitarie
             else None
         ),
+        "reperibilita_per_evento": [
+            {"Evento": r.evento.titolo, "Chi": r.nome, "Telefono": r.telefono}
+            for r in ReperibilitaEvento.objects.filter(persona=persona).select_related("evento")
+        ],
         "eccezioni_squadriglia": [
             {
                 "Reparto": str(d.reparto),
@@ -477,6 +494,10 @@ def cancella(persona: Persona) -> dict:
         if sanitarie is not None:
             _cancella_storico([*sanitarie.allergie.all(), *sanitarie.farmaci.all(), sanitarie])
             sanitarie.delete()
+        reperibilita = list(ReperibilitaEvento.objects.filter(persona=persona))
+        _cancella_storico(reperibilita)
+        for r in reperibilita:
+            r.delete()
         for modello in (
             DerogaSquadriglia,
             CorrezioneAnagrafica,

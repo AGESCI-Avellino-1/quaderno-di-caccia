@@ -14,7 +14,8 @@ import { useErrore } from '@/composables/useErrore'
 import { leggiConCache, salvaInCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
 
-// Parents, the adult member, or a capo transcribing the signed paper form (DEC-50, DEC-55).
+// Parents, the adult member, or a capo transcribing the signed paper form (DEC-50, DEC-55):
+// the whole AGESCI form and the optional fields (DEC-48, DEC-49).
 const props = defineProps<{ id: number }>()
 const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
@@ -28,7 +29,24 @@ const modulo = reactive<SanitarieIn>({
   esigenze_alimentari: '',
   allergie: [],
   farmaci: [],
+  tessera_sanitaria: '',
+  reperibilita_nome: '',
+  reperibilita_telefono: '',
+  antitetanica: null,
+  note_sanitarie: '',
+  gruppo_sanguigno: '',
+  medico_curante: '',
+  altre_vaccinazioni: '',
 })
+const CAMPI_TESTO = [
+  'tessera_sanitaria',
+  'reperibilita_nome',
+  'reperibilita_telefono',
+  'note_sanitarie',
+  'gruppo_sanguigno',
+  'medico_curante',
+  'altre_vaccinazioni',
+] as const
 
 onMounted(async () => {
   const [persona, sanitarie] = await Promise.all([
@@ -47,6 +65,8 @@ onMounted(async () => {
     modulo.esigenze_alimentari = sanitarie.dati.esigenze_alimentari ?? ''
     modulo.allergie = sanitarie.dati.allergie.map((a) => ({ ...a }))
     modulo.farmaci = sanitarie.dati.farmaci.map((f) => ({ ...f }))
+    for (const campo of CAMPI_TESTO) modulo[campo] = sanitarie.dati[campo] ?? ''
+    modulo.antitetanica = sanitarie.dati.antitetanica ?? null
     caricata.value = true
   }
 })
@@ -86,7 +106,7 @@ async function salva() {
       percorso: percorsoSanitarie(props.id),
       corpo: dati,
       // Stored in clear in the queue: no names, no health data.
-      descrizione: `Farmaci e allergie (scheda n. ${props.id})`,
+      descrizione: `Scheda sanitaria (n. ${props.id})`,
     }),
   )
   if (!risultato) return
@@ -109,12 +129,79 @@ async function salva() {
 
 <template>
   <section style="max-width: 44rem">
-    <h1 class="h4 mb-1">Farmaci, allergie e intolleranze</h1>
+    <h1 class="h4 mb-1">Scheda sanitaria</h1>
     <p class="fg-2">{{ nome }}</p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="esito" class="alert theme-info" role="status">{{ esito }}</div>
 
     <form v-if="caricata" class="vstack gap-5" @submit.prevent="salva">
+      <fieldset class="card card-body">
+        <legend class="h6">Dati del modulo</legend>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label small mb-0" for="tessera">Numero di tessera sanitaria</label>
+            <input
+              id="tessera"
+              v-model="modulo.tessera_sanitaria"
+              class="form-control form-control-sm"
+              maxlength="30"
+            />
+          </div>
+          <div class="col-12 md:col-7">
+            <label class="form-label small mb-0" for="rep-nome">
+              Chi chiamare in caso di emergenza (nome e cognome)
+            </label>
+            <input
+              id="rep-nome"
+              v-model="modulo.reperibilita_nome"
+              class="form-control form-control-sm"
+              maxlength="120"
+            />
+          </div>
+          <div class="col-12 md:col-5">
+            <label class="form-label small mb-0" for="rep-tel">Telefono</label>
+            <input
+              id="rep-tel"
+              v-model="modulo.reperibilita_telefono"
+              class="form-control form-control-sm"
+              type="tel"
+              maxlength="30"
+            />
+          </div>
+          <div class="col-12">
+            <p class="form-text mb-0">
+              Vale tutto l'anno; per un singolo campo o uscita puoi indicarne un altro nella pagina
+              dell'evento.
+            </p>
+          </div>
+          <div class="col-12 md:col-6">
+            <label class="form-label small mb-0" for="antitetanica"
+              >Vaccinazione antitetanica</label
+            >
+            <select
+              id="antitetanica"
+              v-model="modulo.antitetanica"
+              class="form-control form-control-sm"
+            >
+              <option :value="null">Non indicata</option>
+              <option :value="true">Sì</option>
+              <option :value="false">No</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label small mb-0" for="note-sanitarie">
+              Ulteriori note sanitarie di rilievo
+            </label>
+            <textarea
+              id="note-sanitarie"
+              v-model="modulo.note_sanitarie"
+              class="form-control form-control-sm"
+              rows="2"
+            />
+          </div>
+        </div>
+      </fieldset>
+
       <fieldset class="card card-body">
         <legend class="h6">Allergie e intolleranze</legend>
         <div class="form-field mb-3">
@@ -277,8 +364,47 @@ async function salva() {
         </p>
       </fieldset>
 
+      <fieldset class="card card-body">
+        <legend class="h6">Dati facoltativi</legend>
+        <p class="form-text">
+          Utili in caso di emergenza; sulla stampa hanno un consenso e una firma a parte.
+        </p>
+        <div class="row g-3">
+          <div class="col-12 md:col-4">
+            <label class="form-label small mb-0" for="gruppo-sanguigno">Gruppo sanguigno</label>
+            <input
+              id="gruppo-sanguigno"
+              v-model="modulo.gruppo_sanguigno"
+              class="form-control form-control-sm"
+              maxlength="10"
+              placeholder="Es. 0+"
+            />
+          </div>
+          <div class="col-12 md:col-8">
+            <label class="form-label small mb-0" for="medico">Medico curante</label>
+            <input
+              id="medico"
+              v-model="modulo.medico_curante"
+              class="form-control form-control-sm"
+              maxlength="200"
+              placeholder="Nome e telefono"
+            />
+          </div>
+          <div class="col-12">
+            <label class="form-label small mb-0" for="vaccinazioni">Altre vaccinazioni</label>
+            <input
+              id="vaccinazioni"
+              v-model="modulo.altre_vaccinazioni"
+              class="form-control form-control-sm"
+              maxlength="300"
+            />
+          </div>
+        </div>
+      </fieldset>
+
       <p class="small fg-2 mb-0">
-        Le prescrizioni del medico restano sulla scheda cartacea firmata, da consegnare ai capi.
+        Dopo aver salvato, stampa il modulo dalla scheda della persona, firmalo e consegnalo ai capi
+        con l'eventuale prescrizione del medico. Se cambi qualcosa, va firmato di nuovo.
       </p>
       <button class="btn btn-solid theme-primary align-self-start" :disabled="inCorso">
         Salva

@@ -61,6 +61,31 @@ const classeGravita = {
         </p>
       </template>
 
+      <template v-if="!compatta">
+        <h3 class="h6 mt-3">Dati del modulo</h3>
+        <ul class="list-unstyled small mb-1">
+          <li v-if="dati.reperibilita_nome || dati.reperibilita_telefono">
+            In caso di emergenza: <strong>{{ dati.reperibilita_nome }}</strong>
+            {{ dati.reperibilita_telefono }}
+          </li>
+          <li v-if="dati.tessera_sanitaria">Tessera sanitaria: {{ dati.tessera_sanitaria }}</li>
+          <li v-if="dati.antitetanica !== undefined">
+            Antitetanica:
+            {{
+              dati.antitetanica === true
+                ? 'sì'
+                : dati.antitetanica === false
+                  ? 'no'
+                  : 'non indicata'
+            }}
+          </li>
+          <li v-if="dati.note_sanitarie" class="testo-a-capo">Note: {{ dati.note_sanitarie }}</li>
+          <li v-if="dati.gruppo_sanguigno">Gruppo sanguigno: {{ dati.gruppo_sanguigno }}</li>
+          <li v-if="dati.medico_curante">Medico curante: {{ dati.medico_curante }}</li>
+          <li v-if="dati.altre_vaccinazioni">Altre vaccinazioni: {{ dati.altre_vaccinazioni }}</li>
+        </ul>
+      </template>
+
       <p v-if="!compatta && dati.aggiornate_il" class="small fg-2 mb-0">
         Aggiornate il {{ new Date(dati.aggiornate_il).toLocaleDateString('it-IT') }}
         <template v-if="dati.inserite_da"> · {{ dati.inserite_da }}</template>

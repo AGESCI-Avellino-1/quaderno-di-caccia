@@ -64,6 +64,21 @@ class Gruppo(ModelloTracciato):
     giorno_riferimento_eta = models.PositiveSmallIntegerField(default=30)
     # A link where families pay outside the app, e.g. paypal.me (DEC-83).
     link_pagamento = models.URLField(blank=True)
+    # Letterhead of every print (the AGESCI forms, receipts), set by the capigruppo
+    # (DEC-192).
+    sede_indirizzo = models.CharField(max_length=200, blank=True)
+    sede_cap = models.CharField(max_length=5, blank=True)
+    sede_comune = models.CharField(max_length=120, blank=True)
+    sede_provincia = models.CharField(max_length=2, blank=True)
+    telefono = models.CharField(max_length=30, blank=True)
+    cellulare = models.CharField(max_length=30, blank=True)
+    email = models.EmailField(blank=True)
+    pec = models.EmailField(blank=True)
+    sito = models.URLField(blank=True)
+    runts_repertorio = models.CharField(max_length=30, blank=True)
+    runts_data = models.DateField(null=True, blank=True)
+    # PNG or JPEG, re-encoded by Pillow; served only to the prints.
+    logo = models.ImageField(upload_to="gruppo/", blank=True)
 
     class Meta:
         verbose_name = "gruppo"

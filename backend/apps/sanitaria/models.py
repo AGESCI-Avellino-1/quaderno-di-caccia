@@ -1,8 +1,11 @@
-"""Health essentials needed at camp (DEC-48 core, DEC-55, DEC-95).
+"""The medical form (DEC-48…DEC-55, DEC-192…).
 
-Only medicines, allergies, intolerances and non-medical dietary needs live here,
-anticipated to phase 1 because the capi need them offline at camp. The full medical form (tessera sanitaria, emergency
-contacts, printing, signatures: DEC-48..DEC-54) is phase 5 and will extend this app.
+Medicines, allergies, intolerances and non-medical dietary needs were anticipated to
+phase 1, because the capi need them offline at camp (DEC-55, DEC-95): only those go
+offline. Phase 5 adds the rest of the AGESCI form (tessera sanitaria, emergency contact,
+tetanus, further notes), the optional fields (DEC-49), the date of the last paper
+signature and of the prescription handed over (DEC-52, DEC-54), the emergency contact
+for a single event (DEC-53) and the print of the official form (DEC-51).
 """
 
 from django.conf import settings
@@ -37,6 +40,34 @@ class InformazioniSanitarie(ModelloTracciato):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
     inserite_da = models.CharField(max_length=12, choices=InseritoDa.choices)
+    # The rest of the AGESCI form (DEC-48).
+    tessera_sanitaria = models.CharField(max_length=30, blank=True)
+    reperibilita_nome = models.CharField(max_length=120, blank=True)
+    reperibilita_telefono = models.CharField(max_length=30, blank=True)
+    antitetanica = models.BooleanField(null=True, blank=True)
+    note_sanitarie = models.TextField(blank=True)
+    # Optional, with their own consent line on the print (DEC-49, DEC-51).
+    gruppo_sanguigno = models.CharField(max_length=10, blank=True)
+    medico_curante = models.CharField(max_length=200, blank=True)
+    altre_vaccinazioni = models.CharField(max_length=300, blank=True)
+    # When the health data last changed (not the signature dates): a form signed
+    # before that must be signed again (DEC-52).
+    dati_modificati_il = models.DateTimeField(null=True, blank=True)
+    # Paper stays paper: the app records only the dates (DEC-52, DEC-54), entered by
+    # the unit staff or a capogruppo (DEC-193).
+    firmata_il = models.DateField(null=True, blank=True)
+    prescrizione_consegnata_il = models.DateField(null=True, blank=True)
+    firma_registrata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    @property
+    def da_rifirmare(self) -> bool:
+        if self.firmata_il is None or self.dati_modificati_il is None:
+            return False
+        from django.utils import timezone
+
+        return timezone.localdate(self.dati_modificati_il) > self.firmata_il
 
     class Meta:
         verbose_name = "informazioni sanitarie essenziali"
@@ -101,3 +132,28 @@ class Farmaco(models.Model):
 
     def __str__(self) -> str:
         return self.nome
+
+
+class ReperibilitaEvento(ModelloTracciato):
+    """The emergency contact for one camp or outing, instead of the yearly one
+    (DEC-53): the print for that event uses it."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="+")
+    evento = models.ForeignKey("eventi.Evento", on_delete=models.CASCADE, related_name="+")
+    nome = models.CharField(max_length=120)
+    telefono = models.CharField(max_length=30)
+    registrata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "reperibilità per un evento"
+        verbose_name_plural = "reperibilità per un evento"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["persona", "evento"], name="una_reperibilita_per_evento"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Reperibilità di {self.persona} per {self.evento}"

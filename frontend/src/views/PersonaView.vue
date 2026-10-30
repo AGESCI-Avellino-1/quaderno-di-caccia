@@ -8,7 +8,9 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import QuotePersona from '@/components/QuotePersona.vue'
+import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
+import { useRete } from '@/composables/useRete'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
 import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -20,6 +22,8 @@ const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const persona = ref<PersonaDettaglio | null>(null)
 const copiaDel = ref<string | null>(null)
+// Printing and paper dates need the network.
+const { online } = useRete()
 const sanitarie = ref<Sanitarie | null>(null)
 // Whether the user may act as this person (online only; the API decides).
 const impersonabile = ref(false)
@@ -114,7 +118,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       </dl>
       <section v-if="sanitarie" class="card card-body mb-5">
         <div class="d-flex align-items-center">
-          <h2 class="h5 mb-0">Farmaci, allergie e alimentazione</h2>
+          <h2 class="h5 mb-0">Scheda sanitaria</h2>
           <RouterLink
             v-if="sanitarie.puo_modificare"
             :to="{ name: 'sanitarie', params: { id: persona.id } }"
@@ -123,6 +127,12 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           >
         </div>
         <SchedaSanitaria :dati="sanitarie" />
+        <CartaSanitaria
+          v-if="online"
+          :persona="persona.id"
+          :dati="sanitarie"
+          @cambiata="(nuovi) => (sanitarie = nuovi)"
+        />
       </section>
       <VisibilitaGenitori :id="persona.id" />
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />

@@ -11,6 +11,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from apps.core.euro import euro as _euro
+from apps.core.stampa import decora_pagina, intestazione
 from apps.organizzazione.models import Gruppo
 
 from .models import Pagamento
@@ -20,13 +21,6 @@ def pdf(pagamento: Pagamento) -> bytes:
     stili = getSampleStyleSheet()
     testo = stili["BodyText"]
     gruppo = Gruppo.objects.first()
-    intestazione = []
-    if gruppo is not None:
-        intestazione.append(
-            f"<b>{escape(gruppo.denominazione_sociale or 'AGESCI ' + gruppo.denominazione)}</b>"
-        )
-        if gruppo.codice_fiscale:
-            intestazione.append(f"Codice fiscale {escape(gruppo.codice_fiscale)}")
     uscita = io.BytesIO()
     documento = SimpleDocTemplate(
         uscita,
@@ -37,7 +31,7 @@ def pdf(pagamento: Pagamento) -> bytes:
         topMargin=20 * mm,
         bottomMargin=20 * mm,
     )
-    elementi = [Paragraph(riga, testo) for riga in intestazione]
+    elementi = [intestazione(gruppo, A4[0] - 40 * mm)]
     elementi += [
         Spacer(1, 8 * mm),
         Paragraph(f"Ricevuta n. {pagamento.numero}", stili["Title"]),
@@ -90,5 +84,6 @@ def pdf(pagamento: Pagamento) -> bytes:
     ]
     if pagamento.note:
         elementi.append(Paragraph(f"Note: {escape(pagamento.note)}", testo))
-    documento.build(elementi)
+    pagina = decora_pagina(gruppo, 20 * mm)
+    documento.build(elementi, onFirstPage=pagina, onLaterPages=pagina)
     return uscita.getvalue()

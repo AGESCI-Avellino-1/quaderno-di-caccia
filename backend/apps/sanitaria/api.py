@@ -2,7 +2,9 @@ from datetime import date, datetime
 
 from django.db import transaction
 from django.db.models import Prefetch
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
 
@@ -11,7 +13,16 @@ from apps.organizzazione.models import Unita
 from apps.permessi import policy
 from apps.permessi.models import AccessoDatoSensibile, Azione, Categoria, registra_accessi
 
-from .models import Allergia, Farmaco, Gravita, InformazioniSanitarie, InseritoDa, TipoAllergia
+from . import stampa
+from .models import (
+    Allergia,
+    Farmaco,
+    Gravita,
+    InformazioniSanitarie,
+    InseritoDa,
+    ReperibilitaEvento,
+    TipoAllergia,
+)
 
 router = Router(tags=["sanitaria"])
 
@@ -38,6 +49,27 @@ class SanitarieIn(Schema):
     esigenze_alimentari: str = ""
     allergie: list[AllergiaIO] = []
     farmaci: list[FarmacoIO] = []
+    # The rest of the form (DEC-48, DEC-49). None = unchanged: a request queued offline
+    # by an older app must not wipe them.
+    tessera_sanitaria: str | None = None
+    reperibilita_nome: str | None = None
+    reperibilita_telefono: str | None = None
+    antitetanica: bool | None = None
+    note_sanitarie: str | None = None
+    gruppo_sanguigno: str | None = None
+    medico_curante: str | None = None
+    altre_vaccinazioni: str | None = None
+
+
+CAMPI_SCHEDA = (
+    "tessera_sanitaria",
+    "reperibilita_nome",
+    "reperibilita_telefono",
+    "note_sanitarie",
+    "gruppo_sanguigno",
+    "medico_curante",
+    "altre_vaccinazioni",
+)
 
 
 class SanitarieOut(Schema):
@@ -50,6 +82,19 @@ class SanitarieOut(Schema):
     inserite_da: str | None = None
     aggiornate_il: datetime | None = None
     puo_modificare: bool = False
+    tessera_sanitaria: str = ""
+    reperibilita_nome: str = ""
+    reperibilita_telefono: str = ""
+    antitetanica: bool | None = None
+    note_sanitarie: str = ""
+    gruppo_sanguigno: str = ""
+    medico_curante: str = ""
+    altre_vaccinazioni: str = ""
+    # Paper (DEC-52, DEC-54): the last signature, and whether the data changed after it.
+    firmata_il: date | None = None
+    da_rifirmare: bool = False
+    prescrizione_consegnata_il: date | None = None
+    puo_registrare_firma: bool = False
 
 
 def _sanitarie(info: InformazioniSanitarie | None) -> dict:
@@ -81,7 +126,12 @@ def _sanitarie(info: InformazioniSanitarie | None) -> dict:
             for f in info.farmaci.all()
         ],
         "inserite_da": info.get_inserite_da_display(),
-        "aggiornate_il": info.aggiornato_il,
+        "aggiornate_il": info.dati_modificati_il or info.aggiornato_il,
+        **{campo: getattr(info, campo) for campo in CAMPI_SCHEDA},
+        "antitetanica": info.antitetanica,
+        "firmata_il": info.firmata_il,
+        "da_rifirmare": info.da_rifirmare,
+        "prescrizione_consegnata_il": info.prescrizione_consegnata_il,
     }
 
 
@@ -98,7 +148,8 @@ def leggi_sanitarie(request, persona_id: int):
     info = InformazioniSanitarie.objects.filter(persona=persona).first()
     registra_accessi(request, [persona], Categoria.SANITARIE, Azione.LETTURA)
     return _sanitarie(info) | {
-        "puo_modificare": policy.puo_modificare_sanitarie(request.auth, persona)
+        "puo_modificare": policy.puo_modificare_sanitarie(request.auth, persona),
+        "puo_registrare_firma": policy.puo_registrare_firma_sanitaria(request.auth, persona),
     }
 
 
@@ -140,8 +191,21 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
         info.nessuna_allergia = dati.nessuna_allergia
         info.nessun_farmaco = dati.nessun_farmaco
         info.esigenze_alimentari = dati.esigenze_alimentari.strip()
+        for campo in CAMPI_SCHEDA:
+            valore = getattr(dati, campo)
+            if valore is not None:
+                setattr(
+                    info,
+                    campo,
+                    valore.strip()[
+                        : InformazioniSanitarie._meta.get_field(campo).max_length or None
+                    ],
+                )
+        if dati.antitetanica is not None or "antitetanica" in dati.model_fields_set:
+            info.antitetanica = dati.antitetanica
         info.inserite_da = inserite_da
         info.aggiornate_da = request.auth
+        info.dati_modificati_il = timezone.now()
         info.save()
         info.allergie.all().delete()
         info.farmaci.all().delete()
@@ -168,7 +232,117 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
             for f in dati.farmaci
         )
         registra_accessi(request, [persona], Categoria.SANITARIE, Azione.MODIFICA)
-    return _sanitarie(info) | {"puo_modificare": True}
+    return _sanitarie(info) | {
+        "puo_modificare": True,
+        "puo_registrare_firma": policy.puo_registrare_firma_sanitaria(request.auth, persona),
+    }
+
+
+class CartaIn(Schema):
+    # None clears a date entered by mistake.
+    firmata_il: date | None = None
+    prescrizione_consegnata_il: date | None = None
+
+
+@router.put("/persone/{persona_id}/sanitarie/carta", response=SanitarieOut)
+def carta(request, persona_id: int, dati: CartaIn):
+    """The signed paper form and the prescription, received by the staff (DEC-52,
+    DEC-54, DEC-193)."""
+    persona = _persona_visibile(request, persona_id)
+    if not policy.puo_registrare_firma_sanitaria(request.auth, persona):
+        raise HttpError(403, "Lo segna lo staff dell'unità o un capogruppo.")
+    oggi = timezone.localdate()
+    if any(d and d > oggi for d in (dati.firmata_il, dati.prescrizione_consegnata_il)):
+        raise HttpError(400, "La data non può essere nel futuro.")
+    info = InformazioniSanitarie.objects.filter(persona=persona).first()
+    if info is None:
+        raise HttpError(400, "La scheda non è ancora compilata nell'app.")
+    info.firmata_il = dati.firmata_il
+    info.prescrizione_consegnata_il = dati.prescrizione_consegnata_il
+    info.firma_registrata_da = request.auth
+    info.save()
+    registra_accessi(request, [persona], Categoria.SANITARIE, Azione.MODIFICA)
+    return _sanitarie(info) | {
+        "puo_modificare": policy.puo_modificare_sanitarie(request.auth, persona),
+        "puo_registrare_firma": True,
+    }
+
+
+def _pdf(contenuto: bytes, nome: str) -> HttpResponse:
+    risposta = HttpResponse(contenuto, content_type="application/pdf")
+    risposta["Content-Disposition"] = f'attachment; filename="{nome}"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
+
+
+@router.get("/persone/{persona_id}/sanitarie/modulo.pdf")
+def modulo(request, persona_id: int):
+    """The AGESCI form filled in, to sign (DEC-51). The file name carries no name."""
+    persona = _persona_visibile(request, persona_id)
+    registra_accessi(request, [persona], Categoria.SANITARIE, Azione.STAMPA)
+    return _pdf(stampa.pdf([persona]), f"scheda-sanitaria-{persona.pk}.pdf")
+
+
+@router.get("/eventi/{evento_id}/schede-sanitarie.pdf")
+def schede_evento(request, evento_id: int):
+    """Every participant's form with the contact given for the event (DEC-53, DEC-195)."""
+    from apps.eventi.models import Evento, StatoPartecipazione
+
+    evento = get_object_or_404(Evento, pk=evento_id)
+    if not policy.puo_stampare_schede_evento(request.auth, evento):
+        raise HttpError(403, "Le stampano i capi che gestiscono l'evento.")
+    persone = [
+        p.persona
+        for p in evento.partecipazioni.filter(stato=StatoPartecipazione.INVITATO)
+        .select_related("persona")
+        .order_by("persona__cognome", "persona__nome")
+    ]
+    if not persone:
+        raise HttpError(400, "Nessun partecipante.")
+    registra_accessi(request, persone, Categoria.SANITARIE, Azione.STAMPA)
+    return _pdf(stampa.pdf(persone, evento), f"schede-sanitarie-evento-{evento.pk}.pdf")
+
+
+class ReperibilitaIO(Schema):
+    nome: str
+    telefono: str
+
+
+@router.get("/eventi/{evento_id}/reperibilita/{persona_id}", response=ReperibilitaIO | None)
+def leggi_reperibilita(request, evento_id: int, persona_id: int):
+    persona = _persona_visibile(request, persona_id)
+    r = ReperibilitaEvento.objects.filter(persona=persona, evento_id=evento_id).first()
+    return {"nome": r.nome, "telefono": r.telefono} if r else None
+
+
+@router.put("/eventi/{evento_id}/reperibilita/{persona_id}", response=ReperibilitaIO | None)
+def scrivi_reperibilita(request, evento_id: int, persona_id: int, dati: ReperibilitaIO):
+    """For this camp or outing only (DEC-53); an empty name and phone go back to the
+    yearly contact."""
+    from apps.eventi.models import Evento
+
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_modificare_sanitarie(request.auth, persona):
+        raise HttpError(403, "La reperibilità la indicano i genitori o il maggiorenne.")
+    evento = get_object_or_404(Evento, pk=evento_id)
+    if not evento.partecipazioni.filter(persona=persona).exists():
+        raise HttpError(400, "Non partecipa a questo evento.")
+    if not dati.nome.strip() and not dati.telefono.strip():
+        ReperibilitaEvento.objects.filter(persona=persona, evento=evento).delete()
+        return None
+    if not dati.nome.strip() or not dati.telefono.strip():
+        raise HttpError(400, "Indica nome e telefono.")
+    ReperibilitaEvento.objects.update_or_create(
+        persona=persona,
+        evento=evento,
+        defaults={
+            "nome": dati.nome.strip()[:120],
+            "telefono": dati.telefono.strip()[:30],
+            "registrata_da": request.auth,
+        },
+    )
+    registra_accessi(request, [persona], Categoria.SANITARIE, Azione.MODIFICA)
+    return {"nome": dati.nome.strip(), "telefono": dati.telefono.strip()}
 
 
 # --- Offline download for camp (DEC-55, DEC-95) --------------------------------------------

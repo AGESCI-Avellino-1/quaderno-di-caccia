@@ -288,6 +288,8 @@ class PartecipanteOut(Schema):
 class DettaglioOut(EventoOut):
     partecipanti: list[PartecipanteOut]
     puo_presenze: bool
+    # The participants' medical forms (DEC-195).
+    puo_stampare_schede: bool = False
     puo_non_invitare: bool
 
 
@@ -313,6 +315,7 @@ def _dettaglio(utente, evento: Evento) -> dict:
         **_evento_out(utente, evento),
         "partecipanti": partecipanti,
         "puo_presenze": policy.puo_segnare_presenze(utente, evento),
+        "puo_stampare_schede": policy.puo_stampare_schede_evento(utente, evento),
         "puo_non_invitare": policy.puo_non_invitare(utente, evento),
     }
 

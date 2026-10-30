@@ -5,11 +5,13 @@ import {
   api,
   foglioPresenze,
   percorsoPresenze,
+  schedeSanitarieEventoPdf,
   type DettaglioEvento,
   type Partecipante,
   type StatoPresenza,
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
 import EventoBC from '@/components/EventoBC.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
@@ -227,6 +229,11 @@ const STATI: [StatoPresenza, string][] = [
             <div v-if="m.stato === 'NON_INVITATO'" class="small">
               Lo staff ha deciso di non invitarlo: {{ m.motivo }}
             </div>
+            <ReperibilitaEvento
+              v-else-if="m.stato === 'INVITATO' && !evento.annullato"
+              :evento="evento.id"
+              :persona="m.persona_id"
+            />
           </li>
         </ul>
       </section>
@@ -243,6 +250,13 @@ const STATI: [StatoPresenza, string][] = [
           </span>
           <a v-if="evento.puo_presenze" :href="foglioPresenze(evento.id)" class="small">
             Foglio da stampare
+          </a>
+          <a
+            v-if="evento.puo_stampare_schede"
+            :href="schedeSanitarieEventoPdf(evento.id)"
+            class="small"
+          >
+            Schede sanitarie dei partecipanti
           </a>
         </div>
         <div v-if="evento.puo_presenze && !evento.annullato" class="d-flex gap-3 mb-3">

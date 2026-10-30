@@ -303,6 +303,20 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
     return _staff_della_persona(user, persona)
 
 
+def puo_registrare_firma_sanitaria(user, persona: Persona) -> bool:
+    """The paper form signed, the prescription handed over (DEC-52, DEC-54): who receives
+    the paper, the staff of the person's unit and the capigruppo (DEC-193)."""
+    if e_capo_in_attesa(user):
+        return False
+    return e_capogruppo(user) or _staff_della_persona(user, persona)
+
+
+def puo_stampare_schede_evento(user, evento) -> bool:
+    """The medical forms of an event's participants, with the contacts given for it
+    (DEC-53): the capi who manage the event (DEC-195), never a CSQ."""
+    return e_capo_censito(user) and not e_capo_in_attesa(user) and puo_gestire_evento(user, evento)
+
+
 def _staff_della_persona(user, persona: Persona) -> bool:
     if e_capo_in_attesa(user):
         return False  # sensitive data and corrections wait for BuonaStrada

@@ -17,7 +17,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
 | 3 | Eventi e presenze | ✅ | eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi, eventi su BuonaCaccia (DEC-158…DEC-164, fatti il 30/10; da provare nel browser) |
 | 4 | Progressione Personale | ✅ | a blocchi (dettaglio sotto): E/G, passaggi, R/S, L/C, più le scelte confermate il 30/10 (DEC-186…DEC-190). Riferimento: [specifica PP v1.0](docs/analisi/specifica-pp.md) |
-| 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
+| 5 | Fascicolo completo | 🚧 | a blocchi (dettaglio sotto): blocco 1 fatto (scheda medica completa con stampa) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
 | 8 | Realizzazione documentazione di uso | ⏳ | installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
@@ -86,8 +86,19 @@ blocco si prova nel browser prima del commit; i casi di prova della specifica (�
 | 4.5 | L/C: momenti, stagione come etichetta, prede e voli, specialità L/C, Piccole Orme, Consiglio degli Anziani | DEC-66, DEC-68, DEC-182…DEC-185 | ✅ provato nel browser il 30/10 |
 | 4.6 | Scelte confermate dopo i blocchi: Progressione scritta solo dallo staff, imprese guidate dal capo squadriglia e dal Consiglio d'impresa, data della conquista, rilettura del rover nel Punto della Strada, rientro in clan, avvisi sulla durata della stagione; specifica PP nel repository | DEC-186…DEC-190 | ✅ |
 
-Dopo la fase 4: fascicolo completo con scheda medica e percorso di
-formazione dei capi inserito a mano (fase 5, DEC-47), poi la fase 6: vedi la tabella "Fasi".
+### 5. Fase 5 — Fascicolo completo
+
+Scelte del 30/10: prima la scheda medica, poi le note; un commit per blocco, provato nel
+browser. Moduli AGESCI di riferimento in `ignored/schede_adesione_e_mediche/` (non nel
+repository).
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| 5.1 | Scheda medica completa: tessera sanitaria, reperibilità annuale e per un singolo evento, antitetanica, note, campi facoltativi; data dell'ultima firma su carta e della prescrizione, con avviso se la scheda cambia dopo; stampa del modulo AGESCI precompilato (minorenni e maggiorenni) e delle schede dei partecipanti a un evento; intestazione del gruppo e logo | DEC-48…DEC-54, DEC-192…DEC-195 | ✅ provato nel browser il 30/10 |
+| 5.2 | Note di staff e del capo squadriglia con visibilità; regole sul rapporto con il minore (riservate alla Co.Ca., anche offline) | DEC-39, DEC-40, DEC-43, DEC-95 | ⏳ |
+| 5.3 | Fascicolo del ragazzo: foto profilo storicizzata, allegati alla Progressione, autorizzazioni, presenze per anno, report per i passaggi | DEC-38, DEC-41, DEC-42 | ⏳ |
+| 5.4 | Fascicolo dei capi: anni di servizio, unità e ruoli, formazione inserita a mano | DEC-47, DEC-134 | ⏳ |
+| 5.5 | Fine anno e uscita: congelamento e riapertura dell'anno, archiviazione dopo due anni con caricamento automatico sul Drive del gruppo, esportazione e importazione del fascicolo tra gruppi | DEC-44…DEC-46, DEC-196 | ⏳ |
 
 ## Fase 1 — Fondamenta
 

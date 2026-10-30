@@ -22,6 +22,7 @@ class Azione(models.TextChoices):
     LETTURA = "LETTURA", "Lettura"
     SCARICO_OFFLINE = "SCARICO_OFFLINE", "Scaricate sul dispositivo"
     MODIFICA = "MODIFICA", "Modifica"
+    STAMPA = "STAMPA", "Stampa"
     ESPORTAZIONE = "ESPORTAZIONE", "Esportazione per un diritto dell'interessato"
     CANCELLAZIONE = "CANCELLAZIONE", "Cancellazione per un diritto dell'interessato"
 

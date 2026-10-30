@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 32, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 33, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -216,6 +216,11 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-189 | Chi rientra in clan dopo un'interruzione o un trasferimento riceve un nuovo periodo R/S dalla data del rientro (con la sua Scoperta); quello concluso resta nella storia. Dopo una Partenza il percorso R/S non si riapre. | DEC-67, DEC-181, 30/10 |
 | DEC-190 | La conquista di una specialità o di un brevetto si registra con la sua data, non con quella del giorno in cui si scrive. Una stagione L/C che dura meno di due o più di cinque mesi è segnalata, senza bloccare. | DEC-62, DEC-183, PP V04, 30/10 |
 | DEC-191 | In ogni unità i ragazzi vedono sempre i nomi di tutti gli altri ragazzi dell'unità e, in reparto, la loro squadriglia: non sono dati riservati (contatti e il resto della scheda seguono DEC-13). | DEC-13, 30/10 |
+| DEC-192 | Ogni stampa (moduli da firmare, ricevute) porta l'intestazione del gruppo: denominazione, codice fiscale, sede, telefoni, email e PEC, sito, iscrizione al RUNTS, logo. La compilano i capigruppo nell'app. | DEC-51, DEC-84, 30/10 |
+| DEC-193 | La data dell'ultima firma della scheda sanitaria e quella di consegna della prescrizione le segnano lo staff dell'unità e i capigruppo, che ricevono la carta. | DEC-52, DEC-54, 30/10 |
+| DEC-194 | Riga di consenso della sezione dei dati facoltativi: «Acconsento/acconsentiamo al trattamento dei dati facoltativi sopra indicati, utili in caso di emergenza, alle stesse condizioni dell'informativa AGESCI.» | DEC-49, DEC-51, 30/10 |
+| DEC-195 | Le schede sanitarie dei partecipanti a un evento, con la reperibilità indicata per quell'evento, le stampano in un unico PDF i capi che gestiscono l'evento (mai il capo squadriglia); ogni stampa resta nel registro degli accessi. | DEC-53, DEC-101, 30/10 |
+| DEC-196 | All'archiviazione (DEC-44) l'archivio compresso si carica da solo sul Drive del gruppo, con un account Google autorizzato una volta. | DEC-44, 30/10 |
 
 ## Eventi e presenze
 

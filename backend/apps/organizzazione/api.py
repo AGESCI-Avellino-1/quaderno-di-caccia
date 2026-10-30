@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import Router, Schema, Status
+from ninja import File, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import (
@@ -704,3 +704,108 @@ def revoca_deroga(request, deroga_id: int):
     deroga.save(update_fields=["revocata_il", "aggiornato_il"])
     registra_accessi(request, [deroga.persona], Categoria.DEROGA_SQ, Azione.MODIFICA)
     return _deroga_out(deroga, set())
+
+
+# --- Letterhead of the prints (DEC-192) -----------------------------------------------------
+
+
+class IntestazioneIO(Schema):
+    denominazione_sociale: str = ""
+    codice_fiscale: str = ""
+    sede_indirizzo: str = ""
+    sede_cap: str = ""
+    sede_comune: str = ""
+    sede_provincia: str = ""
+    telefono: str = ""
+    cellulare: str = ""
+    email: str = ""
+    pec: str = ""
+    sito: str = ""
+    runts_repertorio: str = ""
+    runts_data: date | None = None
+
+
+class IntestazioneOut(IntestazioneIO):
+    logo: bool = False
+    puo_modificare: bool = False
+
+
+CAMPI_INTESTAZIONE = [c for c in IntestazioneIO.model_fields if c != "runts_data"]
+
+
+def _intestazione(request) -> dict:
+    gruppo = Gruppo.objects.first()
+    if gruppo is None:
+        return {"puo_modificare": False}
+    return {
+        **{c: getattr(gruppo, c) for c in CAMPI_INTESTAZIONE},
+        "runts_data": gruppo.runts_data,
+        "logo": bool(gruppo.logo),
+        "puo_modificare": policy.e_capogruppo(request.auth),
+    }
+
+
+@router.get("/gruppo/intestazione", response=IntestazioneOut)
+def intestazione(request):
+    if not policy.e_capo_censito(request.auth):
+        raise HttpError(403, "Riservato ai capi.")
+    return _intestazione(request)
+
+
+def _gruppo_da_modificare(request) -> Gruppo:
+    if not policy.e_capogruppo(request.auth):
+        raise HttpError(403, "I dati del gruppo li modificano i capigruppo.")
+    gruppo = Gruppo.objects.first()
+    if gruppo is None:
+        raise HttpError(400, "Importa prima i dati del gruppo da BuonaStrada.")
+    return gruppo
+
+
+@router.put("/gruppo/intestazione", response=IntestazioneOut)
+def salva_intestazione(request, dati: IntestazioneIO):
+    gruppo = _gruppo_da_modificare(request)
+    for campo in CAMPI_INTESTAZIONE:
+        setattr(gruppo, campo, getattr(dati, campo).strip())
+    gruppo.sede_provincia = gruppo.sede_provincia.upper()
+    gruppo.runts_data = dati.runts_data
+    try:
+        gruppo.full_clean()
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    gruppo.save()
+    return _intestazione(request)
+
+
+@router.post("/gruppo/logo", response=IntestazioneOut)
+def carica_logo(request, file: File[UploadedFile]):
+    """PNG or JPEG, re-encoded as PNG by Pillow (no metadata), at most 600 px."""
+    import io
+    import secrets
+
+    from django.core.files.base import ContentFile
+    from PIL import Image, UnidentifiedImageError
+
+    gruppo = _gruppo_da_modificare(request)
+    if file.size > 5 * 1024 * 1024:
+        raise HttpError(400, "Il logo è troppo grande: al massimo 5 MB.")
+    try:
+        immagine = Image.open(file)
+        immagine.load()
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as errore:
+        raise HttpError(400, "Carica un'immagine PNG o JPEG.") from errore
+    immagine = immagine.convert("RGBA")
+    immagine.thumbnail((600, 600))
+    buffer = io.BytesIO()
+    immagine.save(buffer, "PNG", optimize=True)
+    if gruppo.logo:
+        gruppo.logo.delete(save=False)
+    gruppo.logo.save(f"{secrets.token_hex(16)}.png", ContentFile(buffer.getvalue()), save=True)
+    return _intestazione(request)
+
+
+@router.delete("/gruppo/logo", response=IntestazioneOut)
+def togli_logo(request):
+    gruppo = _gruppo_da_modificare(request)
+    if gruppo.logo:
+        gruppo.logo.delete(save=True)
+    return _intestazione(request)

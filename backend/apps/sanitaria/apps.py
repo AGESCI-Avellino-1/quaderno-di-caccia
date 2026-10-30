@@ -10,5 +10,10 @@ class SanitariaConfig(AppConfig):
 
         from . import models
 
-        for modello in (models.InformazioniSanitarie, models.Allergia, models.Farmaco):
+        for modello in (
+            models.InformazioniSanitarie,
+            models.Allergia,
+            models.Farmaco,
+            models.ReperibilitaEvento,
+        ):
             auditlog.register(modello)

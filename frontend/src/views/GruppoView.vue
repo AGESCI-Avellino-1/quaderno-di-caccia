@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { api, type IncarichiGruppo } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
+import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
@@ -73,6 +74,7 @@ const capi = () => api.capi()
           @cambiato="carica"
         />
       </div>
+      <IntestazioneGruppo />
     </template>
   </section>
 </template>

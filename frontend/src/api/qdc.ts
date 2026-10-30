@@ -597,6 +597,16 @@ export interface SanitarieIn {
   esigenze_alimentari: string
   allergie: Allergia[]
   farmaci: Farmaco[]
+  // The rest of the AGESCI form and the optional fields (DEC-48, DEC-49). Absent from
+  // the camp download (DEC-55) and from copies saved before they existed.
+  tessera_sanitaria?: string
+  reperibilita_nome?: string
+  reperibilita_telefono?: string
+  antitetanica?: boolean | null
+  note_sanitarie?: string
+  gruppo_sanguigno?: string
+  medico_curante?: string
+  altre_vaccinazioni?: string
 }
 
 export interface Sanitarie extends SanitarieIn {
@@ -604,6 +614,29 @@ export interface Sanitarie extends SanitarieIn {
   inserite_da: string | null
   aggiornate_il: string | null
   puo_modificare: boolean
+  // Paper (DEC-52, DEC-54).
+  firmata_il?: string | null
+  da_rifirmare?: boolean
+  prescrizione_consegnata_il?: string | null
+  puo_registrare_firma?: boolean
+}
+
+export interface Intestazione {
+  denominazione_sociale: string
+  codice_fiscale: string
+  sede_indirizzo: string
+  sede_cap: string
+  sede_comune: string
+  sede_provincia: string
+  telefono: string
+  cellulare: string
+  email: string
+  pec: string
+  sito: string
+  runts_repertorio: string
+  runts_data: string | null
+  logo?: boolean
+  puo_modificare?: boolean
 }
 
 export interface Contatto {
@@ -986,6 +1019,8 @@ export interface DettaglioEvento extends Evento {
   partecipanti: Partecipante[]
   puo_presenze: boolean
   puo_non_invitare: boolean
+  /** The participants' medical forms (DEC-195). */
+  puo_stampare_schede?: boolean
 }
 
 export interface RiunioneRicorrente {
@@ -1602,6 +1637,10 @@ export const giustificativoSpesa = (id: number) => `/api/v1/spese-anticipate/${i
 
 export const PERCORSO_PAGAMENTI = '/api/v1/pagamenti'
 export const ricevutaPdf = (pagamento: number) => `/api/v1/pagamenti/${pagamento}/ricevuta.pdf`
+export const moduloSanitarioPdf = (persona: number) =>
+  `/api/v1/persone/${persona}/sanitarie/modulo.pdf`
+export const schedeSanitarieEventoPdf = (evento: number) =>
+  `/api/v1/eventi/${evento}/schede-sanitarie.pdf`
 
 /** "12.50" → "12,50 €" */
 export function euro(valore: string | number): string {
@@ -1790,6 +1829,32 @@ export const api = {
     return richiesta<EsitoImportazione>('/api/v1/importazioni', { metodo: 'POST', corpo: dati })
   },
   sanitarie: (persona: number) => richiesta<Sanitarie>(percorsoSanitarie(persona)),
+  cartaSanitaria: (
+    persona: number,
+    dati: { firmata_il: string | null; prescrizione_consegnata_il: string | null },
+  ) =>
+    richiesta<Sanitarie>(`/api/v1/persone/${persona}/sanitarie/carta`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  reperibilitaEvento: (evento: number, persona: number) =>
+    richiesta<{ nome: string; telefono: string } | null>(
+      `/api/v1/eventi/${evento}/reperibilita/${persona}`,
+    ),
+  salvaReperibilitaEvento: (evento: number, persona: number, nome: string, telefono: string) =>
+    richiesta<{ nome: string; telefono: string } | null>(
+      `/api/v1/eventi/${evento}/reperibilita/${persona}`,
+      { metodo: 'PUT', corpo: { nome, telefono } },
+    ),
+  intestazione: () => richiesta<Intestazione>('/api/v1/gruppo/intestazione'),
+  salvaIntestazione: (dati: Intestazione) =>
+    richiesta<Intestazione>('/api/v1/gruppo/intestazione', { metodo: 'PUT', corpo: dati }),
+  caricaLogo: (file: File) => {
+    const corpo = new FormData()
+    corpo.append('file', file)
+    return richiesta<Intestazione>('/api/v1/gruppo/logo', { metodo: 'POST', corpo })
+  },
+  togliLogo: () => richiesta<Intestazione>('/api/v1/gruppo/logo', { metodo: 'DELETE' }),
   campo: (unita: number) => richiesta<Campo>(`/api/v1/campo/${unita}`),
   accessiSensibili: (persona: number) =>
     richiesta<AccessoSensibile[]>(`/api/v1/persone/${persona}/accessi-sensibili`),

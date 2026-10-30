@@ -1094,7 +1094,46 @@ export interface PreferenzeEmail {
   promemoria_quote: boolean
   maggiore_eta: boolean
   riepiloghi: boolean
+  avvisi: boolean
 }
+
+/** The notice board (DEC-03, DEC-218…DEC-220). */
+export type DestinatariAvviso = 'FAMIGLIE' | 'GENITORI' | 'RAGAZZI' | 'CAPI'
+
+export interface Avviso {
+  id: number
+  titolo: string
+  testo: string
+  unita_id: number | null
+  dove: string
+  destinatari: DestinatariAvviso
+  destinatari_nome: string
+  scade_il: string
+  pubblicato_il: string
+  autore: string
+  email_inviata: boolean
+  scaduto: boolean
+  puo_modificare: boolean
+  allegati: { id: number; titolo: string; tipo_file: string }[]
+}
+
+export interface Bacheca {
+  avvisi: Avviso[]
+  /** Where the user may publish; empty: nowhere. */
+  pubblica_in: { unita_id: number | null; nome: string; destinatari: DestinatariAvviso[] }[]
+  vede_archivio: boolean
+}
+
+export interface AvvisoIn {
+  titolo: string
+  testo: string
+  unita_id: number | null
+  destinatari: DestinatariAvviso
+  scade_il: string
+  invia_email?: boolean
+}
+
+export const allegatoAvviso = (id: number) => `/api/v1/allegati-avviso/${id}`
 
 /** The personal calendar; a capo has three views (their unit; Co.Ca. and their unit;
  * the whole group), everyone else one. */
@@ -2148,6 +2187,19 @@ export const api = {
       corpo: { importo },
     }),
   preferenzeEmail: () => richiesta<PreferenzeEmail>('/api/v1/io/email'),
+  bacheca: (scaduti = false) =>
+    richiesta<Bacheca>(`/api/v1/avvisi${scaduti ? '?scaduti=true' : ''}`),
+  pubblicaAvviso: (dati: AvvisoIn) =>
+    richiesta<Avviso>('/api/v1/avvisi', { metodo: 'POST', corpo: dati }),
+  modificaAvviso: (id: number, dati: AvvisoIn) =>
+    richiesta<Avviso>(`/api/v1/avvisi/${id}`, { metodo: 'PUT', corpo: dati }),
+  togliAvviso: (id: number) => richiesta<null>(`/api/v1/avvisi/${id}`, { metodo: 'DELETE' }),
+  caricaAllegatoAvviso: (id: number, titolo: string, file: File) =>
+    richiesta<Avviso>(`/api/v1/avvisi/${id}/allegati`, {
+      metodo: 'POST',
+      corpo: conFile({ titolo }, file),
+    }),
+  togliAllegatoAvviso: (id: number) => richiesta<Avviso>(allegatoAvviso(id), { metodo: 'DELETE' }),
   scegliPreferenzeEmail: (dati: PreferenzeEmail) =>
     richiesta<PreferenzeEmail>('/api/v1/io/email', { metodo: 'PUT', corpo: dati }),
   calendario: () => richiesta<Calendario>('/api/v1/calendario'),

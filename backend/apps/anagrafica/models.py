@@ -514,6 +514,7 @@ class PreferenzeEmail(ModelloTracciato):
     riepiloghi = models.BooleanField(
         default=True, help_text="Riepiloghi per i capi: correzioni, iscrizioni da decidere."
     )
+    avvisi = models.BooleanField(default=True, help_text="Avvisi della bacheca.")
 
     class Meta:
         verbose_name = "preferenze email"

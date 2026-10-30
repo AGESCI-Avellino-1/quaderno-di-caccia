@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 37, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 38, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -242,6 +242,9 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-215 | L'archivio contiene anche il fascicolo nel formato di scambio tra gruppi, reimportabile: se la persona rientra, anche anni dopo e anche come capo, un capogruppo carica lo ZIP dell'archivio; tornano Progressione, note non riservate, servizio e formazione dei capi, e il record con nome e anni rimasto nell'app si riunisce alla persona riportata da BuonaStrada (riconosciuta dal codice fiscale). | DEC-44, DEC-46, DEC-213, 30/10 |
 | DEC-216 | Le quote non pagate di un anno passano agli anni seguenti come pendenza: la famiglia e chi registra i pagamenti le vedono insieme alle quote dell'anno, segnate come dell'anno precedente, e si pagano con data dell'anno nuovo. L'importo resta quello dell'anno in cui sono nate. Passano subito, anche prima della chiusura dell'anno; in un anno chiuso un'agevolazione si registra ancora sulle quote non pagate, mai su quelle già saldate. | DEC-82, DEC-209, 30/10 |
 | DEC-217 | All'archiviazione l'app conserva un'impronta cifrata del codice fiscale (da cui non si risale al codice), calcolata con una chiave dedicata che chi installa genera una volta, conserva con i backup e non cambia mai. All'importazione da BuonaStrada chi rientra viene riconosciuto e riunito al record con nome e anni; il resto dello storico torna caricando lo ZIP dell'archivio (DEC-215). Senza la chiave l'archiviazione non è disponibile. | DEC-44, DEC-215, 30/10 |
+| DEC-218 | Bacheca: gli avvisi li pubblicano lo staff per la sua unità e i capigruppo per il gruppo o per qualsiasi unità; quelli per la Comunità capi qualsiasi capo; li modificano o tolgono chi li ha pubblicati e i capigruppo. Un avviso è per le famiglie e i ragazzi di un'unità o del gruppo, oppure solo per i genitori o solo per i ragazzi, oppure per la Comunità capi. Nessuna risposta né conferma di lettura. | DEC-03, 30/10 |
+| DEC-219 | Chi pubblica un avviso sceglie se mandarlo anche per email; è un tipo di email facoltativa, che chi la riceve può disattivare. Un avviso resta in bacheca fino al giorno scelto; scaduto, lo vedono solo i capi come archivio. | DEC-03, DEC-157, 30/10 |
+| DEC-220 | Un avviso può avere allegati PDF o immagini (al massimo 10 MB), visibili a chi vede l'avviso. La bacheca è solo online. | DEC-03, 30/10 |
 
 ## Eventi e presenze
 

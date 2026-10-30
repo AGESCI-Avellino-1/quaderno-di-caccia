@@ -14,6 +14,7 @@ const scelte = reactive<PreferenzeEmail>({
   promemoria_quote: true,
   maggiore_eta: true,
   riepiloghi: true,
+  avvisi: true,
 })
 const caricate = ref(false)
 const salvate = ref(false)
@@ -37,6 +38,10 @@ const voci = [
   { chiave: 'eventi', etichetta: 'Eventi: nuovi eventi, cambi di date o luogo, annullamenti' },
   { chiave: 'promemoria_quote', etichetta: 'Promemoria delle quote in scadenza' },
   { chiave: 'maggiore_eta', etichetta: 'Avvisi per i 18 anni (tuoi o dei tuoi figli)' },
+  {
+    chiave: 'avvisi',
+    etichetta: 'Avvisi della bacheca, quando chi li pubblica li manda anche per email',
+  },
 ] as const
 </script>
 

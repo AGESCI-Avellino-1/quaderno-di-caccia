@@ -1350,3 +1350,57 @@ def puo_gestire_fine_anno(user) -> bool:
     """Closing and reopening years, archiving, moving a file to another group: the
     capigruppo (DEC-45, DEC-44, DEC-46)."""
     return e_capogruppo(user) and not e_capo_in_attesa(user)
+
+
+# --- Notice board (DEC-03, DEC-218…DEC-220) -------------------------------------------
+
+
+def puo_pubblicare_avviso(user, unita: Unita | None, destinatari: str | None = None) -> bool:
+    """The unit staff for their unit, the capigruppo for the group and every unit; a
+    notice for the Co.Ca. any capo (DEC-218)."""
+    from apps.bacheca.models import Destinatari
+
+    if e_capo_in_attesa(user):
+        return False
+    if destinatari == Destinatari.CAPI:
+        return unita is None and e_capo(user)
+    if e_capogruppo(user):
+        return True
+    return unita is not None and e_staff(user, unita)
+
+
+def puo_modificare_avviso(user, avviso) -> bool:
+    """The author and the capigruppo."""
+    if e_capo_in_attesa(user):
+        return False
+    return avviso.autore_id == user.pk or e_capogruppo(user)
+
+
+def avvisi_visibili(user, *, scaduti: bool = False):
+    """The capi read every notice, the expired ones too when asked (the archive); a
+    ragazzo the notices for the ragazzi of their unit or of the group; a parent those
+    for the parents of their children's units (of an adult child while they still see
+    their activities, DEC-26). Never an expired one, never one for the capi."""
+    from apps.bacheca.models import Avviso, Destinatari
+
+    oggi = date.today()
+    avvisi = Avviso.objects.all()
+    if e_capo(user):
+        return avvisi if scaduti else avvisi.filter(scade_il__gte=oggi)
+    attive = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.RAGAZZO)
+    persona = persona_di(user)
+    da_ragazzo = (
+        set(attive.filter(persona=persona).values_list("unita_id", flat=True)) if persona else set()
+    )
+    figli = [p for p in tutelati(user) if genitori_vedono(p, "scheda")]
+    da_genitore = set(attive.filter(persona__in=figli).values_list("unita_id", flat=True))
+    scelta = Q(pk__in=[])
+    for unita, per in (
+        (da_ragazzo, Destinatari.RAGAZZI),
+        (da_genitore, Destinatari.GENITORI),
+    ):
+        if unita:
+            scelta |= Q(destinatari__in=[Destinatari.FAMIGLIE, per]) & (
+                Q(unita__in=unita) | Q(unita__isnull=True)
+            )
+    return avvisi.filter(scelta, scade_il__gte=oggi)

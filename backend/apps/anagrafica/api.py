@@ -508,6 +508,7 @@ class PreferenzeEmailIO(Schema):
     promemoria_quote: bool = True
     maggiore_eta: bool = True
     riepiloghi: bool = True
+    avvisi: bool = True
 
 
 def _mia_persona(request) -> Persona:

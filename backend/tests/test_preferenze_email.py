@@ -43,6 +43,7 @@ def test_api_preferenze(genitore, estraneo):
         "promemoria_quote": True,
         "maggiore_eta": True,
         "riepiloghi": True,
+        "avvisi": True,
     }
     risposta = client.put(
         "/api/v1/io/email",

@@ -127,3 +127,13 @@ def test_consenso_da_chi_non_e_genitore_rifiutato(ragazza, estraneo):
     invito.consenso_genitore_il = invito.scadenza
     with pytest.raises(ValidationError):
         invito.full_clean()
+
+
+def test_pubblicare_avvisi(capo, capogruppo, csq, ragazza, genitore, estraneo, reparto):
+    """DEC-218: the unit staff for their unit, the capigruppo for everything."""
+    u = lambda p: p.utente  # noqa: E731
+    assert policy.puo_pubblicare_avviso(u(capo), reparto)
+    assert not policy.puo_pubblicare_avviso(u(capo), None)
+    assert policy.puo_pubblicare_avviso(u(capogruppo), None)
+    for chi in (csq, ragazza, genitore, estraneo):
+        assert not policy.puo_pubblicare_avviso(u(chi), reparto)

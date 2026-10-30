@@ -155,6 +155,12 @@ const router = createRouter({
       component: () => import('@/views/QuoteView.vue'),
     },
     {
+      // Notices for the user's units and the group; the API decides (DEC-218).
+      path: '/bacheca',
+      name: 'bacheca',
+      component: () => import('@/views/BachecaView.vue'),
+    },
+    {
       // The family's own fees: the API decides (DEC-16).
       path: '/mie-quote',
       name: 'mie-quote',

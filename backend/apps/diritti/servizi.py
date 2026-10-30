@@ -241,6 +241,7 @@ def fascicolo(persona: Persona) -> dict:
                 "Promemoria delle quote": p.promemoria_quote,
                 "Avvisi dei 18 anni": p.maggiore_eta,
                 "Riepiloghi per i capi": p.riepiloghi,
+                "Avvisi della bacheca": p.avvisi,
             }
             if (p := PreferenzeEmail.objects.filter(persona=persona).first())
             else None

@@ -105,6 +105,15 @@ onMounted(async () => {
           </span>
         </RouterLink>
       </div>
+      <div
+        v-if="sessione.profilo.persona || sessione.profilo.tutelati.length"
+        class="col-12 md:col-6"
+      >
+        <RouterLink to="/bacheca" class="card card-body h-100 text-decoration-none">
+          <strong>Bacheca</strong>
+          <span class="fg-2 small">Avvisi dei capi per la tua unità e per il gruppo</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.profilo.persona" class="col-12 md:col-6">
         <RouterLink to="/email" class="card card-body h-100 text-decoration-none">
           <strong>Le mie email</strong>

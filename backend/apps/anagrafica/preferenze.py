@@ -2,7 +2,7 @@
 
 from .models import Persona, PreferenzeEmail
 
-CATEGORIE = ("eventi", "promemoria_quote", "maggiore_eta", "riepiloghi")
+CATEGORIE = ("eventi", "promemoria_quote", "maggiore_eta", "riepiloghi", "avvisi")
 
 
 def accetta(persona: Persona, categoria: str) -> bool:

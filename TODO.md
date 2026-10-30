@@ -15,7 +15,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | --- | --- | --- | --- |
 | 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
-| 3 | Eventi e presenze | 🔨 | fatti eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi; resta l'approfondimento sugli eventi BuonaCaccia |
+| 3 | Eventi e presenze | 🔨 | fatti eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi; restano gli eventi su BuonaCaccia (analisi fatta il 30/10, DEC-158…DEC-164) |
 | 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
 | 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
@@ -67,7 +67,7 @@ BuonaCaccia) e DEC-156 (autofinanziamento e budget dei campi).
 | 3.3 | Quote degli eventi, anche a rate, generate per i partecipanti (tolte se non partecipa e non pagate, tornano se partecipa di nuovo), importo per persona fino a zero | DEC-77 | ✅ |
 | 3.4 | Calendario personale (iCal, link segreto rigenerabile) ed email di nuovi eventi, modifiche di date o luogo, annullamenti (non per le singole riunioni ricorrenti) e promemoria delle quote in scadenza (`promemoria_quote`, 7 giorni prima) | DEC-79 | ✅ |
 | 3.5 | Movimenti di prima nota collegati a un evento (gli incassi delle sue quote da soli) e rendiconto dell'evento; budget dei campi (due valori su tre, contributo dello staff a parte, agevolazioni come contributo dalla cassa) | DEC-90, DEC-91, DEC-82 | ✅ |
-| 3.6 | Eventi su BuonaCaccia (dopo l'approfondimento) | DEC-68, DEC-76, DEC-89 | 💤 |
+| 3.6 | Eventi su BuonaCaccia: iscrizioni con scadenze, link di gestione per i capi, liberatoria, schede con domande riusabili, foto, quota per la famiglia, formazione capi per la Zona (analisi fatta il 30/10) | DEC-158…DEC-164 | ⏳ |
 
 Dopo: Progressione Personale (fase 4), fascicolo completo con scheda medica e percorso di
 formazione dei capi inserito a mano (fase 5, DEC-47), poi la fase 6: vedi la tabella "Fasi".
@@ -115,5 +115,4 @@ DEC-137…DEC-144, quote e cassa DEC-145…DEC-156, email facoltative DEC-157.
 | Punto | Riferimento |
 | --- | --- |
 | Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
-| Come caricare la liberatoria personalizzata di BuonaCaccia (approfondimento dopo la fase 3) | DEC-144 |
 | Email facoltative: conferma dell'Ufficio Privacy nazionale | DEC-157 |

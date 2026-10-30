@@ -257,11 +257,11 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-230 | Documentazione in due documenti separati: manuale d'uso per l'Avellino 1 e guida di installazione per i gruppi che adottano QdC; il manuale d'uso ha la precedenza. Analisi in `docs/analisi/manuali.md`. | fase 8, 30/10 |
 | DEC-231 | Entrambi su Read the Docs da `docs/` nel repository (Sphinx con pagine Markdown, come il tema AGESCI Campania), una versione per ogni release; niente wiki di GitHub. | fase 8, 30/10 |
 | DEC-232 | Il manuale d'uso è anche un unico PDF allegato a ogni release, con indice per profilo; la guida di installazione solo online. | fase 8, 30/10 |
-| DEC-233 | Il manuale d'uso è diviso in sezioni complete per profilo (genitore; ragazzo E/G, capo squadriglia, R/S; capo e staff di unità; capogruppo, tesorieri, amministratore tecnico): ognuna si legge da sola; tutti vedono tutto, ma ogni funzione dice chi la può usare. | fase 8, 30/10 |
+| DEC-233 | Il manuale d'uso è diviso in sezioni complete per profilo (genitore; ragazzo L/C, E/G, capo squadriglia, R/S; capo e staff di unità; capogruppo, tesorieri, amministratore tecnico): ognuna si legge da sola; tutti vedono tutto, ma ogni funzione dice chi la può usare. | fase 8, 30/10 |
 | DEC-234 | Gli indirizzi della piattaforma nel manuale sono riferiti a qdc.avellino1.it. | fase 8, 30/10 |
 | DEC-235 | Gli screenshot vengono dall'ambiente di sviluppo con i dati di prova, prodotti da uno script automatico che entra come ogni profilo; mai dati veri. | fase 8, 30/10 |
 | DEC-236 | Il manuale ha un tono informale e dà del «tu»; gli esempi usano le persone di prova. | fase 8, 30/10 |
-| DEC-237 | La parte «ragazzo» del manuale copre E/G (con il capo squadriglia) e R/S: i bambini L/C non hanno un account; se lo avranno si aggiunge una sezione. | DEC-24, fase 8, 30/10 |
+| DEC-237 | La parte «ragazzo» del manuale copre tutte le branche che possono avere un account: L/C (sotto i 14 anni con il consenso del genitore), E/G con il capo squadriglia, R/S. Chi può entrare nell'app ha il suo manuale. | DEC-24, DEC-117, fase 8, 30/10 |
 | DEC-238 | Il manuale è una guida passo passo: ogni funzione con i passi da fare, nell'ordine, e le immagini dei passi. | fase 8, 30/10 |
 | DEC-239 | Screenshot in due formati: telefono, dentro una cornice che lo fa sembrare un telefono, e computer. | DEC-235, fase 8, 30/10 |
 

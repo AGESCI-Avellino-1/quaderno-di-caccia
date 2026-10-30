@@ -10,11 +10,11 @@ codice nell'analisi dei requisiti (DEC-230…DEC-239); l'indice è una proposta.
 | DEC-230 | Due documenti separati: il **manuale d'uso** per l'Avellino 1 e la **guida di installazione** per i gruppi che adottano QdC. Il manuale d'uso ha la precedenza. |
 | DEC-231 | Entrambi su Read the Docs, da `docs/` nel repository (Sphinx con pagine Markdown, come il tema AGESCI Campania), una versione per ogni release. Niente wiki di GitHub (disattivato): non ha versioni e non produce PDF. |
 | DEC-232 | Il manuale d'uso è anche un **unico PDF** allegato a ogni release (indice per profilo); la guida di installazione solo online. |
-| DEC-233 | Il manuale è diviso in **sezioni complete per profilo**: ognuna si legge da sola, anche ripetendo le parti comuni; tutti vedono tutto il manuale, ma ogni funzione dice chiaramente chi la può usare. Profili: genitore; ragazzo (E/G, capo squadriglia, R/S); capo e staff di unità; capogruppo, tesorieri e amministratore tecnico. |
+| DEC-233 | Il manuale è diviso in **sezioni complete per profilo**: ognuna si legge da sola, anche ripetendo le parti comuni; tutti vedono tutto il manuale, ma ogni funzione dice chiaramente chi la può usare. Profili: genitore; ragazzo (L/C, E/G, capo squadriglia, R/S); capo e staff di unità; capogruppo, tesorieri e amministratore tecnico. |
 | DEC-234 | Gli indirizzi della piattaforma nel manuale sono riferiti a `https://qdc.avellino1.it` (non ancora attivo). |
 | DEC-235 | Gli screenshot vengono dall'ambiente di sviluppo con i dati di prova (persone inventate), prodotti da uno **script automatico** che entra come ogni profilo e rifà tutte le immagini; si rigenerano quando cambia l'interfaccia. Mai dati veri. |
 | DEC-236 | Tono informale: il manuale dà del «tu». Gli esempi usano le persone di prova dell'ambiente di sviluppo. |
-| DEC-237 | La parte «ragazzo» copre E/G (con il capo squadriglia) e R/S: i bambini L/C non hanno un account. Se in futuro lo avranno, si aggiunge una sezione. |
+| DEC-237 | La parte «ragazzo» copre tutte le branche che possono avere un account: L/C (sotto i 14 anni con il consenso del genitore, DEC-24), E/G con il capo squadriglia, R/S. Chi può entrare nell'app ha il suo manuale. |
 | DEC-238 | Guida passo passo: ogni funzione con i passi da fare, nell'ordine, e le immagini dei passi. |
 | DEC-239 | Screenshot in due formati: telefono, dentro una cornice che lo fa sembrare un telefono, e computer. |
 
@@ -48,16 +48,22 @@ come app); come leggere il manuale: trova il tuo profilo.
 14. Le mie email: quali si possono disattivare.
 15. I tuoi diritti sui dati: richiesta, esportazione, cancellazione.
 
-### Parte 2 — Ragazzo (dai 14 anni)
+### Parte 2 — Ragazzo
+
+Sotto i 14 anni l'account c'è solo con il consenso del genitore (DEC-24); dai 14 basta
+l'invito (DEC-117). Per lupetti e coccinelle il testo è più semplice e con le parole
+dell'ambientazione (giungla o bosco), da scrivere con lo staff L/C.
 
 1. Primo accesso e protezione del telefono (come per i genitori, con le differenze).
-2. La tua scheda e la tua foto.
-3. La Progressione: E/G (sentiero, mete e impegni, specialità e brevetti, imprese e posti
+2. Lupetti e coccinelle: la tua pista o il tuo sentiero, il momento, le prede o i voli, le
+   specialità, le Piccole Orme.
+3. La tua scheda e la tua foto.
+4. La Progressione: E/G (sentiero, mete e impegni, specialità e brevetti, imprese e posti
    d'azione), R/S (Carta di clan, obiettivi, Punto della Strada con la parte riservata).
-4. Capo squadriglia: la squadriglia, i telefoni, le note sui tuoi squadriglieri, le
+5. Capo squadriglia: la squadriglia, i telefoni, le note sui tuoi squadriglieri, le
    imprese di squadriglia, il Consiglio d'impresa.
-5. Rover e scolte: proporre una nuova versione della Carta di clan.
-6. Eventi, bacheca, email.
+6. Rover e scolte: proporre una nuova versione della Carta di clan.
+7. Eventi, bacheca, email.
 
 ### Parte 3 — Capo e staff di unità
 

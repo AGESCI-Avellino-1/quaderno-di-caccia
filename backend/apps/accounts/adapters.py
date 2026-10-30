@@ -42,6 +42,17 @@ def collega_invito(request, user) -> None:
 
 
 class AccountAdapter(DefaultAccountAdapter):
+    def get_login_stages(self) -> list[str]:
+        """Passkeys are a way in, not a second factor (DEC-22): see stages.py."""
+        return [
+            (
+                "apps.accounts.stages.SecondoFattoreStage"
+                if stage == "allauth.mfa.stages.AuthenticateStage"
+                else stage
+            )
+            for stage in super().get_login_stages()
+        ]
+
     def is_open_for_signup(self, request) -> bool:
         """An invitation, or a registration code from the app (DEC-120)."""
         from apps.iscrizioni.servizi import in_sessione

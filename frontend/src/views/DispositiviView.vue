@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { api, type Dispositivo } from '@/api/qdc'
@@ -13,6 +13,8 @@ import {
   stato,
 } from '@/sicurezza/cassaforte'
 import ImpersonazioniMie from '@/components/ImpersonazioniMie.vue'
+import PasskeyAccesso from '@/components/PasskeyAccesso.vue'
+import { inImpersonazione } from '@/sicurezza/impersonazione'
 import { useSessioneStore } from '@/stores/sessione'
 
 // Own devices; a capogruppo can see and disconnect anyone's lost phone (DEC-23, DEC-97).
@@ -24,6 +26,9 @@ const tutti = ref(false)
 const daConfermare = ref<string | null>(null)
 const biometriaPossibile = ref(false)
 const avviso = ref<string | null>(null)
+const nomeQuesto = computed(
+  () => dispositivi.value.find((d) => d.corrente)?.nome ?? 'Questo dispositivo',
+)
 
 async function carica() {
   dispositivi.value = (await esegui(() => api.dispositivi(tutti.value))) ?? []
@@ -98,6 +103,7 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
       <p v-if="avviso" class="small fg-danger mt-3 mb-0">{{ avviso }}</p>
     </div>
 
+    <PasskeyAccesso v-if="!inImpersonazione()" :nome-predefinito="nomeQuesto" />
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="sessione.capogruppo" class="form-field mb-3">
       <input id="tutti" v-model="tutti" class="switch" type="checkbox" role="switch" />

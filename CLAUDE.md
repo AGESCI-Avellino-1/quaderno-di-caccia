@@ -90,7 +90,10 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
 - **Authentication:** django-allauth *headless* (`/_allauth/browser/v1/…`): email +
   password, login by emailed code, passkeys, Google, Apple (DEC-21, DEC-22). Sign-up is
   possible only through an invitation (`apps/accounts/adapters.py`). Session 30 days
-  (DEC-23). django-axes limits login attempts.
+  (DEC-23). django-axes limits login attempts. Login passkeys are created on the
+  Dispositivi page (`components/PasskeyAccesso.vue`, after allauth's reauthentication)
+  and are a way in, not a second factor: only TOTP asks for one
+  (`accounts/stages.py`), so the emailed code stays the fallback.
 - **API:** `/api/v1/` (django-ninja, `backend/config/api.py`). OpenAPI docs at
   `/api/v1/docs` in dev.
 - **BuonaStrada is the source of truth for the registry** (DEC-02, DEC-27…DEC-35).

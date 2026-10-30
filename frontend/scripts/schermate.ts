@@ -87,6 +87,23 @@ const SCENE: Scena[] = [
   { nome: 'genitore/home', chi: 'genitore', percorso: '/', intera: true },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },
   { nome: 'comune/dispositivi', chi: 'genitore', percorso: '/dispositivi' },
+  {
+    // Last of the parent's scenes: the passkey stays in the database.
+    nome: 'comune/passkey',
+    chi: 'genitore',
+    percorso: '/dispositivi',
+    intera: true,
+    prepara: async (pagina) => {
+      const telefono = (pagina.viewportSize()?.width ?? 0) < 600
+      await pagina
+        .getByLabel('Nome della nuova passkey')
+        .fill(telefono ? 'Telefono di Mario' : 'Computer di Mario')
+      await pagina.getByRole('button', { name: 'Crea una passkey su questo dispositivo' }).click()
+      await pagina.getByLabel('La tua password').fill(PASSWORD)
+      await pagina.getByRole('button', { name: 'Conferma', exact: true }).click()
+      await pagina.getByText('Passkey creata').waitFor()
+    },
+  },
 ]
 
 interface Formato {
@@ -232,7 +249,20 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
         serviceWorkers: 'block',
       })
       attuale = chi
-      if (scena.chi) await entra(await contesto.newPage(), scena.chi, !scena.senzaProtezione)
+      // A virtual authenticator, as on a phone with a fingerprint: passkeys work.
+      const cdp = await contesto.newCDPSession(await contesto.newPage())
+      await cdp.send('WebAuthn.enable')
+      await cdp.send('WebAuthn.addVirtualAuthenticator', {
+        options: {
+          protocol: 'ctap2',
+          transport: 'internal',
+          hasResidentKey: true,
+          hasUserVerification: true,
+          isUserVerified: true,
+          automaticPresenceSimulation: true,
+        },
+      })
+      if (scena.chi) await entra(contesto.pages()[0]!, scena.chi, !scena.senzaProtezione)
     }
     const pagina = contesto.pages()[0] ?? (await contesto.newPage())
     await pagina.goto(`${APP}${scena.percorso}`)
@@ -245,6 +275,7 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
       await pagina.waitForLoadState('networkidle')
     }
     await scena.prepara?.(pagina)
+    await pagina.mouse.move(0, 0) // no hover highlight left on a button
     await pagina.waitForTimeout(300)
     let immagine = await pagina.screenshot({ fullPage: scena.intera ?? false })
     if (formato.suffisso === 'telefono') immagine = await incornicia(browser, immagine)

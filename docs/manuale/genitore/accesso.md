@@ -22,7 +22,7 @@ indirizzo email: se scade, chiedine un altro ai capi.
 
 ## Entrare le volte successive
 
-Apri <https://qdc.avellino1.it>. Puoi entrare in tre modi.
+Apri <https://qdc.avellino1.it>. Puoi entrare in quattro modi.
 
 :::{container} schermate
 ![La pagina di accesso sul telefono](../img/comune/accesso-telefono.png){.telefono width="30%"}
@@ -54,6 +54,30 @@ sceglierne una nuova.
 ![L'accesso con la password sul telefono](../img/comune/accesso-password-telefono.png){.telefono width="30%"}
 ![L'accesso con la password sul computer](../img/comune/accesso-password-computer.png){.computer width="65%"}
 :::
+
+### Con una passkey
+
+Con una passkey entri con l'impronta, il volto o il blocco schermo del telefono, senza
+scrivere niente. Prima devi crearla, una volta per ogni dispositivo:
+
+1. Nella pagina iniziale tocca **Dispositivi e protezione di questo telefono**.
+2. Nel riquadro **Passkey per entrare** controlla il nome (per esempio «Telefono di
+   Mario») e tocca **Crea una passkey su questo dispositivo**.
+3. Per sicurezza l'app ti chiede di confermare che sei tu: scrivi la tua password e
+   tocca **Conferma**. Se hai già una passkey puoi toccare **Conferma con una passkey**.
+4. Il telefono ti chiede l'impronta, il volto o il blocco schermo. Alla fine compare
+   «Passkey creata».
+
+Da quel momento, nella pagina di accesso tocca **Accedi con passkey**.
+
+:::{container} schermate
+![La passkey creata sul telefono](../img/comune/passkey-telefono.png){.telefono width="30%"}
+![La passkey creata sul computer](../img/comune/passkey-computer.png){.computer width="65%"}
+:::
+
+Nello stesso riquadro vedi le tue passkey. Se cambi telefono, tocca **Rimuovi…** accanto a
+quella vecchia e poi **Rimuovi**. Il codice via email funziona sempre, anche se hai una
+passkey.
 
 ### Con Google o Apple
 

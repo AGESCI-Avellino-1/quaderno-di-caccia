@@ -5,7 +5,7 @@
  * The full contract is served in dev at /_allauth/openapi.html: check there before
  * adding calls, never guess paths or payloads.
  */
-import { startAuthentication } from '@simplewebauthn/browser'
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
 
 import { ErroreApi, leggiCookie, richiesta } from './http'
 
@@ -13,8 +13,47 @@ const BASE = '/_allauth/browser/v1'
 
 export interface SessioneAllauth {
   status: number
-  data: { user?: { email: string }; flows?: { id: string; is_pending?: boolean }[] }
+  data: {
+    user?: { email: string }
+    flows?: { id: string; is_pending?: boolean; types?: string[] }[]
+  }
   meta: { is_authenticated: boolean }
+}
+
+/** A login passkey (allauth "webauthn" authenticator); times in seconds. */
+export interface Passkey {
+  id: number
+  name: string
+  created_at: number
+  last_used_at: number | null
+}
+
+/**
+ * Adding or removing a passkey needs a recent login (allauth's reauthentication, 5
+ * minutes): otherwise allauth answers 401 with the ways to confirm (`flows`).
+ */
+export class RiautenticazioneRichiesta extends Error {
+  constructor(
+    readonly conPassword: boolean,
+    readonly conPasskey: boolean,
+  ) {
+    super('Conferma che sei tu.')
+  }
+}
+
+async function oRiautentica<T>(chiamataProtetta: () => Promise<T>): Promise<T> {
+  try {
+    return await chiamataProtetta()
+  } catch (errore) {
+    if (errore instanceof ErroreApi && errore.stato === 401) {
+      const flussi = (errore.dati as SessioneAllauth | null)?.data?.flows ?? []
+      throw new RiautenticazioneRichiesta(
+        flussi.some((f) => f.id === 'reauthenticate'),
+        flussi.some((f) => f.id === 'mfa_reauthenticate' && f.types?.includes('webauthn')),
+      )
+    }
+    throw errore
+  }
 }
 
 /** allauth answers 401 for "not authenticated (yet)": that is a state, not an error. */
@@ -81,6 +120,56 @@ export const allauth = {
       optionsJSON: opzioni.data.request_options.publicKey as never,
     })
     return chiamata('/auth/webauthn/login', 'POST', { credential: credenziale })
+  },
+}
+
+/** Login passkeys of the account (DEC-22): created here, used on the login page. */
+export const passkey = {
+  async elenco(): Promise<Passkey[]> {
+    const risposta = await richiesta<{ data: (Passkey & { type: string })[] }>(
+      `${BASE}/account/authenticators`,
+    )
+    return risposta.data.filter((a) => a.type === 'webauthn')
+  },
+
+  /**
+   * Creates a passkey on this device. Passwordless (a discoverable credential): the
+   * login page asks for no email first.
+   */
+  async crea(nome: string): Promise<void> {
+    const percorso = `${BASE}/account/authenticators/webauthn`
+    const opzioni = await oRiautentica(() =>
+      richiesta<{ data: { creation_options: { publicKey: unknown } } }>(`${percorso}?passwordless`),
+    )
+    const credenziale = await startRegistration({
+      optionsJSON: opzioni.data.creation_options.publicKey as never,
+    })
+    await oRiautentica(() =>
+      richiesta(percorso, {
+        metodo: 'POST',
+        corpo: { name: nome, credential: credenziale, passwordless: true },
+      }),
+    )
+  },
+
+  rimuovi: (id: number) =>
+    oRiautentica(() =>
+      richiesta(`${BASE}/account/authenticators/webauthn`, {
+        metodo: 'DELETE',
+        corpo: { authenticators: [id] },
+      }),
+    ),
+
+  riautenticaConPassword: (password: string) =>
+    richiesta(`${BASE}/auth/reauthenticate`, { metodo: 'POST', corpo: { password } }),
+
+  async riautenticaConPasskey(): Promise<void> {
+    const percorso = `${BASE}/auth/webauthn/reauthenticate`
+    const opzioni = await richiesta<{ data: { request_options: { publicKey: unknown } } }>(percorso)
+    const credenziale = await startAuthentication({
+      optionsJSON: opzioni.data.request_options.publicKey as never,
+    })
+    await richiesta(percorso, { metodo: 'POST', corpo: { credential: credenziale } })
   },
 }
 

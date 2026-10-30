@@ -190,8 +190,9 @@ def interpreta_tipo_unita(testo: str) -> tuple[TipoUnita, Composizione] | None:
 
     Values seen in real exports (a whole zone, 2026-10-30): BRANCO/CERCHIO MISTO,
     MASCHILE and FEMMINILE; REPARTO MISTO, MASCHILE and FEMMINILE; CLAN/FUOCO;
-    COMUNITA` CAPI. A single-sex BRANCO/CERCHIO is a branco (lupetti) or a cerchio
-    (coccinelle). BuonaStrada has no noviziato unit: the app creates it inside the clan.
+    COMUNITA` CAPI. Branco or cerchio is not the composition but the setting (giungla or
+    bosco, AMBIENTE UNITA, DEC-225): a BRANCO/CERCHIO of any composition stays one.
+    BuonaStrada has no noviziato unit: the app creates it inside the clan.
     BRANCO, CERCHIO, CLAN, FUOCO, NOVIZIATO alone were never seen and are kept only as
     a fallback.
     """
@@ -205,11 +206,7 @@ def interpreta_tipo_unita(testo: str) -> tuple[TipoUnita, Composizione] | None:
     tipo = _TIPI_UNITA.get(testo)
     if tipo is None:
         return None
-    if tipo == TipoUnita.BRANCO_CERCHIO and composizione == Composizione.MASCHILE:
-        tipo = TipoUnita.BRANCO
-    elif tipo == TipoUnita.BRANCO_CERCHIO and composizione == Composizione.FEMMINILE:
-        tipo = TipoUnita.CERCHIO
-    elif testo == "FUOCO":
+    if testo == "FUOCO":
         composizione = Composizione.FEMMINILE
     elif testo == "CLAN" and composizione == Composizione.MISTA:
         composizione = Composizione.MASCHILE

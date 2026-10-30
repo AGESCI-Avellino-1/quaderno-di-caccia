@@ -61,7 +61,7 @@ const dati = reactive<UnitaIn>(
       </select>
     </div>
     <div class="col-6 md:col-3">
-      <label class="form-label small" for="unita-ambiente">Ambiente</label>
+      <label class="form-label small" for="unita-ambiente">Ambientazione</label>
       <select id="unita-ambiente" v-model="dati.ambiente" class="form-control form-control-sm">
         <option v-for="a in AMBIENTI" :key="a.valore" :value="a.valore">{{ a.etichetta }}</option>
       </select>

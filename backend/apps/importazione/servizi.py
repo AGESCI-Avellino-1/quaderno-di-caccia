@@ -47,7 +47,7 @@ from apps.anagrafica.servizi import (
 from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
 from apps.iscrizioni.servizi import recepisci
-from apps.organizzazione.models import Gruppo, TipoUnita, Unita
+from apps.organizzazione.models import Ambiente, Gruppo, TipoUnita, Unita
 from apps.organizzazione.servizi import esci_dal_reparto
 
 from .buonastrada import Genitore, RigaSocio, RisultatoParsing
@@ -346,6 +346,11 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
             durata_anni=riga.durata_anni,
         )
         r.unita_create.append(str(unita))
+    elif unita.ambiente == Ambiente.NESSUNO and riga.ambiente != Ambiente.NESSUNO:
+        # The setting is set by the first import that gives it, then it stays the
+        # group's: a later export never changes it (DEC-225).
+        unita.ambiente = riga.ambiente
+        unita.save(update_fields=["ambiente", "aggiornato_il"])
     return unita
 
 

@@ -122,8 +122,22 @@ class Unita(ModelloTracciato):
     def __str__(self) -> str:
         """Type, name, code: "Clan/Fuoco Hirpinia (T1)" (DEC-128). The
         name is the group's and may repeat or be missing; the BuonaStrada code does not."""
-        testo = f"{self.get_tipo_display()} {self.nome}".strip()
+        testo = f"{self.nome_tipo} {self.nome}".strip()
         return f"{testo} ({self.codice})" if self.codice else testo
+
+    @property
+    def nome_tipo(self) -> str:
+        """A branco/cerchio is called by its setting once known (DEC-225)."""
+        if self.tipo == TipoUnita.BRANCO_CERCHIO:
+            return {Ambiente.GIUNGLA: "Branco", Ambiente.BOSCO: "Cerchio"}.get(
+                self.ambiente, self.get_tipo_display()
+            )
+        return self.get_tipo_display()
+
+    @property
+    def senza_ambiente(self) -> bool:
+        """An L/C unit whose setting (giungla or bosco) is not known yet (DEC-225)."""
+        return BRANCA_DEL_TIPO.get(self.tipo) == Branca.LC and self.ambiente == Ambiente.NESSUNO
 
     @property
     def senza_nome(self) -> bool:

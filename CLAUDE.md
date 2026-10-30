@@ -137,8 +137,9 @@ First line `sep=,`; UTF-8 BOM; values wrapped as `="…"`; dates `dd/mm/yyyy` un
 every row has one trailing comma more than the header (82 fields vs 81); the guardian
 column `RESP.GENITORIALE DATI` is free text parsed by regex; surname/name of parents
 are split using the codice fiscale; `CODICE STATUS SOCIO` N (new member) is as active as R;
-`TIPO UNITA` single-sex `BRANCO/CERCHIO` is a branco or a cerchio, and there is no
-noviziato unit (checked on a zone-wide export, 2026-10-30). All handled in
+`TIPO UNITA` `BRANCO/CERCHIO` of any composition stays one: branco or cerchio is the
+setting `AMBIENTE UNITA` (GIUNGLA/BOSCO), taken by the first import that gives it, then
+the group's (DEC-225); there is no noviziato unit (checked on a zone-wide export, 2026-10-30). All handled in
 `backend/apps/importazione/buonastrada.py`, with a test for each trap. If a new export
 breaks the parser, add the case to `tests/export_sintetico.py` first.
 

@@ -303,6 +303,14 @@ def dettaglio_unita(request, unita_id: int):
         "avvisi": (
             ["L'unità non ha ancora un nome: daglielo con «Modifica»."] if unita.senza_nome else []
         )
+        + (
+            [
+                "Manca l'ambientazione (giungla per un branco, bosco per un cerchio): "
+                "sceglila con «Modifica»."
+            ]
+            if unita.senza_ambiente
+            else []
+        )
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + _avvisi_maggiore_eta(unita),
         "puo_modificare": policy.puo_gestire_unita(utente),

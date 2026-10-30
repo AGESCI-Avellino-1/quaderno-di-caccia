@@ -177,8 +177,16 @@ export const AMBIENTI: Scelta[] = [
 
 /** Type, name, code: "Clan/Fuoco Hirpinia (T1)" (DEC-128). The name is
  * the group's and may repeat or be missing; the BuonaStrada code does not. */
-export function nomeUnita(u: { nome: string; codice?: string; tipo: string }): string {
-  const tipo = TIPI_UNITA.find((t) => t.valore === u.tipo)?.etichetta ?? ''
+export function nomeUnita(u: {
+  nome: string
+  codice?: string
+  tipo: string
+  ambiente?: string
+}): string {
+  // A branco/cerchio is called by its setting once known (DEC-225).
+  const ambientazione =
+    u.tipo === 'BRANCO_CERCHIO' ? { GIUNGLA: 'Branco', BOSCO: 'Cerchio' }[u.ambiente ?? ''] : ''
+  const tipo = ambientazione || (TIPI_UNITA.find((t) => t.valore === u.tipo)?.etichetta ?? '')
   const testo = `${tipo} ${u.nome}`.trim()
   return u.codice ? `${testo} (${u.codice})` : testo
 }

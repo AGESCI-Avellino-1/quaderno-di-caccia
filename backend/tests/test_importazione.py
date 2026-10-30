@@ -359,3 +359,34 @@ def test_rientro_dopo_l_archiviazione_riconosciuto():
     assert len(riepilogo.rientri) == 1
     tornata = Persona.objects.get(codice_fiscale="RSSGLI13E50A509A")
     assert tornata.pk == giulia.pk
+
+
+def test_ambientazione_alla_prima_importazione_poi_resta():
+    """Branco or cerchio is the setting, not the composition (DEC-225): set by the first
+    import that gives it, then the group's."""
+    from apps.organizzazione.models import Ambiente
+    from tests.export_sintetico import riga
+
+    def con_lupetta(ambiente: str) -> list[dict[str, str]]:
+        return righe_standard() + [
+            riga(
+                **{
+                    "CODICE SOCIO": "9000099", "NOME": "Anna", "COGNOME": "Lupetta",
+                    "SESSO": "F", "DATA NASCITA": "10/05/2018",
+                    "CODICE FISCALE": "LPTNNA18E50A509Z", "BRANCA": "Branca L/C",
+                    "TIPO UNITA": "BRANCO/CERCHIO FEMMINILE", "CUN": "I",
+                    "AMBIENTE UNITA": ambiente, "DURATA": "4",
+                }
+            )
+        ]  # fmt: skip
+
+    applica(_risultato(con_lupetta("")), oggi=OGGI)
+    lc = Unita.objects.get(tipo=TipoUnita.BRANCO_CERCHIO)
+    assert lc.senza_ambiente and str(lc).startswith("Branco/Cerchio")
+    applica(_risultato(con_lupetta("GIUNGLA")), oggi=OGGI)
+    lc.refresh_from_db()
+    # A girls-only unit with the jungle setting is a branco.
+    assert lc.ambiente == Ambiente.GIUNGLA and str(lc).startswith("Branco ")
+    applica(_risultato(con_lupetta("BOSCO")), oggi=OGGI)
+    lc.refresh_from_db()
+    assert lc.ambiente == Ambiente.GIUNGLA  # the group's setting stays

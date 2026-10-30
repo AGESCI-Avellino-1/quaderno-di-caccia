@@ -37,8 +37,8 @@ DIMENSIONE_FOTO = 1024 * 1024
 
 
 class TipoCampoFormazione(models.TextChoices):
-    """Capi training camps for the Zona's list (DEC-164; list given by the maintainer,
-    30/10/2026). A module and "other" need a description."""
+    """Capi training camps for the Zona's list (DEC-164, DEC-170). A module and "other"
+    need a description."""
 
     CFT = "CFT", "Campo di Formazione Tirocinanti (CFT)"
     CFM = "CFM", "Campo di Formazione Metodologica (CFM)"

@@ -236,7 +236,7 @@ def imposta_quota(
     iscrizione: IscrizioneBuonaCaccia, importo: Decimal, scadenza: date | None, utente
 ) -> None:
     """The amount who registered the member indicates, also on the waiting list; the
-    due date is theirs to set, not a strict one (maintainer, 30/10/2026). No family
+    due date is theirs to set, not a strict one (DEC-169). No family
     discount."""
     from apps.quote.models import Quota
     from apps.quote.servizi import imposta_importo

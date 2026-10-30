@@ -542,7 +542,7 @@ def test_nome_obbligatorio_tranne_per_la_coca(gruppo):
     assert str(coca) == "Comunità Capi"
 
 
-# --- Service and additional roles (maintainer, 30/10/2026) -----------------------------
+# --- Service and additional roles (DEC-165, DEC-166) -----------------------------------
 
 
 def test_i_ruoli_aggiuntivi_si_sommano_al_servizio(capogruppo, capo, reparto):

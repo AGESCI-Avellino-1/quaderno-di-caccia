@@ -9,7 +9,7 @@ import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
 // Additional group roles: capigruppo (diarchy, DEC-18), group treasurers, technical
-// administrators; they add up with the service (maintainer, 30/10/2026). Appointed by the
+// administrators; they add up with the service (DEC-165, DEC-166). Appointed by the
 // capigruppo in office; by the technical administrator only when there is none (first
 // start). Then the capi at disposal (no unit for now) and, for the capigruppo, the capi
 // with no service at all.

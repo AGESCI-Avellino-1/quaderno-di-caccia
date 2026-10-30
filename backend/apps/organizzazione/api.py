@@ -335,7 +335,7 @@ RUOLI_AGGIUNTIVI_DI_GRUPPO = (
 
 
 def capi_senza_servizio():
-    """Active capi with neither a unit nor "a disposizione" (maintainer, 30/10/2026)."""
+    """Active capi with neither a unit nor "a disposizione" (DEC-165)."""
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
     in_servizio = Incarico.objects.attivi().filter(ruolo__in=INCARICHI_DI_SERVIZIO)
     return (

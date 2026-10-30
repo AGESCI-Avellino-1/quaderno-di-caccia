@@ -161,8 +161,8 @@ class Squadriglia(ModelloTracciato):
 class RuoloIncarico(models.TextChoices):
     """Service roles (in a unit, or at the disposal of the Co.Ca.) and additional roles
     (capogruppo, treasurers, technical administrator), which add up freely: one capo may
-    be capogruppo, capo unità, treasurer and administrator at once (maintainer,
-    30/10/2026). CSQ and VCSQ are the ragazzi's."""
+    be capogruppo, capo unità, treasurer and administrator at once (DEC-165). CSQ and
+    VCSQ are the ragazzi's."""
 
     CAPOGRUPPO = "CAPOGRUPPO", "Capogruppo"
     TESORIERE_GRUPPO = "TESORIERE_GRUPPO", "Tesoriere di gruppo"
@@ -172,10 +172,10 @@ class RuoloIncarico(models.TextChoices):
     # would look to the import like a change of unit.
     STAFF = "STAFF", "Staff di unità"
     TESORIERE_UNITA = "TESORIERE_UNITA", "Tesoriere di unità"
-    # A capo of the Co.Ca. serving in no unit for now; excludes any unit service.
+    # A capo of the Co.Ca. serving in no unit for now; excludes any unit service (DEC-165).
     A_DISPOSIZIONE = "A_DISPOSIZIONE", "A disposizione"
     # Appointed by the capigruppo; the first one is created from the command line
-    # (User.amministratore_tecnico). Always a capo (DEC-12, DEC-114).
+    # (User.amministratore_tecnico). Always a capo (DEC-12, DEC-114, DEC-166).
     AMMINISTRATORE = "AMMINISTRATORE", "Amministratore tecnico"
     CSQ = "CSQ", "Capo squadriglia"
     VCSQ = "VCSQ", "Vice capo squadriglia"
@@ -200,7 +200,8 @@ RUOLI_DI_GRUPPO = {
 }
 RUOLI_DI_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.STAFF}
 RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
-# Every capo of the Co.Ca. has a service: one or more units, or at disposal (not both).
+# Every capo of the Co.Ca. has a service: one or more units, or at disposal (not both,
+# DEC-165).
 INCARICHI_DI_SERVIZIO = {
     RuoloIncarico.CAPO_UNITA,
     RuoloIncarico.STAFF,

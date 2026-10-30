@@ -1,4 +1,4 @@
-"""Using the app as another user (maintainer, 30/10/2026): who may, what is blocked, what
+"""Using the app as another user (DEC-167): who may, what is blocked, what
 is recorded."""
 
 from datetime import timedelta

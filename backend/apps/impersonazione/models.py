@@ -1,5 +1,5 @@
 """Using the app as another user, to help them fill something in or to check a problem
-(maintainer, 30/10/2026; no analysis code yet).
+(DEC-167).
 
 - the capigruppo and the technical administrators who are also capi in BuonaStrada may
   act as anyone with an account; the staff of a unit as its ragazzi and their parents

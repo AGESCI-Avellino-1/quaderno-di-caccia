@@ -55,7 +55,7 @@ def _sospese(user) -> set[int]:
 
 def e_amministratore(user) -> bool:
     """Technical administrator (DEC-12): the first one from the command line, then
-    appointed by the capigruppo as a role (maintainer, 30/10/2026). Does NOT grant
+    appointed by the capigruppo as a role (DEC-166). Does NOT grant
     access to educational data."""
     return bool(
         getattr(user, "is_authenticated", False)
@@ -435,7 +435,7 @@ def puo_nominare(
     if ruolo in {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}:
         return e_capogruppo(user)  # DEC-10
     if ruolo in {RuoloIncarico.A_DISPOSIZIONE, RuoloIncarico.AMMINISTRATORE}:
-        return e_capogruppo(user)  # maintainer, 30/10/2026
+        return e_capogruppo(user)  # DEC-165, DEC-166
     if ruolo == RuoloIncarico.TESORIERE_UNITA:
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
@@ -941,7 +941,7 @@ def puo_vedere_iscrizione_buonacaccia(user, persona: Persona) -> bool:
 
 def puo_rispondere_scheda(user, persona: Persona) -> bool:
     """The participant with their own account, or a parent (DEC-161); the parents may
-    always, not only when the child has no account (maintainer, 30/10/2026). The same
+    always, not only when the child has no account (DEC-169). The same
     people send the signed release form (DEC-160)."""
     return _livello_personale(user, persona) in {LivelloAccesso.PROPRIO, LivelloAccesso.TUTORE}
 
@@ -949,7 +949,7 @@ def puo_rispondere_scheda(user, persona: Persona) -> bool:
 def puo_scrivere_scheda(user, persona: Persona) -> bool:
     """Answers and photo: the family (puo_rispondere_scheda) and who manages the
     registration, e.g. copying a paper form for a family that does not use the app
-    (maintainer, 30/10/2026)."""
+    (DEC-169)."""
     return puo_rispondere_scheda(user, persona) or puo_gestire_iscrizione_buonacaccia(user, persona)
 
 
@@ -968,7 +968,7 @@ def puo_vedere_formazione_capi(user) -> bool:
     return e_capogruppo(user)
 
 
-# --- Using the app as another user (maintainer, 30/10/2026) ---------------------------------
+# --- Using the app as another user (DEC-167) -----------------------------------------------
 
 
 def _impersonabili_dallo_staff(user) -> QuerySet[Persona]:

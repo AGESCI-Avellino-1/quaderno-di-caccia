@@ -316,14 +316,12 @@ implements them:
   capi reads of release forms logged as `MODULI`. The photo becomes a JPEG ≤ 1 MB with
   Pillow, metadata dropped. Fees: `CategoriaQuota.BUONACACCIA`, one `Quota` per
   registration, no family discount, never issued by `emetti` nor reminded by
-  `promemoria_quote` (maintainer, 30/10: the app only shows them unpaid). Emails to the
+  `promemoria_quote` (DEC-169: the app only shows them unpaid). Emails to the
   family at registration and reminders 2 days before and on the day, to the family and
-  to the whole unit staff, always sent, not an optional kind of DEC-157 (maintainer,
-  30/10): `manage.py promemoria_buonacaccia` (cron). The family answers the event form;
+  to the whole unit staff, always sent, not an optional kind of DEC-157 (DEC-168): `manage.py promemoria_buonacaccia` (cron). The family answers the event form;
   who manages the registration may also write answers and photo (paper forms). Adults: only a
-  `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp given by
-  the maintainer, 30/10).
-- Service and additional roles (maintainer, 30/10/2026, no analysis code yet;
+  `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp: DEC-170).
+- Service and additional roles (DEC-165, DEC-166;
   `organizzazione.models`): service roles (`INCARICHI_DI_SERVIZIO`: capo unità, staff,
   `A_DISPOSIZIONE` for a capo of the Co.Ca. serving in no unit) and additional roles
   (`RUOLI_AGGIUNTIVI`: capogruppo, group and unit treasurers, `AMMINISTRATORE`) add up
@@ -335,7 +333,7 @@ implements them:
   an `AMMINISTRATORE` role, always a capo; `policy.e_amministratore` reads both. The
   role gives the in-app powers only: the Django admin still needs `is_staff`, set from
   the command line.
-- Using the app as another user (maintainer, 30/10/2026, no analysis code yet;
+- Using the app as another user (DEC-167;
   `apps/impersonazione`): capigruppo and technical administrators who are capi in
   BuonaStrada act as anyone with an account; unit staff as its ragazzi and their
   parents, never capi (`policy.puo_impersonare`, checked again on every request). A

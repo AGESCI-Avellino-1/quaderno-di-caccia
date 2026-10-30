@@ -1,7 +1,7 @@
 """Reminders of fees falling due (DEC-79): daily (cron). One email per family address,
 listing the unpaid fees due within the next days; each fee is reminded once. Not the
 fees of BuonaCaccia events: the group recovers money it advanced, the app only shows
-them as unpaid (maintainer, 30/10/2026)."""
+them as unpaid (DEC-169)."""
 
 from collections import defaultdict
 from datetime import date, timedelta

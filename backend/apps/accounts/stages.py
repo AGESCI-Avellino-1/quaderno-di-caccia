@@ -10,7 +10,7 @@ class SecondoFattoreStage(AuthenticateStage):
 
     allauth counts a passkey as a second factor too: whoever created one could then no
     longer log in with the emailed code alone. Here a passkey is one more way in, and
-    the emailed code stays the fallback (DEC-22).
+    the emailed code stays the fallback (DEC-22, DEC-240).
     """
 
     def _should_handle(self, request) -> bool:

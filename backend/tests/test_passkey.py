@@ -1,5 +1,5 @@
 """Passkeys are a way in, not a second factor: the emailed code stays the fallback
-(DEC-22)."""
+(DEC-22, DEC-240)."""
 
 import pytest
 from allauth.account.models import EmailAddress

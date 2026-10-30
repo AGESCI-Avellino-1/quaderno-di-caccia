@@ -264,6 +264,7 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-237 | La parte «ragazzo» del manuale copre tutte le branche che possono avere un account: L/C (sotto i 14 anni con il consenso del genitore), E/G con il capo squadriglia, R/S. Chi può entrare nell'app ha il suo manuale. | DEC-24, DEC-117, fase 8, 30/10 |
 | DEC-238 | Il manuale è una guida passo passo: ogni funzione con i passi da fare, nell'ordine, e le immagini dei passi. | fase 8, 30/10 |
 | DEC-239 | Screenshot in due formati: telefono, dentro una cornice che lo fa sembrare un telefono, e computer. | DEC-235, fase 8, 30/10 |
+| DEC-240 | La passkey per entrare si crea e si rimuove dalla pagina Dispositivi, dopo aver confermato chi sei (password o un'altra passkey). È un modo in più per entrare, non un secondo fattore: chi ha una passkey entra ancora con il solo codice via email o con la sola password; il secondo fattore lo chiede solo un'app di autenticazione. | DEC-22, 30/10 |
 
 ## Eventi e presenze
 

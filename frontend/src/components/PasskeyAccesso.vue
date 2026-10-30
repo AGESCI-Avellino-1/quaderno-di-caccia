@@ -5,7 +5,7 @@ import { onMounted, ref, watch } from 'vue'
 import { passkey, RiautenticazioneRichiesta, type Passkey } from '@/api/allauth'
 import { testoErrore } from '@/composables/useErrore'
 
-// Login passkeys (DEC-22): created here, used with "Accedi con passkey". Separate from
+// Login passkeys (DEC-22, DEC-240): created here, used with "Accedi con passkey". Separate from
 // the local passkey that unlocks the data on this phone (biometria.ts).
 const props = defineProps<{ nomePredefinito: string }>()
 

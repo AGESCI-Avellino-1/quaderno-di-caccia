@@ -43,7 +43,7 @@ def collega_invito(request, user) -> None:
 
 class AccountAdapter(DefaultAccountAdapter):
     def get_login_stages(self) -> list[str]:
-        """Passkeys are a way in, not a second factor (DEC-22): see stages.py."""
+        """Passkeys are a way in, not a second factor (DEC-240): see stages.py."""
         return [
             (
                 "apps.accounts.stages.SecondoFattoreStage"

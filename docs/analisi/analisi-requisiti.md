@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 29, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 30, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -203,6 +203,9 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-176 | Il passaggio apre il percorso della nuova branca con la sua prima fase (Scoperta del sentiero E/G, passi di scoperta R/S) dalla data del passaggio: è una decisione registrata, non un'apertura automatica (DEC-171). Promessa e distintivi li registra il nuovo staff. | DEC-69, DEC-171, 30/10 |
 | DEC-177 | Il passaggio si prepara per l'unità (chi passa, unità di arrivo, data, sintesi per i nuovi capi di ciascuno; cerimonia con data propria se diversa), si può modificare o annullare con un motivo, e si esegue dalla sua data, dopo una conferma: chiusura e apertura avvengono insieme, tutte o nessuna. Un passaggio eseguito per errore si rettifica: DEC-178. | DEC-69, PP-L, 30/10 |
 | DEC-178 | Un passaggio eseguito per errore si rettifica, con un motivo che resta nella storia, da chi può eseguirlo: si annulla per uno o più ragazzi (torna il percorso di prima con la sua tappa, l'unità, la squadriglia e gli incarichi di squadriglia; il nuovo percorso si toglie) oppure se ne corregge la data. Non si può se il nuovo staff ha già registrato qualcosa nel nuovo percorso (l'app dice cosa) o se dopo il passaggio è stata applicata un'importazione da BuonaStrada: si corregge prima lì. | DEC-174, DEC-177, PP-L, 30/10 |
+| DEC-179 | In R/S obiettivi e impegni li propone anche il rover o la scolta, come in E/G: restano bozze finché lo staff non li concorda, e la verifica la può chiedere lui o lei. Obiettivi R/S e mete E/G sono lo stesso oggetto, chiamato secondo la branca. | DEC-15, DEC-61, DEC-67, PP, 30/10 |
+| DEC-180 | La parte riservata del Punto della Strada (situazioni affrontate con i capi e l'assistente ecclesiastico) la vedono solo il rover o la scolta e i capi, non i genitori, anche se minorenne; la sintesi segue le regole di sempre. Resta fuori dallo storico delle modifiche. | DEC-16, DEC-26, DEC-67, PP V15, 30/10 |
+| DEC-181 | La conclusione del percorso R/S (Partenza, saluto fraterno, interruzione, trasferimento) chiude solo il periodo nella Progressione; l'appartenenza al clan la chiude BuonaStrada all'importazione. | DEC-02, DEC-67, 30/10 |
 
 ## Eventi e presenze
 

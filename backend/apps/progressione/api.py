@@ -18,22 +18,25 @@ from . import servizi
 from .models import (
     ConsegnaDistintivo,
     Fase,
+    FirmaCarta,
     Impegno,
     Impresa,
     LivelloImpresa,
-    MetaEG,
+    Obiettivo,
     Passaggio,
     PassaggioPersona,
     PercorsoCompetenza,
     PeriodoBranca,
     PostoAzione,
     Promessa,
+    PuntoStrada,
     SedeVerifica,
     Stato,
     StatoCompetenza,
     StatoPassaggio,
     Tappa,
     TipoCompetenza,
+    TipoConclusione,
 )
 
 router = Router(tags=["progressione"])
@@ -127,6 +130,24 @@ class PassaggioRiassunto(Schema):
     sintesi: str
 
 
+class ConclusioneOut(Schema):
+    tipo: TipoConclusione
+    tipo_nome: str
+    data: DataOut
+    nota: str
+
+
+class PuntoStradaOut(Schema):
+    id: int
+    periodo_id: int
+    data: date
+    sintesi: str
+    servizio: str
+    # None: the user may not read what was faced in confidence (DEC-180).
+    riservato: str | None
+    obiettivi: list[int]
+
+
 class PeriodoOut(Schema):
     id: int
     branca: str
@@ -139,6 +160,9 @@ class PeriodoOut(Schema):
     passaggio: PassaggioRiassunto | None
     promessa: DataOut | None
     tappe: list[TappaOut]
+    # R/S only (DEC-67).
+    firma_carta: DataOut | None = None
+    conclusione: ConclusioneOut | None = None
 
 
 class CompetenzaOut(Schema):
@@ -183,11 +207,13 @@ class SchedaOut(Schema):
     impegni: list[ImpegnoOut]
     competenze: list[CompetenzaOut]
     posti_azione: list[PostoOut]
+    punti_strada: list[PuntoStradaOut]
     # What the user may do (the API checks again on every command).
     puo_gestire: bool
     puo_proporre: bool
     puo_proporre_verifica: bool
     sedi: list[dict]
+    tipi_conclusione: list[dict]
 
 
 def _tappa_out(t: Tappa) -> dict:
@@ -294,10 +320,11 @@ def _scheda(user, persona: Persona) -> dict:
     periodi = list(
         PeriodoBranca.objects.filter(persona=persona).prefetch_related("tappe__distintivo")
     )
-    mete = MetaEG.objects.filter(periodo__persona=persona).prefetch_related("revisioni")
+    mete = Obiettivo.objects.filter(periodo__persona=persona).prefetch_related("revisioni")
     if not policy.vede_mete_riservate(user, persona):
         mete = mete.filter(riservata=False)
     visibili = {m.pk for m in mete}
+    vede_riservato = policy.vede_riservato_punto_strada(user, persona)
     impegni = Impegno.objects.filter(periodo__persona=persona).prefetch_related("revisioni", "mete")
     return {
         "persona_id": persona.pk,
@@ -316,6 +343,21 @@ def _scheda(user, persona: Persona) -> dict:
                     _d(p.promessa.data, p.promessa.precisione) if hasattr(p, "promessa") else None
                 ),
                 "tappe": [_tappa_out(t) for t in p.tappe.all()],
+                "firma_carta": (
+                    _d(p.firma_carta.data, p.firma_carta.precisione)
+                    if hasattr(p, "firma_carta")
+                    else None
+                ),
+                "conclusione": (
+                    {
+                        "tipo": p.conclusione.tipo,
+                        "tipo_nome": p.conclusione.get_tipo_display(),
+                        "data": _d(p.conclusione.data, p.conclusione.precisione),
+                        "nota": p.conclusione.nota,
+                    }
+                    if hasattr(p, "conclusione")
+                    else None
+                ),
             }
             for p in periodi
         ],
@@ -341,10 +383,25 @@ def _scheda(user, persona: Persona) -> dict:
                 "impresa", "persona"
             )
         ],
+        "punti_strada": [
+            {
+                "id": ps.pk,
+                "periodo_id": ps.periodo_id,
+                "data": ps.data,
+                "sintesi": ps.sintesi,
+                "servizio": ps.servizio,
+                "riservato": ps.riservato if vede_riservato else None,
+                "obiettivi": [o.pk for o in ps.obiettivi.all() if o.pk in visibili],
+            }
+            for ps in PuntoStrada.objects.filter(periodo__persona=persona).prefetch_related(
+                "obiettivi"
+            )
+        ],
         "puo_gestire": policy.puo_gestire_progressione(user, persona),
         "puo_proporre": policy.puo_proporre_percorsi(user, persona),
         "puo_proporre_verifica": policy.puo_proporre_verifica(user, persona),
         "sedi": [{"valore": v, "etichetta": e} for v, e in SedeVerifica.choices],
+        "tipi_conclusione": [{"valore": v, "etichetta": e} for v, e in TipoConclusione.choices],
     }
 
 
@@ -458,6 +515,88 @@ def rettifica_tappa(request, tappa_id: int, dati: RettificaTappaIn):
     return _scheda(request.auth, tappa.periodo.persona)
 
 
+# --- R/S: Carta di clan, passi, Punto della Strada, conclusione (DEC-67, DEC-179…DEC-181) ---
+
+
+@router.post("/progressione/periodi/{periodo_id}/carta", response=SchedaOut)
+def firma_carta(request, periodo_id: int, dati: DataIn):
+    """The Carta di clan, signed: the passi di competenza begin (V12)."""
+    periodo = _periodo(request, periodo_id)
+    _esegui(servizi.firma_carta, periodo, _quando(dati), request.auth)
+    return _scheda(request.auth, periodo.persona)
+
+
+@router.put("/progressione/periodi/{periodo_id}/carta", response=SchedaOut)
+def rettifica_carta(request, periodo_id: int, dati: RettificaIn):
+    periodo = _periodo(request, periodo_id)
+    firma = get_object_or_404(FirmaCarta, periodo=periodo)
+    _esegui(servizi.rettifica_firma, firma, _quando(dati), dati.motivo)
+    return _scheda(request.auth, periodo.persona)
+
+
+@router.post("/progressione/tappe/{tappa_id}/responsabilita", response=SchedaOut)
+def responsabilita(request, tappa_id: int, dati: DataIn):
+    """The confronto on the choices of the Partenza begins: passi di responsabilità."""
+    tappa = _tappa(request, tappa_id)
+    _esegui(servizi.avvia_responsabilita, tappa, _quando(dati), request.auth)
+    return _scheda(request.auth, tappa.periodo.persona)
+
+
+class ConclusioneIn(DataIn):
+    tipo: TipoConclusione
+    nota: str = ""
+
+
+@router.post("/progressione/periodi/{periodo_id}/conclusione", response=SchedaOut)
+def conclusione(request, periodo_id: int, dati: ConclusioneIn):
+    """Partenza, saluto fraterno, interruzione or trasferimento: never automatic (V14)."""
+    periodo = _periodo(request, periodo_id)
+    _esegui(servizi.concludi, periodo, dati.tipo, _quando(dati), dati.nota, request.auth)
+    return _scheda(request.auth, periodo.persona)
+
+
+class PuntoStradaIn(Schema):
+    data: date
+    sintesi: str = ""
+    servizio: str = ""
+    # None leaves it as it is (who cannot read it cannot overwrite it).
+    riservato: str | None = None
+    obiettivi: list[int] = []
+
+
+def _salva_punto(request, punto: PuntoStrada, dati: PuntoStradaIn):
+    persona = punto.periodo.persona
+    riservato = dati.riservato
+    if riservato is not None and not policy.vede_riservato_punto_strada(request.auth, persona):
+        riservato = None
+    obiettivi = list(Obiettivo.objects.filter(pk__in=dati.obiettivi))
+    with transaction.atomic():
+        _esegui(
+            servizi.salva_punto_strada,
+            punto,
+            request.auth,
+            data=dati.data,
+            sintesi=dati.sintesi,
+            servizio=dati.servizio,
+            riservato=riservato,
+            obiettivi=obiettivi,
+        )
+    return _scheda(request.auth, persona)
+
+
+@router.post("/progressione/periodi/{periodo_id}/punti-strada", response={201: SchedaOut})
+def nuovo_punto_strada(request, periodo_id: int, dati: PuntoStradaIn):
+    periodo = _periodo(request, periodo_id)
+    return Status(201, _salva_punto(request, PuntoStrada(periodo=periodo), dati))
+
+
+@router.put("/punti-strada/{punto_id}", response=SchedaOut)
+def modifica_punto_strada(request, punto_id: int, dati: PuntoStradaIn):
+    punto = get_object_or_404(PuntoStrada.objects.select_related("periodo"), pk=punto_id)
+    _periodo(request, punto.periodo_id)
+    return _salva_punto(request, punto, dati)
+
+
 # --- Impegni and mete ----------------------------------------------------------------------
 
 
@@ -494,7 +633,7 @@ def nuova_meta(request, persona_id: int, dati: MetaIn):
     persona, periodo = _sentiero_attivo(request, persona_id)
     _esegui(
         servizi.nuovo,
-        MetaEG,
+        Obiettivo,
         periodo,
         request.auth,
         testo=dati.testo,
@@ -520,12 +659,12 @@ def nuovo_impegno(request, persona_id: int, dati: ImpegnoIn):
             dal_ragazzo=_dal_ragazzo(request, persona),
             criterio_verifica=dati.criterio_verifica.strip(),
         )
-        mete = list(MetaEG.objects.filter(pk__in=dati.mete))
+        mete = list(Obiettivo.objects.filter(pk__in=dati.mete))
         _esegui(servizi.collega_mete, impegno, mete)
     return Status(201, _scheda(request.auth, persona))
 
 
-MODELLI = {"mete": MetaEG, "impegni": Impegno}
+MODELLI = {"mete": Obiettivo, "impegni": Impegno}
 
 
 def _oggetto(request, tipo: str, oggetto_id: int):
@@ -535,7 +674,7 @@ def _oggetto(request, tipo: str, oggetto_id: int):
     oggetto = get_object_or_404(modello.objects.select_related("periodo__persona"), pk=oggetto_id)
     persona = _persona(request, oggetto.periodo.persona_id)
     if (
-        isinstance(oggetto, MetaEG)
+        isinstance(oggetto, Obiettivo)
         and oggetto.riservata
         and not policy.vede_mete_riservate(request.auth, persona)
     ):
@@ -568,11 +707,11 @@ def riformula(request, tipo: str, oggetto_id: int, dati: RiformulaIn):
             termine=dati.termine,
             criterio=dati.criterio_verifica,
         )
-        if isinstance(oggetto, MetaEG) and dati.riservata is not None:
+        if isinstance(oggetto, Obiettivo) and dati.riservata is not None:
             oggetto.riservata = dati.riservata
             oggetto.save(update_fields=["riservata", "aggiornato_il"])
         if isinstance(oggetto, Impegno) and dati.mete is not None:
-            _esegui(servizi.collega_mete, oggetto, list(MetaEG.objects.filter(pk__in=dati.mete)))
+            _esegui(servizi.collega_mete, oggetto, list(Obiettivo.objects.filter(pk__in=dati.mete)))
     return _scheda(request.auth, persona)
 
 
@@ -684,7 +823,7 @@ def sentiero_unita(request, unita_id: int):
                 "impegni_da_verificare": impegni.filter(stato=Stato.DA_VERIFICARE).count(),
                 "bozze": impegni.filter(stato=Stato.BOZZA).count()
                 + (
-                    MetaEG.objects.filter(periodo=periodo, stato=Stato.BOZZA).count()
+                    Obiettivo.objects.filter(periodo=periodo, stato=Stato.BOZZA).count()
                     if periodo
                     else 0
                 ),
@@ -699,7 +838,7 @@ def sentiero_unita(request, unita_id: int):
                 ),
                 "brevetto": _brevetto(periodo),
                 "mete_aperte": (
-                    MetaEG.objects.filter(
+                    Obiettivo.objects.filter(
                         periodo=periodo,
                         stato__in=[Stato.CONCORDATO, Stato.IN_CORSO, Stato.DA_VERIFICARE],
                     ).count()

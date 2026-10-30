@@ -169,13 +169,18 @@ def test_non_cancella_se_stesso(capogruppo):
 
 def _progressione(ragazza, capo):
     from apps.progressione import servizi
-    from apps.progressione.models import MetaEG
+    from apps.progressione.models import Obiettivo
 
     oggi = servizi.DataParziale.giorno(date.today())
     periodo = servizi.apri_sentiero(ragazza, oggi, capo.utente)
     servizi.registra_promessa(periodo, oggi, capo.utente)
     servizi.nuovo(
-        MetaEG, periodo, capo.utente, testo="Imparare a nuotare", dal_ragazzo=False, riservata=True
+        Obiettivo,
+        periodo,
+        capo.utente,
+        testo="Imparare a nuotare",
+        dal_ragazzo=False,
+        riservata=True,
     )
     return periodo
 
@@ -199,7 +204,7 @@ def test_la_progressione_e_nel_fascicolo(ragazza, capo, capogruppo):
 
 
 def test_la_cancellazione_toglie_la_progressione(ragazza, capo, capogruppo):
-    from apps.progressione.models import MetaEG, PeriodoBranca, Promessa, Tappa
+    from apps.progressione.models import Obiettivo, PeriodoBranca, Promessa, Tappa
 
     _progressione(ragazza, capo)
     client = _client(capogruppo)
@@ -207,5 +212,5 @@ def test_la_cancellazione_toglie_la_progressione(ragazza, capo, capogruppo):
     assert any("Progressione" in v for v in client.get(url).json()["voci"])
     assert client.post(url, {"cognome": "esploratrice"}, "application/json").status_code == 200
     assert not PeriodoBranca.objects.filter(persona=ragazza).exists()
-    assert not (Tappa.objects.exists() or Promessa.objects.exists() or MetaEG.objects.exists())
+    assert not (Tappa.objects.exists() or Promessa.objects.exists() or Obiettivo.objects.exists())
     assert not LogEntry.objects.filter(changes_text__icontains="Imparare a nuotare").exists()

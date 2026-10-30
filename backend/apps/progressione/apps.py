@@ -15,12 +15,17 @@ class ProgressioneConfig(AppConfig):
             models.Tappa,
             models.Promessa,
             models.ConsegnaDistintivo,
-            models.MetaEG,
+            models.Obiettivo,
             models.Impegno,
             models.PercorsoCompetenza,
             models.Impresa,
             models.PostoAzione,
             models.Passaggio,
             models.PassaggioPersona,
+            models.FirmaCarta,
+            models.Conclusione,
         ):
             auditlog.register(modello)
+        # What was faced in confidence stays out of the audit log, which the technical
+        # administrator reads (DEC-180).
+        auditlog.register(models.PuntoStrada, exclude_fields=["riservato"])

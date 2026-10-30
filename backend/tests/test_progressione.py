@@ -10,7 +10,7 @@ from auditlog.models import LogEntry
 from django.test import Client
 
 from apps.permessi import policy
-from apps.progressione.models import Fase, Impegno, MetaEG, PeriodoBranca, Stato, Tappa
+from apps.progressione.models import Fase, Impegno, Obiettivo, PeriodoBranca, Stato, Tappa
 from tests.conftest import crea_capo
 
 pytestmark = pytest.mark.django_db
@@ -271,7 +271,7 @@ def test_meta_riservata(capo, ragazza, genitore, csq):
     assert _post(csq, f"/api/v1/progressione/mete/{meta_id}/proponi_verifica").status_code == 404
     per_il_genitore = _client(genitore).get(f"/api/v1/persone/{ragazza.pk}/progressione").json()
     assert per_il_genitore["mete"][0]["riservata"]
-    assert MetaEG.objects.get().stato == Stato.BOZZA
+    assert Obiettivo.objects.get().stato == Stato.BOZZA
 
 
 def test_interrompere_richiede_il_motivo(capo, ragazza):

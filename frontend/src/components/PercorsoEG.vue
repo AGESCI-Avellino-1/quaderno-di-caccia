@@ -22,6 +22,8 @@ const props = defineProps<{
   propone: boolean
   sedi: Scelta[]
   nomiMete: Record<number, string>
+  /** R/S: the mete are called obiettivi, verified outside the Consiglio della Legge. */
+  rs?: boolean
 }>()
 const emit = defineEmits<{ cambiata: [inCoda: boolean] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -31,7 +33,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
 const aperta = ref<'' | 'convalida' | 'interrompi' | 'riformula' | 'storia'>('')
 const modulo = reactive({
   il: oggi(),
-  sede: props.tipo === 'mete' ? 'CONSIGLIO_LEGGE' : '',
+  sede: props.tipo === 'mete' && !props.rs ? 'CONSIGLIO_LEGGE' : '',
   sede_descrizione: '',
   motivo: '',
   testo: props.voce.testo,
@@ -110,7 +112,7 @@ async function riformula() {
             Come si verifica: {{ impegno.criterio_verifica }}.
           </template>
           <template v-if="impegno?.mete.length">
-            Per la meta:
+            {{ rs ? "Per l'obiettivo:" : 'Per la meta:' }}
             {{
               impegno.mete
                 .map((m) => nomiMete[m] ?? '')

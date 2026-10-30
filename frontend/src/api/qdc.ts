@@ -1280,6 +1280,27 @@ export interface ImpegnoEG extends PercorsoPersonale {
   mete: number[]
 }
 
+export type TipoConclusione = 'PARTENZA' | 'SALUTO_FRATERNO' | 'INTERRUZIONE' | 'TRASFERIMENTO'
+
+/** A Punto della Strada (DEC-67); `riservato` is null for who may not read it (DEC-180). */
+export interface PuntoStrada {
+  id: number
+  periodo_id: number
+  data: string
+  sintesi: string
+  servizio: string
+  riservato: string | null
+  obiettivi: number[]
+}
+
+export interface PuntoStradaIn {
+  data: string
+  sintesi: string
+  servizio: string
+  riservato?: string
+  obiettivi: number[]
+}
+
 export interface PeriodoBranca {
   id: number
   branca: string
@@ -1297,6 +1318,14 @@ export interface PeriodoBranca {
   } | null
   promessa: DataParziale | null
   tappe: TappaSentiero[]
+  // R/S only (DEC-67).
+  firma_carta: DataParziale | null
+  conclusione: {
+    tipo: TipoConclusione
+    tipo_nome: string
+    data: DataParziale
+    nota: string
+  } | null
 }
 
 export type StatoPassaggio = 'PREPARATO' | 'ESEGUITO' | 'ANNULLATO' | 'RETTIFICATO'
@@ -1432,10 +1461,12 @@ export interface SchedaProgressione {
   impegni: ImpegnoEG[]
   competenze: Competenza[]
   posti_azione: PostoAzione[]
+  punti_strada: PuntoStrada[]
   puo_gestire: boolean
   puo_proporre: boolean
   puo_proporre_verifica: boolean
   sedi: Scelta[]
+  tipi_conclusione: Scelta[]
 }
 
 export interface RagazzoSentiero {
@@ -1984,6 +2015,33 @@ export const api = {
       metodo: 'PUT',
       corpo: { ...quando, motivo },
     }),
+  firmaCarta: (periodo: number, quando: DataParziale) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/carta`, {
+      metodo: 'POST',
+      corpo: quando,
+    }),
+  rettificaCarta: (periodo: number, quando: DataParziale, motivo: string) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/carta`, {
+      metodo: 'PUT',
+      corpo: { ...quando, motivo },
+    }),
+  avviaResponsabilita: (tappa: number, quando: DataParziale) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}/responsabilita`, {
+      metodo: 'POST',
+      corpo: quando,
+    }),
+  concludi: (periodo: number, dati: DataParziale & { tipo: TipoConclusione; nota: string }) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/conclusione`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  nuovoPuntoStrada: (periodo: number, dati: PuntoStradaIn) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/punti-strada`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  modificaPuntoStrada: (id: number, dati: PuntoStradaIn) =>
+    richiesta<SchedaProgressione>(`/api/v1/punti-strada/${id}`, { metodo: 'PUT', corpo: dati }),
   riconosciTappa: (tappa: number, quando: DataParziale) =>
     richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}/riconosci`, {
       metodo: 'POST',

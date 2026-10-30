@@ -17,16 +17,19 @@ from apps.organizzazione.models import Branca
 from .models import (
     APERTI,
     ORDINE_FASI,
+    Conclusione,
     ConsegnaDistintivo,
     Fase,
+    FirmaCarta,
     Impegno,
-    MetaEG,
+    Obiettivo,
     Passaggio,
     PassaggioPersona,
     PercorsoCompetenza,
     PeriodoBranca,
     PostoAzione,
     Promessa,
+    PuntoStrada,
     Revisione,
     SedeVerifica,
     Stato,
@@ -34,6 +37,7 @@ from .models import (
     StatoPassaggio,
     Tappa,
     TipoCompetenza,
+    TipoConclusione,
 )
 
 APERTI_COMPETENZA = (
@@ -65,6 +69,20 @@ def periodo_attivo(persona: Persona) -> PeriodoBranca | None:
 # --- Sentiero, tappe, Promessa, badges ----------------------------------------------------
 
 
+def branca_attuale(persona: Persona) -> str | None:
+    """The branch of the unit the ragazzo belongs to today (reparto E/G, noviziato and
+    clan R/S, branco and cerchio L/C)."""
+    from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+
+    appartenenza = (
+        Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.RAGAZZO)
+        .select_related("unita")
+        .first()
+    )
+    return appartenenza.unita.branca if appartenenza else None
+
+
 @transaction.atomic
 def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBranca:
     """The staff registers the entry in the sentiero (DEC-171): the branch period and the
@@ -73,7 +91,13 @@ def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBran
         raise ValidationError("Il percorso in questa branca è già aperto.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno dell'ingresso.")
-    return _apri_periodo(persona, Branca.EG, quando, utente)
+    branca = branca_attuale(persona)
+    if branca not in (Branca.EG, Branca.RS):
+        raise ValidationError(
+            "Il percorso si apre per chi è in reparto, noviziato o clan; "
+            "per i lupetti e le coccinelle arriverà in seguito."
+        )
+    return _apri_periodo(persona, branca, quando, utente)
 
 
 def _apri_periodo(persona: Persona, branca: str, quando: DataParziale, utente) -> PeriodoBranca:
@@ -118,7 +142,10 @@ def registra_promessa(periodo: PeriodoBranca, quando: DataParziale, utente) -> P
 @transaction.atomic
 def riconosci_tappa(tappa: Tappa, quando: DataParziale, utente) -> Tappa:
     """The Consiglio della Legge recognises the tappa: the next one starts the same day;
-    after Responsabilità the sentiero goes on until the passaggio (V16)."""
+    after Responsabilità the sentiero goes on until the passaggio (V16). E/G only: the
+    passi R/S move with the Carta di clan and the confronto on the Partenza."""
+    if tappa.periodo.branca != Branca.EG:
+        raise ValidationError("I passi R/S non si riconoscono nel Consiglio della Legge.")
     if tappa.completata_il is not None:
         if (tappa.completata_il, tappa.precisione_completata) == (
             quando.valore,
@@ -156,6 +183,8 @@ def colloca(tappa: Tappa, fase: str, quando: DataParziale, motivazione: str, ute
     suited to them, without inventing the ones in between (spec §17.6; E/G art. 41)."""
     if tappa.fase != Fase.SCOPERTA or tappa.data_fine is not None:
         raise ValidationError("Il collocamento si fa dalla Scoperta in corso.")
+    if tappa.periodo.branca != Branca.EG:
+        raise ValidationError("In R/S i passi seguono la firma della Carta di clan.")
     if fase not in (Fase.COMPETENZA, Fase.RESPONSABILITA):
         raise ValidationError("Scegli la tappa in cui collocarlo.")
     if not Promessa.objects.filter(periodo=tappa.periodo).exists():
@@ -224,8 +253,8 @@ def nuovo(
     """A draft; the ragazzo's stays a draft until the staff agrees it (DEC-61)."""
     if periodo.data_fine is not None:
         raise ValidationError("Il percorso in questa branca è chiuso.")
-    if periodo.branca != Branca.EG:
-        raise ValidationError("Per ora mete e impegni sono quelli del sentiero E/G.")
+    if periodo.branca not in (Branca.EG, Branca.RS):
+        raise ValidationError("Per ora mete, obiettivi e impegni sono quelli di E/G e R/S.")
     if not testo.strip():
         raise ValidationError("Scrivi il testo.")
     oggetto = modello(
@@ -337,7 +366,7 @@ def esegui(
     return oggetto
 
 
-def collega_mete(impegno: Impegno, mete: list[MetaEG]) -> None:
+def collega_mete(impegno: Impegno, mete: list[Obiettivo]) -> None:
     if any(m.periodo_id != impegno.periodo_id for m in mete):
         raise ValidationError("Le mete devono essere dello stesso sentiero.")
     impegno.mete.set(mete)
@@ -844,3 +873,143 @@ def correggi_data(passaggio: Passaggio, nuova: date, motivo: str) -> Passaggio:
     passaggio.nota_rettifica = motivo.strip()[:300]
     passaggio.save()
     return passaggio
+
+
+# --- R/S: passi, Carta di clan, Punto della Strada, conclusione (DEC-67, DEC-179…DEC-181) ---
+
+
+def _strada(periodo: PeriodoBranca) -> None:
+    if periodo.branca != Branca.RS:
+        raise ValidationError("Vale per il percorso R/S.")
+    if periodo.data_fine is not None:
+        raise ValidationError("Il percorso è concluso.")
+
+
+def _passa(tappa: Tappa, fase: str, quando: DataParziale, utente) -> Tappa:
+    tappa.completata_il = quando.valore
+    tappa.precisione_completata = quando.precisione
+    tappa.completata_da = utente
+    tappa.data_fine = quando.valore
+    tappa.save()
+    return Tappa.objects.create(
+        periodo=tappa.periodo,
+        fase=fase,
+        data_inizio=quando.valore,
+        precisione_inizio=quando.precisione,
+        registrata_da=utente,
+    )
+
+
+@transaction.atomic
+def firma_carta(periodo: PeriodoBranca, quando: DataParziale, utente) -> FirmaCarta:
+    """The Carta di clan, signed: from the same day the passi di competenza (V12, spec
+    §17.7), in one go. Entering the clan alone does not open them. Signed twice = once."""
+    _strada(periodo)
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno della firma.")
+    esistente = FirmaCarta.objects.filter(periodo=periodo).first()
+    if esistente is not None:
+        if (esistente.data, esistente.precisione) == (quando.valore, quando.precisione):
+            return esistente
+        raise ValidationError("La firma è già registrata: correggi la data se è sbagliata.")
+    _non_prima(quando, periodo.data_inizio, "l'ingresso nella strada")
+    firma = FirmaCarta.objects.create(
+        periodo=periodo, data=quando.valore, precisione=quando.precisione, registrata_da=utente
+    )
+    tappa = periodo.tappa_attuale()
+    if tappa is not None and tappa.fase == Fase.SCOPERTA:
+        _passa(tappa, Fase.COMPETENZA, quando, utente)
+    return firma
+
+
+@transaction.atomic
+def rettifica_firma(firma: FirmaCarta, quando: DataParziale, motivo: str) -> None:
+    """The Carta was signed on another day: the passi di competenza it opened move with it."""
+    vecchia = firma.data
+    rettifica_data(firma, "data", quando, motivo)
+    for tappa in firma.periodo.tappe.all():
+        if tappa.fase == Fase.SCOPERTA and tappa.data_fine == vecchia:
+            tappa.data_fine = tappa.completata_il = quando.valore
+            tappa.precisione_completata = quando.precisione
+            tappa.save()
+        elif tappa.fase == Fase.COMPETENZA and tappa.data_inizio == vecchia:
+            tappa.data_inizio = quando.valore
+            tappa.precisione_inizio = quando.precisione
+            tappa.nota_rettifica = firma.nota_rettifica
+            tappa.save()
+
+
+@transaction.atomic
+def avvia_responsabilita(tappa: Tappa, quando: DataParziale, utente) -> Tappa:
+    """The explicit confronto on the choices of the Partenza begins, shared with the
+    clan: the passi di responsabilità (spec §17.7). Never a "Partenza" level."""
+    _strada(tappa.periodo)
+    if tappa.fase == Fase.RESPONSABILITA and tappa.data_fine is None:
+        return tappa
+    if tappa.fase != Fase.COMPETENZA or tappa.data_fine is not None:
+        raise ValidationError("Si parte dai passi di competenza in corso.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno.")
+    _non_prima(quando, tappa.data_inizio, "l'inizio della competenza")
+    return _passa(tappa, Fase.RESPONSABILITA, quando, utente)
+
+
+@transaction.atomic
+def concludi(
+    periodo: PeriodoBranca, tipo: str, quando: DataParziale, nota: str, utente
+) -> Conclusione:
+    """Partenza, saluto fraterno, interruzione or trasferimento, with the date
+    (DEC-67): the R/S period closes; the clan membership is BuonaStrada's (DEC-181).
+    Never automatic, never at an age (V14)."""
+    esistente = Conclusione.objects.filter(periodo=periodo).first()
+    if esistente is not None:
+        if (esistente.tipo, esistente.data) == (tipo, quando.valore):
+            return esistente
+        raise ValidationError("Il percorso è già concluso.")
+    _strada(periodo)
+    if tipo not in TipoConclusione.values:
+        raise ValidationError("Scegli come si conclude.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno.")
+    _non_prima(quando, periodo.data_inizio, "l'ingresso nella strada")
+    conclusione = Conclusione.objects.create(
+        periodo=periodo,
+        tipo=tipo,
+        data=quando.valore,
+        precisione=quando.precisione,
+        nota=nota.strip()[:300],
+        registrata_da=utente,
+    )
+    Tappa.objects.filter(periodo=periodo, data_fine__isnull=True).update(data_fine=quando.valore)
+    periodo.data_fine = quando.valore
+    periodo.motivo_fine = conclusione.get_tipo_display()
+    periodo.save()
+    return conclusione
+
+
+def salva_punto_strada(
+    punto: PuntoStrada,
+    utente,
+    *,
+    data: date,
+    sintesi: str,
+    servizio: str,
+    riservato: str | None,
+    obiettivi: list[Obiettivo],
+) -> PuntoStrada:
+    """Simple and repeatable (DEC-67): no states, no four mandatory obiettivi (V13)."""
+    _strada(punto.periodo)
+    if data > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    if any(o.periodo_id != punto.periodo_id for o in obiettivi):
+        raise ValidationError("Gli obiettivi devono essere della stessa strada.")
+    punto.data = data
+    punto.sintesi = sintesi.strip()
+    punto.servizio = servizio.strip()
+    if riservato is not None:
+        punto.riservato = riservato.strip()
+    if punto.pk is None:
+        punto.creato_da = utente
+    punto.save()
+    punto.obiettivi.set(obiettivi)
+    return punto

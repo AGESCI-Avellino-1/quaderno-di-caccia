@@ -263,12 +263,13 @@ def _quando(data, precisione=None) -> str:
 
 
 def _progressione(persona: Persona) -> dict:
-    """The Progressione Personale, private mete included: it is all about the person."""
+    """The Progressione Personale, private mete and the private part of the Punti della
+    Strada included: it is all about the person."""
     from apps.progressione.models import PassaggioPersona, PeriodoBranca, PostoAzione
 
     periodi = list(
         PeriodoBranca.objects.filter(persona=persona).prefetch_related(
-            "tappe", "mete", "impegni", "competenze"
+            "tappe", "mete", "impegni", "competenze", "punti_strada"
         )
     )
     percorso = []
@@ -281,6 +282,17 @@ def _progressione(persona: Persona) -> dict:
             "Promessa": (
                 _quando(periodo.promessa.data, periodo.promessa.precisione)
                 if hasattr(periodo, "promessa")
+                else ""
+            ),
+            "Firma della Carta di clan": (
+                _quando(periodo.firma_carta.data, periodo.firma_carta.precisione)
+                if hasattr(periodo, "firma_carta")
+                else ""
+            ),
+            "Conclusione": (
+                f"{periodo.conclusione.get_tipo_display()} "
+                f"{_quando(periodo.conclusione.data, periodo.conclusione.precisione)}"
+                if hasattr(periodo, "conclusione")
                 else ""
             ),
             "Tappe o passi": "; ".join(
@@ -298,7 +310,7 @@ def _progressione(persona: Persona) -> dict:
         "progressione_personale": percorso,
         "mete_e_impegni": [
             {
-                "Tipo": tipo,
+                "Tipo": tipo if periodo.branca != "RS" or tipo != "Meta" else "Obiettivo",
                 "Testo": v.testo,
                 "Riservata": "sì" if getattr(v, "riservata", False) else "",
                 "Stato": v.get_stato_display(),
@@ -308,6 +320,16 @@ def _progressione(persona: Persona) -> dict:
             for periodo in periodi
             for tipo, righe in (("Meta", periodo.mete.all()), ("Impegno", periodo.impegni.all()))
             for v in righe
+        ],
+        "punti_della_strada": [
+            {
+                "Data": _quando(ps.data),
+                "Sintesi": ps.sintesi,
+                "Servizio": ps.servizio,
+                "Parte riservata": ps.riservato,
+            }
+            for periodo in periodi
+            for ps in periodo.punti_strada.all()
         ],
         "specialita_e_brevetti": [
             {
@@ -425,8 +447,9 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Iscrizioni dall'app e moduli firmati caricati",
         "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
         "(le quote restano)",
-        "Progressione personale: tappe, Promessa, mete e impegni, specialità e brevetti, "
-        "posti d'azione nelle imprese, sintesi dei passaggi di branca",
+        "Progressione personale: tappe e passi, Promessa, Carta di clan, mete, obiettivi e "
+        "impegni, Punti della Strada, specialità e brevetti, posti d'azione nelle imprese, "
+        "sintesi dei passaggi di branca",
         "Storico delle modifiche di questi dati",
     ]
     if motivo is None:

@@ -218,20 +218,23 @@ class Percorso(ModelloTracciato):
         return self.stato in APERTI
 
 
-class MetaEG(Percorso):
-    """A meta E/G (art. 33): introduced when the ragazzo can formulate it (V07). A
-    private one (`riservata`) is seen only by the ragazzo, the parents and the capi
-    (DEC-173)."""
+class Obiettivo(Percorso):
+    """A meta E/G (art. 33: introduced when the ragazzo can formulate it, V07) or an
+    obiettivo R/S (art. 39: set or recalibrated in the Punto della Strada); spec §16.2
+    "ObjectiveKind". A private one (`riservata`) is seen only by the ragazzo, the parents
+    and the capi (DEC-173).
+
+    The API calls them "mete" whatever the branch; the PWA names them by branch."""
 
     periodo = models.ForeignKey(PeriodoBranca, on_delete=models.CASCADE, related_name="mete")
     riservata = models.BooleanField(default=False)
 
     class Meta(Percorso.Meta):
-        verbose_name = "meta"
-        verbose_name_plural = "mete"
+        verbose_name = "meta o obiettivo"
+        verbose_name_plural = "mete e obiettivi"
 
     def __str__(self) -> str:
-        return f"Meta di {self.periodo.persona}"
+        return f"Obiettivo di {self.periodo.persona}"
 
 
 class Impegno(Percorso):
@@ -240,7 +243,7 @@ class Impegno(Percorso):
 
     periodo = models.ForeignKey(PeriodoBranca, on_delete=models.CASCADE, related_name="impegni")
     criterio_verifica = models.TextField(blank=True)
-    mete = models.ManyToManyField(MetaEG, blank=True, related_name="impegni")
+    mete = models.ManyToManyField(Obiettivo, blank=True, related_name="impegni")
 
     class Meta(Percorso.Meta):
         verbose_name = "impegno"
@@ -254,7 +257,7 @@ class Revisione(models.Model):
     """A former wording of an impegno or a meta (DEC-59): kept when the text changes."""
 
     meta = models.ForeignKey(
-        MetaEG, null=True, blank=True, on_delete=models.CASCADE, related_name="revisioni"
+        Obiettivo, null=True, blank=True, on_delete=models.CASCADE, related_name="revisioni"
     )
     impegno = models.ForeignKey(
         Impegno, null=True, blank=True, on_delete=models.CASCADE, related_name="revisioni"
@@ -528,3 +531,82 @@ class PassaggioPersona(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.persona} — {self.passaggio}"
+
+
+# --- R/S: Carta di clan, Punto della Strada, conclusione (DEC-67, DEC-179…DEC-181) ----------
+
+
+class FirmaCarta(ModelloTracciato):
+    """The signature of the Carta di clan, recorded with its date only (DEC-67): the
+    event that opens the passi di competenza (V12). The text of the Carta comes later
+    (phase 6)."""
+
+    periodo = models.OneToOneField(
+        PeriodoBranca, on_delete=models.CASCADE, related_name="firma_carta"
+    )
+    data = _data()
+    precisione = _precisione()
+    registrata_da = _utente()
+    nota_rettifica = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "firma della Carta di clan"
+        verbose_name_plural = "firme della Carta di clan"
+
+    def __str__(self) -> str:
+        return f"Carta di clan di {self.periodo.persona}"
+
+
+class PuntoStrada(ModelloTracciato):
+    """A Punto della Strada, simple and repeatable (DEC-67, art. 39): a dated reading of
+    the way, the service verified, the obiettivi set or recalibrated. `riservato` holds
+    what was faced in confidence with the capi and the AE: only the R/S and the capi see
+    it (DEC-180, V15); the summary follows the usual rules."""
+
+    periodo = models.ForeignKey(
+        PeriodoBranca, on_delete=models.CASCADE, related_name="punti_strada"
+    )
+    data = _data()
+    sintesi = models.TextField(blank=True)
+    servizio = models.TextField(blank=True)
+    riservato = models.TextField(blank=True)
+    obiettivi = models.ManyToManyField(Obiettivo, blank=True, related_name="punti_strada")
+    creato_da = _utente()
+
+    class Meta:
+        verbose_name = "Punto della Strada"
+        verbose_name_plural = "Punti della Strada"
+        ordering = ["data", "creato_il"]
+
+    def __str__(self) -> str:
+        return f"Punto della Strada di {self.periodo.persona} del {self.data:%d/%m/%Y}"
+
+
+class TipoConclusione(models.TextChoices):
+    """Spec §16.2 ClosureKind: none is a failure, none is automatic (V14)."""
+
+    PARTENZA = "PARTENZA", "Partenza"
+    SALUTO_FRATERNO = "SALUTO_FRATERNO", "Saluto fraterno"
+    INTERRUZIONE = "INTERRUZIONE", "Interruzione"
+    TRASFERIMENTO = "TRASFERIMENTO", "Trasferimento"
+
+
+class Conclusione(ModelloTracciato):
+    """How the R/S way ends, with type and date (DEC-67): it closes the branch period
+    only, the clan membership is BuonaStrada's (DEC-181)."""
+
+    periodo = models.OneToOneField(
+        PeriodoBranca, on_delete=models.CASCADE, related_name="conclusione"
+    )
+    tipo = models.CharField(max_length=16, choices=TipoConclusione.choices)
+    data = _data()
+    precisione = _precisione()
+    nota = models.CharField(max_length=300, blank=True)
+    registrata_da = _utente()
+
+    class Meta:
+        verbose_name = "conclusione del percorso"
+        verbose_name_plural = "conclusioni del percorso"
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()} di {self.periodo.persona}"

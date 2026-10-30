@@ -1057,6 +1057,15 @@ def vede_mete_riservate(user, persona: Persona) -> bool:
     return livello == LivelloAccesso.PROPRIO
 
 
+def vede_riservato_punto_strada(user, persona: Persona) -> bool:
+    """What a rover or a scolta faced in confidence with the capi and the assistente
+    ecclesiastico (V15): the R/S and the capi only, not the parents, even of a minor
+    (DEC-180)."""
+    if e_capo_censito(user):
+        return True
+    return _livello_personale(user, persona) == LivelloAccesso.PROPRIO
+
+
 def puo_gestire_progressione(user, persona: Persona) -> bool:
     """Sentiero, tappe, Promessa, badges, agreeing and validating: the staff of the
     person's unit (DEC-09: a capo writes for the unit they serve)."""
@@ -1065,7 +1074,8 @@ def puo_gestire_progressione(user, persona: Persona) -> bool:
 
 def puo_proporre_percorsi(user, persona: Persona) -> bool:
     """An E/G inserts their own mete and impegni, as drafts the staff agrees (DEC-15,
-    DEC-61); the staff too."""
+    DEC-61); a rover or a scolta the same with obiettivi and impegni (DEC-179); the
+    staff too."""
     if puo_gestire_progressione(user, persona):
         return True
     return _livello_personale(user, persona) == LivelloAccesso.PROPRIO

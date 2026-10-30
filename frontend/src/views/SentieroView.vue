@@ -13,20 +13,25 @@ import {
   type TipoCompetenza,
   type SchedaProgressione,
   type TappaSentiero,
+  type TipoConclusione,
 } from '@/api/qdc'
 import CompetenzaEG from '@/components/CompetenzaEG.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
 import PercorsoEG from '@/components/PercorsoEG.vue'
+import PuntiStrada from '@/components/PuntiStrada.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
 
 // The sentiero of one E/G (DEC-56…DEC-74): tappe, Promessa, badges, mete and impegni.
-// The staff of the unit registers and validates; the ragazzo proposes their own mete and
-// impegni and asks for verification; the CSQ asks too; parents and other capi read. A
-// private meta is not shown to the CSQ (DEC-173). Cached for meetings without network;
-// new impegni and their steps go through the offline queue (DEC-95).
+// The strada of one R/S (DEC-67, DEC-179…DEC-181): passi opened by the Carta di clan and
+// by the confronto on the Partenza, obiettivi and impegni, Punti della Strada, the
+// conclusione. The staff of the unit registers and validates; the ragazzo proposes their
+// own mete (obiettivi) and impegni and asks for verification; the CSQ asks too; parents
+// and other capi read. A private meta is not shown to the CSQ (DEC-173). Cached for
+// meetings without network; new impegni and their steps go through the offline queue
+// (DEC-95).
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const scheda = ref<SchedaProgressione | null>(null)
@@ -47,10 +52,22 @@ watch(() => props.id, carica, { immediate: true })
 
 const periodo = computed(() => scheda.value?.periodi.find((p) => p.attivo) ?? null)
 const passati = computed(() => scheda.value?.periodi.filter((p) => !p.attivo) ?? [])
+// The most recent period: after a conclusione the page says how the way ended.
+const ultimo = computed(() => passati.value.at(-1) ?? null)
 const tappa = computed(() => periodo.value?.tappe.find((t) => t.in_corso) ?? null)
-// The tools of this page are those of the E/G sentiero; R/S and L/C come with their
-// blocks of phase 4 (TODO 4.4, 4.5).
+// E/G and R/S tools; L/C comes with its block of phase 4 (TODO 4.5).
 const eg = computed(() => periodo.value?.branca === 'EG')
+const rs = computed(() => periodo.value?.branca === 'RS')
+const strumenti = computed(() => eg.value || rs.value)
+// Made in an earlier branch: in clan it is not asked again.
+const promessaPrima = computed(
+  () => [...passati.value].reverse().find((p) => p.promessa)?.promessa ?? null,
+)
+const obiettiviAperti = computed(() =>
+  (scheda.value?.mete ?? [])
+    .filter((m) => aperti(m.stato))
+    .map((m) => ({ id: m.id, testo: m.testo })),
+)
 const nomiMete = computed(() =>
   Object.fromEntries((scheda.value?.mete ?? []).map((m) => [m.id, m.testo])),
 )
@@ -73,8 +90,19 @@ async function dopoScrittura(inCoda: boolean) {
 // --- Staff: sentiero, Promessa, tappe -----------------------------------------------------
 
 const apertura = ref<
-  '' | 'sentiero' | 'promessa' | 'riconosci' | 'distintivo' | 'colloca' | 'rettifica'
+  | ''
+  | 'sentiero'
+  | 'promessa'
+  | 'riconosci'
+  | 'distintivo'
+  | 'colloca'
+  | 'rettifica'
+  | 'carta'
+  | 'rettifica-carta'
+  | 'responsabilita'
+  | 'conclusione'
 >('')
+const conclusione = reactive({ tipo: '' as TipoConclusione | '', nota: '' })
 const quando = ref<DataParziale>(dataOggi())
 const collocamento = reactive({ fase: 'COMPETENZA' as FaseProgressione, motivazione: '' })
 const rettifica = reactive({ motivo: '' })
@@ -85,13 +113,35 @@ function apri(cosa: typeof apertura.value) {
 }
 
 const apriSentiero = () =>
-  online(() => api.apriSentiero(props.id, quando.value), 'Sentiero aperto: inizia la Scoperta.')
+  online(() => api.apriSentiero(props.id, quando.value), 'Percorso aperto: inizia la Scoperta.')
 const promessa = () =>
   online(() => api.promessa(periodo.value!.id, quando.value), 'Promessa registrata.')
 const correggiPromessa = () =>
   online(
     () => api.rettificaPromessa(periodo.value!.id, quando.value, rettifica.motivo),
     'Data della Promessa corretta.',
+  )
+const firmaCarta = () =>
+  online(
+    () => api.firmaCarta(periodo.value!.id, quando.value),
+    'Carta di clan firmata: iniziano i passi di competenza.',
+  )
+const correggiCarta = () =>
+  online(
+    () => api.rettificaCarta(periodo.value!.id, quando.value, rettifica.motivo),
+    'Data della firma corretta.',
+  )
+const avviaResponsabilita = (t: TappaSentiero) =>
+  online(() => api.avviaResponsabilita(t.id, quando.value), 'Iniziano i passi di responsabilità.')
+const concludi = () =>
+  online(
+    () =>
+      api.concludi(periodo.value!.id, {
+        ...quando.value,
+        tipo: conclusione.tipo as TipoConclusione,
+        nota: conclusione.nota,
+      }),
+    'Percorso concluso.',
   )
 const riconosci = (t: TappaSentiero) =>
   online(
@@ -209,7 +259,7 @@ async function salvaNuova() {
   <section v-if="scheda">
     <div class="d-flex flex-wrap align-items-baseline gap-3">
       <h1 class="h4 mb-1">
-        {{ periodo?.branca === 'RS' ? 'Strada' : 'Sentiero' }} di {{ scheda.persona }}
+        {{ (periodo ?? ultimo)?.branca === 'RS' ? 'Strada' : 'Sentiero' }} di {{ scheda.persona }}
       </h1>
       <CopiaLocale :del="copiaDel" />
     </div>
@@ -223,21 +273,26 @@ async function salvaNuova() {
 
     <!-- No sentiero yet -->
     <div v-if="!periodo" class="card card-body mb-5">
-      <p class="mb-3">Il sentiero non è ancora aperto.</p>
-      <template v-if="scheda.puo_gestire">
+      <p v-if="ultimo?.conclusione" class="mb-0">
+        Percorso concluso: {{ ultimo.conclusione.tipo_nome }}
+        {{ quandoParziale(ultimo.conclusione.data) }}.
+        <template v-if="ultimo.conclusione.nota">{{ ultimo.conclusione.nota }}.</template>
+      </p>
+      <p v-else class="mb-3">Il percorso non è ancora aperto.</p>
+      <template v-if="scheda.puo_gestire && !ultimo?.conclusione">
         <button
           v-if="apertura !== 'sentiero'"
           type="button"
           class="btn btn-sm btn-solid theme-primary align-self-start"
           @click="apri('sentiero')"
         >
-          Apri il sentiero
+          Apri il percorso
         </button>
         <form v-else class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="apriSentiero">
           <InputDataParziale
             id="ingresso"
             v-model="quando"
-            etichetta="Ingresso nel sentiero (per chi c'era già, anche solo l'anno)"
+            etichetta="Ingresso in reparto, noviziato o clan (per chi c'era già, anche solo l'anno)"
           />
           <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
             Apri
@@ -265,7 +320,16 @@ async function salvaNuova() {
         <template v-if="periodo.promessa"
           >Promessa: {{ testoDataParziale(periodo.promessa) }}.</template
         >
+        <template v-else-if="promessaPrima"
+          >Promessa: {{ testoDataParziale(promessaPrima) }}, in una branca precedente.</template
+        >
         <template v-else>Promessa non ancora registrata.</template>
+        <template v-if="periodo.branca === 'RS'">
+          <template v-if="periodo.firma_carta">
+            Carta di clan firmata {{ quandoParziale(periodo.firma_carta) }}.</template
+          >
+          <template v-else> Carta di clan non ancora firmata.</template>
+        </template>
       </p>
       <ol class="mb-3">
         <li v-for="t in periodo.tappe" :key="t.id" class="mb-1">
@@ -279,7 +343,10 @@ async function salvaNuova() {
             <template v-else-if="t.in_corso && periodo.branca === 'EG'">
               · distintivo non ancora consegnato</template
             >
-            <template v-if="t.completata">
+            <template v-if="t.completata && periodo.branca === 'RS'">
+              · fino {{ quandoParziale(t.completata) }}</template
+            >
+            <template v-else-if="t.completata">
               · riconosciuta nel Consiglio della Legge
               {{ quandoParziale(t.completata) }}</template
             >
@@ -290,6 +357,114 @@ async function salvaNuova() {
       <p v-if="tappa?.fase === 'RESPONSABILITA' && tappa.completata" class="small fg-2">
         Il sentiero continua fino al passaggio in noviziato.
       </p>
+
+      <div v-if="scheda.puo_gestire && tappa && rs" class="d-flex flex-wrap gap-1">
+        <button
+          v-if="!periodo.promessa && !promessaPrima"
+          type="button"
+          class="btn btn-sm btn-outline theme-primary"
+          @click="apri('promessa')"
+        >
+          Registra la Promessa
+        </button>
+        <button
+          v-if="!periodo.firma_carta"
+          type="button"
+          class="btn btn-sm btn-outline theme-success"
+          @click="apri('carta')"
+        >
+          Firma della Carta di clan
+        </button>
+        <button v-else type="button" class="btn btn-sm btn-link" @click="apri('rettifica-carta')">
+          Correggi la data della firma
+        </button>
+        <button
+          v-if="tappa.fase === 'COMPETENZA'"
+          type="button"
+          class="btn btn-sm btn-outline theme-success"
+          @click="apri('responsabilita')"
+        >
+          Inizia il confronto sulla Partenza
+        </button>
+        <button type="button" class="btn btn-sm btn-link" @click="apri('conclusione')">
+          Concludi il percorso…
+        </button>
+      </div>
+      <form
+        v-if="apertura === 'carta'"
+        class="d-flex flex-wrap align-items-end gap-3 mt-3"
+        @submit.prevent="firmaCarta"
+      >
+        <InputDataParziale id="carta" v-model="quando" etichetta="Firma della Carta di clan" />
+        <button type="submit" class="btn btn-sm btn-solid theme-success" :disabled="inCorso">
+          Registra
+        </button>
+        <span class="small fg-2 w-100">Dallo stesso giorno iniziano i passi di competenza.</span>
+      </form>
+      <form
+        v-if="apertura === 'rettifica-carta'"
+        class="d-flex flex-wrap align-items-end gap-3 mt-3"
+        @submit.prevent="correggiCarta"
+      >
+        <InputDataParziale id="carta-r" v-model="quando" etichetta="Data giusta della firma" />
+        <div class="flex-grow-1">
+          <label class="form-label small" for="motivo-carta">Perché la correggi</label>
+          <input
+            id="motivo-carta"
+            v-model="rettifica.motivo"
+            class="form-control form-control-sm"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+          Correggi
+        </button>
+      </form>
+      <form
+        v-if="apertura === 'responsabilita' && tappa"
+        class="d-flex flex-wrap align-items-end gap-3 mt-3"
+        @submit.prevent="avviaResponsabilita(tappa)"
+      >
+        <InputDataParziale
+          id="responsabilita"
+          v-model="quando"
+          etichetta="Inizio del confronto con la comunità sulle scelte della Partenza"
+        />
+        <button type="submit" class="btn btn-sm btn-solid theme-success" :disabled="inCorso">
+          Registra
+        </button>
+      </form>
+      <form
+        v-if="apertura === 'conclusione'"
+        class="d-flex flex-wrap align-items-end gap-3 mt-3"
+        @submit.prevent="concludi"
+      >
+        <div>
+          <label class="form-label small" for="tipo-concl">Come si conclude</label>
+          <select
+            id="tipo-concl"
+            v-model="conclusione.tipo"
+            class="form-control form-control-sm"
+            required
+          >
+            <option value="" disabled>—</option>
+            <option v-for="t in scheda.tipi_conclusione" :key="t.valore" :value="t.valore">
+              {{ t.etichetta }}
+            </option>
+          </select>
+        </div>
+        <InputDataParziale id="concl" v-model="quando" etichetta="Data" />
+        <div class="flex-grow-1">
+          <label class="form-label small" for="nota-concl">Nota (facoltativa)</label>
+          <input id="nota-concl" v-model="conclusione.nota" class="form-control form-control-sm" />
+        </div>
+        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+          Concludi
+        </button>
+        <span class="small fg-2 w-100">
+          Chiude il percorso nella Progressione; l'uscita dal clan la registra BuonaStrada.
+        </span>
+      </form>
 
       <div v-if="scheda.puo_gestire && tappa && eg" class="d-flex flex-wrap gap-1">
         <button
@@ -424,8 +599,8 @@ async function salvaNuova() {
       </form>
     </section>
 
-    <!-- Mete and impegni -->
-    <template v-if="periodo && eg">
+    <!-- Mete (obiettivi in R/S) and impegni -->
+    <template v-if="periodo && strumenti">
       <div class="d-flex flex-wrap gap-3 mb-3">
         <template v-if="scheda.puo_proporre && !nuova.tipo">
           <button
@@ -440,12 +615,14 @@ async function salvaNuova() {
             class="btn btn-sm btn-outline theme-primary"
             @click="nuova.tipo = 'mete'"
           >
-            Nuova meta
+            {{ rs ? 'Nuovo obiettivo' : 'Nuova meta' }}
           </button>
         </template>
       </div>
       <form v-if="nuova.tipo" class="card card-body mb-5" @submit.prevent="salvaNuova">
-        <h2 class="h6">{{ nuova.tipo === 'mete' ? 'Nuova meta' : 'Nuovo impegno' }}</h2>
+        <h2 class="h6">
+          {{ nuova.tipo === 'impegni' ? 'Nuovo impegno' : rs ? 'Nuovo obiettivo' : 'Nuova meta' }}
+        </h2>
         <p v-if="!scheda.puo_gestire" class="small fg-2">
           Resta una bozza finché non la concordi con lo staff.
         </p>
@@ -471,7 +648,9 @@ async function salvaNuova() {
             class="form-control form-control-sm mb-3"
           />
           <fieldset v-if="scheda.mete.some((m) => aperti(m.stato))" class="mb-3">
-            <legend class="form-label small">Per quale meta (facoltativo)</legend>
+            <legend class="form-label small">
+              Per quale {{ rs ? 'obiettivo' : 'meta' }} (facoltativo)
+            </legend>
             <div
               v-for="m in scheda.mete.filter((m) => aperti(m.stato))"
               :key="m.id"
@@ -496,7 +675,7 @@ async function salvaNuova() {
           :min="oggi()"
           class="form-control form-control-sm w-auto mb-3"
         />
-        <div v-if="nuova.tipo === 'mete'" class="form-field mb-3">
+        <div v-if="nuova.tipo === 'mete' && eg" class="form-field mb-3">
           <input id="nuova-riservata" v-model="nuova.riservata" type="checkbox" class="check" />
           <label class="small" for="nuova-riservata"
             >Riservata: non la vede il capo squadriglia</label
@@ -513,8 +692,11 @@ async function salvaNuova() {
       </form>
 
       <section class="mb-5">
-        <h2 class="h5">Mete</h2>
-        <p v-if="!scheda.mete.length" class="small fg-2">
+        <h2 class="h5">{{ rs ? 'Obiettivi' : 'Mete' }}</h2>
+        <p v-if="!scheda.mete.length && rs" class="small fg-2">
+          Nessun obiettivo: si fissano o si ricalibrano nel Punto della Strada.
+        </p>
+        <p v-else-if="!scheda.mete.length" class="small fg-2">
           Nessuna meta: si introducono quando il ragazzo sa formularle; prima bastano gli impegni.
         </p>
         <ul v-else class="list-group">
@@ -523,6 +705,7 @@ async function salvaNuova() {
             :key="m.id"
             tipo="mete"
             :voce="m"
+            :rs="rs"
             :gestisce="scheda.puo_gestire"
             :propone="scheda.puo_proporre"
             :propone-verifica="scheda.puo_proporre_verifica"
@@ -541,6 +724,7 @@ async function salvaNuova() {
             :key="i.id"
             tipo="impegni"
             :voce="i"
+            :rs="rs"
             :gestisce="scheda.puo_gestire"
             :propone="scheda.puo_proporre"
             :propone-verifica="scheda.puo_proporre_verifica"
@@ -550,6 +734,19 @@ async function salvaNuova() {
           />
         </ul>
       </section>
+      <PuntiStrada
+        v-if="rs"
+        :periodo="periodo.id"
+        :punti="scheda.punti_strada.filter((p) => p.periodo_id === periodo!.id)"
+        :obiettivi="obiettiviAperti"
+        :gestisce="scheda.puo_gestire"
+        @salvata="
+          (dati) => {
+            scheda = dati
+            esito = 'Punto della Strada salvato.'
+          }
+        "
+      />
     </template>
 
     <template v-if="periodo && eg">
@@ -677,7 +874,7 @@ async function salvaNuova() {
       </section>
     </template>
 
-    <p v-if="periodo && !eg" class="small fg-2 mb-5">
+    <p v-if="periodo && !strumenti" class="small fg-2 mb-5">
       Gli strumenti della progressione di questa branca arriveranno nei prossimi aggiornamenti.
     </p>
 
@@ -688,7 +885,12 @@ async function salvaNuova() {
           {{ p.branca_nome }}: dal {{ testoDataParziale(p.inizio) }} al
           {{ p.fine ? new Date(p.fine).toLocaleDateString('it-IT') : '' }}
           <template v-if="p.motivo_fine"> ({{ p.motivo_fine }})</template>
-          · {{ p.tappe.map((t) => t.fase_nome + (t.completata ? ' riconosciuta' : '')).join(', ') }}
+          ·
+          {{
+            p.tappe
+              .map((t) => t.fase_nome + (t.completata && p.branca !== 'RS' ? ' riconosciuta' : ''))
+              .join(', ')
+          }}
         </li>
       </ul>
     </section>

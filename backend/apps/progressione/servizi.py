@@ -20,12 +20,22 @@ from .models import (
     Fase,
     Impegno,
     MetaEG,
+    PercorsoCompetenza,
     PeriodoBranca,
+    PostoAzione,
     Promessa,
     Revisione,
     SedeVerifica,
     Stato,
+    StatoCompetenza,
     Tappa,
+    TipoCompetenza,
+)
+
+APERTI_COMPETENZA = (
+    StatoCompetenza.PROPOSTO,
+    StatoCompetenza.IN_CORSO,
+    StatoCompetenza.DA_VERIFICARE,
 )
 
 
@@ -322,3 +332,170 @@ def collega_mete(impegno: Impegno, mete: list[MetaEG]) -> None:
     if any(m.periodo_id != impegno.periodo_id for m in mete):
         raise ValidationError("Le mete devono essere dello stesso sentiero.")
     impegno.mete.set(mete)
+
+
+# --- Specialità, brevetti, specialità di squadriglia (DEC-62…DEC-64) -----------------------
+
+
+def nuova_competenza(
+    tipo: str,
+    codice: str,
+    utente,
+    *,
+    periodo: PeriodoBranca | None = None,
+    squadriglia=None,
+    carta: str = "",
+    maestro: str = "",
+    storico: DataParziale | None = None,
+) -> PercorsoCompetenza:
+    """A path is started from a current catalog item. `storico`: a specialità or a
+    brevetto already conquered in the past, recorded directly with the precision known
+    (spec §18.4: importing does not walk through every state)."""
+    from .catalogo import voce
+
+    trovata = voce(tipo, codice)
+    if trovata is None:
+        raise ValidationError("Voce del catalogo sconosciuta.")
+    if trovata.ritirata and storico is None:
+        raise ValidationError("Questa voce è stata ritirata dal catalogo.")
+    if (tipo == TipoCompetenza.SPECIALITA_SQ) != (squadriglia is not None):
+        raise ValidationError("Le specialità di squadriglia sono della squadriglia.")
+    if periodo is not None:
+        if periodo.data_fine is not None or periodo.branca != Branca.EG:
+            raise ValidationError("Serve un sentiero E/G aperto.")
+        doppio = PercorsoCompetenza.objects.filter(
+            periodo=periodo, codice=codice, stato__in=APERTI_COMPETENZA
+        )
+        if doppio.exists() and storico is None:
+            raise ValidationError("C'è già un percorso aperto per questa voce.")
+    percorso = PercorsoCompetenza(
+        tipo=tipo,
+        codice=trovata.codice,
+        nome=trovata.nome,
+        versione_catalogo=trovata.versione,
+        periodo=periodo,
+        squadriglia=squadriglia,
+        carta=carta.strip(),
+        maestro=maestro.strip(),
+        creato_da=utente,
+    )
+    if storico is not None:
+        if storico.valore is None:
+            raise ValidationError("Indica almeno l'anno della conquista.")
+        percorso.stato = StatoCompetenza.RICONOSCIUTO
+        percorso.storico = True
+        percorso.riconosciuto_il = storico.valore
+        percorso.precisione_riconosciuto = storico.precisione
+        percorso.riconosciuto_da = utente
+    percorso.full_clean()
+    percorso.save()
+    return percorso
+
+
+DA_COMPETENZA = {
+    "avvia": (StatoCompetenza.PROPOSTO,),
+    "proponi_verifica": (StatoCompetenza.IN_CORSO,),
+    "prosegui": (StatoCompetenza.DA_VERIFICARE,),
+    "riconosci": (StatoCompetenza.DA_VERIFICARE,),
+    "interrompi": (
+        StatoCompetenza.PROPOSTO,
+        StatoCompetenza.IN_CORSO,
+        StatoCompetenza.DA_VERIFICARE,
+    ),
+}
+A_COMPETENZA = {
+    "avvia": StatoCompetenza.IN_CORSO,
+    "proponi_verifica": StatoCompetenza.DA_VERIFICARE,
+    "prosegui": StatoCompetenza.IN_CORSO,
+    "riconosci": StatoCompetenza.RICONOSCIUTO,
+    "interrompi": StatoCompetenza.INTERROTTO,
+}
+
+
+def passo_competenza(
+    percorso: PercorsoCompetenza,
+    azione: str,
+    utente,
+    *,
+    il: date | None = None,
+    motivo: str = "",
+) -> PercorsoCompetenza:
+    """Spec §17.4. A personal specialità or brevetto is recognised in the Consiglio della
+    Legge (art. 36, art. 38; DEC-172); never by itself. A step already applied is done."""
+    if azione not in DA_COMPETENZA:
+        raise ValidationError("Operazione sconosciuta.")
+    if percorso.stato == A_COMPETENZA[azione] and azione != "prosegui":
+        return percorso
+    if percorso.stato not in DA_COMPETENZA[azione]:
+        raise ValidationError(f"Non si può: è «{percorso.get_stato_display().lower()}».")
+    il = il or oggi()
+    if il > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    if azione == "avvia":
+        percorso.avviato_il = il
+    elif azione == "proponi_verifica":
+        percorso.verifica_proposta_da = utente
+        percorso.verifica_proposta_il = timezone.now()
+    elif azione == "riconosci":
+        percorso.riconosciuto_il = il
+        percorso.precisione_riconosciuto = PrecisioneData.GIORNO
+        percorso.riconosciuto_da = utente
+        if percorso.periodo_id:
+            percorso.sede = SedeVerifica.CONSIGLIO_LEGGE
+    elif azione == "interrompi":
+        if not motivo.strip():
+            raise ValidationError("Scrivi perché si interrompe.")
+        percorso.interrotto_il = il
+        percorso.motivo_interruzione = motivo.strip()[:300]
+    percorso.stato = A_COMPETENZA[azione]
+    percorso.save()
+    return percorso
+
+
+def consegna_distintivo_competenza(percorso: PercorsoCompetenza, quando: DataParziale) -> None:
+    """The badge of a conquered specialità or brevetto, with its own date."""
+    if percorso.stato != StatoCompetenza.RICONOSCIUTO:
+        raise ValidationError("Il distintivo si consegna dopo la conquista.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno della consegna.")
+    percorso.distintivo_il = quando.valore
+    percorso.precisione_distintivo = quando.precisione
+    percorso.save()
+
+
+def collega_competenze(percorso: PercorsoCompetenza, altri: list[PercorsoCompetenza]) -> None:
+    """Brevetto: the person's own specialità; patrol: the members' specialità and
+    brevetti born from its path (DEC-64)."""
+    if percorso.tipo == TipoCompetenza.BREVETTO:
+        if any(
+            a.periodo_id != percorso.periodo_id or a.tipo != TipoCompetenza.SPECIALITA
+            for a in altri
+        ):
+            raise ValidationError("A un brevetto si collegano specialità della stessa persona.")
+    elif percorso.tipo == TipoCompetenza.SPECIALITA_SQ:
+        if any(a.periodo_id is None for a in altri):
+            raise ValidationError("Si collegano specialità e brevetti dei singoli.")
+    else:
+        raise ValidationError("Si collegano solo a brevetti e specialità di squadriglia.")
+    percorso.collegati.set(altri)
+
+
+# --- Imprese and posti d'azione (DEC-65) ----------------------------------------------------
+
+
+def verifica_posto(
+    posto: PostoAzione, utente, *, il: date, sede: str, sede_descrizione: str
+) -> None:
+    """Consiglio di squadriglia, Consiglio della Legge or Alta Squadriglia (E/G artt.
+    42–43)."""
+    if sede not in SedeVerifica.values:
+        raise ValidationError("Indica dove si è fatta la verifica.")
+    if sede == SedeVerifica.ALTRO and not sede_descrizione.strip():
+        raise ValidationError("Scrivi dove si è fatta la verifica.")
+    if il > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    posto.verificato_il = il
+    posto.sede = sede
+    posto.sede_descrizione = sede_descrizione.strip() if sede == SedeVerifica.ALTRO else ""
+    posto.verificato_da = utente
+    posto.save()

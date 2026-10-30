@@ -283,3 +283,161 @@ class Revisione(models.Model):
     def clean(self) -> None:
         if (self.meta_id is None) == (self.impegno_id is None):
             raise ValidationError("Una revisione è di una meta o di un impegno.")
+
+
+# --- Specialità, brevetti, specialità di squadriglia (DEC-62…DEC-64) -----------------------
+
+
+class TipoCompetenza(models.TextChoices):
+    SPECIALITA = "SPECIALITA", "Specialità"
+    BREVETTO = "BREVETTO", "Brevetto di competenza"
+    SPECIALITA_SQ = "SPECIALITA_SQ", "Specialità di squadriglia"
+
+
+class StatoCompetenza(models.TextChoices):
+    """Spec §17.4: from proposed to recognised (DEC-62)."""
+
+    PROPOSTO = "PROPOSTO", "Proposto"
+    IN_CORSO = "IN_CORSO", "In corso"
+    DA_VERIFICARE = "DA_VERIFICARE", "Da verificare"
+    RICONOSCIUTO = "RICONOSCIUTO", "Conquistato"
+    INTERROTTO = "INTERROTTO", "Interrotto"
+
+
+class PercorsoCompetenza(ModelloTracciato):
+    """The way to a specialità or a brevetto of one E/G, or to a specialità of a whole
+    patrol (DEC-64, V19: the patrol is the holder, its members get nothing by it). It
+    keeps the catalog's code, name and version as they were (DEC-63)."""
+
+    tipo = models.CharField(max_length=14, choices=TipoCompetenza.choices)
+    codice = models.CharField(max_length=10)
+    nome = models.CharField(max_length=120)
+    versione_catalogo = models.CharField(max_length=20)
+    # Exactly one holder: a person's branch period, or a patrol.
+    periodo = models.ForeignKey(
+        PeriodoBranca, null=True, blank=True, on_delete=models.CASCADE, related_name="competenze"
+    )
+    squadriglia = models.ForeignKey(
+        "organizzazione.Squadriglia",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="competenze",
+    )
+    stato = models.CharField(
+        max_length=14, choices=StatoCompetenza.choices, default=StatoCompetenza.PROPOSTO
+    )
+    # The carta di specialità or di competenza, written in the app (DEC-62).
+    carta = models.TextField(blank=True)
+    # An E/G, a capo or an adult from outside: a name, never an account (DEC-62).
+    maestro = models.CharField(max_length=120, blank=True)
+    # Brevetto (art. 38, V09): the occasion of comparison on the competence.
+    confronto = models.TextField(blank=True)
+    # Brevetto: the specialità judged suitable; patrol: the individual specialità and
+    # brevetti born from its path, even if not conquered (DEC-64).
+    collegati = models.ManyToManyField("self", blank=True, symmetrical=False, related_name="+")
+    avviato_il = _data(null=True, blank=True)
+    verifica_proposta_il = models.DateTimeField(null=True, blank=True)
+    verifica_proposta_da = _utente()
+    riconosciuto_il = _data(null=True, blank=True)
+    precisione_riconosciuto = _precisione()
+    sede = models.CharField(max_length=16, choices=SedeVerifica.choices, blank=True)
+    riconosciuto_da = _utente()
+    # Recorded afterwards from a past year, with the precision known (spec §18.4).
+    storico = models.BooleanField(default=False)
+    distintivo_il = _data(null=True, blank=True)
+    precisione_distintivo = _precisione()
+    interrotto_il = _data(null=True, blank=True)
+    motivo_interruzione = models.CharField(max_length=300, blank=True)
+    creato_da = _utente()
+
+    class Meta:
+        verbose_name = "percorso di specialità o brevetto"
+        verbose_name_plural = "percorsi di specialità e brevetti"
+        ordering = ["creato_il"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(periodo__isnull=False, squadriglia__isnull=True)
+                | Q(periodo__isnull=True, squadriglia__isnull=False),
+                name="competenza_un_titolare",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()} {self.nome}"
+
+
+# --- Imprese and posti d'azione (DEC-65) ----------------------------------------------------
+
+
+class LivelloImpresa(models.TextChoices):
+    REPARTO = "REPARTO", "Impresa di reparto"
+    SQUADRIGLIA = "SQUADRIGLIA", "Impresa di squadriglia"
+    ALTA_SQUADRIGLIA = "ALTA_SQ", "Impresa di Alta Squadriglia"
+
+
+class Impresa(ModelloTracciato):
+    reparto = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.CASCADE, related_name="imprese"
+    )
+    livello = models.CharField(max_length=12, choices=LivelloImpresa.choices)
+    squadriglia = models.ForeignKey(
+        "organizzazione.Squadriglia",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="imprese",
+    )
+    titolo = models.CharField(max_length=160)
+    descrizione = models.TextField(blank=True)
+    dal = _data()
+    al = _data(null=True, blank=True)
+    creata_da = _utente()
+
+    class Meta:
+        verbose_name = "impresa"
+        verbose_name_plural = "imprese"
+        ordering = ["-dal"]
+
+    def __str__(self) -> str:
+        return self.titolo
+
+    def clean(self) -> None:
+        errori = []
+        if self.livello == LivelloImpresa.SQUADRIGLIA and not self.squadriglia_id:
+            errori.append("Scegli la squadriglia.")
+        if self.livello != LivelloImpresa.SQUADRIGLIA and self.squadriglia_id:
+            errori.append("La squadriglia vale solo per un'impresa di squadriglia.")
+        if self.squadriglia_id and self.squadriglia.unita_id != self.reparto_id:
+            errori.append("La squadriglia non è di questo reparto.")
+        if self.al and self.dal and self.al < self.dal:
+            errori.append("La fine deve seguire l'inizio.")
+        if errori:
+            raise ValidationError(errori)
+
+
+class PostoAzione(ModelloTracciato):
+    """A role in an impresa (E/G art. 32: it may give rise to an impegno), verified in
+    the Consiglio di squadriglia, the Consiglio della Legge or the Alta Squadriglia
+    (artt. 42–43)."""
+
+    impresa = models.ForeignKey(Impresa, on_delete=models.CASCADE, related_name="posti")
+    persona = models.ForeignKey(
+        "anagrafica.Persona", on_delete=models.CASCADE, related_name="posti_azione"
+    )
+    ruolo = models.CharField(max_length=160)
+    impegno = models.ForeignKey(
+        Impegno, null=True, blank=True, on_delete=models.SET_NULL, related_name="posti_azione"
+    )
+    verificato_il = _data(null=True, blank=True)
+    sede = models.CharField(max_length=16, choices=SedeVerifica.choices, blank=True)
+    sede_descrizione = models.CharField(max_length=120, blank=True)
+    verificato_da = _utente()
+
+    class Meta:
+        verbose_name = "posto d'azione"
+        verbose_name_plural = "posti d'azione"
+        ordering = ["impresa", "creato_il"]
+
+    def __str__(self) -> str:
+        return f"{self.ruolo} — {self.persona}"

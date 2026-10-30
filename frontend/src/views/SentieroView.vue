@@ -5,12 +5,16 @@ import { RouterLink } from 'vue-router'
 import {
   api,
   percorsoNuovoImpegno,
+  quandoParziale,
   testoDataParziale,
+  type CataloghiPP,
   type DataParziale,
   type FaseProgressione,
+  type TipoCompetenza,
   type SchedaProgressione,
   type TappaSentiero,
 } from '@/api/qdc'
+import CompetenzaEG from '@/components/CompetenzaEG.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
 import PercorsoEG from '@/components/PercorsoEG.vue'
@@ -100,6 +104,58 @@ const colloca = (t: TappaSentiero) =>
     () => api.collocaTappa(t.id, { ...quando.value, ...collocamento }),
     'Collocato nella tappa.',
   )
+
+// --- Specialità and brevetti (DEC-62, DEC-63) -------------------------------------------
+
+const cataloghi = ref<CataloghiPP | null>(null)
+const nuovaCompetenza = reactive({
+  aperta: false,
+  tipo: 'SPECIALITA' as TipoCompetenza,
+  codice: '',
+  carta: '',
+  maestro: '',
+  passata: false,
+  quando: dataOggi(),
+})
+const vociCatalogo = computed(() =>
+  nuovaCompetenza.tipo === 'BREVETTO' ? cataloghi.value?.brevetti : cataloghi.value?.specialita,
+)
+const specialitaCollegabili = computed(() =>
+  (scheda.value?.competenze ?? [])
+    .filter((c) => c.tipo === 'SPECIALITA')
+    .map((c) => ({ id: c.id, testo: `${c.nome} (${c.stato_nome.toLowerCase()})` })),
+)
+
+async function apriCompetenza() {
+  nuovaCompetenza.aperta = true
+  if (!cataloghi.value) {
+    cataloghi.value =
+      (await esegui(async () => (await leggiConCache('cataloghi-pp', api.cataloghiPP)).dati)) ??
+      null
+  }
+}
+
+async function salvaCompetenza() {
+  const fatto = await online(
+    () =>
+      api.nuovaCompetenza(props.id, {
+        tipo: nuovaCompetenza.tipo,
+        codice: nuovaCompetenza.codice,
+        carta: nuovaCompetenza.carta,
+        maestro: nuovaCompetenza.maestro,
+        conquistata: nuovaCompetenza.passata ? nuovaCompetenza.quando : null,
+      }),
+    'Salvato.',
+  )
+  if (fatto)
+    Object.assign(nuovaCompetenza, {
+      aperta: false,
+      codice: '',
+      carta: '',
+      maestro: '',
+      passata: false,
+    })
+}
 
 // --- Mete and impegni ----------------------------------------------------------------------
 
@@ -202,12 +258,12 @@ async function salvaNuova() {
             dal {{ testoDataParziale(t.inizio) }}
             <template v-if="t.collocamento"> (collocamento: {{ t.motivazione }})</template>
             <template v-if="t.distintivo">
-              · distintivo consegnato il {{ testoDataParziale(t.distintivo) }}</template
+              · distintivo consegnato {{ quandoParziale(t.distintivo) }}</template
             >
             <template v-else-if="t.in_corso"> · distintivo non ancora consegnato</template>
             <template v-if="t.completata">
-              · riconosciuta nel Consiglio della Legge il
-              {{ testoDataParziale(t.completata) }}</template
+              · riconosciuta nel Consiglio della Legge
+              {{ quandoParziale(t.completata) }}</template
             >
             <template v-else-if="t.in_corso"> · in corso</template>
           </span>
@@ -474,6 +530,131 @@ async function salvaNuova() {
             :nomi-mete="nomiMete"
             @cambiata="dopoScrittura"
           />
+        </ul>
+      </section>
+    </template>
+
+    <template v-if="periodo">
+      <section class="mb-5">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+          <h2 class="h5 mb-0">Specialità e brevetti</h2>
+          <button
+            v-if="scheda.puo_gestire && !nuovaCompetenza.aperta"
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            @click="apriCompetenza"
+          >
+            Aggiungi
+          </button>
+        </div>
+        <form
+          v-if="nuovaCompetenza.aperta"
+          class="card card-body mb-3"
+          @submit.prevent="salvaCompetenza"
+        >
+          <div class="d-flex flex-wrap gap-3 mb-3">
+            <div>
+              <label class="form-label small" for="nc-tipo">Cosa</label>
+              <select
+                id="nc-tipo"
+                v-model="nuovaCompetenza.tipo"
+                class="form-control form-control-sm"
+                @change="nuovaCompetenza.codice = ''"
+              >
+                <option value="SPECIALITA">Specialità</option>
+                <option value="BREVETTO">Brevetto di competenza</option>
+              </select>
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label small" for="nc-voce">Quale</label>
+              <select
+                id="nc-voce"
+                v-model="nuovaCompetenza.codice"
+                class="form-control form-control-sm"
+                required
+              >
+                <option value="" disabled>—</option>
+                <option v-for="v in vociCatalogo ?? []" :key="v.codice" :value="v.codice">
+                  {{ v.nome }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="form-field mb-3">
+            <input
+              id="nc-passata"
+              v-model="nuovaCompetenza.passata"
+              type="checkbox"
+              class="check"
+            />
+            <label class="small" for="nc-passata"
+              >Già conquistata in passato (per ricostruire la storia)</label
+            >
+          </div>
+          <InputDataParziale
+            v-if="nuovaCompetenza.passata"
+            id="nc-quando"
+            v-model="nuovaCompetenza.quando"
+            etichetta="Conquistata il"
+            class="mb-3"
+          />
+          <template v-else>
+            <label class="form-label small" for="nc-carta"
+              >Carta (si può scrivere anche dopo)</label
+            >
+            <textarea
+              id="nc-carta"
+              v-model="nuovaCompetenza.carta"
+              class="form-control form-control-sm mb-3"
+              rows="2"
+            />
+            <label class="form-label small" for="nc-maestro"
+              >Maestro o maestra (anche un adulto esterno)</label
+            >
+            <input
+              id="nc-maestro"
+              v-model="nuovaCompetenza.maestro"
+              class="form-control form-control-sm mb-3"
+              maxlength="120"
+            />
+          </template>
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+              Salva
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-link"
+              @click="nuovaCompetenza.aperta = false"
+            >
+              Annulla
+            </button>
+          </div>
+        </form>
+        <p v-if="!scheda.competenze.length" class="small fg-2">Nessuna specialità o brevetto.</p>
+        <ul v-else class="list-group">
+          <CompetenzaEG
+            v-for="c in scheda.competenze"
+            :key="c.id"
+            :voce="c"
+            :gestisce="scheda.puo_gestire"
+            :propone-verifica="scheda.puo_proporre_verifica"
+            :collegabili="specialitaCollegabili"
+            @cambiata="dopoScrittura"
+          />
+        </ul>
+      </section>
+      <section v-if="scheda.posti_azione.length" class="mb-5">
+        <h2 class="h5">Posti d'azione nelle imprese</h2>
+        <ul class="list-group">
+          <li v-for="p in scheda.posti_azione" :key="p.id" class="list-group-item small">
+            <strong>{{ p.ruolo }}</strong> · {{ p.impresa }} ({{ p.impresa_livello.toLowerCase() }})
+            <template v-if="p.verificato_il">
+              · verificato il {{ new Date(p.verificato_il).toLocaleDateString('it-IT') }} ({{
+                p.sede_nome
+              }})
+            </template>
+          </li>
         </ul>
       </section>
     </template>

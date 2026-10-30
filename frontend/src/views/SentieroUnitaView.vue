@@ -37,8 +37,10 @@ watch(
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <template v-if="dati">
       <p class="small fg-2">
-        {{ dati.unita }}.
-        <RouterLink :to="`/unita/${props.id}`">Pagina dell'unità</RouterLink>
+        {{ dati.unita }}. <RouterLink :to="`/unita/${props.id}`">Pagina dell'unità</RouterLink> ·
+        <RouterLink :to="`/unita/${props.id}/imprese`"
+          >Imprese e specialità di squadriglia</RouterLink
+        >
       </p>
       <p v-if="!dati.ragazzi.length" class="small">Nessun ragazzo nell'unità.</p>
       <ul v-else class="list-group">
@@ -61,7 +63,11 @@ watch(
                 {{ r.impegni_da_verificare }} da verificare
               </span>
               <span v-if="r.bozze" class="badge theme-secondary">{{ r.bozze }} da concordare</span>
-              <span>{{ r.impegni_in_corso }} impegni in corso · {{ r.mete_aperte }} mete</span>
+              <span>
+                {{ r.impegni_in_corso }} impegni in corso · {{ r.mete_aperte }} mete ·
+                {{ r.specialita }} specialità ·
+                {{ r.brevetto ? `brevetto ${r.brevetto}` : 'nessun brevetto' }}
+              </span>
             </div>
           </RouterLink>
         </li>

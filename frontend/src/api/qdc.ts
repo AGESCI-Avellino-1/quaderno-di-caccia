@@ -1291,12 +1291,95 @@ export interface PeriodoBranca {
   tappe: TappaSentiero[]
 }
 
+export type TipoCompetenza = 'SPECIALITA' | 'BREVETTO' | 'SPECIALITA_SQ'
+export type StatoCompetenza =
+  'PROPOSTO' | 'IN_CORSO' | 'DA_VERIFICARE' | 'RICONOSCIUTO' | 'INTERROTTO'
+export type AzioneCompetenza =
+  'avvia' | 'proponi_verifica' | 'prosegui' | 'riconosci' | 'interrompi'
+
+export interface Competenza {
+  id: number
+  tipo: TipoCompetenza
+  tipo_nome: string
+  codice: string
+  nome: string
+  stato: StatoCompetenza
+  stato_nome: string
+  carta: string
+  maestro: string
+  confronto: string
+  collegati: number[]
+  avviato_il: string | null
+  verifica_proposta: boolean
+  riconosciuto: DataParziale | null
+  storico: boolean
+  distintivo: DataParziale | null
+  interrotto_il: string | null
+  motivo_interruzione: string
+}
+
+export interface PostoAzione {
+  id: number
+  impresa_id: number
+  impresa: string
+  impresa_livello: string
+  persona_id: number
+  persona: string
+  ruolo: string
+  impegno_id: number | null
+  verificato_il: string | null
+  sede_nome: string
+}
+
+export interface VoceCatalogo {
+  codice: string
+  nome: string
+}
+
+export interface CataloghiPP {
+  specialita: VoceCatalogo[]
+  brevetti: VoceCatalogo[]
+  specialita_squadriglia: VoceCatalogo[]
+}
+
+export type LivelloImpresa = 'REPARTO' | 'SQUADRIGLIA' | 'ALTA_SQ'
+
+export interface ImpresaEG {
+  id: number
+  livello: LivelloImpresa
+  livello_nome: string
+  squadriglia_id: number | null
+  squadriglia: string | null
+  titolo: string
+  descrizione: string
+  dal: string
+  al: string | null
+  posti: PostoAzione[]
+}
+
+export interface ImpreseReparto {
+  reparto_id: number
+  reparto: string
+  imprese: ImpresaEG[]
+  squadriglie: {
+    id: number
+    nome: string
+    competenze: Competenza[]
+    individuali: { id: number; testo: string }[]
+  }[]
+  ragazzi: { id: number; nome: string }[]
+  puo_gestire: boolean
+  sedi: Scelta[]
+}
+
 export interface SchedaProgressione {
   persona_id: number
   persona: string
   periodi: PeriodoBranca[]
   mete: MetaEG[]
   impegni: ImpegnoEG[]
+  competenze: Competenza[]
+  posti_azione: PostoAzione[]
   puo_gestire: boolean
   puo_proporre: boolean
   puo_proporre_verifica: boolean
@@ -1315,6 +1398,8 @@ export interface RagazzoSentiero {
   impegni_da_verificare: number
   bozze: number
   mete_aperte: number
+  specialita: number
+  brevetto: string | null
 }
 
 export interface SentieroUnita {
@@ -1328,6 +1413,33 @@ export const percorsoNuovoImpegno = (persona: number) =>
   `/api/v1/persone/${persona}/progressione/impegni`
 export const percorsoAzione = (tipo: 'mete' | 'impegni', id: number, azione: AzionePercorso) =>
   `/api/v1/progressione/${tipo}/${id}/${azione}`
+
+export const percorsoAzioneCompetenza = (id: number, azione: AzioneCompetenza) =>
+  `/api/v1/competenze/${id}/${azione}`
+
+const MESI = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
+
+/** "il 12/03/2025", "a marzo 2025", "nel 2025": a partial date after a verb. */
+export function quandoParziale(d: DataParziale | null): string {
+  if (!d?.data) return d ? '(data non documentata)' : ''
+  const [anno, mese] = d.data.split('-')
+  if (d.precisione === 'ANNO') return `nel ${anno}`
+  if (d.precisione === 'MESE') return `a ${MESI[Number(mese) - 1]} ${anno}`
+  return `il ${testoDataParziale(d)}`
+}
 
 /** A partial date as Italians read it: 12/03/2025, 03/2025, 2025 (DEC-70). */
 export function testoDataParziale(d: DataParziale | null): string {
@@ -1872,6 +1984,54 @@ export const api = {
       corpo: dati,
     }),
   sentieroUnita: (unita: number) => richiesta<SentieroUnita>(`/api/v1/unita/${unita}/progressione`),
+  cataloghiPP: () => richiesta<CataloghiPP>('/api/v1/progressione/cataloghi'),
+  nuovaCompetenza: (
+    persona: number,
+    dati: {
+      tipo: TipoCompetenza
+      codice: string
+      carta: string
+      maestro: string
+      conquistata: DataParziale | null
+    },
+  ) =>
+    richiesta<SchedaProgressione>(`/api/v1/persone/${persona}/progressione/competenze`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  modificaCompetenza: (
+    id: number,
+    dati: { carta: string; maestro: string; confronto: string; collegati: number[] },
+  ) => richiesta<unknown>(`/api/v1/competenze/${id}`, { metodo: 'PUT', corpo: dati }),
+  distintivoCompetenza: (id: number, quando: DataParziale) =>
+    richiesta<unknown>(`/api/v1/competenze/${id}/distintivo`, { metodo: 'POST', corpo: quando }),
+  impreseReparto: (unita: number) => richiesta<ImpreseReparto>(`/api/v1/unita/${unita}/imprese`),
+  nuovaImpresa: (
+    unita: number,
+    dati: {
+      livello: LivelloImpresa
+      squadriglia_id: number | null
+      titolo: string
+      descrizione: string
+      dal: string
+      al: string | null
+    },
+  ) => richiesta<ImpreseReparto>(`/api/v1/unita/${unita}/imprese`, { metodo: 'POST', corpo: dati }),
+  nuovoPosto: (impresa: number, dati: { persona_id: number; ruolo: string }) =>
+    richiesta<ImpreseReparto>(`/api/v1/imprese/${impresa}/posti`, { metodo: 'POST', corpo: dati }),
+  verificaPosto: (posto: number, dati: { il: string; sede: string; sede_descrizione: string }) =>
+    richiesta<ImpreseReparto>(`/api/v1/posti-azione/${posto}/verifica`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  nuovaSpecialitaSquadriglia: (
+    squadriglia: number,
+    dati: { codice: string; carta: string; conquistata: DataParziale | null },
+  ) =>
+    richiesta<ImpreseReparto>(`/api/v1/squadriglie/${squadriglia}/competenze`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
       metodo: 'POST',

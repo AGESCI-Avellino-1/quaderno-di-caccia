@@ -188,6 +188,14 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      // Imprese, posti d'azione, specialità di squadriglia: capi (DEC-64, DEC-65).
+      path: '/unita/:id(\\d+)/imprese',
+      name: 'imprese',
+      component: () => import('@/views/ImpreseView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Using the app as another user: capigruppo, administrators who are capi, unit
       // staff (the API decides).
       path: '/impersonazioni',

@@ -17,5 +17,8 @@ class ProgressioneConfig(AppConfig):
             models.ConsegnaDistintivo,
             models.MetaEG,
             models.Impegno,
+            models.PercorsoCompetenza,
+            models.Impresa,
+            models.PostoAzione,
         ):
             auditlog.register(modello)

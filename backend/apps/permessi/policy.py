@@ -1076,3 +1076,9 @@ def puo_proporre_verifica(user, persona: Persona) -> bool:
     if puo_proporre_percorsi(user, persona):
         return True
     return _csq_di(user, persona)
+
+
+def puo_gestire_reparto_progressione(user, reparto: Unita) -> bool:
+    """Imprese, posti d'azione and specialità di squadriglia: the reparto staff
+    (DEC-09, DEC-65)."""
+    return not e_capo_in_attesa(user) and e_staff(user, reparto)

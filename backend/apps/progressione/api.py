@@ -19,12 +19,18 @@ from .models import (
     ConsegnaDistintivo,
     Fase,
     Impegno,
+    Impresa,
+    LivelloImpresa,
     MetaEG,
+    PercorsoCompetenza,
     PeriodoBranca,
+    PostoAzione,
     Promessa,
     SedeVerifica,
     Stato,
+    StatoCompetenza,
     Tappa,
+    TipoCompetenza,
 )
 
 router = Router(tags=["progressione"])
@@ -121,12 +127,48 @@ class PeriodoOut(Schema):
     tappe: list[TappaOut]
 
 
+class CompetenzaOut(Schema):
+    id: int
+    tipo: TipoCompetenza
+    tipo_nome: str
+    codice: str
+    nome: str
+    stato: StatoCompetenza
+    stato_nome: str
+    carta: str
+    maestro: str
+    confronto: str
+    collegati: list[int]
+    avviato_il: date | None
+    verifica_proposta: bool
+    riconosciuto: DataOut | None
+    storico: bool
+    distintivo: DataOut | None
+    interrotto_il: date | None
+    motivo_interruzione: str
+
+
+class PostoOut(Schema):
+    id: int
+    impresa_id: int
+    impresa: str
+    impresa_livello: str
+    persona_id: int
+    persona: str
+    ruolo: str
+    impegno_id: int | None
+    verificato_il: date | None
+    sede_nome: str
+
+
 class SchedaOut(Schema):
     persona_id: int
     persona: str
     periodi: list[PeriodoOut]
     mete: list[MetaOut]
     impegni: list[ImpegnoOut]
+    competenze: list[CompetenzaOut]
+    posti_azione: list[PostoOut]
     # What the user may do (the API checks again on every command).
     puo_gestire: bool
     puo_proporre: bool
@@ -178,6 +220,44 @@ def _percorso_out(o) -> dict:
     }
 
 
+def _competenza_out(c: PercorsoCompetenza) -> dict:
+    return {
+        "id": c.pk,
+        "tipo": c.tipo,
+        "tipo_nome": c.get_tipo_display(),
+        "codice": c.codice,
+        "nome": c.nome,
+        "stato": c.stato,
+        "stato_nome": c.get_stato_display(),
+        "carta": c.carta,
+        "maestro": c.maestro,
+        "confronto": c.confronto,
+        "collegati": [a.pk for a in c.collegati.all()],
+        "avviato_il": c.avviato_il,
+        "verifica_proposta": c.verifica_proposta_il is not None,
+        "riconosciuto": _d(c.riconosciuto_il, c.precisione_riconosciuto),
+        "storico": c.storico,
+        "distintivo": _d(c.distintivo_il, c.precisione_distintivo),
+        "interrotto_il": c.interrotto_il,
+        "motivo_interruzione": c.motivo_interruzione,
+    }
+
+
+def _posto_out(p: PostoAzione) -> dict:
+    return {
+        "id": p.pk,
+        "impresa_id": p.impresa_id,
+        "impresa": p.impresa.titolo,
+        "impresa_livello": p.impresa.get_livello_display(),
+        "persona_id": p.persona_id,
+        "persona": f"{p.persona.cognome} {p.persona.nome}",
+        "ruolo": p.ruolo,
+        "impegno_id": p.impegno_id,
+        "verificato_il": p.verificato_il,
+        "sede_nome": p.sede_descrizione or (p.get_sede_display() if p.sede else ""),
+    }
+
+
 def _scheda(user, persona: Persona) -> dict:
     periodi = list(
         PeriodoBranca.objects.filter(persona=persona).prefetch_related("tappe__distintivo")
@@ -214,6 +294,18 @@ def _scheda(user, persona: Persona) -> dict:
                 "mete": [m.pk for m in i.mete.all() if m.pk in visibili],
             }
             for i in impegni
+        ],
+        "competenze": [
+            _competenza_out(c)
+            for c in PercorsoCompetenza.objects.filter(periodo__persona=persona).prefetch_related(
+                "collegati"
+            )
+        ],
+        "posti_azione": [
+            _posto_out(p)
+            for p in PostoAzione.objects.filter(persona=persona).select_related(
+                "impresa", "persona"
+            )
         ],
         "puo_gestire": policy.puo_gestire_progressione(user, persona),
         "puo_proporre": policy.puo_proporre_percorsi(user, persona),
@@ -503,12 +595,26 @@ class RagazzoSentiero(Schema):
     impegni_da_verificare: int
     bozze: int
     mete_aperte: int
+    specialita: int
+    # V10: at least one brevetto in the sentiero, a reminder for the capi, never a block.
+    brevetto: str | None
 
 
 class SentieroUnita(Schema):
     unita: str
     ragazzi: list[RagazzoSentiero]
     puo_gestire: bool
+
+
+def _brevetto(periodo) -> str | None:
+    if periodo is None:
+        return None
+    brevetti = PercorsoCompetenza.objects.filter(periodo=periodo, tipo=TipoCompetenza.BREVETTO)
+    if brevetti.filter(stato=StatoCompetenza.RICONOSCIUTO).exists():
+        return "conquistato"
+    if brevetti.exclude(stato=StatoCompetenza.INTERROTTO).exists():
+        return "in corso"
+    return None
 
 
 @router.get("/unita/{unita_id}/progressione", response=SentieroUnita)
@@ -548,6 +654,16 @@ def sentiero_unita(request, unita_id: int):
                     if periodo
                     else 0
                 ),
+                "specialita": (
+                    PercorsoCompetenza.objects.filter(
+                        periodo=periodo,
+                        tipo=TipoCompetenza.SPECIALITA,
+                        stato=StatoCompetenza.RICONOSCIUTO,
+                    ).count()
+                    if periodo
+                    else 0
+                ),
+                "brevetto": _brevetto(periodo),
                 "mete_aperte": (
                     MetaEG.objects.filter(
                         periodo=periodo,
@@ -563,3 +679,374 @@ def sentiero_unita(request, unita_id: int):
         "ragazzi": righe,
         "puo_gestire": policy.e_staff(request.auth, unita),
     }
+
+
+# --- Catalogs -------------------------------------------------------------------------------
+
+
+class VoceOut(Schema):
+    codice: str
+    nome: str
+
+
+class CataloghiOut(Schema):
+    specialita: list[VoceOut]
+    brevetti: list[VoceOut]
+    specialita_squadriglia: list[VoceOut]
+
+
+@router.get("/progressione/cataloghi", response=CataloghiOut)
+def cataloghi(request):
+    """The current items (withdrawn ones are only kept in history, DEC-63)."""
+    from .catalogo import voci
+
+    def attive(tipo):
+        return [{"codice": v.codice, "nome": v.nome} for v in voci(tipo) if not v.ritirata]
+
+    return {
+        "specialita": attive(TipoCompetenza.SPECIALITA),
+        "brevetti": attive(TipoCompetenza.BREVETTO),
+        "specialita_squadriglia": attive(TipoCompetenza.SPECIALITA_SQ),
+    }
+
+
+# --- Specialità and brevetti of one E/G (DEC-62, DEC-63) ------------------------------------
+
+
+class CompetenzaIn(Schema):
+    tipo: TipoCompetenza
+    codice: str
+    carta: str = ""
+    maestro: str = ""
+    # Already conquered in a past year: recorded directly (spec §18.4).
+    conquistata: DataIn | None = None
+
+
+@router.post("/persone/{persona_id}/progressione/competenze", response={201: SchedaOut})
+def nuova_competenza(request, persona_id: int, dati: CompetenzaIn):
+    persona = _persona(request, persona_id)
+    _gestore(request, persona)
+    if dati.tipo == TipoCompetenza.SPECIALITA_SQ:
+        raise HttpError(400, "Le specialità di squadriglia si registrano dalla pagina del reparto.")
+    periodo = servizi.periodo_attivo(persona)
+    if periodo is None:
+        raise HttpError(400, "Il sentiero non è ancora aperto.")
+    _esegui(
+        servizi.nuova_competenza,
+        dati.tipo,
+        dati.codice,
+        request.auth,
+        periodo=periodo,
+        carta=dati.carta,
+        maestro=dati.maestro,
+        storico=_quando(dati.conquistata) if dati.conquistata else None,
+    )
+    return Status(201, _scheda(request.auth, persona))
+
+
+def _competenza(request, competenza_id: int) -> PercorsoCompetenza:
+    """Who may see it: of a person, as their sentiero; of a patrol, the capi."""
+    percorso = get_object_or_404(
+        PercorsoCompetenza.objects.select_related("periodo__persona", "squadriglia__unita"),
+        pk=competenza_id,
+    )
+    if percorso.periodo_id:
+        _persona(request, percorso.periodo.persona_id)
+    elif not policy.e_capo_censito(request.auth):
+        raise HttpError(404, "Non trovato.")
+    return percorso
+
+
+def _gestore_competenza(request, percorso: PercorsoCompetenza) -> None:
+    if percorso.periodo_id:
+        _gestore(request, percorso.periodo.persona)
+    elif not policy.puo_gestire_reparto_progressione(request.auth, percorso.squadriglia.unita):
+        raise HttpError(403, "Lo registra lo staff del reparto.")
+
+
+def _dopo_competenza(request, percorso: PercorsoCompetenza):
+    if percorso.periodo_id:
+        return _scheda(request.auth, percorso.periodo.persona)
+    return _imprese(request.auth, percorso.squadriglia.unita)
+
+
+class CompetenzaModificaIn(Schema):
+    carta: str = ""
+    maestro: str = ""
+    confronto: str = ""
+    collegati: list[int] = []
+
+
+@router.put("/competenze/{competenza_id}", response=SchedaOut | dict)
+def modifica_competenza(request, competenza_id: int, dati: CompetenzaModificaIn):
+    """The carta, the maestro, the occasion of comparison (brevetto), the links."""
+    percorso = _competenza(request, competenza_id)
+    _gestore_competenza(request, percorso)
+    with transaction.atomic():
+        percorso.carta = dati.carta.strip()
+        percorso.maestro = dati.maestro.strip()[:120]
+        percorso.confronto = dati.confronto.strip()
+        percorso.save()
+        if percorso.tipo != TipoCompetenza.SPECIALITA:
+            altri = list(PercorsoCompetenza.objects.filter(pk__in=dati.collegati))
+            _esegui(servizi.collega_competenze, percorso, altri)
+    return _dopo_competenza(request, percorso)
+
+
+class PassoCompetenzaIn(Schema):
+    il: date | None = None
+    motivo: str = ""
+
+
+@router.post("/competenze/{competenza_id}/distintivo", response=SchedaOut | dict)
+def distintivo_competenza(request, competenza_id: int, dati: DataIn):
+    percorso = _competenza(request, competenza_id)
+    _gestore_competenza(request, percorso)
+    _esegui(servizi.consegna_distintivo_competenza, percorso, _quando(dati))
+    return _dopo_competenza(request, percorso)
+
+
+@router.post("/competenze/{competenza_id}/{azione}", response=SchedaOut | dict)
+def passo_competenza(request, competenza_id: int, azione: str, dati: PassoCompetenzaIn):
+    """Spec §17.4. Asking for the verification of a personal path: the ragazzo and their
+    CSQ too (DEC-13); the rest is the staff's."""
+    percorso = _competenza(request, competenza_id)
+    if azione == "proponi_verifica" and percorso.periodo_id:
+        if not policy.puo_proporre_verifica(request.auth, percorso.periodo.persona):
+            raise HttpError(
+                403, "La verifica la propongono il ragazzo, il capo squadriglia o lo staff."
+            )
+    else:
+        _gestore_competenza(request, percorso)
+    _esegui(
+        servizi.passo_competenza, percorso, azione, request.auth, il=dati.il, motivo=dati.motivo
+    )
+    return _dopo_competenza(request, percorso)
+
+
+# --- Imprese and specialità di squadriglia (DEC-64, DEC-65) ---------------------------------
+
+
+class ImpresaOut(Schema):
+    id: int
+    livello: LivelloImpresa
+    livello_nome: str
+    squadriglia_id: int | None
+    squadriglia: str | None
+    titolo: str
+    descrizione: str
+    dal: date
+    al: date | None
+    posti: list[PostoOut]
+
+
+class SquadrigliaCompetenze(Schema):
+    id: int
+    nome: str
+    competenze: list[CompetenzaOut]
+    # Members' specialità and brevetti that may be linked to a patrol's path.
+    individuali: list[dict]
+
+
+class ImpreseOut(Schema):
+    reparto_id: int
+    reparto: str
+    imprese: list[ImpresaOut]
+    squadriglie: list[SquadrigliaCompetenze]
+    ragazzi: list[dict]
+    puo_gestire: bool
+    sedi: list[dict]
+
+
+def _imprese(user, reparto: Unita) -> dict:
+    from apps.anagrafica.models import AppartenenzaSquadriglia
+
+    ragazzi = Persona.objects.filter(
+        pk__in=Appartenenza.objects.attive()
+        .filter(unita=reparto, ruolo=RuoloAppartenenza.RAGAZZO)
+        .values("persona_id")
+    ).order_by("cognome", "nome")
+    squadriglie = []
+    for sq in reparto.squadriglie.filter(attiva=True).order_by("nome"):
+        membri = (
+            AppartenenzaSquadriglia.objects.attive().filter(squadriglia=sq).values("persona_id")
+        )
+        individuali = PercorsoCompetenza.objects.filter(
+            periodo__persona_id__in=membri
+        ).select_related("periodo__persona")
+        squadriglie.append(
+            {
+                "id": sq.pk,
+                "nome": sq.nome,
+                "competenze": [
+                    _competenza_out(c) for c in sq.competenze.prefetch_related("collegati")
+                ],
+                "individuali": [
+                    {
+                        "id": c.pk,
+                        "testo": f"{c.nome} — {c.periodo.persona.nome} {c.periodo.persona.cognome}",
+                    }
+                    for c in individuali
+                ],
+            }
+        )
+    imprese = Impresa.objects.filter(reparto=reparto).select_related("squadriglia")
+    return {
+        "reparto_id": reparto.pk,
+        "reparto": str(reparto),
+        "imprese": [
+            {
+                "id": i.pk,
+                "livello": i.livello,
+                "livello_nome": i.get_livello_display(),
+                "squadriglia_id": i.squadriglia_id,
+                "squadriglia": i.squadriglia.nome if i.squadriglia_id else None,
+                "titolo": i.titolo,
+                "descrizione": i.descrizione,
+                "dal": i.dal,
+                "al": i.al,
+                "posti": [_posto_out(p) for p in i.posti.select_related("impresa", "persona")],
+            }
+            for i in imprese
+        ],
+        "squadriglie": squadriglie,
+        "ragazzi": [{"id": p.pk, "nome": f"{p.cognome} {p.nome}"} for p in ragazzi],
+        "puo_gestire": policy.puo_gestire_reparto_progressione(user, reparto),
+        "sedi": [{"valore": v, "etichetta": e} for v, e in SedeVerifica.choices],
+    }
+
+
+def _reparto(request, unita_id: int) -> Unita:
+    reparto = get_object_or_404(Unita, pk=unita_id)
+    if not policy.e_capo_censito(request.auth):
+        raise HttpError(403, "Imprese e specialità di squadriglia le vedono i capi.")
+    if reparto.branca != Branca.EG:
+        raise HttpError(400, "Le imprese sono del reparto.")
+    return reparto
+
+
+def _gestore_reparto(request, reparto: Unita) -> None:
+    if not policy.puo_gestire_reparto_progressione(request.auth, reparto):
+        raise HttpError(403, "Le registra lo staff del reparto.")
+
+
+@router.get("/unita/{unita_id}/imprese", response=ImpreseOut)
+def imprese(request, unita_id: int):
+    return _imprese(request.auth, _reparto(request, unita_id))
+
+
+class ImpresaIn(Schema):
+    livello: LivelloImpresa
+    squadriglia_id: int | None = None
+    titolo: str
+    descrizione: str = ""
+    dal: date
+    al: date | None = None
+
+
+def _salva_impresa(impresa: Impresa, dati: ImpresaIn) -> None:
+    from apps.organizzazione.models import Squadriglia
+
+    impresa.livello = dati.livello
+    impresa.squadriglia = (
+        get_object_or_404(Squadriglia, pk=dati.squadriglia_id)
+        if dati.livello == LivelloImpresa.SQUADRIGLIA and dati.squadriglia_id
+        else None
+    )
+    impresa.titolo = dati.titolo.strip()
+    impresa.descrizione = dati.descrizione.strip()
+    impresa.dal = dati.dal
+    impresa.al = dati.al
+    _esegui(impresa.full_clean)
+    impresa.save()
+
+
+@router.post("/unita/{unita_id}/imprese", response={201: ImpreseOut})
+def nuova_impresa(request, unita_id: int, dati: ImpresaIn):
+    reparto = _reparto(request, unita_id)
+    _gestore_reparto(request, reparto)
+    _salva_impresa(Impresa(reparto=reparto, creata_da=request.auth), dati)
+    return Status(201, _imprese(request.auth, reparto))
+
+
+@router.put("/imprese/{impresa_id}", response=ImpreseOut)
+def modifica_impresa(request, impresa_id: int, dati: ImpresaIn):
+    impresa = get_object_or_404(Impresa, pk=impresa_id)
+    reparto = _reparto(request, impresa.reparto_id)
+    _gestore_reparto(request, reparto)
+    _salva_impresa(impresa, dati)
+    return _imprese(request.auth, reparto)
+
+
+class PostoIn(Schema):
+    persona_id: int
+    ruolo: str
+    impegno_id: int | None = None
+
+
+@router.post("/imprese/{impresa_id}/posti", response={201: ImpreseOut})
+def nuovo_posto(request, impresa_id: int, dati: PostoIn):
+    impresa = get_object_or_404(Impresa, pk=impresa_id)
+    reparto = _reparto(request, impresa.reparto_id)
+    _gestore_reparto(request, reparto)
+    persona = get_object_or_404(Persona, pk=dati.persona_id)
+    if not Appartenenza.objects.attive().filter(persona=persona, unita=reparto).exists():
+        raise HttpError(400, "Scegli un ragazzo del reparto.")
+    if not dati.ruolo.strip():
+        raise HttpError(400, "Scrivi il posto d'azione.")
+    impegno = (
+        get_object_or_404(Impegno, pk=dati.impegno_id, periodo__persona=persona)
+        if dati.impegno_id
+        else None
+    )
+    PostoAzione.objects.create(
+        impresa=impresa, persona=persona, ruolo=dati.ruolo.strip()[:160], impegno=impegno
+    )
+    return Status(201, _imprese(request.auth, reparto))
+
+
+class VerificaPostoIn(Schema):
+    il: date
+    sede: str
+    sede_descrizione: str = ""
+
+
+@router.post("/posti-azione/{posto_id}/verifica", response=ImpreseOut)
+def verifica_posto(request, posto_id: int, dati: VerificaPostoIn):
+    posto = get_object_or_404(PostoAzione.objects.select_related("impresa"), pk=posto_id)
+    reparto = _reparto(request, posto.impresa.reparto_id)
+    _gestore_reparto(request, reparto)
+    _esegui(
+        servizi.verifica_posto,
+        posto,
+        request.auth,
+        il=dati.il,
+        sede=dati.sede,
+        sede_descrizione=dati.sede_descrizione,
+    )
+    return _imprese(request.auth, reparto)
+
+
+class SpecialitaSquadrigliaIn(Schema):
+    codice: str
+    carta: str = ""
+    conquistata: DataIn | None = None
+
+
+@router.post("/squadriglie/{squadriglia_id}/competenze", response={201: ImpreseOut})
+def nuova_specialita_squadriglia(request, squadriglia_id: int, dati: SpecialitaSquadrigliaIn):
+    from apps.organizzazione.models import Squadriglia
+
+    squadriglia = get_object_or_404(Squadriglia, pk=squadriglia_id)
+    reparto = _reparto(request, squadriglia.unita_id)
+    _gestore_reparto(request, reparto)
+    _esegui(
+        servizi.nuova_competenza,
+        TipoCompetenza.SPECIALITA_SQ,
+        dati.codice,
+        request.auth,
+        squadriglia=squadriglia,
+        carta=dati.carta,
+        storico=_quando(dati.conquistata) if dati.conquistata else None,
+    )
+    return Status(201, _imprese(request.auth, reparto))

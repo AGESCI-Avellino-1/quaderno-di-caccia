@@ -1286,9 +1286,58 @@ export interface PeriodoBranca {
   branca_nome: string
   inizio: DataParziale
   fine: string | null
+  motivo_fine: string
   attivo: boolean
+  passaggio: {
+    data: string
+    da: string
+    a: string
+    data_cerimonia: string | null
+    sintesi: string
+  } | null
   promessa: DataParziale | null
   tappe: TappaSentiero[]
+}
+
+export type StatoPassaggio = 'PREPARATO' | 'ESEGUITO' | 'ANNULLATO'
+
+export interface PersonaPassaggio {
+  persona_id: number
+  persona: string
+  sintesi: string
+}
+
+export interface PassaggioBranca {
+  id: number
+  unita_origine_id: number
+  unita_origine: string
+  unita_destinazione_id: number
+  unita_destinazione: string
+  data: string
+  data_decisione: string | null
+  data_cerimonia: string | null
+  stato: StatoPassaggio
+  stato_nome: string
+  motivo_annullamento: string
+  persone: PersonaPassaggio[]
+  puo_gestire: boolean
+}
+
+export interface PassaggiUnita {
+  unita: string
+  in_uscita: PassaggioBranca[]
+  in_entrata: PassaggioBranca[]
+  ragazzi: { id: number; nome: string }[]
+  destinazioni: { id: number; nome: string }[]
+  puo_preparare: boolean
+}
+
+export interface PassaggioIn {
+  unita_destinazione_id: number
+  data: string
+  data_decisione: string | null
+  data_cerimonia: string | null
+  persone: { persona_id: number; sintesi: string }[]
 }
 
 export type TipoCompetenza = 'SPECIALITA' | 'BREVETTO' | 'SPECIALITA_SQ'
@@ -2031,6 +2080,18 @@ export const api = {
     richiesta<ImpreseReparto>(`/api/v1/squadriglie/${squadriglia}/competenze`, {
       metodo: 'POST',
       corpo: dati,
+    }),
+  passaggiUnita: (unita: number) => richiesta<PassaggiUnita>(`/api/v1/unita/${unita}/passaggi`),
+  preparaPassaggio: (unita: number, dati: PassaggioIn) =>
+    richiesta<PassaggiUnita>(`/api/v1/unita/${unita}/passaggi`, { metodo: 'POST', corpo: dati }),
+  modificaPassaggio: (id: number, dati: PassaggioIn) =>
+    richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}`, { metodo: 'PUT', corpo: dati }),
+  eseguiPassaggio: (id: number) =>
+    richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}/esegui`, { metodo: 'POST' }),
+  annullaPassaggio: (id: number, motivo: string) =>
+    richiesta<PassaggiUnita>(`/api/v1/passaggi/${id}/annulla`, {
+      metodo: 'POST',
+      corpo: { motivo },
     }),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {

@@ -20,5 +20,7 @@ class ProgressioneConfig(AppConfig):
             models.PercorsoCompetenza,
             models.Impresa,
             models.PostoAzione,
+            models.Passaggio,
+            models.PassaggioPersona,
         ):
             auditlog.register(modello)

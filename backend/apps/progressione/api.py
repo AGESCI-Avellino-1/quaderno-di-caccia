@@ -22,6 +22,8 @@ from .models import (
     Impresa,
     LivelloImpresa,
     MetaEG,
+    Passaggio,
+    PassaggioPersona,
     PercorsoCompetenza,
     PeriodoBranca,
     PostoAzione,
@@ -29,6 +31,7 @@ from .models import (
     SedeVerifica,
     Stato,
     StatoCompetenza,
+    StatoPassaggio,
     Tappa,
     TipoCompetenza,
 )
@@ -116,13 +119,24 @@ class ImpegnoOut(PercorsoOut):
     mete: list[int]
 
 
+class PassaggioRiassunto(Schema):
+    data: date
+    da: str
+    a: str
+    data_cerimonia: date | None
+    sintesi: str
+
+
 class PeriodoOut(Schema):
     id: int
     branca: str
     branca_nome: str
     inizio: DataOut
     fine: date | None
+    motivo_fine: str
     attivo: bool
+    # How the period began: the passage, with the summary for the new capi (spec §7).
+    passaggio: PassaggioRiassunto | None
     promessa: DataOut | None
     tappe: list[TappaOut]
 
@@ -258,6 +272,24 @@ def _posto_out(p: PostoAzione) -> dict:
     }
 
 
+def _passaggio_di(periodo: PeriodoBranca) -> dict | None:
+    riga = (
+        PassaggioPersona.objects.filter(periodo_destinazione=periodo)
+        .select_related("passaggio__unita_origine", "passaggio__unita_destinazione")
+        .first()
+    )
+    if riga is None:
+        return None
+    passaggio = riga.passaggio
+    return {
+        "data": passaggio.data,
+        "da": str(passaggio.unita_origine),
+        "a": str(passaggio.unita_destinazione),
+        "data_cerimonia": passaggio.data_cerimonia,
+        "sintesi": riga.sintesi,
+    }
+
+
 def _scheda(user, persona: Persona) -> dict:
     periodi = list(
         PeriodoBranca.objects.filter(persona=persona).prefetch_related("tappe__distintivo")
@@ -277,7 +309,9 @@ def _scheda(user, persona: Persona) -> dict:
                 "branca_nome": p.get_branca_display(),
                 "inizio": _d(p.data_inizio, p.precisione_inizio),
                 "fine": p.data_fine,
+                "motivo_fine": p.motivo_fine,
                 "attivo": p.data_fine is None,
+                "passaggio": _passaggio_di(p),
                 "promessa": (
                     _d(p.promessa.data, p.promessa.precisione) if hasattr(p, "promessa") else None
                 ),
@@ -1050,3 +1084,165 @@ def nuova_specialita_squadriglia(request, squadriglia_id: int, dati: SpecialitaS
         storico=_quando(dati.conquistata) if dati.conquistata else None,
     )
     return Status(201, _imprese(request.auth, reparto))
+
+
+# --- Passaggi tra branche (DEC-69, DEC-174…DEC-177) -----------------------------------------
+
+
+class PersonaPassaggioIO(Schema):
+    persona_id: int
+    persona: str = ""
+    sintesi: str = ""
+
+
+class PassaggioOut(Schema):
+    id: int
+    unita_origine_id: int
+    unita_origine: str
+    unita_destinazione_id: int
+    unita_destinazione: str
+    data: date
+    data_decisione: date | None
+    data_cerimonia: date | None
+    stato: StatoPassaggio
+    stato_nome: str
+    motivo_annullamento: str
+    persone: list[PersonaPassaggioIO]
+    puo_gestire: bool
+
+
+class PassaggiUnita(Schema):
+    unita: str
+    in_uscita: list[PassaggioOut]
+    in_entrata: list[PassaggioOut]
+    ragazzi: list[dict]
+    destinazioni: list[dict]
+    puo_preparare: bool
+
+
+def _passaggio_out(user, p: Passaggio) -> dict:
+    return {
+        "id": p.pk,
+        "unita_origine_id": p.unita_origine_id,
+        "unita_origine": str(p.unita_origine),
+        "unita_destinazione_id": p.unita_destinazione_id,
+        "unita_destinazione": str(p.unita_destinazione),
+        "data": p.data,
+        "data_decisione": p.data_decisione,
+        "data_cerimonia": p.data_cerimonia,
+        "stato": p.stato,
+        "stato_nome": p.get_stato_display(),
+        "motivo_annullamento": p.motivo_annullamento,
+        "persone": [
+            {
+                "persona_id": r.persona_id,
+                "persona": f"{r.persona.cognome} {r.persona.nome}",
+                "sintesi": r.sintesi,
+            }
+            for r in p.persone.select_related("persona")
+        ],
+        "puo_gestire": policy.puo_gestire_passaggi(user, p.unita_origine),
+    }
+
+
+def _passaggi(user, unita: Unita) -> dict:
+    successiva = servizi.SUCCESSIVA.get(unita.branca)
+    destinazioni = [
+        u
+        for u in Unita.objects.filter(attiva=True)
+        if successiva is not None and u.branca == successiva
+    ]
+    relazioni = ("unita_origine", "unita_destinazione")
+    return {
+        "unita": str(unita),
+        "in_uscita": [
+            _passaggio_out(user, p)
+            for p in Passaggio.objects.filter(unita_origine=unita).select_related(*relazioni)
+        ],
+        "in_entrata": [
+            _passaggio_out(user, p)
+            for p in Passaggio.objects.filter(unita_destinazione=unita).select_related(*relazioni)
+        ],
+        "ragazzi": [
+            {"id": p.pk, "nome": f"{p.cognome} {p.nome}"}
+            for p in servizi.ragazzi_di(unita).order_by("cognome", "nome")
+        ],
+        "destinazioni": [{"id": u.pk, "nome": str(u)} for u in destinazioni],
+        "puo_preparare": bool(destinazioni) and policy.puo_gestire_passaggi(user, unita),
+    }
+
+
+def _unita_passaggi(request, unita_id: int) -> Unita:
+    if not policy.e_capo_censito(request.auth):
+        raise HttpError(403, "I passaggi li vedono i capi.")
+    return get_object_or_404(Unita, pk=unita_id)
+
+
+@router.get("/unita/{unita_id}/passaggi", response=PassaggiUnita)
+def passaggi(request, unita_id: int):
+    return _passaggi(request.auth, _unita_passaggi(request, unita_id))
+
+
+class Motivo(Schema):
+    motivo: str
+
+
+class PassaggioIn(Schema):
+    unita_destinazione_id: int
+    data: date
+    data_decisione: date | None = None
+    data_cerimonia: date | None = None
+    persone: list[PersonaPassaggioIO]
+
+
+def _compila(request, passaggio: Passaggio, dati: PassaggioIn) -> None:
+    passaggio.unita_destinazione = get_object_or_404(Unita, pk=dati.unita_destinazione_id)
+    passaggio.data = dati.data
+    passaggio.data_decisione = dati.data_decisione
+    passaggio.data_cerimonia = dati.data_cerimonia
+    persone = {p.pk: p for p in Persona.objects.filter(pk__in=[r.persona_id for r in dati.persone])}
+    righe = [(persone[r.persona_id], r.sintesi) for r in dati.persone if r.persona_id in persone]
+    _esegui(servizi.prepara_passaggio, passaggio, righe, request.auth)
+
+
+@router.post("/unita/{unita_id}/passaggi", response={201: PassaggiUnita})
+def prepara(request, unita_id: int, dati: PassaggioIn):
+    unita = _unita_passaggi(request, unita_id)
+    if not policy.puo_gestire_passaggi(request.auth, unita):
+        raise HttpError(403, "Il passaggio lo prepara lo staff dell'unità o un capogruppo.")
+    with transaction.atomic():
+        _compila(request, Passaggio(unita_origine=unita), dati)
+    return Status(201, _passaggi(request.auth, unita))
+
+
+def _passaggio(request, passaggio_id: int) -> Passaggio:
+    passaggio = get_object_or_404(
+        Passaggio.objects.select_related("unita_origine", "unita_destinazione"), pk=passaggio_id
+    )
+    _unita_passaggi(request, passaggio.unita_origine_id)
+    if not policy.puo_gestire_passaggi(request.auth, passaggio.unita_origine):
+        raise HttpError(403, "Il passaggio lo gestisce lo staff dell'unità o un capogruppo.")
+    return passaggio
+
+
+@router.put("/passaggi/{passaggio_id}", response=PassaggiUnita)
+def modifica_passaggio(request, passaggio_id: int, dati: PassaggioIn):
+    passaggio = _passaggio(request, passaggio_id)
+    with transaction.atomic():
+        _compila(request, passaggio, dati)
+    return _passaggi(request.auth, passaggio.unita_origine)
+
+
+@router.post("/passaggi/{passaggio_id}/esegui", response=PassaggiUnita)
+def esegui_passaggio(request, passaggio_id: int):
+    """Also from the offline queue: executed twice = done (DEC-96)."""
+    passaggio = _passaggio(request, passaggio_id)
+    _esegui(servizi.esegui_passaggio, passaggio, request.auth)
+    return _passaggi(request.auth, passaggio.unita_origine)
+
+
+@router.post("/passaggi/{passaggio_id}/annulla", response=PassaggiUnita)
+def annulla_passaggio(request, passaggio_id: int, dati: Motivo):
+    passaggio = _passaggio(request, passaggio_id)
+    _esegui(servizi.annulla_passaggio, passaggio, dati.motivo)
+    return _passaggi(request.auth, passaggio.unita_origine)

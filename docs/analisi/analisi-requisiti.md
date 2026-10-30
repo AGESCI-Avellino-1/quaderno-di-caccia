@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 27, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 28, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -189,7 +189,7 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-66 | L/C: stagione di caccia o di volo come etichetta; prede e voli; appartenenza al Consiglio degli Anziani. | PP-C, L-05 |
 | DEC-67 | R/S: Punto della Strada semplice e ripetibile; firma della Carta di clan registrata con la sola data, come evento che apre i passi di competenza; servizio verificato nel Punto della Strada; conclusione con tipo (Partenza, saluto fraterno, interruzione, trasferimento) e data. | PP-J, P-3, S-03, PP-K |
 | DEC-68 | Eventi individuali (Piccole Orme, campi di specialità, EPPPI, ROSS): solo partecipazione e quote anticipate; nessun controllo automatico, lo fa BuonaCaccia. | PP-I |
-| DEC-69 | I passaggi tra branche li decide la Co.Ca., in blocco per unità; chiudono un periodo e aprono il successivo senza convertire tappe o specialità. | T-01, PP-L |
+| DEC-69 | I passaggi tra branche li decide la Co.Ca., in blocco per unità; chiudono un periodo e aprono il successivo senza convertire tappe o specialità. Come si registrano: DEC-174…DEC-177. | T-01, PP-L |
 | DEC-70 | Storico: date parziali (anche solo l'anno), correzioni tracciate, registro delle modifiche; versione per ogni oggetto e protezione dai doppi invii. | PP-O, PP-P, PP-Q |
 | DEC-71 | Solo vincoli strutturali e qualche promemoria: nessun avanzamento automatico, nessuna classifica. | PP-R, P-08 |
 | DEC-72 | Viste: scheda personale con la storia di tutti gli anni nel gruppo e vista di unità. Per i ragazzi, linguaggio e colore della branca e nomi giungla o bosco dei capi. | PP-T, P-07, N-26, L-06 |
@@ -198,6 +198,10 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-171 | In E/G il sentiero e la tappa li registra lo staff, non si aprono da soli con l'ingresso in reparto: l'apertura parte dalla Scoperta. Chi entra più grande, dopo Scoperta e Promessa, si colloca nella tappa adeguata con una motivazione, senza inventare le tappe intermedie. | DEC-57, PP-A, 30/10 |
 | DEC-172 | La convalida registra anche la sede della verifica: Consiglio della Legge, Consiglio di squadriglia, Alta Squadriglia o altro (da descrivere). Tappe, specialità e brevetti si riconoscono nel Consiglio della Legge. | DEC-60, PP-F, 30/10 |
 | DEC-173 | Una meta può essere riservata (le mete "particolarmente delicate"): la vedono il ragazzo, i genitori e i capi, non il capo squadriglia né le viste di squadriglia. Le note con visibilità complete restano alla fase 5. | DEC-13, DEC-39, PP-N, 30/10 |
+| DEC-174 | Il passaggio deciso dalla Co.Ca. lo prepara e lo esegue nell'app lo staff dell'unità di partenza o un capogruppo, con la data della decisione della Co.Ca. | DEC-69, 30/10 |
+| DEC-175 | Eseguire il passaggio sposta i ragazzi nella nuova unità come unità assegnata nell'app: all'importazione da BuonaStrada vale DEC-130. Uscire dal reparto chiude squadriglia e incarichi di squadriglia. | DEC-34, DEC-130, 30/10 |
+| DEC-176 | Il passaggio apre il percorso della nuova branca con la sua prima fase (Scoperta del sentiero E/G, passi di scoperta R/S) dalla data del passaggio: è una decisione registrata, non un'apertura automatica (DEC-171). Promessa e distintivi li registra il nuovo staff. | DEC-69, DEC-171, 30/10 |
+| DEC-177 | Il passaggio si prepara per l'unità (chi passa, unità di arrivo, data, sintesi per i nuovi capi di ciascuno; cerimonia con data propria se diversa), si può modificare o annullare con un motivo, e si esegue dalla sua data: chiusura e apertura avvengono insieme, tutte o nessuna. Eseguito non si annulla. | DEC-69, PP-L, 30/10 |
 
 ## Eventi e presenze
 

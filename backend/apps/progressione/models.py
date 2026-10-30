@@ -441,3 +441,79 @@ class PostoAzione(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.ruolo} — {self.persona}"
+
+
+# --- Passaggi tra branche (DEC-69, DEC-174…DEC-177) -----------------------------------------
+
+
+class StatoPassaggio(models.TextChoices):
+    """Spec §17.9, prepared then executed (DEC-177)."""
+
+    PREPARATO = "PREPARATO", "Preparato"
+    ESEGUITO = "ESEGUITO", "Eseguito"
+    ANNULLATO = "ANNULLATO", "Annullato"
+
+
+class Passaggio(ModelloTracciato):
+    """The passage of some ragazzi of a unit to the next branch, decided by the Co.Ca.
+    in a block (DEC-69). Executing it closes the branch periods and opens the new ones
+    with their first phase (DEC-176), and moves the ragazzi to the new unit as a unit
+    assigned in the app (DEC-175); tappe and specialità are never converted."""
+
+    unita_origine = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.PROTECT, related_name="passaggi_in_uscita"
+    )
+    unita_destinazione = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.PROTECT, related_name="passaggi_in_entrata"
+    )
+    # The date it takes effect; the Co.Ca. decision and the ceremony may differ.
+    data = _data()
+    data_decisione = _data(null=True, blank=True)
+    data_cerimonia = _data(null=True, blank=True)
+    stato = models.CharField(
+        max_length=10, choices=StatoPassaggio.choices, default=StatoPassaggio.PREPARATO
+    )
+    preparato_da = _utente()
+    eseguito_da = _utente()
+    eseguito_il = models.DateTimeField(null=True, blank=True)
+    annullato_il = models.DateTimeField(null=True, blank=True)
+    motivo_annullamento = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "passaggio"
+        verbose_name_plural = "passaggi"
+        ordering = ["-data"]
+
+    def __str__(self) -> str:
+        return f"Passaggio da {self.unita_origine} a {self.unita_destinazione}"
+
+
+class PassaggioPersona(ModelloTracciato):
+    """One ragazzo in a passage, with the summary for the new capi (spec §7)."""
+
+    passaggio = models.ForeignKey(Passaggio, on_delete=models.CASCADE, related_name="persone")
+    persona = models.ForeignKey(
+        "anagrafica.Persona", on_delete=models.CASCADE, related_name="passaggi"
+    )
+    sintesi = models.TextField(blank=True)
+    periodo_origine = models.ForeignKey(
+        PeriodoBranca, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    periodo_destinazione = models.OneToOneField(
+        PeriodoBranca,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="passaggio_in_entrata",
+    )
+
+    class Meta:
+        verbose_name = "ragazzo in un passaggio"
+        verbose_name_plural = "ragazzi nei passaggi"
+        ordering = ["persona__cognome", "persona__nome"]
+        constraints = [
+            models.UniqueConstraint(fields=["passaggio", "persona"], name="passaggio_persona_unica")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.persona} — {self.passaggio}"

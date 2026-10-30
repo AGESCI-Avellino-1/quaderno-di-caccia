@@ -20,6 +20,8 @@ from .models import (
     Fase,
     Impegno,
     MetaEG,
+    Passaggio,
+    PassaggioPersona,
     PercorsoCompetenza,
     PeriodoBranca,
     PostoAzione,
@@ -28,6 +30,7 @@ from .models import (
     SedeVerifica,
     Stato,
     StatoCompetenza,
+    StatoPassaggio,
     Tappa,
     TipoCompetenza,
 )
@@ -69,9 +72,14 @@ def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBran
         raise ValidationError("Il percorso in questa branca è già aperto.")
     if quando.valore is None:
         raise ValidationError("Indica almeno l'anno dell'ingresso.")
+    return _apri_periodo(persona, Branca.EG, quando, utente)
+
+
+def _apri_periodo(persona: Persona, branca: str, quando: DataParziale, utente) -> PeriodoBranca:
+    """A branch period with its Scoperta (tappa E/G, passi R/S)."""
     periodo = PeriodoBranca.objects.create(
         persona=persona,
-        branca=Branca.EG,
+        branca=branca,
         data_inizio=quando.valore,
         precisione_inizio=quando.precisione,
         registrato_da=utente,
@@ -499,3 +507,125 @@ def verifica_posto(
     posto.sede_descrizione = sede_descrizione.strip() if sede == SedeVerifica.ALTRO else ""
     posto.verificato_da = utente
     posto.save()
+
+
+# --- Passaggi tra branche (DEC-69, DEC-174…DEC-177) -----------------------------------------
+
+# The branch that follows each one (Interbranca art. 31).
+SUCCESSIVA = {Branca.LC: Branca.EG, Branca.EG: Branca.RS}
+
+
+def ragazzi_di(unita, giorno: date | None = None):
+    from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+
+    return Persona.objects.filter(
+        pk__in=Appartenenza.objects.attive(giorno)
+        .filter(unita=unita, ruolo=RuoloAppartenenza.RAGAZZO)
+        .values("persona_id")
+    )
+
+
+@transaction.atomic
+def prepara_passaggio(
+    passaggio: Passaggio, persone: list[tuple[Persona, str]], utente
+) -> Passaggio:
+    """Prepared for a unit: who, where, when, the summary for the new capi. Changed
+    freely until executed."""
+    if passaggio.stato != StatoPassaggio.PREPARATO:
+        raise ValidationError("Il passaggio non si cambia più.")
+    origine, destinazione = passaggio.unita_origine, passaggio.unita_destinazione
+    if SUCCESSIVA.get(origine.branca) != destinazione.branca:
+        raise ValidationError(
+            "Il passaggio va alla branca successiva: dai lupetti e coccinelle al reparto, "
+            "dal reparto al noviziato o al clan."
+        )
+    if not destinazione.attiva:
+        raise ValidationError("L'unità di arrivo è chiusa.")
+    if not persone:
+        raise ValidationError("Scegli chi passa.")
+    del_reparto = set(ragazzi_di(origine).values_list("pk", flat=True))
+    if any(p.pk not in del_reparto for p, _ in persone):
+        raise ValidationError(f"Passa solo chi è oggi in {origine}.")
+    decisione, cerimonia = passaggio.data_decisione, passaggio.data_cerimonia
+    if decisione and cerimonia and cerimonia < decisione:
+        raise ValidationError("La cerimonia non può precedere la decisione della Co.Ca.")
+    if passaggio.pk is None:
+        passaggio.preparato_da = utente
+    passaggio.save()
+    PassaggioPersona.objects.filter(passaggio=passaggio).exclude(
+        persona__in=[p for p, _ in persone]
+    ).delete()
+    for persona, sintesi in persone:
+        PassaggioPersona.objects.update_or_create(
+            passaggio=passaggio, persona=persona, defaults={"sintesi": sintesi.strip()}
+        )
+    return passaggio
+
+
+@transaction.atomic
+def esegui_passaggio(passaggio: Passaggio, utente) -> Passaggio:
+    """All or nothing (spec §19.3: never an origin closed without a destination): for
+    each ragazzo the period and its open phase end, the new period opens with its
+    Scoperta (DEC-176), the unit changes as assigned in the app (DEC-175; BuonaStrada
+    will confirm, DEC-130); leaving a reparto ends patrol and patrol roles. Executed
+    twice = done."""
+    from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+    from apps.core.models import FonteDato
+    from apps.organizzazione.servizi import esci_dal_reparto
+
+    passaggio = Passaggio.objects.select_for_update().get(pk=passaggio.pk)
+    if passaggio.stato == StatoPassaggio.ESEGUITO:
+        return passaggio
+    if passaggio.stato != StatoPassaggio.PREPARATO:
+        raise ValidationError("Il passaggio è annullato.")
+    if passaggio.data > oggi():
+        raise ValidationError(f"Si esegue dal {passaggio.data:%d/%m/%Y}.")
+    giorno = passaggio.data
+    branca = passaggio.unita_destinazione.branca
+    for riga in passaggio.persone.select_related("persona"):
+        persona = riga.persona
+        vecchio = periodo_attivo(persona)
+        if vecchio is not None:
+            if vecchio.data_inizio > giorno:
+                raise ValidationError(f"Il percorso di {persona} inizia dopo il passaggio.")
+            Tappa.objects.filter(periodo=vecchio, data_fine__isnull=True).update(data_fine=giorno)
+            vecchio.data_fine = giorno
+            vecchio.motivo_fine = f"Passaggio in {passaggio.unita_destinazione}"
+            vecchio.save()
+        riga.periodo_origine = vecchio
+        riga.periodo_destinazione = _apri_periodo(
+            persona, branca, DataParziale.giorno(giorno), utente
+        )
+        riga.save()
+        for appartenenza in Appartenenza.objects.attive(giorno).filter(
+            persona=persona, unita=passaggio.unita_origine, ruolo=RuoloAppartenenza.RAGAZZO
+        ):
+            appartenenza.data_fine = giorno
+            appartenenza.save(update_fields=["data_fine", "aggiornato_il"])
+            esci_dal_reparto(persona, passaggio.unita_origine, giorno)
+        Appartenenza.objects.create(
+            persona=persona,
+            unita=passaggio.unita_destinazione,
+            ruolo=RuoloAppartenenza.RAGAZZO,
+            data_inizio=giorno,
+            fonte=FonteDato.APP,
+        )
+    passaggio.stato = StatoPassaggio.ESEGUITO
+    passaggio.eseguito_da = utente
+    passaggio.eseguito_il = timezone.now()
+    passaggio.save()
+    return passaggio
+
+
+def annulla_passaggio(passaggio: Passaggio, motivo: str) -> None:
+    """Before execution only: nothing changes in periods or units (spec §17.9)."""
+    if passaggio.stato == StatoPassaggio.ANNULLATO:
+        return
+    if passaggio.stato != StatoPassaggio.PREPARATO:
+        raise ValidationError("Un passaggio eseguito non si annulla.")
+    if not motivo.strip():
+        raise ValidationError("Scrivi perché si annulla.")
+    passaggio.stato = StatoPassaggio.ANNULLATO
+    passaggio.annullato_il = timezone.now()
+    passaggio.motivo_annullamento = motivo.strip()[:300]
+    passaggio.save()

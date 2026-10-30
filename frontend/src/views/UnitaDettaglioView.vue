@@ -128,6 +128,8 @@ const iniziale = (u: Unita): UnitaIn => ({
     </div>
     <p class="small">
       <RouterLink :to="{ name: 'persone', query: { unita: unita.id } }">Chi ne fa parte</RouterLink>
+      ·
+      <RouterLink :to="{ name: 'passaggi', params: { id: unita.id } }">Passaggi</RouterLink>
       <template v-if="unita.tipo === 'REPARTO'">
         ·
         <RouterLink :to="{ name: 'sentiero-unita', params: { id: unita.id } }">

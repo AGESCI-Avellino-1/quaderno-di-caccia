@@ -16,7 +16,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
 | 3 | Eventi e presenze | ✅ | eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi, eventi su BuonaCaccia (DEC-158…DEC-164, fatti il 30/10; da provare nel browser) |
-| 4 | Progressione Personale | 🚧 | E/G a blocchi (dettaglio sotto): blocchi 1 e 2 fatti, ora i passaggi di branca; poi R/S e L/C. Riferimento: specifica PP v1.0 (in `ignored/`, non nel repository) |
+| 4 | Progressione Personale | 🚧 | E/G a blocchi (dettaglio sotto): blocchi 1–3 fatti (E/G e passaggi), ora R/S; poi R/S e L/C. Riferimento: specifica PP v1.0 (in `ignored/`, non nel repository) |
 | 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
@@ -81,7 +81,7 @@ blocco si prova nel browser prima del commit; i casi di prova della specifica (�
 | --- | --- | --- | --- |
 | 4.1 | E/G, blocco 1: apertura del sentiero, tappe (Scoperta, Competenza, Responsabilità) riconosciute nel Consiglio della Legge, collocamento di chi entra più grande, Promessa, consegna del distintivo, date parziali e rettifiche tracciate; mete (anche riservate) e impegni con i sei stati, revisioni del testo, proposta di verifica (ragazzo, capo squadriglia), convalida con data, chi e sede; anche offline; scheda del sentiero e vista di reparto | DEC-57…DEC-61, DEC-70…DEC-73, DEC-171…DEC-173 | ✅ provato nel browser il 30/10 (staff e ragazza) |
 | 4.2 | E/G, blocco 2: specialità e brevetti con carta, maestro (anche esterno) e riconoscimento; specialità di squadriglia; imprese di reparto, squadriglia e Alta Squadriglia con posti d'azione; promemoria del brevetto | DEC-62…DEC-65, V09, V10 | ✅ provato nel browser il 30/10 |
-| 4.3 | Passaggi di branca decisi dalla Co.Ca., in blocco per unità, con sintesi per i nuovi capi | DEC-69, DEC-41 | ⏳ |
+| 4.3 | Passaggi di branca decisi dalla Co.Ca., in blocco per unità, con sintesi per i nuovi capi | DEC-69, DEC-174…DEC-177 | ✅ provato nel browser il 30/10 (il report completo per i passaggi, DEC-41, resta alla fase 5) |
 | 4.4 | R/S: passi, Carta di clan, Punto della Strada, EPPPI, conclusione (Partenza, saluto fraterno…) | DEC-67, DEC-68 | ⏳ |
 | 4.5 | L/C: momenti, stagione come etichetta, prede e voli, specialità L/C, Piccole Orme, Consiglio degli Anziani | DEC-66, DEC-68 | ⏳ |
 

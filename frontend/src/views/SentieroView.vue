@@ -48,6 +48,9 @@ watch(() => props.id, carica, { immediate: true })
 const periodo = computed(() => scheda.value?.periodi.find((p) => p.attivo) ?? null)
 const passati = computed(() => scheda.value?.periodi.filter((p) => !p.attivo) ?? [])
 const tappa = computed(() => periodo.value?.tappe.find((t) => t.in_corso) ?? null)
+// The tools of this page are those of the E/G sentiero; R/S and L/C come with their
+// blocks of phase 4 (TODO 4.4, 4.5).
+const eg = computed(() => periodo.value?.branca === 'EG')
 const nomiMete = computed(() =>
   Object.fromEntries((scheda.value?.mete ?? []).map((m) => [m.id, m.testo])),
 )
@@ -205,7 +208,9 @@ async function salvaNuova() {
 <template>
   <section v-if="scheda">
     <div class="d-flex flex-wrap align-items-baseline gap-3">
-      <h1 class="h4 mb-1">Sentiero di {{ scheda.persona }}</h1>
+      <h1 class="h4 mb-1">
+        {{ periodo?.branca === 'RS' ? 'Strada' : 'Sentiero' }} di {{ scheda.persona }}
+      </h1>
       <CopiaLocale :del="copiaDel" />
     </div>
     <p class="small mb-3">
@@ -243,9 +248,20 @@ async function salvaNuova() {
 
     <!-- Tappe, Promessa, badges -->
     <section v-if="periodo" class="card card-body mb-5">
-      <h2 class="h5">Tappe</h2>
+      <h2 class="h5">{{ periodo.branca === 'RS' ? 'Passi' : 'Tappe' }}</h2>
+      <div v-if="periodo.passaggio" class="alert theme-info small">
+        <div>
+          Passaggio da {{ periodo.passaggio.da }} il
+          {{ new Date(periodo.passaggio.data).toLocaleDateString('it-IT') }}.
+          <template v-if="periodo.passaggio.sintesi">
+            Sintesi per i nuovi capi:
+            <span class="testo-a-capo">{{ periodo.passaggio.sintesi }}</span>
+          </template>
+        </div>
+      </div>
       <p class="small mb-3">
-        Nel sentiero dal {{ testoDataParziale(periodo.inizio) }}.
+        {{ periodo.branca === 'RS' ? 'Nella strada' : 'Nel sentiero' }} dal
+        {{ testoDataParziale(periodo.inizio) }}.
         <template v-if="periodo.promessa"
           >Promessa: {{ testoDataParziale(periodo.promessa) }}.</template
         >
@@ -260,7 +276,9 @@ async function salvaNuova() {
             <template v-if="t.distintivo">
               · distintivo consegnato {{ quandoParziale(t.distintivo) }}</template
             >
-            <template v-else-if="t.in_corso"> · distintivo non ancora consegnato</template>
+            <template v-else-if="t.in_corso && periodo.branca === 'EG'">
+              · distintivo non ancora consegnato</template
+            >
             <template v-if="t.completata">
               · riconosciuta nel Consiglio della Legge
               {{ quandoParziale(t.completata) }}</template
@@ -273,7 +291,7 @@ async function salvaNuova() {
         Il sentiero continua fino al passaggio in noviziato.
       </p>
 
-      <div v-if="scheda.puo_gestire && tappa" class="d-flex flex-wrap gap-1">
+      <div v-if="scheda.puo_gestire && tappa && eg" class="d-flex flex-wrap gap-1">
         <button
           v-if="!periodo.promessa"
           type="button"
@@ -407,7 +425,7 @@ async function salvaNuova() {
     </section>
 
     <!-- Mete and impegni -->
-    <template v-if="periodo">
+    <template v-if="periodo && eg">
       <div class="d-flex flex-wrap gap-3 mb-3">
         <template v-if="scheda.puo_proporre && !nuova.tipo">
           <button
@@ -534,7 +552,7 @@ async function salvaNuova() {
       </section>
     </template>
 
-    <template v-if="periodo">
+    <template v-if="periodo && eg">
       <section class="mb-5">
         <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
           <h2 class="h5 mb-0">Specialità e brevetti</h2>
@@ -659,12 +677,18 @@ async function salvaNuova() {
       </section>
     </template>
 
+    <p v-if="periodo && !eg" class="small fg-2 mb-5">
+      Gli strumenti della progressione di questa branca arriveranno nei prossimi aggiornamenti.
+    </p>
+
     <section v-if="passati.length" class="mb-5">
       <h2 class="h5">Percorsi precedenti</h2>
       <ul class="small">
         <li v-for="p in passati" :key="p.id">
           {{ p.branca_nome }}: dal {{ testoDataParziale(p.inizio) }} al
           {{ p.fine ? new Date(p.fine).toLocaleDateString('it-IT') : '' }}
+          <template v-if="p.motivo_fine"> ({{ p.motivo_fine }})</template>
+          · {{ p.tappe.map((t) => t.fase_nome + (t.completata ? ' riconosciuta' : '')).join(', ') }}
         </li>
       </ul>
     </section>

@@ -196,6 +196,14 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      // Passages to the next branch: capi see, unit staff and capigruppo act (DEC-69).
+      path: '/unita/:id(\\d+)/passaggi',
+      name: 'passaggi',
+      component: () => import('@/views/PassaggiView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Using the app as another user: capigruppo, administrators who are capi, unit
       // staff (the API decides).
       path: '/impersonazioni',

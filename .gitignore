@@ -34,6 +34,9 @@ frontend/coverage/
 *.tsbuildinfo
 npm-debug.log*
 
+# --- Documentation build ---------------------------------------------------------
+docs/_build/
+
 # --- Deploy (generated per server) -----------------------------------------------------
 deploy/generated/
 deploy/nginx-docker/acme/

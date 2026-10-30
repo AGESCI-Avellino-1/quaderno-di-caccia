@@ -499,7 +499,7 @@ class ContatoreCodiceProvvisorio(models.Model):
 
 
 class PreferenzeEmail(ModelloTracciato):
-    """Which of the optional emails a person receives (maintainer, 2026-10-29: the right
+    """Which of the optional emails a person receives (DEC-157: the right
     to object to communications based on the group's legitimate interest, GDPR art.
     21). On the person, not the account: parents get emails before they have one.
     Always sent, not listed here: access codes, invitations, security warnings, the

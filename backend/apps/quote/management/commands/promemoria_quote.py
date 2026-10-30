@@ -13,7 +13,7 @@ from apps.core.euro import euro
 from apps.eventi.avvisi import indirizzi_famiglia
 from apps.quote.models import Quota
 
-# How many days before the due date (maintainer, 2026-10-29).
+# How many days before the due date (DEC-142).
 PREAVVISO = timedelta(days=7)
 
 

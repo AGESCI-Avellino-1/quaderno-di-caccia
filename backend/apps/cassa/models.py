@@ -1,16 +1,16 @@
 """Cash book by cash box (DEC-85…DEC-88).
 
-Decided with the maintainer on 2026-10-29 (not yet in the analysis):
 - one bank account for the group, every movement says which unit it belongs to (the
-  units' debit cards included); a cash box for each unit's cash;
+  units' debit cards included); a cash box for each unit's cash (DEC-150);
 - fee payments enter by themselves (cash in the member's unit box, transfers in the
-  bank); cancelling a payment reverses its movements;
+  bank); cancelling a payment reverses its movements (DEC-152);
 - a movement is never edited: a mistake is reversed (storno) with a reason, and a
-  new one recorded; records made offline never conflict (DEC-96);
-- an initial balance per box, then cash checks: a difference becomes an adjustment;
+  new one recorded; records made offline never conflict (DEC-96, DEC-153);
+- an initial balance per box, then cash checks: a difference becomes an adjustment
+  (DEC-154);
 - a capo records an expense paid out of pocket, which becomes an outflow when the
-  treasurer refunds it (DEC-86);
-- the receipt photo is optional; outflows without it are flagged.
+  treasurer refunds it (DEC-86, DEC-155);
+- the receipt photo is optional; outflows without it are flagged (DEC-155).
 """
 
 from decimal import Decimal

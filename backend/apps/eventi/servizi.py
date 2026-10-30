@@ -299,7 +299,7 @@ def numero_partecipanti(evento: Evento) -> int:
 
 
 def staff_al_campo(evento: Evento) -> int:
-    """All the staff of the units involved (maintainer, 2026-10-29)."""
+    """All the staff of the units involved (DEC-156)."""
     giorno = giorno_evento(evento)
     return (
         Incarico.objects.attivi(giorno)
@@ -342,7 +342,7 @@ def fissa_budget(
 def budget(evento: Evento) -> dict | None:
     """totale = quota × participants + quota_staff × staff + contributo, the missing one
     computed on today's numbers. The staff's contribution counts in the budget only
-    (maintainer, 2026-10-29)."""
+    (DEC-156)."""
     from decimal import ROUND_HALF_UP, Decimal
 
     quota, contributo, totale = evento.budget_quota, evento.budget_contributo, evento.budget_totale

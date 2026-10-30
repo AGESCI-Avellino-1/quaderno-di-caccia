@@ -1,20 +1,21 @@
 """Events, recurring meetings, participants and attendance (DEC-75, DEC-78).
 
-Decided with the maintainer on 2026-10-29 (not yet in the analysis):
 - participants are by default all the members of the units involved (the whole group
-  for a group event);
+  for a group event) (DEC-137);
 - the family (or the adult member) says the member will not take part; the staff (the
-  Co.Ca. for group events) may not invite a member, with a reason the family sees;
+  Co.Ca. for group events) may not invite a member, with a reason the family sees
+  (DEC-137);
 - attendance is present, absent or excused, marked by capi only, also offline, at
-  recurring meetings and at every other event (for a camp, once for the event);
-- BuonaCaccia events come after this phase;
+  recurring meetings and at every other event (for a camp, once for the event)
+  (DEC-138);
+- BuonaCaccia events come after this phase (DEC-144);
 - patrol meetings are patrol events: the CSQ, a member they delegate (to create them
   only) or the reparto staff create them, and the CSQ marks their attendance; the staff
   also creates the patrol's mission (with notes for the parents the ragazzi do not
-  see) and other activities of one patrol;
+  see) and other activities of one patrol (DEC-139);
 - the staff creates events for the Consiglio Capi (CSQ), the Con.Ca.Vi. (CSQ and
   VCSQ) and the Alta Squadriglia (chosen by the staff each year), of one or more
-  reparti of the group.
+  reparti of the group (DEC-140).
 """
 
 from django.conf import settings
@@ -114,7 +115,7 @@ class Evento(ModelloTracciato):
     # Camp budget (DEC-91): two of the three are set, the third follows from the number
     # of participants: totale = quota × participants + quota_staff × staff + contributo.
     # The staff (all the staff of the units involved) has its own contribution per head,
-    # also zero, counted in the budget only (maintainer, 2026-10-29).
+    # also zero, counted in the budget only (DEC-156).
     budget_quota = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     budget_contributo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     budget_totale = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

@@ -487,7 +487,7 @@ def scegli_visibilita_genitori(request, persona_id: int, dati: VisibilitaGenitor
     return _visibilita(persona)
 
 
-# --- Optional emails (GDPR art. 21; maintainer, 2026-10-29) ---------------------------
+# --- Optional emails (GDPR art. 21; DEC-157) ----------------------------------------
 
 
 class PreferenzeEmailIO(Schema):

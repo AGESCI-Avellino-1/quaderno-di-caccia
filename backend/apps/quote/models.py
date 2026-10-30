@@ -1,18 +1,18 @@
 """Fees, family discount, agevolazioni, payments and receipts (DEC-80…DEC-84, DEC-92).
 
-Decided with the maintainer on 2026-10-29 (not yet in the analysis):
 - only the group sets the fee types (capigruppo and group treasurer), each type says
-  who owes it (all members, ragazzi, capi, given units);
-- the monthly unit fee is one fee per chosen month;
+  who owes it (all members, ragazzi, capi, given units) (DEC-145);
+- the monthly unit fee is one fee per chosen month (DEC-145);
 - the family discount is a fixed amount per fee type, taken off the fee of every
   member of the family when at least two members of the family are in the group
-  (siblings, a parent with their children, spouses), never on the national fee;
+  (siblings, a parent with their children, spouses), never on the national fee
+  (DEC-146);
 - a payment may cover several fees of the same family, also in part (deposits), with
-  one receipt per payment;
+  one receipt per payment (DEC-148);
 - camp, outing and external event fees come with the events (phase 3): set by the
   capi of the event, also in instalments (e.g. two deposits on fixed dates and the
-  balance before leaving), each instalment a fee with its due date (maintainer,
-  2026-10-29).
+  balance before leaving), each instalment a fee with its due date
+  (DEC-141).
 """
 
 from datetime import date

@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 21, 29 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 22, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -11,7 +11,7 @@ Oct 21, 2026 · @Andrea Bruno
 
 Quaderno di Caccia (QdC) è l'app con cui i capi del Gruppo AGESCI Avellino 1 gestiscono anagrafica, fascicolo personale, Progressione Personale, eventi, presenze, quote e cassa. I ragazzi e i genitori la usano per consultare la propria parte. Si parte da anagrafica e quote, con il reparto come unità pilota; altri gruppi potranno installare la propria copia.
 
-Il documento raccoglie le decisioni prese nell'analisi del 21 ottobre 2026; quelle da DEC-110 in poi sono state prese con il maintainer durante lo sviluppo della fase 1 (28 e 29 ottobre 2026), e nella colonna **Origine** riportano la data e la decisione che precisano. Ogni decisione ha un codice (**DEC-nn**) da citare nello sviluppo, e la colonna **Origine** rimanda alla domanda da cui nasce: le domande sono nel documento "Analisi requisiti — App di Gruppo (Avellino 1)". Le parti marcate *\[da verificare\]* sono inferenze non ancora confermate. Le sigle sono spiegate nel glossario in fondo.
+Il documento raccoglie le decisioni prese nell'analisi del 21 ottobre 2026; quelle da DEC-110 in poi sono state prese con il maintainer durante lo sviluppo delle fasi 1, 2 e 3 (28 e 29 ottobre 2026), e nella colonna **Origine** riportano la data e la decisione che precisano. Ogni decisione ha un codice (**DEC-nn**) da citare nello sviluppo, e la colonna **Origine** rimanda alla domanda da cui nasce: le domande sono nel documento "Analisi requisiti — App di Gruppo (Avellino 1)". Le parti marcate *\[da verificare\]* sono inferenze non ancora confermate. Le sigle sono spiegate nel glossario in fondo.
 
 Il nome dell'app coincide con quello del quaderno cartaceo dei ragazzi, che resta: nei testi per le famiglie conviene scrivere "l'app QdC".
 
@@ -199,11 +199,19 @@ Gli eventi servono soprattutto a collegare presenze, quote e liberatorie; le pre
 
 | ID | Decisione | Origine |
 | --- | --- | --- |
-| DEC-75 | Eventi a quattro livelli: gruppo (li creano i capigruppo), branca (i capi di quella branca), unità (i capi dell'unità), squadriglia (il CSQ o i capi del reparto). | EV-01 |
-| DEC-76 | Eventi esterni: si registrano partecipazione, quote anticipate dal gruppo su BuonaCaccia da recuperare e liberatorie ricevute; i genitori vedono quote e liberatorie mancanti. Gli R/S maggiorenni pagano in autonomia. | EV-02, N-11 |
-| DEC-77 | Iscrivere un ragazzo a un evento con quota genera la quota da pagare; l'importo è modificabile per persona, anche a zero. | EV-03 |
-| DEC-78 | Presenze: ogni unità ha riunioni ricorrenti (es. sabato 16–18) e il capo segna i presenti, anche offline. Si può stampare un elenco da compilare a mano e riportare dopo. Il dettaglio resta due anni, poi restano i totali per anno. | A-07, EV-04, N-09 |
-| DEC-79 | Feed iCal per Google Calendar e Calendario di iPhone; avvisi via email e notifiche push sull'app installata. | EV-05, EV-06, X-05 |
+| DEC-75 | Eventi a quattro livelli: gruppo (li creano i capigruppo), branca (i capi di quella branca), unità (i capi dell'unità), squadriglia (il CSQ o i capi del reparto). Partecipanti: DEC-137; squadriglie e consigli: DEC-139, DEC-140. | EV-01 |
+| DEC-76 | Eventi esterni: si registrano partecipazione, quote anticipate dal gruppo su BuonaCaccia da recuperare e liberatorie ricevute; i genitori vedono quote e liberatorie mancanti. Gli R/S maggiorenni pagano in autonomia. Eventi su BuonaCaccia: DEC-144. | EV-02, N-11 |
+| DEC-77 | Iscrivere un ragazzo a un evento con quota genera la quota da pagare; l'importo è modificabile per persona, anche a zero. Rate: DEC-141. | EV-03 |
+| DEC-78 | Presenze: ogni unità ha riunioni ricorrenti (es. sabato 16–18) e il capo segna i presenti, anche offline. Si può stampare un elenco da compilare a mano e riportare dopo. Il dettaglio resta due anni, poi restano i totali per anno. Dettagli: DEC-138. | A-07, EV-04, N-09 |
+| DEC-79 | Feed iCal per Google Calendar e Calendario di iPhone; avvisi via email e notifiche push sull'app installata. Dettagli: DEC-142, DEC-143. | EV-05, EV-06, X-05 |
+| DEC-137 | Partecipanti: di default tutti i soci delle unità coinvolte (per un evento di gruppo, tutto il gruppo). La famiglia (o il maggiorenne) comunica che il socio non partecipa. Lo staff (la Co.Ca. per gli eventi di gruppo) può non invitare un socio, con un motivo (di solito il patto di corresponsabilità); la famiglia vede l'esclusione e il motivo. | DEC-75, 29/10 |
+| DEC-138 | Presenze: presente, assente o giustificato, segnate solo dai capi, anche offline, alle riunioni ricorrenti e a ogni altro evento; per i campi la presenza all'evento, non giorno per giorno. Le presenze delle riunioni di squadriglia le segna il capo squadriglia (e lo staff). | DEC-78, 29/10 |
+| DEC-139 | Eventi di squadriglia: il capo squadriglia crea tutti gli eventi della sua squadriglia tranne la missione; le riunioni le inserisce anche un membro della squadriglia delegato dal capo squadriglia (solo per inserirle). Lo staff del reparto crea missione e attività per una squadriglia; la missione ha note per tutti e note di dettaglio per i genitori, che leggono genitori e capi, non i ragazzi. | DEC-75, 29/10 |
+| DEC-140 | Consiglio Capi, Con.Ca.Vi. e Alta Squadriglia sono eventi creati dallo staff per uno o più reparti del gruppo (anche tutti; basta lo staff di uno di essi): invitano i capi squadriglia, capi e vice, o l'Alta Squadriglia, che lo staff sceglie anno per anno. | DEC-75, 29/10 |
+| DEC-141 | Le quote degli eventi (campi, uscite, eventi esterni) le fissano i capi dell'evento, anche a rate (es. per campo estivo e Vacanze di Branco/Cerchio due acconti a date fisse più il saldo prima della partenza): ogni rata è una quota con la sua scadenza, e arrivano tutte subito ai partecipanti. Lo sconto famiglia, se c'è, va sul saldo. Se il socio non partecipa più, le rate non pagate si tolgono; quelle già pagate, anche in parte, restano e decide lo staff. | DEC-77, DEC-80, DEC-81, 29/10 |
+| DEC-142 | Email di nuovo evento, modifiche e annullamenti; le riunioni ricorrenti non si annunciano una per una. Promemoria delle quote 7 giorni prima della scadenza, una volta per quota. Le notifiche push arrivano in una fase successiva. Chi riceve le email facoltative: DEC-157. | DEC-79, DEC-108, 29/10 |
+| DEC-143 | Calendario: un link personale segreto per ogni utente, rigenerabile, con solo titolo, date e luogo degli eventi suoi e dei figli. Il calendario di un capo (capogruppo compreso) ha tre viste: solo la sua unità; Co.Ca. e la sua unità; tutto il gruppo. Gli eventi dei figli ci sono sempre. | DEC-79, 29/10 |
+| DEC-144 | Eventi su BuonaCaccia: l'iscrizione dei minorenni la gestisce lo staff dell'unità, i maggiorenni si iscrivono da soli; la parte dello staff della scheda resta nel fascicolo e la vedono solo i capi; la liberatoria serve solo per gli eventi esterni (da inviare / inviata). Come caricare la liberatoria personalizzata che BuonaCaccia produce per ogni iscritto è da approfondire dopo la fase 3. | DEC-68, DEC-76, DEC-89, 29/10 |
 
 ## Quote e cassa
 
@@ -211,20 +219,32 @@ QdC gestisce quote, pagamenti e prima nota; il rendiconto si compila a mano sull
 
 | ID | Decisione | Origine |
 | --- | --- | --- |
-| DEC-80 | Tipi di quota: censimento (quota nazionale), quota di gruppo, quota mensile di unità, campi e uscite, eventi esterni. | N-28 |
-| DEC-81 | Sconto fratelli: regola automatica, uguale per tutti quelli che hanno le stesse condizioni, attivabile per ogni tipo di quota e mai sulla quota nazionale. Non si modifica a mano sulla singola famiglia. | N-28, B-5 |
-| DEC-82 | Agevolazione: la cassa di gruppo copre, in tutto o in parte, qualsiasi quota. Per la parte coperta non si registra nessuna entrata. La decide e la vede la Co.Ca.; la famiglia la vede sulla propria quota; il tesoriere R/S ragazzo no. Nei campi entra nel budget come contributo dalla cassa. | F-04, B-6, N-20 |
-| DEC-83 | Nessun pagamento dentro l'app: si registrano i pagamenti fatti in contanti, con bonifico o altro; si può indicare un link di pagamento (es. paypal.me). | F-05 |
+| DEC-80 | Tipi di quota: censimento (quota nazionale), quota di gruppo, quota mensile di unità, campi e uscite, eventi esterni. Dettagli: DEC-145; quote degli eventi: DEC-141. | N-28 |
+| DEC-81 | Sconto fratelli: regola automatica, uguale per tutti quelli che hanno le stesse condizioni, attivabile per ogni tipo di quota e mai sulla quota nazionale. Non si modifica a mano sulla singola famiglia. Dettagli: DEC-146. | N-28, B-5 |
+| DEC-82 | Agevolazione: la cassa di gruppo copre, in tutto o in parte, qualsiasi quota. Per la parte coperta non si registra nessuna entrata. La decide e la vede la Co.Ca.; la famiglia la vede sulla propria quota; il tesoriere R/S ragazzo no. Nei campi entra nel budget come contributo dalla cassa. Chi la registra: DEC-147. | F-04, B-6, N-20 |
+| DEC-83 | Nessun pagamento dentro l'app: si registrano i pagamenti fatti in contanti, con bonifico o altro; si può indicare un link di pagamento (es. paypal.me). Chi registra e chi annulla: DEC-148. | F-05 |
 | DEC-84 | Ricevute in PDF non fiscali, numerate per anno associativo (es. 2026-27/015), intestate al gruppo e inviate via email al genitore; le emette chi registra il pagamento. | F-06, N-29 |
-| DEC-85 | Prima nota per cassa: conto bancario (all'AV1 uno solo, con carte di debito per unità) e cassa contanti per unità. La struttura delle casse si configura per gruppo. | F-01 |
+| DEC-85 | Prima nota per cassa: conto bancario (all'AV1 uno solo, con carte di debito per unità) e cassa contanti per unità. La struttura delle casse si configura per gruppo. Dettagli: DEC-150…DEC-155. | F-01 |
 | DEC-86 | Le uscite si registrano con foto del giustificativo, anche offline. I rimborsi ai capi vanno nella voce "Rimborsi spese volontari". | F-03 |
 | DEC-87 | Le categorie della prima nota sono le voci del Modello D: la voce scout o, se manca, quella ministeriale; escluse le righe non selezionabili (5x1000, personale). Il catalogo vale per anno di bilancio. | B-1, F-02 |
 | DEC-88 | Prelievi, versamenti e passaggi tra casse sono giroconti: cambiano i saldi, ma non sono né entrate né uscite. | B-2 |
 | DEC-89 | Le quote anticipate su BuonaCaccia vanno in A.2, sia l'uscita verso BuonaCaccia sia il rimborso dalla famiglia. | B-4 |
 | DEC-90 | L'autofinanziamento è un tipo di evento con entrate, uscite e rendiconto propri. | B-3 |
-| DEC-91 | Budget dei campi: tra quota pro capite, contributo dalla cassa e budget complessivo, fissati due si calcola il terzo. | F-08 |
+| DEC-91 | Budget dei campi: tra quota pro capite, contributo dalla cassa e budget complessivo, fissati due si calcola il terzo. Contributo dello staff: DEC-156. | F-08 |
 | DEC-92 | Chi non ha pagato lo vedono solo la Co.Ca. e la famiglia interessata. | F-09 |
 | DEC-93 | Il caricamento dell'estratto conto bancario per abbinare i bonifici arriva in una fase successiva. | N-04 |
+| DEC-145 | Le quote le fissa solo il gruppo (capigruppo e tesoriere di gruppo), per tutti i tipi, anche la mensile di unità. Per ogni tipo si sceglie a chi si applica: tutti i soci, solo i ragazzi, solo i capi, le unità indicate. La quota mensile è una quota per ogni mese scelto, con un giorno di scadenza; chi entra a metà anno paga dai mesi successivi. | DEC-80, 29/10 |
+| DEC-146 | Sconto famiglia: importo fisso in euro per tipo di quota, tolto alla quota di ogni socio quando il nucleo familiare ha almeno due soci. Il nucleo comprende fratelli, genitore socio e figli soci, coniugi soci (anche senza figli soci, indicati a mano). Mai sulla quota nazionale. | DEC-33, DEC-81, 29/10 |
+| DEC-147 | Le agevolazioni le registrano i capigruppo e il tesoriere di gruppo (capo); la famiglia vede l'importo, la nota resta alla Co.Ca. | DEC-82, 29/10 |
+| DEC-148 | I pagamenti li registrano tesoriere di gruppo, capigruppo, tesoriere di unità, capo unità e staff dell'unità del socio. Un pagamento si ripartisce su più quote della stessa famiglia, anche in parte (acconti), con una ricevuta per pagamento. Un pagamento sbagliato non si modifica: si annulla, e il numero di ricevuta resta, segnato annullato. Lo annullano i capigruppo e il tesoriere di gruppo, e chi l'ha registrato finché una cassa in cui è entrato non viene verificata. | DEC-83, DEC-84, 29/10 |
+| DEC-149 | Un capo non ancora in BuonaStrada non vede le quote degli altri. | DEC-92, DEC-123, 29/10 |
+| DEC-150 | Casse: un solo conto bancario del gruppo, in cui ogni movimento indica l'unità (anche quelli con la carta di unità), e una cassa contanti per unità. Le configurano i capigruppo e il tesoriere di gruppo. | DEC-85, 29/10 |
+| DEC-151 | Prima nota: registrano tesoriere di gruppo e capigruppo su tutte le casse, tesoriere di unità e capo unità per la loro unità. La Co.Ca. vede tutto, anche il rendiconto; il tesoriere R/S ragazzo solo i movimenti della sua unità, non il saldo del conto bancario. | DEC-11, DEC-85, 29/10 |
+| DEC-152 | Gli incassi delle quote entrano da soli in prima nota: i contanti nella cassa dell'unità del socio, il resto nel conto (chi registra può scegliere); voce A.1 per censimento e quota di gruppo, A.2 per la mensile. Annullare il pagamento storna i movimenti. I pagamenti registrati prima di configurare le casse si riportano in prima nota, con la loro data, con un pulsante nella sezione Casse. | DEC-83, DEC-87, 29/10 |
+| DEC-153 | Un movimento non si modifica: si storna con un motivo e si registra di nuovo. | DEC-96, 29/10 |
+| DEC-154 | Ogni cassa ha un saldo iniziale, poi le verifiche di cassa del tesoriere o del capo unità; il conto del gruppo lo verificano capigruppo e tesoriere di gruppo. Una differenza diventa una rettifica motivata, che resta fuori dai totali del Modello D (mostrata a parte) e non si storna. | DEC-11, 29/10 |
+| DEC-155 | Rimborsi ai capi: il capo registra la spesa anticipata, con la foto; diventa un'uscita (Rimborsi spese volontari) quando il tesoriere la rimborsa. La foto del giustificativo è facoltativa: le uscite senza restano segnalate e la foto si può aggiungere dopo. | DEC-86, 29/10 |
+| DEC-156 | Autofinanziamento e budget dei campi si realizzano con gli eventi (fase 3). Nel budget del campo lo staff presente (tutto lo staff delle unità coinvolte) ha un contributo pro capite proprio, anche zero, che conta solo nel budget: i capi non ricevono una quota nell'app. | DEC-90, DEC-91, 29/10 |
 
 ## Offline e sincronizzazione
 
@@ -243,13 +263,14 @@ Il titolare del trattamento è AGESCI nazionale; i capigruppo sono delegati al t
 
 | ID | Decisione | Origine |
 | --- | --- | --- |
-| DEC-98 | Titolare: AGESCI APS nazionale, come da informativa unificata del 10 novembre 2024. Delegati: i capigruppo; i capi su loro delega. | D-01, I-4 |
+| DEC-98 | Titolare: AGESCI APS nazionale, come da informativa unificata del 10 novembre 2024. Delegati: i capigruppo; i capi su loro delega. Email facoltative: DEC-157. | D-01, I-4 |
 | DEC-99 | Non si redige una valutazione d'impatto (DPIA): i capigruppo se ne assumono la responsabilità. | D-02 |
 | DEC-100 | Nessuna cifratura dei singoli campi nel database; backup cifrati (copia della macchina virtuale e, per altri gruppi, backup incrementale periodico). | D-04, D-09 |
 | DEC-101 | Registro degli accessi ai dati sensibili, consultabile dalla Co.Ca. e, su richiesta, dai genitori e dalle autorità giudiziarie. | D-06 |
 | DEC-102 | In ogni fase si realizzano le funzioni per i diritti degli interessati: accesso, rettifica, cancellazione, esportazione del fascicolo. Ne rispondono i capigruppo. Dettagli: DEC-136. | D-08 |
 | DEC-103 | Dati ospitati in Unione Europea. | D-05 |
 | DEC-136 | La delega dei capigruppo copre l'app. Diritti degli interessati gestiti dai capigruppo, che girano le richieste al nazionale: registro delle richieste con scadenza a un mese; fascicolo completo in file (JSON) e pagina stampabile; cancellazione dei dati che esistono solo nell'app, con anonimizzazione di chi non è più socio né genitore di un socio (restano i periodi nelle unità). | DEC-98, DEC-102, 29/10 |
+| DEC-157 | Ognuno sceglie se ricevere le email di eventi, i promemoria delle quote, gli avvisi dei 18 anni e (i capi) i riepiloghi: è il diritto di opposizione alle comunicazioni basate sul legittimo interesse del gruppo (GDPR art. 21) *\[da confermare con l'Ufficio Privacy nazionale\]*. Arrivano sempre codici di accesso, inviti, avvisi di sicurezza, email dell'iscrizione dall'app e ricevute. | DEC-79, DEC-98, 29/10 |
 
 ## Architettura tecnica
 
@@ -291,6 +312,8 @@ Nessuno blocca l'inizio dello sviluppo. Quelli chiusi il 29 ottobre 2026 rimanda
 - [x] **Esigenze alimentari non mediche** (es. vegetariano): decidere se registrarle e dove, ad esempio nella scheda personale. (DEC-49) → **DEC-135**
 - [x] **Contatti per il CSQ.** Nel tentativo di giugno il CSQ vedeva telefono ed email dei suoi squadriglieri: confermare o escludere. (DEC-13) → **DEC-115**
 - [x] **Account dai 14 anni.** Confermare la procedura: invito del capo unità, con o senza approvazione del genitore. (DEC-24) → **DEC-117**
+- [ ] **Liberatorie di BuonaCaccia.** BuonaCaccia produce una liberatoria personalizzata per ogni iscritto: capire come caricarla nell'app (il maintainer ha un'idea). Da approfondire dopo la fase 3. (DEC-76, DEC-144)
+- [ ] **Email facoltative.** Confermare con l'Ufficio Privacy nazionale quali email si possono rifiutare. (DEC-157)
 
 ## Glossario essenziale
 

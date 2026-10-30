@@ -271,7 +271,7 @@ async function rimborsa() {
 
 // --- Cash boxes (the group) -------------------------------------------------------------
 
-// Fee payments recorded before the boxes were set up (maintainer, 2026-10-29).
+// Fee payments recorded before the boxes were set up (DEC-152).
 const fuori = ref<{ pagamenti: number; importo: string } | null>(null)
 const cassaRiporto = ref<number | null>(null)
 watch(vista, async (nuova) => {

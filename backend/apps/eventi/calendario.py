@@ -11,7 +11,7 @@ from apps.permessi import policy
 
 from .models import Evento, Livello, StatoPartecipazione
 
-# A capo chooses among three views (maintainer, 2026-10-29); everyone else has one.
+# A capo chooses among three views (DEC-143); everyone else has one.
 VISTE = {
     "unita": "Solo la mia unità",
     "coca": "Co.Ca. e la mia unità",

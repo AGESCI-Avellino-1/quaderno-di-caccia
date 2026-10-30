@@ -52,29 +52,13 @@ bancario è della fase 6 (DEC-93).
 | 2.7 | Prima nota per cassa: conto bancario e casse contanti per unità, configurabili; giroconti | DEC-85, DEC-88 | ✅ |
 | 2.8 | Uscite con foto del giustificativo, anche offline; rimborsi ai capi | DEC-86 | ✅ |
 | 2.9 | Categorie del Modello D dal catalogo, rendiconto con i totali da ricopiare; le quote anticipate su BuonaCaccia (A.2) arrivano con gli eventi esterni della fase 3 | DEC-87, DEC-89 | ✅ |
-| 2.10 | Autofinanziamento come evento e budget dei campi (dopo la fase 3) | DEC-90, DEC-91 | 💤 |
+| 2.10 | Autofinanziamento come evento e budget dei campi (fatti con la fase 3, punto 3.5) | DEC-90, DEC-91, DEC-156 | ✅ |
 
 ### 3. Fase 3 — Eventi e presenze
 
-Decisioni del maintainer (29/10/2026, da riportare nell'analisi):
-
-| Punto | Decisione | Precisa |
-| --- | --- | --- |
-| Partecipanti | Di default tutti i soci delle unità coinvolte (per un evento di gruppo, tutto il gruppo) | DEC-75 |
-| Assenza | La famiglia (o il maggiorenne) comunica che il socio non partecipa | DEC-75 |
-| Non invitato | Lo staff (la Co.Ca. per gli eventi di gruppo) può non invitare un socio, con un motivo (di solito il patto di corresponsabilità); la famiglia vede l'esclusione e il motivo | DEC-75 |
-| Presenze | Presente, assente o giustificato, segnate solo dai capi, anche offline; alle riunioni ricorrenti e a ogni altro evento (per i campi la presenza all'evento, non giorno per giorno) | DEC-78 |
-| Quote degli eventi | Le fissano i capi dell'evento, anche a rate (es. due acconti a date fisse più il saldo prima della partenza); ogni rata è una quota con la sua scadenza; importo modificabile per persona | DEC-77 |
-| Email | Nuovo evento, modifiche e annullamenti, promemoria delle scadenze delle quote; le notifiche push in una fase successiva | DEC-79, DEC-108 |
-| Calendario | Un link personale segreto per ogni utente, rigenerabile, con solo titolo, date e luogo degli eventi suoi e dei figli | DEC-79 |
-| Riunioni di squadriglia | Sono eventi di squadriglia: le inseriscono il capo squadriglia, lo staff o un membro della squadriglia delegato dal capo squadriglia (solo per inserirle); le presenze le segna il capo squadriglia (e lo staff) | DEC-75, DEC-78 |
-| Missione e attività di squadriglia | Le crea lo staff del reparto per una squadriglia; la missione ha note di dettaglio per i genitori (le leggono genitori e capi, non i ragazzi) e note per tutti | DEC-75 |
-| Consiglio Capi, Con.Ca.Vi., Alta Squadriglia | Eventi creati dallo staff per uno o più reparti del gruppo (anche tutti; basta lo staff di uno di essi): invitano i capi squadriglia, capi e vice, o l'Alta Squadriglia, che lo staff sceglie anno per anno | DEC-75 |
-| Email facoltative | Ognuno sceglie se ricevere le email di eventi, promemoria delle quote, avvisi dei 18 anni e (capi) riepiloghi; arrivano sempre codici di accesso, inviti, avvisi di sicurezza, email dell'iscrizione dall'app e ricevute (diritto di opposizione, GDPR art. 21; da confermare con l'Ufficio Privacy nazionale) | DEC-79, DEC-98 |
-| Email e calendario | Il promemoria delle quote parte 7 giorni prima della scadenza, una volta per quota; le riunioni ricorrenti non si annunciano una per una. Il calendario di un capo (capogruppo compreso) ha tre viste: solo la sua unità; Co.Ca. e la sua unità; tutto il gruppo. Ci sono sempre gli eventi dei figli | DEC-79 |
-| Quote degli eventi | Tutte le rate arrivano subito ai partecipanti; lo sconto famiglia, se c'è, va sul saldo; le rate già pagate in parte restano se il socio non partecipa più (decide lo staff); il capo squadriglia crea tutti gli eventi della sua squadriglia tranne la missione | DEC-77, DEC-81 |
-| Autofinanziamento e budget dei campi | In questa fase. Nel budget del campo lo staff presente (tutto lo staff delle unità coinvolte) ha un contributo pro capite proprio, anche zero, che conta solo nel budget: i capi non ricevono una quota nell'app | DEC-90, DEC-91 |
-| Eventi su BuonaCaccia | **Approfondimento dopo questa fase.** BuonaCaccia produce una liberatoria personalizzata per ogni iscritto, da capire come caricarla (il maintainer ha un'idea). Già deciso: l'iscrizione dei minorenni la gestisce lo staff dell'unità, i maggiorenni si iscrivono da soli; la parte dello staff della scheda resta nel fascicolo e la vedono solo i capi; la liberatoria serve solo per gli eventi esterni (da inviare / inviata) | DEC-68, DEC-76, DEC-89 |
+Le decisioni prese con il maintainer il 29/10/2026 sono nell'analisi come DEC-137…DEC-144
+(partecipanti, presenze, squadriglie e consigli, quote a rate, email, calendario, eventi su
+BuonaCaccia) e DEC-156 (autofinanziamento e budget dei campi).
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
@@ -121,31 +105,15 @@ iscrizione dall'app DEC-120…DEC-127, unità DEC-128, correzioni e importazione
 DEC-129, DEC-130, formazione dei capi DEC-134 (fase 5), esigenze alimentari DEC-135,
 diritti GDPR DEC-136.
 
-## Decisioni della fase 2 da riportare nell'analisi
+## Decisioni prese durante le fasi 2 e 3
 
-Prese con il maintainer il 29/10/2026, ancora senza codice DEC:
-
-| Punto | Decisione | Precisa |
-| --- | --- | --- |
-| Chi fissa le quote | Solo il gruppo (capigruppo e tesoriere di gruppo), per tutti i tipi, anche la mensile di unità | DEC-80 |
-| A chi si applica | Per ogni tipo si sceglie: tutti i soci, solo i ragazzi, solo i capi, le unità indicate | DEC-80 |
-| Quota mensile | Una quota per ogni mese scelto, con un giorno di scadenza; chi entra a metà anno paga dai mesi successivi | DEC-80 |
-| Sconto famiglia | Importo fisso in euro per tipo di quota, tolto alla quota di ogni socio quando il nucleo familiare ha almeno due soci; il nucleo comprende fratelli, genitore socio e figli soci, coniugi soci (anche senza figli soci, indicati a mano); mai sulla quota nazionale | DEC-81 |
-| Agevolazioni | Le registrano i capigruppo e il tesoriere di gruppo (capo); la famiglia vede l'importo, la nota resta alla Co.Ca. | DEC-82 |
-| Pagamenti | Li registrano tesoriere di gruppo, capigruppo, tesoriere di unità, capo unità e staff dell'unità del socio; un pagamento si ripartisce su più quote della stessa famiglia, anche in parte (acconti); una ricevuta per pagamento | DEC-83, DEC-84 |
-| Campi, uscite, eventi esterni | Rimandati alla fase 3, con le rate a scadenze fisse per campo estivo e Vacanze di Branco/Cerchio | DEC-80 |
-| Casse | Un solo conto bancario del gruppo: ogni movimento indica l'unità (anche quelli con la carta di unità); una cassa contanti per unità; le configurano capigruppo e tesoriere di gruppo | DEC-85 |
-| Chi registra in prima nota | Tesoriere di gruppo e capigruppo su tutte le casse; tesoriere di unità e capo unità per la loro unità | DEC-11, DEC-85 |
-| Chi vede la prima nota | La Co.Ca. tutto (anche il rendiconto); il tesoriere R/S ragazzo solo i movimenti della sua unità, non il saldo del conto bancario | DEC-11 |
-| Incassi delle quote | Entrano da soli: contanti nella cassa dell'unità del socio, il resto nel conto (chi registra può scegliere); voce A.1 per censimento e quota di gruppo, A.2 per la mensile; annullare il pagamento storna i movimenti | DEC-83, DEC-87 |
-| Correzioni | Un movimento non si modifica: si storna con un motivo e si registra di nuovo | DEC-96 |
-| Saldi | Saldo iniziale per cassa, poi verifiche di cassa del tesoriere o del capo unità: una differenza diventa una rettifica motivata (fuori dal Modello D) | DEC-11 |
-| Rimborsi ai capi | Il capo registra la spesa anticipata con la foto; diventa un'uscita (Rimborsi spese volontari) quando il tesoriere la rimborsa | DEC-86 |
-| Giustificativi | Foto facoltativa; le uscite senza giustificativo restano segnalate e la foto si può aggiungere dopo | DEC-86 |
-| Confermate il 29/10 | Un capo non ancora in BuonaStrada non vede le quote degli altri; i pagamenti sbagliati si annullano (il numero di ricevuta resta, segnato annullato), non si modificano; li annullano capigruppo e tesoriere di gruppo, e chi li ha registrati finché la cassa non viene verificata; le rettifiche delle verifiche di cassa restano fuori dai totali del Modello D (mostrate a parte) e non si stornano; il conto del gruppo lo verificano capigruppo e tesoriere di gruppo; i pagamenti registrati prima di configurare le casse si riportano in prima nota con un pulsante (sezione Casse) | DEC-11, DEC-84, DEC-85 |
+Le decisioni prese con il maintainer il 29/10/2026 sono nell'analisi: eventi e presenze
+DEC-137…DEC-144, quote e cassa DEC-145…DEC-156, email facoltative DEC-157.
 
 ## Punti aperti da confermare
 
 | Punto | Riferimento |
 | --- | --- |
 | Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
+| Come caricare la liberatoria personalizzata di BuonaCaccia (approfondimento dopo la fase 3) | DEC-144 |
+| Email facoltative: conferma dell'Ufficio Privacy nazionale | DEC-157 |

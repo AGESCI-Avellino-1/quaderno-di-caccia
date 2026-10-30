@@ -726,7 +726,7 @@ class VistaCalendario(Schema):
 
 class CalendarioOut(Schema):
     url: str
-    # A capo's three views (maintainer, 2026-10-29); empty for everyone else.
+    # A capo's three views (DEC-143); empty for everyone else.
     viste: list[VistaCalendario]
 
 

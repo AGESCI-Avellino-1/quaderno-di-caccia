@@ -314,7 +314,7 @@ def test_genitore_di_un_maggiorenne_che_non_mostra_le_attivita(clan, rover, geni
     assert not policy.eventi_visibili(genitore.utente).filter(pk=evento.pk).exists()
 
 
-# --- Patrols, councils, Alta Squadriglia (maintainer, 2026-10-29) ---------------------------
+# --- Patrols, councils, Alta Squadriglia (DEC-139, DEC-140) ------------------------------
 
 
 def _evento_sq(squadriglia, tipo, utente, **campi):

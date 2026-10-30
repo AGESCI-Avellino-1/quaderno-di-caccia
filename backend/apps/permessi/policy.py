@@ -480,10 +480,10 @@ def puo_gestire_iscrizioni_buonastrada(user) -> bool:
 
 
 # --- Fees and payments (DEC-11, DEC-16, DEC-80…DEC-84, DEC-92) ----------------------------
-# Decided with the maintainer on 2026-10-29 (not yet in the analysis): only the group
-# sets the fees; payments are recorded by the treasurers, the capigruppo, and the capo
-# unità and staff of the member's unit; agevolazioni by the capigruppo and the group
-# treasurer. A capo not yet in BuonaStrada sees no fees of others (confirmed 2026-10-29).
+# Only the group sets the fees (DEC-145); payments are recorded by the treasurers, the
+# capigruppo, and the capo unità and staff of the member's unit (DEC-148); agevolazioni
+# by the capigruppo and the group treasurer (DEC-147). A capo not yet in BuonaStrada
+# sees no fees of others (DEC-149).
 
 
 def _unita_della_persona(persona: Persona) -> QuerySet:
@@ -550,7 +550,7 @@ def puo_registrare_pagamenti(user, persona: Persona) -> bool:
 
 def puo_annullare_pagamento(user, pagamento) -> bool:
     """The capigruppo and the group treasurer; who recorded it, until a cash check of
-    a box it went into (maintainer, 2026-10-29)."""
+    a box it went into (DEC-148)."""
     if puo_gestire_quote(user):
         return True
     if pagamento.registrato_da_id is None or pagamento.registrato_da_id != user.pk:
@@ -582,10 +582,9 @@ def puo_registrare_agevolazioni(user) -> bool:
 
 
 # --- Cash book (DEC-11, DEC-85…DEC-88) ------------------------------------------------------
-# Decided with the maintainer on 2026-10-29 (not yet in the analysis): the group sets up
-# the cash boxes; the group treasurer and the capigruppo record on all of them, the unit
+# The group sets up the cash boxes (DEC-150); the group treasurer and the capigruppo record on all of them, the unit
 # treasurer and the capo unità for their unit; the Co.Ca. sees everything, an R/S
-# treasurer only their unit.
+# treasurer only their unit (DEC-151).
 
 
 def _unita_tesoreria(user) -> set[int]:
@@ -657,9 +656,9 @@ def puo_registrare_spesa_anticipata(user, capo: Persona) -> bool:
 
 
 # --- Events and attendance (DEC-75, DEC-78) ---------------------------------------------------
-# Decided with the maintainer on 2026-10-29 (not yet in the analysis): the family (or the
-# adult member) says the member will not take part; the staff (the Co.Ca. for group
-# events) may not invite a member, with a reason; attendance is marked by capi only.
+# The family (or the adult member) says the member will not take part; the staff (the
+# Co.Ca. for group events) may not invite a member, with a reason (DEC-137); attendance
+# is marked by capi only (DEC-138).
 
 
 def _staff_di_tutte(user, unita_ids) -> bool:
@@ -700,10 +699,9 @@ def puo_creare_evento(
 ) -> bool:
     """DEC-75: group events the capigruppo; branch events the capi of that branch; unit
     events the unit staff; patrol events the CSQ or the reparto staff. The capigruppo
-    may create any. Maintainer, 2026-10-29: the patrol's mission only the staff; a
-    member delegated by the CSQ creates the patrol's meetings; the councils of one or
-    more reparti (Consiglio Capi, Con.Ca.Vi., Alta Squadriglia) the staff of any of
-    them (confirmed 2026-10-29)."""
+    may create any. The patrol's mission only the staff; a member delegated by the CSQ
+    creates the patrol's meetings (DEC-139); the councils of one or more reparti
+    (Consiglio Capi, Con.Ca.Vi., Alta Squadriglia) the staff of any of them (DEC-140)."""
     from apps.organizzazione.models import BRANCA_DEL_TIPO
 
     if e_capogruppo(user):
@@ -759,7 +757,7 @@ def puo_gestire_evento(user, evento) -> bool:
 
 def puo_segnare_presenze(user, evento) -> bool:
     """Capi only: the staff of the units involved; any capo at a group event. The CSQ
-    marks the patrol's meetings (maintainer, 2026-10-29)."""
+    marks the patrol's meetings (DEC-138)."""
     if (
         evento.livello == "SQUADRIGLIA"
         and evento.tipo == "RIUNIONE"
@@ -833,7 +831,7 @@ def puo_segnalare_assenza(user, persona: Persona, evento) -> bool:
 
 def vede_note_genitori(user, evento) -> bool:
     """A mission's notes for the parents: the capi and the parents, never the ragazzi
-    (maintainer, 2026-10-29)."""
+    (DEC-139)."""
     if e_capo(user):
         return True
     figli = [p.pk for p in tutelati(user)]

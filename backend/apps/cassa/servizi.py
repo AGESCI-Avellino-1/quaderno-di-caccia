@@ -266,7 +266,7 @@ def pagamenti_fuori_prima_nota():
 @transaction.atomic
 def riporta_in_prima_nota(utente, cassa: Cassa | None = None) -> int:
     """Each one into `cassa`, or the default box for its method, with its own date
-    (maintainer, 2026-10-29). A payment dated before a box's initial balance cannot
+    (DEC-152). A payment dated before a box's initial balance cannot
     go into that box."""
     riportati = 0
     for pagamento in pagamenti_fuori_prima_nota().prefetch_related("righe__quota__tipo"):

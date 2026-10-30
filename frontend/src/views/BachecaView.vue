@@ -144,14 +144,15 @@ const data = (d: string) => new Date(d).toLocaleDateString('it-IT')
           Nuovo avviso
         </button>
         <div v-if="dati.vede_archivio" class="form-field mb-0">
-          <input
-            id="bacheca-archivio"
-            v-model="archivio"
-            type="checkbox"
-            class="switch"
-            role="switch"
-            @change="carica"
-          />
+          <div class="switch">
+            <input
+              id="bacheca-archivio"
+              v-model="archivio"
+              type="checkbox"
+              role="switch"
+              @change="carica"
+            />
+          </div>
           <label for="bacheca-archivio">Mostra anche gli avvisi scaduti</label>
         </div>
       </div>
@@ -220,13 +221,9 @@ const data = (d: string) => new Date(d).toLocaleDateString('it-IT')
           </div>
           <div v-if="aperto === -1" class="col-12 md:col-6 d-flex align-items-end">
             <div class="form-field mb-0">
-              <input
-                id="avv-email"
-                v-model="modulo.invia_email"
-                type="checkbox"
-                class="switch"
-                role="switch"
-              />
+              <div class="switch">
+                <input id="avv-email" v-model="modulo.invia_email" type="checkbox" role="switch" />
+              </div>
               <label for="avv-email">Manda anche un'email</label>
             </div>
           </div>

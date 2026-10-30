@@ -930,13 +930,14 @@ async function salvaCassa() {
             />
           </div>
           <div class="col-12 form-field">
-            <input
-              id="cassa-attiva"
-              v-model="modificaCassa.attiva"
-              type="checkbox"
-              class="switch"
-              role="switch"
-            />
+            <div class="switch">
+              <input
+                id="cassa-attiva"
+                v-model="modificaCassa.attiva"
+                type="checkbox"
+                role="switch"
+              />
+            </div>
             <label for="cassa-attiva">Attiva</label>
           </div>
         </div>

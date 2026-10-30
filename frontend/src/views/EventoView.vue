@@ -211,15 +211,16 @@ const STATI: [StatoPresenza, string][] = [
               <span v-if="m.stato === 'NON_INVITATO'" class="badge theme-danger">Non invitato</span>
               <template v-else-if="m.puo_segnalare && !evento.annullato">
                 <div class="form-field mb-0">
-                  <input
-                    :id="`partecipa-${m.persona_id}`"
-                    type="checkbox"
-                    class="switch"
-                    role="switch"
-                    :checked="m.stato === 'INVITATO'"
-                    :disabled="inCorso"
-                    @change="partecipa(m.persona_id, ($event.target as HTMLInputElement).checked)"
-                  />
+                  <div class="switch">
+                    <input
+                      :id="`partecipa-${m.persona_id}`"
+                      type="checkbox"
+                      role="switch"
+                      :checked="m.stato === 'INVITATO'"
+                      :disabled="inCorso"
+                      @change="partecipa(m.persona_id, ($event.target as HTMLInputElement).checked)"
+                    />
+                  </div>
                   <label :for="`partecipa-${m.persona_id}`">
                     {{ m.stato === 'INVITATO' ? 'Partecipa' : 'Non partecipa' }}
                   </label>

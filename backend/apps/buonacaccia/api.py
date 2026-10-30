@@ -16,6 +16,7 @@ from ninja.responses import Status
 
 from apps.anagrafica.models import Persona
 from apps.core.anno import AnnoAssociativo
+from apps.core.dataora import DataOra
 from apps.eventi import avvisi as avvisi_eventi
 from apps.eventi.models import Evento, Livello, Partecipazione, StatoPartecipazione, TipoEvento
 from apps.permessi import policy
@@ -140,8 +141,8 @@ def nuova_versione(request, scheda_id: int, dati: SchedaIn):
 class EventoBCIn(Schema):
     titolo: str
     tipo: TipoEvento = TipoEvento.CAMPO
-    inizio: datetime
-    fine: datetime
+    inizio: DataOra
+    fine: DataOra
     luogo: str = ""
     descrizione: str = ""
     formazione_capi: bool = False

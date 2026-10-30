@@ -14,6 +14,7 @@ from ninja.responses import Status
 from ninja.throttling import AnonRateThrottle
 
 from apps.anagrafica.models import Persona
+from apps.core.dataora import DataOra
 from apps.organizzazione.models import Branca, Squadriglia, Unita
 from apps.permessi import policy
 
@@ -46,8 +47,8 @@ class EventoIn(Schema):
     branca: Branca | None = None
     unita: list[int] = []
     squadriglia_id: int | None = None
-    inizio: datetime
-    fine: datetime
+    inizio: DataOra
+    fine: DataOra
     luogo: str = ""
     descrizione: str = ""
     # A patrol's mission: notes for the parents and the capi, not the ragazzi.

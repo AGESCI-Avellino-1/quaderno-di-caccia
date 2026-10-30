@@ -130,13 +130,9 @@ watch(scelta, async (valore) => {
           placeholder="Cerca per nome"
         />
         <div class="form-field">
-          <input
-            id="solo-con-dati"
-            v-model="soloConDati"
-            class="switch"
-            type="checkbox"
-            role="switch"
-          />
+          <div class="switch">
+            <input id="solo-con-dati" v-model="soloConDati" type="checkbox" role="switch" />
+          </div>
           <label for="solo-con-dati"
             >Solo con farmaci, allergie o esigenze a tavola (e non compilati)</label
           >

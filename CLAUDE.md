@@ -163,8 +163,10 @@ check a class exists in `frontend/node_modules/bootstrap/dist/css/bootstrap.css`
 short: colours via `theme-*` (`btn btn-solid theme-primary`, `btn-outline`,
 `alert theme-danger`, `badge theme-success`); text `fg-*` (`fg-2` for secondary text);
 responsive prefixes `md:col-6`; spacing scale 1, 3, 5, 7, 12 (= v5 1–5); `<select
-class="form-control">`; checkboxes/switches are `input.check` / `input.switch` inside
-`.form-field`; `.alert` is a flex box, so wrap mixed content in one `<div>`; the theme is
+class="form-control">`; checkboxes are `input.check` inside `.form-field`, a switch is a
+wrapper, `<div class="switch"><input type="checkbox" role="switch"></div>`, then the
+label (on the input itself the browser draws its own checkbox on top); `.alert` is a flex
+box, so wrap mixed content in one `<div>`; the theme is
 light only (`data-bs-theme="light"`). Minimum browsers: Chrome/Edge 130, Firefox 132,
 Safari 18. Font: Titillium Web, bundled
 (SIL OFL, `frontend/src/assets/fonts/OFL.txt`) so it works offline.

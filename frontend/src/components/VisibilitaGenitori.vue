@@ -62,14 +62,15 @@ async function salva() {
     <div v-if="errore" class="alert theme-danger py-3 small" role="alert">{{ errore }}</div>
     <form class="vstack gap-3" @submit.prevent="salva">
       <div v-for="v in voci" :key="v.chiave" class="form-field">
-        <input
-          :id="`visibile-${v.chiave}`"
-          v-model="scelte[v.chiave]"
-          type="checkbox"
-          class="switch"
-          role="switch"
-          @change="salvato = false"
-        />
+        <div class="switch">
+          <input
+            :id="`visibile-${v.chiave}`"
+            v-model="scelte[v.chiave]"
+            type="checkbox"
+            role="switch"
+            @change="salvato = false"
+          />
+        </div>
         <label :for="`visibile-${v.chiave}`">{{ v.etichetta }}</label>
       </div>
       <div class="d-flex align-items-center gap-3">

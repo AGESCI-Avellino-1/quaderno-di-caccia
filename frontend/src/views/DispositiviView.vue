@@ -106,7 +106,7 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
     <PasskeyAccesso v-if="!inImpersonazione()" :nome-predefinito="nomeQuesto" />
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="sessione.capogruppo" class="form-field mb-3">
-      <input id="tutti" v-model="tutti" class="switch" type="checkbox" role="switch" />
+      <div class="switch"><input id="tutti" v-model="tutti" type="checkbox" role="switch" /></div>
       <label for="tutti">Tutti i dispositivi del gruppo</label>
     </div>
     <p v-if="inCorso" class="fg-2">Caricamento…</p>

@@ -57,7 +57,9 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       chiudono da sole quando l'importazione le ritrova in BuonaStrada.
     </p>
     <div class="form-field mb-5">
-      <input id="mostra-chiuse" v-model="chiuse" type="checkbox" class="switch" role="switch" />
+      <div class="switch">
+        <input id="mostra-chiuse" v-model="chiuse" type="checkbox" role="switch" />
+      </div>
       <label for="mostra-chiuse">Mostra le correzioni chiuse</label>
     </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>

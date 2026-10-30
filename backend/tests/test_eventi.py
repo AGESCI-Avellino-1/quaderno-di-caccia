@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.anagrafica.models import Appartenenza, RelazioneTutela, RuoloAppartenenza
@@ -582,3 +583,19 @@ def test_sconto_famiglia_sul_saldo(uscita, staff, ragazza, genitore, reparto):
         date(2026, 6, 1): Decimal("0"),
         date(2026, 7, 15): Decimal("10"),
     }
+
+
+def test_ora_senza_fuso_e_quella_del_gruppo(reparto, staff):
+    """A time without an offset is local time, not a server error."""
+    corpo = {
+        "titolo": "Riunione",
+        "tipo": "RIUNIONE",
+        "livello": "UNITA",
+        "unita": [reparto.pk],
+        "inizio": "2026-04-11T15:30:00",
+        "fine": "2026-04-11T18:00:00",
+    }
+    risposta = _post(staff, "/api/v1/eventi", corpo)
+    assert risposta.status_code == 201, risposta.content
+    evento = Evento.objects.get(pk=risposta.json()["id"])
+    assert timezone.localtime(evento.inizio).hour == 15

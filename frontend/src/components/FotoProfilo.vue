@@ -148,7 +148,9 @@ onBeforeUnmount(annulla)
         class="d-none"
         @change="scegli"
       />
-      <p class="small fg-2 mb-0 mt-1">Serve ai capi per riconoscerlo; non viene pubblicata.</p>
+      <p class="small fg-2 mb-0 mt-1">
+        Serve ai capi per riconoscere {{ persona.nome }}; non viene pubblicata.
+      </p>
     </div>
 
     <div v-if="sorgente" class="w-100">

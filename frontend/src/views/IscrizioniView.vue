@@ -58,7 +58,9 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       codice socio provvisorio, finché il gruppo non lo inserisce in BuonaStrada.
     </p>
     <div class="form-field mb-5">
-      <input id="anche-accolte" v-model="accolte" type="checkbox" class="switch" role="switch" />
+      <div class="switch">
+        <input id="anche-accolte" v-model="accolte" type="checkbox" role="switch" />
+      </div>
       <label for="anche-accolte">Anche quelle accolte, da completare</label>
     </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>

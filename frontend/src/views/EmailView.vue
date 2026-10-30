@@ -54,23 +54,20 @@ const voci = [
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <form v-if="caricate" class="card card-body mb-5" @submit.prevent="salva">
       <div v-for="v in voci" :key="v.chiave" class="form-field">
-        <input
-          :id="`email-${v.chiave}`"
-          v-model="scelte[v.chiave]"
-          type="checkbox"
-          class="switch"
-          role="switch"
-        />
+        <div class="switch">
+          <input
+            :id="`email-${v.chiave}`"
+            v-model="scelte[v.chiave]"
+            type="checkbox"
+            role="switch"
+          />
+        </div>
         <label :for="`email-${v.chiave}`">{{ v.etichetta }}</label>
       </div>
       <div v-if="sessione.capo" class="form-field">
-        <input
-          id="email-riepiloghi"
-          v-model="scelte.riepiloghi"
-          type="checkbox"
-          class="switch"
-          role="switch"
-        />
+        <div class="switch">
+          <input id="email-riepiloghi" v-model="scelte.riepiloghi" type="checkbox" role="switch" />
+        </div>
         <label for="email-riepiloghi">
           Riepiloghi per i capi: correzioni da inoltrare, richieste di iscrizione da decidere
         </label>

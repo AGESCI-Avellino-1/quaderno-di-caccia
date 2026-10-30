@@ -182,8 +182,10 @@ async function reinvia(id: number) {
         <thead>
           <tr>
             <th>Quota</th>
-            <th>Scadenza</th>
-            <th class="text-end">Importo</th>
+            <!-- On a phone the due date goes under the fee and the amount before
+                 discounts is left out: the table fits the screen. -->
+            <th class="d-none md:d-table-cell">Scadenza</th>
+            <th class="d-none md:d-table-cell text-end">Importo</th>
             <th class="text-end">Da pagare</th>
             <th class="text-end">Resta</th>
             <th v-if="dati.puo_gestire || dati.puo_agevolare"></th>
@@ -197,6 +199,9 @@ async function reinvia(id: number) {
                   q.descrizione
                 }}</span>
                 <span v-if="q.arretrata" class="badge theme-warning ms-1">anno precedente</span>
+                <div class="small md:d-none" :class="{ 'fg-danger': scaduta(q) }">
+                  Entro il {{ data(q.scadenza) }}
+                </div>
                 <div v-if="Number(q.sconto)" class="small fg-2">
                   Sconto famiglia {{ euro(q.sconto) }}
                 </div>
@@ -206,8 +211,10 @@ async function reinvia(id: number) {
                 </div>
                 <div v-if="q.annullata" class="small">Annullata: {{ q.motivo_annullamento }}</div>
               </td>
-              <td :class="{ 'fg-danger': scaduta(q) }">{{ data(q.scadenza) }}</td>
-              <td class="text-end">{{ euro(q.importo) }}</td>
+              <td class="d-none md:d-table-cell" :class="{ 'fg-danger': scaduta(q) }">
+                {{ data(q.scadenza) }}
+              </td>
+              <td class="d-none md:d-table-cell text-end">{{ euro(q.importo) }}</td>
               <td class="text-end">{{ euro(q.dovuto) }}</td>
               <td class="text-end">
                 <strong v-if="Number(q.residuo) > 0">{{ euro(q.residuo) }}</strong>

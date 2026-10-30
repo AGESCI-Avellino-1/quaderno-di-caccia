@@ -185,7 +185,9 @@ const statoMio = {
     </div>
     <div class="d-flex flex-wrap gap-3 mb-5">
       <div class="form-field mb-0">
-        <input id="eventi-passati" v-model="passati" type="checkbox" class="switch" role="switch" />
+        <div class="switch">
+          <input id="eventi-passati" v-model="passati" type="checkbox" role="switch" />
+        </div>
         <label for="eventi-passati">Eventi passati</label>
       </div>
       <button

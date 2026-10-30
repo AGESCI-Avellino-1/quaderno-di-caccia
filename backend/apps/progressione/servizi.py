@@ -1,0 +1,324 @@
+"""Commands of the Progressione Personale (spec §17, §19.1). Each changes state and
+history together; none advances anyone by itself (DEC-71, V08). A command already
+applied is answered as done: offline replays and double sends change nothing (DEC-96,
+PP-Q)."""
+
+from datetime import date
+
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.utils import timezone
+
+from apps.anagrafica.models import Persona
+from apps.core.date_parziali import DataParziale, PrecisioneData
+from apps.organizzazione.models import Branca
+
+from .models import (
+    APERTI,
+    ORDINE_FASI,
+    ConsegnaDistintivo,
+    Fase,
+    Impegno,
+    MetaEG,
+    PeriodoBranca,
+    Promessa,
+    Revisione,
+    SedeVerifica,
+    Stato,
+    Tappa,
+)
+
+
+def oggi() -> date:
+    return timezone.localdate()
+
+
+def data_parziale(valore: date | None, precisione: str) -> DataParziale:
+    """Checked partial date (DEC-70); a future date is refused."""
+    try:
+        parziale = DataParziale(valore, PrecisioneData(precisione))
+    except ValueError as errore:
+        raise ValidationError(str(errore)) from errore
+    if parziale.valore and parziale.valore > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    return parziale
+
+
+def periodo_attivo(persona: Persona) -> PeriodoBranca | None:
+    return PeriodoBranca.objects.filter(persona=persona, data_fine__isnull=True).first()
+
+
+# --- Sentiero, tappe, Promessa, badges ----------------------------------------------------
+
+
+@transaction.atomic
+def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBranca:
+    """The staff registers the entry in the sentiero (DEC-171): the branch period and the
+    Scoperta start together. A later entrant is placed after the Promessa (`colloca`)."""
+    if periodo_attivo(persona):
+        raise ValidationError("Il percorso in questa branca è già aperto.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno dell'ingresso.")
+    periodo = PeriodoBranca.objects.create(
+        persona=persona,
+        branca=Branca.EG,
+        data_inizio=quando.valore,
+        precisione_inizio=quando.precisione,
+        registrato_da=utente,
+    )
+    Tappa.objects.create(
+        periodo=periodo,
+        fase=Fase.SCOPERTA,
+        data_inizio=quando.valore,
+        precisione_inizio=quando.precisione,
+        registrata_da=utente,
+    )
+    return periodo
+
+
+def _non_prima(quando: DataParziale, dopo: date, cosa: str) -> None:
+    esatta = quando.valore is not None and quando.precisione == PrecisioneData.GIORNO
+    if esatta and quando.valore < dopo:
+        raise ValidationError(f"La data non può precedere {cosa}.")
+
+
+def registra_promessa(periodo: PeriodoBranca, quando: DataParziale, utente) -> Promessa:
+    esistente = Promessa.objects.filter(periodo=periodo).first()
+    if esistente is not None:
+        if (esistente.data, esistente.precisione) == (quando.valore, quando.precisione):
+            return esistente  # the same command twice
+        raise ValidationError("La Promessa è già registrata: correggi la data se è sbagliata.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno della Promessa.")
+    _non_prima(quando, periodo.data_inizio, "l'ingresso nel sentiero")
+    return Promessa.objects.create(
+        periodo=periodo, data=quando.valore, precisione=quando.precisione, registrata_da=utente
+    )
+
+
+@transaction.atomic
+def riconosci_tappa(tappa: Tappa, quando: DataParziale, utente) -> Tappa:
+    """The Consiglio della Legge recognises the tappa: the next one starts the same day;
+    after Responsabilità the sentiero goes on until the passaggio (V16)."""
+    if tappa.completata_il is not None:
+        if (tappa.completata_il, tappa.precisione_completata) == (
+            quando.valore,
+            quando.precisione,
+        ):
+            return tappa.periodo.tappa_attuale() or tappa  # the same command twice
+        raise ValidationError("La conclusione di questa tappa è già riconosciuta.")
+    if tappa.data_fine is not None or tappa.periodo.data_fine is not None:
+        raise ValidationError("Questa tappa non è più in corso.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno del Consiglio della Legge.")
+    _non_prima(quando, tappa.data_inizio, "l'inizio della tappa")
+    tappa.completata_il = quando.valore
+    tappa.precisione_completata = quando.precisione
+    tappa.sede_completamento = SedeVerifica.CONSIGLIO_LEGGE
+    tappa.completata_da = utente
+    indice = ORDINE_FASI.index(Fase(tappa.fase))
+    if indice == len(ORDINE_FASI) - 1:
+        tappa.save()
+        return tappa
+    tappa.data_fine = quando.valore
+    tappa.save()
+    return Tappa.objects.create(
+        periodo=tappa.periodo,
+        fase=ORDINE_FASI[indice + 1],
+        data_inizio=quando.valore,
+        precisione_inizio=quando.precisione,
+        registrata_da=utente,
+    )
+
+
+@transaction.atomic
+def colloca(tappa: Tappa, fase: str, quando: DataParziale, motivazione: str, utente) -> Tappa:
+    """A later entrant, after the Scoperta and the Promessa, is placed in the tappa
+    suited to them, without inventing the ones in between (spec §17.6; E/G art. 41)."""
+    if tappa.fase != Fase.SCOPERTA or tappa.data_fine is not None:
+        raise ValidationError("Il collocamento si fa dalla Scoperta in corso.")
+    if fase not in (Fase.COMPETENZA, Fase.RESPONSABILITA):
+        raise ValidationError("Scegli la tappa in cui collocarlo.")
+    if not Promessa.objects.filter(periodo=tappa.periodo).exists():
+        raise ValidationError("Prima registra la Promessa.")
+    if not motivazione.strip():
+        raise ValidationError("Scrivi la motivazione del collocamento.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno.")
+    _non_prima(quando, tappa.data_inizio, "l'inizio della Scoperta")
+    tappa.data_fine = quando.valore
+    tappa.save()
+    return Tappa.objects.create(
+        periodo=tappa.periodo,
+        fase=fase,
+        data_inizio=quando.valore,
+        precisione_inizio=quando.precisione,
+        collocamento=True,
+        motivazione=motivazione.strip()[:300],
+        registrata_da=utente,
+    )
+
+
+def consegna_distintivo(tappa: Tappa, quando: DataParziale, utente) -> ConsegnaDistintivo:
+    """The badge, handed over at the start of the tappa, with its own date (V06)."""
+    esistente = ConsegnaDistintivo.objects.filter(tappa=tappa).first()
+    if esistente is not None:
+        if (esistente.data, esistente.precisione) == (quando.valore, quando.precisione):
+            return esistente
+        raise ValidationError("Il distintivo di questa tappa è già consegnato.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno della consegna.")
+    return ConsegnaDistintivo.objects.create(
+        tappa=tappa, data=quando.valore, precisione=quando.precisione, registrata_da=utente
+    )
+
+
+def rettifica_data(oggetto, campo: str, quando: DataParziale, motivo: str) -> None:
+    """A recording mistake (spec §18.4): a traced correction with its reason, never a
+    revocation (V20). The audit log keeps the old value."""
+    if not motivo.strip():
+        raise ValidationError("Scrivi perché correggi la data.")
+    if quando.valore is None:
+        raise ValidationError("Indica almeno l'anno.")
+    precisione = {"data": "precisione", "data_inizio": "precisione_inizio"}.get(
+        campo, "precisione_completata"
+    )
+    setattr(oggetto, campo, quando.valore)
+    setattr(oggetto, precisione, quando.precisione)
+    oggetto.nota_rettifica = motivo.strip()[:300]
+    oggetto.save()
+
+
+# --- Impegni and mete (DEC-59…DEC-61) -----------------------------------------------------
+
+
+def nuovo(
+    modello,
+    periodo: PeriodoBranca,
+    utente,
+    *,
+    testo: str,
+    dal_ragazzo: bool,
+    termine: date | None = None,
+    **campi,
+):
+    """A draft; the ragazzo's stays a draft until the staff agrees it (DEC-61)."""
+    if periodo.data_fine is not None:
+        raise ValidationError("Il percorso in questa branca è chiuso.")
+    if periodo.branca != Branca.EG:
+        raise ValidationError("Per ora mete e impegni sono quelli del sentiero E/G.")
+    if not testo.strip():
+        raise ValidationError("Scrivi il testo.")
+    oggetto = modello(
+        periodo=periodo,
+        testo=testo.strip(),
+        termine=termine,
+        creato_da=utente,
+        proposto_dal_ragazzo=dal_ragazzo,
+        **campi,
+    )
+    oggetto.full_clean()
+    oggetto.save()
+    return oggetto
+
+
+def riformula(oggetto, utente, *, testo: str, termine: date | None, criterio: str | None = None):
+    """A new wording keeps the old one (DEC-59). The last write wins on texts (DEC-96)."""
+    if not oggetto.aperto:
+        raise ValidationError("Un percorso chiuso non si riformula: aprine uno nuovo.")
+    if not testo.strip():
+        raise ValidationError("Scrivi il testo.")
+    vecchio_criterio = getattr(oggetto, "criterio_verifica", "")
+    if (oggetto.testo, oggetto.termine, vecchio_criterio) == (
+        testo.strip(),
+        termine,
+        (criterio or "").strip() if criterio is not None else vecchio_criterio,
+    ):
+        return
+    Revisione.objects.create(
+        **{"impegno" if isinstance(oggetto, Impegno) else "meta": oggetto},
+        testo=oggetto.testo,
+        criterio_verifica=vecchio_criterio,
+        termine=oggetto.termine,
+        sostituita_da=utente,
+    )
+    oggetto.testo = testo.strip()
+    oggetto.termine = termine
+    if criterio is not None and isinstance(oggetto, Impegno):
+        oggetto.criterio_verifica = criterio.strip()
+    oggetto.save()
+
+
+# Allowed steps (spec §17.2, DEC-59): origin states for each command.
+DA = {
+    "concorda": (Stato.BOZZA,),
+    "avvia": (Stato.CONCORDATO,),
+    "proponi_verifica": (Stato.IN_CORSO,),
+    "prosegui": (Stato.DA_VERIFICARE,),
+    "convalida": (Stato.DA_VERIFICARE,),
+    "interrompi": APERTI,
+}
+A = {
+    "concorda": Stato.CONCORDATO,
+    "avvia": Stato.IN_CORSO,
+    "proponi_verifica": Stato.DA_VERIFICARE,
+    "prosegui": Stato.IN_CORSO,
+    "convalida": Stato.CONCLUSO,
+    "interrompi": Stato.INTERROTTO,
+}
+
+
+def esegui(
+    oggetto,
+    azione: str,
+    utente,
+    *,
+    il: date | None = None,
+    sede: str = "",
+    sede_descrizione: str = "",
+    motivo: str = "",
+):
+    """One step of an impegno or a meta. Already in the arrival state = done (a replay
+    from the offline queue, DEC-96)."""
+    if azione not in DA:
+        raise ValidationError("Operazione sconosciuta.")
+    if oggetto.stato == A[azione] and azione != "prosegui":
+        return oggetto
+    if oggetto.stato not in DA[azione]:
+        raise ValidationError(f"Non si può: è «{oggetto.get_stato_display().lower()}».")
+    il = il or oggi()
+    if il > oggi():
+        raise ValidationError("La data non può essere nel futuro.")
+    if azione == "concorda":
+        if isinstance(oggetto, Impegno) and oggetto.termine is None:
+            # E/G: an agreed impegno is limited in time (art. 32; spec §16.4).
+            raise ValidationError("Indica entro quando: un impegno è limitato nel tempo.")
+        oggetto.concordato_il = il
+    elif azione == "avvia":
+        oggetto.avviato_il = il
+    elif azione == "proponi_verifica":
+        oggetto.verifica_proposta_da = utente
+        oggetto.verifica_proposta_il = timezone.now()
+    elif azione == "convalida":
+        if sede not in SedeVerifica.values:
+            raise ValidationError("Indica dove si è fatta la verifica.")
+        if sede == SedeVerifica.ALTRO and not sede_descrizione.strip():
+            raise ValidationError("Scrivi dove si è fatta la verifica.")
+        oggetto.verificato_il = il
+        oggetto.sede = sede
+        oggetto.sede_descrizione = sede_descrizione.strip() if sede == SedeVerifica.ALTRO else ""
+        oggetto.verificato_da = utente
+    elif azione == "interrompi":
+        if not motivo.strip():
+            raise ValidationError("Scrivi perché si interrompe.")
+        oggetto.interrotto_il = il
+        oggetto.motivo_interruzione = motivo.strip()[:300]
+    oggetto.stato = A[azione]
+    oggetto.save()
+    return oggetto
+
+
+def collega_mete(impegno: Impegno, mete: list[MetaEG]) -> None:
+    if any(m.periodo_id != impegno.periodo_id for m in mete):
+        raise ValidationError("Le mete devono essere dello stesso sentiero.")
+    impegno.mete.set(mete)

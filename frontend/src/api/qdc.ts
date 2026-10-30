@@ -1219,6 +1219,125 @@ export interface FormazioneCapo {
   quota_versata: string | null
 }
 
+// --- Progressione Personale E/G (DEC-56…DEC-74, DEC-171…DEC-173) -------------------------
+
+export type Precisione = 'GIORNO' | 'MESE' | 'ANNO' | 'IGNOTA'
+export type FaseProgressione = 'SCOPERTA' | 'COMPETENZA' | 'RESPONSABILITA'
+export type StatoPercorso =
+  'BOZZA' | 'CONCORDATO' | 'IN_CORSO' | 'DA_VERIFICARE' | 'CONCLUSO' | 'INTERROTTO'
+export type AzionePercorso =
+  'concorda' | 'avvia' | 'proponi_verifica' | 'prosegui' | 'convalida' | 'interrompi'
+
+export interface DataParziale {
+  data: string | null
+  precisione: Precisione
+}
+
+export interface TappaSentiero {
+  id: number
+  fase: FaseProgressione
+  fase_nome: string
+  inizio: DataParziale
+  collocamento: boolean
+  motivazione: string
+  completata: DataParziale | null
+  in_corso: boolean
+  distintivo: DataParziale | null
+  nota_rettifica: string
+}
+
+export interface RevisionePercorso {
+  testo: string
+  criterio_verifica: string
+  termine: string | null
+  sostituita_il: string
+}
+
+export interface PercorsoPersonale {
+  id: number
+  testo: string
+  termine: string | null
+  stato: StatoPercorso
+  stato_nome: string
+  proposto_dal_ragazzo: boolean
+  concordato_il: string | null
+  avviato_il: string | null
+  verifica_proposta: boolean
+  verificato_il: string | null
+  sede: string
+  sede_nome: string
+  interrotto_il: string | null
+  motivo_interruzione: string
+  revisioni: RevisionePercorso[]
+}
+
+export interface MetaEG extends PercorsoPersonale {
+  riservata: boolean
+}
+
+export interface ImpegnoEG extends PercorsoPersonale {
+  criterio_verifica: string
+  mete: number[]
+}
+
+export interface PeriodoBranca {
+  id: number
+  branca: string
+  branca_nome: string
+  inizio: DataParziale
+  fine: string | null
+  attivo: boolean
+  promessa: DataParziale | null
+  tappe: TappaSentiero[]
+}
+
+export interface SchedaProgressione {
+  persona_id: number
+  persona: string
+  periodi: PeriodoBranca[]
+  mete: MetaEG[]
+  impegni: ImpegnoEG[]
+  puo_gestire: boolean
+  puo_proporre: boolean
+  puo_proporre_verifica: boolean
+  sedi: Scelta[]
+}
+
+export interface RagazzoSentiero {
+  persona_id: number
+  persona: string
+  sentiero_aperto: boolean
+  tappa: string | null
+  tappa_dal: DataParziale | null
+  distintivo: boolean
+  promessa: boolean
+  impegni_in_corso: number
+  impegni_da_verificare: number
+  bozze: number
+  mete_aperte: number
+}
+
+export interface SentieroUnita {
+  unita: string
+  ragazzi: RagazzoSentiero[]
+  puo_gestire: boolean
+}
+
+/** Paths of the writes that may wait in the offline queue (DEC-95). */
+export const percorsoNuovoImpegno = (persona: number) =>
+  `/api/v1/persone/${persona}/progressione/impegni`
+export const percorsoAzione = (tipo: 'mete' | 'impegni', id: number, azione: AzionePercorso) =>
+  `/api/v1/progressione/${tipo}/${id}/${azione}`
+
+/** A partial date as Italians read it: 12/03/2025, 03/2025, 2025 (DEC-70). */
+export function testoDataParziale(d: DataParziale | null): string {
+  if (!d?.data) return d ? 'data non documentata' : ''
+  const [anno, mese, giorno] = d.data.split('-')
+  if (d.precisione === 'ANNO') return anno!
+  if (d.precisione === 'MESE') return `${mese}/${anno}`
+  return `${giorno}/${mese}/${anno}`
+}
+
 const bc = (iscrizione: number, resto = '') =>
   `/api/v1/buonacaccia/iscrizioni/${iscrizione}${resto}`
 export const fileLiberatoria = (iscrizione: number) => bc(iscrizione, '/liberatoria')
@@ -1684,6 +1803,75 @@ export const api = {
     richiesta<{ ok: boolean }>('/api/v1/impersonazione/fine', { metodo: 'POST' }),
   impersonazioniMie: () => richiesta<Impersonazione[]>('/api/v1/impersonazioni/mie'),
   impersonazioni: () => richiesta<Impersonazione[]>('/api/v1/impersonazioni'),
+  progressione: (persona: number) =>
+    richiesta<SchedaProgressione>(`/api/v1/persone/${persona}/progressione`),
+  apriSentiero: (persona: number, quando: DataParziale) =>
+    richiesta<SchedaProgressione>(`/api/v1/persone/${persona}/progressione/sentiero`, {
+      metodo: 'POST',
+      corpo: quando,
+    }),
+  promessa: (periodo: number, quando: DataParziale) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/promessa`, {
+      metodo: 'POST',
+      corpo: quando,
+    }),
+  rettificaPromessa: (periodo: number, quando: DataParziale, motivo: string) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/periodi/${periodo}/promessa`, {
+      metodo: 'PUT',
+      corpo: { ...quando, motivo },
+    }),
+  riconosciTappa: (tappa: number, quando: DataParziale) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}/riconosci`, {
+      metodo: 'POST',
+      corpo: quando,
+    }),
+  collocaTappa: (
+    tappa: number,
+    dati: DataParziale & { fase: FaseProgressione; motivazione: string },
+  ) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}/colloca`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  distintivoTappa: (tappa: number, quando: DataParziale) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}/distintivo`, {
+      metodo: 'POST',
+      corpo: quando,
+    }),
+  rettificaTappa: (
+    tappa: number,
+    campo: 'inizio' | 'completata' | 'distintivo',
+    quando: DataParziale,
+    motivo: string,
+  ) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/tappe/${tappa}`, {
+      metodo: 'PUT',
+      corpo: { ...quando, campo, motivo },
+    }),
+  nuovaMeta: (
+    persona: number,
+    dati: { testo: string; termine: string | null; riservata: boolean },
+  ) =>
+    richiesta<SchedaProgressione>(`/api/v1/persone/${persona}/progressione/mete`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  riformula: (
+    tipo: 'mete' | 'impegni',
+    id: number,
+    dati: {
+      testo: string
+      termine: string | null
+      criterio_verifica?: string
+      riservata?: boolean
+      mete?: number[]
+    },
+  ) =>
+    richiesta<SchedaProgressione>(`/api/v1/progressione/${tipo}/${id}`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  sentieroUnita: (unita: number) => richiesta<SentieroUnita>(`/api/v1/unita/${unita}/progressione`),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
       metodo: 'POST',

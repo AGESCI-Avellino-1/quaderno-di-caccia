@@ -16,7 +16,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
 | 3 | Eventi e presenze | ✅ | eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi, eventi su BuonaCaccia (DEC-158…DEC-164, fatti il 30/10; da provare nel browser) |
-| 4 | Progressione Personale | ⏳ | pronti i cataloghi di specialità/brevetti in `backend/data/cataloghi/`; prima E/G, poi R/S e L/C |
+| 4 | Progressione Personale | 🚧 | E/G a blocchi (dettaglio sotto): blocco 1 fatto, blocco 2 da fare; poi R/S e L/C. Riferimento: specifica PP v1.0 (in `ignored/`, non nel repository) |
 | 5 | Fascicolo completo | ⏳ | anticipati i dati sanitari essenziali (fase 1) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
@@ -69,7 +69,23 @@ BuonaCaccia) e DEC-156 (autofinanziamento e budget dei campi).
 | 3.5 | Movimenti di prima nota collegati a un evento (gli incassi delle sue quote da soli) e rendiconto dell'evento; budget dei campi (due valori su tre, contributo dello staff a parte, agevolazioni come contributo dalla cassa) | DEC-90, DEC-91, DEC-82 | ✅ |
 | 3.6 | Eventi su BuonaCaccia: iscrizioni con scadenze, link di gestione per i capi, liberatoria, schede con domande riusabili, foto, quota per la famiglia, formazione capi per la Zona (`apps/buonacaccia`, promemoria con `promemoria_buonacaccia`); la foto profilo (DEC-162) arriverà con il fascicolo | DEC-158…DEC-164 | ✅ |
 
-Dopo: Progressione Personale (fase 4), fascicolo completo con scheda medica e percorso di
+### 4. Fase 4 — Progressione Personale
+
+Riferimento: «Specifica di dominio e requisiti per lo sviluppo» v1.0 (DEC-56), ridotta dalle
+decisioni DEC-56…DEC-74; scelte del 30/10: lo staff apre sentiero e tappa, la verifica ha
+la sede, le mete possono essere riservate, lavoro a blocchi con un commit ciascuno. Ogni
+blocco si prova nel browser prima del commit; i casi di prova della specifica (§13,
+§19.3) diventano test (DEC-73).
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| 4.1 | E/G, blocco 1: apertura del sentiero, tappe (Scoperta, Competenza, Responsabilità) riconosciute nel Consiglio della Legge, collocamento di chi entra più grande, Promessa, consegna del distintivo, date parziali e rettifiche tracciate; mete (anche riservate) e impegni con i sei stati, revisioni del testo, proposta di verifica (ragazzo, capo squadriglia), convalida con data, chi e sede; anche offline; scheda del sentiero e vista di reparto | DEC-57…DEC-61, DEC-70…DEC-73, DEC-171…DEC-173 | ✅ provato nel browser il 30/10 (staff e ragazza) |
+| 4.2 | E/G, blocco 2: specialità e brevetti con carta, maestro (anche esterno) e riconoscimento; specialità di squadriglia; imprese di reparto, squadriglia e Alta Squadriglia con posti d'azione; promemoria del brevetto | DEC-62…DEC-65, V09, V10 | ⏳ |
+| 4.3 | Passaggi di branca decisi dalla Co.Ca., in blocco per unità, con sintesi per i nuovi capi | DEC-69, DEC-41 | ⏳ |
+| 4.4 | R/S: passi, Carta di clan, Punto della Strada, EPPPI, conclusione (Partenza, saluto fraterno…) | DEC-67, DEC-68 | ⏳ |
+| 4.5 | L/C: momenti, stagione come etichetta, prede e voli, specialità L/C, Piccole Orme, Consiglio degli Anziani | DEC-66, DEC-68 | ⏳ |
+
+Dopo la fase 4: fascicolo completo con scheda medica e percorso di
 formazione dei capi inserito a mano (fase 5, DEC-47), poi la fase 6: vedi la tabella "Fasi".
 
 ## Fase 1 — Fondamenta

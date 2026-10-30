@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 26, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 27, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -180,7 +180,7 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-57 | Una persona ha un'unica identità per tutta la vita nel gruppo; periodi di branca e di momento, tappa o passo sono distinti dalle appartenenze alle unità. | PP-A |
 | DEC-58 | La Promessa è un evento con data; la consegna del distintivo ha una data propria, distinta dall'ingresso nella tappa. | PP-B |
 | DEC-59 | Impegni, mete e obiettivi hanno sei stati (bozza, concordato, in corso, da verificare, concluso, interrotto) e conservano le revisioni del testo, in tutte le branche, L/C compresi. | PP-D, P-1 |
-| DEC-60 | La convalida è il passaggio da "da verificare" a "concluso", con data; chi convalida è registrato in automatico. Non si registrano colloqui né autovalutazioni. | PP-F, P-05 |
+| DEC-60 | La convalida è il passaggio da "da verificare" a "concluso", con data; chi convalida è registrato in automatico. Non si registrano colloqui né autovalutazioni. Sede della verifica: DEC-172. | PP-F, P-05 |
 | DEC-61 | In L/C registra il capo; in E/G anche i ragazzi possono inserire mete e impegni; il CSQ propone convalide, lo staff le conferma. | P-02, N-23 |
 | DEC-62 | Specialità e brevetti seguono un percorso con carta (testo scritto nell'app), maestro anche esterno senza account e stati da proposto a riconosciuto. | PP-G, P-2 |
 | DEC-63 | I cataloghi vengono dal regolamento metodologico: 40 specialità L/C, 65 specialità E/G, 12 specialità di squadriglia, 15 brevetti. Le voci si ritirano, mai si cancellano, e ogni conquista conserva il nome dell'epoca. Le immagini delle specialità E/G si caricano a parte. | M-03, P-4, P-06 |
@@ -195,6 +195,9 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-72 | Viste: scheda personale con la storia di tutti gli anni nel gruppo e vista di unità. Per i ragazzi, linguaggio e colore della branca e nomi giungla o bosco dei capi. | PP-T, P-07, N-26, L-06 |
 | DEC-73 | I casi di prova del documento PP diventano test automatici. | PP-U |
 | DEC-74 | Esclusi: classificazioni educative, collegamento a pagine e articoli del regolamento, esperienze collegate agli impegni (forse in seguito). | PP-M, PP-S, PP-E |
+| DEC-171 | In E/G il sentiero e la tappa li registra lo staff, non si aprono da soli con l'ingresso in reparto: l'apertura parte dalla Scoperta. Chi entra più grande, dopo Scoperta e Promessa, si colloca nella tappa adeguata con una motivazione, senza inventare le tappe intermedie. | DEC-57, PP-A, 30/10 |
+| DEC-172 | La convalida registra anche la sede della verifica: Consiglio della Legge, Consiglio di squadriglia, Alta Squadriglia o altro (da descrivere). Tappe, specialità e brevetti si riconoscono nel Consiglio della Legge. | DEC-60, PP-F, 30/10 |
+| DEC-173 | Una meta può essere riservata (le mete "particolarmente delicate"): la vedono il ragazzo, i genitori e i capi, non il capo squadriglia né le viste di squadriglia. Le note con visibilità complete restano alla fase 5. | DEC-13, DEC-39, PP-N, 30/10 |
 
 ## Eventi e presenze
 

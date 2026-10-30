@@ -173,6 +173,21 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // The sentiero of one E/G: staff, the ragazzo, parents, CSQ (the API decides).
+      path: '/persone/:id(\\d+)/sentiero',
+      name: 'sentiero',
+      component: () => import('@/views/SentieroView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
+      // The reparto at a glance: capi (DEC-72).
+      path: '/unita/:id(\\d+)/sentiero',
+      name: 'sentiero-unita',
+      component: () => import('@/views/SentieroUnitaView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Using the app as another user: capigruppo, administrators who are capi, unit
       // staff (the API decides).
       path: '/impersonazioni',

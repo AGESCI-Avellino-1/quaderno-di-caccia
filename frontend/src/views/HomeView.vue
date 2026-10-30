@@ -209,6 +209,18 @@ onMounted(async () => {
           <span class="fg-2 small">Scheda di tuo figlio/a</span>
         </RouterLink>
       </div>
+      <div
+        v-if="sessione.profilo.persona && !sessione.capo && sessione.profilo.branca === 'eg'"
+        class="col-12 md:col-6"
+      >
+        <RouterLink
+          :to="{ name: 'sentiero', params: { id: sessione.profilo.persona.id } }"
+          class="card card-body h-100 text-decoration-none"
+        >
+          <strong>Il mio sentiero</strong>
+          <span class="fg-2 small">Tappe, mete e impegni</span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.profilo.persona && !sessione.capo" class="col-12 md:col-6">
         <RouterLink
           :to="{ name: 'persona', params: { id: sessione.profilo.persona.id } }"
@@ -220,9 +232,6 @@ onMounted(async () => {
     </div>
     <p class="small mt-7">
       <RouterLink to="/dispositivi">Dispositivi e protezione di questo telefono</RouterLink>
-    </p>
-    <p class="fg-2 small">
-      Progressione personale, presenze e cassa arriveranno nelle prossime versioni.
     </p>
   </section>
 </template>

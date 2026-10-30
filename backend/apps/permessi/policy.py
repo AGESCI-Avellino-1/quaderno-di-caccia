@@ -1023,3 +1023,56 @@ def puo_impersonare(user, bersaglio) -> bool:
 def puo_vedere_impersonazioni(user) -> bool:
     """The whole list of who used the app in someone else's place: the Co.Ca."""
     return e_capo_censito(user)
+
+
+# --- Progressione Personale (DEC-09, DEC-13, DEC-15, DEC-16, DEC-41, DEC-61) ---------------
+
+
+def _csq_di(user, persona: Persona) -> bool:
+    """The user is CSQ of a patrol `persona` belongs to today."""
+    return _membri_squadriglie(squadriglie_guidate(user)).filter(pk=persona.pk).exists()
+
+
+def puo_vedere_progressione(user, persona: Persona) -> bool:
+    """Every capo sees the whole PP of any ragazzo (DEC-09, DEC-41); the ragazzo their
+    own (DEC-15); the parents (DEC-16; of an adult as chosen, DEC-26); the CSQ the mete,
+    impegni, specialità and brevetti of their patrol (DEC-13)."""
+    if e_capo_censito(user):
+        return True
+    livello = _livello_personale(user, persona)
+    if livello == LivelloAccesso.PROPRIO:
+        return True
+    if livello == LivelloAccesso.TUTORE:
+        return genitori_vedono(persona, "scheda")
+    return _csq_di(user, persona)
+
+
+def vede_mete_riservate(user, persona: Persona) -> bool:
+    """A private meta: the ragazzo, the parents and the capi, never the CSQ (DEC-173)."""
+    if e_capo_censito(user):
+        return True
+    livello = _livello_personale(user, persona)
+    if livello == LivelloAccesso.TUTORE:
+        return genitori_vedono(persona, "scheda")
+    return livello == LivelloAccesso.PROPRIO
+
+
+def puo_gestire_progressione(user, persona: Persona) -> bool:
+    """Sentiero, tappe, Promessa, badges, agreeing and validating: the staff of the
+    person's unit (DEC-09: a capo writes for the unit they serve)."""
+    return _staff_della_persona(user, persona)
+
+
+def puo_proporre_percorsi(user, persona: Persona) -> bool:
+    """An E/G inserts their own mete and impegni, as drafts the staff agrees (DEC-15,
+    DEC-61); the staff too."""
+    if puo_gestire_progressione(user, persona):
+        return True
+    return _livello_personale(user, persona) == LivelloAccesso.PROPRIO
+
+
+def puo_proporre_verifica(user, persona: Persona) -> bool:
+    """Ask for a validation: the ragazzo, their CSQ (DEC-13, DEC-61), the staff."""
+    if puo_proporre_percorsi(user, persona):
+        return True
+    return _csq_di(user, persona)

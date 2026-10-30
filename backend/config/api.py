@@ -17,6 +17,7 @@ from apps.impersonazione.api import router as impersonazione_router
 from apps.importazione.api import router as importazione_router
 from apps.iscrizioni.api import router as iscrizioni_router
 from apps.organizzazione.api import router as organizzazione_router
+from apps.progressione.api import router as progressione_router
 from apps.quote.api import router as quote_router
 from apps.sanitaria.api import router as sanitaria_router
 
@@ -45,3 +46,4 @@ api.add_router("/", cassa_router)
 api.add_router("/", eventi_router)
 api.add_router("/", buonacaccia_router)
 api.add_router("/", impersonazione_router)
+api.add_router("/", progressione_router)

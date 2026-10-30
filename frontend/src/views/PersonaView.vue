@@ -68,6 +68,11 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
     <template v-if="persona">
       <h1 class="h4 mb-1">{{ persona.nome }} {{ persona.cognome }}</h1>
       <p class="fg-2 small">{{ persona.unita.join(' · ') }}</p>
+      <p class="small">
+        <RouterLink :to="{ name: 'sentiero', params: { id: persona.id } }">
+          Sentiero (Progressione Personale)
+        </RouterLink>
+      </p>
       <CopiaLocale :del="copiaDel" />
       <dl class="row">
         <template v-if="persona.codice_socio">

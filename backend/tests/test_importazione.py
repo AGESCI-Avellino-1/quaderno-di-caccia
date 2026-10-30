@@ -332,3 +332,30 @@ def test_unita_importate_senza_nome():
     assert any("non ha ancora un nome" in a for a in avvisi)
     reparto.nome = "Millennium"
     assert str(reparto) == "Reparto Millennium (N1)"
+
+
+def test_rientro_dopo_l_archiviazione_riconosciuto():
+    """The fingerprint of the erased codice fiscale joins someone who comes back to the
+    record that stayed, with name and years (DEC-217)."""
+    from apps.archivio.models import Archiviazione, impronta_codice_fiscale
+    from apps.diritti.servizi import cancella
+
+    applica(_risultato(), oggi=OGGI)
+    giulia = Persona.objects.get(codice_fiscale="RSSGLI13E50A509A")
+    Archiviazione.objects.create(
+        persona=giulia,
+        nome="Rossi Giulia",
+        file_drive="f",
+        nome_file="f.zip",
+        md5="0" * 32,
+        dimensione=1,
+        impronta_cf=impronta_codice_fiscale(giulia.codice_fiscale),
+    )
+    cancella(giulia, conserva_nome=True)
+    giulia.refresh_from_db()
+    assert giulia.codice_fiscale is None and not giulia.codice_socio
+
+    riepilogo = applica(_risultato(), oggi=OGGI)
+    assert len(riepilogo.rientri) == 1
+    tornata = Persona.objects.get(codice_fiscale="RSSGLI13E50A509A")
+    assert tornata.pk == giulia.pk

@@ -22,6 +22,9 @@ class Archiviazione(ModelloTracciato):
     confermata_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    # A keyed fingerprint of the codice fiscale, which is erased: the BuonaStrada import
+    # recognises who comes back without the app keeping the code itself (DEC-217).
+    impronta_cf = models.CharField(max_length=64, blank=True, db_index=True)
 
     class Meta:
         verbose_name = "archiviazione"
@@ -30,3 +33,17 @@ class Archiviazione(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Archivio di {self.nome}"
+
+
+def impronta_codice_fiscale(codice_fiscale: str) -> str:
+    """HMAC-SHA256 with its own key, QDC_IMPRONTA_CHIAVE (not SECRET_KEY, which may be
+    rotated): it cannot be turned back into the code, nor computed without the key.
+    Changing the key makes the old fingerprints useless (DEC-217)."""
+    from django.utils.crypto import salted_hmac
+
+    return salted_hmac(
+        "qdc.archivio.codice-fiscale",
+        codice_fiscale.strip().upper(),
+        secret=settings.QDC_IMPRONTA_CHIAVE,
+        algorithm="sha256",
+    ).hexdigest()

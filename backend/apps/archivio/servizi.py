@@ -6,6 +6,7 @@ import json
 import zipfile
 from datetime import date, datetime, timedelta
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Max
@@ -16,7 +17,7 @@ from apps.core.anno import AnnoAssociativo
 from apps.organizzazione.models import AnnoChiuso
 
 from . import drive
-from .models import Archiviazione
+from .models import Archiviazione, impronta_codice_fiscale
 
 MASSIMO_RIAPERTURA = 30  # days (DEC-210)
 
@@ -205,6 +206,10 @@ def archivia(request, persona: Persona) -> Archiviazione:
 
     if not da_archiviare().filter(pk=persona.pk).exists():
         raise ValidationError("Non è ancora da archiviare.")
+    if not settings.QDC_IMPRONTA_CHIAVE:
+        raise ValidationError(
+            "Manca la chiave per riconoscere chi rientra: la imposta chi ha installato l'app."
+        )
     genitori = genitori_da_includere(persona)
     contenuto = prepara(request, persona)
     oggi = timezone.localdate()
@@ -223,6 +228,9 @@ def archivia(request, persona: Persona) -> Archiviazione:
             md5=caricato["md5"],
             dimensione=caricato["dimensione"],
             confermata_da=request.auth,
+            impronta_cf=(
+                impronta_codice_fiscale(persona.codice_fiscale) if persona.codice_fiscale else ""
+            ),
         )
         registra_accessi(request, [persona, *genitori], Categoria.FASCICOLO, Azione.ARCHIVIAZIONE)
         cancella(persona, conserva_nome=True)

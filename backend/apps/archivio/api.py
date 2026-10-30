@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from ninja import Router, Schema
@@ -95,7 +96,8 @@ class ArchivioOut(Schema):
 
 def _archivio() -> dict:
     return {
-        "drive_configurato": drive.configurato(),
+        # Archiving needs the Drive and the fingerprint key (DEC-212, DEC-217).
+        "drive_configurato": drive.configurato() and bool(settings.QDC_IMPRONTA_CHIAVE),
         "da_archiviare": [
             {
                 "id": p.pk,

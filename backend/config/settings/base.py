@@ -224,6 +224,10 @@ QDC_OFFLINE_GIORNI = env.int("QDC_OFFLINE_GIORNI", default=14)
 # account's JSON key and the id of the folder. Empty: archiving is not available.
 QDC_DRIVE_CREDENZIALI = env("QDC_DRIVE_CREDENZIALI", default="")
 QDC_DRIVE_CARTELLA = env("QDC_DRIVE_CARTELLA", default="")
+# Key of the fingerprint of an archived person's codice fiscale (DEC-217), used only for
+# that: set once and never changed, or who comes back is no longer recognised. Empty:
+# archiving is not available.
+QDC_IMPRONTA_CHIAVE = env("QDC_IMPRONTA_CHIAVE", default="")
 
 LOGGING = {
     "version": 1,

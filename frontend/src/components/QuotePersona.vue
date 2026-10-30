@@ -196,6 +196,7 @@ async function reinvia(id: number) {
                 <span :class="{ 'text-decoration-line-through': q.annullata }">{{
                   q.descrizione
                 }}</span>
+                <span v-if="q.arretrata" class="badge theme-warning ms-1">anno precedente</span>
                 <div v-if="Number(q.sconto)" class="small fg-2">
                   Sconto famiglia {{ euro(q.sconto) }}
                 </div>

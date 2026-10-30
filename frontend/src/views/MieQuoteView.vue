@@ -71,7 +71,10 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <ul class="list-group">
           <li v-for="q in p.quote" :key="q.id" class="list-group-item">
             <div class="d-flex flex-wrap justify-content-between gap-3">
-              <span>{{ q.descrizione }}</span>
+              <span>
+                {{ q.descrizione }}
+                <span v-if="q.arretrata" class="badge theme-warning ms-1">anno precedente</span>
+              </span>
               <strong v-if="Number(q.residuo) > 0">{{ euro(q.residuo) }}</strong>
               <span v-else class="badge theme-success">Pagata</span>
             </div>

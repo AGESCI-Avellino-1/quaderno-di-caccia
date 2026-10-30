@@ -28,6 +28,7 @@ const conteggi = computed(() => {
     ['Appartenenze chiuse', r.appartenenze_chiuse.length],
     ['Correzioni recepite da BuonaStrada', r.correzioni_recepite?.length ?? 0],
     ["Iscrizioni dall'app ora in BuonaStrada", r.iscrizioni_recepite?.length ?? 0],
+    ['Rientri dopo l’archiviazione', r.rientri?.length ?? 0],
   ] as const
 })
 

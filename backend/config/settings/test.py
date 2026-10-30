@@ -4,6 +4,7 @@ from .base import *
 
 DEBUG = False
 SECRET_KEY = "test-only-secret-key"  # noqa: S105
+QDC_IMPRONTA_CHIAVE = "test-only-impronta"
 DATABASES = {"default": env.db("DATABASE_URL", default="sqlite://:memory:")}
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 MAILERS = {"default": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"}}

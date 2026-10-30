@@ -155,7 +155,10 @@ async function importa(evento: Event) {
         genitori che non hanno altri figli nel gruppo: di loro nell'app non resta nulla.
       </p>
       <div v-if="!archivio.drive_configurato" class="alert theme-warning small" role="status">
-        <div>Il Drive del gruppo non è ancora collegato: lo configura chi ha installato l'app.</div>
+        <div>
+          L'archivio non è ancora configurato (Drive del gruppo e chiave per riconoscere chi
+          rientra): lo configura chi ha installato l'app.
+        </div>
       </div>
       <p v-if="!archivio.da_archiviare.length" class="small">Nessuno da archiviare.</p>
       <ul v-else class="list-group mb-3">

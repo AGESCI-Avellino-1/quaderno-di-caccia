@@ -49,8 +49,10 @@ def _riunisci(persona: Persona, dati: dict) -> bool:
 
     rimasto_id = (dati.get("archivio") or {}).get("persona_id")
     rimasto = Persona.objects.filter(pk=rimasto_id, archiviazioni__isnull=False).first()
-    if rimasto is None or rimasto.pk == persona.pk:
+    if rimasto is None:
         return False
+    if rimasto.pk == persona.pk:
+        return True  # already joined by the BuonaStrada import (DEC-217)
     for modello in (Appartenenza, AppartenenzaSquadriglia, Incarico, AccessoDatoSensibile):
         modello.objects.filter(persona=rimasto).update(persona=persona)
     Archiviazione.objects.filter(persona=rimasto).update(persona=persona)

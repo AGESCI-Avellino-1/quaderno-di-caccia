@@ -23,6 +23,7 @@ Rules:
 from dataclasses import asdict, dataclass, field
 from datetime import date
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -87,6 +88,8 @@ class Riepilogo:
     correzioni_recepite: list[str] = field(default_factory=list)
     # Members who joined from the app, now in BuonaStrada with their real code.
     iscrizioni_recepite: list[str] = field(default_factory=list)
+    # Archived people who come back, joined to the record that stayed (DEC-217).
+    rientri: list[str] = field(default_factory=list)
     avvisi: list[dict] = field(default_factory=list)
     # When BuonaStrada's data were last updated (asked at upload) and the choices made.
     aggiornato_al: str | None = None
@@ -245,6 +248,26 @@ def _aggiorna_campi(persona: Persona, valori: dict, r: Riepilogo, codice_socio: 
     return cambiato
 
 
+def _rientro(codice_fiscale: str) -> Persona | None:
+    """Someone archived who comes back (DEC-217): the record with name and years that
+    stayed, found by the fingerprint of the erased codice fiscale. The rest of the history
+    comes back when a capogruppo loads the archive ZIP (DEC-215)."""
+    from apps.archivio.models import Archiviazione, impronta_codice_fiscale
+
+    if not settings.QDC_IMPRONTA_CHIAVE:
+        return None
+    archiviazione = (
+        Archiviazione.objects.filter(
+            impronta_cf=impronta_codice_fiscale(codice_fiscale),
+            persona__isnull=False,
+            persona__codice_fiscale__isnull=True,
+        )
+        .select_related("persona")
+        .first()
+    )
+    return archiviazione.persona if archiviazione else None
+
+
 def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
     valori = {
         "nome": riga.nome,
@@ -274,6 +297,10 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
     if persona is None and riga.codice_fiscale:
         # A guardian already in the app may become a member (e.g. a parent who joins).
         persona = Persona.objects.filter(codice_fiscale=riga.codice_fiscale).first()
+    if persona is None and riga.codice_fiscale:
+        persona = _rientro(riga.codice_fiscale)
+        if persona is not None:
+            r.rientri.append(str(persona))
     if persona is None:
         persona = Persona(codice_socio=riga.codice_socio, **valori)
         persona.ultima_importazione = adesso

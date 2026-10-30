@@ -24,6 +24,7 @@ function quota(campi: Partial<Quota>): Quota {
     residuo: '35.00',
     annullata: false,
     motivo_annullamento: '',
+    arretrata: false,
     ...campi,
   }
 }
@@ -116,6 +117,7 @@ describe('MieQuoteView', () => {
               ricevuta_inviata_il: null,
               annullato: false,
               motivo_annullamento: '',
+              arretrata: false,
             },
           ],
           link_pagamento: 'https://paypal.me/gruppo',

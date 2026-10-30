@@ -13,6 +13,7 @@ from ninja.responses import Status
 
 from apps.anagrafica.models import Appartenenza, Persona
 from apps.core.anno import AnnoAssociativo
+from apps.core.chiusura import anno_chiuso
 from apps.organizzazione.models import Gruppo, Unita
 from apps.permessi import policy
 
@@ -178,6 +179,8 @@ class QuotaOut(Schema):
     residuo: Decimal
     annullata: bool
     motivo_annullamento: str = ""
+    # Unpaid from an earlier year, shown with the year asked (DEC-216).
+    arretrata: bool = False
 
 
 def _quota_out(user, quota: Quota) -> dict:
@@ -209,15 +212,25 @@ def _quota_out(user, quota: Quota) -> dict:
         "residuo": quota.residuo,
         "annullata": quota.annullata_il is not None,
         "motivo_annullamento": quota.motivo_annullamento,
+        "arretrata": getattr(quota, "arretrata", False),
     }
 
 
 def _quote(persone, anno: int) -> list[Quota]:
-    return list(
-        Quota.objects.filter(persona__in=persone, tipo__anno=anno)
-        .select_related("tipo", "persona", "agevolazione")
-        .order_by("persona__cognome", "persona__nome", "periodo", "tipo__nome")
+    """The fees of the year, then those of earlier years still unpaid: they carry over
+    as arrears into the following years (DEC-216)."""
+    base = Quota.objects.filter(persona__in=persone).select_related(
+        "tipo", "persona", "agevolazione"
     )
+    ordine = ("persona__cognome", "persona__nome", "periodo", "tipo__nome")
+    arretrate = [
+        q
+        for q in base.filter(tipo__anno__lt=anno, annullata_il__isnull=True).order_by(*ordine)
+        if q.residuo > 0
+    ]
+    for q in arretrate:
+        q.arretrata = True
+    return list(base.filter(tipo__anno=anno).order_by(*ordine)) + arretrate
 
 
 def _persona_quote(request, persona_id: int) -> Persona:
@@ -279,6 +292,15 @@ class AgevolazioneIn(Schema):
     nota: str = ""
 
 
+def _solo_pendenze(quota: Quota) -> None:
+    """In a closed year an agevolazione is still decided on a fee left unpaid, never on
+    one already settled (DEC-216)."""
+    if anno_chiuso(quota.periodo) and quota.residuo <= 0:
+        raise HttpError(
+            400, "L'anno di questa quota è chiuso e la quota è pagata: non si cambia più."
+        )
+
+
 @router.put("/quote/{quota_id}/agevolazione", response=QuotaOut)
 def agevola(request, quota_id: int, dati: AgevolazioneIn):
     """DEC-82: decided by the Co.Ca., recorded here."""
@@ -287,6 +309,7 @@ def agevola(request, quota_id: int, dati: AgevolazioneIn):
     quota = get_object_or_404(Quota.objects.select_related("tipo", "persona"), pk=quota_id)
     if quota.annullata_il:
         raise HttpError(400, "La quota è annullata.")
+    _solo_pendenze(quota)
     agevolazione = getattr(quota, "agevolazione", None) or Agevolazione(quota=quota)
     agevolazione.importo = dati.importo
     agevolazione.decisa_il = dati.decisa_il
@@ -305,6 +328,7 @@ def togli_agevolazione(request, quota_id: int):
     if not policy.puo_registrare_agevolazioni(request.auth):
         raise HttpError(403, "Le agevolazioni le registrano i capigruppo e il tesoriere di gruppo.")
     quota = get_object_or_404(Quota.objects.select_related("tipo", "persona"), pk=quota_id)
+    _solo_pendenze(quota)
     Agevolazione.objects.filter(quota=quota).delete()
     return _quota_out(request.auth, Quota.objects.get(pk=quota.pk))
 

@@ -33,7 +33,8 @@ Altri gruppi possono installarne una copia.
 
 ## Stato
 
-Fase 1 (fondamenta) in corso. Già pronti:
+Fasi 1–5 pronte (fondamenta, quote e cassa, eventi e presenze, fascicolo completo);
+Progressione Personale pronta per tutte le branche. Tra le funzioni principali:
 
 - account con invito (email, codice via email, passkey, Google, Apple), ruoli con
   diarchia, unità e squadriglie, regole di visibilità per ogni ruolo;
@@ -43,10 +44,14 @@ Fase 1 (fondamenta) in corso. Già pronti:
   con PIN o impronta, revoca a distanza dei dispositivi e coda delle modifiche fatte
   senza rete;
 - farmaci, allergie e intolleranze compilati dai genitori (o trascritti dai capi) e la
-  pagina **Al campo** con i dati dell'unità consultabili anche senza rete.
+  pagina **Al campo** con i dati dell'unità consultabili anche senza rete;
+- quote, pagamenti, ricevute e prima nota; eventi, presenze, calendario ed eventi
+  BuonaCaccia; Progressione Personale L/C, E/G e R/S con i passaggi tra branche;
+- scheda sanitaria completa con stampa, note, fascicolo del ragazzo e dei capi, chiusura
+  dell'anno e archivio sul Drive del gruppo.
 
-Le fasi successive (quote e cassa, eventi e presenze, Progressione Personale,
-fascicolo completo) sono descritte nell'analisi e nella roadmap di
+Le fasi successive (bacheca, estratto conto, documentazione di uso) sono descritte
+nell'analisi e nella roadmap di
 [`CLAUDE.md`](CLAUDE.md#roadmap-phases-from-the-analysis).
 
 ## Documentazione
@@ -187,8 +192,13 @@ cancella i dati, tenendo nome e anni nel gruppo. Per collegare il Drive, una vol
 3. metti la chiave in `secrets/drive.json` accanto a `compose.prod.yml` (la cartella
    `secrets/` non va mai nel repository) e in `.env`:
    `QDC_DRIVE_CREDENZIALI=/run/qdc-secrets/drive.json` e `QDC_DRIVE_CARTELLA=<id>`;
-4. riavvia `web`. Nella pagina del gruppo, sezione «Archivio», sparisce l'avviso «Drive
-   non collegato».
+4. genera una volta la chiave che riconosce chi rientra dopo l'archiviazione
+   (`openssl rand -hex 32`) e mettila in `.env` come `QDC_IMPRONTA_CHIAVE`. **Conservala
+   insieme ai backup e non cambiarla mai**, nemmeno se rigeneri `DJANGO_SECRET_KEY` o
+   sposti l'app su un altro server: con una chiave diversa chi è stato archiviato non viene
+   più riconosciuto in automatico quando torna (resta solo il caricamento a mano dello ZIP);
+5. riavvia `web`. Nella pagina del gruppo, sezione «Archivio», sparisce l'avviso
+   «L'archivio non è ancora configurato».
 
 Per il backup del database: `scripts/backup-db.sh` (il file contiene dati di minori: va
 conservato cifrato).

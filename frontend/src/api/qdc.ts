@@ -292,6 +292,8 @@ export interface EsitoImportazione {
     appartenenze_chiuse: string[]
     /** Members who joined from the app, now with their real code. Missing in older imports. */
     iscrizioni_recepite?: string[]
+    /** Archived people who come back (DEC-217). Missing in older imports. */
+    rientri?: string[]
     /** Corrections BuonaStrada now has: closed (DEC-31). Missing in older imports. */
     correzioni_recepite?: string[]
     differenze: {
@@ -773,6 +775,8 @@ export interface Quota {
   residuo: string
   annullata: boolean
   motivo_annullamento: string
+  /** Still unpaid from an earlier year, carried over (DEC-216). */
+  arretrata: boolean
 }
 
 export interface QuotePersona {

@@ -462,3 +462,37 @@ def test_api_situazione_dell_unita(reparto, clan, ragazza, fratello, capo, tesor
     assert all(r["scadute"] == 1 for r in righe)  # due 30/11/2025
     assert _client(tesoriere_rs).get(url).status_code == 403
     assert _client(csq).get(url).status_code == 403
+
+
+def test_quote_non_pagate_passano_all_anno_dopo(ragazza, genitore, capo, reparto):
+    """Unpaid fees carry over to the following years as arrears (DEC-216)."""
+    servizi.emetti(_annuale(), oggi=GENNAIO)
+    pagata = _annuale(nome="Quota pagata", importo=Decimal("5.00"))
+    servizi.emetti(pagata, oggi=GENNAIO)
+    _paga([(Quota.objects.get(tipo=pagata, persona=ragazza), "5.00")], capo.utente)
+    mie = _client(genitore).get(f"/api/v1/mie-quote?anno={ANNO + 1}").json()
+    assert [(q["descrizione"], q["arretrata"]) for q in mie["quote"]] == [
+        ("Quota di gruppo 2025/26", True)
+    ]
+    stesse = _client(genitore).get(f"/api/v1/mie-quote?anno={ANNO}").json()
+    assert not any(q["arretrata"] for q in stesse["quote"])
+
+
+def test_agevolazione_in_anno_chiuso_solo_sulle_pendenze(ragazza, tesoriere_gruppo, capo):
+    """In a closed year an agevolazione goes only on a fee still unpaid (DEC-216)."""
+    from apps.organizzazione.models import AnnoChiuso
+
+    servizi.emetti(_annuale(), oggi=GENNAIO)
+    pagata = _annuale(nome="Quota pagata", importo=Decimal("5.00"))
+    servizi.emetti(pagata, oggi=GENNAIO)
+    saldata = Quota.objects.get(tipo=pagata, persona=ragazza)
+    _paga([(saldata, "5.00")], capo.utente)
+    AnnoChiuso.objects.create(anno=ANNO, chiuso_il=date(2026, 10, 30))
+    aperta = Quota.objects.get(tipo__nome="Quota di gruppo", persona=ragazza)
+    dati = {"importo": "10.00", "decisa_il": "2026-11-05"}
+    client = _client(tesoriere_gruppo)
+    url = "/api/v1/quote/{}/agevolazione"
+    risposta = client.put(url.format(aperta.pk), dati, content_type="application/json")
+    assert risposta.status_code == 200
+    rifiutata = client.put(url.format(saldata.pk), dati, content_type="application/json")
+    assert rifiutata.status_code == 400

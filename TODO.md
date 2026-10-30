@@ -31,7 +31,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada, promemoria, sospensione, chi corregge cosa (ora DEC-124, DEC-125, DEC-129, DEC-130) | maintainer | ✅ applicate |
 | Riportare nell'analisi le decisioni del 28 e 29/10 (DEC-110…DEC-136) | sviluppo | ✅ 29/10 |
 | In produzione, programmare i comandi giornalieri: esempio pronto in [deploy/cron/qdc.crontab](deploy/cron/qdc.crontab) | chi installa | ⏳ |
-| Collegare il Drive condiviso del gruppo per l'archivio (account di servizio, cartella: vedi README) e provare un'archiviazione vera | chi installa | ⏳ |
+| Collegare il Drive condiviso del gruppo per l'archivio (account di servizio, cartella, chiave `QDC_IMPRONTA_CHIAVE` da conservare: vedi README) e provare un'archiviazione vera | chi installa | ⏳ |
 | Avviso nella pagina dell'unità finché non ha un nome (le unità importate nascono senza); unità mostrate come "Tipo Nome (Codice)" | sviluppo | ✅ |
 | Prove nel browser: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza server (copia cifrata) | sviluppo | ✅ 29/10 |
 | Prove che servono un telefono o account esterni veri: passkey e impronta, accesso con Google e Apple | maintainer | ⏳ |
@@ -99,7 +99,7 @@ repository).
 | 5.2 | Note di staff e del capo squadriglia con visibilità; regole sul rapporto con il minore (riservate alla Co.Ca., anche offline) | DEC-39, DEC-40, DEC-43, DEC-95, DEC-197…DEC-199 | ✅ provato nel browser il 30/10 (capo e genitore) |
 | 5.3 | Fascicolo del ragazzo: foto profilo storicizzata, allegati alla Progressione, autorizzazioni, presenze per anno, report per i passaggi | DEC-38, DEC-41, DEC-42, DEC-200…DEC-205 | ✅ provato nel browser il 30/10 (foto ritagliata, allegato, fascicolo) |
 | 5.4 | Fascicolo dei capi: anni di servizio, unità e ruoli, formazione inserita a mano | DEC-47, DEC-134, DEC-206…DEC-208 | ✅ provato nel browser il 30/10 |
-| 5.5 | Fine anno e uscita: congelamento e riapertura dell'anno, archiviazione dopo due anni con caricamento automatico sul Drive del gruppo, esportazione e importazione del fascicolo tra gruppi | DEC-44…DEC-46, DEC-196, DEC-209…DEC-215 | ✅ provato nel browser il 30/10 (chiusura e riapertura); il caricamento sul Drive vero va provato all'installazione |
+| 5.5 | Fine anno e uscita: congelamento e riapertura dell'anno, archiviazione dopo due anni con caricamento automatico sul Drive del gruppo, esportazione e importazione del fascicolo tra gruppi | DEC-44…DEC-46, DEC-196, DEC-209…DEC-217 | ✅ provato nel browser il 30/10 (chiusura e riapertura); il caricamento sul Drive vero va provato all'installazione |
 
 ### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
 

@@ -317,6 +317,9 @@ def test_carta_di_clan_chi(capo_clan, csq, ragazza, genitore, clan, settings, tm
     )
     assert policy.puo_vedere_carta_clan(novizio.utente, clan)
     assert not policy.puo_proporre_carta_clan(novizio.utente, clan)
+    # A novice reads every clan's Carta, even with the noviziato linked to one (DEC-228).
+    altro = Unita.objects.create(gruppo=clan.gruppo, tipo=TipoUnita.CLAN_FUOCO, nome="Altro")
+    assert policy.puo_vedere_carta_clan(novizio.utente, altro)
     risposta = _client(capo_clan).post(
         f"/api/v1/unita/{clan.pk}/carta-clan",
         {"file": _pdf(), "in_vigore_dal": str(OGGI + timedelta(days=1))},

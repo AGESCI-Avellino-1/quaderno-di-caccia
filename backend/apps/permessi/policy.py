@@ -1433,21 +1433,18 @@ def _unita_ragazzo(persona: Persona | None) -> QuerySet:
 
 
 def clan_letti_da(persona: Persona | None) -> set[int]:
-    """The clans a rover, a scolta or a novice belongs to: a noviziato reads the clan it
-    is linked to, or every clan of the group when it is linked to none."""
+    """The clans whose Carta a person reads: a rover or a scolta their clan, a novice
+    every clan of the group, linked or not (DEC-228)."""
     clan: set[int] = set()
     for unita in _unita_ragazzo(persona):
         if unita.tipo == TipoUnita.CLAN_FUOCO:
             clan.add(unita.pk)
         elif unita.tipo == TipoUnita.NOVIZIATO:
-            if unita.collegata_a_id:
-                clan.add(unita.collegata_a_id)
-            else:
-                clan |= set(
-                    Unita.objects.filter(tipo=TipoUnita.CLAN_FUOCO, attiva=True).values_list(
-                        "pk", flat=True
-                    )
+            clan |= set(
+                Unita.objects.filter(tipo=TipoUnita.CLAN_FUOCO, attiva=True).values_list(
+                    "pk", flat=True
                 )
+            )
     return clan
 
 

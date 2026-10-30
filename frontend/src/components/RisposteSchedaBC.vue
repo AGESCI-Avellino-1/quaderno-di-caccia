@@ -65,6 +65,11 @@ async function foto(evento: Event) {
   if (dati) emit('cambiata', dati)
 }
 
+async function fotoProfilo() {
+  const dati = await esegui(() => api.usaFotoProfiloBC(props.iscrizione.id))
+  if (dati) emit('cambiata', dati)
+}
+
 const testoSiNo = (valore: RispostaScheda | undefined) =>
   valore === true ? 'Sì' : valore === false ? 'No' : ''
 const testo = (valore: RispostaScheda | undefined) =>
@@ -118,6 +123,14 @@ const testo = (valore: RispostaScheda | undefined) =>
             :disabled="inCorso"
             @change="foto"
           />
+          <button
+            type="button"
+            class="btn btn-sm btn-link px-0"
+            :disabled="inCorso"
+            @click="fotoProfilo"
+          >
+            Usa la foto profilo
+          </button>
         </template>
         <fieldset v-else-if="d.tipo === 'SCELTA_SINGOLA' || d.tipo === 'SCELTA_MULTIPLA'">
           <legend class="form-label small">

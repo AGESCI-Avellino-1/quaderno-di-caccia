@@ -521,3 +521,23 @@ class PreferenzeEmail(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Email di {self.persona}"
+
+
+class FotoProfilo(ModelloTracciato):
+    """The profile photo, to recognise the ragazzi (DEC-42, DEC-201): the latest is the
+    current one, the earlier ones stay for the capi. A JPEG of at most 1 MB under a
+    random name, metadata dropped; served only by the API."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="foto_profilo")
+    file = models.ImageField(upload_to="foto/")
+    caricata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "foto profilo"
+        verbose_name_plural = "foto profilo"
+        ordering = ["-creato_il"]
+
+    def __str__(self) -> str:
+        return f"Foto di {self.persona}"

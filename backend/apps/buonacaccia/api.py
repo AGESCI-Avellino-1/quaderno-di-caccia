@@ -712,6 +712,22 @@ def carica_foto(request, iscrizione_id: int, file: File[UploadedFile]):
     return _iscrizione_out(request.auth, iscrizione)
 
 
+@router.post("/buonacaccia/iscrizioni/{iscrizione_id}/foto-profilo", response=IscrizioneOut)
+def usa_foto_profilo(request, iscrizione_id: int):
+    """The profile photo, if there is one, instead of a new one (DEC-162)."""
+    iscrizione = _iscrizione(request, iscrizione_id)
+    _famiglia(request, iscrizione)
+    attuale = iscrizione.partecipazione.persona.foto_profilo.first()
+    if attuale is None:
+        raise HttpError(400, "Non c'è ancora una foto profilo.")
+    attuale.file.open("rb")
+    try:
+        _esegui(servizi.carica_foto, iscrizione, attuale.file, request.auth)
+    finally:
+        attuale.file.close()
+    return _iscrizione_out(request.auth, iscrizione)
+
+
 @router.get("/buonacaccia/iscrizioni/{iscrizione_id}/foto")
 def scarica_foto(request, iscrizione_id: int):
     """The JPEG ready for BuonaCaccia."""

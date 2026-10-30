@@ -9,6 +9,7 @@ BuonaStrada stays with the national office.
 from auditlog.context import disable_auditlog
 from auditlog.models import LogEntry
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.accounts.models import Invito
@@ -18,6 +19,7 @@ from apps.anagrafica.models import (
     Appartenenza,
     CorrezioneAnagrafica,
     DerogaSquadriglia,
+    FotoProfilo,
     Persona,
     PreferenzeEmail,
     RelazioneTutela,
@@ -180,6 +182,7 @@ def fascicolo(persona: Persona) -> dict:
         "regole_sul_rapporto_con_il_minore": (
             persona.regole_rapporto.testo if hasattr(persona, "regole_rapporto") else ""
         ),
+        "foto_profilo": [_giorno(f.creato_il) for f in FotoProfilo.objects.filter(persona=persona)],
         "reperibilita_per_evento": [
             {"Evento": r.evento.titolo, "Chi": r.nome, "Telefono": r.telefono}
             for r in ReperibilitaEvento.objects.filter(persona=persona).select_related("evento")
@@ -409,8 +412,20 @@ def _cancella_progressione(persona: Persona) -> None:
     """All of it is app-only: periods with tappe, Promessa, mete, impegni, specialità and
     brevetti, places in the imprese, the summaries written at the passages. Patrol
     specialità and imprese belong to the patrol and stay."""
-    from apps.progressione.models import PassaggioPersona, PeriodoBranca, PostoAzione
+    from apps.progressione.models import AllegatoPP, PassaggioPersona, PeriodoBranca, PostoAzione
 
+    # Files first: the rows go with the periods, the files on disk would not.
+    allegati = list(
+        AllegatoPP.objects.filter(
+            Q(obiettivo__periodo__persona=persona)
+            | Q(impegno__periodo__persona=persona)
+            | Q(competenza__periodo__persona=persona)
+        )
+    )
+    _cancella_storico(allegati)
+    for allegato in allegati:
+        allegato.file.delete(save=False)
+        allegato.delete()
     periodi = list(PeriodoBranca.objects.filter(persona=persona))
     figli = []
     for periodo in periodi:
@@ -478,6 +493,7 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Scelte sul telefono in squadriglia e su cosa vedono i genitori",
         "Correzioni ai dati di BuonaStrada",
         "Note di staff e del capo squadriglia, regole sul rapporto con il minore",
+        "Foto profilo, anche quelle precedenti, e allegati alla Progressione",
         "Account, dispositivi e inviti",
         "Iscrizioni dall'app e moduli firmati caricati",
         "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
@@ -511,6 +527,11 @@ def cancella(persona: Persona) -> dict:
         if sanitarie is not None:
             _cancella_storico([*sanitarie.allergie.all(), *sanitarie.farmaci.all(), sanitarie])
             sanitarie.delete()
+        foto = list(FotoProfilo.objects.filter(persona=persona))
+        _cancella_storico(foto)
+        for f in foto:
+            f.file.delete(save=False)
+            f.delete()
         for modello in (Nota, RegoleRapporto):
             oggetti = list(modello.objects.filter(persona=persona))
             _cancella_storico(oggetti)

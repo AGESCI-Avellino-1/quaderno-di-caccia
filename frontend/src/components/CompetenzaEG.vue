@@ -9,6 +9,7 @@ import {
   type Competenza,
   type DataParziale,
 } from '@/api/qdc'
+import AllegatiPP from '@/components/AllegatiPP.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { scrivi } from '@/offline/outbox'
@@ -24,6 +25,8 @@ const props = defineProps<{
   proponeVerifica: boolean
   /** Paths that may be linked: { id, testo }. */
   collegabili: { id: number; testo: string }[]
+  /** Attachments (DEC-202): the staff and the ragazzo; never on a patrol's path. */
+  allega?: boolean
 }>()
 const emit = defineEmits<{ cambiata: [inCoda: boolean] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -317,5 +320,14 @@ async function distintivo() {
         Registra
       </button>
     </form>
+    <AllegatiPP
+      v-if="voce.tipo !== 'SPECIALITA_SQ'"
+      tipo="competenze"
+      :voce="voce.id"
+      :allegati="voce.allegati ?? []"
+      :carica="!!allega"
+      :togli="gestisce"
+      @cambiata="(c) => emit('cambiata', c)"
+    />
   </li>
 </template>

@@ -9,6 +9,7 @@ import {
   type MetaEG,
   type Scelta,
 } from '@/api/qdc'
+import AllegatiPP from '@/components/AllegatiPP.vue'
 import { useErrore } from '@/composables/useErrore'
 import { scrivi } from '@/offline/outbox'
 
@@ -312,6 +313,15 @@ async function riformula() {
         </button>
       </div>
     </form>
+
+    <AllegatiPP
+      :tipo="tipo"
+      :voce="voce.id"
+      :allegati="voce.allegati ?? []"
+      :carica="propone"
+      :togli="gestisce"
+      @cambiata="(c) => emit('cambiata', c)"
+    />
 
     <ul v-if="aperta === 'storia'" class="small fg-2 mt-1">
       <li v-for="(r, n) in voce.revisioni" :key="n">

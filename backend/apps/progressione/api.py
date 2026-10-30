@@ -1,12 +1,13 @@
 """Progressione Personale (see models). Who may do what: apps.permessi.policy."""
 
-from datetime import date
+from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import Router, Schema
+from ninja import File, Form, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 from ninja.responses import Status
 
@@ -18,6 +19,7 @@ from apps.permessi import policy
 
 from . import servizi
 from .models import (
+    AllegatoPP,
     ConsegnaDistintivo,
     Fase,
     FirmaCarta,
@@ -99,6 +101,20 @@ class RevisioneOut(Schema):
     sostituita_il: str
 
 
+class AllegatoOut(Schema):
+    id: int
+    titolo: str
+    tipo_file: str
+    caricato_il: datetime
+
+
+def _allegati(voce) -> list[dict]:
+    return [
+        {"id": a.pk, "titolo": a.titolo, "tipo_file": a.tipo_file, "caricato_il": a.creato_il}
+        for a in voce.allegati.all()
+    ]
+
+
 class PercorsoOut(Schema):
     id: int
     testo: str
@@ -115,6 +131,7 @@ class PercorsoOut(Schema):
     interrotto_il: date | None
     motivo_interruzione: str
     revisioni: list[RevisioneOut]
+    allegati: list[AllegatoOut] = []
 
 
 class MetaOut(PercorsoOut):
@@ -205,6 +222,7 @@ class CompetenzaOut(Schema):
     distintivo: DataOut | None
     interrotto_il: date | None
     motivo_interruzione: str
+    allegati: list[AllegatoOut] = []
 
 
 class PostoOut(Schema):
@@ -284,6 +302,7 @@ def _percorso_out(o) -> dict:
             }
             for r in o.revisioni.all()
         ],
+        "allegati": _allegati(o),
     }
 
 
@@ -307,6 +326,7 @@ def _competenza_out(c: PercorsoCompetenza) -> dict:
         "distintivo": _d(c.distintivo_il, c.precisione_distintivo),
         "interrotto_il": c.interrotto_il,
         "motivo_interruzione": c.motivo_interruzione,
+        "allegati": _allegati(c) if c.periodo_id else [],
     }
 
 
@@ -369,7 +389,9 @@ def _scheda(user, persona: Persona) -> dict:
     periodi = list(
         PeriodoBranca.objects.filter(persona=persona).prefetch_related("tappe__distintivo")
     )
-    mete = Obiettivo.objects.filter(periodo__persona=persona).prefetch_related("revisioni")
+    mete = Obiettivo.objects.filter(periodo__persona=persona).prefetch_related(
+        "revisioni", "allegati"
+    )
     if not policy.vede_mete_riservate(user, persona):
         mete = mete.filter(riservata=False)
     visibili = {m.pk for m in mete}
@@ -377,7 +399,7 @@ def _scheda(user, persona: Persona) -> dict:
     impegni = (
         Impegno.objects.filter(periodo__persona=persona)
         .select_related("stagione")
-        .prefetch_related("revisioni", "mete")
+        .prefetch_related("revisioni", "mete", "allegati")
     )
     return {
         "persona_id": persona.pk,
@@ -1747,3 +1769,83 @@ def passo_stagione(request, stagione_id: int, azione: str, dati: PassoStagioneIn
     else:
         raise HttpError(404, "Operazione sconosciuta.")
     return _stagioni(request.auth, stagione.unita)
+
+
+# --- Attachments (DEC-42, DEC-202) -----------------------------------------------------------
+
+
+@router.post("/allegati-pp/{tipo}/{voce_id}", response={201: SchedaOut})
+def carica_allegato(request, tipo: str, voce_id: int, titolo: Form[str], file: File[UploadedFile]):
+    """An image or a PDF on an impegno, a meta or obiettivo, a specialità or brevetto."""
+    from apps.buonacaccia.servizi import _file_con_nome_casuale
+
+    if tipo == "competenze":
+        voce = _competenza(request, voce_id)
+        if voce.periodo_id is None:
+            raise HttpError(400, "Gli allegati vanno sulle specialità e sui brevetti dei singoli.")
+        persona = voce.periodo.persona
+    else:
+        voce, persona = _oggetto(request, tipo, voce_id)
+    if not policy.puo_caricare_allegato_pp(request.auth, persona):
+        raise HttpError(403, "Gli allegati li caricano lo staff e il ragazzo.")
+    if not titolo.strip():
+        raise HttpError(400, "Scrivi cos'è l'allegato.")
+    salvato, tipo_file = _esegui(
+        _file_con_nome_casuale,
+        file,
+        {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png"},
+        "Carica un PDF o un'immagine (JPEG o PNG).",
+    )
+    allegato = AllegatoPP(
+        titolo=titolo.strip()[:120], tipo_file=tipo_file, file=salvato, caricato_da=request.auth
+    )
+    setattr(allegato, {"mete": "obiettivo", "impegni": "impegno"}.get(tipo, "competenza"), voce)
+    _esegui(allegato.full_clean)
+    allegato.save()
+    return Status(201, _scheda(request.auth, persona))
+
+
+def _allegato(request, allegato_id: int) -> tuple[AllegatoPP, Persona]:
+    allegato = get_object_or_404(
+        AllegatoPP.objects.select_related(
+            "obiettivo__periodo__persona",
+            "impegno__periodo__persona",
+            "competenza__periodo__persona",
+        ),
+        pk=allegato_id,
+    )
+    if allegato.competenza_id:
+        _competenza(request, allegato.competenza_id)
+        persona = allegato.competenza.periodo.persona
+    else:
+        tipo = "mete" if allegato.obiettivo_id else "impegni"
+        _, persona = _oggetto(request, tipo, allegato.voce.pk)
+    return allegato, persona
+
+
+@router.get("/allegati-pp/{allegato_id}")
+def scarica_allegato(request, allegato_id: int):
+    """Served only here, to who reads the item; the name carries no person's name."""
+    allegato, _ = _allegato(request, allegato_id)
+    estensione = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png"}
+    risposta = HttpResponse(allegato.file.read(), content_type=allegato.tipo_file)
+    risposta["Content-Disposition"] = (
+        f'inline; filename="allegato-{allegato.pk}.{estensione.get(allegato.tipo_file, "bin")}"'
+    )
+    risposta["Cache-Control"] = "private, no-store"
+    risposta["X-Content-Type-Options"] = "nosniff"
+    return risposta
+
+
+@router.delete("/allegati-pp/{allegato_id}", response=SchedaOut)
+def togli_allegato(request, allegato_id: int):
+    """Who uploaded it, or the staff."""
+    allegato, persona = _allegato(request, allegato_id)
+    if not (
+        allegato.caricato_da_id == request.auth.pk
+        or policy.puo_gestire_progressione(request.auth, persona)
+    ):
+        raise HttpError(403, "Lo toglie chi l'ha caricato o lo staff.")
+    allegato.file.delete(save=False)
+    allegato.delete()
+    return _scheda(request.auth, persona)

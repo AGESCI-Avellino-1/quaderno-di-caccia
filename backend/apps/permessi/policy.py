@@ -1276,3 +1276,43 @@ def puo_vedere_regole_rapporto(user, persona: Persona) -> bool:
 def puo_scrivere_regole_rapporto(user, persona: Persona) -> bool:
     """Transcribed from the signed form by the unit staff and the capigruppo (DEC-199)."""
     return puo_scrivere_nota_staff(user, persona)
+
+
+# --- The ragazzo's file: photo, attachments, file per year (DEC-38, DEC-41, DEC-42) ---------
+
+
+def puo_caricare_foto(user, persona: Persona) -> bool:
+    """The parents of a minor, the adult member, the unit staff, the capigruppo
+    (DEC-201): the same people who write the medical form."""
+    return puo_modificare_sanitarie(user, persona)
+
+
+def puo_vedere_foto(user, persona: Persona) -> bool:
+    """The capi, the person, the parents (of an adult as chosen); never the other
+    ragazzi (DEC-201)."""
+    if _capo_pieno(user):
+        return True
+    livello = _livello_personale(user, persona)
+    if livello == LivelloAccesso.PROPRIO:
+        return True
+    return livello == LivelloAccesso.TUTORE and genitori_vedono(persona, "scheda")
+
+
+def vede_storico_foto(user, persona: Persona) -> bool:
+    """The earlier photos: the capi (DEC-42)."""
+    return _capo_pieno(user)
+
+
+def puo_caricare_allegato_pp(user, persona: Persona) -> bool:
+    """The staff and the ragazzo (DEC-202)."""
+    if puo_gestire_progressione(user, persona):
+        return True
+    return _livello_personale(user, persona) == LivelloAccesso.PROPRIO
+
+
+def puo_vedere_fascicolo_anno(user, persona: Persona) -> bool:
+    """The file of a year: the capi, the person, the parents; each section then asks its
+    own rule (DEC-38, DEC-203)."""
+    if _capo_pieno(user):
+        return True
+    return _livello_personale(user, persona) in (LivelloAccesso.PROPRIO, LivelloAccesso.TUTORE)

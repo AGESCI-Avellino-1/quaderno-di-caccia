@@ -91,6 +91,9 @@ export interface PersonaDettaglio extends PersonaBreve {
   comune: string | null
   consenso_foto: boolean | null
   unita: string[]
+  /** Profile photo (DEC-201): there is one the user may see; who may upload one. */
+  foto?: boolean
+  puo_caricare_foto?: boolean
 }
 
 // --- Accounts and invitations (DEC-21, DEC-24, DEC-25) ---------------------------------
@@ -694,6 +697,8 @@ export interface SchedaCampo {
   sanitarie: Sanitarie
   /** For the Co.Ca. only, in evidence at camp (DEC-43, DEC-95). */
   regole_rapporto?: string
+  /** A small copy of the profile photo, as a data URL (DEC-201). */
+  foto?: string | null
 }
 
 export interface Campo {
@@ -1337,6 +1342,40 @@ export interface RevisionePercorso {
   sostituita_il: string
 }
 
+/** An image or a PDF on an item of the Progressione (DEC-42, DEC-202). */
+export interface AllegatoPP {
+  id: number
+  titolo: string
+  tipo_file: string
+  caricato_il: string
+}
+
+export type TipoVoceAllegato = 'mete' | 'impegni' | 'competenze'
+export const allegatoPP = (id: number) => `/api/v1/allegati-pp/${id}`
+
+/** The file of a year (DEC-38, DEC-203): sections of labelled rows. */
+export interface SezioneFascicolo {
+  titolo: string
+  voci: { etichetta: string; valore: string }[]
+  vuota: string
+}
+
+export interface FascicoloAnno {
+  persona_id: number
+  persona: string
+  anno: number
+  etichetta: string
+  sezioni: SezioneFascicolo[]
+  foto: boolean
+  anni: { anno: number; etichetta: string }[]
+}
+
+export const fotoProfilo = (persona: number) => `/api/v1/persone/${persona}/foto`
+export const fascicoloAnnoPdf = (persona: number, anno: number) =>
+  `/api/v1/persone/${persona}/fascicolo-anno.pdf?anno=${anno}`
+export const reportPassaggioPdf = (passaggio: number, persona: number) =>
+  `/api/v1/passaggi/${passaggio}/report/${persona}.pdf`
+
 export interface PercorsoPersonale {
   id: number
   testo: string
@@ -1353,6 +1392,7 @@ export interface PercorsoPersonale {
   interrotto_il: string | null
   motivo_interruzione: string
   revisioni: RevisionePercorso[]
+  allegati?: AllegatoPP[]
 }
 
 export interface MetaEG extends PercorsoPersonale {
@@ -1516,6 +1556,7 @@ export interface Competenza {
   distintivo: DataParziale | null
   interrotto_il: string | null
   motivo_interruzione: string
+  allegati?: AllegatoPP[]
 }
 
 export interface PostoAzione {
@@ -2144,6 +2185,24 @@ export const api = {
     richiesta<IscrizioneBC>(bc(id, '/risposte'), { metodo: 'PUT', corpo: { risposte } }),
   caricaFotoBC: (id: number, file: File) =>
     richiesta<IscrizioneBC>(bc(id, '/foto'), { metodo: 'POST', corpo: conFile({}, file) }),
+  usaFotoProfiloBC: (id: number) =>
+    richiesta<IscrizioneBC>(bc(id, '/foto-profilo'), { metodo: 'POST' }),
+  caricaFotoProfilo: (persona: number, file: Blob) => {
+    const corpo = new FormData()
+    corpo.append('file', file, 'foto.jpg')
+    return richiesta<PersonaDettaglio>(fotoProfilo(persona), { metodo: 'POST', corpo })
+  },
+  caricaAllegatoPP: (tipo: TipoVoceAllegato, voce: number, titolo: string, file: File) =>
+    richiesta<SchedaProgressione>(`/api/v1/allegati-pp/${tipo}/${voce}`, {
+      metodo: 'POST',
+      corpo: conFile({ titolo }, file),
+    }),
+  togliAllegatoPP: (id: number) =>
+    richiesta<SchedaProgressione>(allegatoPP(id), { metodo: 'DELETE' }),
+  fascicoloAnno: (persona: number, anno?: number) =>
+    richiesta<FascicoloAnno>(
+      `/api/v1/persone/${persona}/fascicolo-anno${anno ? `?anno=${anno}` : ''}`,
+    ),
   presentazioneBC: (id: number, testo: string) =>
     richiesta<IscrizioneBC>(bc(id, '/presentazione'), { metodo: 'PUT', corpo: { testo } }),
   riepilogoBC: (id: number) => richiesta<RiepilogoBC>(bc(id, '/riepilogo')),

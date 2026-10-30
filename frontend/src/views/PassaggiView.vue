@@ -2,7 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { api, type PassaggiUnita, type PassaggioBranca } from '@/api/qdc'
+import { api, reportPassaggioPdf, type PassaggiUnita, type PassaggioBranca } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
 // Passages to the next branch, decided by the Co.Ca. in a block for a unit (DEC-69):
@@ -272,6 +272,13 @@ const COLORI: Record<string, string> = {
             <li v-for="r in p.persone" :key="r.persona_id">
               <RouterLink :to="`/persone/${r.persona_id}/sentiero`">{{ r.persona }}</RouterLink>
               <span v-if="r.sintesi" class="fg-2 testo-a-capo"> — {{ r.sintesi }}</span>
+              <a
+                v-if="!r.rettificata"
+                :href="reportPassaggioPdf(p.id, r.persona_id)"
+                class="ms-1"
+                title="Percorso nella branca, sintesi e presenze, per i nuovi capi"
+                >report (PDF)</a
+              >
               <span v-if="r.rettificata" class="badge theme-secondary ms-1">
                 annullato dopo l'esecuzione: {{ r.motivo_rettifica }}
               </span>

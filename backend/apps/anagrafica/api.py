@@ -1,9 +1,10 @@
 from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import Router, Schema
+from ninja import File, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
 from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
@@ -19,6 +20,7 @@ from .models import (
     Appartenenza,
     AppartenenzaSquadriglia,
     CorrezioneAnagrafica,
+    FotoProfilo,
     Persona,
     StatoCorrezione,
     VisibilitaGenitori,
@@ -53,6 +55,9 @@ class PersonaDettaglio(Schema):
     comune: str | None = None
     consenso_foto: bool | None = None
     unita: list[str] = []
+    # Profile photo (DEC-42, DEC-201): whether there is one the caller may see.
+    foto: bool = False
+    puo_caricare_foto: bool = False
 
 
 @router.get("/persone", response=list[PersonaElenco])
@@ -95,6 +100,8 @@ def dettaglio_persona(request, persona_id: int):
             "indirizzo": f"{persona.indirizzo} {persona.civico}".strip(),
             "comune": persona.comune,
         }
+    dati["foto"] = policy.puo_vedere_foto(request.auth, persona) and persona.foto_profilo.exists()
+    dati["puo_caricare_foto"] = policy.puo_caricare_foto(request.auth, persona)
     return dati
 
 
@@ -523,3 +530,65 @@ def scegli_preferenze_email(request, dati: PreferenzeEmailIO):
         persona=_mia_persona(request), defaults=dati.dict()
     )
     return preferenze
+
+
+# --- Profile photo (DEC-42, DEC-201) --------------------------------------------------------
+
+
+def _foto_visibile(request, persona_id: int) -> Persona:
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_vedere_foto(request.auth, persona):
+        raise HttpError(404, "Foto non trovata.")
+    return persona
+
+
+@router.get("/persone/{persona_id}/foto")
+def foto(request, persona_id: int, foto_id: int | None = None):
+    """The current photo; an earlier one by its id, for the capi."""
+    persona = _foto_visibile(request, persona_id)
+    tutte = persona.foto_profilo.all()
+    if foto_id is not None:
+        if not policy.vede_storico_foto(request.auth, persona):
+            raise HttpError(404, "Foto non trovata.")
+        scelta = tutte.filter(pk=foto_id).first()
+    else:
+        scelta = tutte.first()
+    if scelta is None:
+        raise HttpError(404, "Nessuna foto.")
+    risposta = HttpResponse(scelta.file.read(), content_type="image/jpeg")
+    risposta["Cache-Control"] = "private, no-store"
+    return risposta
+
+
+class FotoStorico(Schema):
+    id: int
+    creata_il: datetime
+
+
+@router.get("/persone/{persona_id}/foto/storico", response=list[FotoStorico])
+def storico_foto(request, persona_id: int):
+    persona = _foto_visibile(request, persona_id)
+    if not policy.vede_storico_foto(request.auth, persona):
+        raise HttpError(403, "Le foto precedenti le vedono i capi.")
+    return [{"id": f.pk, "creata_il": f.creato_il} for f in persona.foto_profilo.all()]
+
+
+@router.post("/persone/{persona_id}/foto", response={201: PersonaDettaglio})
+def carica_foto(request, persona_id: int, file: File[UploadedFile]):
+    """A new photo: the earlier ones stay in the history (DEC-42)."""
+    import uuid
+
+    from django.core.files.base import ContentFile
+
+    from apps.buonacaccia.servizi import prepara_foto
+
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_caricare_foto(request.auth, persona):
+        raise HttpError(403, "La foto la caricano i genitori, il maggiorenne o lo staff.")
+    try:
+        jpeg = prepara_foto(file)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    nuova = FotoProfilo(persona=persona, caricata_da=request.auth)
+    nuova.file.save(f"{uuid.uuid4().hex}.jpg", ContentFile(jpeg), save=True)
+    return Status(201, dettaglio_persona(request, persona_id))

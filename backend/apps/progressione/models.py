@@ -670,3 +670,46 @@ class Stagione(ModelloTracciato):
 
     def __str__(self) -> str:
         return self.nome
+
+
+# --- Attachments (DEC-42, DEC-202) ---------------------------------------------------------
+
+
+class AllegatoPP(ModelloTracciato):
+    """An image or a PDF on an impegno (preda, volo), a meta or obiettivo, a specialità
+    or brevetto: uploaded by the staff or the ragazzo, read by who reads the item, at most
+    10 MB, checked on its first bytes, random file name, served only by the API."""
+
+    obiettivo = models.ForeignKey(
+        Obiettivo, null=True, blank=True, on_delete=models.CASCADE, related_name="allegati"
+    )
+    impegno = models.ForeignKey(
+        Impegno, null=True, blank=True, on_delete=models.CASCADE, related_name="allegati"
+    )
+    competenza = models.ForeignKey(
+        PercorsoCompetenza, null=True, blank=True, on_delete=models.CASCADE, related_name="allegati"
+    )
+    file = models.FileField(upload_to="progressione/allegati/")
+    tipo_file = models.CharField(max_length=30)
+    # What it is, written by who uploads it (the original file name may hold names).
+    titolo = models.CharField(max_length=120)
+    caricato_da = _utente()
+
+    class Meta:
+        verbose_name = "allegato alla Progressione"
+        verbose_name_plural = "allegati alla Progressione"
+        ordering = ["creato_il"]
+
+    def __str__(self) -> str:
+        return self.titolo
+
+    def clean(self) -> None:
+        if (
+            sum(x is not None for x in (self.obiettivo_id, self.impegno_id, self.competenza_id))
+            != 1
+        ):
+            raise ValidationError("Un allegato va su una sola voce.")
+
+    @property
+    def voce(self):
+        return self.obiettivo or self.impegno or self.competenza

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "apps.impersonazione",
     "apps.progressione",
     "apps.note",
+    "apps.fascicolo",
 ]
 
 MIDDLEWARE = [

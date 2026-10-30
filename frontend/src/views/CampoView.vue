@@ -147,6 +147,14 @@ watch(scelta, async (valore) => {
         <div v-for="p in persone" :key="p.id" class="col-12 lg:col-6">
           <article class="card h-100" :class="{ 'border-danger border-2': haGrave(p) }">
             <div class="card-body">
+              <img
+                v-if="p.foto"
+                :src="p.foto"
+                :alt="`Foto di ${p.nome}`"
+                width="56"
+                height="56"
+                class="rounded float-end ms-3"
+              />
               <h2 class="h6 mb-1">
                 {{ p.cognome }} {{ p.nome }}
                 <span v-if="eta(p.data_nascita) !== null" class="fg-2 fw-normal">

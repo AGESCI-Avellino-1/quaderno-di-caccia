@@ -1019,6 +1019,7 @@ async function salvaNuova() {
             :gestisce="scheda.puo_gestire"
             :propone-verifica="scheda.puo_proporre_verifica"
             :collegabili="specialitaCollegabili"
+            :allega="scheda.puo_proporre"
             @cambiata="dopoScrittura"
           />
         </ul>

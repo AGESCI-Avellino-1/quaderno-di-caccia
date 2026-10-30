@@ -582,3 +582,22 @@ def test_esportazione_e_cancellazione(capo, ragazza, piccole_orme):
     assert riga["Presentazione dello staff"] == "Brava"
     cancella(ragazza)
     assert not IscrizioneBuonaCaccia.objects.exists()
+
+
+def test_i_file_della_liberatoria_si_tolgono_appena_decisa(capo, genitore, ragazza, piccole_orme):
+    """Kept only as long as needed (DEC-200): the signed file goes at the outcome, the
+    blank form once validated; dates and outcome stay."""
+    iscrizione = _iscrivi(capo, piccole_orme, ragazza)
+    url = f"/api/v1/buonacaccia/iscrizioni/{iscrizione.pk}"
+    _client(capo).post(f"{url}/liberatoria", {"file": SimpleUploadedFile("a.pdf", PDF)})
+    _client(genitore).post(f"{url}/liberatoria-firmata", {"file": SimpleUploadedFile("b.pdf", PDF)})
+    _json(capo, "put", f"{url}/passi", {"liberatoria_caricata_il": OGGI.isoformat()})
+    dati = _json(
+        capo, "post", f"{url}/esito-liberatoria", {"esito": "RIGETTATA", "motivo": "Firma"}
+    ).json()
+    assert dati["liberatoria_firmata"] is False and dati["liberatoria_da_firmare"] is True
+    _client(genitore).post(f"{url}/liberatoria-firmata", {"file": SimpleUploadedFile("c.pdf", PDF)})
+    _json(capo, "put", f"{url}/passi", {"liberatoria_caricata_il": OGGI.isoformat()})
+    dati = _json(capo, "post", f"{url}/esito-liberatoria", {"esito": "VALIDATA"}).json()
+    assert dati["liberatoria_firmata"] is False and dati["liberatoria_da_firmare"] is False
+    assert dati["esito_liberatoria"] == "VALIDATA" and dati["liberatoria_ricevuta_il"]

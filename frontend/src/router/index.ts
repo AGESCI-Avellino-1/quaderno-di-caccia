@@ -173,6 +173,14 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // The file of a year: capi, the person, the parents; each section as allowed
+      // (DEC-38, the API decides).
+      path: '/persone/:id(\\d+)/fascicolo-anno',
+      name: 'fascicolo-anno',
+      component: () => import('@/views/FascicoloAnnoView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // The sentiero of one E/G: staff, the ragazzo, parents, CSQ (the API decides).
       path: '/persone/:id(\\d+)/sentiero',
       name: 'sentiero',

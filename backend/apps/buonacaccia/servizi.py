@@ -366,6 +366,26 @@ def esito_liberatoria(iscrizione: IscrizioneBuonaCaccia, esito: str, motivo: str
     if esito == EsitoLiberatoria.RIGETTATA:
         iscrizione.liberatoria_ricevuta_il = None
     iscrizione.save()
+    togli_file_liberatoria(iscrizione)
+
+
+def togli_file_liberatoria(iscrizione: IscrizioneBuonaCaccia) -> None:
+    """Kept only as long as needed (DEC-200): once the secretariat decides, the signed
+    file goes, validated or rejected (BuonaCaccia keeps its own copy); the blank form
+    goes once validated, and stays after a rejection, to be signed again. Dates and
+    outcome stay."""
+    campi = []
+    if iscrizione.esito_liberatoria and iscrizione.liberatoria_firmata:
+        iscrizione.liberatoria_firmata.delete(save=False)
+        campi.append("liberatoria_firmata")
+    if (
+        iscrizione.esito_liberatoria == EsitoLiberatoria.VALIDATA
+        and iscrizione.liberatoria_da_firmare
+    ):
+        iscrizione.liberatoria_da_firmare.delete(save=False)
+        campi.append("liberatoria_da_firmare")
+    if campi:
+        iscrizione.save(update_fields=[*campi, "aggiornato_il"])
 
 
 def liberatoria_mancante(iscrizione: IscrizioneBuonaCaccia) -> bool:

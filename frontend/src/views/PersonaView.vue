@@ -9,6 +9,7 @@ import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import QuotePersona from '@/components/QuotePersona.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
+import FotoProfilo from '@/components/FotoProfilo.vue'
 import NotePersona from '@/components/NotePersona.vue'
 import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
@@ -78,7 +79,14 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <RouterLink :to="{ name: 'sentiero', params: { id: persona.id } }">
           Sentiero (Progressione Personale)
         </RouterLink>
+        <template v-if="persona.livello_accesso !== 'squadriglia'">
+          ·
+          <RouterLink :to="{ name: 'fascicolo-anno', params: { id: persona.id } }">
+            Fascicolo dell'anno
+          </RouterLink>
+        </template>
       </p>
+      <FotoProfilo v-if="online" :persona="persona" @cambiata="(nuova) => (persona = nuova)" />
       <CopiaLocale :del="copiaDel" />
       <dl class="row">
         <template v-if="persona.codice_socio">

@@ -17,7 +17,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
 | 3 | Eventi e presenze | ✅ | eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi, eventi su BuonaCaccia (DEC-158…DEC-164, fatti il 30/10; da provare nel browser) |
 | 4 | Progressione Personale | ✅ | a blocchi (dettaglio sotto): E/G, passaggi, R/S, L/C, più le scelte confermate il 30/10 (DEC-186…DEC-190). Riferimento: [specifica PP v1.0](docs/analisi/specifica-pp.md) |
-| 5 | Fascicolo completo | 🚧 | a blocchi (dettaglio sotto): blocchi 1–2 fatti (scheda medica con stampa, note e regole sul rapporto con il minore) |
+| 5 | Fascicolo completo | 🚧 | a blocchi (dettaglio sotto): blocchi 1–3 fatti (scheda medica con stampa, note e regole, fascicolo del ragazzo) |
 | 6 | Dopo | ⏳ | bacheca, estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
 | 8 | Realizzazione documentazione di uso | ⏳ | installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
@@ -96,9 +96,19 @@ repository).
 | --- | --- | --- | --- |
 | 5.1 | Scheda medica completa: tessera sanitaria, reperibilità annuale e per un singolo evento, antitetanica, note, campi facoltativi; data dell'ultima firma su carta e della prescrizione, con avviso se la scheda cambia dopo; stampa del modulo AGESCI precompilato (minorenni e maggiorenni) e delle schede dei partecipanti a un evento; intestazione del gruppo e logo | DEC-48…DEC-54, DEC-192…DEC-195 | ✅ provato nel browser il 30/10 |
 | 5.2 | Note di staff e del capo squadriglia con visibilità; regole sul rapporto con il minore (riservate alla Co.Ca., anche offline) | DEC-39, DEC-40, DEC-43, DEC-95, DEC-197…DEC-199 | ✅ provato nel browser il 30/10 (capo e genitore) |
-| 5.3 | Fascicolo del ragazzo: foto profilo storicizzata, allegati alla Progressione, autorizzazioni, presenze per anno, report per i passaggi | DEC-38, DEC-41, DEC-42 | ⏳ |
+| 5.3 | Fascicolo del ragazzo: foto profilo storicizzata, allegati alla Progressione, autorizzazioni, presenze per anno, report per i passaggi | DEC-38, DEC-41, DEC-42, DEC-200…DEC-205 | ✅ provato nel browser il 30/10 (foto ritagliata, allegato, fascicolo) |
 | 5.4 | Fascicolo dei capi: anni di servizio, unità e ruoli, formazione inserita a mano | DEC-47, DEC-134 | ⏳ |
 | 5.5 | Fine anno e uscita: congelamento e riapertura dell'anno, archiviazione dopo due anni con caricamento automatico sul Drive del gruppo, esportazione e importazione del fascicolo tra gruppi | DEC-44…DEC-46, DEC-196 | ⏳ |
+
+### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
+
+Argomenti da spiegare bene ai capi, perché non sono chiari a tutti:
+
+- **Regole sul rapporto con il minore** (DEC-43, DEC-199): cosa sono (le indicazioni
+  che i genitori scrivono sul modulo sanitario per i minorenni, per esempio dopo una
+  separazione: chi può riprendere il ragazzo all'uscita, a chi non dare informazioni,
+  provvedimenti del giudice), perché le leggono solo i capi, che valgono finché i
+  genitori non danno nuove indicazioni scritte, dove si trovano al campo anche senza rete.
 
 ## Fase 1 — Fondamenta
 

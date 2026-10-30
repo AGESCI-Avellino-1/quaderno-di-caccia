@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 34, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 35, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -224,6 +224,12 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-197 | Le note di staff le scrivono lo staff dell'unità del ragazzo e i capigruppo per tutte le unità; gli altri capi le leggono. Il capo squadriglia scrive note sugli altri membri della sua squadriglia, non su di sé. | DEC-13, DEC-39, DEC-40, DEC-113, 30/10 |
 | DEC-198 | Una nota la modifica e la cancella solo chi l'ha scritta (vince l'ultima modifica; lo storico delle modifiche la conserva). Lo staff può cambiare a chi è mostrata una nota del capo squadriglia, non il testo. | DEC-40, DEC-96, 30/10 |
 | DEC-199 | Le regole sul rapporto con il minore le trascrivono dal modulo firmato lo staff dell'unità e i capigruppo; le leggono solo i capi, anche offline al campo, mai i genitori né il ragazzo; ogni lettura e ogni scarico sul telefono resta nel registro degli accessi. | DEC-43, DEC-95, DEC-101, 30/10 |
+| DEC-200 | Le liberatorie degli eventi le conserva BuonaCaccia: l'app tiene i file solo lo stretto indispensabile. Appena la segreteria decide, si cancella il file firmato (validato o rigettato); il modulo da firmare si cancella quando è validato e resta dopo un rigetto, per firmarlo di nuovo. Restano date ed esito. | DEC-42, DEC-160, 30/10 |
+| DEC-201 | La foto profilo la caricano i genitori, il maggiorenne o lo staff dell'unità; la vedono i capi, l'interessato e i genitori, mai gli altri ragazzi. Serve a riconoscere i ragazzi: una copia piccola va offline sui telefoni dei capi al campo. Le foto precedenti restano, visibili ai capi. | DEC-42, DEC-95, 30/10 |
+| DEC-202 | Gli allegati alla Progressione (immagini e PDF, al massimo 10 MB) vanno su impegni, mete e obiettivi, specialità e brevetti; li caricano lo staff e il ragazzo, li vede chi vede la voce, li toglie chi li ha caricati o lo staff. | DEC-42, 30/10 |
+| DEC-203 | Il fascicolo del ragazzo è una pagina per anno associativo, stampabile in PDF, con le sezioni di DEC-38; ciascuno vede solo le sezioni che può vedere. «Autorizzazioni» raccoglie i consensi di BuonaStrada, la firma della scheda sanitaria e lo stato delle liberatorie (date ed esito, senza file). | DEC-38, 30/10 |
+| DEC-204 | Il report per i passaggi è un PDF per ragazzo con il percorso nella branca, la sintesi per i nuovi capi e le presenze di quegli anni; non contiene note né regole sul rapporto con il minore. Lo leggono i capi. | DEC-41, PP §11.2, 30/10 |
+| DEC-205 | La foto profilo si ritaglia sul telefono, in un riquadro intorno alla persona: si carica solo quel riquadro, così le altre persone di una foto di gruppo non escono dal telefono. | DEC-201, 30/10 |
 
 ## Eventi e presenze
 

@@ -150,6 +150,27 @@ ESSENZIALI = (
 )
 
 
+def _miniatura(persona: Persona) -> str | None:
+    """A data URL of at most 160 px: it goes into the encrypted device copy."""
+    import base64
+    import io
+
+    from PIL import Image
+
+    foto = persona.foto_profilo.first()
+    if foto is None:
+        return None
+    try:
+        with foto.file.open("rb") as f:
+            immagine = Image.open(f)
+            immagine.thumbnail((160, 160))
+            buffer = io.BytesIO()
+            immagine.convert("RGB").save(buffer, "JPEG", quality=75)
+    except OSError:
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+
 def _essenziali(info: InformazioniSanitarie | None) -> dict:
     tutto = _sanitarie(info)
     return {k: v for k, v in tutto.items() if k in ESSENZIALI}
@@ -383,6 +404,8 @@ class SchedaCampo(Schema):
     sanitarie: SanitarieOut
     # For the Co.Ca. only, in evidence (DEC-43, DEC-95).
     regole_rapporto: str = ""
+    # A small copy of the profile photo, to recognise the ragazzi at camp (DEC-201).
+    foto: str | None = None
 
 
 class Campo(Schema):
@@ -462,6 +485,7 @@ def scarica_campo(request, unita_id: int):
                 "contatti": contatti(p),
                 "sanitarie": _essenziali(getattr(p, "informazioni_sanitarie", None)),
                 "regole_rapporto": regole.get(p.pk, ""),
+                "foto": _miniatura(p),
             }
             for p in persone
         ],

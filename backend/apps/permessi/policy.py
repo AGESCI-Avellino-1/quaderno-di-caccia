@@ -1404,3 +1404,16 @@ def avvisi_visibili(user, *, scaduti: bool = False):
                 Q(unita__in=unita) | Q(unita__isnull=True)
             )
     return avvisi.filter(scelta, scade_il__gte=oggi)
+
+
+def puo_gestire_estratto_conto(user) -> bool:
+    """Loading the bank statement and confirming its lines: the group treasurer and
+    the capigruppo (DEC-221)."""
+    if e_capo_in_attesa(user):
+        return False
+    return e_capogruppo(user) or _ha_incarico(user, {RuoloIncarico.TESORIERE_GRUPPO})
+
+
+def puo_configurare_carte(user) -> bool:
+    """Which unit each debit card belongs to: the capigruppo (DEC-224)."""
+    return e_capogruppo(user) and not e_capo_in_attesa(user)

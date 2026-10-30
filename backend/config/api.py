@@ -9,6 +9,7 @@ from apps.accounts.api import router as accounts_router
 from apps.anagrafica.api import router as anagrafica_router
 from apps.archivio.api import router as archivio_router
 from apps.bacheca.api import router as bacheca_router
+from apps.banca.api import router as banca_router
 from apps.buonacaccia.api import router as buonacaccia_router
 from apps.cassa.api import router as cassa_router
 from apps.core.api import router as core_router
@@ -55,3 +56,4 @@ api.add_router("/", note_router)
 api.add_router("/", fascicolo_router)
 api.add_router("/", archivio_router)
 api.add_router("/", bacheca_router)
+api.add_router("/", banca_router)

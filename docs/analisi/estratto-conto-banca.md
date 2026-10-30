@@ -1,9 +1,12 @@
 # Estratto conto bancario: note per la fase 6
 
-Note raccolte il 29/10/2026 su un export reale dei movimenti, per quando si realizzerà
-l'importazione dell'estratto conto (fase 6, DEC-93). **Non è un'analisi approvata**: le
-decisioni si prendono con il maintainer quando si arriva alla fase. Qui non ci sono dati
-reali: solo la struttura del file.
+Note raccolte il 29/10/2026 su un export reale dei movimenti. **Realizzato il 30/10/2026**
+(fase 6, blocco 2): le decisioni sono DEC-221…DEC-224 nell'analisi, il codice in
+`backend/apps/banca`. Qui non ci sono dati reali: solo la struttura del file.
+
+Verificato sul file vero: la carta di un'unità compare come `CARTA N. ####` nei prelievi e
+`CARTA ####` nei pagamenti POS (le ultime quattro cifre); l'ordinante di un bonifico
+ricevuto si legge da `ORD.:` o `MITT.:`.
 
 - **Esempio:** `ignored/Movimenti_Conto_27102026.xlsx`, un export dell'AGESCI Zona
   Hirpinia dalla stessa banca del gruppo. La cartella è esclusa da git e il file non va

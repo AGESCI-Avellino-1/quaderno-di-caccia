@@ -137,3 +137,12 @@ def test_pubblicare_avvisi(capo, capogruppo, csq, ragazza, genitore, estraneo, r
     assert policy.puo_pubblicare_avviso(u(capogruppo), None)
     for chi in (csq, ragazza, genitore, estraneo):
         assert not policy.puo_pubblicare_avviso(u(chi), reparto)
+
+
+def test_estratto_conto(capo, capogruppo, csq, ragazza, genitore, estraneo):
+    """DEC-221, DEC-224: the group treasurer and the capigruppo; cards the capigruppo."""
+    assert policy.puo_gestire_estratto_conto(capogruppo.utente)
+    assert policy.puo_configurare_carte(capogruppo.utente)
+    for chi in (capo, csq, ragazza, genitore, estraneo):
+        assert not policy.puo_gestire_estratto_conto(chi.utente)
+        assert not policy.puo_configurare_carte(chi.utente)

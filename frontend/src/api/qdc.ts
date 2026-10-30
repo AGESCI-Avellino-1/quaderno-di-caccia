@@ -850,6 +850,65 @@ export interface VoceModelloD {
   nome: string
 }
 
+/** The bank statement (DEC-93, DEC-221…DEC-224). */
+export interface CarteUnita {
+  carte: { id: number; unita_id: number; unita: string; ultime_cifre: string }[]
+  puo_configurare: boolean
+}
+
+export interface EsitoEstratto {
+  righe_nuove: number
+  righe_gia_presenti: number
+  saldo_iniziale: string
+  saldo_finale: string
+  data_finale: string | null
+}
+
+export interface RigaBanca {
+  id: number
+  data: string
+  operazione: string
+  dettaglio: string
+  importo: string
+  ordinante: string
+  /** Movements recorded by hand that may be this line. */
+  registrati: { movimenti: number[]; descrizione: string; data: string }[]
+  /** Families with open fees, best first (money in only). */
+  famiglie: {
+    quote: {
+      id: number
+      persona: string
+      descrizione: string
+      residuo: string
+      proposto: string
+    }[]
+  }[]
+  /** Money out: what the app proposes. */
+  uscita: {
+    tipo: 'USCITA' | 'GIROCONTO'
+    unita_id: number | null
+    voce_id: string
+    cassa_destinazione_id: number | null
+  } | null
+}
+
+export interface RigheBanca {
+  righe: RigaBanca[]
+  confermate: number
+  saldo: { al: string; banca: string; prima_nota: string; differenza: string } | null
+}
+
+export interface ConfermaRiga {
+  azione: 'collega' | 'quote' | 'movimento' | 'giroconto'
+  movimenti?: number[]
+  quote?: { quota_id: number; importo: string }[]
+  versato_da?: string
+  descrizione?: string
+  voce_id?: string
+  unita_id?: number | null
+  cassa_destinazione_id?: number | null
+}
+
 export interface CassaIn {
   nome: string
   tipo: TipoCassa
@@ -2229,6 +2288,25 @@ export const api = {
     }),
   vociModelloD: () => richiesta<VoceModelloD[]>('/api/v1/voci-modello-d'),
   casse: () => richiesta<Cassa[]>('/api/v1/casse'),
+  carteUnita: () => richiesta<CarteUnita>('/api/v1/banca/carte'),
+  nuovaCarta: (unita_id: number, ultime_cifre: string) =>
+    richiesta<CarteUnita>('/api/v1/banca/carte', {
+      metodo: 'POST',
+      corpo: { unita_id, ultime_cifre },
+    }),
+  togliCarta: (id: number) =>
+    richiesta<CarteUnita>(`/api/v1/banca/carte/${id}`, { metodo: 'DELETE' }),
+  caricaEstratto: (cassa: number, file: File) =>
+    richiesta<EsitoEstratto>(`/api/v1/banca/${cassa}/estratti`, {
+      metodo: 'POST',
+      corpo: conFile({}, file),
+    }),
+  righeBanca: (cassa: number) => richiesta<RigheBanca>(`/api/v1/banca/${cassa}/righe`),
+  confermaRigaBanca: (id: number, dati: ConfermaRiga) =>
+    richiesta<{ id: number }>(`/api/v1/banca/righe/${id}/conferma`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
   creaCassa: (dati: CassaIn) => richiesta<Cassa>('/api/v1/casse', { metodo: 'POST', corpo: dati }),
   modificaCassa: (id: number, dati: CassaIn) =>
     richiesta<Cassa>(`/api/v1/casse/${id}`, { metodo: 'PUT', corpo: dati }),

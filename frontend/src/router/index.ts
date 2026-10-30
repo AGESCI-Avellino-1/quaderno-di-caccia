@@ -155,6 +155,12 @@ const router = createRouter({
       component: () => import('@/views/QuoteView.vue'),
     },
     {
+      // The bank statement: group treasurer and capigruppo; the API decides (DEC-221).
+      path: '/banca',
+      name: 'banca',
+      component: () => import('@/views/BancaView.vue'),
+    },
+    {
       // Notices for the user's units and the group; the API decides (DEC-218).
       path: '/bacheca',
       name: 'bacheca',

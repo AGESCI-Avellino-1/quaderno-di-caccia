@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import {
   api,
@@ -317,6 +318,13 @@ async function salvaCassa() {
   <section>
     <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
       <h1 class="h4 mb-0">Prima nota</h1>
+      <RouterLink
+        v-if="gestisce"
+        :to="{ name: 'banca' }"
+        class="btn btn-sm btn-outline theme-primary"
+      >
+        Estratto conto della banca
+      </RouterLink>
       <div class="d-flex align-items-center gap-1">
         <button
           type="button"

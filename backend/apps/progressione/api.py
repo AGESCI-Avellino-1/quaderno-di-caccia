@@ -374,8 +374,8 @@ def _unita_lc(persona: Persona):
 
 def ambiente(persona: Persona) -> str | None:
     """The unit's setting, giungla (branco) or bosco (cerchio), whatever its composition
-    (DEC-225); while not known, by the type and then by the child (DEC-185). None:
-    generic names (sex not known, or not in L/C)."""
+    and never by the child's sex (DEC-185, DEC-225). None: generic names (setting not
+    known yet, or not in L/C)."""
     unita = _unita_lc(persona).first()
     if unita is None:
         return None
@@ -385,7 +385,7 @@ def ambiente(persona: Persona) -> str | None:
         return "GIUNGLA"
     if unita.tipo == TipoUnita.CERCHIO:
         return "BOSCO"
-    return {"M": "GIUNGLA", "F": "BOSCO"}.get(persona.sesso)
+    return None
 
 
 def _scheda(user, persona: Persona) -> dict:

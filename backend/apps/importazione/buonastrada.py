@@ -191,7 +191,8 @@ def interpreta_tipo_unita(testo: str) -> tuple[TipoUnita, Composizione] | None:
     Values seen in real exports (a whole zone, 2026-10-30): BRANCO/CERCHIO MISTO,
     MASCHILE and FEMMINILE; REPARTO MISTO, MASCHILE and FEMMINILE; CLAN/FUOCO;
     COMUNITA` CAPI. Branco or cerchio is not the composition but the setting (giungla or
-    bosco, AMBIENTE UNITA, DEC-225): a BRANCO/CERCHIO of any composition stays one.
+    bosco, AMBIENTE UNITA, DEC-225), unrelated to sex: a BRANCO/CERCHIO of any
+    composition stays one.
     BuonaStrada has no noviziato unit: the app creates it inside the clan.
     BRANCO, CERCHIO, CLAN, FUOCO, NOVIZIATO alone were never seen and are kept only as
     a fallback.

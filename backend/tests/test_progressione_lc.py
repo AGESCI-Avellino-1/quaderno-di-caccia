@@ -138,15 +138,28 @@ def test_la_pista_si_apre_e_l_ambiente_e_la_giungla(akela, lupetto, pista):
     assert dati["ambiente"] == "GIUNGLA"
 
 
-def test_in_un_branco_cerchio_l_ambiente_e_del_bambino(gruppo):
+def test_l_ambiente_e_dell_unita_mai_del_bambino(gruppo):
+    """Giungla or bosco by the unit's setting, for boys and girls alike (DEC-185,
+    DEC-225); generic names while the setting is not known."""
+    from apps.organizzazione.models import Ambiente
+    from apps.progressione.api import ambiente
+
     misto = Unita.objects.create(
         gruppo=gruppo, nome="Misto", tipo=TipoUnita.BRANCO_CERCHIO, composizione=Composizione.MISTA
     )
-    from apps.progressione.api import ambiente
-
-    assert ambiente(_bambino(misto, "Lia", "F")) == "BOSCO"
-    assert ambiente(_bambino(misto, "Teo", "M")) == "GIUNGLA"
-    assert ambiente(_bambino(misto, "Ignoto", "")) is None
+    lia, teo = _bambino(misto, "Lia", "F"), _bambino(misto, "Teo", "M")
+    assert ambiente(lia) is None and ambiente(teo) is None
+    misto.ambiente = Ambiente.GIUNGLA
+    misto.save()
+    assert ambiente(lia) == "GIUNGLA" and ambiente(teo) == "GIUNGLA"
+    femminile = Unita.objects.create(
+        gruppo=gruppo,
+        nome="Femminile",
+        tipo=TipoUnita.BRANCO_CERCHIO,
+        composizione=Composizione.FEMMINILE,
+        ambiente=Ambiente.GIUNGLA,
+    )
+    assert ambiente(_bambino(femminile, "Ada", "F")) == "GIUNGLA"
 
 
 def test_un_impegno_prima_della_promessa(akela, lupetto, pista, stagione):

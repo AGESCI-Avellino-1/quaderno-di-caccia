@@ -58,8 +58,8 @@ const tappa = computed(() => periodo.value?.tappe.find((t) => t.in_corso) ?? nul
 // The tools of each branch.
 const eg = computed(() => periodo.value?.branca === 'EG')
 const lc = computed(() => periodo.value?.branca === 'LC')
-// L/C names (DEC-185): giungla in a branco, bosco in a cerchio, by the child in a mixed
-// unit; generic when the sex is not known.
+// L/C names (DEC-185, DEC-225): giungla or bosco by the unit's setting, the same for
+// boys and girls; generic while the setting is not known.
 const giungla = computed(() => scheda.value?.ambiente === 'GIUNGLA')
 const bosco = computed(() => scheda.value?.ambiente === 'BOSCO')
 const nomePrede = computed(() => (giungla.value ? 'Prede' : bosco.value ? 'Voli' : 'Prede e voli'))

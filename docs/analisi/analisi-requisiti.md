@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 25, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 26, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -288,7 +288,7 @@ Il titolare del trattamento è AGESCI nazionale; i capigruppo sono delegati al t
 | DEC-102 | In ogni fase si realizzano le funzioni per i diritti degli interessati: accesso, rettifica, cancellazione, esportazione del fascicolo. Ne rispondono i capigruppo. Dettagli: DEC-136. | D-08 |
 | DEC-103 | Dati ospitati in Unione Europea. | D-05 |
 | DEC-136 | La delega dei capigruppo copre l'app. Diritti degli interessati gestiti dai capigruppo, che girano le richieste al nazionale: registro delle richieste con scadenza a un mese; fascicolo completo in file (JSON) e pagina stampabile; cancellazione dei dati che esistono solo nell'app, con anonimizzazione di chi non è più socio né genitore di un socio (restano i periodi nelle unità). | DEC-98, DEC-102, 29/10 |
-| DEC-157 | Ognuno sceglie se ricevere le email di eventi, i promemoria delle quote, gli avvisi dei 18 anni e (i capi) i riepiloghi: è il diritto di opposizione alle comunicazioni basate sul legittimo interesse del gruppo (GDPR art. 21) *\[da confermare con l'Ufficio Privacy nazionale\]*. Arrivano sempre codici di accesso, inviti, avvisi di sicurezza, email dell'iscrizione dall'app, ricevute ed email degli eventi su BuonaCaccia (DEC-168). | DEC-79, DEC-98, 29/10 |
+| DEC-157 | Ognuno sceglie se ricevere le email di eventi, i promemoria delle quote, gli avvisi dei 18 anni e (i capi) i riepiloghi: è il diritto di opposizione alle comunicazioni basate sul legittimo interesse del gruppo (GDPR art. 21); verificato dal maintainer il 30/10. Arrivano sempre codici di accesso, inviti, avvisi di sicurezza, email dell'iscrizione dall'app, ricevute ed email degli eventi su BuonaCaccia (DEC-168). | DEC-79, DEC-98, 29/10 |
 
 ## Architettura tecnica
 
@@ -331,7 +331,7 @@ Nessuno blocca l'inizio dello sviluppo. Quelli chiusi il 29 ottobre 2026 rimanda
 - [x] **Contatti per il CSQ.** Nel tentativo di giugno il CSQ vedeva telefono ed email dei suoi squadriglieri: confermare o escludere. (DEC-13) → **DEC-115**
 - [x] **Account dai 14 anni.** Confermare la procedura: invito del capo unità, con o senza approvazione del genitore. (DEC-24) → **DEC-117**
 - [x] **Liberatorie di BuonaCaccia.** BuonaCaccia produce una liberatoria personalizzata per ogni iscritto: capire come caricarla nell'app (il maintainer ha un'idea). Da approfondire dopo la fase 3. (DEC-76, DEC-144) → **DEC-158…DEC-164**
-- [ ] **Email facoltative.** Confermare con l'Ufficio Privacy nazionale quali email si possono rifiutare. (DEC-157)
+- [x] **Email facoltative.** Confermare con l'Ufficio Privacy nazionale quali email si possono rifiutare. (DEC-157) → **confermata DEC-157, 30/10**
 - [x] **Amministratore nominato nell'app e amministrazione del server.** Decidere se chi i capigruppo nominano amministratore tecnico debba avere anche l'accesso all'amministrazione del server (pieno accesso al database), oggi riservato a chi installa. (DEC-166) → **sì, DEC-166**
 
 ## Glossario essenziale

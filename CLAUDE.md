@@ -305,7 +305,7 @@ implements them:
   stays. New sensitive data = add it to `diritti.servizi.fascicolo` and `cancella`.
 - Phases 2 and 3 (decided 29/10/2026): events and attendance DEC-137…DEC-144, fees and
   cash book DEC-145…DEC-156, optional emails DEC-157 (`anagrafica.PreferenzeEmail`,
-  to be confirmed with the national Privacy Office).
+  verified by the maintainer on 30/10/2026).
 - BuonaCaccia events (DEC-158…DEC-164, `apps/buonacaccia`): an `Evento` with level
   `ESTERNO`, participants one by one (no `previsti`), created and changed only through
   `/buonacaccia/…` (`policy.puo_creare_evento` refuses `ESTERNO`). A minor's

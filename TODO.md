@@ -115,4 +115,3 @@ DEC-137…DEC-144, quote e cassa DEC-145…DEC-156, email facoltative DEC-157.
 | Punto | Riferimento |
 | --- | --- |
 | Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
-| Email facoltative: conferma dell'Ufficio Privacy nazionale | DEC-157 |

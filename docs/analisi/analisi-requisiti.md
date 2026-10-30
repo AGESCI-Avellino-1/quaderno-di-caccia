@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 38, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 39, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -254,6 +254,12 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-227 | La Carta di clan si carica come PDF, una per ogni clan/fuoco, in versioni: rover e scolte del clan caricano una proposta; lo staff del clan e i capigruppo la mettono in vigore da un giorno (mai nel futuro), o caricano direttamente una versione in vigore. Una proposta la toglie chi l'ha caricata o lo staff; una versione in vigore resta. | DEC-67, PP §17.7, 30/10 |
 | DEC-228 | Le versioni in vigore le leggono rover e scolte (quella del loro clan), i novizi (quelle di tutti i clan del gruppo, sempre), i loro genitori (per i maggiorenni secondo le loro scelte) e tutti i capi; le proposte solo il clan e lo staff. Solo online. | DEC-26, DEC-67, 30/10 |
 | DEC-229 | Ogni firma della Carta si collega da sola alla versione in vigore nel clan il giorno della firma; le firme registrate prima che ci fosse una versione si collegano quando la prima entra in vigore. Una revisione successiva non cambia le firme già fatte; correggere la data di una firma la ricollega alla versione di quel giorno. | DEC-67, PP §17.7, 30/10 |
+| DEC-230 | Documentazione in due documenti separati: manuale d'uso per l'Avellino 1 e guida di installazione per i gruppi che adottano QdC; il manuale d'uso ha la precedenza. Analisi in `docs/analisi/manuali.md`. | fase 8, 30/10 |
+| DEC-231 | Entrambi su Read the Docs da `docs/` nel repository (Sphinx con pagine Markdown, come il tema AGESCI Campania), una versione per ogni release; niente wiki di GitHub. | fase 8, 30/10 |
+| DEC-232 | Il manuale d'uso è anche un unico PDF allegato a ogni release, con indice per profilo; la guida di installazione solo online. | fase 8, 30/10 |
+| DEC-233 | Il manuale d'uso è diviso in sezioni complete per profilo (genitore; ragazzo E/G, capo squadriglia, R/S; capo e staff di unità; capogruppo, tesorieri, amministratore tecnico): ognuna si legge da sola; tutti vedono tutto, ma ogni funzione dice chi la può usare. | fase 8, 30/10 |
+| DEC-234 | Gli indirizzi della piattaforma nel manuale sono riferiti a qdc.avellino1.it. | fase 8, 30/10 |
+| DEC-235 | Gli screenshot vengono dall'ambiente di sviluppo con i dati di prova, prodotti da uno script automatico che entra come ogni profilo; mai dati veri. | fase 8, 30/10 |
 
 ## Eventi e presenze
 

@@ -20,7 +20,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 5 | Fascicolo completo | ✅ | a blocchi (dettaglio sotto): scheda medica con stampa, note e regole, fascicolo del ragazzo e dei capi, fine anno e archivio |
 | 6 | Dopo | ✅ | a blocchi: 6.1 bacheca ✅ (DEC-218…DEC-220, provata nel browser il 30/10), 6.2 estratto conto ✅ (DEC-221…DEC-224, provato nel browser il 30/10 con un estratto sintetico; il file vero della banca si legge), 6.3 Carta di clan ✅ (DEC-227…DEC-229, provata nel browser il 30/10). Note: estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
-| 8 | Realizzazione documentazione di uso | ⏳ | installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
+| 8 | Realizzazione documentazione di uso | 🚧 | analisi in corso: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-235); prima il manuale d'uso. Era: installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
 
 ## Prossimi passi
 

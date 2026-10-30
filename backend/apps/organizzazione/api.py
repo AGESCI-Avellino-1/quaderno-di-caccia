@@ -2,6 +2,7 @@ from datetime import date
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Schema, Status
@@ -19,9 +20,11 @@ from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
 from .models import (
+    INCARICHI_DI_SERVIZIO,
     RUOLI_DI_GRUPPO,
     RUOLI_DI_SQUADRIGLIA,
     RUOLI_DI_UNITA,
+    SERVIZIO_IN_UNITA,
     Ambiente,
     Composizione,
     Gruppo,
@@ -314,8 +317,32 @@ def dettaglio_unita(request, unita_id: int):
 
 
 class IncarichiGruppo(Schema):
+    # Additional group roles: capigruppo, group treasurers, technical administrators.
     incarichi: list[IncaricoOut]
     nomina: list[Scelta]
+    # Capi of the Co.Ca. serving in no unit for now.
+    a_disposizione: list[IncaricoOut]
+    nomina_a_disposizione: list[Scelta]
+    # For the capigruppo: capi with no service at all, to sort out.
+    senza_servizio: list[PersonaBreve]
+
+
+RUOLI_AGGIUNTIVI_DI_GRUPPO = (
+    RuoloIncarico.CAPOGRUPPO,
+    RuoloIncarico.TESORIERE_GRUPPO,
+    RuoloIncarico.AMMINISTRATORE,
+)
+
+
+def capi_senza_servizio():
+    """Active capi with neither a unit nor "a disposizione" (maintainer, 30/10/2026)."""
+    capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
+    in_servizio = Incarico.objects.attivi().filter(ruolo__in=INCARICHI_DI_SERVIZIO)
+    return (
+        Persona.objects.filter(pk__in=capi.values("persona_id"))
+        .exclude(pk__in=in_servizio.values("persona_id"))
+        .order_by("cognome", "nome")
+    )
 
 
 @router.get("/gruppo/incarichi", response=IncarichiGruppo)
@@ -323,8 +350,13 @@ def incarichi_di_gruppo(request):
     if not policy.puo_vedere_incarichi_di_gruppo(request.auth):
         raise HttpError(403, "Riservato ai capi.")
     return {
-        "incarichi": list(_incarichi(ruolo__in=RUOLI_DI_GRUPPO)),
-        "nomina": _nomina(request.auth, (RuoloIncarico.CAPOGRUPPO, RuoloIncarico.TESORIERE_GRUPPO)),
+        "incarichi": list(_incarichi(ruolo__in=RUOLI_AGGIUNTIVI_DI_GRUPPO)),
+        "nomina": _nomina(request.auth, RUOLI_AGGIUNTIVI_DI_GRUPPO),
+        "a_disposizione": list(_incarichi(ruolo=RuoloIncarico.A_DISPOSIZIONE)),
+        "nomina_a_disposizione": _nomina(request.auth, (RuoloIncarico.A_DISPOSIZIONE,)),
+        "senza_servizio": (
+            list(capi_senza_servizio()) if policy.e_capogruppo(request.auth) else []
+        ),
     }
 
 
@@ -364,8 +396,23 @@ def crea_incarico(request, dati: NuovoIncarico):
         request.auth, dati.ruolo, unita=incarico.unita, squadriglia=incarico.squadriglia
     ):
         raise HttpError(403, "Non puoi assegnare questo incarico.")
-    _salva(incarico)
+    with transaction.atomic():
+        if dati.ruolo in SERVIZIO_IN_UNITA:
+            # Back in a unit: "a disposizione" ends by itself.
+            _chiudi_a_disposizione(incarico.persona, incarico.data_inizio)
+        _salva(incarico)
     return Status(201, incarico)
+
+
+def _chiudi_a_disposizione(persona: Persona, giorno: date) -> None:
+    for incarico in Incarico.objects.filter(
+        persona=persona, ruolo=RuoloIncarico.A_DISPOSIZIONE, data_inizio__lte=giorno
+    ).filter(Q(data_fine__isnull=True) | Q(data_fine__gt=giorno)):
+        if incarico.data_inizio == giorno:
+            incarico.delete()  # started the same day: never really in effect
+        else:
+            incarico.data_fine = giorno
+            incarico.save(update_fields=["data_fine", "aggiornato_il"])
 
 
 class ChiusuraIncarico(Schema):

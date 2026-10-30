@@ -82,7 +82,9 @@ async function crea(dati: UnitaIn) {
         <input id="anche-chiuse" v-model="ancheChiuse" type="checkbox" class="check" />
         <label for="anche-chiuse">Mostra anche le unità chiuse</label>
       </div>
-      <RouterLink :to="{ name: 'gruppo' }">Capigruppo e tesorieri di gruppo</RouterLink>
+      <RouterLink :to="{ name: 'gruppo' }"
+        >Incarichi di gruppo: capigruppo, tesorieri, amministratori, a disposizione</RouterLink
+      >
     </div>
   </section>
 </template>

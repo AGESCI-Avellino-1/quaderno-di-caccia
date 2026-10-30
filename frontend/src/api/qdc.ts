@@ -255,8 +255,14 @@ export interface NuovaDeroga {
 }
 
 export interface IncarichiGruppo {
+  /** Additional group roles: capigruppo, group treasurers, technical administrators. */
   incarichi: Incarico[]
   nomina: Scelta[]
+  /** Capi of the Co.Ca. serving in no unit for now. */
+  a_disposizione: Incarico[]
+  nomina_a_disposizione: Scelta[]
+  /** For the capigruppo: capi with no service at all. */
+  senza_servizio: PersonaBreve[]
 }
 
 /** Where a role is held: the group (nothing), a unit or a patrol. */

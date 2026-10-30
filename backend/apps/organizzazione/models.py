@@ -159,6 +159,11 @@ class Squadriglia(ModelloTracciato):
 
 
 class RuoloIncarico(models.TextChoices):
+    """Service roles (in a unit, or at the disposal of the Co.Ca.) and additional roles
+    (capogruppo, treasurers, technical administrator), which add up freely: one capo may
+    be capogruppo, capo unità, treasurer and administrator at once (maintainer,
+    30/10/2026). CSQ and VCSQ are the ragazzi's."""
+
     CAPOGRUPPO = "CAPOGRUPPO", "Capogruppo"
     TESORIERE_GRUPPO = "TESORIERE_GRUPPO", "Tesoriere di gruppo"
     CAPO_UNITA = "CAPO_UNITA", "Capo unità"
@@ -167,6 +172,11 @@ class RuoloIncarico(models.TextChoices):
     # would look to the import like a change of unit.
     STAFF = "STAFF", "Staff di unità"
     TESORIERE_UNITA = "TESORIERE_UNITA", "Tesoriere di unità"
+    # A capo of the Co.Ca. serving in no unit for now; excludes any unit service.
+    A_DISPOSIZIONE = "A_DISPOSIZIONE", "A disposizione"
+    # Appointed by the capigruppo; the first one is created from the command line
+    # (User.amministratore_tecnico). Always a capo (DEC-12, DEC-114).
+    AMMINISTRATORE = "AMMINISTRATORE", "Amministratore tecnico"
     CSQ = "CSQ", "Capo squadriglia"
     VCSQ = "VCSQ", "Vice capo squadriglia"
 
@@ -182,9 +192,27 @@ TITOLARI_MASSIMI = {
     RuoloIncarico.VCSQ: 1,
 }
 
-RUOLI_DI_GRUPPO = {RuoloIncarico.CAPOGRUPPO, RuoloIncarico.TESORIERE_GRUPPO}
+RUOLI_DI_GRUPPO = {
+    RuoloIncarico.CAPOGRUPPO,
+    RuoloIncarico.TESORIERE_GRUPPO,
+    RuoloIncarico.A_DISPOSIZIONE,
+    RuoloIncarico.AMMINISTRATORE,
+}
 RUOLI_DI_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.STAFF}
 RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
+# Every capo of the Co.Ca. has a service: one or more units, or at disposal (not both).
+INCARICHI_DI_SERVIZIO = {
+    RuoloIncarico.CAPO_UNITA,
+    RuoloIncarico.STAFF,
+    RuoloIncarico.A_DISPOSIZIONE,
+}
+SERVIZIO_IN_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF}
+RUOLI_AGGIUNTIVI = {
+    RuoloIncarico.CAPOGRUPPO,
+    RuoloIncarico.TESORIERE_GRUPPO,
+    RuoloIncarico.TESORIERE_UNITA,
+    RuoloIncarico.AMMINISTRATORE,
+}
 
 
 class IncaricoQuerySet(models.QuerySet):
@@ -235,6 +263,7 @@ class Incarico(ModelloTracciato):
             raise ValidationError("Un incarico di squadriglia richiede la squadriglia.")
         if self.data_fine and self.data_fine <= self.data_inizio:
             raise ValidationError("La data di fine deve seguire quella di inizio.")
+        self._controlla_servizio(ruolo)
         if self._state.adding:
             # Only on appointment: closing the role of someone who has meanwhile left
             # the service must stay possible (DEC-20).
@@ -256,6 +285,26 @@ class Incarico(ModelloTracciato):
             raise ValidationError(
                 f"Il ruolo {self.get_ruolo_display()} ammette al massimo {massimo} titolari."
             )
+
+    def _controlla_servizio(self, ruolo: RuoloIncarico) -> None:
+        """At disposal and service in a unit exclude each other."""
+        if ruolo == RuoloIncarico.A_DISPOSIZIONE:
+            altri = SERVIZIO_IN_UNITA
+            messaggio = "fa servizio in un'unità: chiudi prima quell'incarico."
+        elif ruolo in SERVIZIO_IN_UNITA:
+            altri = {RuoloIncarico.A_DISPOSIZIONE}
+            messaggio = "è a disposizione: chiudi prima quell'incarico."
+        else:
+            return
+        sovrapposti = (
+            Incarico.objects.filter(persona=self.persona_id, ruolo__in=altri)
+            .filter(Q(data_fine__isnull=True) | Q(data_fine__gt=self.data_inizio))
+            .exclude(pk=self.pk)
+        )
+        if self.data_fine:
+            sovrapposti = sovrapposti.filter(data_inizio__lt=self.data_fine)
+        if sovrapposti.exists():
+            raise ValidationError(f"{self.persona} {messaggio}")
 
     def titolari_massimi(self) -> int | None:
         """Holders allowed at the same time; None = no limit (staff)."""

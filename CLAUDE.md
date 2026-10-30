@@ -323,6 +323,18 @@ implements them:
   who manages the registration may also write answers and photo (paper forms). Adults: only a
   `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp given by
   the maintainer, 30/10).
+- Service and additional roles (maintainer, 30/10/2026, no analysis code yet;
+  `organizzazione.models`): service roles (`INCARICHI_DI_SERVIZIO`: capo unità, staff,
+  `A_DISPOSIZIONE` for a capo of the Co.Ca. serving in no unit) and additional roles
+  (`RUOLI_AGGIUNTIVI`: capogruppo, group and unit treasurers, `AMMINISTRATORE`) add up
+  freely. A capo may serve several units; "a disposizione" excludes any unit service
+  (`Incarico._controlla_servizio`), and ends by itself when the capo is appointed to a
+  unit (`organizzazione.api.crea_incarico`). The capigruppo appoint both new roles and
+  see the capi with no service (`/gruppo/incarichi`, `senza_servizio`). The technical
+  administrator: the first from the command line (`User.amministratore_tecnico`), then
+  an `AMMINISTRATORE` role, always a capo; `policy.e_amministratore` reads both. The
+  role gives the in-app powers only: the Django admin still needs `is_staff`, set from
+  the command line.
 - Using the app as another user (maintainer, 30/10/2026, no analysis code yet;
   `apps/impersonazione`): capigruppo and technical administrators who are capi in
   BuonaStrada act as anyone with an account; unit staff as its ragazzi and their

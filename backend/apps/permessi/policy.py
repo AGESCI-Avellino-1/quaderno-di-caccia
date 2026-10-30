@@ -54,10 +54,16 @@ def _sospese(user) -> set[int]:
 
 
 def e_amministratore(user) -> bool:
-    """Technical administrator (DEC-12). Does NOT grant access to educational data."""
+    """Technical administrator (DEC-12): the first one from the command line, then
+    appointed by the capigruppo as a role (maintainer, 30/10/2026). Does NOT grant
+    access to educational data."""
     return bool(
         getattr(user, "is_authenticated", False)
-        and (user.amministratore_tecnico or user.is_superuser)
+        and (
+            user.amministratore_tecnico
+            or user.is_superuser
+            or _ha_incarico(user, {RuoloIncarico.AMMINISTRATORE})
+        )
     )
 
 
@@ -428,6 +434,8 @@ def puo_nominare(
         )
     if ruolo in {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}:
         return e_capogruppo(user)  # DEC-10
+    if ruolo in {RuoloIncarico.A_DISPOSIZIONE, RuoloIncarico.AMMINISTRATORE}:
+        return e_capogruppo(user)  # maintainer, 30/10/2026
     if ruolo == RuoloIncarico.TESORIERE_UNITA:
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
@@ -1007,7 +1015,7 @@ def puo_impersonare(user, bersaglio) -> bool:
         return False
     if e_capogruppo(user) or e_amministratore(user):
         return True
-    if bersaglio.is_superuser or bersaglio.amministratore_tecnico:
+    if bersaglio.is_superuser or e_amministratore(bersaglio):
         return False
     return _impersonabili_dallo_staff(user).filter(utente=bersaglio).exists()
 

@@ -244,7 +244,7 @@ def test_amministratore_nomina_il_primo_capogruppo(amministratore, capo_semplice
     assert _nomina(capo_semplice, secondo, "CAPOGRUPPO").status_code == 201
     dati = _client(capo_semplice).get("/api/v1/gruppo/incarichi").json()
     assert len(dati["incarichi"]) == 2
-    assert _valori(dati["nomina"]) == ["CAPOGRUPPO", "TESORIERE_GRUPPO"]
+    assert _valori(dati["nomina"]) == ["CAPOGRUPPO", "TESORIERE_GRUPPO", "AMMINISTRATORE"]
 
 
 @pytest.mark.parametrize("ruolo", ["csq", "ragazza", "genitore", "estraneo"])
@@ -540,3 +540,55 @@ def test_nome_obbligatorio_tranne_per_la_coca(gruppo):
     )
     coca.full_clean()
     assert str(coca) == "Comunità Capi"
+
+
+# --- Service and additional roles (maintainer, 30/10/2026) -----------------------------
+
+
+def test_i_ruoli_aggiuntivi_si_sommano_al_servizio(capogruppo, capo, reparto):
+    """capo is capo unità of the reparto: also treasurer and administrator."""
+    for ruolo, dove in (("TESORIERE_UNITA", {"unita_id": reparto.pk}), ("AMMINISTRATORE", {})):
+        assert _nomina(capogruppo, capo, ruolo, **dove).status_code == 201
+    assert policy.e_amministratore(capo.utente)
+    assert policy.e_capo_unita(capo.utente, reparto)
+
+
+def test_solo_i_capigruppo_nominano_l_amministratore(capogruppo, capo, capo_semplice, ragazza):
+    assert _nomina(capo, capo_semplice, "AMMINISTRATORE").status_code == 403
+    # Always a capo (DEC-12, DEC-114).
+    assert _nomina(capogruppo, ragazza, "AMMINISTRATORE").status_code == 400
+    assert _nomina(capogruppo, capo_semplice, "AMMINISTRATORE").status_code == 201
+    assert policy.e_amministratore(capo_semplice.utente)
+
+
+def test_a_disposizione_esclude_il_servizio_in_unita(capogruppo, capo, capo_semplice, reparto):
+    # capo serves the reparto: not at disposal at the same time.
+    risposta = _nomina(capogruppo, capo, "A_DISPOSIZIONE")
+    assert risposta.status_code == 400
+    assert "fa servizio in un'unità" in risposta.json()["detail"]
+    # At disposal from yesterday, then appointed to a unit: it ends by itself.
+    ieri = (timezone.localdate() - timedelta(days=1)).isoformat()
+    assert _nomina(capogruppo, capo_semplice, "A_DISPOSIZIONE", data_inizio=ieri).status_code == 201
+    assert _nomina(capogruppo, capo_semplice, "STAFF", unita_id=reparto.pk).status_code == 201
+    disposizione = Incarico.objects.get(persona=capo_semplice, ruolo=R.A_DISPOSIZIONE)
+    assert disposizione.data_fine == timezone.localdate()
+    # Several units are fine.
+    branco = Unita.objects.create(
+        gruppo=reparto.gruppo,
+        nome="Branco",
+        tipo=TipoUnita.BRANCO,
+        composizione=reparto.composizione,
+    )
+    assert _nomina(capogruppo, capo, "STAFF", unita_id=branco.pk).status_code == 201
+
+
+def test_capi_senza_servizio_per_i_capigruppo(capogruppo, capo, capo_semplice):
+    dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
+    senza = {p["id"] for p in dati["senza_servizio"]}
+    assert capo_semplice.pk in senza and capo.pk not in senza
+    _nomina(capogruppo, capo_semplice, "A_DISPOSIZIONE")
+    dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
+    assert capo_semplice.pk not in {p["id"] for p in dati["senza_servizio"]}
+    assert [i["persona"]["id"] for i in dati["a_disposizione"]] == [capo_semplice.pk]
+    # Other capi see the roles, not the list to sort out.
+    assert _client(capo).get("/api/v1/gruppo/incarichi").json()["senza_servizio"] == []

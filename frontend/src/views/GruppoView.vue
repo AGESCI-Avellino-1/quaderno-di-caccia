@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { api, type IncarichiGruppo } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
@@ -7,8 +8,11 @@ import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
-// Capigruppo (diarchy, DEC-18) and group treasurers. Appointed by the capigruppo in
-// office; by the technical administrator only when there is none (first start).
+// Additional group roles: capigruppo (diarchy, DEC-18), group treasurers, technical
+// administrators; they add up with the service (maintainer, 30/10/2026). Appointed by the
+// capigruppo in office; by the technical administrator only when there is none (first
+// start). Then the capi at disposal (no unit for now) and, for the capigruppo, the capi
+// with no service at all.
 const { errore, esegui } = useErrore()
 const dati = ref<IncarichiGruppo | null>(null)
 const copiaDel = ref<string | null>(null)
@@ -25,18 +29,50 @@ const capi = () => api.capi()
 
 <template>
   <section>
-    <h1 class="h4 mb-5">Capigruppo e tesorieri di gruppo</h1>
+    <h1 class="h4 mb-5">Incarichi di gruppo</h1>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
-    <div v-if="dati" class="card card-body">
-      <ElencoIncarichi
-        :incarichi="dati.incarichi"
-        :nomina="dati.nomina"
-        :dove="{}"
-        :candidati="capi"
-        vuoto="Nessun capogruppo registrato."
-        @cambiato="carica"
-      />
-    </div>
+    <template v-if="dati">
+      <div v-if="dati.senza_servizio.length" class="alert theme-warning small" role="status">
+        <div>
+          Capi senza servizio: né in un'unità né a disposizione. Assegnali a un'unità (dalla pagina
+          dell'unità) o mettili a disposizione qui sotto:
+          <template v-for="(p, n) in dati.senza_servizio" :key="p.id">
+            <RouterLink :to="`/persone/${p.id}`">{{ p.nome }} {{ p.cognome }}</RouterLink
+            >{{ n < dati.senza_servizio.length - 1 ? ', ' : '.' }}
+          </template>
+        </div>
+      </div>
+      <h2 class="h5">Capigruppo, tesorieri e amministratori</h2>
+      <p class="small fg-2">
+        Ruoli che si aggiungono al servizio: lo stesso capo può essere, per esempio, capo unità,
+        capogruppo, tesoriere e amministratore.
+      </p>
+      <div class="card card-body mb-5">
+        <ElencoIncarichi
+          :incarichi="dati.incarichi"
+          :nomina="dati.nomina"
+          :dove="{}"
+          :candidati="capi"
+          vuoto="Nessun capogruppo registrato."
+          @cambiato="carica"
+        />
+      </div>
+      <h2 class="h5">A disposizione</h2>
+      <p class="small fg-2">
+        Capi della Co.Ca. che al momento non fanno servizio in un'unità. Quando un capo viene
+        assegnato a un'unità, «a disposizione» finisce da sé.
+      </p>
+      <div class="card card-body">
+        <ElencoIncarichi
+          :incarichi="dati.a_disposizione"
+          :nomina="dati.nomina_a_disposizione"
+          :dove="{}"
+          :candidati="capi"
+          vuoto="Nessun capo a disposizione."
+          @cambiato="carica"
+        />
+      </div>
+    </template>
   </section>
 </template>

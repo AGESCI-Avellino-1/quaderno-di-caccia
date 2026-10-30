@@ -153,6 +153,12 @@ watch(scelta, async (valore) => {
                   · {{ eta(p.data_nascita) }} anni</span
                 >
               </h2>
+              <div v-if="p.regole_rapporto" class="alert theme-warning small mb-1" role="note">
+                <div>
+                  <strong>Regole sul rapporto con il minore</strong>:
+                  <span class="testo-a-capo">{{ p.regole_rapporto }}</span>
+                </div>
+              </div>
               <SchedaSanitaria :dati="p.sanitarie" compatta />
               <ul v-if="p.contatti.length" class="list-unstyled small mb-0 mt-3">
                 <li v-for="(c, i) in p.contatti" :key="i">

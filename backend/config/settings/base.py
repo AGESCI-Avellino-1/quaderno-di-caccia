@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.buonacaccia",
     "apps.impersonazione",
     "apps.progressione",
+    "apps.note",
 ]
 
 MIDDLEWARE = [

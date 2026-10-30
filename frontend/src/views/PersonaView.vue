@@ -9,6 +9,8 @@ import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import QuotePersona from '@/components/QuotePersona.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
+import NotePersona from '@/components/NotePersona.vue'
+import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useRete } from '@/composables/useRete'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
@@ -116,6 +118,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <dd class="col-7 md:col-9">{{ persona.consenso_foto ? 'Sì' : 'No' }}</dd>
         </template>
       </dl>
+      <RegoleRapporto :persona="persona.id" />
       <section v-if="sanitarie" class="card card-body mb-5">
         <div class="d-flex align-items-center">
           <h2 class="h5 mb-0">Scheda sanitaria</h2>
@@ -134,6 +137,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           @cambiata="(nuovi) => (sanitarie = nuovi)"
         />
       </section>
+      <NotePersona :persona="persona.id" />
       <VisibilitaGenitori :id="persona.id" />
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
       <QuotePersona :id="persona.id" />

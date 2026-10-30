@@ -16,6 +16,7 @@ class Categoria(models.TextChoices):
     FASCICOLO = "FASCICOLO", "Fascicolo completo"
     MODULI = "MODULI", "Moduli firmati"
     ISCRIZIONI = "ISCRIZIONI", "Dati per BuonaStrada"
+    REGOLE_MINORE = "REGOLE", "Regole sul rapporto con il minore"
 
 
 class Azione(models.TextChoices):

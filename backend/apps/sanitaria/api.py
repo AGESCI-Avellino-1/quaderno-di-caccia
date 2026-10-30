@@ -9,6 +9,7 @@ from ninja import Router, Schema
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela
+from apps.note.models import RegoleRapporto
 from apps.organizzazione.models import Unita
 from apps.permessi import policy
 from apps.permessi.models import AccessoDatoSensibile, Azione, Categoria, registra_accessi
@@ -133,6 +134,25 @@ def _sanitarie(info: InformazioniSanitarie | None) -> dict:
         "da_rifirmare": info.da_rifirmare,
         "prescrizione_consegnata_il": info.prescrizione_consegnata_il,
     }
+
+
+# What goes offline at camp: medicines, allergies, intolerances, food (DEC-55), never the
+# rest of the form.
+ESSENZIALI = (
+    "compilate",
+    "nessuna_allergia",
+    "nessun_farmaco",
+    "esigenze_alimentari",
+    "allergie",
+    "farmaci",
+    "inserite_da",
+    "aggiornate_il",
+)
+
+
+def _essenziali(info: InformazioniSanitarie | None) -> dict:
+    tutto = _sanitarie(info)
+    return {k: v for k, v in tutto.items() if k in ESSENZIALI}
 
 
 def _persona_visibile(request, persona_id: int) -> Persona:
@@ -361,6 +381,8 @@ class SchedaCampo(Schema):
     data_nascita: date | None
     contatti: list[Contatto]
     sanitarie: SanitarieOut
+    # For the Co.Ca. only, in evidence (DEC-43, DEC-95).
+    regole_rapporto: str = ""
 
 
 class Campo(Schema):
@@ -397,6 +419,14 @@ def scarica_campo(request, unita_id: int):
         )
     )
     registra_accessi(request, persone, Categoria.SANITARIE, Azione.SCARICO_OFFLINE)
+    regole = {r.persona_id: r.testo for r in RegoleRapporto.objects.filter(persona__in=persone)}
+    if regole:
+        registra_accessi(
+            request,
+            [p for p in persone if p.pk in regole],
+            Categoria.REGOLE_MINORE,
+            Azione.SCARICO_OFFLINE,
+        )
 
     def contatti(persona: Persona) -> list[dict]:
         risultato = []
@@ -430,7 +460,8 @@ def scarica_campo(request, unita_id: int):
                 "cognome": p.cognome,
                 "data_nascita": p.data_nascita,
                 "contatti": contatti(p),
-                "sanitarie": _sanitarie(getattr(p, "informazioni_sanitarie", None)),
+                "sanitarie": _essenziali(getattr(p, "informazioni_sanitarie", None)),
+                "regole_rapporto": regole.get(p.pk, ""),
             }
             for p in persone
         ],

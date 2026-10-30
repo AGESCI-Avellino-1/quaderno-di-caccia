@@ -16,6 +16,7 @@ from apps.eventi.api import router as eventi_router
 from apps.impersonazione.api import router as impersonazione_router
 from apps.importazione.api import router as importazione_router
 from apps.iscrizioni.api import router as iscrizioni_router
+from apps.note.api import router as note_router
 from apps.organizzazione.api import router as organizzazione_router
 from apps.progressione.api import router as progressione_router
 from apps.quote.api import router as quote_router
@@ -47,3 +48,4 @@ api.add_router("/", eventi_router)
 api.add_router("/", buonacaccia_router)
 api.add_router("/", impersonazione_router)
 api.add_router("/", progressione_router)
+api.add_router("/", note_router)

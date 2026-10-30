@@ -1214,3 +1214,65 @@ def puo_gestire_passaggi(user, unita: Unita) -> bool:
     if e_capo_in_attesa(user):
         return False
     return e_capogruppo(user) or e_staff(user, unita)
+
+
+# --- Notes and rules on the relationship with the minor (DEC-39, DEC-40, DEC-43) -------------
+
+
+def _capo_pieno(user) -> bool:
+    return e_capo_censito(user) and not e_capo_in_attesa(user)
+
+
+def puo_scrivere_nota_staff(user, persona: Persona) -> bool:
+    """The unit staff and the capigruppo (DEC-197)."""
+    if e_capo_in_attesa(user):
+        return False
+    return e_capogruppo(user) or _staff_della_persona(user, persona)
+
+
+def puo_scrivere_nota_csq(user, persona: Persona) -> bool:
+    """The CSQ on the other members of their patrol (DEC-13, DEC-40)."""
+    propria = persona_di(user)
+    return (propria is None or propria.pk != persona.pk) and _csq_di(user, persona)
+
+
+def note_visibili(user, persona: Persona):
+    """The notes on `persona` the user may read: the Co.Ca. all of them (DEC-09); the
+    ragazzo, the parents (of an adult as chosen, DEC-26) and the CSQ what was shared
+    with them (DEC-39, DEC-40); the author their own."""
+    from apps.note.models import Nota, TipoNota
+
+    note = Nota.objects.filter(persona=persona)
+    if _capo_pieno(user):
+        return note
+    filtro = Q(autore_id=getattr(user, "pk", None))
+    livello = _livello_personale(user, persona)
+    if livello == LivelloAccesso.PROPRIO:
+        filtro |= Q(visibile_ragazzo=True)
+    elif livello == LivelloAccesso.TUTORE and genitori_vedono(persona, "scheda"):
+        filtro |= Q(visibile_genitori=True)
+    if _csq_di(user, persona):
+        filtro |= Q(tipo=TipoNota.STAFF, visibile_csq=True)
+    return note.filter(filtro)
+
+
+def puo_modificare_nota(user, nota) -> bool:
+    """Only the author changes or removes it (DEC-198)."""
+    return nota.autore_id is not None and nota.autore_id == getattr(user, "pk", None)
+
+
+def puo_cambiare_visibilita_nota(user, nota) -> bool:
+    """The author; for a CSQ note also the staff (DEC-40)."""
+    if puo_modificare_nota(user, nota):
+        return True
+    return nota.tipo == "CSQ" and puo_scrivere_nota_staff(user, nota.persona)
+
+
+def puo_vedere_regole_rapporto(user, persona: Persona) -> bool:
+    """For the Co.Ca. only, never the parents or the ragazzo (DEC-43, DEC-199)."""
+    return _capo_pieno(user)
+
+
+def puo_scrivere_regole_rapporto(user, persona: Persona) -> bool:
+    """Transcribed from the signed form by the unit staff and the capigruppo (DEC-199)."""
+    return puo_scrivere_nota_staff(user, persona)

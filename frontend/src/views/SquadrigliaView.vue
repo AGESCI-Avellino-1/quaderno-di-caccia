@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { api, type MiaSquadriglia } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
@@ -36,7 +37,13 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
       <ul class="list-group">
         <li v-for="m in s.membri" :key="m.id" class="list-group-item">
           <div class="d-flex flex-wrap align-items-baseline gap-3">
-            <strong>{{ m.nome }} {{ m.cognome }}</strong>
+            <RouterLink
+              v-if="s.sono_capo"
+              :to="{ name: 'persona', params: { id: m.id } }"
+              title="Scheda e note"
+              ><strong>{{ m.nome }} {{ m.cognome }}</strong></RouterLink
+            >
+            <strong v-else>{{ m.nome }} {{ m.cognome }}</strong>
             <span v-if="m.incarico" class="badge theme-primary">{{ m.incarico }}</span>
             <a v-if="m.telefono" :href="`tel:${m.telefono}`" class="ms-auto">{{ m.telefono }}</a>
             <span v-else class="fg-2 small ms-auto">nessun numero</span>

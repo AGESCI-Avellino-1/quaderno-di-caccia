@@ -1,6 +1,6 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 33, 30 ottobre 2026), da
+> **Copia nel repository** del documento di analisi (revisione 34, 30 ottobre 2026), da
 > cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
 > è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
 > cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
@@ -221,6 +221,9 @@ La PP segue il documento "Specifica di dominio e requisiti per lo sviluppo" v1.0
 | DEC-194 | Riga di consenso della sezione dei dati facoltativi: «Acconsento/acconsentiamo al trattamento dei dati facoltativi sopra indicati, utili in caso di emergenza, alle stesse condizioni dell'informativa AGESCI.» | DEC-49, DEC-51, 30/10 |
 | DEC-195 | Le schede sanitarie dei partecipanti a un evento, con la reperibilità indicata per quell'evento, le stampano in un unico PDF i capi che gestiscono l'evento (mai il capo squadriglia); ogni stampa resta nel registro degli accessi. | DEC-53, DEC-101, 30/10 |
 | DEC-196 | All'archiviazione (DEC-44) l'archivio compresso si carica da solo sul Drive del gruppo, con un account Google autorizzato una volta. | DEC-44, 30/10 |
+| DEC-197 | Le note di staff le scrivono lo staff dell'unità del ragazzo e i capigruppo per tutte le unità; gli altri capi le leggono. Il capo squadriglia scrive note sugli altri membri della sua squadriglia, non su di sé. | DEC-13, DEC-39, DEC-40, DEC-113, 30/10 |
+| DEC-198 | Una nota la modifica e la cancella solo chi l'ha scritta (vince l'ultima modifica; lo storico delle modifiche la conserva). Lo staff può cambiare a chi è mostrata una nota del capo squadriglia, non il testo. | DEC-40, DEC-96, 30/10 |
+| DEC-199 | Le regole sul rapporto con il minore le trascrivono dal modulo firmato lo staff dell'unità e i capigruppo; le leggono solo i capi, anche offline al campo, mai i genitori né il ragazzo; ogni lettura e ogni scarico sul telefono resta nel registro degli accessi. | DEC-43, DEC-95, DEC-101, 30/10 |
 
 ## Eventi e presenze
 

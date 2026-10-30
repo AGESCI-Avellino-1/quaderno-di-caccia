@@ -1,4 +1,4 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
@@ -50,7 +50,7 @@ afterEach(() => vi.unstubAllGlobals())
 describe('SquadrigliaView', () => {
   it('shows the members phones, the parent number marked', async () => {
     stubFetch([squadriglia(false)])
-    const vista = mount(SquadrigliaView)
+    const vista = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
     await flushPromises()
     expect(vista.text()).toContain('Aquile')
     expect(vista.find('a[href="tel:3472"]').exists()).toBe(true)
@@ -61,7 +61,7 @@ describe('SquadrigliaView', () => {
 
   it('shows the parents to the capo squadriglia', async () => {
     stubFetch([squadriglia(true)])
-    const vista = mount(SquadrigliaView)
+    const vista = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
     await flushPromises()
     expect(vista.text()).toContain('Genitore: Lucia Prova')
     expect(vista.find('a[href="tel:3489"]').exists()).toBe(true)
@@ -69,7 +69,7 @@ describe('SquadrigliaView', () => {
 
   it('says so when the user is in no patrol', async () => {
     stubFetch([])
-    const vista = mount(SquadrigliaView)
+    const vista = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
     await flushPromises()
     expect(vista.text()).toContain('Non sei in una squadriglia')
   })

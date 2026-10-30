@@ -621,6 +621,46 @@ export interface Sanitarie extends SanitarieIn {
   puo_registrare_firma?: boolean
 }
 
+export type TipoNota = 'STAFF' | 'CSQ'
+
+/** A note on a ragazzo (DEC-39, DEC-40). */
+export interface Nota {
+  id: number
+  tipo: TipoNota
+  tipo_nome: string
+  testo: string
+  autore: string
+  creata_il: string
+  aggiornata_il: string
+  visibile_ragazzo: boolean
+  visibile_genitori: boolean
+  visibile_csq: boolean
+  condivisa_fuori_coca: boolean
+  puo_modificare: boolean
+  puo_cambiare_visibilita: boolean
+}
+
+export interface NoteSchede {
+  note: Nota[]
+  /** The type a new note by this user would have; null: they write none here. */
+  scrive: TipoNota | null
+  csq_possibile: boolean
+  /** Rules on the relationship with the minor: null for who may not read them (DEC-43). */
+  regole: string | null
+  regole_aggiornate_il: string | null
+  puo_scrivere_regole: boolean
+}
+
+export interface NotaIn {
+  testo: string
+  visibile_ragazzo: boolean
+  visibile_genitori: boolean
+  visibile_csq: boolean
+}
+
+export const percorsoNote = (persona: number) => `/api/v1/persone/${persona}/note`
+export const percorsoNota = (nota: number) => `/api/v1/note/${nota}`
+
 export interface Intestazione {
   denominazione_sociale: string
   codice_fiscale: string
@@ -652,6 +692,8 @@ export interface SchedaCampo {
   data_nascita: string | null
   contatti: Contatto[]
   sanitarie: Sanitarie
+  /** For the Co.Ca. only, in evidence at camp (DEC-43, DEC-95). */
+  regole_rapporto?: string
 }
 
 export interface Campo {
@@ -1846,6 +1888,12 @@ export const api = {
       `/api/v1/eventi/${evento}/reperibilita/${persona}`,
       { metodo: 'PUT', corpo: { nome, telefono } },
     ),
+  note: (persona: number) => richiesta<NoteSchede>(percorsoNote(persona)),
+  regoleRapporto: (persona: number, testo: string) =>
+    richiesta<NoteSchede>(`/api/v1/persone/${persona}/regole-rapporto`, {
+      metodo: 'PUT',
+      corpo: { testo },
+    }),
   intestazione: () => richiesta<Intestazione>('/api/v1/gruppo/intestazione'),
   salvaIntestazione: (dati: Intestazione) =>
     richiesta<Intestazione>('/api/v1/gruppo/intestazione', { metodo: 'PUT', corpo: dati }),

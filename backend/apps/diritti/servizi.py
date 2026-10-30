@@ -27,6 +27,7 @@ from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
 from apps.buonacaccia.models import IscrizioneBuonaCaccia, QuotaFormazione
 from apps.dispositivi.models import Dispositivo
 from apps.iscrizioni.models import RichiestaIscrizione
+from apps.note.models import Nota, RegoleRapporto
 from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
 from apps.quote.models import Quota
@@ -163,6 +164,21 @@ def fascicolo(persona: Persona) -> dict:
             }
             if sanitarie
             else None
+        ),
+        # Every note about the person, also those not shared with them: it is all
+        # personal data (DEC-102).
+        "note": [
+            {
+                "Tipo": n.get_tipo_display(),
+                "Testo": n.testo,
+                "Scritta il": _giorno(n.creato_il),
+                "La legge il ragazzo": n.visibile_ragazzo,
+                "La leggono i genitori": n.visibile_genitori,
+            }
+            for n in Nota.objects.filter(persona=persona)
+        ],
+        "regole_sul_rapporto_con_il_minore": (
+            persona.regole_rapporto.testo if hasattr(persona, "regole_rapporto") else ""
         ),
         "reperibilita_per_evento": [
             {"Evento": r.evento.titolo, "Chi": r.nome, "Telefono": r.telefono}
@@ -461,6 +477,7 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Eccezioni sulla squadriglia",
         "Scelte sul telefono in squadriglia e su cosa vedono i genitori",
         "Correzioni ai dati di BuonaStrada",
+        "Note di staff e del capo squadriglia, regole sul rapporto con il minore",
         "Account, dispositivi e inviti",
         "Iscrizioni dall'app e moduli firmati caricati",
         "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
@@ -494,6 +511,11 @@ def cancella(persona: Persona) -> dict:
         if sanitarie is not None:
             _cancella_storico([*sanitarie.allergie.all(), *sanitarie.farmaci.all(), sanitarie])
             sanitarie.delete()
+        for modello in (Nota, RegoleRapporto):
+            oggetti = list(modello.objects.filter(persona=persona))
+            _cancella_storico(oggetti)
+            for oggetto in oggetti:
+                oggetto.delete()
         reperibilita = list(ReperibilitaEvento.objects.filter(persona=persona))
         _cancella_storico(reperibilita)
         for r in reperibilita:

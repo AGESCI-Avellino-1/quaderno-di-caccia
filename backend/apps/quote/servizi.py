@@ -90,6 +90,8 @@ def emetti(tipo: TipoQuota, oggi: date | None = None) -> list[Quota]:
     by who belonged at any time from the start of the year to today."""
     if tipo.categoria == CategoriaQuota.EVENTO:
         return emetti_evento(tipo)
+    if tipo.categoria == CategoriaQuota.BUONACACCIA:
+        return []  # one by one, at registration (apps.buonacaccia)
     oggi = oggi or date.today()
     anno = tipo.anno_associativo
     nuove = []
@@ -176,8 +178,8 @@ def allinea_quote_evento(evento) -> None:
     from apps.eventi.models import StatoPartecipazione
 
     tipo = getattr(evento, "quota", None)
-    if tipo is None:
-        return
+    if tipo is None or tipo.categoria != CategoriaQuota.EVENTO:
+        return  # BuonaCaccia fees: the staff withdraws them (DEC-163)
     emetti_evento(tipo)
     assenti = evento.partecipazioni.exclude(stato=StatoPartecipazione.INVITATO).values("persona_id")
     for quota in Quota.objects.valide().filter(tipo=tipo, persona_id__in=assenti):
@@ -189,7 +191,7 @@ def allinea_quote_evento(evento) -> None:
 
 def imposta_importo(quota: Quota, importo: Decimal) -> None:
     """DEC-77: the amount of an event's fee may change per person, down to zero."""
-    if quota.tipo.categoria != CategoriaQuota.EVENTO:
+    if quota.tipo.categoria not in (CategoriaQuota.EVENTO, CategoriaQuota.BUONACACCIA):
         raise ValidationError("Solo le quote degli eventi si cambiano per persona.")
     if importo < 0:
         raise ValidationError("L'importo non può essere negativo.")

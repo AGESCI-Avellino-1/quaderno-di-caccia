@@ -42,6 +42,8 @@ def unita_coinvolte(evento: Evento) -> QuerySet[Unita]:
         return Unita.objects.filter(attiva=True, tipo__in=tipi)
     if evento.livello == Livello.SQUADRIGLIA:
         return Unita.objects.filter(pk=evento.squadriglia.unita_id)
+    if evento.livello == Livello.ESTERNO:
+        return Unita.objects.none()  # single participants (DEC-158)
     return evento.unita.all()
 
 
@@ -50,6 +52,8 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
     whole group for a group event; the patrol for a patrol event; the CSQ, CSQ and VCSQ
     or the Alta Squadriglia of the reparti for their councils)."""
     giorno = giorno_evento(evento)
+    if evento.livello == Livello.ESTERNO:
+        return Persona.objects.none()  # who registered on BuonaCaccia, one by one
     if evento.livello == Livello.SQUADRIGLIA:
         ids = (
             AppartenenzaSquadriglia.objects.filter(

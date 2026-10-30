@@ -10,6 +10,7 @@ import {
   type StatoPresenza,
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import EventoBC from '@/components/EventoBC.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -18,7 +19,8 @@ import { scrivi } from '@/offline/outbox'
 
 // One event: the family says whether their child takes part; the staff sees everyone,
 // may not invite someone (with a reason the family reads) and marks attendance, also
-// offline (DEC-75, DEC-78). Cached for offline use.
+// offline (DEC-75, DEC-78). Cached for offline use. An event on BuonaCaccia shows its
+// registrations instead (DEC-158…DEC-164), online only.
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const evento = ref<DettaglioEvento | null>(null)
@@ -151,9 +153,11 @@ const STATI: [StatoPresenza, string][] = [
       {{
         evento.livello === 'GRUPPO'
           ? 'tutto il gruppo'
-          : evento.squadriglia
-            ? `Sq. ${evento.squadriglia}`
-            : evento.unita_nomi.join(', ')
+          : evento.livello === 'ESTERNO'
+            ? 'evento su BuonaCaccia'
+            : evento.squadriglia
+              ? `Sq. ${evento.squadriglia}`
+              : evento.unita_nomi.join(', ')
       }}
     </p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
@@ -178,162 +182,166 @@ const STATI: [StatoPresenza, string][] = [
       </div>
     </div>
 
-    <QuotaEvento
-      :evento="evento.id"
-      :quota="evento.quota"
-      :puo-gestire="evento.puo_gestire && !evento.annullato"
-      :in-famiglia="evento.mie.length > 0"
-      @cambiata="carica"
-    />
+    <EventoBC v-if="evento.livello === 'ESTERNO'" :evento="evento.id" />
 
-    <RendicontoEvento
-      v-if="evento.puo_gestire || evento.partecipanti.length"
-      :evento="evento.id"
-      :campo="evento.tipo === 'CAMPO'"
-    />
+    <template v-else>
+      <QuotaEvento
+        :evento="evento.id"
+        :quota="evento.quota"
+        :puo-gestire="evento.puo_gestire && !evento.annullato"
+        :in-famiglia="evento.mie.length > 0"
+        @cambiata="carica"
+      />
 
-    <!-- The family -->
-    <section v-if="evento.mie.length" class="mb-5">
-      <h2 class="h5">Partecipazione</h2>
-      <ul class="list-group">
-        <li v-for="m in evento.mie" :key="m.persona_id" class="list-group-item">
-          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <strong>{{ m.persona }}</strong>
-            <span v-if="m.stato === 'NON_INVITATO'" class="badge theme-danger">Non invitato</span>
-            <template v-else-if="m.puo_segnalare && !evento.annullato">
-              <div class="form-field mb-0">
-                <input
-                  :id="`partecipa-${m.persona_id}`"
-                  type="checkbox"
-                  class="switch"
-                  role="switch"
-                  :checked="m.stato === 'INVITATO'"
-                  :disabled="inCorso"
-                  @change="partecipa(m.persona_id, ($event.target as HTMLInputElement).checked)"
-                />
-                <label :for="`partecipa-${m.persona_id}`">
-                  {{ m.stato === 'INVITATO' ? 'Partecipa' : 'Non partecipa' }}
-                </label>
-              </div>
-            </template>
-          </div>
-          <div v-if="m.stato === 'NON_INVITATO'" class="small">
-            Lo staff ha deciso di non invitarlo: {{ m.motivo }}
-          </div>
-        </li>
-      </ul>
-    </section>
+      <RendicontoEvento
+        v-if="evento.puo_gestire || evento.partecipanti.length"
+        :evento="evento.id"
+        :campo="evento.tipo === 'CAMPO'"
+      />
 
-    <!-- The staff -->
-    <section v-if="evento.partecipanti.length" class="mb-5">
-      <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-        <h2 class="h5 mb-0">Partecipanti</h2>
-        <span class="small fg-2">
-          {{ conteggio.presenti }} {{ conteggio.presenti === 1 ? 'presente' : 'presenti' }} ·
-          {{ conteggio.assenti }} {{ conteggio.assenti === 1 ? 'assente' : 'assenti' }} ·
-          {{ conteggio.giustificati }}
-          {{ conteggio.giustificati === 1 ? 'giustificato' : 'giustificati' }}
-        </span>
-        <a v-if="evento.puo_presenze" :href="foglioPresenze(evento.id)" class="small">
-          Foglio da stampare
-        </a>
-      </div>
-      <div v-if="evento.puo_presenze && !evento.annullato" class="d-flex gap-3 mb-3">
-        <button type="button" class="btn btn-sm btn-outline theme-primary" @click="tuttiPresenti">
-          Segna gli altri presenti
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm btn-solid theme-primary"
-          :disabled="inCorso || !modificate.length"
-          @click="salvaPresenze"
-        >
-          Salva le presenze
-        </button>
-      </div>
-      <ul class="list-group">
-        <li v-for="p in evento.partecipanti" :key="p.persona_id" class="list-group-item">
-          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <span>
-              {{ p.cognome }} {{ p.nome }}
-              <span v-if="p.stato === 'NON_PARTECIPA'" class="badge theme-warning ms-1">
-                Non partecipa
-              </span>
-              <span v-if="p.stato === 'NON_INVITATO'" class="badge theme-danger ms-1">
-                Non invitato
-              </span>
-            </span>
-            <div
-              v-if="evento.puo_presenze && p.stato !== 'NON_INVITATO' && !evento.annullato"
-              class="d-flex gap-1"
-              role="group"
-              :aria-label="`Presenza di ${p.nome} ${p.cognome}`"
-            >
-              <button
-                v-for="[stato, etichetta] in STATI"
-                :key="stato"
-                type="button"
-                class="btn btn-sm"
-                :class="
-                  presenze[p.persona_id] === stato
-                    ? 'btn-solid theme-primary'
-                    : 'btn-outline theme-secondary'
-                "
-                :aria-pressed="presenze[p.persona_id] === stato"
-                @click="presenze[p.persona_id] = stato"
-              >
-                {{ etichetta }}
-              </button>
+      <!-- The family -->
+      <section v-if="evento.mie.length" class="mb-5">
+        <h2 class="h5">Partecipazione</h2>
+        <ul class="list-group">
+          <li v-for="m in evento.mie" :key="m.persona_id" class="list-group-item">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <strong>{{ m.persona }}</strong>
+              <span v-if="m.stato === 'NON_INVITATO'" class="badge theme-danger">Non invitato</span>
+              <template v-else-if="m.puo_segnalare && !evento.annullato">
+                <div class="form-field mb-0">
+                  <input
+                    :id="`partecipa-${m.persona_id}`"
+                    type="checkbox"
+                    class="switch"
+                    role="switch"
+                    :checked="m.stato === 'INVITATO'"
+                    :disabled="inCorso"
+                    @change="partecipa(m.persona_id, ($event.target as HTMLInputElement).checked)"
+                  />
+                  <label :for="`partecipa-${m.persona_id}`">
+                    {{ m.stato === 'INVITATO' ? 'Partecipa' : 'Non partecipa' }}
+                  </label>
+                </div>
+              </template>
             </div>
-            <span v-else-if="p.presenza" class="small">
-              {{ STATI.find(([s]) => s === p.presenza)?.[1] }}
-            </span>
-          </div>
-          <div v-if="p.stato === 'NON_INVITATO'" class="small fg-2">{{ p.motivo }}</div>
-          <div v-if="evento.puo_non_invitare && !evento.annullato" class="small">
-            <button
-              v-if="p.stato === 'NON_INVITATO'"
-              type="button"
-              class="btn btn-sm btn-link"
-              @click="reinvita(p)"
-            >
-              Invita di nuovo
-            </button>
-            <button
-              v-else-if="esclusione.persona !== p.persona_id"
-              type="button"
-              class="btn btn-sm btn-link"
-              @click="Object.assign(esclusione, { persona: p.persona_id, motivo: '' })"
-            >
-              Non invitare…
-            </button>
-            <form
-              v-else
-              class="d-flex flex-wrap align-items-end gap-3 mt-1"
-              @submit.prevent="nonInvitare(p)"
-            >
-              <div class="flex-grow-1">
-                <label class="form-label small" :for="`motivo-${p.persona_id}`">
-                  Motivo (la famiglia lo legge)
-                </label>
-                <input
-                  :id="`motivo-${p.persona_id}`"
-                  v-model="esclusione.motivo"
-                  class="form-control form-control-sm"
-                  required
-                />
+            <div v-if="m.stato === 'NON_INVITATO'" class="small">
+              Lo staff ha deciso di non invitarlo: {{ m.motivo }}
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- The staff -->
+      <section v-if="evento.partecipanti.length" class="mb-5">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+          <h2 class="h5 mb-0">Partecipanti</h2>
+          <span class="small fg-2">
+            {{ conteggio.presenti }} {{ conteggio.presenti === 1 ? 'presente' : 'presenti' }} ·
+            {{ conteggio.assenti }} {{ conteggio.assenti === 1 ? 'assente' : 'assenti' }} ·
+            {{ conteggio.giustificati }}
+            {{ conteggio.giustificati === 1 ? 'giustificato' : 'giustificati' }}
+          </span>
+          <a v-if="evento.puo_presenze" :href="foglioPresenze(evento.id)" class="small">
+            Foglio da stampare
+          </a>
+        </div>
+        <div v-if="evento.puo_presenze && !evento.annullato" class="d-flex gap-3 mb-3">
+          <button type="button" class="btn btn-sm btn-outline theme-primary" @click="tuttiPresenti">
+            Segna gli altri presenti
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-solid theme-primary"
+            :disabled="inCorso || !modificate.length"
+            @click="salvaPresenze"
+          >
+            Salva le presenze
+          </button>
+        </div>
+        <ul class="list-group">
+          <li v-for="p in evento.partecipanti" :key="p.persona_id" class="list-group-item">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <span>
+                {{ p.cognome }} {{ p.nome }}
+                <span v-if="p.stato === 'NON_PARTECIPA'" class="badge theme-warning ms-1">
+                  Non partecipa
+                </span>
+                <span v-if="p.stato === 'NON_INVITATO'" class="badge theme-danger ms-1">
+                  Non invitato
+                </span>
+              </span>
+              <div
+                v-if="evento.puo_presenze && p.stato !== 'NON_INVITATO' && !evento.annullato"
+                class="d-flex gap-1"
+                role="group"
+                :aria-label="`Presenza di ${p.nome} ${p.cognome}`"
+              >
+                <button
+                  v-for="[stato, etichetta] in STATI"
+                  :key="stato"
+                  type="button"
+                  class="btn btn-sm"
+                  :class="
+                    presenze[p.persona_id] === stato
+                      ? 'btn-solid theme-primary'
+                      : 'btn-outline theme-secondary'
+                  "
+                  :aria-pressed="presenze[p.persona_id] === stato"
+                  @click="presenze[p.persona_id] = stato"
+                >
+                  {{ etichetta }}
+                </button>
               </div>
-              <button type="submit" class="btn btn-sm btn-solid theme-danger" :disabled="inCorso">
-                Non invitare
+              <span v-else-if="p.presenza" class="small">
+                {{ STATI.find(([s]) => s === p.presenza)?.[1] }}
+              </span>
+            </div>
+            <div v-if="p.stato === 'NON_INVITATO'" class="small fg-2">{{ p.motivo }}</div>
+            <div v-if="evento.puo_non_invitare && !evento.annullato" class="small">
+              <button
+                v-if="p.stato === 'NON_INVITATO'"
+                type="button"
+                class="btn btn-sm btn-link"
+                @click="reinvita(p)"
+              >
+                Invita di nuovo
               </button>
-              <button type="button" class="btn btn-sm btn-link" @click="esclusione.persona = 0">
-                Annulla
+              <button
+                v-else-if="esclusione.persona !== p.persona_id"
+                type="button"
+                class="btn btn-sm btn-link"
+                @click="Object.assign(esclusione, { persona: p.persona_id, motivo: '' })"
+              >
+                Non invitare…
               </button>
-            </form>
-          </div>
-        </li>
-      </ul>
-    </section>
+              <form
+                v-else
+                class="d-flex flex-wrap align-items-end gap-3 mt-1"
+                @submit.prevent="nonInvitare(p)"
+              >
+                <div class="flex-grow-1">
+                  <label class="form-label small" :for="`motivo-${p.persona_id}`">
+                    Motivo (la famiglia lo legge)
+                  </label>
+                  <input
+                    :id="`motivo-${p.persona_id}`"
+                    v-model="esclusione.motivo"
+                    class="form-control form-control-sm"
+                    required
+                  />
+                </div>
+                <button type="submit" class="btn btn-sm btn-solid theme-danger" :disabled="inCorso">
+                  Non invitare
+                </button>
+                <button type="button" class="btn btn-sm btn-link" @click="esclusione.persona = 0">
+                  Annulla
+                </button>
+              </form>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </template>
 
     <section v-if="evento.puo_gestire && !evento.annullato">
       <button

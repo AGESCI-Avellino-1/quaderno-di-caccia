@@ -24,6 +24,7 @@ from apps.anagrafica.models import (
     VisibilitaGenitori,
 )
 from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
+from apps.buonacaccia.models import IscrizioneBuonaCaccia, QuotaFormazione
 from apps.dispositivi.models import Dispositivo
 from apps.iscrizioni.models import RichiestaIscrizione
 from apps.organizzazione.models import Incarico
@@ -230,6 +231,17 @@ def fascicolo(persona: Persona) -> dict:
             }
             for r in RichiestaIscrizione.objects.filter(persona=persona).select_related("unita")
         ],
+        "eventi_buonacaccia": [_iscrizione_buonacaccia(i) for i in _iscrizioni_bc(persona)],
+        "campi_di_formazione": [
+            {
+                "Evento": q.partecipazione.evento.titolo,
+                "Dal": _giorno(q.partecipazione.evento.inizio),
+                "Quota versata": str(q.importo),
+            }
+            for q in QuotaFormazione.objects.filter(partecipazione__persona=persona).select_related(
+                "partecipazione__evento"
+            )
+        ],
         "richieste_dei_diritti": [
             {
                 "Tipo": r.get_tipo_display(),
@@ -238,6 +250,31 @@ def fascicolo(persona: Persona) -> dict:
             }
             for r in RichiestaDiritti.objects.filter(persona=persona)
         ],
+    }
+
+
+def _iscrizioni_bc(persona: Persona):
+    return IscrizioneBuonaCaccia.objects.filter(partecipazione__persona=persona).select_related(
+        "partecipazione__evento"
+    )
+
+
+def _iscrizione_buonacaccia(i: IscrizioneBuonaCaccia) -> dict:
+    """A registration on BuonaCaccia: the answers with their questions, the staff's
+    presentation too (it is about the person)."""
+    from apps.buonacaccia.servizi import riepilogo
+
+    return {
+        "Evento": i.partecipazione.evento.titolo,
+        "Dal": _giorno(i.partecipazione.evento.inizio),
+        "Iscritto il": come_testo(i.iscritto_il),
+        "Stato": i.get_stato_display(),
+        "Liberatoria ricevuta il": come_testo(i.liberatoria_ricevuta_il),
+        "Esito della liberatoria": i.get_esito_liberatoria_display(),
+        "Risposte": "; ".join(
+            f"{r['domanda']}: {r['risposta']}" for r in riepilogo(i) if r["risposta"]
+        ),
+        "Presentazione dello staff": i.presentazione,
     }
 
 
@@ -260,6 +297,8 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Correzioni ai dati di BuonaStrada",
         "Account, dispositivi e inviti",
         "Iscrizioni dall'app e moduli firmati caricati",
+        "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
+        "(le quote restano)",
         "Storico delle modifiche di questi dati",
     ]
     if motivo is None:
@@ -297,6 +336,11 @@ def cancella(persona: Persona) -> dict:
             _cancella_storico(oggetti)
             for oggetto in oggetti:
                 oggetto.delete()
+        for iscrizione in _iscrizioni_bc(persona):
+            from apps.buonacaccia.servizi import elimina
+
+            _cancella_storico([iscrizione])
+            elimina(iscrizione)
         iscrizioni = list(RichiestaIscrizione.objects.filter(persona=persona))
         for richiesta in iscrizioni:
             allegati = list(richiesta.allegati.all())

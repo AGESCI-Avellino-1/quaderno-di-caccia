@@ -704,6 +704,8 @@ def puo_creare_evento(
     (Consiglio Capi, Con.Ca.Vi., Alta Squadriglia) the staff of any of them (DEC-140)."""
     from apps.organizzazione.models import BRANCA_DEL_TIPO
 
+    if livello == "ESTERNO":
+        return False  # through apps.buonacaccia (puo_creare_evento_buonacaccia)
     if e_capogruppo(user):
         return True
     if livello == "GRUPPO":
@@ -744,6 +746,8 @@ def _unita_ids_evento(evento) -> list[int]:
 def puo_gestire_evento(user, evento) -> bool:
     """Change, cancel, invite or not: who could create it. A patrol event made by the
     CSQ is managed by the CSQ and the reparto staff."""
+    if evento.livello == "ESTERNO":
+        return puo_gestire_evento_buonacaccia(user, evento)
     return puo_creare_evento(
         user,
         evento.livello,
@@ -787,6 +791,8 @@ def puo_segnare_presenze(user, evento) -> bool:
 def puo_non_invitare(user, evento) -> bool:
     """The staff of the event; for a group event the Co.Ca. decides and a capogruppo
     records it."""
+    if evento.livello == "ESTERNO":
+        return False  # who takes part is decided on BuonaCaccia
     if evento.livello == "GRUPPO":
         return e_capogruppo(user)
     if evento.livello == "SQUADRIGLIA":
@@ -820,7 +826,10 @@ def puo_vedere_partecipanti(user, evento) -> bool:
 
 def puo_segnalare_assenza(user, persona: Persona, evento) -> bool:
     """The family of a minor, the adult member (and their parents while they still
-    see their activities, DEC-26); the event's managers on their behalf."""
+    see their activities, DEC-26); the event's managers on their behalf. On BuonaCaccia
+    a minor's registration is cancelled by the staff (DEC-144)."""
+    if evento.livello == "ESTERNO":
+        return puo_segnare_partecipazione_esterna(user, persona) and not persona.e_minorenne()
     livello = _livello_personale(user, persona)
     if livello == LivelloAccesso.PROPRIO:
         return not persona.e_minorenne()
@@ -860,3 +869,85 @@ def squadriglie_delegate(user) -> list[int]:
             "squadriglia_id", flat=True
         )
     )
+
+
+# --- Events on BuonaCaccia (DEC-144, DEC-158…DEC-164) --------------------------------------
+# Only capi (for minors) and adults (for themselves) act on BuonaCaccia: the app keeps the
+# staff's notebook. The management link deletes a registration without trace: only who
+# manages it sees it (DEC-159).
+
+
+def puo_gestire_iscrizione_buonacaccia(user, persona: Persona) -> bool:
+    """A minor's registration, its link, deadlines, release form and the staff's
+    presentation: the staff of the member's unit and the capigruppo (DEC-144, DEC-159)."""
+    if e_capo_in_attesa(user):
+        return False
+    return e_capogruppo(user) or _staff_della_persona(user, persona)
+
+
+def puo_segnare_partecipazione_esterna(user, persona: Persona) -> bool:
+    """An adult member (R/S or capo) records their own participation; the staff of their
+    unit and the capigruppo may do it for them (DEC-164). A parent who is not a member
+    has no participation to record."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return (
+            not persona.e_minorenne()
+            and Appartenenza.objects.attive().filter(persona=persona).exists()
+        )
+    return puo_gestire_iscrizione_buonacaccia(user, persona)
+
+
+def puo_creare_evento_buonacaccia(user) -> bool:
+    """Who registers someone: the capi; an adult member for themself (DEC-164)."""
+    if e_capo(user):
+        return True
+    propria = persona_di(user)
+    return (
+        propria is not None
+        and not propria.e_minorenne()
+        and Appartenenza.objects.attive().filter(persona=propria).exists()
+    )
+
+
+def puo_gestire_evento_buonacaccia(user, evento) -> bool:
+    """Title, dates, the event form: the capigruppo, who created the event, who manages
+    one of its participants."""
+    if not getattr(user, "is_authenticated", False):
+        return False
+    if e_capogruppo(user) or evento.creato_da_id == user.pk:
+        return True
+    return any(
+        puo_gestire_iscrizione_buonacaccia(user, p.persona)
+        for p in evento.partecipazioni.select_related("persona")
+    )
+
+
+def puo_vedere_iscrizione_buonacaccia(user, persona: Persona) -> bool:
+    """Status, deadlines, answers and photo: the capi, the member, their parents
+    (DEC-161)."""
+    if e_capo_censito(user):
+        return True
+    return _livello_personale(user, persona) in {LivelloAccesso.PROPRIO, LivelloAccesso.TUTORE}
+
+
+def puo_rispondere_scheda(user, persona: Persona) -> bool:
+    """The participant with their own account, or a parent (DEC-161); the parents may
+    always, not only when the child has no account (maintainer, 30/10/2026). The same
+    people send the signed release form (DEC-160)."""
+    return _livello_personale(user, persona) in {LivelloAccesso.PROPRIO, LivelloAccesso.TUTORE}
+
+
+def vede_presentazione_buonacaccia(user) -> bool:
+    """The staff's presentation of the participant: capi only (DEC-144, DEC-161)."""
+    return e_capo_censito(user)
+
+
+def puo_gestire_schede_buonacaccia(user) -> bool:
+    """Event forms, reusable over the years: any capo (DEC-161)."""
+    return e_capo(user) and not e_capo_in_attesa(user)
+
+
+def puo_vedere_formazione_capi(user) -> bool:
+    """The list of training camps for the Zona: the capigruppo (DEC-164)."""
+    return e_capogruppo(user)

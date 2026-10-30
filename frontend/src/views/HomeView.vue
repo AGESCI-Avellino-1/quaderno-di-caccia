@@ -88,6 +88,14 @@ onMounted(async () => {
           <span class="small fg-2">Riunioni, uscite e campi; partecipazione e presenze</span>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.eventi_buonacaccia" class="col-12 md:col-6">
+        <RouterLink to="/buonacaccia" class="card card-body h-100 text-decoration-none">
+          <strong>Eventi su BuonaCaccia</strong>
+          <span class="small fg-2">
+            Piccole Orme, campetti, formazione: iscrizioni, scadenze e liberatorie
+          </span>
+        </RouterLink>
+      </div>
       <div v-if="sessione.profilo.persona" class="col-12 md:col-6">
         <RouterLink to="/email" class="card card-body h-100 text-decoration-none">
           <strong>Le mie email</strong>

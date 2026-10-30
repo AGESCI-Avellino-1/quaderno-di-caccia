@@ -213,7 +213,7 @@ Backend tests use in-memory SQLite locally and PostgreSQL in CI; set
 | --- | --- | --- |
 | 1. Fondamenta | accounts, roles, units, BuonaStrada import, parents and families; anticipated: device protection (DEC-97) and health essentials (DEC-55) | **built** — done: models, policy, import (CLI + API + UI), invitations (API + email + `crea_invito` + panel on the person page), login (password, code, passkey, Google/Apple), PWA with encrypted offline data, PIN/biometrics, device revocation and expiry, medicines/allergies/intolerances with offline "Al campo" view, access log for health data, units/staff/roles/squadriglie and their members (API + UI). corrections to BuonaStrada data forwarded by the capigruppo (DEC-31), patrol phones (DEC-13), non-medical dietary needs with the health essentials (DEC-49), what parents of an adult see and the alerts at 18 (DEC-26), requests from data subjects with full export and erasure (DEC-102), joining from the app (DEC-120…DEC-127). Tried in a browser end to end on 2026-10-29; left: passkey/Google/Apple on real devices, cron in production |
 | 2. Quote e cassa | fee types, sibling discount, agevolazioni, payments, receipts, cash book on Modello D | **built** — fees, family discount, agevolazioni, payments and receipts, cash book with Modello D totals, refunds, cash checks; decisions DEC-145…DEC-155 |
-| 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | **built** but for BuonaCaccia events (DEC-144, to be studied) — events, attendance, fees in instalments, calendar, emails, fundraising and camp budgets; decisions DEC-137…DEC-144, DEC-156, DEC-157 |
+| 3. Eventi e presenze | 4-level events, recurring meetings, offline attendance, iCal feed | **built** — events, attendance, fees in instalments, calendar, emails, fundraising and camp budgets, BuonaCaccia events (`apps/buonacaccia`); decisions DEC-137…DEC-144, DEC-156…DEC-164 |
 | 4. Progressione Personale | E/G first (pilot, imprese), then R/S and L/C | catalogs of specialità/brevetti ready in `backend/data/cataloghi/` |
 | 5. Fascicolo completo | full medical form with print and signatures (extends `apps/sanitaria`), notes with visibility, archiving | — |
 | 6. Dopo | notice board, bank statement matching, Carta di clan text | — |
@@ -305,7 +305,21 @@ implements them:
   stays. New sensitive data = add it to `diritti.servizi.fascicolo` and `cancella`.
 - Phases 2 and 3 (decided 29/10/2026): events and attendance DEC-137…DEC-144, fees and
   cash book DEC-145…DEC-156, optional emails DEC-157 (`anagrafica.PreferenzeEmail`,
-  to be confirmed with the national Privacy Office). BuonaCaccia events wait for the
-  open point on their personalised release forms.
+  to be confirmed with the national Privacy Office).
+- BuonaCaccia events (DEC-158…DEC-164, `apps/buonacaccia`): an `Evento` with level
+  `ESTERNO`, participants one by one (no `previsti`), created and changed only through
+  `/buonacaccia/…` (`policy.puo_creare_evento` refuses `ESTERNO`). A minor's
+  `IscrizioneBuonaCaccia` (deadlines computed: +9 days, 7 days before the start, release
+  form 2 days before) is managed by the unit staff and the capigruppo
+  (`policy.puo_gestire_iscrizione_buonacaccia`), who alone see `link_gestione` (kept
+  out of the audit log). Files (release forms, photo) under random names, API only;
+  capi reads of release forms logged as `MODULI`. The photo becomes a JPEG ≤ 1 MB with
+  Pillow, metadata dropped. Fees: `CategoriaQuota.BUONACACCIA`, one `Quota` per
+  registration, no family discount, never issued by `emetti` nor reminded by
+  `promemoria_quote` (maintainer, 30/10: the app only shows them unpaid). Reminders 2
+  days before and on the day, always sent (`[da verificare]` whether they should be an
+  optional kind of DEC-157): `manage.py promemoria_buonacaccia` (cron). Adults: only a
+  `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp given by
+  the maintainer, 30/10).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

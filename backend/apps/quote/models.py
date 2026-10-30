@@ -53,12 +53,15 @@ def _euro(**campi) -> models.DecimalField:
 
 
 class CategoriaQuota(models.TextChoices):
-    """DEC-80; BuonaCaccia's external events come later."""
+    """DEC-80, DEC-77, DEC-163."""
 
     CENSIMENTO = "CENSIMENTO", "Censimento (quota nazionale)"
     GRUPPO = "GRUPPO", "Quota di gruppo"
     MENSILE = "MENSILE", "Quota mensile di unità"
     EVENTO = "EVENTO", "Quota di un evento"  # DEC-77
+    # DEC-163: one fee per registration, amount and due date set by who registered the
+    # member, no family discount; issued by apps.buonacaccia, never by `emetti`.
+    BUONACACCIA = "BUONACACCIA", "Quota di un evento su BuonaCaccia"
 
 
 class Destinatari(models.TextChoices):
@@ -108,7 +111,12 @@ class TipoQuota(ModelloTracciato):
             errori.append("La quota nazionale non ha lo sconto per la famiglia.")
         if self.importo is not None and self.sconto_famiglia > self.importo:
             errori.append("Lo sconto per la famiglia non può superare l'importo.")
-        if self.categoria == CategoriaQuota.EVENTO:
+        if self.categoria == CategoriaQuota.BUONACACCIA:
+            if self.evento_id is None:
+                errori.append("La quota di un evento va collegata all'evento.")
+            if self.sconto_famiglia:
+                errori.append("Le quote degli eventi su BuonaCaccia non hanno lo sconto famiglia.")
+        elif self.categoria == CategoriaQuota.EVENTO:
             errori += self._errori_rate()
         elif self.categoria == CategoriaQuota.MENSILE:
             if not self.mesi or any(m not in MESI_ANNO for m in self.mesi):

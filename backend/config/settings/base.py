@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.quote",
     "apps.cassa",
     "apps.eventi",
+    "apps.buonacaccia",
 ]
 
 MIDDLEWARE = [

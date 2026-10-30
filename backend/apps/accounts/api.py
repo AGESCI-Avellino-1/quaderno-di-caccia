@@ -49,6 +49,9 @@ class Profilo(Schema):
     vede_cassa: bool
     # Patrols whose meetings the user may create as the CSQ's delegate.
     squadriglie_delegate: list[int]
+    # Events on BuonaCaccia: who registers someone, who lists capi training (DEC-164).
+    eventi_buonacaccia: bool
+    formazione_capi: bool
 
 
 @router.get("/io", response=Profilo)
@@ -89,6 +92,8 @@ def profilo(request):
         "unita_quote": policy.unita_situazione_quote(user),
         "vede_cassa": policy.puo_vedere_cassa(user),
         "squadriglie_delegate": policy.squadriglie_delegate(user),
+        "eventi_buonacaccia": policy.puo_creare_evento_buonacaccia(user),
+        "formazione_capi": policy.puo_vedere_formazione_capi(user),
     }
 
 

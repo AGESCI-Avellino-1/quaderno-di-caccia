@@ -1,5 +1,7 @@
 """Reminders of fees falling due (DEC-79): daily (cron). One email per family address,
-listing the unpaid fees due within the next days; each fee is reminded once."""
+listing the unpaid fees due within the next days; each fee is reminded once. Not the
+fees of BuonaCaccia events: the group recovers money it advanced, the app only shows
+them as unpaid (maintainer, 30/10/2026)."""
 
 from collections import defaultdict
 from datetime import date, timedelta
@@ -11,7 +13,7 @@ from django.core.management.base import BaseCommand
 from apps.anagrafica.preferenze import nota_a_piede
 from apps.core.euro import euro
 from apps.eventi.avvisi import indirizzi_famiglia
-from apps.quote.models import Quota
+from apps.quote.models import CategoriaQuota, Quota
 
 # How many days before the due date (DEC-142).
 PREAVVISO = timedelta(days=7)
@@ -25,6 +27,7 @@ class Command(BaseCommand):
         quote = (
             Quota.objects.valide()
             .filter(promemoria_il__isnull=True, scadenza__gte=oggi, scadenza__lte=oggi + PREAVVISO)
+            .exclude(tipo__categoria=CategoriaQuota.BUONACACCIA)
             .select_related("tipo", "persona", "agevolazione")
         )
         per_indirizzo: dict[str, list[Quota]] = defaultdict(list)

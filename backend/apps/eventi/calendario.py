@@ -23,7 +23,8 @@ def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
     """Always the events the user's children take part in. Anyone else: the events
     they take part in. A capo, by view: the events of the units they serve; also
     those of the Co.Ca. and of the whole group; or every event of the group (their own
-    participation as a member of the Co.Ca. is the second view, not the first)."""
+    participation as a member of the Co.Ca. is the second view, not the first; their own
+    BuonaCaccia events are in every view)."""
     persone = [p.pk for p in policy.tutelati(utente) if policy.genitori_vedono(p, "scheda")]
     propria = policy.persona_di(utente)
     capo = propria is not None and policy.e_capo(utente)
@@ -36,6 +37,12 @@ def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
     if capo:
         if vista == "gruppo":
             return Evento.objects.all().order_by("inizio")
+        # Their own BuonaCaccia events (a training camp, DEC-164) in every view.
+        filtro |= Q(
+            livello=Livello.ESTERNO,
+            partecipazioni__persona=propria,
+            partecipazioni__stato=StatoPartecipazione.INVITATO,
+        )
         servite = Incarico.objects.attivi().filter(
             persona=propria,
             ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},

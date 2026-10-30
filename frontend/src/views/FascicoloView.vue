@@ -33,6 +33,8 @@ const TITOLI: Record<string, string> = {
   inviti: 'Inviti',
   accessi_ai_dati_delicati: 'Chi ha visto i dati delicati',
   iscrizioni_dall_app: "Iscrizioni dall'app",
+  eventi_buonacaccia: 'Eventi su BuonaCaccia',
+  campi_di_formazione: 'Campi di formazione capi',
   richieste_dei_diritti: 'Richieste fatte',
 }
 

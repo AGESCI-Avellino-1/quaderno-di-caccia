@@ -44,6 +44,10 @@ export interface Profilo {
   vede_cassa: boolean
   /** Patrols whose meetings the user may create as the CSQ's delegate. */
   squadriglie_delegate: number[]
+  /** Events on BuonaCaccia: registers someone (capi) or themself (adults). */
+  eventi_buonacaccia: boolean
+  /** Capigruppo: the training camps of the capi, for the Zona. */
+  formazione_capi: boolean
 }
 
 export interface PersonaElenco extends PersonaBreve {
@@ -829,7 +833,7 @@ export type TipoEvento =
   'RIUNIONE' | 'USCITA' | 'CAMPO' | 'AUTOFINANZIAMENTO' | 'MISSIONE' | 'ALTRO'
 /** Who of the reparti involved is invited: all, CSQ, CSQ and VCSQ, Alta Squadriglia. */
 export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ'
-export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA'
+export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA' | 'ESTERNO'
 export type StatoPartecipazione = 'INVITATO' | 'NON_PARTECIPA' | 'NON_INVITATO'
 export type StatoPresenza = 'PRESENTE' | 'ASSENTE' | 'GIUSTIFICATO'
 
@@ -996,6 +1000,201 @@ export interface AltaSquadriglia {
 
 export const percorsoPresenze = (evento: number) => `/api/v1/eventi/${evento}/presenze`
 export const foglioPresenze = (evento: number) => `/api/v1/eventi/${evento}/foglio-presenze.pdf`
+
+// --- Events on BuonaCaccia (DEC-158…DEC-164) -----------------------------------------------
+
+export type TipoDomanda =
+  'SCELTA_SINGOLA' | 'SCELTA_MULTIPLA' | 'BREVE' | 'LUNGA' | 'SI_NO' | 'FOTO'
+export type StatoIscrizioneBC = 'AMMESSO' | 'IN_ATTESA' | 'NON_AMMESSO' | 'CANCELLATA'
+export type ModoLiberatoria = 'APP' | 'ALTRI_CANALI'
+export type TipoCampoFormazione = 'CFT' | 'CFM' | 'CFA' | 'CCG' | 'MODULO' | 'ALTRO'
+export type RispostaScheda = string | string[] | boolean
+
+export const TIPI_DOMANDA: [TipoDomanda, string][] = [
+  ['SCELTA_SINGOLA', 'Scelta singola'],
+  ['SCELTA_MULTIPLA', 'Scelta multipla'],
+  ['BREVE', 'Risposta breve'],
+  ['LUNGA', 'Risposta lunga'],
+  ['SI_NO', 'Sì / no'],
+  ['FOTO', 'Foto'],
+]
+
+export const TIPI_CAMPO: [TipoCampoFormazione, string][] = [
+  ['CFT', 'Campo di Formazione Tirocinanti (CFT)'],
+  ['CFM', 'Campo di Formazione Metodologica (CFM)'],
+  ['CFA', 'Campo di Formazione Associativa (CFA)'],
+  ['CCG', 'Campo per Capigruppo (CCG)'],
+  ['MODULO', 'Modulo formativo'],
+  ['ALTRO', 'Altro'],
+]
+
+export interface Domanda {
+  id: string
+  tipo: TipoDomanda
+  testo: string
+  opzioni: string[]
+  obbligatoria: boolean
+}
+
+export interface VersioneScheda {
+  id: number
+  modello_id: number
+  nome: string
+  numero: number
+  domande: Domanda[]
+  chiede_foto: boolean
+}
+
+export interface SchedaBC {
+  id: number
+  nome: string
+  ultima: VersioneScheda
+  versioni: number
+  usata: number
+}
+
+export interface EventoBCIn {
+  titolo: string
+  tipo: TipoEvento
+  inizio: string
+  fine: string
+  luogo: string
+  descrizione: string
+  formazione_capi: boolean
+  tipo_campo: TipoCampoFormazione | null
+  specifica: string
+}
+
+export interface EventoBCTrovato {
+  id: number
+  titolo: string
+  inizio: string
+  fine: string
+  luogo: string
+  formazione_capi: boolean
+}
+
+export interface QuotaIscrizioneBC {
+  id: number
+  importo: string
+  scadenza: string
+  dovuto: string
+  pagato: string
+  residuo: string
+  annullata: boolean
+}
+
+export interface IscrizioneBC {
+  id: number
+  evento_id: number
+  evento: string
+  inizio: string
+  persona_id: number
+  persona: string
+  stato: StatoIscrizioneBC
+  stato_nome: string
+  attiva: boolean
+  iscritto_il: string
+  scadenza: string
+  limite_cancellazione: string
+  cancellata_il: string | null
+  /** Only for who manages the registration. */
+  link_gestione: string | null
+  modo_liberatoria: ModoLiberatoria
+  scadenza_liberatoria: string
+  scadenza_liberatoria_fissata: boolean
+  liberatoria_da_firmare: boolean
+  liberatoria_firmata: boolean
+  liberatoria_ricevuta_il: string | null
+  liberatoria_caricata_il: string | null
+  esito_liberatoria: '' | 'VALIDATA' | 'RIGETTATA'
+  motivo_rigetto: string
+  risposte: Record<string, RispostaScheda>
+  risposte_il: string | null
+  risposte_mancanti: string[]
+  foto: boolean
+  /** Capi only. */
+  presentazione: string | null
+  scheda_inviata_il: string | null
+  pagata_il: string | null
+  quota: QuotaIscrizioneBC | null
+  puo_gestire: boolean
+  puo_rispondere: boolean
+  puo_togliere_quota: boolean
+}
+
+export interface IscrizioneBCIn {
+  persona_id: number
+  iscritto_il: string
+  stato: StatoIscrizioneBC
+  link_gestione: string
+  modo_liberatoria: ModoLiberatoria
+  scadenza_liberatoria: string | null
+  importo: string | null
+  scadenza_quota: string | null
+}
+
+export interface AdultoBC {
+  persona_id: number
+  persona: string
+  partecipa: boolean
+  quota_versata: string | null
+  puo_modificare: boolean
+}
+
+export interface DettaglioBC {
+  id: number
+  titolo: string
+  tipo: TipoEvento
+  inizio: string
+  fine: string
+  luogo: string
+  descrizione: string
+  annullato: boolean
+  formazione_capi: boolean
+  tipo_campo: TipoCampoFormazione | ''
+  tipo_campo_nome: string
+  specifica: string
+  scheda: VersioneScheda | null
+  iscrizioni: IscrizioneBC[]
+  adulti: AdultoBC[]
+  puo_gestire: boolean
+  puo_iscrivere: boolean
+  puo_partecipare: boolean
+}
+
+export interface PassiBC {
+  liberatoria_ricevuta_il?: string | null
+  liberatoria_caricata_il?: string | null
+  scheda_inviata_il?: string | null
+  pagata_il?: string | null
+}
+
+export interface RiepilogoBC {
+  persona: string
+  righe: { domanda: string; tipo: TipoDomanda; risposta: string }[]
+  presentazione: string
+  foto: boolean
+}
+
+export interface FormazioneCapo {
+  persona_id: number
+  persona: string
+  evento_id: number
+  evento: string
+  dal: string
+  al: string
+  luogo: string
+  tipo_campo: string
+  quota_versata: string | null
+}
+
+const bc = (iscrizione: number, resto = '') =>
+  `/api/v1/buonacaccia/iscrizioni/${iscrizione}${resto}`
+export const fileLiberatoria = (iscrizione: number) => bc(iscrizione, '/liberatoria')
+export const fileLiberatoriaFirmata = (iscrizione: number) => bc(iscrizione, '/liberatoria-firmata')
+export const fileFotoBC = (iscrizione: number) => bc(iscrizione, '/foto')
+export const fileFormazione = (anno: number) => `/api/v1/buonacaccia/formazione.xlsx?anno=${anno}`
 
 export const PERCORSO_MOVIMENTI = '/api/v1/movimenti'
 export const PERCORSO_SPESE_ANTICIPATE = '/api/v1/spese-anticipate'
@@ -1372,6 +1571,77 @@ export const api = {
     }),
   modelloD: (anno?: number) =>
     richiesta<ModelloD>(`/api/v1/modello-d${anno ? `?anno=${anno}` : ''}`),
+  cercaEventiBC: (cerca: string) =>
+    richiesta<EventoBCTrovato[]>(`/api/v1/buonacaccia/eventi?cerca=${encodeURIComponent(cerca)}`),
+  creaEventoBC: (dati: EventoBCIn) =>
+    richiesta<EventoBCTrovato>('/api/v1/buonacaccia/eventi', { metodo: 'POST', corpo: dati }),
+  modificaEventoBC: (id: number, dati: EventoBCIn) =>
+    richiesta<EventoBCTrovato>(`/api/v1/buonacaccia/eventi/${id}`, { metodo: 'PUT', corpo: dati }),
+  eventoBC: (id: number) => richiesta<DettaglioBC>(`/api/v1/buonacaccia/eventi/${id}`),
+  schedaEventoBC: (id: number, versione_id: number | null) =>
+    richiesta<DettaglioBC>(`/api/v1/buonacaccia/eventi/${id}/scheda`, {
+      metodo: 'PUT',
+      corpo: { versione_id },
+    }),
+  partecipanteBC: (
+    evento: number,
+    dati: { persona_id: number; partecipa: boolean; quota_versata: string | null },
+  ) =>
+    richiesta<DettaglioBC>(`/api/v1/buonacaccia/eventi/${evento}/partecipanti`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  iscriviBC: (evento: number, dati: IscrizioneBCIn) =>
+    richiesta<IscrizioneBC>(`/api/v1/buonacaccia/eventi/${evento}/iscrizioni`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  iscrizioniBC: (tutte = false) =>
+    richiesta<IscrizioneBC[]>(`/api/v1/buonacaccia/iscrizioni${tutte ? '?tutte=true' : ''}`),
+  aggiornaIscrizioneBC: (
+    id: number,
+    dati: Partial<{
+      iscritto_il: string
+      stato: StatoIscrizioneBC
+      link_gestione: string
+      modo_liberatoria: ModoLiberatoria
+      scadenza_liberatoria: string | null
+      scadenza_liberatoria_predefinita: boolean
+    }>,
+  ) => richiesta<IscrizioneBC>(bc(id), { metodo: 'PUT', corpo: dati }),
+  chiudiIscrizioneBC: (id: number, stato: 'CANCELLATA' | 'NON_AMMESSO', il: string) =>
+    richiesta<IscrizioneBC>(bc(id, '/chiudi'), { metodo: 'POST', corpo: { stato, il } }),
+  quotaIscrizioneBC: (id: number, importo: string, scadenza: string) =>
+    richiesta<IscrizioneBC>(bc(id, '/quota'), { metodo: 'PUT', corpo: { importo, scadenza } }),
+  togliQuotaBC: (id: number) => richiesta<IscrizioneBC>(bc(id, '/togli-quota'), { metodo: 'POST' }),
+  passiBC: (id: number, passi: PassiBC) =>
+    richiesta<IscrizioneBC>(bc(id, '/passi'), { metodo: 'PUT', corpo: passi }),
+  esitoLiberatoriaBC: (id: number, esito: 'VALIDATA' | 'RIGETTATA', motivo = '') =>
+    richiesta<IscrizioneBC>(bc(id, '/esito-liberatoria'), {
+      metodo: 'POST',
+      corpo: { esito, motivo },
+    }),
+  caricaLiberatoriaBC: (id: number, file: File) =>
+    richiesta<IscrizioneBC>(bc(id, '/liberatoria'), { metodo: 'POST', corpo: conFile({}, file) }),
+  caricaLiberatoriaFirmataBC: (id: number, file: File) =>
+    richiesta<IscrizioneBC>(bc(id, '/liberatoria-firmata'), {
+      metodo: 'POST',
+      corpo: conFile({}, file),
+    }),
+  risposteBC: (id: number, risposte: Record<string, RispostaScheda>) =>
+    richiesta<IscrizioneBC>(bc(id, '/risposte'), { metodo: 'PUT', corpo: { risposte } }),
+  caricaFotoBC: (id: number, file: File) =>
+    richiesta<IscrizioneBC>(bc(id, '/foto'), { metodo: 'POST', corpo: conFile({}, file) }),
+  presentazioneBC: (id: number, testo: string) =>
+    richiesta<IscrizioneBC>(bc(id, '/presentazione'), { metodo: 'PUT', corpo: { testo } }),
+  riepilogoBC: (id: number) => richiesta<RiepilogoBC>(bc(id, '/riepilogo')),
+  schedeBC: () => richiesta<SchedaBC[]>('/api/v1/buonacaccia/schede'),
+  creaSchedaBC: (dati: { nome: string; domande: Domanda[] }) =>
+    richiesta<SchedaBC>('/api/v1/buonacaccia/schede', { metodo: 'POST', corpo: dati }),
+  nuovaVersioneSchedaBC: (id: number, dati: { nome: string; domande: Domanda[] }) =>
+    richiesta<SchedaBC>(`/api/v1/buonacaccia/schede/${id}`, { metodo: 'PUT', corpo: dati }),
+  formazioneCapi: (anno: number) =>
+    richiesta<FormazioneCapo[]>(`/api/v1/buonacaccia/formazione?anno=${anno}`),
   applicaImportazione: (id: number, scelte: Record<string, Lato>) =>
     richiesta<EsitoImportazione>(`/api/v1/importazioni/${id}/applica`, {
       metodo: 'POST',

@@ -173,6 +173,27 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // Events on BuonaCaccia: the capi's registrations to follow; adults add their own
+      // events (DEC-158, DEC-164). The API decides.
+      path: '/buonacaccia',
+      name: 'buonacaccia',
+      component: () => import('@/views/BuonaCacciaView.vue'),
+    },
+    {
+      // Event forms, reusable over the years (DEC-161).
+      path: '/buonacaccia/schede',
+      name: 'schede-buonacaccia',
+      component: () => import('@/views/SchedeBuonaCacciaView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
+      // Capi training camps for the Zona: the capigruppo (DEC-164).
+      path: '/buonacaccia/formazione',
+      name: 'formazione-capi',
+      component: () => import('@/views/FormazioneCapiView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // The Co.Ca. and the unit treasurers: the API decides (DEC-85…DEC-88).
       path: '/cassa',
       name: 'cassa',

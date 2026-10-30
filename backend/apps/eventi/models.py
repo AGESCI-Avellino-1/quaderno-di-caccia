@@ -8,7 +8,8 @@
 - attendance is present, absent or excused, marked by capi only, also offline, at
   recurring meetings and at every other event (for a camp, once for the event)
   (DEC-138);
-- BuonaCaccia events come after this phase (DEC-144);
+- BuonaCaccia events are external events with single participants, recorded by the
+  staff (minors) or the adult themself (DEC-144, DEC-158…DEC-164, `apps.buonacaccia`);
 - patrol meetings are patrol events: the CSQ, a member they delegate (to create them
   only) or the reparto staff create them, and the CSQ marks their attendance; the staff
   also creates the patrol's mission (with notes for the parents the ragazzi do not
@@ -33,6 +34,8 @@ class Livello(models.TextChoices):
     BRANCA = "BRANCA", "Branca"
     UNITA = "UNITA", "Unità"
     SQUADRIGLIA = "SQUADRIGLIA", "Squadriglia"
+    # Organised outside the group, on BuonaCaccia (DEC-158): single participants.
+    ESTERNO = "ESTERNO", "Evento su BuonaCaccia"
 
 
 class TipoEvento(models.TextChoices):
@@ -147,6 +150,8 @@ class Evento(ModelloTracciato):
             errori.append("Scegli la squadriglia.")
         if self.tipo == TipoEvento.MISSIONE and self.livello != Livello.SQUADRIGLIA:
             errori.append("La missione è di una squadriglia.")
+        if self.tipo == TipoEvento.RIUNIONE and self.livello == Livello.ESTERNO:
+            errori.append("Un evento su BuonaCaccia non è una riunione.")
         if self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
             errori.append("Consiglio Capi, Con.Ca.Vi. e Alta Squadriglia sono eventi di reparto.")
         if errori:

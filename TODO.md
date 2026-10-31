@@ -159,7 +159,22 @@ Richiesta del maintainer del 31/10/2026.
 | --- | --- | --- | --- |
 | C.1 | Ovunque si scrive un codice fiscale: pulsante che lo calcola da nome, cognome, sesso, data e luogo di nascita e lo propone (chi lo inserisce verifica). Serve l'elenco dei codici dei comuni e degli stati esteri (fonte ISTAT, scelta del 31/10: l'elenco dei comuni c'è; quello degli stati esteri ha i link ISTAT rotti, da chiedere al maintainer) | DEC-265 | ✅ provato nel browser il 31/10 per i comuni; ⏳ stati esteri: serve il file ISTAT dal portale SITUAS |
 
-### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
+### 8. Fase 8 — Documentazione di uso
+
+Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| 8.1 | Impianto, introduzione, accesso e protezione del telefono | DEC-230…DEC-239 | ✅ 30/10 |
+| 8.2 | Il resto della parte genitore, riallineata il 31/10 alla nuova navigazione | DEC-233, DEC-238 | ✅ 31/10 |
+| 8.3 | Genitore: iscrizioni agli eventi BuonaCaccia (scheda, foto, liberatoria, quota); nei dati di prova un evento BuonaCaccia con l'iscrizione di Giulia | DEC-158…DEC-163, DEC-168 | ✅ 31/10 |
+| 8.4 | Parte ragazzo, comune ed E/G: accesso, scheda (e cosa cambia a 18 anni), Sentiero E/G (proporre mete e impegni, pronto per la verifica), capo squadriglia (telefoni, note, imprese), eventi e privacy; nei dati di prova un impegno e una specialità di Giulia in corso | DEC-237 | ✅ 31/10 |
+| 8.4b | Parte ragazzo, R/S: Carta di clan (proporre una versione), obiettivi, passi, Punto della Strada con la parte riservata; servono dati di prova per Chiara | DEC-179…DEC-181, DEC-227…DEC-229 | ⏳ |
+| 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; servono dati di prova per Sofia | DEC-182…DEC-185, DEC-237 | ⏳ |
+| 8.5 | Parte capo e staff di unità (con la lista d'attesa dei capi, L.6) | DEC-233 | ⏳ |
+| 8.6 | Parte capogruppo, tesorieri, amministratore tecnico | DEC-233 | ⏳ |
+
+Appunti per quando ci si arriva:
 
 Argomenti da spiegare bene ai capi, perché non sono chiari a tutti:
 

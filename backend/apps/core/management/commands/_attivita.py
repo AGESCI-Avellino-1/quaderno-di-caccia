@@ -6,9 +6,11 @@ rules and permissions as the app. Dates are relative to today: the screenshots a
 show an ongoing year.
 """
 
+import io
 import json
 from datetime import date, datetime, time, timedelta
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import CommandError
 from django.test import Client
 from django.utils import timezone
@@ -45,6 +47,26 @@ class Api:
                 f"{metodo.upper()} {percorso}: {risposta.status_code} {risposta.content[:300]!r}"
             )
         return risposta.json() if risposta.content else None
+
+    def carica(self, percorso: str, file: SimpleUploadedFile):
+        """A file sent as a form, as the app's upload fields do."""
+        risposta = self.client.post(f"/api/v1{percorso}", {"file": file})
+        if risposta.status_code >= 400:
+            raise CommandError(
+                f"POST {percorso}: {risposta.status_code} {risposta.content[:300]!r}"
+            )
+        return risposta.json()
+
+
+def _pdf_di_prova(testo: str) -> SimpleUploadedFile:
+    """A one-page PDF standing for a real form (no real model is copied)."""
+    from reportlab.pdfgen.canvas import Canvas
+
+    contenuto = io.BytesIO()
+    pagina = Canvas(contenuto)
+    pagina.drawString(72, 770, testo)
+    pagina.save()
+    return SimpleUploadedFile("liberatoria.pdf", contenuto.getvalue(), "application/pdf")
 
 
 def _giorno(giorni: int, ora: time) -> str:
@@ -264,7 +286,7 @@ def crea_attivita(email) -> None:
     )
     meta = scheda["mete"][-1]["id"]
     capo_reparto("post", f"/progressione/mete/{meta}/concorda", {})
-    capo_reparto(
+    scheda = capo_reparto(
         "post",
         f"/persone/{giulia}/progressione/impegni",
         {
@@ -274,6 +296,21 @@ def crea_attivita(email) -> None:
             "mete": [meta],
         },
     )
+    # Under way, so that the guida can say she is ready for the verification.
+    impegno = scheda["impegni"][-1]["id"]
+    capo_reparto("post", f"/progressione/impegni/{impegno}/concorda", {})
+    capo_reparto("post", f"/progressione/impegni/{impegno}/avvia", {})
+    scheda = capo_reparto(
+        "post",
+        f"/persone/{giulia}/progressione/competenze",
+        {
+            "tipo": "SPECIALITA",
+            "codice": "EGSP064",  # Topografo
+            "carta": "Disegnare la cartina del quartiere e guidare un'uscita con la bussola",
+            "maestro": "Marco Ferri",
+        },
+    )
+    capo_reparto("post", f"/competenze/{scheda['competenze'][-1]['id']}/avvia", {})
 
     # A registration code for the cerchio (DEC-120).
     codice = capo_cerchio(
@@ -302,3 +339,52 @@ def crea_attivita(email) -> None:
         },
     )
     InAttesa.objects.filter(cognome="Colombo").update(token=LINK_ATTESA)
+
+    # A BuonaCaccia event (DEC-158…DEC-163): the reparto staff registered Giulia, the
+    # form asks a few questions and a photo, the release form waits for the family.
+    scheda = capo_reparto(
+        "post",
+        "/buonacaccia/schede",
+        {
+            "nome": "Campo di specialità",
+            "domande": [
+                {"tipo": "BREVE", "testo": "Taglia della maglietta", "obbligatoria": True},
+                {
+                    "tipo": "SCELTA_SINGOLA",
+                    "testo": "Specialità che vuoi approfondire",
+                    "opzioni": ["Pioniere", "Topografo", "Cuciniere"],
+                    "obbligatoria": True,
+                },
+                {"tipo": "SI_NO", "testo": "Sai nuotare?"},
+                {"tipo": "FOTO", "testo": "Una tua foto per il cartellino", "obbligatoria": True},
+            ],
+        },
+    )
+    campo = capo_reparto(
+        "post",
+        "/buonacaccia/eventi",
+        {
+            "titolo": "Campo di specialità di Zona",
+            "tipo": "CAMPO",
+            "inizio": _giorno(_sabato(4), time(9)),
+            "fine": _giorno(_sabato(4) + 1, time(17)),
+            "luogo": "Base scout di Montevergine",
+        },
+    )
+    capo_reparto(
+        "put", f"/buonacaccia/eventi/{campo['id']}/scheda", {"versione_id": scheda["ultima"]["id"]}
+    )
+    iscrizione = capo_reparto(
+        "post",
+        f"/buonacaccia/eventi/{campo['id']}/iscrizioni",
+        {
+            "persona_id": giulia,
+            "iscritto_il": (date.today() - timedelta(days=2)).isoformat(),
+            "importo": "35.00",
+            "scadenza_quota": (date.today() + timedelta(days=6)).isoformat(),
+        },
+    )
+    capo_reparto.carica(
+        f"/buonacaccia/iscrizioni/{iscrizione['id']}/liberatoria",
+        _pdf_di_prova("Liberatoria di prova: modulo inventato per il manuale"),
+    )

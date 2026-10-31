@@ -6,7 +6,9 @@ from django.test import override_settings
 
 from apps.accounts.models import Invito, User
 from apps.anagrafica.models import Persona
+from apps.attesa.models import InAttesa
 from apps.bacheca.models import Avviso
+from apps.buonacaccia.models import IscrizioneBuonaCaccia
 from apps.eventi.models import Evento
 from apps.iscrizioni.models import CodiceIscrizione
 from apps.organizzazione.models import Incarico, RuoloIncarico
@@ -38,10 +40,15 @@ def test_every_profile_can_log_in():
     # The group's activity, created through the API.
     giulia = Persona.objects.get(nome="Giulia", cognome="Rossi")
     assert giulia.informazioni_sanitarie.allergie.count() == 2
-    assert Evento.objects.count() == 3
+    # A meeting, an outing, a group party and a BuonaCaccia camp.
+    assert Evento.objects.count() == 4
+    iscrizione = IscrizioneBuonaCaccia.objects.get()
+    assert iscrizione.partecipazione.persona == giulia
+    assert iscrizione.liberatoria_da_firmare
     assert Pagamento.objects.count() == 1
     assert Avviso.objects.count() == 2
     assert CodiceIscrizione.objects.get().codice == "CERCHIO2027"
+    assert InAttesa.objects.get(token="attesa-di-prova").nome == "Pietro"
 
     with pytest.raises(CommandError, match="--azzera"):
         call_command("dati_di_prova", verbosity=0)

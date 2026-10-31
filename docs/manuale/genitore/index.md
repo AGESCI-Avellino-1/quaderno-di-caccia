@@ -32,6 +32,7 @@ lista-attesa
 iscrizione
 sanitaria
 eventi
+buonacaccia
 quote
 progressione
 squadriglia

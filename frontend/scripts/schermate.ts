@@ -203,6 +203,28 @@ const SCENE: Scena[] = [
     prepara: apri('Uscita di reparto'),
     intera: true,
   },
+  {
+    nome: 'genitore/buonacaccia',
+    chi: 'genitore',
+    percorso: '/eventi',
+    prepara: apri('Campo di specialità di Zona'),
+    intera: true,
+  },
+  {
+    nome: 'genitore/buonacaccia-scheda',
+    chi: 'genitore',
+    percorso: '/eventi',
+    prepara: async (pagina) => {
+      await apri('Campo di specialità di Zona')(pagina)
+      await pagina.getByLabel('Taglia della maglietta').fill('M')
+      await pagina.getByLabel('Topografo').check()
+      await pagina.getByLabel('Sai nuotare?').selectOption({ label: 'Sì' })
+      await pagina.getByRole('button', { name: 'Salva le risposte' }).click()
+      await pagina.getByText('Salvate.').waitFor()
+    },
+    // After saving, only the photo is missing (the answers stay in the database).
+    mostra: 'Mancano: Una tua foto per il cartellino.',
+  },
   { nome: 'genitore/quote', chi: 'genitore', percorso: '/mie-quote', intera: true },
   {
     nome: 'genitore/quote-bonifico',
@@ -227,6 +249,56 @@ const SCENE: Scena[] = [
     percorso: '/',
     prepara: apri('Chiara Russo'),
     intera: true,
+  },
+  // The ragazzi (DEC-237): Giulia is a guida and the capo squadriglia of the Pantere.
+  { nome: 'ragazzo/home', chi: 'capoSquadriglia', percorso: '/', intera: true },
+  {
+    nome: 'ragazzo/scheda',
+    chi: 'capoSquadriglia',
+    percorso: '/',
+    prepara: apri('Il mio profilo'),
+    intera: true,
+  },
+  {
+    nome: 'ragazzo/sentiero',
+    chi: 'capoSquadriglia',
+    percorso: '/',
+    prepara: apri('Il mio Sentiero'),
+    intera: true,
+  },
+  {
+    nome: 'ragazzo/nuova-meta',
+    chi: 'capoSquadriglia',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('Il mio Sentiero')(pagina)
+      await pagina.getByRole('button', { name: 'Nuova meta' }).click()
+      await pagina
+        .getByLabel('Il cambiamento che vuoi raggiungere')
+        .fill('Parlare davanti al reparto senza agitarmi')
+    },
+    mostra: 'Nuova meta',
+  },
+  {
+    nome: 'ragazzo/verifica',
+    chi: 'capoSquadriglia',
+    percorso: '/',
+    prepara: apri('Il mio Sentiero'),
+    mostra: 'Impegni',
+  },
+  { nome: 'ragazzo/squadriglia', chi: 'capoSquadriglia', percorso: '/squadriglia', intera: true },
+  {
+    nome: 'ragazzo/nota-csq',
+    chi: 'capoSquadriglia',
+    percorso: '/squadriglia',
+    prepara: async (pagina) => {
+      await apri('Alice Marino')(pagina)
+      await pagina.getByRole('button', { name: 'Nuova nota' }).click()
+      await pagina
+        .getByLabel('Nota', { exact: true })
+        .fill("Ha preparato da sola il fuoco per la cena dell'uscita: brava!")
+    },
+    mostra: 'Note',
   },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },
   { nome: 'comune/dispositivi', chi: 'genitore', percorso: '/dispositivi' },

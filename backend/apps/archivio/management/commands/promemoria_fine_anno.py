@@ -6,13 +6,13 @@ the link: no names.
 """
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.anagrafica.preferenze import accetta, nota_a_piede
+from apps.anagrafica.preferenze import accetta
 from apps.archivio import servizi
 from apps.core.anno import AnnoAssociativo
+from apps.impostazioni.email import invia
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 
@@ -48,13 +48,13 @@ class Command(BaseCommand):
         )
         if not destinatari:
             return
-        send_mail(
-            subject="Fine anno e archivio nel Quaderno di Caccia",
-            message="Ciao,\n\n"
-            + "\n\n".join(f"- {r}" for r in righe)
-            + f"\n\nTrovi tutto qui:\n{settings.FRONTEND_URL}/gruppo\n"
-            + nota_a_piede(),
-            from_email=None,
-            recipient_list=destinatari,
+        # One message per capogruppo: nobody sees the others' addresses.
+        invia(
+            "promemoria_fine_anno",
+            {
+                "Elenco": "\n".join(f"- {r}" for r in righe),
+                "Link": f"{settings.FRONTEND_URL}/gruppo",
+            },
+            destinatari,
         )
         self.stdout.write(f"Avvisati {len(destinatari)} capigruppo.")

@@ -109,7 +109,7 @@ body {
   @media (min-width: 1024px) {
     .qdc-cornice > .ag-sidebar {
       position: sticky !important;
-      top: 0;
+      top: 0 !important;
       height: 100dvh !important;
     }
   }
@@ -161,4 +161,28 @@ body {
   padding-top: 0;
   margin-bottom: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+// --- Email templates (DEC-250) ------------------------------------------------------------
+.qdc-editor-testo {
+  // Bootstrap 6's .form-control is a flex row: the paragraphs must stack.
+  display: block;
+  min-height: 12rem;
+}
+
+.qdc-editor-testo:focus {
+  outline: none;
+}
+
+.qdc-editor-testo p {
+  margin-bottom: 0.5rem;
+}
+
+.qdc-anteprima-email {
+  min-height: 20rem;
+  background-color: var(--bs-bg-body);
+}
+
+.qdc-testo-email {
+  white-space: pre-wrap;
 }

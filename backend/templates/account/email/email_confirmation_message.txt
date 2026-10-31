@@ -1,9 +1,0 @@
-{% extends "account/email/base_message.txt" %}
-{% block content %}{% autoescape off %}questo indirizzo è stato indicato per un account del Quaderno di Caccia.
-
-{% if code %}Il codice per confermarlo è:
-
-{{ code }}{% else %}Per confermarlo apri questo link:
-{{ activate_url }}{% endif %}
-
-Se non aspettavi questo messaggio puoi ignorarlo.{% endautoescape %}{% endblock content %}

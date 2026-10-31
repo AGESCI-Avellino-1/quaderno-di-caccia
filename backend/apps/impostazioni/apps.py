@@ -11,3 +11,4 @@ class ImpostazioniConfig(AppConfig):
         from . import models
 
         auditlog.register(models.Impostazioni)
+        auditlog.register(models.ModelloEmail)

@@ -41,7 +41,38 @@ def collega_invito(request, user) -> None:
     DefaultAccountAdapter().stash_verified_email(request, user.email)
 
 
+# allauth's emails that can be sent with our settings, and our template for each
+# (DEC-250): the values come from allauth's context. Security notifications are off
+# (ACCOUNT_EMAIL_NOTIFICATIONS); any other prefix keeps allauth's own text.
+EMAIL_ALLAUTH = {
+    "account/email/login_code": ("codice_accesso", {"Codice": "code"}),
+    "account/email/password_reset_key": ("reimposta_password", {"Link": "password_reset_url"}),
+    "account/email/email_confirmation_signup": (
+        "verifica_email_registrazione",
+        {"Link": "activate_url"},
+    ),
+    "account/email/email_confirmation": ("verifica_email", {"Link": "activate_url"}),
+    "account/email/account_already_exists": (
+        "account_esistente",
+        {"Email": "email", "Link": "password_reset_url"},
+    ),
+    "account/email/unknown_account": ("account_sconosciuto", {"Email": "email"}),
+}
+
+
 class AccountAdapter(DefaultAccountAdapter):
+    def send_mail(self, template_prefix, email, context):
+        """allauth's emails from the group's templates (DEC-250)."""
+        if template_prefix not in EMAIL_ALLAUTH:
+            return super().send_mail(template_prefix, email, context)
+        from apps.impostazioni.email import messaggio
+
+        modello, campi = EMAIL_ALLAUTH[template_prefix]
+        valori = {
+            nome: str({**context, "email": email}.get(campo, "")) for nome, campo in campi.items()
+        }
+        messaggio(modello, valori, email).send()
+
     def get_login_stages(self) -> list[str]:
         """Passkeys are a way in, not a second factor (DEC-240): see stages.py."""
         return [

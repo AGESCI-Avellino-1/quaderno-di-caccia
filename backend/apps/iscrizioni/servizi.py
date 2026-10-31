@@ -6,7 +6,6 @@ from datetime import date
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
@@ -22,6 +21,7 @@ from apps.anagrafica.models import (
 from apps.anagrafica.servizi import codice_fiscale_valido, nuovo_codice_provvisorio
 from apps.core.anno import eta_in_data
 from apps.core.models import FonteDato
+from apps.impostazioni.email import invia
 from apps.organizzazione.models import TipoUnita
 
 from .models import (
@@ -165,10 +165,13 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
     aggiorna_stato(richiesta)  # someone already known to the app may need nothing more
     _scrivi(
         richiesta,
-        "Iscrizione accolta",
-        f"l'iscrizione di {richiesta.nome} a {unita} è stata accolta.\n\n"
-        f"Entro il {scadenza.strftime('%d/%m/%Y')} completa i dati e carica i moduli "
-        f"firmati dall'app:\n{settings.FRONTEND_URL}/mia-iscrizione\n",
+        "iscrizione_accolta",
+        {
+            "Nome": richiesta.nome,
+            "Unità": str(unita),
+            "Scadenza": scadenza.strftime("%d/%m/%Y"),
+            "Link": f"{settings.FRONTEND_URL}/mia-iscrizione",
+        },
     )
     return socio
 
@@ -186,21 +189,15 @@ def rifiuta(richiesta: RichiestaIscrizione, utente, motivo: str) -> None:
     richiesta.save()
     _scrivi(
         richiesta,
-        "Iscrizione non accolta",
-        f"l'iscrizione di {richiesta.nome} a {richiesta.unita} non è stata accolta:\n"
-        f"{richiesta.motivo_rifiuto}\n\nPer chiarimenti rivolgiti ai capi dell'unità.\n",
+        "iscrizione_rifiutata",
+        {"Nome": richiesta.nome, "Unità": str(richiesta.unita), "Motivo": richiesta.motivo_rifiuto},
     )
 
 
-def _scrivi(richiesta: RichiestaIscrizione, oggetto: str, testo: str) -> None:
+def _scrivi(richiesta: RichiestaIscrizione, modello: str, valori: dict[str, str]) -> None:
     if richiesta.utente is None or not richiesta.utente.email:
         return
-    send_mail(
-        subject=f"Quaderno di Caccia: {oggetto}",
-        message=f"Ciao,\n\n{testo}",
-        from_email=None,
-        recipient_list=[richiesta.utente.email],
-    )
+    invia(modello, valori, [richiesta.utente.email])
 
 
 def in_sessione(request) -> tuple[CodiceIscrizione, DatiIscrizione] | None:

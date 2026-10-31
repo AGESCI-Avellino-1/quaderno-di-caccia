@@ -5,11 +5,11 @@ nobody sees the others'. Weekly meetings are not announced one by one.
 """
 
 from django.conf import settings
-from django.core.mail import EmailMessage, mailers
 from django.utils import timezone
 
 from apps.anagrafica.models import Persona
-from apps.anagrafica.preferenze import accetta, nota_a_piede
+from apps.anagrafica.preferenze import accetta
+from apps.impostazioni.email import invia
 from apps.permessi.policy import genitori_vedono
 
 from .models import Evento, StatoPartecipazione
@@ -46,19 +46,20 @@ def _quando(evento: Evento) -> str:
     return f"dal {inizio:%d/%m/%Y %H:%M} al {fine:%d/%m/%Y %H:%M}"
 
 
-def _invia(evento: Evento, oggetto: str, testo: str) -> int:
+def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
     partecipanti = Persona.objects.filter(
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
     indirizzi = indirizzi_famiglia(partecipanti, "eventi")
-    corpo = (
-        f"Ciao,\n\n{testo}\n\nI dettagli nell'app:\n{settings.FRONTEND_URL}/eventi/{evento.pk}"
-        + nota_a_piede()
+    return invia(
+        modello,
+        {
+            "Evento": evento.titolo,
+            "Link": f"{settings.FRONTEND_URL}/eventi/{evento.pk}",
+            **valori,
+        },
+        indirizzi,
     )
-    messaggi = [EmailMessage(subject=oggetto, body=corpo, to=[a]) for a in indirizzi]
-    if messaggi:
-        mailers.default.send_messages(messaggi)
-    return len(messaggi)
 
 
 def _da_annunciare(evento: Evento) -> bool:
@@ -68,22 +69,22 @@ def _da_annunciare(evento: Evento) -> bool:
 def nuovo(evento: Evento) -> int:
     if not _da_annunciare(evento):
         return 0
-    righe = [f"nuovo evento: {evento.titolo}", _quando(evento)]
+    dettagli = []
     if evento.luogo:
-        righe.append(f"Luogo: {evento.luogo}")
+        dettagli.append(f"Luogo: {evento.luogo}")
     tipo = getattr(evento, "quota", None)
     if tipo is not None:
-        righe.append(f"Quota: {tipo.importo} €")
-    return _invia(evento, evento.titolo, "\n".join(righe))
+        dettagli.append(f"Quota: {tipo.importo} €")
+    return _invia(
+        evento, "evento_nuovo", {"Quando": _quando(evento), "Dettagli": "\n".join(dettagli)}
+    )
 
 
 def modificato(evento: Evento) -> int:
     if not _da_annunciare(evento):
         return 0
-    testo = f"è cambiato l'evento {evento.titolo}: ora è {_quando(evento)}"
-    if evento.luogo:
-        testo += f", a {evento.luogo}"
-    return _invia(evento, f"Cambiato: {evento.titolo}", testo + ".")
+    quando = _quando(evento) + (f", a {evento.luogo}" if evento.luogo else "")
+    return _invia(evento, "evento_modificato", {"Quando": quando})
 
 
 def annullato(evento: Evento) -> int:
@@ -91,6 +92,6 @@ def annullato(evento: Evento) -> int:
         return 0
     return _invia(
         evento,
-        f"Annullato: {evento.titolo}",
-        f"l'evento {evento.titolo} ({_quando(evento)}) è annullato: {evento.motivo_annullamento}",
+        "evento_annullato",
+        {"Quando": _quando(evento), "Motivo": evento.motivo_annullamento},
     )

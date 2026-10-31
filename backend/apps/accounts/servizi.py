@@ -1,7 +1,8 @@
 """Invitation delivery (DEC-21, DEC-25)."""
 
 from django.conf import settings
-from django.core.mail import send_mail
+
+from apps.impostazioni.email import invia
 
 from .models import Invito
 
@@ -13,17 +14,12 @@ def link_invito(invito: Invito) -> str:
 def invia_invito(invito: Invito) -> None:
     """Email the invitation link; the text names the person the account is for. Every
     account has its own address, a child's too (refines DEC-25, see api.crea_invito)."""
-    scadenza = invito.scadenza.astimezone().strftime("%d/%m/%Y")
-    send_mail(
-        subject="Invito al Quaderno di Caccia",
-        message=(
-            f"Ciao,\n\n"
-            f"sei stato invitato a creare l'account del Quaderno di Caccia (QdC) per "
-            f"{invito.persona.nome} {invito.persona.cognome}.\n\n"
-            f"Apri questo link per completare l'iscrizione:\n{link_invito(invito)}\n\n"
-            f"Il link vale fino al {scadenza} e si può usare una sola volta.\n"
-            f"Se non aspettavi questo messaggio puoi ignorarlo.\n"
-        ),
-        from_email=None,
-        recipient_list=[invito.email],
+    invia(
+        "invito",
+        {
+            "Persona": f"{invito.persona.nome} {invito.persona.cognome}",
+            "Link": link_invito(invito),
+            "Scadenza": invito.scadenza.astimezone().strftime("%d/%m/%Y"),
+        },
+        [invito.email],
     )

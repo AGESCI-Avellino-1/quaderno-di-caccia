@@ -9,13 +9,13 @@ link: no names or values (they are personal data of minors).
 """
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
 from apps.anagrafica.models import CorrezioneAnagrafica, StatoCorrezione
-from apps.anagrafica.preferenze import accetta, nota_a_piede
+from apps.anagrafica.preferenze import accetta
+from apps.impostazioni.email import invia
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 
@@ -43,17 +43,15 @@ class Command(BaseCommand):
             self.stderr.write("Nessun capogruppo da avvisare: nessuna email inviata.")
             return
         da_inoltrare = CorrezioneAnagrafica.objects.filter(stato=StatoCorrezione.IN_ATTESA).count()
-        send_mail(
-            subject="Correzioni da inoltrare alla segreteria",
-            message=(
-                f"Ciao,\n\n"
-                f"nel Quaderno di Caccia ci sono {numero} nuove correzioni ai dati di "
-                f"BuonaStrada ({da_inoltrare} in tutto da inoltrare alla segreteria).\n\n"
-                f"Le trovi qui:\n{settings.FRONTEND_URL}/correzioni\n\n"
-                f"Dopo averle inoltrate, segnalale come inoltrate nell'app." + nota_a_piede()
-            ),
-            from_email=None,
-            recipient_list=destinatari,
+        # One message per capogruppo: nobody sees the others' addresses.
+        invia(
+            "correzioni_da_inoltrare",
+            {
+                "Nuove": str(numero),
+                "Da inoltrare": str(da_inoltrare),
+                "Link": f"{settings.FRONTEND_URL}/correzioni",
+            },
+            destinatari,
         )
         nuove.update(segnalata_il=timezone.now())
         self.stdout.write(f"Avvisati {len(destinatari)} capigruppo.")

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
-import { api, type Impostazioni, type Sito } from '@/api/qdc'
+import { api, type Impostazioni, type ModelloEmailBreve, type Sito } from '@/api/qdc'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import LinkPagamento from '@/components/LinkPagamento.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -15,8 +16,11 @@ const sito = useSitoStore()
 const dati = ref<Impostazioni | null>(null)
 const esito = ref('')
 
+const modelli = ref<ModelloEmailBreve[]>([])
+
 onMounted(async () => {
   dati.value = (await esegui(() => api.impostazioni())) ?? null
+  if (dati.value?.puo_modificare) modelli.value = (await esegui(() => api.modelliEmail())) ?? []
 })
 
 // The titles as they will look, with the values being typed.
@@ -160,6 +164,28 @@ async function salva() {
             </button>
           </div>
         </form>
+      </section>
+      <section v-if="modelli.length" class="mb-7">
+        <h2 class="h5">Modelli delle email</h2>
+        <p class="small fg-2">
+          Il testo di ogni email che l'app manda. Puoi cambiarlo e tornare quando vuoi al testo di
+          base; quello che serve davvero (link, codici, le informazioni da mandare) deve restare.
+        </p>
+        <div class="list-group">
+          <RouterLink
+            v-for="m in modelli"
+            :key="m.chiave"
+            :to="{ name: 'modello-email', params: { chiave: m.chiave } }"
+            class="list-group-item list-group-item-action"
+          >
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <strong>{{ m.nome }}</strong>
+              <span v-if="m.da_correggere" class="badge theme-warning">Da correggere</span>
+              <span v-else-if="m.personalizzato" class="badge theme-success">Personalizzato</span>
+            </div>
+            <div class="small fg-2">{{ m.descrizione }}</div>
+          </RouterLink>
+        </div>
       </section>
       <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
       <LinkPagamento v-if="dati.puo_modificare_pagamenti" />

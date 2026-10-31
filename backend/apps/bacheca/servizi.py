@@ -2,11 +2,11 @@
 address; a kind of email the reader may refuse (DEC-157, DEC-219)."""
 
 from django.conf import settings
-from django.core.mail import EmailMessage, mailers
 from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
-from apps.anagrafica.preferenze import accetta, nota_a_piede
+from apps.anagrafica.preferenze import accetta
+from apps.impostazioni.email import invia as invia_email
 from apps.permessi.policy import genitori_vedono
 
 from .models import Avviso, Destinatari
@@ -48,13 +48,15 @@ def invia(avviso: Avviso) -> int:
         email = _email(persona)
         if email and email not in indirizzi and accetta(persona, "avvisi"):
             indirizzi.append(email)
-    corpo = (
-        f"Ciao,\n\n{avviso.titolo}\n\n{avviso.testo}\n\n"
-        f"Nella bacheca dell'app:\n{settings.FRONTEND_URL}/bacheca" + nota_a_piede()
+    inviati = invia_email(
+        "avviso_bacheca",
+        {
+            "Titolo": avviso.titolo,
+            "Testo": avviso.testo,
+            "Link": f"{settings.FRONTEND_URL}/bacheca",
+        },
+        indirizzi,
     )
-    messaggi = [EmailMessage(subject=avviso.titolo, body=corpo, to=[a]) for a in indirizzi]
-    if messaggi:
-        mailers.default.send_messages(messaggi)
     avviso.email_inviata_il = timezone.now()
     avviso.save(update_fields=["email_inviata_il"])
-    return len(messaggi)
+    return inviati

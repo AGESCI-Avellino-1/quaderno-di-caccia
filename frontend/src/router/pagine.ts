@@ -58,5 +58,6 @@ export const PAGINE: Record<string, Pagina> = {
   dispositivi: { titolo: 'Password e sicurezza' },
   modifiche: { titolo: 'Modifiche da inviare' },
   impostazioni: { titolo: 'Impostazioni' },
+  'modello-email': { titolo: 'Modello di email', sopra: 'impostazioni' },
   'non-trovata': { titolo: 'Pagina non trovata' },
 }

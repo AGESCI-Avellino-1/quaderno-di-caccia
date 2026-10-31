@@ -62,3 +62,26 @@ class Impostazioni(ModelloTracciato):
 
         gruppo = Gruppo.objects.first()
         return f"AGESCI {gruppo.denominazione}" if gruppo else "AGESCI"
+
+
+class ModelloEmail(ModelloTracciato):
+    """A template of an email the group has personalised (DEC-250). Without a row the
+    default in `email.TIPI` is used; deleting the row goes back to it."""
+
+    chiave = models.CharField(max_length=60, unique=True)
+    oggetto = models.CharField(max_length=200)
+    # HTML from the editor, cleaned by `html.pulisci` before saving.
+    corpo = models.TextField()
+    modificato_da = models.ForeignKey(
+        "accounts.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    # When the capigruppo were told that an update made a placeholder indispensable that
+    # this template lacks; cleared at every save.
+    avvisato_il = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "modello di email"
+        verbose_name_plural = "modelli di email"
+
+    def __str__(self) -> str:
+        return self.chiave

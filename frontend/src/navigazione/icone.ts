@@ -18,6 +18,7 @@ import collection from 'bootstrap-icons/icons/collection.svg?raw'
 import compass from 'bootstrap-icons/icons/compass.svg?raw'
 import diagram3 from 'bootstrap-icons/icons/diagram-3.svg?raw'
 import envelopeOpen from 'bootstrap-icons/icons/envelope-open.svg?raw'
+import envelopePaper from 'bootstrap-icons/icons/envelope-paper.svg?raw'
 import fileEarmarkText from 'bootstrap-icons/icons/file-earmark-text.svg?raw'
 import flag from 'bootstrap-icons/icons/flag.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
@@ -25,7 +26,10 @@ import incognito from 'bootstrap-icons/icons/incognito.svg?raw'
 import journalText from 'bootstrap-icons/icons/journal-text.svg?raw'
 import key from 'bootstrap-icons/icons/key.svg?raw'
 import layoutSidebarInset from 'bootstrap-icons/icons/layout-sidebar-inset.svg?raw'
+import link45deg from 'bootstrap-icons/icons/link-45deg.svg?raw'
 import list from 'bootstrap-icons/icons/list.svg?raw'
+import listOl from 'bootstrap-icons/icons/list-ol.svg?raw'
+import listUl from 'bootstrap-icons/icons/list-ul.svg?raw'
 import lock from 'bootstrap-icons/icons/lock.svg?raw'
 import megaphone from 'bootstrap-icons/icons/megaphone.svg?raw'
 import pencilSquare from 'bootstrap-icons/icons/pencil-square.svg?raw'
@@ -43,6 +47,9 @@ import shieldLock from 'bootstrap-icons/icons/shield-lock.svg?raw'
 import signpostSplit from 'bootstrap-icons/icons/signpost-split.svg?raw'
 import sliders from 'bootstrap-icons/icons/sliders.svg?raw'
 import tools from 'bootstrap-icons/icons/tools.svg?raw'
+import typeBold from 'bootstrap-icons/icons/type-bold.svg?raw'
+import typeItalic from 'bootstrap-icons/icons/type-italic.svg?raw'
+import typeUnderline from 'bootstrap-icons/icons/type-underline.svg?raw'
 import upload from 'bootstrap-icons/icons/upload.svg?raw'
 import wallet2 from 'bootstrap-icons/icons/wallet2.svg?raw'
 import xLg from 'bootstrap-icons/icons/x-lg.svg?raw'
@@ -65,6 +72,7 @@ export const ICONE = {
   compass: compass,
   'diagram-3': diagram3,
   'envelope-open': envelopeOpen,
+  'envelope-paper': envelopePaper,
   'file-earmark-text': fileEarmarkText,
   flag: flag,
   gear: gear,
@@ -72,7 +80,10 @@ export const ICONE = {
   'journal-text': journalText,
   key: key,
   'layout-sidebar-inset': layoutSidebarInset,
+  'link-45deg': link45deg,
   list: list,
+  'list-ol': listOl,
+  'list-ul': listUl,
   lock: lock,
   megaphone: megaphone,
   'pencil-square': pencilSquare,
@@ -90,6 +101,9 @@ export const ICONE = {
   'signpost-split': signpostSplit,
   sliders: sliders,
   tools: tools,
+  'type-bold': typeBold,
+  'type-italic': typeItalic,
+  'type-underline': typeUnderline,
   upload: upload,
   wallet2: wallet2,
   'x-lg': xLg,

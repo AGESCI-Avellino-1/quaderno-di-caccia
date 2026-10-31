@@ -307,6 +307,13 @@ const router = createRouter({
       component: () => import('@/views/ImpostazioniView.vue'),
     },
     {
+      // One email template (DEC-250): capigruppo and the technical administrator.
+      path: '/impostazioni/email/:chiave',
+      name: 'modello-email',
+      component: () => import('@/views/ModelloEmailView.vue'),
+      props: true,
+    },
+    {
       path: '/:percorso(.*)*',
       name: 'non-trovata',
       component: () => import('@/views/NonTrovataView.vue'),

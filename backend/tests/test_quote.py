@@ -304,9 +304,13 @@ def test_ricevuta_ai_genitori_del_minore(quote_famiglia, genitore, genitrice_sen
     sua, _ = quote_famiglia
     pagamento = _paga([(sua, "35")], staff.utente)
     assert servizi.invia_ricevuta(pagamento)
-    [messaggio] = mail.outbox
-    assert set(messaggio.to) == {"genitore@example.invalid", "lucia@example.invalid"}
-    assert "2025-26/001" in messaggio.subject
+    # One message per parent: separated parents do not see each other's address.
+    assert sorted(m.to[0] for m in mail.outbox) == [
+        "genitore@example.invalid",
+        "lucia@example.invalid",
+    ]
+    messaggio = mail.outbox[0]
+    assert len(messaggio.to) == 1 and "2025-26/001" in messaggio.subject
     nome, contenuto, tipo = messaggio.attachments[0]
     assert nome == "ricevuta-2025-26-001.pdf" and tipo == "application/pdf"
     assert contenuto.startswith(b"%PDF")

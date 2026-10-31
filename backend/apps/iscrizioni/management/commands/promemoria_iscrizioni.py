@@ -13,11 +13,11 @@ Run once a day from the host's scheduler, e.g.:
 from datetime import date, timedelta
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.anagrafica.preferenze import accetta, nota_a_piede
+from apps.anagrafica.preferenze import accetta
+from apps.impostazioni.email import invia
 from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.iscrizioni.servizi import mancanti
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
@@ -42,11 +42,6 @@ def _approvatori(unita) -> set[str]:
     }
 
 
-def _scrivi(destinatari, oggetto: str, testo: str) -> None:
-    for destinatario in sorted(destinatari):  # one each: no addresses shared
-        send_mail(f"Quaderno di Caccia: {oggetto}", f"Ciao,\n\n{testo}", None, [destinatario])
-
-
 class Command(BaseCommand):
     help = "Avvisi giornalieri sulle iscrizioni dall'app."
 
@@ -61,11 +56,10 @@ class Command(BaseCommand):
             stato=StatoIscrizione.IN_ATTESA, segnalata_il__isnull=True
         ).select_related("unita")
         for richiesta in nuove:
-            _scrivi(
+            invia(
+                "nuova_richiesta_iscrizione",
+                {"Unità": str(richiesta.unita), "Link": f"{link}/iscrizioni"},
                 _approvatori(richiesta.unita),
-                "nuova richiesta di iscrizione",
-                f"c'è una nuova richiesta di iscrizione a {richiesta.unita}.\n\n"
-                f"La trovi qui:\n{link}/iscrizioni" + nota_a_piede(),
             )
             richiesta.segnalata_il = timezone.now()
             richiesta.save(update_fields=["segnalata_il", "aggiornato_il"])
@@ -76,26 +70,17 @@ class Command(BaseCommand):
         for richiesta in da_completare:
             email = richiesta.utente.email if richiesta.utente else ""
             scadenza = richiesta.scadenza_completamento
-            giorno = scadenza.strftime("%d/%m/%Y")
+            valori = {
+                "Nome": richiesta.nome,
+                "Scadenza": scadenza.strftime("%d/%m/%Y"),
+                "Link": f"{link}/mia-iscrizione",
+            }
             if scadenza <= oggi and mancanti(richiesta):
                 richiesta.stato = StatoIscrizione.SOSPESA
                 richiesta.sospesa_il = oggi
                 richiesta.save(update_fields=["stato", "sospesa_il", "aggiornato_il"])
-                if email:
-                    _scrivi(
-                        {email},
-                        "iscrizione sospesa",
-                        f"il {giorno} è scaduto il termine per completare l'iscrizione di "
-                        f"{richiesta.nome}. Fino a quando non la completi, nell'app vedi "
-                        f"solo l'iscrizione e non la sua scheda:\n{link}/mia-iscrizione\n",
-                    )
+                invia("iscrizione_sospesa", valori, [email])
             elif scadenza - PREAVVISO <= oggi < scadenza and not richiesta.promemoria_il:
                 richiesta.promemoria_il = oggi
                 richiesta.save(update_fields=["promemoria_il", "aggiornato_il"])
-                if email:
-                    _scrivi(
-                        {email},
-                        "completa l'iscrizione",
-                        f"entro il {giorno} vanno completati i dati e i moduli "
-                        f"dell'iscrizione di {richiesta.nome}:\n{link}/mia-iscrizione\n",
-                    )
+                invia("iscrizione_da_completare", valori, [email])

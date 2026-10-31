@@ -14,10 +14,10 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from django.conf import settings
-from django.core.mail import EmailMessage, mailers
 from django.db.models import Q
 
 from apps.anagrafica.models import Appartenenza, Persona
+from apps.impostazioni.email import invia
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 from . import servizi
@@ -69,11 +69,8 @@ def _link(iscrizione: IscrizioneBuonaCaccia) -> str:
     return f"{settings.FRONTEND_URL}/eventi/{iscrizione.partecipazione.evento_id}"
 
 
-def _invia(indirizzi: list[str], oggetto: str, corpo: str) -> int:
-    messaggi = [EmailMessage(subject=oggetto, body=corpo, to=[a]) for a in indirizzi]
-    if messaggi:
-        mailers.default.send_messages(messaggi)
-    return len(messaggi)
+def _invia(indirizzi: list[str], modello: str, valori: dict[str, str]) -> int:
+    return invia(modello, valori, indirizzi)
 
 
 def _cosa_serve(iscrizione: IscrizioneBuonaCaccia) -> list[str]:
@@ -100,40 +97,54 @@ def _cosa_serve(iscrizione: IscrizioneBuonaCaccia) -> list[str]:
 def iscritto(iscrizione: IscrizioneBuonaCaccia) -> int:
     persona = iscrizione.partecipazione.persona
     evento = iscrizione.partecipazione.evento
-    stato = iscrizione.get_stato_display().lower()
-    righe = [
-        f"{persona.nome} è iscritto su BuonaCaccia all'evento {evento.titolo} "
-        f"({evento.inizio:%d/%m/%Y}): {stato}."
-    ]
+    righe = []
     serve = _cosa_serve(iscrizione)
     if serve:
         righe.append("Ci serve:\n" + "\n".join(f"- {r}" for r in serve))
     if iscrizione.quota_id:
         righe.append("Trovi nell'app anche la quota da versare al gruppo.")
-    corpo = "Ciao,\n\n" + "\n\n".join(righe) + f"\n\nI dettagli nell'app:\n{_link(iscrizione)}\n"
-    return _invia(indirizzi_famiglia(persona), f"Iscrizione a {evento.titolo}", corpo)
+    return _invia(
+        indirizzi_famiglia(persona),
+        "buonacaccia_iscrizione",
+        {
+            "Nome": persona.nome,
+            "Evento": evento.titolo,
+            "Data": f"{evento.inizio:%d/%m/%Y}",
+            "Stato": iscrizione.get_stato_display().lower(),
+            "Cosa serve": "\n\n".join(righe),
+            "Link": _link(iscrizione),
+        },
+    )
 
 
 def liberatoria_da_firmare(iscrizione: IscrizioneBuonaCaccia) -> int:
     persona = iscrizione.partecipazione.persona
     evento = iscrizione.partecipazione.evento
-    corpo = (
-        f"Ciao,\n\nnell'app c'è la liberatoria di {persona.nome} per {evento.titolo}: "
-        "scaricala, completala, firmala e caricala di nuovo nell'app entro il "
-        f"{iscrizione.scadenza_della_liberatoria:%d/%m/%Y}.\n\n{_link(iscrizione)}\n"
+    return _invia(
+        indirizzi_famiglia(persona),
+        "liberatoria_da_firmare",
+        {
+            "Nome": persona.nome,
+            "Evento": evento.titolo,
+            "Scadenza": f"{iscrizione.scadenza_della_liberatoria:%d/%m/%Y}",
+            "Link": _link(iscrizione),
+        },
     )
-    return _invia(indirizzi_famiglia(persona), f"Liberatoria per {evento.titolo}", corpo)
 
 
 def liberatoria_rigettata(iscrizione: IscrizioneBuonaCaccia) -> int:
     persona = iscrizione.partecipazione.persona
     evento = iscrizione.partecipazione.evento
-    corpo = (
-        f"Ciao,\n\nla segreteria ha rigettato la liberatoria di {persona.nome} per "
-        f"{evento.titolo}: {iscrizione.motivo_rigetto}\n\nServe una liberatoria nuova: "
-        f"{_link(iscrizione)}\n"
+    return _invia(
+        indirizzi_famiglia(persona),
+        "liberatoria_rigettata",
+        {
+            "Nome": persona.nome,
+            "Evento": evento.titolo,
+            "Motivo": iscrizione.motivo_rigetto,
+            "Link": _link(iscrizione),
+        },
     )
-    return _invia(indirizzi_famiglia(persona), f"Liberatoria da rifare: {evento.titolo}", corpo)
 
 
 # --- Daily reminders ----------------------------------------------------------------------
@@ -210,15 +221,13 @@ def promemoria(oggi: date) -> int:
             inviati.append((iscrizione, chiavi))
     quanti = 0
     for indirizzo, righe in allo_staff.items():
-        corpo = (
-            "Ciao,\n\nscadenze vicine delle iscrizioni su BuonaCaccia:\n"
-            + "\n".join(righe)
-            + f"\n\nNell'app: {settings.FRONTEND_URL}/buonacaccia\n"
+        quanti += _invia(
+            [indirizzo],
+            "buonacaccia_scadenze",
+            {"Elenco": "\n".join(righe), "Link": f"{settings.FRONTEND_URL}/buonacaccia"},
         )
-        quanti += _invia([indirizzo], "Scadenze su BuonaCaccia", corpo)
     for indirizzo, blocchi in alla_famiglia.items():
-        corpo = "Ciao,\n\n" + "\n\n".join(blocchi) + "\n"
-        quanti += _invia([indirizzo], "Promemoria: liberatoria per un evento", corpo)
+        quanti += _invia([indirizzo], "promemoria_liberatoria", {"Elenco": "\n\n".join(blocchi)})
     for iscrizione, chiavi in inviati:
         iscrizione.promemoria = {**iscrizione.promemoria, **{c: oggi.isoformat() for c in chiavi}}
         iscrizione.save(update_fields=["promemoria", "aggiornato_il"])

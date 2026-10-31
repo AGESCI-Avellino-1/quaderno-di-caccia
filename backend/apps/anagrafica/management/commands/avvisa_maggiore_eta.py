@@ -13,12 +13,12 @@ unit page (organizzazione.api), so that someone invites them.
 from datetime import date, timedelta
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza, VisibilitaGenitori
-from apps.anagrafica.preferenze import accetta, nota_a_piede
+from apps.anagrafica.preferenze import accetta
 from apps.core.anno import compie_anni
+from apps.impostazioni.email import invia
 
 ANTICIPO = timedelta(days=30)
 
@@ -34,31 +34,6 @@ def _genitori(persona: Persona) -> list[Persona]:
             tutele__minore=persona, tutele__responsabilita_genitoriale=True
         ).exclude(email="", utente__isnull=True)
     )
-
-
-def _testi(persona: Persona, giorno: date, oggi: date) -> tuple[str, str, str]:
-    """Subject, text for the member, text for the parents."""
-    quando = "oggi" if giorno <= oggi else f"il {giorno.strftime('%d/%m/%Y')}"
-    link = f"{settings.FRONTEND_URL}/persone/{persona.pk}"
-    oggetto = (
-        "Compi 18 anni: cosa vedono i tuoi genitori"
-        if giorno <= oggi
-        else ("Tra un mese compi 18 anni")
-    )
-    al_ragazzo = (
-        f"Ciao {persona.nome},\n\n"
-        f"{quando} compi 18 anni. Da quel giorno decidi tu cosa possono vedere i tuoi "
-        f"genitori nel Quaderno di Caccia: contatti, farmaci e allergie, la tua scheda.\n"
-        f"Finché non scegli, continuano a vedere tutto.\n\n"
-        f"Scegli qui (serve il tuo account; se non l'hai, chiedilo ai tuoi capi):\n{link}\n"
-    )
-    ai_genitori = (
-        f"Gentile genitore,\n\n"
-        f"{quando} {persona.nome} compie 18 anni. Da quel giorno sarà {persona.nome} a "
-        f"decidere cosa resta visibile a voi nel Quaderno di Caccia. Finché non sceglie, "
-        f"continuate a vedere tutto come ora.\n"
-    )
-    return oggetto, al_ragazzo, ai_genitori
 
 
 class Command(BaseCommand):
@@ -94,18 +69,18 @@ class Command(BaseCommand):
                 if scelta.avviso_mese_prima:
                     continue
                 scelta.avviso_mese_prima = oggi
-            oggetto, al_ragazzo, ai_genitori = _testi(persona, giorno, oggi)
+            quando = "oggi" if giorno <= oggi else f"il {giorno.strftime('%d/%m/%Y')}"
+            valori = {
+                "Nome": persona.nome,
+                "Quando": quando,
+                "Link": f"{settings.FRONTEND_URL}/email",
+            }
             if accetta(persona, "maggiore_eta") and (email := _email(persona)):
-                send_mail(oggetto, al_ragazzo + nota_a_piede(), None, [email])
+                modello = "maggiore_eta" if giorno <= oggi else "maggiore_eta_mese_prima"
+                invia(modello, valori, [email])
             # One email per parent: separated parents do not see each other's address.
             genitori = [g for g in _genitori(persona) if accetta(g, "maggiore_eta")]
-            for destinatario in sorted({_email(g) for g in genitori} - {""}):
-                send_mail(
-                    f"{persona.nome} compie 18 anni",
-                    ai_genitori + nota_a_piede(),
-                    None,
-                    [destinatario],
-                )
+            invia("maggiore_eta_genitori", valori, {_email(g) for g in genitori} - {""})
             scelta.save()
             inviati += 1
         self.stdout.write(f"Avvisi inviati per {inviati} persone.")

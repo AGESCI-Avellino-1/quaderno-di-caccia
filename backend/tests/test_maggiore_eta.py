@@ -98,7 +98,8 @@ def test_avvisi_un_mese_prima_e_il_giorno(ragazza, genitore, genitrice_senza_acc
         "lucia@example.invalid",
     ]
     assert all(len(m.to) == 1 for m in mail.outbox)
-    assert f"/persone/{ragazza.pk}" in next(m for m in mail.outbox if "giulia" in m.to[0]).body
+    # The choice is on the Privacy page (DEC-251).
+    assert "/email\n" in next(m for m in mail.outbox if "giulia" in m.to[0]).body
 
     call_command("avvisa_maggiore_eta", oggi=compleanno - timedelta(days=10))
     assert len(mail.outbox) == 3  # once

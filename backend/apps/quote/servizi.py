@@ -5,7 +5,6 @@ from datetime import date
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.core.mail import EmailMessage
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
@@ -14,6 +13,7 @@ from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela, Ruolo
 from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
 from apps.core.euro import euro
+from apps.impostazioni.email import invia
 
 from .models import (
     ZERO,
@@ -355,20 +355,23 @@ def invia_ricevuta(pagamento: Pagamento) -> bool:
     indirizzi = destinatari_ricevuta(pagamento)
     if not indirizzi:
         return False
-    messaggio = EmailMessage(
-        subject=f"Ricevuta n. {pagamento.numero}",
-        body=(
-            "Ciao,\n\n"
-            f"in allegato la ricevuta del pagamento di {euro(pagamento.importo)} del "
-            f"{pagamento.data.strftime('%d/%m/%Y')}. Non è una ricevuta fiscale.\n\n"
-            "La trovi anche nell'app, alla pagina Quote."
+    # One message per address, as every other email: nobody sees the others'.
+    invia(
+        "ricevuta",
+        {
+            "Numero": pagamento.numero,
+            "Importo": euro(pagamento.importo),
+            "Data": pagamento.data.strftime("%d/%m/%Y"),
+        },
+        indirizzi,
+        allegati=(
+            (
+                f"ricevuta-{pagamento.numero.replace('/', '-')}.pdf",
+                pdf(pagamento),
+                "application/pdf",
+            ),
         ),
-        to=indirizzi,
     )
-    messaggio.attach(
-        f"ricevuta-{pagamento.numero.replace('/', '-')}.pdf", pdf(pagamento), "application/pdf"
-    )
-    messaggio.send()
     pagamento.ricevuta_inviata_il = timezone.now()
     pagamento.save(update_fields=["ricevuta_inviata_il"])
     return True

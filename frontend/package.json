@@ -28,6 +28,10 @@
   },
   "dependencies": {
     "@simplewebauthn/browser": "^14.0.0",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "@tiptap/vue-3": "3.32.0",
     "bootstrap": "6.0.0-alpha.1",
     "bootstrap-icons": "1.13.2",
     "dexie": "^4.4.6",

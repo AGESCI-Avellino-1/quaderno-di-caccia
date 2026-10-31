@@ -13,6 +13,7 @@ dependencies = [
     "django-environ>=0.14",
     "django-ninja>=1.7",
     "gunicorn>=26",
+    "nh3>=0.3.7",
     "openpyxl>=3.1.5",
     "psycopg[binary]>=3.3",
     "pyjwt[crypto]>=2.15,<3",

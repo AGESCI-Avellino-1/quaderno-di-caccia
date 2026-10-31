@@ -8,7 +8,7 @@ from ninja.errors import HttpError
 from apps.core.anno import AnnoAssociativo
 from apps.permessi import policy
 
-from .models import Impostazioni
+from .models import Impostazioni, ModelloEmail
 
 router = Router(tags=["impostazioni"])
 
@@ -128,3 +128,144 @@ def email_di_prova(request, dati: EmailDiProvaIn):
     imp.email_di_prova = dati.attiva
     imp.save(update_fields=["email_di_prova", "aggiornato_il"])
     return _impostazioni(request)
+
+
+# --- Email templates (DEC-250) --------------------------------------------------------------
+
+
+class SegnapostoOut(Schema):
+    nome: str
+    descrizione: str
+    indispensabile: bool
+
+
+class ModelloEmailBreve(Schema):
+    chiave: str
+    nome: str
+    descrizione: str
+    personalizzato: bool
+    # A personalised template that lacks something indispensable: the default is used.
+    da_correggere: bool
+
+
+class ModelloEmailOut(ModelloEmailBreve):
+    oggetto: str
+    corpo: str
+    oggetto_predefinito: str
+    corpo_predefinito: str
+    segnaposto: list[SegnapostoOut]
+    facoltativa: bool
+
+
+class ModelloEmailIn(Schema):
+    oggetto: str
+    corpo: str
+
+
+class AnteprimaOut(Schema):
+    oggetto: str
+    html: str
+    testo: str
+
+
+def _gestore_modelli(request) -> None:
+    if not policy.puo_modificare_impostazioni(request.auth):
+        raise HttpError(403, "I modelli delle email li cambiano i capigruppo.")
+
+
+def _tipo(chiave: str):
+    from . import email
+
+    try:
+        return email.tipo(chiave)
+    except KeyError as errore:
+        raise HttpError(404, "Email non trovata.") from errore
+
+
+def _breve(t, salvato) -> dict:
+    from . import email
+
+    return {
+        "chiave": t.chiave,
+        "nome": t.nome,
+        "descrizione": t.descrizione,
+        "personalizzato": salvato is not None,
+        "da_correggere": bool(salvato and email.mancanti(t, salvato.oggetto, salvato.corpo)),
+    }
+
+
+def _modello_out(t) -> dict:
+    from . import email
+
+    salvato = ModelloEmail.objects.filter(chiave=t.chiave).first()
+    return {
+        **_breve(t, salvato),
+        "oggetto": salvato.oggetto if salvato else t.oggetto,
+        "corpo": salvato.corpo if salvato else t.corpo,
+        "oggetto_predefinito": t.oggetto,
+        "corpo_predefinito": t.corpo,
+        "segnaposto": [
+            {"nome": s.nome, "descrizione": s.descrizione, "indispensabile": s.indispensabile}
+            for s in email.segnaposto_di(t)
+        ],
+        "facoltativa": t.facoltativa,
+    }
+
+
+@router.get("/impostazioni/email", response=list[ModelloEmailBreve])
+def modelli_email(request):
+    from . import email
+
+    _gestore_modelli(request)
+    salvati = {m.chiave: m for m in ModelloEmail.objects.all()}
+    return [_breve(t, salvati.get(t.chiave)) for t in email.tutti()]
+
+
+@router.get("/impostazioni/email/{chiave}", response=ModelloEmailOut)
+def modello_email(request, chiave: str):
+    _gestore_modelli(request)
+    return _modello_out(_tipo(chiave))
+
+
+@router.put("/impostazioni/email/{chiave}", response=ModelloEmailOut)
+def salva_modello_email(request, chiave: str, dati: ModelloEmailIn):
+    from . import email
+    from .html import pulisci
+
+    _gestore_modelli(request)
+    t = _tipo(chiave)
+    oggetto = " ".join(dati.oggetto.split())
+    corpo = pulisci(dati.corpo)
+    errori = email.problemi(t, oggetto, corpo)
+    if errori:
+        raise HttpError(400, " ".join(errori))
+    ModelloEmail.objects.update_or_create(
+        chiave=t.chiave,
+        defaults={
+            "oggetto": oggetto,
+            "corpo": corpo,
+            "modificato_da": request.auth,
+            "avvisato_il": None,
+        },
+    )
+    return _modello_out(t)
+
+
+@router.delete("/impostazioni/email/{chiave}", response=ModelloEmailOut)
+def ripristina_modello_email(request, chiave: str):
+    _gestore_modelli(request)
+    t = _tipo(chiave)
+    ModelloEmail.objects.filter(chiave=t.chiave).delete()
+    return _modello_out(t)
+
+
+@router.post("/impostazioni/email/{chiave}/anteprima", response=AnteprimaOut)
+def anteprima_modello_email(request, chiave: str, dati: ModelloEmailIn):
+    """The email as it would arrive, with example values; nothing is saved."""
+    from . import email
+
+    _gestore_modelli(request)
+    t = _tipo(chiave)
+    esempi = {s.nome: s.esempio for s in t.segnaposto}
+    composta = email.componi_da(t, dati.oggetto, dati.corpo, esempi)
+    return {"oggetto": composta.oggetto, "html": composta.html, "testo": composta.testo}

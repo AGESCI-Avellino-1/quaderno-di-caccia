@@ -86,6 +86,31 @@ export interface ImpostazioniSito {
   riga_piede: string
 }
 
+/** An email the group may personalise (DEC-250). */
+export interface ModelloEmailBreve {
+  chiave: string
+  nome: string
+  descrizione: string
+  personalizzato: boolean
+  /** Personalised but lacking something indispensable: the default text is sent. */
+  da_correggere: boolean
+}
+
+export interface ModelloEmail extends ModelloEmailBreve {
+  oggetto: string
+  corpo: string
+  oggetto_predefinito: string
+  corpo_predefinito: string
+  segnaposto: { nome: string; descrizione: string; indispensabile: boolean }[]
+  facoltativa: boolean
+}
+
+export interface AnteprimaEmail {
+  oggetto: string
+  html: string
+  testo: string
+}
+
 export interface Impostazioni extends ImpostazioniSito {
   /** The group's name in the title when nome_gruppo is empty. */
   gruppo_predefinito: string
@@ -1997,6 +2022,23 @@ export const api = {
   impostazioni: () => richiesta<Impostazioni>('/api/v1/impostazioni'),
   salvaImpostazioniSito: (dati: ImpostazioniSito) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/sito', { metodo: 'PUT', corpo: dati }),
+  modelliEmail: () => richiesta<ModelloEmailBreve[]>('/api/v1/impostazioni/email'),
+  modelloEmail: (chiave: string) =>
+    richiesta<ModelloEmail>(`/api/v1/impostazioni/email/${encodeURIComponent(chiave)}`),
+  salvaModelloEmail: (chiave: string, dati: { oggetto: string; corpo: string }) =>
+    richiesta<ModelloEmail>(`/api/v1/impostazioni/email/${encodeURIComponent(chiave)}`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  ripristinaModelloEmail: (chiave: string) =>
+    richiesta<ModelloEmail>(`/api/v1/impostazioni/email/${encodeURIComponent(chiave)}`, {
+      metodo: 'DELETE',
+    }),
+  anteprimaModelloEmail: (chiave: string, dati: { oggetto: string; corpo: string }) =>
+    richiesta<AnteprimaEmail>(
+      `/api/v1/impostazioni/email/${encodeURIComponent(chiave)}/anteprima`,
+      { metodo: 'POST', corpo: dati },
+    ),
   emailDiProva: (attiva: boolean) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/email-di-prova', {
       metodo: 'PUT',

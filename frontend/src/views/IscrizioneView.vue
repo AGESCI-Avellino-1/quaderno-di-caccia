@@ -341,7 +341,8 @@ async function invia() {
 
       <p class="form-text mb-0">
         Residenza, luogo di nascita e moduli firmati si completano dopo che i capi hanno accolto la
-        richiesta.
+        richiesta. Leggi la <RouterLink to="/privacy" target="_blank">privacy policy</RouterLink> e
+        i <RouterLink to="/termini" target="_blank">termini</RouterLink>.
       </p>
       <button type="submit" class="btn btn-solid theme-primary" :disabled="inCorso">
         Invia la richiesta

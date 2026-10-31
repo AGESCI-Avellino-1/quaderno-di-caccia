@@ -205,3 +205,20 @@ body {
 .qdc-testo-email {
   white-space: pre-wrap;
 }
+
+// --- Cookie notice and legal pages (DEC-266) ---------------------------------------------
+.qdc-banner-cookie {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
+  padding-bottom: env(safe-area-inset-bottom);
+  background-color: var(--bs-bg-body);
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.qdc-pagina-legale h2 {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+}

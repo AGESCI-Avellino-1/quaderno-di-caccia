@@ -148,9 +148,9 @@ Richiesta del maintainer del 31/10/2026.
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
-| P.1 | Privacy policy: pagina pubblica con un testo di base precompilato, che capigruppo e amministratore tecnico modificano con l'editor nelle Impostazioni; link nel piè di pagina e dal modulo della lista d'attesa | — | ⏳ |
-| P.2 | Termini e condizioni: come la privacy policy | — | ⏳ |
-| P.3 | Cookie banner solo informativo (l'app usa solo cookie tecnici): «Ho capito» ricordato nel browser, unica eccezione alla regola sui dati in chiaro; ricompare se la privacy policy cambia. Privacy policy e termini pubblicati e linkati, senza accettazione salvata (scelte del 31/10) | — | ⏳ |
+| P.1 | Privacy policy: pagina pubblica con un testo di base precompilato, che capigruppo e amministratore tecnico modificano con l'editor nelle Impostazioni; link nel piè di pagina e dal modulo della lista d'attesa | DEC-266 | ✅ provato nel browser il 31/10 |
+| P.2 | Termini e condizioni: come la privacy policy | DEC-266 | ✅ provato nel browser il 31/10 |
+| P.3 | Cookie banner solo informativo (l'app usa solo cookie tecnici): «Ho capito» ricordato nel browser, unica eccezione alla regola sui dati in chiaro; ricompare se la privacy policy cambia. Privacy policy e termini pubblicati e linkati, senza accettazione salvata (scelte del 31/10) | DEC-266 | ✅ provato nel browser il 31/10 |
 
 ### Calcolo del codice fiscale (richiesta del 31/10)
 

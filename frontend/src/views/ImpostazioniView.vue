@@ -187,6 +187,24 @@ async function salva() {
           </RouterLink>
         </div>
       </section>
+      <section v-if="dati.puo_modificare" class="mb-7">
+        <h2 class="h5">Privacy policy e termini</h2>
+        <p class="small fg-2">
+          Le pagine pubbliche linkate nel piè di pagina, nell'iscrizione e nella lista d'attesa.
+        </p>
+        <div class="list-group">
+          <RouterLink
+            :to="{ name: 'pagina-legale-modifica', params: { chiave: 'privacy' } }"
+            class="list-group-item list-group-item-action"
+            >Privacy policy</RouterLink
+          >
+          <RouterLink
+            :to="{ name: 'pagina-legale-modifica', params: { chiave: 'termini' } }"
+            class="list-group-item list-group-item-action"
+            >Termini e condizioni</RouterLink
+          >
+        </div>
+      </section>
       <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
       <PagamentiGruppo v-if="dati.puo_modificare_pagamenti" />
       <section v-if="dati.puo_email_di_prova" class="mb-7">

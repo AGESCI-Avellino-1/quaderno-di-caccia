@@ -1,7 +1,11 @@
-"""Settings of the installation (DEC-245…DEC-248)."""
+"""Settings of the installation (DEC-245…DEC-248, DEC-266)."""
+
+import re
+from datetime import date
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
 
@@ -26,6 +30,8 @@ class SitoOut(Schema):
     riga_piede: str
     # Emails go to Mailpit: every page says so, the login page too (DEC-249).
     email_di_prova: bool
+    # When the privacy policy changed: the cookie banner shows again (DEC-266).
+    privacy_aggiornata_il: str = ""
 
 
 def _sito() -> dict:
@@ -40,6 +46,9 @@ def _sito() -> dict:
         "titolo_breve": imp.titolo_breve,
         "riga_piede": imp.riga_piede,
         "email_di_prova": imp.email_di_prova_attiva(),
+        "privacy_aggiornata_il": (
+            imp.privacy_aggiornata_il.isoformat() if imp.privacy_aggiornata_il else ""
+        ),
     }
 
 
@@ -269,3 +278,103 @@ def anteprima_modello_email(request, chiave: str, dati: ModelloEmailIn):
     esempi = {s.nome: s.esempio for s in t.segnaposto}
     composta = email.componi_da(t, dati.oggetto, dati.corpo, esempi)
     return {"oggetto": composta.oggetto, "html": composta.html, "testo": composta.testo}
+
+
+# --- Privacy policy and terms (DEC-266) -----------------------------------------------------
+
+
+class PaginaOut(Schema):
+    titolo: str
+    html: str
+    aggiornata_il: date | None
+
+
+def _pagina(chiave: str):
+    from .pagine import PAGINE
+
+    pagina = PAGINE.get(chiave)
+    if pagina is None:
+        raise HttpError(404, "Pagina non trovata.")
+    return pagina
+
+
+@router.get("/pagine/{chiave}", response=PaginaOut, auth=None)
+def pagina_pubblica(request, chiave: str):
+    from .pagine import riempi, valori
+
+    pagina = _pagina(chiave)
+    imp = Impostazioni.carica()
+    testo = getattr(imp, pagina.campo) or pagina.base
+    return {
+        "titolo": pagina.titolo,
+        "html": riempi(testo, valori()),
+        "aggiornata_il": getattr(imp, pagina.campo_data),
+    }
+
+
+class PaginaModificaOut(Schema):
+    titolo: str
+    testo: str
+    base: str
+    personalizzata: bool
+    segnaposto: list[str]
+
+
+class PaginaIn(Schema):
+    testo: str
+
+
+def _pagina_modifica(pagina) -> dict:
+    from .pagine import SEGNAPOSTO_PAGINE
+
+    imp = Impostazioni.carica()
+    salvato = getattr(imp, pagina.campo)
+    return {
+        "titolo": pagina.titolo,
+        "testo": salvato or pagina.base,
+        "base": pagina.base,
+        "personalizzata": bool(salvato),
+        "segnaposto": list(SEGNAPOSTO_PAGINE),
+    }
+
+
+@router.get("/impostazioni/pagine/{chiave}", response=PaginaModificaOut)
+def pagina_da_modificare(request, chiave: str):
+    if not policy.puo_modificare_impostazioni(request.auth):
+        raise HttpError(403, "Privacy policy e termini li cambiano i capigruppo.")
+    return _pagina_modifica(_pagina(chiave))
+
+
+def _salva_pagina(pagina, testo: str) -> None:
+    imp = Impostazioni.carica()
+    setattr(imp, pagina.campo, testo)
+    setattr(imp, pagina.campo_data, timezone.localdate())
+    imp.save(update_fields=[pagina.campo, pagina.campo_data, "aggiornato_il"])
+
+
+@router.put("/impostazioni/pagine/{chiave}", response=PaginaModificaOut)
+def salva_pagina(request, chiave: str, dati: PaginaIn):
+    from . import segnaposto as sp
+    from .html import pulisci
+    from .pagine import SEGNAPOSTO_PAGINE
+
+    if not policy.puo_modificare_impostazioni(request.auth):
+        raise HttpError(403, "Privacy policy e termini li cambiano i capigruppo.")
+    pagina = _pagina(chiave)
+    testo = pulisci(dati.testo)
+    if not sp.SEGNAPOSTO.sub("", re.sub(r"<[^>]*>", "", testo)).strip():
+        raise HttpError(400, "Il testo è vuoto.")
+    ignoti = sp.sconosciuti(re.sub(r"<[^>]*>", " ", testo), SEGNAPOSTO_PAGINE)
+    if ignoti:
+        raise HttpError(400, "Segnaposto sconosciuto: " + ", ".join(f"[{n}]" for n in ignoti) + ".")
+    _salva_pagina(pagina, testo)
+    return _pagina_modifica(pagina)
+
+
+@router.delete("/impostazioni/pagine/{chiave}", response=PaginaModificaOut)
+def pagina_di_base(request, chiave: str):
+    if not policy.puo_modificare_impostazioni(request.auth):
+        raise HttpError(403, "Privacy policy e termini li cambiano i capigruppo.")
+    pagina = _pagina(chiave)
+    _salva_pagina(pagina, "")
+    return _pagina_modifica(pagina)

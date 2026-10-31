@@ -198,3 +198,37 @@ def test_mailpit_solo_per_l_amministratore(gruppo, capogruppo, amministratore, s
     )
     settings.QDC_MAILPIT_CONSENTITO = False
     assert _client(amministratore).get("/mailpit/").status_code == 404
+
+
+# --- Privacy policy and terms (DEC-266) -----------------------------------------------------
+
+
+def test_pagine_pubbliche_di_base(gruppo):
+    gruppo.email = "gruppo@example.invalid"
+    gruppo.save()
+    for chiave, titolo in (("privacy", "Privacy policy"), ("termini", "Termini e condizioni")):
+        pagina = Client().get(f"/api/v1/pagine/{chiave}").json()
+        assert pagina["titolo"] == titolo and pagina["aggiornata_il"] is None
+        assert "AGESCI Prova 1" in pagina["html"] and "gruppo@example.invalid" in pagina["html"]
+        assert "[" not in pagina["html"]
+    assert Client().get("/api/v1/pagine/altro").status_code == 404
+
+
+def test_chi_cambia_privacy_e_termini(gruppo, capo, capogruppo, genitore, amministratore):
+    url = "/api/v1/impostazioni/pagine/privacy"
+    nuovo = {"testo": "<p>Titolare: AGESCI. [Gruppo]</p><script>x</script>"}
+    for chi in (capo, genitore):
+        assert (
+            _client(chi.utente).put(url, nuovo, content_type="application/json").status_code == 403
+        )
+    salvata = _client(capogruppo.utente).put(url, nuovo, content_type="application/json").json()
+    assert salvata["personalizzata"] and "script" not in salvata["testo"]
+    pubblica = Client().get("/api/v1/pagine/privacy").json()
+    assert pubblica["html"] == "<p>Titolare: AGESCI. AGESCI Prova 1</p>"
+    # The cookie banner shows again after a change.
+    assert Client().get("/api/v1/sito").json()["privacy_aggiornata_il"]
+    ignoto = {"testo": "<p>[Firma]</p>"}
+    assert (
+        _client(amministratore).put(url, ignoto, content_type="application/json").status_code == 400
+    )
+    assert _client(amministratore).delete(url).json()["personalizzata"] is False

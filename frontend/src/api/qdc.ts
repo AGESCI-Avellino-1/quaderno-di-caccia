@@ -127,6 +127,23 @@ export interface Sito {
   riga_piede: string
   /** Emails go to Mailpit, nobody receives them (DEC-249). */
   email_di_prova?: boolean
+  /** When the privacy policy changed: the cookie banner shows again (DEC-266). */
+  privacy_aggiornata_il?: string
+}
+
+/** Privacy policy or terms, as published (DEC-266). */
+export interface PaginaLegale {
+  titolo: string
+  html: string
+  aggiornata_il: string | null
+}
+
+export interface PaginaLegaleModifica {
+  titolo: string
+  testo: string
+  base: string
+  personalizzata: boolean
+  segnaposto: string[]
 }
 
 export interface ImpostazioniSito {
@@ -2487,6 +2504,19 @@ export const api = {
     }),
   comuni: (cerca: string) =>
     richiesta<string[]>(`/api/v1/comuni?cerca=${encodeURIComponent(cerca)}`),
+  paginaLegale: (chiave: string) =>
+    richiesta<PaginaLegale>(`/api/v1/pagine/${encodeURIComponent(chiave)}`),
+  paginaLegaleDaModificare: (chiave: string) =>
+    richiesta<PaginaLegaleModifica>(`/api/v1/impostazioni/pagine/${encodeURIComponent(chiave)}`),
+  salvaPaginaLegale: (chiave: string, testo: string) =>
+    richiesta<PaginaLegaleModifica>(`/api/v1/impostazioni/pagine/${encodeURIComponent(chiave)}`, {
+      metodo: 'PUT',
+      corpo: { testo },
+    }),
+  paginaLegaleDiBase: (chiave: string) =>
+    richiesta<PaginaLegaleModifica>(`/api/v1/impostazioni/pagine/${encodeURIComponent(chiave)}`, {
+      metodo: 'DELETE',
+    }),
   segnalaPagamento: (dati: { metodo: 'PAYPAL' | 'BONIFICO'; quote: number[]; data?: string }) =>
     richiesta<Segnalazione>('/api/v1/mie-quote/segnalazioni', { metodo: 'POST', corpo: dati }),
   caricaRicevutaSegnalazione: (id: number, file: File) => {

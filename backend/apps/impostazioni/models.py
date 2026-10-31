@@ -28,6 +28,13 @@ class Impostazioni(ModelloTracciato):
     # Email test mode (DEC-249): emails go to Mailpit, nobody receives them. Effective only
     # where settings.QDC_MAILPIT_CONSENTITO: see `email_di_prova_attiva`.
     email_di_prova = models.BooleanField(default=False)
+    # Privacy policy and terms (DEC-266): the group's text, cleaned HTML with
+    # placeholders; empty = the default in `pagine.PAGINE`. The date tells the cookie
+    # banner to show again.
+    privacy = models.TextField(blank=True)
+    privacy_aggiornata_il = models.DateField(null=True, blank=True)
+    termini = models.TextField(blank=True)
+    termini_aggiornati_il = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "impostazioni"

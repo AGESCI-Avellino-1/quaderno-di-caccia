@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import AggiornamentoApp from '@/components/AggiornamentoApp.vue'
+import BannerCookie from '@/components/BannerCookie.vue'
 import BarraEmailDiProva from '@/components/BarraEmailDiProva.vue'
 import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
 import BarraOffline from '@/components/BarraOffline.vue'
@@ -97,5 +98,6 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
       <PiePagina class="d-none lg:d-block" />
     </div>
   </div>
+  <BannerCookie />
   <AggiornamentoApp />
 </template>

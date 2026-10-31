@@ -97,6 +97,27 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Privacy policy and terms, public (DEC-266).
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('@/views/PaginaLegaleView.vue'),
+      meta: { pubblica: true },
+      props: { chiave: 'privacy' },
+    },
+    {
+      path: '/termini',
+      name: 'termini',
+      component: () => import('@/views/PaginaLegaleView.vue'),
+      meta: { pubblica: true },
+      props: { chiave: 'termini' },
+    },
+    {
+      path: '/impostazioni/pagine/:chiave(privacy|termini)',
+      name: 'pagina-legale-modifica',
+      component: () => import('@/views/PaginaLegaleModificaView.vue'),
+      props: true,
+    },
+    {
       // The waiting list, public: no account (DEC-256); the personal link (DEC-257).
       path: '/lista-attesa',
       name: 'lista-attesa',

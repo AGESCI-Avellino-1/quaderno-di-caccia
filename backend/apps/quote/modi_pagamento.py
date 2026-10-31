@@ -2,7 +2,9 @@
 own by the group. Never a payment inside the app: these only tell the family how.
 """
 
+import re
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from urllib.parse import urlsplit
 
 from apps.core.euro import euro
 from apps.organizzazione.models import Gruppo
@@ -25,6 +27,23 @@ def iban_valido(iban: str) -> bool:
     return int(numero) % 97 == 1
 
 
+BIC = re.compile(r"[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?")
+
+
+def bic_valido(bic: str) -> bool:
+    return bool(BIC.fullmatch(bic))
+
+
+def link_paypal(base: str, importo: Decimal) -> str:
+    """A paypal.me link with the amount already in it (…/paypalme/nome/50.50), so the
+    family pays exactly that; any other link is left as it is."""
+    parti = urlsplit(base)
+    host = parti.netloc.lower().removeprefix("www.")
+    if host == "paypal.me" or (host == "paypal.com" and parti.path.startswith("/paypalme/")):
+        return f"{base.rstrip('/')}/{importo.quantize(CENTESIMO)}"
+    return base
+
+
 def _decimale(valore) -> Decimal | None:
     if valore is None or valore == "":
         return None
@@ -39,6 +58,8 @@ def problemi(gruppo: Gruppo) -> list[str]:
     errori = []
     if gruppo.iban and not iban_valido(gruppo.iban):
         errori.append("L'IBAN non è valido: controlla di averlo copiato tutto.")
+    if gruppo.bic and not bic_valido(gruppo.bic):
+        errori.append("Il BIC/SWIFT non è valido: sono 8 o 11 lettere e cifre.")
     if gruppo.bonifico_attivo and not (gruppo.iban and gruppo.intestatario_conto.strip()):
         errori.append("Per il bonifico scrivi l'IBAN e a chi è intestato il conto.")
     if gruppo.paypal_attivo and not gruppo.link_pagamento:
@@ -117,20 +138,45 @@ def regola_paypal(gruppo: Gruppo) -> str:
     return ""
 
 
-def per_la_famiglia(gruppo: Gruppo | None, da_pagare: Decimal) -> dict:
-    """The enabled ways, as the family's fee page shows them."""
+def per_la_famiglia(gruppo: Gruppo | None, quote) -> dict:
+    """The enabled ways, as the family's fee page shows them; for PayPal one link with
+    the amount for each fee still due and one for everything."""
     if gruppo is None:
-        return {"contanti": False, "bonifico": None, "paypal": None}
+        return {"contanti": False, "carte": False, "bonifico": None, "paypal": None}
+    dovute = [(q, q.residuo) for q in quote if q.residuo > 0]
     paypal = None
     if gruppo.paypal_attivo and gruppo.link_pagamento:
+        da_pagare = sum((r for _, r in dovute), Decimal(0))
         aggiunta = maggiorazione_paypal(gruppo, da_pagare)
+        per_quota = []
+        for quota, residuo in dovute:
+            sua = maggiorazione_paypal(gruppo, residuo)
+            per_quota.append(
+                {
+                    "quota_id": quota.pk,
+                    "maggiorazione": sua,
+                    "totale": residuo + sua,
+                    "link": link_paypal(gruppo.link_pagamento, residuo + sua),
+                }
+            )
         paypal = {
-            "link": gruppo.link_pagamento,
+            "link": link_paypal(gruppo.link_pagamento, da_pagare + aggiunta),
             "regola": regola_paypal(gruppo),
             "maggiorazione": aggiunta,
             "totale": da_pagare + aggiunta,
+            "per_quota": per_quota,
         }
     bonifico = None
     if gruppo.bonifico_attivo and gruppo.iban:
-        bonifico = {"iban": gruppo.iban, "intestatario": gruppo.intestatario_conto}
-    return {"contanti": gruppo.contanti_attivo, "bonifico": bonifico, "paypal": paypal}
+        bonifico = {
+            "iban": gruppo.iban,
+            "intestatario": gruppo.intestatario_conto,
+            "banca": gruppo.banca,
+            "bic": gruppo.bic,
+        }
+    return {
+        "contanti": gruppo.contanti_attivo,
+        "carte": gruppo.carte_attivo,
+        "bonifico": bonifico,
+        "paypal": paypal,
+    }

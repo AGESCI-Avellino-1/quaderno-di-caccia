@@ -122,12 +122,14 @@ describe('MieQuoteView', () => {
           ],
           modi_pagamento: {
             contanti: true,
+            carte: true,
             bonifico: { iban: 'IT60X0542811101000000123456', intestatario: 'AGESCI Prova 1' },
             paypal: {
-              link: 'https://paypal.me/gruppo',
+              link: 'https://paypal.me/gruppo/37.00',
               regola: 'Per i costi di PayPal si aggiungono 2,00 €.',
               maggiorazione: '2.00',
               totale: '37.00',
+              per_quota: [],
             },
           },
         }),
@@ -137,10 +139,12 @@ describe('MieQuoteView', () => {
     await flushPromises()
     expect(pagina.text()).toContain('Da pagare: 35,00 €')
     expect(pagina.text()).toContain('coperto dal gruppo 10,00 €')
-    expect(pagina.get('a[href="https://paypal.me/gruppo"]').text()).toBe('Paga con PayPal')
+    expect(pagina.get('a[href="https://paypal.me/gruppo/37.00"]').text()).toBe(
+      'Paga tutto con PayPal (37,00 €)',
+    )
     expect(pagina.text()).toContain('in tutto 37,00 €')
     expect(pagina.text()).toContain('IT60 X054 2811 1010 0000 0123 456')
-    expect(pagina.text()).toContain('In contanti, ai capi.')
+    expect(pagina.text()).toContain('In contanti o con carta, ai capi.')
     expect(pagina.find('a[href="/api/v1/pagamenti/7/ricevuta.pdf"]').exists()).toBe(true)
   })
 })

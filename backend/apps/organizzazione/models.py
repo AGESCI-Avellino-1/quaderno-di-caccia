@@ -66,9 +66,14 @@ class Gruppo(ModelloTracciato):
     # How families pay (DEC-83, DEC-253), each way enabled on its own: cash to the capi,
     # bank transfer, PayPal. Checked and computed in quote/modi_pagamento.py.
     contanti_attivo = models.BooleanField(default=True)
+    # Credit or debit cards to the capi (a POS): not every group has one.
+    carte_attivo = models.BooleanField(default=False)
     bonifico_attivo = models.BooleanField(default=False)
     iban = models.CharField(max_length=34, blank=True)
     intestatario_conto = models.CharField(max_length=140, blank=True)
+    # Optional, for payments from abroad.
+    banca = models.CharField(max_length=140, blank=True)
+    bic = models.CharField(max_length=11, blank=True)
     paypal_attivo = models.BooleanField(default=False)
     # The PayPal link, e.g. paypal.me (the name comes from before DEC-253).
     link_pagamento = models.URLField(blank=True)

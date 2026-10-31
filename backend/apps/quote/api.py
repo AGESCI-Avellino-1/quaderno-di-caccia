@@ -552,20 +552,32 @@ def annulla_pagamento(request, pagamento_id: int, dati: Motivo):
 class BonificoOut(Schema):
     iban: str
     intestatario: str
+    banca: str = ""
+    bic: str = ""
+
+
+class PaypalQuotaOut(Schema):
+    quota_id: int
+    maggiorazione: Decimal
+    totale: Decimal
+    link: str
 
 
 class PaypalOut(Schema):
+    # With the amount in it (paypal.me): for everything due.
     link: str
     # The rule in words, what to add to the whole amount due, and the total.
     regola: str
     maggiorazione: Decimal
     totale: Decimal
+    per_quota: list[PaypalQuotaOut] = []
 
 
 class ModiPagamentoOut(Schema):
     """How to pay, only the ways the group enabled (DEC-253)."""
 
     contanti: bool = False
+    carte: bool = False
     bonifico: BonificoOut | None = None
     paypal: PaypalOut | None = None
 
@@ -590,11 +602,10 @@ def mie_quote(request, anno: int | None = None):
         righe__quota__persona__in=persone, anno_ricevuta=anno
     ).distinct()
     quote = [q for q in _quote(persone, anno) if not q.annullata_il]
-    da_pagare = sum((max(q.residuo, Decimal(0)) for q in quote), Decimal(0))
     return {
         "quote": [_quota_out(utente, q) for q in quote],
         "pagamenti": [_pagamento_out(p, request.auth) for p in pagamenti],
-        "modi_pagamento": modi_pagamento.per_la_famiglia(Gruppo.objects.first(), da_pagare),
+        "modi_pagamento": modi_pagamento.per_la_famiglia(Gruppo.objects.first(), quote),
     }
 
 
@@ -656,9 +667,12 @@ class ImpostazioniQuote(Schema):
     """The payment section of the settings (DEC-253)."""
 
     contanti_attivo: bool = True
+    carte_attivo: bool = False
     bonifico_attivo: bool = False
     iban: str = ""
     intestatario_conto: str = ""
+    banca: str = ""
+    bic: str = ""
     paypal_attivo: bool = False
     link_pagamento: str = ""
     paypal_maggiorazione: str = "NESSUNA"
@@ -691,6 +705,8 @@ def salva_impostazioni(request, dati: ImpostazioniQuote):
         setattr(gruppo, campo, getattr(dati, campo))
     gruppo.iban = modi_pagamento.normalizza_iban(dati.iban)
     gruppo.intestatario_conto = dati.intestatario_conto.strip()
+    gruppo.banca = dati.banca.strip()
+    gruppo.bic = "".join(dati.bic.split()).upper()
     gruppo.link_pagamento = dati.link_pagamento.strip()
     gruppo.paypal_fasce = [
         {"fino_a": None if f.fino_a is None else str(f.fino_a), "quota": str(f.quota)}

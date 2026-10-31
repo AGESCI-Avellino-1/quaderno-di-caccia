@@ -18,6 +18,7 @@ import chevronUp from 'bootstrap-icons/icons/chevron-up.svg?raw'
 import cloudUpload from 'bootstrap-icons/icons/cloud-upload.svg?raw'
 import collection from 'bootstrap-icons/icons/collection.svg?raw'
 import compass from 'bootstrap-icons/icons/compass.svg?raw'
+import creditCard from 'bootstrap-icons/icons/credit-card.svg?raw'
 import diagram3 from 'bootstrap-icons/icons/diagram-3.svg?raw'
 import envelopeOpen from 'bootstrap-icons/icons/envelope-open.svg?raw'
 import envelopePaper from 'bootstrap-icons/icons/envelope-paper.svg?raw'
@@ -77,6 +78,7 @@ export const ICONE = {
   'cloud-upload': cloudUpload,
   collection: collection,
   compass: compass,
+  'credit-card': creditCard,
   'diagram-3': diagram3,
   'envelope-open': envelopeOpen,
   'envelope-paper': envelopePaper,

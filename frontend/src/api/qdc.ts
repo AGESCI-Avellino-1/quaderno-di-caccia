@@ -895,8 +895,17 @@ export interface Pagamento {
 /** How to pay, only the ways the group enabled (DEC-253). */
 export interface ModiPagamento {
   contanti: boolean
-  bonifico: { iban: string; intestatario: string } | null
-  paypal: { link: string; regola: string; maggiorazione: string; totale: string } | null
+  /** Credit or debit cards to the capi. */
+  carte?: boolean
+  bonifico: { iban: string; intestatario: string; banca?: string; bic?: string } | null
+  paypal: {
+    /** With the amount already in it, for everything due. */
+    link: string
+    regola: string
+    maggiorazione: string
+    totale: string
+    per_quota?: { quota_id: number; maggiorazione: string; totale: string; link: string }[]
+  } | null
 }
 
 export interface MieQuote {
@@ -914,9 +923,12 @@ export interface FasciaPaypal {
 /** The payment section of the settings (DEC-253). */
 export interface ImpostazioniPagamenti {
   contanti_attivo: boolean
+  carte_attivo: boolean
   bonifico_attivo: boolean
   iban: string
   intestatario_conto: string
+  banca: string
+  bic: string
   paypal_attivo: boolean
   link_pagamento: string
   paypal_maggiorazione: 'NESSUNA' | 'FISSA' | 'PERCENTUALE' | 'FASCE'

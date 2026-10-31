@@ -184,13 +184,14 @@ def crea_attivita(email) -> None:
             "scadenza": scadenza,
         },
     )
-    # How families pay (DEC-253): cash, transfer to an example IBAN (valid check digits,
+    # How families pay (DEC-253): cash and cards to the capi, transfer to an example IBAN (valid check digits,
     # no real account), PayPal with 2 € for its costs, as the Avellino 1 does.
     tesoriera(
         "put",
         "/quote/impostazioni",
         {
             "contanti_attivo": True,
+            "carte_attivo": True,
             "bonifico_attivo": True,
             "iban": "IT60X0542811101000000123456",
             "intestatario_conto": "AGESCI Gruppo Prova 1",

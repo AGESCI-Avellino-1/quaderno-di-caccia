@@ -97,6 +97,14 @@ const esempio = computed(() => {
           <Icona nome="cash" /> Contanti, ai capi
         </label>
       </div>
+      <div class="form-field mt-3">
+        <div class="switch">
+          <input id="pag-carte" v-model="dati.carte_attivo" type="checkbox" role="switch" />
+        </div>
+        <label for="pag-carte" class="d-flex align-items-center gap-3">
+          <Icona nome="credit-card" /> Carte di credito o di debito, ai capi
+        </label>
+      </div>
 
       <hr />
       <div class="form-field">
@@ -126,6 +134,20 @@ const esempio = computed(() => {
             class="form-control form-control-sm"
           />
         </div>
+        <div class="col-12 md:col-6">
+          <label class="form-label small mb-0" for="pag-banca">Banca (facoltativa)</label>
+          <input id="pag-banca" v-model="dati.banca" class="form-control form-control-sm" />
+        </div>
+        <div class="col-12 md:col-6">
+          <label class="form-label small mb-0" for="pag-bic">BIC/SWIFT (facoltativo)</label>
+          <input
+            id="pag-bic"
+            v-model="dati.bic"
+            class="form-control form-control-sm"
+            autocomplete="off"
+          />
+          <div class="form-text">Serve per i bonifici dall'estero.</div>
+        </div>
       </div>
 
       <hr />
@@ -148,6 +170,9 @@ const esempio = computed(() => {
               class="form-control form-control-sm"
               placeholder="https://paypal.me/…"
             />
+            <div class="form-text">
+              Con un link paypal.me il pulsante delle famiglie porta già l'importo da pagare.
+            </div>
           </div>
           <div class="col-12 md:col-6">
             <label class="form-label small mb-0" for="pag-maggiorazione">

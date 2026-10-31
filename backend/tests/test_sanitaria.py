@@ -113,6 +113,15 @@ def test_scarico_per_il_campo_negato_ai_ragazzi(csq, reparto):
     assert client.get(f"/api/v1/campo/{reparto.pk}").status_code == 403
 
 
+def test_la_scheda_dice_chi_vede_registro_e_foto_precedenti(capo, genitore, ragazza):
+    """The person page shows the access log and the earlier photos to the capi only."""
+    del_capo = _client(capo).get(f"/api/v1/persone/{ragazza.pk}").json()
+    del_genitore = _client(genitore).get(f"/api/v1/persone/{ragazza.pk}").json()
+    assert del_capo["vede_registro_accessi"] and del_capo["vede_storico_foto"]
+    assert not del_genitore["vede_registro_accessi"]
+    assert not del_genitore["vede_storico_foto"]
+
+
 def test_registro_accessi_solo_ai_capi(capo, genitore, ragazza):
     _client(genitore).get(f"/api/v1/persone/{ragazza.pk}/sanitarie")
     righe = _client(capo).get(f"/api/v1/persone/{ragazza.pk}/accessi-sensibili").json()

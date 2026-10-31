@@ -58,6 +58,9 @@ class PersonaDettaglio(Schema):
     # Profile photo (DEC-42, DEC-201): whether there is one the caller may see.
     foto: bool = False
     puo_caricare_foto: bool = False
+    # The capi see the earlier photos (DEC-42) and who read the sensitive data (DEC-101).
+    vede_storico_foto: bool = False
+    vede_registro_accessi: bool = False
     # The capi's file (DEC-47, DEC-206), when the person has been a capo.
     fascicolo_capo: bool = False
 
@@ -104,6 +107,8 @@ def dettaglio_persona(request, persona_id: int):
         }
     dati["foto"] = policy.puo_vedere_foto(request.auth, persona) and persona.foto_profilo.exists()
     dati["puo_caricare_foto"] = policy.puo_caricare_foto(request.auth, persona)
+    dati["vede_storico_foto"] = policy.vede_storico_foto(request.auth, persona)
+    dati["vede_registro_accessi"] = policy.puo_vedere_registro_accessi(request.auth)
     dati["fascicolo_capo"] = policy.puo_vedere_fascicolo_capo(request.auth, persona)
     return dati
 

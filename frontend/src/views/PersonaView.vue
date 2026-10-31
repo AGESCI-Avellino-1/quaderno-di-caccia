@@ -11,6 +11,7 @@ import QuotePersona from '@/components/QuotePersona.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import FotoProfilo from '@/components/FotoProfilo.vue'
 import NotePersona from '@/components/NotePersona.vue'
+import RegistroAccessi from '@/components/RegistroAccessi.vue'
 import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useRete } from '@/composables/useRete'
@@ -167,6 +168,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
+      <RegistroAccessi v-if="online && persona.vede_registro_accessi" :id="persona.id" />
       <AvviaImpersonazione
         v-if="impersonabile"
         class="mb-5"

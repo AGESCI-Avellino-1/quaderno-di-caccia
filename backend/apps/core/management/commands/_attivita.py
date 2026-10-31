@@ -59,6 +59,17 @@ class Api:
         return risposta.json()
 
 
+def _foto_di_prova(colore: str, iniziali: str) -> SimpleUploadedFile:
+    """A coloured square with initials: never a real face."""
+    from PIL import Image, ImageDraw
+
+    immagine = Image.new("RGB", (600, 600), colore)
+    ImageDraw.Draw(immagine).text((250, 280), iniziali, fill="white", font_size=96)
+    contenuto = io.BytesIO()
+    immagine.save(contenuto, "JPEG")
+    return SimpleUploadedFile("foto.jpg", contenuto.getvalue(), "image/jpeg")
+
+
 def _pdf_di_prova(testo: str, nome: str = "liberatoria.pdf") -> SimpleUploadedFile:
     """A one-page PDF standing for a real form (no real model is copied)."""
     from reportlab.pdfgen.canvas import Canvas
@@ -348,6 +359,10 @@ def crea_attivita(email) -> None:
             "mete": [meta],
         },
     )
+    # Two profile photos of Giulia: the capi see the earlier one too (DEC-42).
+    capo_reparto.carica(f"/persone/{giulia}/foto", _foto_di_prova("#3d63ad", "GR"))
+    capo_reparto.carica(f"/persone/{giulia}/foto", _foto_di_prova("#2f8f4e", "GR"))
+
     # Under way, so that the guida can say she is ready for the verification.
     impegno = scheda["impegni"][-1]["id"]
     capo_reparto("post", f"/progressione/impegni/{impegno}/concorda", {})

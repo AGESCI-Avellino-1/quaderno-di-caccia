@@ -242,6 +242,8 @@ export interface PersonaDettaglio extends PersonaBreve {
   /** Profile photo (DEC-201): there is one the user may see; who may upload one. */
   foto?: boolean
   puo_caricare_foto?: boolean
+  vede_storico_foto?: boolean
+  vede_registro_accessi?: boolean
   /** The capi's file (DEC-47, DEC-206), when the person has been a capo. */
   fascicolo_capo?: boolean
 }
@@ -895,6 +897,11 @@ export interface Campo {
   unita: string
   scaricato_il: string
   persone: SchedaCampo[]
+}
+
+export interface FotoStorica {
+  id: number
+  creata_il: string
 }
 
 export interface AccessoSensibile {
@@ -2429,6 +2436,8 @@ export const api = {
   campo: (unita: number) => richiesta<Campo>(`/api/v1/campo/${unita}`),
   accessiSensibili: (persona: number) =>
     richiesta<AccessoSensibile[]>(`/api/v1/persone/${persona}/accessi-sensibili`),
+  storicoFoto: (persona: number) =>
+    richiesta<FotoStorica[]>(`/api/v1/persone/${persona}/foto/storico`),
   dispositivi: (tutti = false) =>
     richiesta<Dispositivo[]>(`/api/v1/dispositivi${tutti ? '?tutti=true' : ''}`),
   registraDispositivo: (dati: { nome: string; id: string | null }) =>

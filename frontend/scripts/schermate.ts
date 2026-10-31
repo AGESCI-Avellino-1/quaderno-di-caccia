@@ -549,6 +549,28 @@ const SCENE: Scena[] = [
     },
     intera: true,
   },
+  {
+    // After the camp download and the year's file: their reads are in the log.
+    nome: 'capo/registro-accessi',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Giulia')(pagina)
+      await pagina.getByRole('button', { name: 'Mostra il registro' }).click()
+      await pagina.locator('.list-group-item').first().waitFor()
+    },
+    mostra: 'Chi ha visto i dati delicati',
+  },
+  {
+    nome: 'capo/foto-precedenti',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Giulia')(pagina)
+      await pagina.getByRole('button', { name: 'Foto precedenti' }).click()
+      await pagina.getByText('Nascondi le foto precedenti').waitFor()
+    },
+  },
   { nome: 'capo/attesa', chi: 'capoCerchio', percorso: '/attesa', intera: true },
   { nome: 'capo/richieste', chi: 'capoCerchio', percorso: '/iscrizioni', intera: true },
   // Francesca Gallo is the group treasurer; Laura Bianchi the capogruppo.

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
-import { api, fotoProfilo, type PersonaDettaglio } from '@/api/qdc'
+import { api, fotoProfilo, type FotoStorica, type PersonaDettaglio } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
 // The profile photo, to recognise the ragazzi (DEC-42, DEC-201). The photo is cropped
 // on the device to a square around the person (DEC-205): only that square leaves the
 // phone, so the other people in a group photo are never uploaded. The server reduces it
-// to a JPEG of at most 1 MB without metadata; the earlier photos stay for the capi.
+// to a JPEG of at most 1 MB without metadata; the earlier photos stay for the capi, who
+// open them on request (online only, like the current one).
 const props = defineProps<{ persona: PersonaDettaglio }>()
 const emit = defineEmits<{ cambiata: [persona: PersonaDettaglio] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -15,6 +16,19 @@ const { errore, inCorso, esegui } = useErrore()
 const LATO = 280 // the square on screen
 const USCITA = 800 // the square uploaded
 const versione = ref(Date.now())
+// The earlier photos, newest first; null until asked for.
+const precedenti = ref<FotoStorica[] | null>(null)
+const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
+
+async function mostraPrecedenti() {
+  if (precedenti.value) {
+    precedenti.value = null
+    return
+  }
+  const tutte = await esegui(() => api.storicoFoto(props.persona.id))
+  // The first one is the current photo, already shown.
+  if (tutte) precedenti.value = tutte.slice(1)
+}
 const sorgente = ref<HTMLImageElement | null>(null)
 const url = ref('')
 const stato = reactive({ zoom: 1, x: 0, y: 0 })
@@ -151,6 +165,26 @@ onBeforeUnmount(annulla)
       <p class="small fg-2 mb-0 mt-1">
         Serve ai capi per riconoscere {{ persona.nome }}; non viene pubblicata.
       </p>
+    </div>
+    <div v-if="persona.vede_storico_foto && persona.foto && !sorgente" class="w-100">
+      <button type="button" class="btn btn-sm btn-link px-0" @click="mostraPrecedenti">
+        {{ precedenti ? 'Nascondi le foto precedenti' : 'Foto precedenti' }}
+      </button>
+      <template v-if="precedenti">
+        <p v-if="!precedenti.length" class="small fg-2 mb-0">Nessuna foto precedente.</p>
+        <ul v-else class="list-unstyled d-flex flex-wrap gap-3 mb-0">
+          <li v-for="f in precedenti" :key="f.id" class="small fg-2 text-center">
+            <img
+              :src="`${fotoProfilo(persona.id)}?foto_id=${f.id}`"
+              :alt="`Foto di ${persona.nome} del ${data(f.creata_il)}`"
+              width="72"
+              height="72"
+              class="rounded d-block mb-1"
+            />
+            {{ data(f.creata_il) }}
+          </li>
+        </ul>
+      </template>
     </div>
 
     <div v-if="sorgente" class="w-100">

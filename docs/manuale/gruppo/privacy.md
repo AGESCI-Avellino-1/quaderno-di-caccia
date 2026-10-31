@@ -2,7 +2,8 @@
 
 ## Scollegare il telefono di qualcun altro
 
-Se un capo o un genitore perde il telefono e non riesce a entrare, puoi scollegarlo tu:
+Se un capo o un genitore perde il telefono e non riesce a entrare, lo scollegano i capigruppo
+o l'amministratore tecnico:
 
 1. Nel menu del profilo tocca **Password e sicurezza**.
 2. Accendi **Tutti i dispositivi del gruppo**.

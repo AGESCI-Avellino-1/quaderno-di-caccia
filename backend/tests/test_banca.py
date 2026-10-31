@@ -148,6 +148,19 @@ def test_bonifico_proposto_e_pagato(banca, censimento, capogruppo):
     assert banca.saldo() == Decimal("1040.00")
 
 
+def test_ricevuta_del_bonifico_parte_per_email(
+    banca, censimento, capogruppo, monkeypatch, django_capture_on_commit_callbacks
+):
+    """A payment confirmed from the bank statement sends its receipt like any other."""
+    inviate = []
+    monkeypatch.setattr(servizi, "invia_ricevuta", inviate.append)
+    servizi.carica(banca, _estratto(BONIFICO), capogruppo.utente)
+    riga = RigaBanca.objects.get()
+    with django_capture_on_commit_callbacks(execute=True):
+        servizi.paga_quote(riga, [quote.Riga(censimento, Decimal("40"))], "", capogruppo.utente)
+    assert inviate == [Pagamento.objects.get()]
+
+
 def test_pagamento_gia_registrato_si_collega(banca, censimento, capogruppo):
     quote.registra_pagamento(
         data=date(2026, 1, 12),

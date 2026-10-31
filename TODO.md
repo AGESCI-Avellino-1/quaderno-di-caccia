@@ -186,8 +186,8 @@ Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manual
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
-| M.1 | Piccole correzioni: la ricevuta di un pagamento dall'estratto conto parte per email come le altre; l'amministratore tecnico vede «Tutti i dispositivi del gruppo»; descrizione di «Impostazioni» nel menu; percorso in alto nelle pagine dei ragazzi | DEC-84, DEC-222, DEC-23, DEC-244 | 🚧 |
-| M.2 | Scheda della persona: registro degli accessi ai dati delicati e foto precedenti, per i capi | DEC-101, DEC-42 | ⏳ |
+| M.1 | Piccole correzioni: la ricevuta di un pagamento dall'estratto conto parte per email come le altre; l'amministratore tecnico vede «Tutti i dispositivi del gruppo»; descrizione di «Impostazioni» nel menu; percorso in alto nelle pagine dei ragazzi | DEC-84, DEC-222, DEC-23, DEC-244 | ✅ 31/10 (provato nel browser con le schermate: sentiero dei ragazzi, Carta di clan della scolta, passaggi) |
+| M.2 | Scheda della persona: registro degli accessi ai dati delicati e foto precedenti, per i capi | DEC-101, DEC-42 | 🚧 |
 | M.3 | Correggere le date di una tappa (inizio, riconoscimento, distintivo) con il motivo | DEC-171…DEC-173 | ⏳ |
 | M.4 | Modificare un evento | DEC-75, DEC-79 | ⏳ |
 | M.5 | Delega delle riunioni di squadriglia da parte dello staff: la regola del codice (`puo_delegare`) lo permette, l'analisi (DEC-139) dà la delega solo al capo squadriglia: da decidere con il maintainer | DEC-139, DEC-14 | ❓ |

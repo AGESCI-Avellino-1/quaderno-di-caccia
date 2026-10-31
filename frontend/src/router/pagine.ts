@@ -8,6 +8,8 @@ export interface Pagina {
   titolo: string
   /** Route name of the page above; none = right under the Home. */
   sopra?: string
+  /** Only the capi open it: the breadcrumb leaves it out for the others. */
+  soloCapi?: boolean
 }
 
 export const PAGINE: Record<string, Pagina> = {
@@ -18,7 +20,7 @@ export const PAGINE: Record<string, Pagina> = {
   invito: { titolo: 'Invito' },
   'verifica-email': { titolo: "Conferma dell'email" },
   'reimposta-password': { titolo: 'Nuova password' },
-  persone: { titolo: 'Persone' },
+  persone: { titolo: 'Persone', soloCapi: true },
   persona: { titolo: 'Scheda', sopra: 'persone' },
   sanitarie: { titolo: 'Scheda sanitaria', sopra: 'persona' },
   fascicolo: { titolo: 'Fascicolo completo', sopra: 'persona' },
@@ -26,8 +28,8 @@ export const PAGINE: Record<string, Pagina> = {
   'fascicolo-anno': { titolo: "Fascicolo dell'anno", sopra: 'persona' },
   sentiero: { titolo: 'Progressione personale', sopra: 'persona' },
   campo: { titolo: 'Al campo' },
-  unita: { titolo: 'Unità' },
-  'unita-dettaglio': { titolo: 'Unità', sopra: 'unita' },
+  unita: { titolo: 'Unità', soloCapi: true },
+  'unita-dettaglio': { titolo: 'Unità', sopra: 'unita', soloCapi: true },
   'carta-clan': { titolo: 'Carta di clan', sopra: 'unita-dettaglio' },
   'sentiero-unita': { titolo: "Progressione dell'unità", sopra: 'unita-dettaglio' },
   imprese: { titolo: 'Imprese', sopra: 'unita-dettaglio' },

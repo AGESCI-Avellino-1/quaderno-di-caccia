@@ -17,7 +17,8 @@ import PasskeyAccesso from '@/components/PasskeyAccesso.vue'
 import { inImpersonazione } from '@/sicurezza/impersonazione'
 import { useSessioneStore } from '@/stores/sessione'
 
-// Own devices; a capogruppo can see and disconnect anyone's lost phone (DEC-23, DEC-97).
+// Own devices; a capogruppo or the technical administrator can see and disconnect anyone's
+// lost phone (DEC-23, DEC-97; policy.puo_revocare_dispositivi_altrui).
 const sessione = useSessioneStore()
 const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
@@ -105,7 +106,10 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
 
     <PasskeyAccesso v-if="!inImpersonazione()" :nome-predefinito="nomeQuesto" />
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
-    <div v-if="sessione.capogruppo" class="form-field mb-3">
+    <div
+      v-if="sessione.capogruppo || sessione.profilo?.amministratore_tecnico"
+      class="form-field mb-3"
+    >
       <div class="switch"><input id="tutti" v-model="tutti" type="checkbox" role="switch" /></div>
       <label for="tutti">Tutti i dispositivi del gruppo</label>
     </div>

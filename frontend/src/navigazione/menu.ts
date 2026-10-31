@@ -321,7 +321,12 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           nome: 'Impostazioni',
           icona: 'sliders',
           to: '/impostazioni',
-          descrizione: 'Nome e titolo del sito, intestazione delle stampe',
+          // Each one sees only the sections they may change (ImpostazioniView).
+          descrizione: p.capogruppo
+            ? 'Sito, stampe, pagamenti, modelli delle email, privacy policy'
+            : p.amministratore_tecnico
+              ? 'Sito, modelli delle email, privacy policy, email di prova'
+              : 'Come le famiglie possono pagare le quote',
         },
         p.amministratore_tecnico &&
           contatori.email_di_prova && {

@@ -16,17 +16,13 @@ Per ogni riga in **Da confermare**:
   stesso importo: tocca **Sì, è questo**.
 - **Pagamento di quote**: per un bonifico in entrata l'app propone le famiglie più probabili
   (dal nome nella causale e dall'importo). Scegli la famiglia, controlla le quote e tocca
-  **Registra il pagamento**: nasce il pagamento con la sua ricevuta.
+  **Registra il pagamento**: nasce il pagamento con la sua ricevuta, che parte per email
+  alla famiglia.
 - **Prelievo verso la cassa**: un prelievo con la carta di un'unità diventa un giroconto
   verso la sua cassa.
 - **Altra entrata** o **Spesa o altra uscita**: scegli la voce del Modello D e l'unità, e
   tocca **Registra in prima nota**. Per commissioni e canoni l'app propone già gli oneri
   bancari.
-
-:::{warning}
-La ricevuta di un pagamento registrato dall'estratto conto non parte da sola per email: se
-la famiglia la vuole, nella scheda del ragazzo tocca **Invia di nuovo**.
-:::
 
 ## Le carte delle unità
 

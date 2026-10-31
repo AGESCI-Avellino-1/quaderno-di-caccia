@@ -19,7 +19,7 @@ from apps.cassa import servizi as cassa_servizi
 from apps.cassa.catalogo import USCITA, catalogo
 from apps.cassa.models import Cassa, Movimento, TipoCassa, TipoMovimento
 from apps.quote.models import MetodoPagamento, Quota
-from apps.quote.servizi import Riga, famiglia, registra_pagamento
+from apps.quote.servizi import Riga, famiglia, invia_ricevuta, registra_pagamento
 
 from . import estratto as lettore
 from .models import CartaUnita, EstrattoConto, RigaBanca
@@ -267,7 +267,8 @@ def collega(riga: RigaBanca, movimento_ids: list[int], utente) -> RigaBanca:
 @transaction.atomic
 def paga_quote(riga: RigaBanca, righe: list[Riga], versato_da: str, utente) -> RigaBanca:
     """A transfer for fees: the payment with its receipt, in the cash book on this
-    account with the bank's date (DEC-152, DEC-222)."""
+    account with the bank's date (DEC-152, DEC-222); the receipt is emailed as for any
+    other payment (DEC-84)."""
     _libera(riga)
     if riga.importo <= ZERO:
         raise ValidationError("Solo un accredito può pagare delle quote.")
@@ -284,7 +285,9 @@ def paga_quote(riga: RigaBanca, righe: list[Riga], versato_da: str, utente) -> R
     movimenti = list(Movimento.objects.filter(pagamento=pagamento, cassa=riga.cassa))
     if not movimenti:
         raise ValidationError("Il conto bancario non è configurato in prima nota.")
-    return _conferma(riga, movimenti, utente)
+    confermata = _conferma(riga, movimenti, utente)
+    transaction.on_commit(lambda: invia_ricevuta(pagamento))
+    return confermata
 
 
 @transaction.atomic

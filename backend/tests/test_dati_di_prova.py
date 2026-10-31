@@ -13,6 +13,7 @@ from apps.eventi.models import Evento
 from apps.iscrizioni.models import CodiceIscrizione
 from apps.organizzazione.models import Incarico, RuoloIncarico
 from apps.permessi import policy
+from apps.progressione.models import CartaClan, Stagione
 from apps.quote.models import Pagamento
 
 
@@ -49,6 +50,11 @@ def test_every_profile_can_log_in():
     assert Avviso.objects.count() == 2
     assert CodiceIscrizione.objects.get().codice == "CERCHIO2027"
     assert InAttesa.objects.get(token="attesa-di-prova").nome == "Pietro"
+    # The strada of the scolta and the sentiero of the coccinella (manual, ragazzo part).
+    chiara = Persona.objects.get(nome="Chiara", cognome="Russo")
+    assert chiara.periodi_branca.get().punti_strada.count() == 1
+    assert CartaClan.objects.exclude(in_vigore_dal=None).count() == 1
+    assert Stagione.objects.get().unita.nome == "Fiordaliso"
 
     with pytest.raises(CommandError, match="--azzera"):
         call_command("dati_di_prova", verbosity=0)

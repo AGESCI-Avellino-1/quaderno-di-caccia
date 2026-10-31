@@ -72,6 +72,20 @@ describe('menu', () => {
     )
   })
 
+  it("describes the child's Progressione with the branch's words", () => {
+    const descrizione = (p: Profilo) =>
+      gruppiMenu(p).find((g) => g.chiave === 'progressione')?.voci[0]?.descrizione
+    const ragazzo = { ...BASE, persona: io }
+    expect(descrizione({ ...ragazzo, branca: 'eg' })).toBe('Tappe, mete e impegni')
+    expect(descrizione({ ...ragazzo, branca: 'rs' })).toBe('Passi, obiettivi e impegni')
+    expect(descrizione({ ...ragazzo, branca: 'lc', ambiente: 'BOSCO' })).toBe(
+      'Momenti, voli e specialità',
+    )
+    expect(descrizione({ ...ragazzo, branca: 'lc', ambiente: 'GIUNGLA' })).toBe(
+      'Momenti, prede e specialità',
+    )
+  })
+
   it('a capo sees the units they serve under Progressione personale', () => {
     const capo = {
       ...BASE,

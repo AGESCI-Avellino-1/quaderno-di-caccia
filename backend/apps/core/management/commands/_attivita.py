@@ -48,9 +48,9 @@ class Api:
             )
         return risposta.json() if risposta.content else None
 
-    def carica(self, percorso: str, file: SimpleUploadedFile):
+    def carica(self, percorso: str, file: SimpleUploadedFile, **campi: str):
         """A file sent as a form, as the app's upload fields do."""
-        risposta = self.client.post(f"/api/v1{percorso}", {"file": file})
+        risposta = self.client.post(f"/api/v1{percorso}", {"file": file, **campi})
         if risposta.status_code >= 400:
             raise CommandError(
                 f"POST {percorso}: {risposta.status_code} {risposta.content[:300]!r}"
@@ -58,7 +58,7 @@ class Api:
         return risposta.json()
 
 
-def _pdf_di_prova(testo: str) -> SimpleUploadedFile:
+def _pdf_di_prova(testo: str, nome: str = "liberatoria.pdf") -> SimpleUploadedFile:
     """A one-page PDF standing for a real form (no real model is copied)."""
     from reportlab.pdfgen.canvas import Canvas
 
@@ -66,7 +66,7 @@ def _pdf_di_prova(testo: str) -> SimpleUploadedFile:
     pagina = Canvas(contenuto)
     pagina.drawString(72, 770, testo)
     pagina.save()
-    return SimpleUploadedFile("liberatoria.pdf", contenuto.getvalue(), "application/pdf")
+    return SimpleUploadedFile(nome, contenuto.getvalue(), "application/pdf")
 
 
 def _giorno(giorni: int, ora: time) -> str:
@@ -89,6 +89,7 @@ def crea_attivita(email) -> None:
     capogruppo = Api(email("Laura", "Bianchi"))
     tesoriera = Api(email("Francesca", "Gallo"))
     capo_cerchio = Api(email("Elena", "Conti"))
+    capo_clan = Api(email("Davide", "Ricci"))
 
     # Health essentials, written by the unit staff (DEC-113).
     giulia = persona["Giulia Rossi"].pk
@@ -388,3 +389,110 @@ def crea_attivita(email) -> None:
         f"/buonacaccia/iscrizioni/{iscrizione['id']}/liberatoria",
         _pdf_di_prova("Liberatoria di prova: modulo inventato per il manuale"),
     )
+
+    # The strada of a scolta (DEC-67, DEC-179…DEC-181, DEC-227): the Carta di clan in
+    # force and signed, an obiettivo and a service under way, a Punto della Strada with
+    # its private part.
+    clan = Unita.objects.get(nome="Hirpinia")
+    chiara = persona["Chiara Russo"].pk
+    inizio_anno = date(anno.anno_fine - 1, 10, 1)
+    capo_clan.carica(
+        f"/unita/{clan.pk}/carta-clan",
+        _pdf_di_prova("Carta di clan di prova: testo inventato per il manuale", "carta.pdf"),
+        nota="Scritta alla route estiva",
+        in_vigore_dal=date(anno.anno_fine - 2, 9, 1).isoformat(),
+    )
+    scheda = capo_clan(
+        "post",
+        f"/persone/{chiara}/progressione/sentiero",
+        {"data": date(anno.anno_fine - 2, 10, 1).isoformat()},
+    )
+    periodo = scheda["periodi"][-1]["id"]
+    capo_clan(
+        "post",
+        f"/progressione/periodi/{periodo}/promessa",
+        {"data": date(anno.anno_fine - 2, 12, 8).isoformat()},
+    )
+    capo_clan("post", f"/progressione/periodi/{periodo}/carta", {"data": inizio_anno.isoformat()})
+    scheda = capo_clan(
+        "post",
+        f"/persone/{chiara}/progressione/mete",
+        {"testo": "Prendermi cura di chi è più fragile", "termine": None, "riservata": False},
+    )
+    obiettivo = scheda["mete"][-1]["id"]
+    capo_clan("post", f"/progressione/mete/{obiettivo}/concorda", {})
+    capo_clan("post", f"/progressione/mete/{obiettivo}/avvia", {})
+    scheda = capo_clan(
+        "post",
+        f"/persone/{chiara}/progressione/impegni",
+        {
+            "testo": "Servizio il sabato pomeriggio alla mensa della Caritas",
+            "termine": date(anno.anno_fine, 5, 31).isoformat(),
+            "criterio_verifica": "Ne parliamo al prossimo Punto della Strada con chi coordina",
+            "mete": [obiettivo],
+        },
+    )
+    impegno = scheda["impegni"][-1]["id"]
+    capo_clan("post", f"/progressione/impegni/{impegno}/concorda", {})
+    capo_clan("post", f"/progressione/impegni/{impegno}/avvia", {})
+    capo_clan(
+        "post",
+        f"/progressione/periodi/{periodo}/punti-strada",
+        {
+            "data": (date.today() - timedelta(days=10)).isoformat(),
+            "sintesi": "Il servizio alla mensa le piace; vuole capire meglio cosa sceglie dopo.",
+            "servizio": "Alla mensa da settembre, con costanza",
+            "riservato": "Ha parlato con fiducia dei suoi dubbi sulla fede.",
+            "obiettivi": [obiettivo],
+        },
+    )
+
+    # The sentiero of a coccinella (DEC-66, DEC-182…DEC-185): the cerchio's season
+    # launched, a volo and a specialità (Giocattolaio) under way.
+    sofia = persona["Sofia Esposito"].pk
+    stagioni = capo_cerchio(
+        "post",
+        f"/unita/{cerchio.pk}/stagioni",
+        {
+            "nome": "Stagione delle foglie",
+            "inizio_previsto": (date.today() - timedelta(days=14)).isoformat(),
+            "fine_prevista": date(anno.anno_fine - 1, 12, 20).isoformat(),
+        },
+    )
+    stagione = stagioni["stagioni"][-1]["id"]
+    capo_cerchio(
+        "post",
+        f"/stagioni/{stagione}/lancia",
+        {"il": (date.today() - timedelta(days=14)).isoformat()},
+    )
+    scheda = capo_cerchio(
+        "post",
+        f"/persone/{sofia}/progressione/sentiero",
+        {"data": date(anno.anno_fine - 2, 10, 1).isoformat()},
+    )
+    periodo = scheda["periodi"][-1]["id"]
+    capo_cerchio(
+        "post",
+        f"/progressione/periodi/{periodo}/promessa",
+        {"data": date(anno.anno_fine - 1, 2, 22).isoformat()},
+    )
+    scheda = capo_cerchio(
+        "post",
+        f"/persone/{sofia}/progressione/impegni",
+        {
+            "testo": "Imparare a preparare la merenda per tutto il cerchio",
+            "termine": None,
+            "criterio_verifica": "",
+            "mete": [],
+            "stagione_id": stagione,
+        },
+    )
+    volo = scheda["impegni"][-1]["id"]
+    capo_cerchio("post", f"/progressione/impegni/{volo}/concorda", {})
+    capo_cerchio("post", f"/progressione/impegni/{volo}/avvia", {})
+    scheda = capo_cerchio(
+        "post",
+        f"/persone/{sofia}/progressione/competenze",
+        {"tipo": "SPECIALITA_LC", "codice": "LCSP023", "carta": "", "maestro": "Elena Conti"},
+    )
+    capo_cerchio("post", f"/competenze/{scheda['competenze'][-1]['id']}/avvia", {})

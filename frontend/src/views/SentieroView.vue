@@ -69,7 +69,17 @@ const lc = computed(() => periodo.value?.branca === 'LC')
 const giungla = computed(() => scheda.value?.ambiente === 'GIUNGLA')
 const bosco = computed(() => scheda.value?.ambiente === 'BOSCO')
 const nomePrede = computed(() => (giungla.value ? 'Prede' : bosco.value ? 'Voli' : 'Prede e voli'))
-const nomePreda = computed(() => (giungla.value ? 'preda' : bosco.value ? 'volo' : 'preda o volo'))
+// "Nuova preda", "Nuovo volo": the adjective agrees with the noun.
+const nuovaPreda = computed(() =>
+  giungla.value ? 'Nuova preda' : bosco.value ? 'Nuovo volo' : 'Nuova preda o volo',
+)
+const unaPreda = computed(() =>
+  giungla.value
+    ? 'una preda conquistata'
+    : bosco.value
+      ? 'un volo conquistato'
+      : 'una preda o un volo conquistati',
+)
 // Momenti and recognitions (spec §4.1, appendix A1): the recognition name never shows as
 // already conquered while the child walks towards it.
 const MOMENTI: Record<string, [string, string, string, string]> = {
@@ -717,8 +727,8 @@ async function salvaNuova() {
         </button>
         <span class="small fg-2 w-100">
           <template v-if="lc && tappa.fase !== 'RESPONSABILITA'"
-            >Serve almeno una {{ nomePreda }} conquistata in questo momento; dallo stesso giorno
-            inizia il successivo.</template
+            >Serve almeno {{ unaPreda }} in questo momento; dallo stesso giorno inizia il
+            successivo.</template
           >
           <template v-else-if="tappa.fase !== 'RESPONSABILITA'"
             >Dallo stesso giorno inizia la tappa successiva.</template
@@ -763,7 +773,7 @@ async function salvaNuova() {
             class="btn btn-sm btn-solid theme-primary"
             @click="apriNuovoImpegno"
           >
-            {{ lc ? `Nuova ${nomePreda}` : 'Nuovo impegno' }}
+            {{ lc ? nuovaPreda : 'Nuovo impegno' }}
           </button>
           <button
             v-if="!lc"
@@ -780,7 +790,7 @@ async function salvaNuova() {
           {{
             nuova.tipo === 'impegni'
               ? lc
-                ? `Nuova ${nomePreda}`
+                ? nuovaPreda
                 : 'Nuovo impegno'
               : rs
                 ? 'Nuovo obiettivo'

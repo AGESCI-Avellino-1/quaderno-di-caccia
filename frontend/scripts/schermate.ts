@@ -300,6 +300,46 @@ const SCENE: Scena[] = [
     },
     mostra: 'Note',
   },
+  // Chiara is a scolta of the clan Hirpinia, of age.
+  {
+    nome: 'ragazzo/strada',
+    chi: 'scolta',
+    percorso: '/',
+    prepara: apri('La mia Strada'),
+    intera: true,
+  },
+  {
+    nome: 'ragazzo/rilettura',
+    chi: 'scolta',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('La mia Strada')(pagina)
+      await pagina.getByRole('button', { name: 'Aggiungi la mia rilettura' }).click()
+      await pagina
+        .getByLabel('La mia rilettura')
+        .fill('Alla mensa ho capito che ascoltare conta quanto servire il pranzo.')
+    },
+    mostra: 'Punti della Strada',
+  },
+  {
+    nome: 'ragazzo/carta-clan',
+    chi: 'scolta',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('La mia Strada')(pagina)
+      await apri('Leggi la Carta di clan')(pagina)
+    },
+    intera: true,
+  },
+  // Sofia is a coccinella of the cerchio Fiordaliso (setting: bosco).
+  { nome: 'ragazzo/lc-home', chi: 'coccinella', percorso: '/', intera: true },
+  {
+    nome: 'ragazzo/lc-sentiero',
+    chi: 'coccinella',
+    percorso: '/',
+    prepara: apri('Il mio Sentiero'),
+    intera: true,
+  },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },
   { nome: 'comune/dispositivi', chi: 'genitore', percorso: '/dispositivi' },
   {

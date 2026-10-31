@@ -169,8 +169,8 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.2 | Il resto della parte genitore, riallineata il 31/10 alla nuova navigazione | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.3 | Genitore: iscrizioni agli eventi BuonaCaccia (scheda, foto, liberatoria, quota); nei dati di prova un evento BuonaCaccia con l'iscrizione di Giulia | DEC-158…DEC-163, DEC-168 | ✅ 31/10 |
 | 8.4 | Parte ragazzo, comune ed E/G: accesso, scheda (e cosa cambia a 18 anni), Sentiero E/G (proporre mete e impegni, pronto per la verifica), capo squadriglia (telefoni, note, imprese), eventi e privacy; nei dati di prova un impegno e una specialità di Giulia in corso | DEC-237 | ✅ 31/10 |
-| 8.4b | Parte ragazzo, R/S: Carta di clan (proporre una versione), obiettivi, passi, Punto della Strada con la parte riservata; servono dati di prova per Chiara | DEC-179…DEC-181, DEC-227…DEC-229 | ⏳ |
-| 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; servono dati di prova per Sofia | DEC-182…DEC-185, DEC-237 | ⏳ |
+| 8.4b | Parte ragazzo, R/S: Carta di clan (proporre una versione), obiettivi, passi, Punto della Strada con la parte riservata; nei dati di prova la strada di Chiara (Carta di clan in vigore e firmata, obiettivo, servizio, Punto della Strada) | DEC-179…DEC-181, DEC-227…DEC-229 | ✅ 31/10 |
+| 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; nei dati di prova la stagione del cerchio, un volo e una specialità di Sofia; bozza scritta il 31/10, segnata `[da verificare]`, da far rileggere allo staff L/C; corretti «Nuovo volo» e la descrizione della Progressione L/C nella Home | DEC-182…DEC-185, DEC-237 | 🚧 bozza fatta, manca la rilettura dello staff L/C |
 | 8.5 | Parte capo e staff di unità (con la lista d'attesa dei capi, L.6) | DEC-233 | ⏳ |
 | 8.6 | Parte capogruppo, tesorieri, amministratore tecnico | DEC-233 | ⏳ |
 

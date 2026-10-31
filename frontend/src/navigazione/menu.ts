@@ -55,6 +55,19 @@ export function nomeProgressione(profilo: Profilo): string {
 
 const RAGAZZO = new Set(['lc', 'eg', 'rs'])
 
+/** What the child's Progressione holds, in the words of their branch (DEC-185). */
+function descrizioneProgressione(p: Profilo): string {
+  if (p.branca === 'rs') return 'Passi, obiettivi e impegni'
+  if (p.branca === 'lc') {
+    return p.ambiente === 'BOSCO'
+      ? 'Momenti, voli e specialità'
+      : p.ambiente === 'GIUNGLA'
+        ? 'Momenti, prede e specialità'
+        : 'Momenti, prede o voli e specialità'
+  }
+  return 'Tappe, mete e impegni'
+}
+
 /** The entries that apply: each one is written as `condition && { … }`. */
 function solo(voci: (Voce | false | null | undefined | 0)[]): Voce[] {
   return voci.filter((v): v is Voce => !!v)
@@ -67,7 +80,7 @@ function progressione(p: Profilo): Voce[] {
       nome: nomeProgressione(p),
       icona: 'compass',
       to: { name: 'sentiero', params: { id: p.persona.id } },
-      descrizione: p.branca === 'rs' ? 'Passi, obiettivi e impegni' : 'Tappe, mete e impegni',
+      descrizione: descrizioneProgressione(p),
     })
   }
   if (p.imprese_reparto) {

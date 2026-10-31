@@ -7,7 +7,7 @@ sola.
 | Se sei… | Leggi |
 | --- | --- |
 | il genitore di un lupetto, una coccinella, un esploratore, una guida, un rover o una scolta | [Genitore](genitore/index) |
-| un esploratore, una guida, un capo squadriglia (e presto un lupetto, una coccinella, un rover o una scolta) | [Ragazzo](ragazzo/index) |
+| un lupetto, una coccinella, un esploratore, una guida, un capo squadriglia, un rover o una scolta | [Ragazzo](ragazzo/index) |
 
 Le altre parti (capi, capigruppo e tesorieri) arriveranno presto.
 

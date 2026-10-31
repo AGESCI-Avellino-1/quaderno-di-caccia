@@ -24,15 +24,16 @@ Le stesse voci sono nel menu (vedi [Come ci si muove](../introduzione.md#come-ci
 ![La Home di Giulia sul computer](../img/ragazzo/home-computer.png){.computer width="65%"}
 :::
 
-Leggi i capitoli comuni e poi quello della tua branca. Per ora c'è quello di esploratori
-e guide; quelli di lupetti e coccinelle e di rover e scolte arriveranno presto.
+Leggi i capitoli comuni e poi quello della tua branca.
 
 ```{toctree}
 :maxdepth: 1
 
 accesso
 scheda
+lc
 eg
 capo-squadriglia
+rs
 eventi
 ```

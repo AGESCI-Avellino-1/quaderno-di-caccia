@@ -174,7 +174,7 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.5a | Parte capo, blocco 1: chi sei, accesso e uso senza rete, l'unità (membri, squadriglie, eccezioni, incarichi, età), persone (scheda, correzioni, inviti, foto, codice fiscale), lista d'attesa (L.6) e richieste di iscrizione, al campo (regole sul rapporto con il minore), scheda sanitaria, note; nei dati di prova una richiesta di iscrizione da accogliere, le regole su Luca e una nota di staff | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.5b | Parte capo, blocco 2: eventi e presenze (anche offline), iscrizioni BuonaCaccia, Progressione per branca, passaggi | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.5c | Parte capo, blocco 3: fascicolo dell'anno e del capo, bacheca, le mie spese, usare l'app al posto di un ragazzo o di un genitore | DEC-233, DEC-238 | 🚧 |
-| 8.R | Due progetti Read the Docs separati sullo stesso account (maintainer, 31/10): il manuale d'uso nella sua cartella Sphinx con il suo `.readthedocs.yaml`; la guida di installazione avrà la sua | DEC-231 | ⏳ dopo il blocco 8.5b |
+| 8.R | Due progetti Read the Docs separati sullo stesso account (maintainer, 31/10): il manuale d'uso nella sua cartella Sphinx con il suo `.readthedocs.yaml`; la guida di installazione avrà la sua; in Read the Docs, nelle impostazioni avanzate del progetto, va indicato `docs/manuale/.readthedocs.yaml` | DEC-231 | ✅ 31/10 (restano da creare i progetti e sceglierne i nomi) |
 | 8.6 | Parte capogruppo, tesorieri, amministratore tecnico | DEC-233 | ⏳ |
 
 Trovato scrivendo la parte dei capi (31/10), da decidere con il maintainer:

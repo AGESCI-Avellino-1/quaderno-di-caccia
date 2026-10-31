@@ -1,14 +1,16 @@
-"""Sphinx configuration of the QdC documentation (DEC-230…DEC-232).
+"""Sphinx configuration of the user manual (DEC-230…DEC-232).
 
-The user manual lives in ``manuale/``; the installation guide will sit next to it.
-``analisi/`` holds the requirements analysis, for developers: it is not published.
+The user manual and the installation guide are two separate Read the Docs projects on the
+same account (maintainer, 31/10/2026): each has its own folder under ``docs/``, with its
+``conf.py`` and ``.readthedocs.yaml``. ``docs/_static`` is shared; ``docs/analisi`` holds
+the requirements analysis, for developers, and is never published.
 """
 
 import tomllib
 from pathlib import Path
 
 _pyproject = tomllib.loads(
-    (Path(__file__).parent.parent / "backend" / "pyproject.toml").read_text()
+    (Path(__file__).parent.parent.parent / "backend" / "pyproject.toml").read_text()
 )
 release = _pyproject["project"]["version"]
 version = ".".join(release.split(".")[:2])
@@ -25,12 +27,12 @@ extensions = [
 ]
 
 source_suffix = {".md": "markdown"}
-exclude_patterns = ["_build", "analisi", "requirements.txt", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["Thumbs.db", ".DS_Store"]
 
 html_theme = "furo"
 html_title = "Quaderno di Caccia"
-html_logo = "_static/logo.png"
-html_static_path = ["_static"]
+html_logo = "../_static/logo.png"
+html_static_path = ["../_static"]
 html_css_files = ["qdc.css"]
 html_theme_options = {
     # AGESCI azzurro, the "generico" colour of the app's theme.
@@ -49,7 +51,7 @@ myst_heading_anchors = 3
 
 rinoh_documents = [
     {
-        "doc": "manuale/index",
+        "doc": "index",
         "target": "quaderno-di-caccia-manuale",
         "title": "Quaderno di Caccia — Manuale d'uso",
         "author": author,

@@ -249,6 +249,21 @@ def test_file_di_un_altro_gruppo_rifiutato():
         applica(_risultato(), oggi=OGGI)
 
 
+def test_dati_ufficiali_del_gruppo_corretti_nell_app_restano():
+    applica(_risultato(), oggi=OGGI)
+    gruppo = Gruppo.objects.get()
+    assert gruppo.denominazione_sociale == "AGESCI GRUPPO PROVA 1"
+    assert gruppo.codice_fiscale == "90000000001"
+    # Corrected in the app: the next import does not write them back (DEC-252).
+    gruppo.denominazione_sociale = "AGESCI Gruppo Prova 1"
+    gruppo.codice_fiscale = "90000000002"
+    gruppo.save()
+    applica(_risultato(), oggi=OGGI)
+    gruppo.refresh_from_db()
+    assert gruppo.denominazione_sociale == "AGESCI Gruppo Prova 1"
+    assert gruppo.codice_fiscale == "90000000002"
+
+
 def test_unico_genitore():
     applica(_risultato(), oggi=OGGI)
     paolo = Persona.objects.get(codice_socio="9000003")

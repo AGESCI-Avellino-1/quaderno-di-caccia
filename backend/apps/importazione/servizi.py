@@ -188,8 +188,10 @@ def _gruppo(riga: RigaSocio) -> Gruppo:
     gruppo.ordinale = dati.ordinale or gruppo.ordinale
     gruppo.zona = dati.zona or gruppo.zona
     gruppo.regione = dati.regione or gruppo.regione
-    gruppo.codice_fiscale = dati.codice_fiscale or gruppo.codice_fiscale
-    gruppo.denominazione_sociale = dati.denominazione_sociale or gruppo.denominazione_sociale
+    # Corrected in the app (Impostazioni, letterhead): the app wins, BuonaStrada only fills
+    # what is still empty (DEC-252).
+    gruppo.codice_fiscale = gruppo.codice_fiscale or dati.codice_fiscale
+    gruppo.denominazione_sociale = gruppo.denominazione_sociale or dati.denominazione_sociale
     gruppo.rappresentante_legale = dati.rappresentante_legale or gruppo.rappresentante_legale
     gruppo.save()
     return gruppo

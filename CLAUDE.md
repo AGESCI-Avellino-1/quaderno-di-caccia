@@ -98,7 +98,9 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
   `/api/v1/docs` in dev.
 - **BuonaStrada is the source of truth for the registry** (DEC-02, DEC-27…DEC-35).
   Import = preview first, then apply. Corrections made in the app are never silently
-  overwritten (DEC-31): the import reports a *differenza* instead.
+  overwritten (DEC-31): the import reports a *differenza* instead. The group's official
+  data corrected in the app (denominazione sociale, codice fiscale) are only filled in
+  by the import while empty (DEC-252).
 - **Offline writes** (DEC-94…DEC-96) go through the outbox in `frontend/src/offline/`:
   stored in IndexedDB, replayed in order with an `Idempotency-Key` header; the server
   (`apps/core/idempotenza.py`) answers a replay from storage instead of executing it

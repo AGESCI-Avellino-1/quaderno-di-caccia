@@ -9,6 +9,7 @@ import {
   type DettaglioEvento,
   type Partecipante,
   type StatoPresenza,
+  type TipoEvento,
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
@@ -33,6 +34,58 @@ const esito = ref('')
 const presenze = reactive<Record<number, StatoPresenza | null>>({})
 const esclusione = reactive({ persona: 0, motivo: '' })
 const annullamento = reactive({ aperto: false, motivo: '' })
+
+// Changing an event (DEC-75): what it is, when and where. Who is invited does not change
+// (the API refuses it): for that, a new event. Families get an email if the dates or the
+// place change (DEC-79). Online only, like creating it.
+const modifica = ref<{
+  titolo: string
+  tipo: TipoEvento
+  inizio: string
+  fine: string
+  luogo: string
+  descrizione: string
+  note_genitori: string
+} | null>(null)
+// An ISO instant as the value of a datetime-local field, in local time.
+const inLocale = (iso: string) => {
+  const d = new Date(iso)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+}
+
+function apriModifica() {
+  const e = evento.value!
+  modifica.value = {
+    titolo: e.titolo,
+    tipo: e.tipo,
+    inizio: inLocale(e.inizio),
+    fine: inLocale(e.fine),
+    luogo: e.luogo,
+    descrizione: e.descrizione,
+    note_genitori: e.note_genitori ?? '',
+  }
+}
+
+async function salvaModifica() {
+  const e = evento.value!
+  const m = modifica.value!
+  const fatto = await esegui(() =>
+    api.modificaEvento(e.id, {
+      ...m,
+      inizio: new Date(m.inizio).toISOString(),
+      fine: new Date(m.fine || m.inizio).toISOString(),
+      livello: e.livello,
+      branca: e.branca || null,
+      unita: e.unita,
+      squadriglia_id: e.squadriglia_id,
+      cerchia: e.cerchia,
+    }),
+  )
+  if (!fatto) return
+  modifica.value = null
+  esito.value = 'Evento modificato.'
+  await carica()
+}
 
 const chiave = () => `evento:${props.id}`
 
@@ -185,6 +238,107 @@ const STATI: [StatoPresenza, string][] = [
         <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
       </div>
     </div>
+
+    <section
+      v-if="evento.puo_gestire && !evento.annullato && evento.livello !== 'ESTERNO'"
+      class="mb-5"
+    >
+      <button
+        v-if="!modifica"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary"
+        @click="apriModifica"
+      >
+        Modifica
+      </button>
+      <form v-else class="card card-body" @submit.prevent="salvaModifica">
+        <div class="row g-3">
+          <div class="md:col-8">
+            <label class="form-label small" for="mod-titolo">Titolo</label>
+            <input
+              id="mod-titolo"
+              v-model="modifica.titolo"
+              class="form-control form-control-sm"
+              required
+            />
+          </div>
+          <div class="md:col-4">
+            <label class="form-label small" for="mod-tipo">Tipo</label>
+            <select
+              id="mod-tipo"
+              v-model="modifica.tipo"
+              class="form-control form-control-sm"
+              :disabled="evento.tipo === 'MISSIONE'"
+            >
+              <option value="RIUNIONE">Riunione</option>
+              <option value="USCITA">Uscita</option>
+              <option value="CAMPO">Campo</option>
+              <option v-if="evento.tipo === 'MISSIONE'" value="MISSIONE">
+                Missione di squadriglia
+              </option>
+              <option value="AUTOFINANZIAMENTO">Autofinanziamento</option>
+              <option value="ALTRO">Altro evento</option>
+            </select>
+          </div>
+          <div class="md:col-6">
+            <label class="form-label small" for="mod-inizio">Inizio</label>
+            <input
+              id="mod-inizio"
+              v-model="modifica.inizio"
+              type="datetime-local"
+              class="form-control form-control-sm"
+              required
+            />
+          </div>
+          <div class="md:col-6">
+            <label class="form-label small" for="mod-fine">Fine</label>
+            <input
+              id="mod-fine"
+              v-model="modifica.fine"
+              type="datetime-local"
+              class="form-control form-control-sm"
+              required
+            />
+          </div>
+          <div class="col-12">
+            <label class="form-label small" for="mod-luogo">Luogo</label>
+            <input id="mod-luogo" v-model="modifica.luogo" class="form-control form-control-sm" />
+          </div>
+          <div class="col-12">
+            <label class="form-label small" for="mod-descrizione">Descrizione</label>
+            <textarea
+              id="mod-descrizione"
+              v-model="modifica.descrizione"
+              rows="3"
+              class="form-control form-control-sm"
+            />
+          </div>
+          <div v-if="modifica.tipo === 'MISSIONE'" class="col-12">
+            <label class="form-label small" for="mod-note"
+              >Note per i genitori (le leggono i genitori e i capi, non i ragazzi)</label
+            >
+            <textarea
+              id="mod-note"
+              v-model="modifica.note_genitori"
+              rows="3"
+              class="form-control form-control-sm"
+            />
+          </div>
+        </div>
+        <p class="form-text mt-3 mb-0">
+          Chi è invitato non cambia: per altre unità o un'altra squadriglia crea un evento nuovo. Se
+          cambiano date o luogo, gli invitati ricevono un'email.
+        </p>
+        <div class="d-flex gap-3 mt-3">
+          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+            Salva
+          </button>
+          <button type="button" class="btn btn-sm btn-link" @click="modifica = null">
+            Annulla
+          </button>
+        </div>
+      </form>
+    </section>
 
     <EventoBC v-if="evento.livello === 'ESTERNO'" :evento="evento.id" />
 

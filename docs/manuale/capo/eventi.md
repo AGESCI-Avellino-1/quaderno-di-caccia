@@ -27,9 +27,16 @@ aggiunto da solo.
 Alle famiglie degli invitati arriva un'email quando crei l'evento, quando cambiano date,
 orari o luogo e se lo annulli (non per le singole riunioni ricorrenti).
 
-:::{note}
-Per ora un evento creato non si può modificare dall'app: se hai sbagliato, annullalo e
-creane uno nuovo.
+## Modificare un evento
+
+Nella pagina dell'evento tocca **Modifica**: puoi cambiare titolo, tipo, date, luogo e
+descrizione (e, per una missione, le note per i genitori). Tocca **Salva**. Se cambiano date
+o luogo, gli invitati ricevono un'email. Chi è invitato invece non cambia: per altre unità o
+un'altra squadriglia, annulla l'evento e creane uno nuovo.
+
+:::{container} schermate
+![La modifica di un evento sul telefono](../img/capo/evento-modifica-telefono.png){.telefono width="30%"}
+![La modifica di un evento sul computer](../img/capo/evento-modifica-computer.png){.computer width="65%"}
 :::
 
 ## Le riunioni di ogni settimana

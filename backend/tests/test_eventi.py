@@ -214,6 +214,31 @@ def test_api_crea_e_vede(reparto, staff, genitore, ragazza, csq):
     assert {p["nome"] for p in dello_staff["partecipanti"]} == {"Giulia", "Sara"}
 
 
+def test_api_modifica(reparto, staff, csq, capogruppo):
+    """What, when and where change; who is invited does not (DEC-75)."""
+    corpo = {
+        "titolo": "Uscita di primavera",
+        "tipo": "USCITA",
+        "livello": "UNITA",
+        "unita": [reparto.pk],
+        "inizio": "2026-04-11T09:00:00+02:00",
+        "fine": "2026-04-12T17:00:00+02:00",
+        "luogo": "Montevergine",
+    }
+    evento = _post(staff, "/api/v1/eventi", corpo).json()
+    url = f"/api/v1/eventi/{evento['id']}"
+    nuovo = {**corpo, "titolo": "Uscita di maggio", "luogo": "Laceno"}
+
+    def put(chi, dati):
+        return _client(chi).put(url, dati, content_type="application/json")
+
+    assert put(csq, nuovo).status_code == 403
+    risposta = put(staff, nuovo)
+    assert risposta.status_code == 200, risposta.content
+    assert (risposta.json()["titolo"], risposta.json()["luogo"]) == ("Uscita di maggio", "Laceno")
+    assert put(staff, {**nuovo, "livello": "GRUPPO"}).status_code == 400
+
+
 def test_api_famiglia_non_partecipa_staff_non_invita(uscita, genitore, ragazza, staff, csq):
     url = f"/api/v1/eventi/{uscita.pk}/partecipanti/{ragazza.pk}"
     assert _post(csq, f"{url}/partecipa", {"partecipa": False}).status_code == 403

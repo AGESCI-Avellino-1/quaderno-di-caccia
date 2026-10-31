@@ -420,6 +420,20 @@ const SCENE: Scena[] = [
     intera: true,
   },
   {
+    // Saved once unchanged (the form must round-trip), then opened again for the picture.
+    nome: 'capo/evento-modifica',
+    chi: 'capoReparto',
+    percorso: '/eventi',
+    prepara: async (pagina) => {
+      await apri('Uscita di reparto')(pagina)
+      await pagina.getByRole('button', { name: 'Modifica', exact: true }).click()
+      await pagina.getByRole('button', { name: 'Salva', exact: true }).click()
+      await pagina.getByText('Evento modificato.').waitFor()
+      await pagina.getByRole('button', { name: 'Modifica', exact: true }).click()
+    },
+    mostra: 'Titolo',
+  },
+  {
     nome: 'capo/presenze',
     chi: 'capoReparto',
     percorso: '/eventi',

@@ -189,13 +189,12 @@ Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manual
 | M.1 | Piccole correzioni: la ricevuta di un pagamento dall'estratto conto parte per email come le altre; l'amministratore tecnico vede «Tutti i dispositivi del gruppo»; descrizione di «Impostazioni» nel menu; percorso in alto nelle pagine dei ragazzi | DEC-84, DEC-222, DEC-23, DEC-244 | ✅ 31/10 (provato nel browser con le schermate: sentiero dei ragazzi, Carta di clan della scolta, passaggi) |
 | M.2 | Scheda della persona: registro degli accessi ai dati delicati e foto precedenti, per i capi | DEC-101, DEC-42 | ✅ 31/10 (provato nel browser; nei dati di prova due foto inventate di Giulia) |
 | M.3 | Correggere le date di una tappa (inizio, riconoscimento, distintivo) con il motivo | DEC-171…DEC-173 | ✅ 31/10 (provato nel browser) |
-| M.4 | Modificare un evento | DEC-75, DEC-79 | ⏳ |
+| M.4 | Modificare un evento | DEC-75, DEC-79 | ✅ 31/10 (provato nel browser: salvataggio e riapertura) |
 | M.5 | Delega delle riunioni di squadriglia da parte dello staff: la regola del codice (`puo_delegare`) lo permette, l'analisi (DEC-139) dà la delega solo al capo squadriglia: da decidere con il maintainer | DEC-139, DEC-14 | ❓ |
 | M.6 | Nei dati di prova un estratto conto della banca inventato, per le schermate | DEC-235 | ⏳ |
 
 Elenco originale (31/10):
 
-- un evento creato non si modifica dall'app (l'API c'è, nessuna pagina la usa): il manuale dice di annullarlo e crearne uno nuovo;
 - lo staff del reparto può delegare le riunioni di squadriglia (regola `puo_delegare`), ma il riquadro è solo in «La mia squadriglia», che vedono i ragazzi;
 - un pagamento registrato dall'estratto conto ha la ricevuta ma non parte l'email alla famiglia (si manda con «Invia di nuovo»);
 - l'amministratore tecnico può scollegare i dispositivi altrui (regola) ma non vede l'interruttore «Tutti i dispositivi del gruppo»;

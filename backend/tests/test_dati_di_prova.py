@@ -10,7 +10,8 @@ from apps.attesa.models import InAttesa
 from apps.bacheca.models import Avviso
 from apps.buonacaccia.models import IscrizioneBuonaCaccia
 from apps.eventi.models import Evento
-from apps.iscrizioni.models import CodiceIscrizione
+from apps.iscrizioni.models import CodiceIscrizione, RichiestaIscrizione
+from apps.note.models import Nota, RegoleRapporto, TipoNota
 from apps.organizzazione.models import Incarico, RuoloIncarico
 from apps.permessi import policy
 from apps.progressione.models import CartaClan, Stagione
@@ -55,6 +56,10 @@ def test_every_profile_can_log_in():
     assert chiara.periodi_branca.get().punti_strada.count() == 1
     assert CartaClan.objects.exclude(in_vigore_dal=None).count() == 1
     assert Stagione.objects.get().unita.nome == "Fiordaliso"
+    # The capi's part: a request to accept, rules on the relationship with a minor.
+    assert RichiestaIscrizione.objects.get().nome == "Marta"
+    assert RegoleRapporto.objects.get().persona.nome == "Luca"
+    assert Nota.objects.filter(tipo=TipoNota.STAFF).count() == 1
 
     with pytest.raises(CommandError, match="--azzera"):
         call_command("dati_di_prova", verbosity=0)

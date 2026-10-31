@@ -340,6 +340,74 @@ const SCENE: Scena[] = [
     prepara: apri('Il mio Sentiero'),
     intera: true,
   },
+  // The capi (DEC-233): Marco Ferri is capo of the reparto, Elena Conti of the cerchio.
+  { nome: 'capo/home', chi: 'capoReparto', percorso: '/', intera: true },
+  {
+    nome: 'capo/unita',
+    chi: 'capoReparto',
+    percorso: '/unita',
+    prepara: apri('Antares'),
+    intera: true,
+  },
+  {
+    nome: 'capo/persona',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: apri('Rossi Luca'),
+    intera: true,
+  },
+  {
+    nome: 'capo/regole',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: apri('Rossi Luca'),
+    mostra: 'Regole sul rapporto con il minore',
+  },
+  {
+    nome: 'capo/note',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: apri('Rossi Luca'),
+    mostra: 'Note',
+  },
+  {
+    nome: 'capo/sanitaria',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Giulia')(pagina)
+      await pagina.getByText('Segna la consegna su carta…').click()
+    },
+    mostra: 'Scheda sanitaria',
+  },
+  {
+    nome: 'capo/invito',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Marino Alice')(pagina)
+      await pagina.getByRole('button', { name: 'Invita' }).first().click()
+      await pagina.getByLabel("Email a cui mandare l'invito").fill(`alice.marino@${DOMINIO}`)
+    },
+    mostra: "Accesso all'app",
+  },
+  {
+    nome: 'capo/campo',
+    chi: 'capoReparto',
+    percorso: '/campo',
+    prepara: async (pagina) => {
+      await pagina.getByRole('combobox').first().selectOption({ label: 'Reparto Antares (N1)' })
+      await pagina.getByRole('button', { name: 'Scarica sul telefono' }).click()
+      await pagina
+        .getByText('Cerca per nome')
+        .or(pagina.getByPlaceholder('Cerca per nome'))
+        .first()
+        .waitFor()
+    },
+    intera: true,
+  },
+  { nome: 'capo/attesa', chi: 'capoCerchio', percorso: '/attesa', intera: true },
+  { nome: 'capo/richieste', chi: 'capoCerchio', percorso: '/iscrizioni', intera: true },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },
   { nome: 'comune/dispositivi', chi: 'genitore', percorso: '/dispositivi' },
   {

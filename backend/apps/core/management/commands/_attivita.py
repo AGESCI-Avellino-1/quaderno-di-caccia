@@ -19,6 +19,7 @@ from apps.accounts.models import User
 from apps.anagrafica.models import Persona
 from apps.attesa.models import InAttesa
 from apps.core.anno import AnnoAssociativo
+from apps.core.codice_fiscale import calcola
 from apps.iscrizioni.models import CodiceIscrizione
 from apps.organizzazione.models import Unita
 
@@ -340,6 +341,47 @@ def crea_attivita(email) -> None:
         },
     )
     InAttesa.objects.filter(cognome="Colombo").update(token=LINK_ATTESA)
+
+    # What the parents wrote on the signed form about Luca, and a staff note shared with
+    # them (DEC-43, DEC-197…DEC-199).
+    luca = persona["Luca Rossi"].pk
+    capo_reparto(
+        "put",
+        f"/persone/{luca}/regole-rapporto",
+        {"testo": "All'uscita lo riprendono solo i genitori o la nonna, Rosa Rossi."},
+    )
+    capo_reparto(
+        "post",
+        f"/persone/{luca}/note",
+        {
+            "testo": "All'uscita di ottobre ha aiutato i più piccoli a montare la tenda.",
+            "visibile_ragazzo": True,
+            "visibile_genitori": True,
+        },
+    )
+
+    # A request waiting for the cerchio staff (DEC-121): a parent already in the group
+    # registers a third child with the code.
+    marta = date(date.today().year - 8, 4, 3)
+    Api(email("Giovanni", "Esposito"))(
+        "post",
+        f"/iscrizione/{CODICE_ISCRIZIONE}",
+        {
+            "nome": "Marta",
+            "cognome": "Esposito",
+            "data_nascita": marta.isoformat(),
+            "codice_fiscale": calcola("Marta", "Esposito", "F", marta, "A509"),
+            "sesso": "F",
+            "luogo_nascita": "Avellino",
+            "genitore_nome": "Giovanni",
+            "genitore_cognome": "Esposito",
+            "genitore_codice_fiscale": calcola(
+                "Giovanni", "Esposito", "M", date(1984, 7, 12), "A509"
+            ),
+            "genitore_cellulare": "3330000005",
+            "responsabilita": "UNICO_GENITORE",
+        },
+    )
 
     # A BuonaCaccia event (DEC-158…DEC-163): the reparto staff registered Giulia, the
     # form asks a few questions and a photo, the release form waits for the family.

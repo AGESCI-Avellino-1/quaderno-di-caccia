@@ -11,12 +11,9 @@ const sito = useSitoStore()
   <footer class="qdc-piede small fg-2 text-center py-3">
     <div class="container">
       <p v-if="sito.rigaPiede" class="mb-1">{{ sito.rigaPiede }}</p>
-      <p class="mb-1">
-        <RouterLink to="/privacy">Privacy policy</RouterLink> ·
-        <RouterLink to="/termini">Termini e condizioni</RouterLink>
-      </p>
       <p class="mb-0">
-        Sviluppato da
+        <RouterLink to="/privacy">Privacy policy</RouterLink> ·
+        <RouterLink to="/termini">Termini e condizioni</RouterLink> · Sviluppato da
         <a href="https://bruand81.it" target="_blank" rel="noopener">Andrea Bruno</a> e distribuito
         con licenza MIT
       </p>

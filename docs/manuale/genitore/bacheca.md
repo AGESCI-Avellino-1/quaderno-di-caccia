@@ -1,6 +1,6 @@
 # Bacheca
 
-Nella pagina iniziale tocca **Bacheca**: trovi gli avvisi dei capi per l'unità dei tuoi
+Nella Home (o nel menu) tocca **Bacheca**: trovi gli avvisi dei capi per l'unità dei tuoi
 figli e per tutto il gruppo. Ogni avviso dice per chi è, chi l'ha pubblicato e fino a
 quando vale; quando scade sparisce.
 

@@ -1,6 +1,7 @@
 # Le mie email
 
-Nella pagina iniziale tocca **Le mie email** e scegli quali ricevere:
+Nella Home, in **Profilo** (o nel menu del profilo), tocca **Privacy**. In **Le email che ricevi**
+scegli quali ricevere:
 
 - eventi: nuovi eventi, cambi di date o luogo, annullamenti;
 - promemoria delle quote in scadenza;

@@ -2,7 +2,7 @@
 
 ## Gli eventi
 
-Nella pagina iniziale tocca **Eventi**. Vedi riunioni, uscite e campi dei tuoi figli e gli
+Nella Home (o nel menu, nel gruppo **Attività**) tocca **Eventi**. Vedi riunioni, uscite e campi dei tuoi figli e gli
 eventi di tutto il gruppo, dal più vicino. Con **Eventi passati** vedi anche quelli già
 fatti.
 

@@ -12,8 +12,10 @@ hai dato ai capi sul rapporto con tuo figlio (per esempio chi può venire a ripr
 leggono solo i capi.
 :::
 
-Quando entri, la pagina iniziale ti mostra quello che puoi fare: gli eventi, la bacheca,
-le tue email, le quote e una scheda per ogni figlio.
+Quando entri, la Home ti mostra quello che puoi fare: la **Bacheca**, un riquadro per
+ogni figlio in **La mia famiglia**, gli **Eventi** in **Attività** e, in **Profilo**, le
+tue quote, le email e la protezione del telefono. Le stesse voci sono nel menu (vedi
+[Come ci si muove](../introduzione.md#come-ci-si-muove)).
 
 :::{container} schermate
 ![La pagina iniziale di Mario Rossi sul telefono](../img/genitore/home-telefono.png){.telefono width="30%"}
@@ -26,6 +28,7 @@ le tue email, le quote e una scheda per ogni figlio.
 accesso
 protezione
 figli
+lista-attesa
 iscrizione
 sanitaria
 eventi

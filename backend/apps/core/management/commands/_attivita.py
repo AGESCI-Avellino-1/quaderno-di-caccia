@@ -1,5 +1,5 @@
 """The group's activity in the test data (DEC-235): health forms, events, fees, notices,
-the sentiero of a guida, a registration code.
+the sentiero of a guida, a registration code, a child on the waiting list.
 
 Everything goes through the API as the capo who would do it, so it passes the same
 rules and permissions as the app. Dates are relative to today: the screenshots always
@@ -15,12 +15,14 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.anagrafica.models import Persona
+from apps.attesa.models import InAttesa
 from apps.core.anno import AnnoAssociativo
 from apps.iscrizioni.models import CodiceIscrizione
 from apps.organizzazione.models import Unita
 
 # Fixed, so that the manual can show the page it opens.
 CODICE_ISCRIZIONE = "CERCHIO2027"
+LINK_ATTESA = "attesa-di-prova"
 
 
 class Api:
@@ -278,3 +280,25 @@ def crea_attivita(email) -> None:
         "post", f"/unita/{cerchio.pk}/codici-iscrizione", {"tipo": "UNITA", "scadenza": scadenza}
     )
     CodiceIscrizione.objects.filter(pk=codice["id"]).update(codice=CODICE_ISCRIZIONE)
+
+    # A child on the waiting list (DEC-258), with the link of the family's email fixed.
+    capogruppo(
+        "post",
+        "/attesa",
+        {
+            "nome": "Pietro",
+            "cognome": "Colombo",
+            "sesso": "M",
+            "data_nascita": date(date.today().year - 7, 3, 12).isoformat(),
+            "luogo_nascita": "Avellino",
+            "contatto_nome": "Anna",
+            "contatto_cognome": "Colombo",
+            "telefono": "3337654321",
+            "email": email("Anna", "Colombo"),
+            "indirizzo": "Via Roma 10",
+            "comune": "Avellino",
+            "provincia": "AV",
+            "cap": "83100",
+        },
+    )
+    InAttesa.objects.filter(cognome="Colombo").update(token=LINK_ATTESA)

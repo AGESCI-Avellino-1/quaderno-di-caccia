@@ -2,7 +2,9 @@
 
 Per entrare ti serve un account. Non puoi crearlo da solo: lo apri con un **invito** che
 ti mandano i capi, oppure con un **codice di iscrizione** se stai iscrivendo tuo figlio
-per la prima volta.
+per la prima volta (vedi [Iscrivere un figlio](iscrizione)). Se vuoi solo mettere tuo
+figlio in lista per entrare nel gruppo, l'account non serve: vedi [Lista
+d'attesa](lista-attesa).
 
 ## Con un invito
 
@@ -60,7 +62,8 @@ sceglierne una nuova.
 Con una passkey entri con l'impronta, il volto o il blocco schermo del telefono, senza
 scrivere niente. Prima devi crearla, una volta per ogni dispositivo:
 
-1. Nella pagina iniziale tocca **Dispositivi e protezione di questo telefono**.
+1. Nella Home, in **Profilo**, tocca **Password e sicurezza** (è anche nel menu del
+   profilo, sotto il tuo nome).
 2. Nel riquadro **Passkey per entrare** controlla il nome (per esempio «Telefono di
    Mario») e tocca **Crea una passkey su questo dispositivo**.
 3. Per sicurezza l'app ti chiede di confermare che sei tu: scrivi la tua password e

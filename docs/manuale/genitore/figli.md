@@ -1,6 +1,7 @@
 # I tuoi figli
 
-Nella pagina iniziale c'è un riquadro per ogni figlio. Toccalo per aprire la sua scheda.
+Nella Home, in **La mia famiglia**, c'è un riquadro per ogni figlio: toccalo per aprire la
+sua scheda. I tuoi figli sono anche nel menu, nel gruppo **La mia famiglia**.
 
 ## La scheda
 

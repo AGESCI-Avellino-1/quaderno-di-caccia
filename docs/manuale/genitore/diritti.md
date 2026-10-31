@@ -1,7 +1,8 @@
 # I tuoi diritti sui dati
 
-I dati tuoi e dei tuoi figli minorenni li tratta il gruppo, insieme all'AGESCI. Puoi
-chiedere:
+I dati tuoi e dei tuoi figli minorenni li tratta il gruppo, insieme all'AGESCI. Chi li
+tratta, per cosa e per quanto tempo lo trovi nella **Privacy policy**: il link è in fondo a
+ogni pagina. Puoi chiedere:
 
 - di **vedere** quali dati ci sono;
 - una **copia** di tutti i dati;

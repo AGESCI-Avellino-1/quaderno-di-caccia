@@ -28,7 +28,8 @@ funziona solo con la rete.
 ## Quando l'app si blocca
 
 Dopo 5 minuti senza usarla, o quando la riapri, l'app si blocca. Scrivi il PIN (o usa
-l'impronta) e tocca **Sblocca**. Puoi bloccarla anche tu con **Blocca** in alto.
+l'impronta) e tocca **Sblocca**. Puoi bloccarla anche tu: nel menu del profilo, sotto il
+tuo nome, tocca **Blocca l'app**.
 
 :::{container} schermate
 ![L'app bloccata sul telefono](../img/comune/sblocco-telefono.png){.telefono width="30%"}
@@ -50,7 +51,7 @@ Puoi scollegarlo da un altro telefono o dal computer. Al primo collegamento, il 
 perso cancella i dati da solo.
 
 1. Entra nel Quaderno di Caccia da un altro dispositivo.
-2. Nella pagina iniziale tocca **Dispositivi e protezione di questo telefono**.
+2. Nella Home, in **Profilo**, tocca **Password e sicurezza**.
 3. Accanto al telefono perso tocca **Scollega…** e poi **Scollega**.
 
 Se non riesci a entrare, chiedi a un capogruppo di scollegarlo per te.

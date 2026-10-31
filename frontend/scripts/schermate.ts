@@ -28,6 +28,8 @@ const PASSWORD = 'manuale-di-prova'
 const PIN = '246813'
 /** Tallest phone screenshot, in CSS pixels: about one and a half screens. */
 const ALTEZZA_TELEFONO = 1300
+/** Tallest computer screenshot, in CSS pixels. */
+const ALTEZZA_COMPUTER = 2400
 const DOMINIO = 'example.invalid'
 
 /** Who appears in the manual, by profile (DEC-236): the people of `dati_di_prova`. */
@@ -66,6 +68,16 @@ interface Scena {
   intera?: boolean
   /** Scroll so that this text (a heading) is at the top of the screen. */
   mostra?: string
+  /** Keep the cookie notice, closed in every other scene. */
+  cookie?: boolean
+}
+
+/** The side menu with the profile menu open: on the phone it opens from the top button. */
+async function apriMenu(pagina: Page): Promise<void> {
+  const pulsante = pagina.getByRole('button', { name: 'Apri il menu' })
+  if (await pulsante.isVisible()) await pulsante.click()
+  await pagina.locator('.ag-sidebar__user-toggle').click()
+  await pagina.locator('#menu-profilo').waitFor()
 }
 
 const SCENE: Scena[] = [
@@ -95,7 +107,9 @@ const SCENE: Scena[] = [
     percorso: '/protezione',
     intera: true,
   },
+  { nome: 'comune/privacy', percorso: '/privacy', cookie: true },
   { nome: 'genitore/home', chi: 'genitore', percorso: '/', intera: true },
+  { nome: 'genitore/menu', chi: 'genitore', percorso: '/', prepara: apriMenu },
   {
     nome: 'genitore/figlio',
     chi: 'genitore',
@@ -190,9 +204,23 @@ const SCENE: Scena[] = [
     intera: true,
   },
   { nome: 'genitore/quote', chi: 'genitore', percorso: '/mie-quote', intera: true },
+  {
+    nome: 'genitore/quote-bonifico',
+    chi: 'genitore',
+    percorso: '/mie-quote',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Ho fatto il bonifico' }).click()
+      await pagina.getByText('Quali quote hai pagato con il bonifico?').waitFor()
+      await pagina.locator('form input.check').first().check()
+    },
+    mostra: 'Quali quote hai pagato con il bonifico?',
+  },
   { nome: 'genitore/bacheca', chi: 'genitore', percorso: '/bacheca', intera: true },
   { nome: 'genitore/email', chi: 'genitore', percorso: '/email', intera: true },
   { nome: 'genitore/iscrizione', percorso: '/iscrizione/CERCHIO2027', intera: true },
+  { nome: 'genitore/lista-attesa', percorso: '/lista-attesa', intera: true },
+  // The link of the confirmation email (fixed in dati_di_prova).
+  { nome: 'genitore/mia-attesa', percorso: '/lista-attesa/attesa-di-prova', intera: true },
   {
     nome: 'genitore/maggiorenne',
     chi: 'genitoreMaggiorenne',
@@ -394,6 +422,15 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
       await pagina.waitForURL((url) => url.pathname !== '/sblocco')
       await pagina.waitForLoadState('networkidle')
     }
+    // The cookie notice covers the bottom of every page: the manual shows it once.
+    if (scena.cookie) {
+      await pagina.evaluate(() => localStorage.removeItem('qdc-cookie-informativa'))
+      await pagina.reload()
+      await pagina.waitForLoadState('networkidle')
+    } else {
+      const cookie = pagina.getByRole('button', { name: 'Ho capito' })
+      if (await cookie.isVisible()) await cookie.click()
+    }
     await scena.prepara?.(pagina)
     if (scena.mostra) {
       await pagina
@@ -401,28 +438,30 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
         .first()
         .evaluate((el) => {
           el.scrollIntoView({ block: 'start' })
+          // Only the content scrolls (DEC-241): leave a margin above the heading.
+          el.closest('.qdc-scorrevole')?.scrollBy(0, -24)
           window.scrollBy(0, -80)
         })
     }
     await pagina.mouse.move(0, 0) // no hover highlight left on a button
     await pagina.waitForTimeout(300)
-    let immagine: Buffer
-    if (formato.suffisso === 'telefono') {
-      // A whole page on the phone, up to ALTEZZA_TELEFONO: a taller image does not fit
-      // a PDF page and rinohtype pushes it to the next page forever.
-      const altezza = scena.intera
-        ? Math.min(
-            await pagina.evaluate(() => document.documentElement.scrollHeight),
-            ALTEZZA_TELEFONO,
-          )
-        : undefined
-      immagine = await pagina.screenshot(
-        altezza ? { fullPage: true, clip: { x: 0, y: 0, width: 390, height: altezza } } : {},
-      )
-      immagine = await incornicia(browser, immagine)
-    } else {
-      immagine = await pagina.screenshot({ fullPage: scena.intera ?? false })
+    // Only the content scrolls (DEC-241), so `fullPage` would stop at one screen: a
+    // whole page grows the window to the content instead, then puts it back.
+    const finestra = pagina.viewportSize()!
+    if (scena.intera) {
+      const contenuto = await pagina.evaluate(() => {
+        const s = document.querySelector('.qdc-scorrevole')
+        return window.innerHeight + (s ? s.scrollHeight - s.clientHeight : 0)
+      })
+      // On the phone up to ALTEZZA_TELEFONO: a taller image does not fit a PDF page and
+      // rinohtype pushes it to the next page forever.
+      const massima = formato.suffisso === 'telefono' ? ALTEZZA_TELEFONO : ALTEZZA_COMPUTER
+      await pagina.setViewportSize({ ...finestra, height: Math.min(contenuto, massima) })
+      await pagina.waitForTimeout(300)
     }
+    let immagine = await pagina.screenshot()
+    if (scena.intera) await pagina.setViewportSize(finestra)
+    if (formato.suffisso === 'telefono') immagine = await incornicia(browser, immagine)
     const file = join(IMMAGINI, `${scena.nome}-${formato.suffisso}.png`)
     await mkdir(dirname(file), { recursive: true })
     await writeFile(file, immagine)

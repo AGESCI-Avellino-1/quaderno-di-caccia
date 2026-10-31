@@ -707,19 +707,24 @@ class ImpostazioniQuote(Schema):
 CAMPI_PAGAMENTO = list(ImpostazioniQuote.model_fields)
 
 
+class ImpostazioniQuoteOut(ImpostazioniQuote):
+    # Set when enabling PayPal created the PayPal account of the cash book (DEC-254).
+    conto_paypal_creato: bool = False
+
+
 def _impostazioni_out(gruppo: Gruppo | None) -> dict:
     if gruppo is None:
         return {}
     return {c: getattr(gruppo, c) for c in CAMPI_PAGAMENTO}
 
 
-@router.get("/quote/impostazioni", response=ImpostazioniQuote)
+@router.get("/quote/impostazioni", response=ImpostazioniQuoteOut)
 def impostazioni(request):
     _gestore(request)
     return _impostazioni_out(Gruppo.objects.first())
 
 
-@router.put("/quote/impostazioni", response=ImpostazioniQuote)
+@router.put("/quote/impostazioni", response=ImpostazioniQuoteOut)
 def salva_impostazioni(request, dati: ImpostazioniQuote):
     _gestore(request)
     gruppo = Gruppo.objects.first()
@@ -740,8 +745,10 @@ def salva_impostazioni(request, dati: ImpostazioniQuote):
     if errori:
         raise HttpError(400, " ".join(errori))
     _valida(gruppo)
-    gruppo.save(update_fields=[*CAMPI_PAGAMENTO, "aggiornato_il"])
-    return _impostazioni_out(gruppo)
+    with transaction.atomic():
+        gruppo.save(update_fields=[*CAMPI_PAGAMENTO, "aggiornato_il"])
+        creato = gruppo.paypal_attivo and modi_pagamento.crea_conto_paypal()
+    return {**_impostazioni_out(gruppo), "conto_paypal_creato": creato}
 
 
 # --- Payments the family reports (DEC-255) -------------------------------------------------

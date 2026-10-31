@@ -50,7 +50,10 @@ async function salva() {
   const nuovi = await esegui(() => api.salvaImpostazioniQuote(corpo))
   if (!nuovi) return
   mostra(nuovi)
-  esito.value = 'Pagamenti salvati.'
+  esito.value = nuovi.conto_paypal_creato
+    ? 'Pagamenti salvati. Ho creato in prima nota il conto PayPal, con saldo zero da oggi: ' +
+      'se il conto ha già dei soldi, correggi il saldo iniziale nella Prima nota.'
+    : 'Pagamenti salvati.'
 }
 
 function aggiungiFascia() {

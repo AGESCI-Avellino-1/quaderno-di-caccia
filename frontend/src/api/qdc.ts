@@ -958,6 +958,8 @@ export interface ImpostazioniPagamenti {
   paypal_maggiorazione: 'NESSUNA' | 'FISSA' | 'PERCENTUALE' | 'FASCE'
   paypal_valore: string | null
   paypal_fasce: FasciaPaypal[]
+  /** Set when enabling PayPal created the PayPal account of the cash book. */
+  conto_paypal_creato?: boolean
 }
 
 export interface RigaSituazione {

@@ -175,3 +175,22 @@ def per_la_famiglia(gruppo: Gruppo | None, quote) -> dict:
         "bonifico": bonifico,
         "paypal": paypal,
     }
+
+
+def crea_conto_paypal() -> bool:
+    """The first time PayPal is enabled, the PayPal account of the cash book, from today
+    with a zero balance (DEC-254); never a second one, not even if the first was closed.
+    True when created."""
+    from django.utils import timezone
+
+    from apps.cassa.models import Cassa, TipoCassa
+
+    if Cassa.objects.filter(tipo=TipoCassa.PAYPAL).exists():
+        return False
+    Cassa.objects.create(
+        nome="PayPal",
+        tipo=TipoCassa.PAYPAL,
+        saldo_iniziale=Decimal("0.00"),
+        data_saldo_iniziale=timezone.localdate(),
+    )
+    return True

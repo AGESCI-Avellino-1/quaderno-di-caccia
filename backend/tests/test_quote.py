@@ -595,6 +595,18 @@ def test_chi_imposta_i_pagamenti_e_cosa_si_controlla(
         paypal_valore="2",
     )
     assert giusto.status_code == 200 and giusto.json()["iban"] == IBAN
+    # Enabling PayPal the first time created the PayPal account, only once (DEC-254).
+    from apps.cassa.models import Cassa, TipoCassa
+
+    assert giusto.json()["conto_paypal_creato"] is True
+    assert Cassa.objects.filter(tipo=TipoCassa.PAYPAL).count() == 1
+    di_nuovo = _imposta(
+        tesoriere_gruppo,
+        paypal_attivo=True,
+        link_pagamento="https://paypal.me/gruppo",
+    )
+    assert di_nuovo.json()["conto_paypal_creato"] is False
+    assert Cassa.objects.filter(tipo=TipoCassa.PAYPAL).count() == 1
 
 
 def test_la_famiglia_vede_solo_i_modi_abilitati(quote_famiglia, capogruppo, genitore):

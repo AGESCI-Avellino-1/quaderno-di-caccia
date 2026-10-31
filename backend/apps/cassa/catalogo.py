@@ -42,11 +42,13 @@ class Catalogo:
 
 # The app's own categories under a Modello D line, so these movements are easy to find
 # when writing the balance on the national app (DEC-254): (side, line, key, name).
+# PayPal's extra paid by the family with the bank income, what PayPal keeps with the bank
+# charges.
 VOCI_QDC = (
-    (ENTRATA, "A.10", "paypal", "Quota PayPal"),
+    (ENTRATA, "D.1", "paypal", "Quota PayPal"),
     (USCITA, "A.2", "paypal", "Trattenuta PayPal"),
 )
-QUOTA_PAYPAL, TRATTENUTA_PAYPAL = "E:A.10:paypal", "U:A.2:paypal"
+QUOTA_PAYPAL, TRATTENUTA_PAYPAL = "E:D.1:paypal", "U:A.2:paypal"
 
 
 @cache

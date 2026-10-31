@@ -173,9 +173,11 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; nei dati di prova la stagione del cerchio, un volo e una specialità di Sofia; bozza scritta il 31/10, segnata `[da verificare]`, da far rileggere allo staff L/C; corretti «Nuovo volo» e la descrizione della Progressione L/C nella Home | DEC-182…DEC-185, DEC-237 | 🚧 bozza fatta, manca la rilettura dello staff L/C |
 | 8.5a | Parte capo, blocco 1: chi sei, accesso e uso senza rete, l'unità (membri, squadriglie, eccezioni, incarichi, età), persone (scheda, correzioni, inviti, foto, codice fiscale), lista d'attesa (L.6) e richieste di iscrizione, al campo (regole sul rapporto con il minore), scheda sanitaria, note; nei dati di prova una richiesta di iscrizione da accogliere, le regole su Luca e una nota di staff | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.5b | Parte capo, blocco 2: eventi e presenze (anche offline), iscrizioni BuonaCaccia, Progressione per branca, passaggi | DEC-233, DEC-238 | ✅ 31/10 |
-| 8.5c | Parte capo, blocco 3: fascicolo dell'anno e del capo, bacheca, le mie spese, usare l'app al posto di un ragazzo o di un genitore | DEC-233, DEC-238 | 🚧 |
+| 8.5c | Parte capo, blocco 3: fascicolo dell'anno e del capo, bacheca, le mie spese, usare l'app al posto di un ragazzo o di un genitore | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.R | Due progetti Read the Docs separati sullo stesso account (maintainer, 31/10): il manuale d'uso nella sua cartella Sphinx con il suo `.readthedocs.yaml`; la guida di installazione avrà la sua; in Read the Docs, nelle impostazioni avanzate del progetto, va indicato `docs/manuale/.readthedocs.yaml` | DEC-231 | ✅ 31/10 (restano da creare i progetti e sceglierne i nomi) |
-| 8.6 | Parte capogruppo, tesorieri, amministratore tecnico | DEC-233 | ⏳ |
+| 8.6a | Parte capogruppo: importazione da BuonaStrada e differenze, correzioni da inoltrare, iscrizioni da inserire e modulistica, unità e incarichi, eccezioni sulle squadriglie, dispositivi, richieste privacy, fine anno e archivio | DEC-233, DEC-238 | 🚧 |
+| 8.6b | Impostazioni (sito, stampe, pagamenti), modelli delle email, privacy policy e termini; amministratore tecnico (pannello di amministrazione, modalità di prova delle email) | DEC-233, DEC-238 | ⏳ |
+| 8.6c | Tesorieri: quote, agevolazioni, pagamenti e ricevute, pagamenti da verificare, prima nota e rendiconto, estratto conto | DEC-233, DEC-238 | ⏳ |
 
 Trovato scrivendo la parte dei capi (31/10), da decidere con il maintainer:
 
@@ -183,6 +185,7 @@ Trovato scrivendo la parte dei capi (31/10), da decidere con il maintainer:
 - lo staff del reparto può delegare le riunioni di squadriglia (regola `puo_delegare`), ma il riquadro è solo in «La mia squadriglia», che vedono i ragazzi;
 - la data di una tappa (inizio, riconoscimento, distintivo) non si corregge dall'app, solo Promessa e firma della Carta di clan;
 - il registro degli accessi ai dati sensibili di una persona non ha una pagina;
+- le foto precedenti di una persona (le vedono i capi) non hanno una pagina: l'API c'è;
 - il percorso in alto è strano in alcune pagine dei ragazzi («Il mio Sentiero › Giulia Rossi › Progressione personale», «Unità › Carta di clan» per una scolta).
 
 Appunti per quando ci si arriva:

@@ -13,7 +13,7 @@ sola.
 | un lupetto, una coccinella, un esploratore, una guida, un capo squadriglia, un rover o una scolta | [Ragazzo](ragazzo/index) |
 | un capo in servizio in un'unità, come capo unità o nello staff | [Capo e staff di unità](capo/index) |
 
-La parte dei capigruppo e dei tesorieri arriverà presto; anche quella dei capi si sta completando.
+La parte dei capigruppo e dei tesorieri arriverà presto.
 
 ```{toctree}
 :maxdepth: 2

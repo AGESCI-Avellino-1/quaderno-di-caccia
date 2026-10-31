@@ -45,4 +45,8 @@ eventi
 buonacaccia
 progressione
 passaggi
+fascicolo
+bacheca
+spese
+impersona
 ```

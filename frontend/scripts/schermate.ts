@@ -494,6 +494,58 @@ const SCENE: Scena[] = [
     },
     intera: true,
   },
+  {
+    nome: 'capo/fascicolo-anno',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Luca')(pagina)
+      await apri("Fascicolo dell'anno")(pagina)
+    },
+    intera: true,
+  },
+  {
+    nome: 'capo/fascicolo-capo',
+    chi: 'capoReparto',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await apri('Il mio profilo')(pagina)
+      await apri('Servizio e formazione')(pagina)
+    },
+    intera: true,
+  },
+  {
+    nome: 'capo/avviso',
+    chi: 'capoReparto',
+    percorso: '/bacheca',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Nuovo avviso' }).click()
+      await pagina.getByLabel('Titolo').fill('Riunione dei genitori del reparto')
+      await pagina
+        .getByLabel('Testo')
+        .fill('Sabato dopo la riunione presentiamo il campo invernale.')
+      await pagina
+        .getByLabel('Per', { exact: true })
+        .selectOption({ label: 'Reparto Antares (N1)' })
+      await pagina.getByLabel('A chi').selectOption({ label: 'Solo i genitori' })
+    },
+    intera: true,
+  },
+  { nome: 'capo/spese', chi: 'capoReparto', percorso: '/spese', intera: true },
+  {
+    nome: 'capo/impersona',
+    chi: 'capoReparto',
+    percorso: '/impersonazioni',
+    prepara: async (pagina) => {
+      await pagina.getByLabel('Nome, cognome o email').fill('Rossi')
+      await pagina.getByRole('button', { name: 'Cerca' }).click()
+      await pagina
+        .getByRole('button', { name: /^Impersona / })
+        .first()
+        .waitFor()
+    },
+    intera: true,
+  },
   { nome: 'capo/attesa', chi: 'capoCerchio', percorso: '/attesa', intera: true },
   { nome: 'capo/richieste', chi: 'capoCerchio', percorso: '/iscrizioni', intera: true },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },

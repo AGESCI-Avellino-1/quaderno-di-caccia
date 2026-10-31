@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 from django.core import mail
+from django.core.exceptions import ValidationError
 from django.test import Client
 from django.utils import timezone
 
@@ -191,6 +192,10 @@ def test_iscrizione_dalla_lista(in_lista, reparto, capo, django_capture_on_commi
         responsabilita="UNICO_GENITORE",
         genitore_cellulare="3330000099",
     )
+    # The link is for Marta only.
+    altra = iscrizioni.DatiIscrizione(**{**vars(dati), "nome": "Giulia"})
+    with pytest.raises(ValidationError):
+        iscrizioni.crea_richiesta(codice, altra, genitore)
     richiesta = iscrizioni.crea_richiesta(codice, dati, genitore)
     socio = iscrizioni.approva(richiesta, capo.utente, timezone.localdate() + timedelta(days=30))
     assert (socio.sesso, socio.luogo_nascita, socio.cap) == ("F", "Avellino", "83100")

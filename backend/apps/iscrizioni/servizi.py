@@ -83,10 +83,29 @@ class DatiIscrizione:
         )
 
 
+def _stessa_persona(codice: CodiceIscrizione, dati: DatiIscrizione) -> None:
+    """A personal link from the waiting list is for one person only (DEC-261): the
+    capi chose who joins."""
+    proposti = codice.dati_proposti
+    if not proposti:
+        return
+    uguali = (
+        dati.nome.strip().casefold() == proposti.get("nome", "").casefold()
+        and dati.cognome.strip().casefold() == proposti.get("cognome", "").casefold()
+        and dati.data_nascita.isoformat() == proposti.get("data_nascita")
+    )
+    if not uguali:
+        raise ValidationError(
+            f"Questo link è per l'iscrizione di {proposti.get('nome')} {proposti.get('cognome')}: "
+            "non si può usare per un'altra persona."
+        )
+
+
 def prepara(codice: CodiceIscrizione, dati: DatiIscrizione) -> RichiestaIscrizione:
     """A validated, unsaved request (ValidationError otherwise)."""
     if not codice.valido:
         raise ValidationError("Il codice di iscrizione non è più valido.")
+    _stessa_persona(codice, dati)
     richiesta = RichiestaIscrizione(codice=codice, unita=codice.unita, **vars(dati.pulisci()))
     richiesta.full_clean(exclude=["utente", "persona"])
     gia = Appartenenza.objects.attive().filter(

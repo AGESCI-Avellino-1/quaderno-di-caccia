@@ -138,6 +138,7 @@ con la sua sezione del manuale. Decisioni nell'analisi quando confermate.
 | L.3 | Vista dei capi: per età nell'anno in corso e nel successivo, branca e unità consigliate (età minime e massime per unità), contattato / da contattare e per quale unità | DEC-259…DEC-261 | ✅ provato nel browser il 31/10 |
 | L.4 | Iscrizione: l'unità scelta, il link al genitore (o al maggiorenne) per i dati dell'iscrizione, che prosegue come l'iscrizione dall'app (DEC-120…DEC-127) | DEC-261 | ✅ provato nel browser il 31/10 |
 | L.4b | Il modulo di iscrizione con codice chiede subito il sesso del ragazzo e, per un minore, i genitori o il tutore con la responsabilità genitoriale (uno o due) con telefono ed email; dalla lista d'attesa arrivano già compilati (maintainer, 31/10) | DEC-264 | ✅ provato nel browser il 31/10 |
+| L.4c | Modulo di iscrizione: genitore o «me stesso» lo decide l'età (maggiorenne si iscrive da sé), non una scelta; un link personale dalla lista vale solo per quella persona (nome, cognome e data di nascita bloccati, controllati anche dal server) (maintainer, 31/10) | DEC-261, DEC-121 | ✅ provato nel browser il 31/10 |
 | L.5 | Promemoria dei due anni (contati da quando si raggiunge l'età minima di un'unità del gruppo), uscita dopo 30 giorni senza risposta | DEC-262, DEC-263 | ✅ coperto dai test (comando giornaliero) |
 | L.6 | Manuale: la sezione della lista d'attesa (famiglie e capi) | DEC-238 | ⏳ |
 

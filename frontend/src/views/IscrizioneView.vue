@@ -17,7 +17,6 @@ const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 
 const info = ref<InfoCodice | null>(null)
-const chi = ref<'figlio' | 'io'>('figlio')
 const dati = reactive({
   nome: '',
   cognome: '',
@@ -45,14 +44,12 @@ const oggi = new Date().toLocaleDateString('sv')
 onMounted(async () => {
   if (!sessione.pronta) await sessione.carica()
   info.value = (await esegui(() => api.infoCodice(props.codice))) ?? null
-  if (info.value?.per_capi) chi.value = 'io'
   const persona = sessione.profilo?.persona
   if (persona)
     Object.assign(dati, { genitore_nome: persona.nome, genitore_cognome: persona.cognome })
   // From the waiting list (DEC-261): what the family wrote there.
   const p = info.value?.proposti
   if (p?.nome) {
-    if (p.da_se) chi.value = 'io'
     Object.assign(dati, {
       nome: p.nome,
       cognome: p.cognome ?? '',
@@ -67,7 +64,16 @@ onMounted(async () => {
   }
 })
 
-const perFiglio = computed(() => chi.value === 'figlio')
+// Who fills in depends on the age, not on a choice (DEC-121): a parent for a minor, the
+// adult themself; the Co.Ca. only adults.
+const maggiorenne = computed(() => {
+  if (!dati.data_nascita) return false
+  const nascita = new Date(dati.data_nascita)
+  return new Date(nascita.getFullYear() + 18, nascita.getMonth(), nascita.getDate()) <= new Date()
+})
+const perFiglio = computed(() => !info.value?.per_capi && !maggiorenne.value)
+// A personal link from the waiting list is for one person: who it is cannot change.
+const bloccato = computed(() => !!info.value?.proposti?.nome)
 
 async function invia() {
   const corpo = perFiglio.value
@@ -117,30 +123,32 @@ async function invia() {
         <template v-if="info.per_capi">Riservata ai capi.</template>
       </p>
 
-      <fieldset v-if="!info.per_capi">
-        <legend class="form-label small">Chi iscrivi?</legend>
-        <div class="d-flex flex-wrap gap-5">
-          <div class="form-field">
-            <input id="chi-figlio" v-model="chi" type="radio" class="radio" value="figlio" />
-            <label for="chi-figlio">Mio figlio o mia figlia</label>
-          </div>
-          <div class="form-field">
-            <input id="chi-io" v-model="chi" type="radio" class="radio" value="io" />
-            <label for="chi-io">Me stesso (maggiorenne)</label>
-          </div>
-        </div>
-      </fieldset>
+      <p v-if="!info.per_capi && !bloccato" class="small fg-2">
+        Per un minorenne compila un genitore; chi è maggiorenne si iscrive da sé.
+      </p>
 
       <fieldset class="card card-body vstack gap-3">
         <legend class="h6">{{ perFiglio ? 'Il ragazzo o la ragazza' : 'I tuoi dati' }}</legend>
         <div class="row g-3">
           <div class="col-12 sm:col-6">
             <label class="form-label small" for="isc-nome">Nome</label>
-            <input id="isc-nome" v-model="dati.nome" class="form-control" required />
+            <input
+              id="isc-nome"
+              v-model="dati.nome"
+              class="form-control"
+              :readonly="bloccato"
+              required
+            />
           </div>
           <div class="col-12 sm:col-6">
             <label class="form-label small" for="isc-cognome">Cognome</label>
-            <input id="isc-cognome" v-model="dati.cognome" class="form-control" required />
+            <input
+              id="isc-cognome"
+              v-model="dati.cognome"
+              class="form-control"
+              :readonly="bloccato"
+              required
+            />
           </div>
           <div class="col-12 sm:col-6">
             <label class="form-label small" for="isc-nascita">Data di nascita</label>
@@ -148,6 +156,7 @@ async function invia() {
               id="isc-nascita"
               v-model="dati.data_nascita"
               type="date"
+              :readonly="bloccato"
               class="form-control"
               :max="oggi"
               required

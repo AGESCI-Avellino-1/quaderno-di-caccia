@@ -62,6 +62,57 @@ export interface Profilo {
   ambiente?: 'GIUNGLA' | 'BOSCO' | null
   /** Payments families reported that this user may check (DEC-255). */
   pagamenti_da_verificare?: number
+  /** The waiting list (DEC-259): every capo. */
+  vede_lista_attesa?: boolean
+}
+
+/** Someone on the waiting list, as the family writes it (DEC-256). */
+export interface DatiAttesa {
+  nome: string
+  cognome: string
+  sesso: 'M' | 'F' | ''
+  data_nascita: string
+  luogo_nascita: string
+  /** An adult on the list by themself: the contact is them. */
+  da_se: boolean
+  contatto_nome: string
+  contatto_cognome: string
+  telefono: string
+  email: string
+  indirizzo: string
+  comune: string
+  provincia: string
+  cap: string
+}
+
+/** What the family sees through its link: never the place in the list (DEC-257). */
+export interface MiaAttesa extends DatiAttesa {
+  conferma_chiesta: boolean
+  contattabile_dal: string
+}
+
+export interface VoceAttesa extends DatiAttesa {
+  id: number
+  eta: number
+  eta_prossimo: number
+  consigliate: { id: number; nome: string }[]
+  consigliate_prossimo: { id: number; nome: string }[]
+  stato: 'DA_CONTATTARE' | 'CONTATTATO'
+  contattato_per: { id: number; nome: string } | null
+  contattato_il: string | null
+  contattato_da: string
+  inserito_il: string
+  inserito_da_un_capo: boolean
+  possibile_doppione: boolean
+  conferma_chiesta_il: string | null
+}
+
+export interface ListaAttesa {
+  anno: string
+  anno_prossimo: string
+  voci: VoceAttesa[]
+  unita: { id: number; nome: string }[]
+  puo_inserire: boolean
 }
 
 /** What every page needs for its title and footer, also before the login (DEC-246). */
@@ -213,6 +264,9 @@ export interface Unita {
   attiva: boolean
   collegata_a: number | null
   nota_collegamento: string
+  /** Ages for the waiting list (DEC-260); null for the Co.Ca. */
+  eta_minima?: number | null
+  eta_massima?: number | null
 }
 
 // --- Units, staff and roles (DEC-10, DEC-11, DEC-14, DEC-18) --------------------------
@@ -306,6 +360,8 @@ export interface UnitaDettaglio {
   /** Single-sex check: members without a sex, or of the other sex without an exception. */
   avvisi: string[]
   puo_gestire_squadriglie: boolean
+  /** The ages for the waiting list (DEC-260). */
+  puo_modificare_eta?: boolean
   nomina: Scelta[]
 }
 
@@ -438,6 +494,16 @@ export interface InfoCodice {
   codice: string
   unita: string
   per_capi: boolean
+  /** From the waiting list (DEC-261): to fill in the form. */
+  proposti?: {
+    nome?: string
+    cognome?: string
+    data_nascita?: string
+    contatto_nome?: string
+    contatto_cognome?: string
+    email?: string
+    da_se?: boolean
+  }
 }
 
 export interface DatiIscrizione {
@@ -2365,6 +2431,36 @@ export const api = {
     }),
   togliConiugi: (id: number) =>
     richiesta<void>(`/api/v1/quote/coniugi/${id}`, { metodo: 'DELETE' }),
+  mettitiInLista: (dati: DatiAttesa & { privacy: boolean }) =>
+    richiesta<void>('/api/v1/lista-attesa', { metodo: 'POST', corpo: dati }),
+  chiediLinkAttesa: (email: string) =>
+    richiesta<void>('/api/v1/lista-attesa/link', { metodo: 'POST', corpo: { email } }),
+  miaAttesa: (token: string) =>
+    richiesta<MiaAttesa>(`/api/v1/lista-attesa/${encodeURIComponent(token)}`),
+  correggiAttesa: (token: string, dati: DatiAttesa) =>
+    richiesta<MiaAttesa>(`/api/v1/lista-attesa/${encodeURIComponent(token)}`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  confermaAttesa: (token: string) =>
+    richiesta<MiaAttesa>(`/api/v1/lista-attesa/${encodeURIComponent(token)}/conferma`, {
+      metodo: 'POST',
+    }),
+  esciDallaLista: (token: string) =>
+    richiesta<void>(`/api/v1/lista-attesa/${encodeURIComponent(token)}`, { metodo: 'DELETE' }),
+  listaAttesa: () => richiesta<ListaAttesa>('/api/v1/attesa'),
+  inserisciInLista: (dati: DatiAttesa) =>
+    richiesta<void>('/api/v1/attesa', { metodo: 'POST', corpo: dati }),
+  contattoAttesa: (id: number, unita_id: number | null) =>
+    richiesta<void>(`/api/v1/attesa/${id}/contatto`, { metodo: 'POST', corpo: { unita_id } }),
+  iscriviDallaLista: (id: number, unita_id: number) =>
+    richiesta<void>(`/api/v1/attesa/${id}/iscrivi`, { metodo: 'POST', corpo: { unita_id } }),
+  togliDallaLista: (id: number) => richiesta<void>(`/api/v1/attesa/${id}`, { metodo: 'DELETE' }),
+  etaUnita: (id: number, dati: { eta_minima: number | null; eta_massima: number | null }) =>
+    richiesta<{ eta_minima: number; eta_massima: number }>(`/api/v1/unita/${id}/eta`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
   segnalaPagamento: (dati: { metodo: 'PAYPAL' | 'BONIFICO'; quote: number[]; data?: string }) =>
     richiesta<Segnalazione>('/api/v1/mie-quote/segnalazioni', { metodo: 'POST', corpo: dati }),
   caricaRicevutaSegnalazione: (id: number, file: File) => {

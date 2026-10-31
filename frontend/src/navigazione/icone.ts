@@ -26,6 +26,7 @@ import envelopePaper from 'bootstrap-icons/icons/envelope-paper.svg?raw'
 import fileEarmarkText from 'bootstrap-icons/icons/file-earmark-text.svg?raw'
 import flag from 'bootstrap-icons/icons/flag.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
+import hourglassSplit from 'bootstrap-icons/icons/hourglass-split.svg?raw'
 import incognito from 'bootstrap-icons/icons/incognito.svg?raw'
 import journalText from 'bootstrap-icons/icons/journal-text.svg?raw'
 import key from 'bootstrap-icons/icons/key.svg?raw'
@@ -87,6 +88,7 @@ export const ICONE = {
   'file-earmark-text': fileEarmarkText,
   flag: flag,
   gear: gear,
+  'hourglass-split': hourglassSplit,
   incognito: incognito,
   'journal-text': journalText,
   key: key,

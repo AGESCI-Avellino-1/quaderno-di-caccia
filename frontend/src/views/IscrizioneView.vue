@@ -40,6 +40,20 @@ onMounted(async () => {
   const persona = sessione.profilo?.persona
   if (persona)
     Object.assign(dati, { genitore_nome: persona.nome, genitore_cognome: persona.cognome })
+  // From the waiting list (DEC-261): what the family wrote there.
+  const p = info.value?.proposti
+  if (p?.nome) {
+    if (p.da_se) chi.value = 'io'
+    Object.assign(dati, {
+      nome: p.nome,
+      cognome: p.cognome ?? '',
+      data_nascita: p.data_nascita ?? '',
+      ...(p.da_se
+        ? { email: p.email ?? '' }
+        : { genitore_nome: p.contatto_nome ?? '', genitore_cognome: p.contatto_cognome ?? '' }),
+    })
+    account.email ||= p.email ?? ''
+  }
 })
 
 const perFiglio = computed(() => chi.value === 'figlio')

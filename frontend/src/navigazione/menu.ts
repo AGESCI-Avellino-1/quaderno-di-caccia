@@ -173,6 +173,12 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           descrizione: 'Nuovi soci da accogliere e moduli da verificare',
           contatore: p.iscrizioni_da_decidere || undefined,
         },
+        p.vede_lista_attesa && {
+          nome: "Lista d'attesa",
+          icona: 'hourglass-split',
+          to: '/attesa',
+          descrizione: 'Chi vuole entrare nel gruppo, per età e unità consigliata',
+        },
         p.capogruppo && {
           nome: 'Modulistica',
           icona: 'file-earmark-text',

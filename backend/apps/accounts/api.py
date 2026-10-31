@@ -94,6 +94,8 @@ class Profilo(Schema):
     ambiente: str | None
     # Payments families reported that this user may check (DEC-255).
     pagamenti_da_verificare: int = 0
+    # The waiting list (DEC-259): every capo sees it.
+    vede_lista_attesa: bool = False
 
 
 @router.get("/io", response=Profilo)
@@ -148,6 +150,7 @@ def profilo(request):
         ],
         "ambiente": ambiente(persona) if persona is not None else None,
         "pagamenti_da_verificare": _pagamenti_da_verificare(user),
+        "vede_lista_attesa": policy.vede_lista_attesa(user),
     }
 
 

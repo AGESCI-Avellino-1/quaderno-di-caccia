@@ -97,6 +97,27 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // The waiting list, public: no account (DEC-256); the personal link (DEC-257).
+      path: '/lista-attesa',
+      name: 'lista-attesa',
+      component: () => import('@/views/ListaAttesaView.vue'),
+      meta: { pubblica: true },
+    },
+    {
+      path: '/lista-attesa/:token',
+      name: 'mia-attesa',
+      component: () => import('@/views/MiaAttesaView.vue'),
+      meta: { pubblica: true },
+      props: true,
+    },
+    {
+      // The waiting list for the capi (DEC-259): the API decides.
+      path: '/attesa',
+      name: 'attesa',
+      component: () => import('@/views/AttesaView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Joining from the app with a registration code: reachable without an account.
       path: '/iscrizione/:codice',
       name: 'iscrizione',

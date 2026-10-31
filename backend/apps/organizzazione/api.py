@@ -68,6 +68,17 @@ class UnitaOut(Schema):
     attiva: bool
     collegata_a: int | None
     nota_collegamento: str
+    # Ages for the waiting list (DEC-260); None for the Co.Ca.
+    eta_minima: int | None = None
+    eta_massima: int | None = None
+
+    @staticmethod
+    def resolve_eta_minima(obj: Unita) -> int | None:
+        return obj.eta[0] if obj.eta else None
+
+    @staticmethod
+    def resolve_eta_massima(obj: Unita) -> int | None:
+        return obj.eta[1] if obj.eta else None
 
     @staticmethod
     def resolve_branca(obj: Unita) -> str:
@@ -196,6 +207,8 @@ class UnitaDettaglio(Schema):
     avvisi: list[str]
     puo_modificare: bool
     puo_gestire_squadriglie: bool
+    # The ages for the waiting list (DEC-260): its staff and the capigruppo.
+    puo_modificare_eta: bool = False
     # Unit roles the caller may assign (and close).
     nomina: list[Scelta]
 
@@ -316,6 +329,8 @@ def dettaglio_unita(request, unita_id: int):
         "puo_modificare": policy.puo_gestire_unita(utente),
         "puo_gestire_squadriglie": unita.tipo == TipoUnita.REPARTO
         and policy.puo_gestire_squadriglie(utente, unita),
+        "puo_modificare_eta": unita.eta is not None
+        and policy.puo_modificare_eta_unita(utente, unita),
         "nomina": _nomina(
             utente,
             (

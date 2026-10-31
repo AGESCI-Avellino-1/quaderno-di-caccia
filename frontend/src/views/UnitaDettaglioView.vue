@@ -15,6 +15,7 @@ import {
 import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
 import AltaSquadriglia from '@/components/AltaSquadriglia.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import EtaUnita from '@/components/EtaUnita.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -155,6 +156,11 @@ const iniziale = (u: Unita): UnitaIn => ({
       <span v-if="unita.nota_collegamento" class="fg-2"> · {{ unita.nota_collegamento }}</span>
     </p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+    <EtaUnita
+      v-if="unita && dettaglio"
+      :unita="unita"
+      :modificabile="!!dettaglio.puo_modificare_eta"
+    />
     <CopiaLocale :del="copiaDel" />
     <div v-if="dettaglio?.avvisi.length" class="alert theme-warning small" role="status">
       <div>

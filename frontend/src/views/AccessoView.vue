@@ -169,6 +169,10 @@ const provider = (nome: 'google' | 'apple') =>
         </button>
       </div>
       <p class="small fg-2 mt-5 mb-1">
+        Vuoi entrare nel gruppo?
+        <RouterLink to="/lista-attesa">Mettiti in lista d'attesa</RouterLink>.
+      </p>
+      <p class="small fg-2 mb-1">
         Non hai un account? Ti serve un invito, oppure un codice di iscrizione dai capi.
       </p>
       <form class="d-flex gap-3" @submit.prevent="usaCodice">

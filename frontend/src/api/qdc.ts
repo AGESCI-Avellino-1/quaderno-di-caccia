@@ -499,6 +499,8 @@ export interface InfoCodice {
     nome?: string
     cognome?: string
     data_nascita?: string
+    sesso?: string
+    telefono?: string
     contatto_nome?: string
     contatto_cognome?: string
     email?: string
@@ -515,6 +517,15 @@ export interface DatiIscrizione {
   genitore_nome: string
   genitore_cognome: string
   genitore_codice_fiscale: string
+  /** Asked at once since DEC-264. */
+  sesso?: string
+  responsabilita?: '' | 'GENITORI' | 'UNICO_GENITORE' | 'TUTORE'
+  genitore_cellulare?: string
+  altro_nome?: string
+  altro_cognome?: string
+  altro_codice_fiscale?: string
+  altro_cellulare?: string
+  altro_email?: string
 }
 
 export type StatoIscrizione =

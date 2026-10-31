@@ -54,6 +54,10 @@ def _dati_figlio(**altri) -> dict:
         "genitore_nome": "Luigi",
         "genitore_cognome": "Bianco",
         "genitore_codice_fiscale": CF_GENITORE,
+        # Asked at once since DEC-264.
+        "sesso": "F",
+        "responsabilita": "UNICO_GENITORE",
+        "genitore_cellulare": "3330000077",
         **altri,
     }
 
@@ -245,7 +249,11 @@ def capo_nuovo(coca, capogruppo):
     codice = CodiceIscrizione.objects.create(unita=coca, tipo="PERSONALE", scadenza=TRA_UN_MESE)
     utente = User.objects.create_user(email="anna.verdi@example.invalid", password="x")
     dati = servizi.DatiIscrizione(
-        nome="Anna", cognome="Verdi", data_nascita=date(1990, 1, 1), codice_fiscale=CF_CAPO
+        nome="Anna",
+        cognome="Verdi",
+        data_nascita=date(1990, 1, 1),
+        codice_fiscale=CF_CAPO,
+        sesso="F",
     )
     richiesta = servizi.crea_richiesta(codice, dati, utente)
     assert not policy.puo_approvare_iscrizione(
@@ -295,6 +303,7 @@ def test_un_adulto_con_account_si_iscrive_con_la_sua_email(coca, capogruppo, gen
         "cognome": "Genitore",
         "data_nascita": "1980-01-01",
         "codice_fiscale": "GNTMRA80A01A509X",
+        "sesso": "M",
     }
     risposta = _post(_client(genitore), f"/api/v1/iscrizione/{codice.codice}", dati)
     assert risposta.json()["serve_account"] is False
@@ -356,8 +365,10 @@ def test_la_famiglia_completa_i_dati(approvata, genitore_nuovo):
     client = _client(genitore_nuovo)
     url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
     stato = client.get(url).json()
-    assert "Sesso" in stato["richiesta"]["mancanti"]
-    assert "Cellulare del genitore" in stato["richiesta"]["mancanti"]
+    # Sex and the parent's mobile were given with the request (DEC-264).
+    assert "Sesso" not in stato["richiesta"]["mancanti"]
+    assert "Cellulare del genitore" not in stato["richiesta"]["mancanti"]
+    assert "Indirizzo" in stato["richiesta"]["mancanti"]
 
     assert _put(client, url, {**DATI_COMPLETI, "cap": "831"}).status_code == 400
     completo = _put(client, url, DATI_COMPLETI).json()
@@ -611,12 +622,8 @@ def test_entrambi_i_genitori_servono_i_dati_dell_altro(approvata, genitore_nuovo
 
     url = f"/api/v1/iscrizioni/{approvata.pk}/completamento"
     client = _client(genitore_nuovo)
+    # Declared one parent at the request (DEC-264): the completion can still change it.
     senza_scelta = {k: v for k, v in DATI_COMPLETI.items() if k != "genitore_unico"}
-    assert (
-        "Genitore singolo o entrambi i genitori"
-        in _put(client, url, senza_scelta).json()["richiesta"]["mancanti"]
-    )
-
     entrambi = {**senza_scelta, "genitore_unico": False}
     assert "Dati dell'altro genitore" in _put(client, url, entrambi).json()["richiesta"]["mancanti"]
     altro = {"nome": "Anna", "cognome": "Rossi", "codice_fiscale": "RSSNNA82A41A509B"}
@@ -713,3 +720,53 @@ def test_contatti_propri_obbligatori_per_i_minori_in_clan(gruppo, capo, genitore
 def test_contatti_propri_facoltativi_per_i_minori_in_reparto(approvata):
     assert not approvata.contatti_obbligatori
     assert "Cellulare" not in servizi.mancanti(approvata)
+
+
+# --- Asked at once (DEC-264) ------------------------------------------------------------
+
+
+def test_subito_sesso_e_responsabilita(codice_reparto, genitore_nuovo):
+    url = f"/api/v1/iscrizione/{codice_reparto.codice}"
+    client = _client(genitore_nuovo)
+    for manca in ("sesso", "responsabilita", "genitore_cellulare"):
+        dati = {k: v for k, v in _dati_figlio().items() if k != manca}
+        assert _post(client, url, dati).status_code == 400, manca
+    entrambi = _dati_figlio(responsabilita="GENITORI")
+    assert "altro genitore" in _post(client, url, entrambi).json()["detail"]
+
+
+def test_entrambi_i_genitori_dalla_richiesta(codice_reparto, genitore_nuovo, capo):
+    from apps.anagrafica.models import TipoTutela
+
+    dati = servizi.DatiIscrizione(
+        **{
+            **_dati_figlio(
+                responsabilita="GENITORI",
+                altro_nome="Anna",
+                altro_cognome="Rossi",
+                altro_codice_fiscale="RSSNNA82A41A509B",
+                altro_cellulare="3480000001",
+                altro_email="anna.rossi@example.invalid",
+            ),
+            "data_nascita": nato_anni_fa(11),
+        }
+    )
+    richiesta = servizi.crea_richiesta(codice_reparto, dati, genitore_nuovo)
+    figlia = servizi.approva(richiesta, capo.utente, TRA_UN_MESE)
+    assert figlia.sesso == "F"
+    tutori = {t.tutore.codice_fiscale: t for t in figlia.tutori.select_related("tutore")}
+    assert tutori[CF_GENITORE].tutore.cellulare == "3330000077"
+    assert tutori["RSSNNA82A41A509B"].tutore.email == "anna.rossi@example.invalid"
+    assert {t.tipo for t in tutori.values()} == {TipoTutela.GENITORE}
+    assert "Genitore singolo o entrambi i genitori" not in servizi.mancanti(richiesta)
+
+
+def test_un_tutore(codice_reparto, genitore_nuovo, capo):
+    from apps.anagrafica.models import TipoTutela
+
+    dati = servizi.DatiIscrizione(
+        **{**_dati_figlio(responsabilita="TUTORE"), "data_nascita": nato_anni_fa(11)}
+    )
+    richiesta = servizi.crea_richiesta(codice_reparto, dati, genitore_nuovo)
+    figlia = servizi.approva(richiesta, capo.utente, TRA_UN_MESE)
+    assert list(figlia.tutori.values_list("tipo", flat=True)) == [TipoTutela.TUTORE]

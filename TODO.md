@@ -137,6 +137,7 @@ con la sua sezione del manuale. Decisioni nell'analisi quando confermate.
 | L.2 | Iscrizione pubblica alla lista (genitore o maggiorenne, senza account), email di conferma con il link per modificare o cancellarsi, link ritrovabile con l'email; inserimento da parte di un capo | DEC-256…DEC-258 | ✅ provato nel browser il 31/10 |
 | L.3 | Vista dei capi: per età nell'anno in corso e nel successivo, branca e unità consigliate (età minime e massime per unità), contattato / da contattare e per quale unità | DEC-259…DEC-261 | ✅ provato nel browser il 31/10 |
 | L.4 | Iscrizione: l'unità scelta, il link al genitore (o al maggiorenne) per i dati dell'iscrizione, che prosegue come l'iscrizione dall'app (DEC-120…DEC-127) | DEC-261 | ✅ provato nel browser il 31/10 |
+| L.4b | Il modulo di iscrizione con codice chiede subito il sesso del ragazzo e, per un minore, i genitori o il tutore con la responsabilità genitoriale (uno o due) con telefono ed email; dalla lista d'attesa arrivano già compilati (maintainer, 31/10) | DEC-264 | ✅ provato nel browser il 31/10 |
 | L.5 | Promemoria dei due anni (contati da quando si raggiunge l'età minima di un'unità del gruppo), uscita dopo 30 giorni senza risposta | DEC-262, DEC-263 | ✅ coperto dai test (comando giornaliero) |
 | L.6 | Manuale: la sezione della lista d'attesa (famiglie e capi) | DEC-238 | ⏳ |
 
@@ -148,7 +149,13 @@ Richiesta del maintainer del 31/10/2026.
 | --- | --- | --- | --- |
 | P.1 | Privacy policy: pagina pubblica con un testo di base precompilato, che capigruppo e amministratore tecnico modificano con l'editor nelle Impostazioni; link nel piè di pagina e dal modulo della lista d'attesa | — | ⏳ |
 | P.2 | Termini e condizioni: come la privacy policy | — | ⏳ |
-| P.3 | Cookie banner (l'app usa solo cookie tecnici: da decidere con il maintainer se solo informativo) | — | ⏳ |
+| P.3 | Cookie banner solo informativo (l'app usa solo cookie tecnici): «Ho capito» ricordato nel browser, unica eccezione alla regola sui dati in chiaro; ricompare se la privacy policy cambia. Privacy policy e termini pubblicati e linkati, senza accettazione salvata (scelte del 31/10) | — | ⏳ |
+
+### Calcolo del codice fiscale (richiesta del 31/10)
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| C.1 | Ovunque si scrive un codice fiscale: pulsante che lo calcola da nome, cognome, sesso, data e luogo di nascita e lo propone (chi lo inserisce verifica). Serve l'elenco dei codici dei comuni e degli stati esteri (da scaricare: chiedere al maintainer la fonte) | — | ⏳ |
 
 ### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
 

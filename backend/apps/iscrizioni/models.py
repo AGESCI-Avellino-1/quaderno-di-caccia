@@ -132,6 +132,24 @@ class RichiestaIscrizione(ModelloTracciato):
     genitore_nome = models.CharField(max_length=80, blank=True)
     genitore_cognome = models.CharField(max_length=80, blank=True)
     genitore_codice_fiscale = models.CharField(max_length=16, blank=True)
+    # Asked at once since DEC-264: the child's sex, how the parental responsibility is
+    # held (both parents, one, a guardian: as BuonaStrada), the contacts.
+    sesso = models.CharField(max_length=1, blank=True)
+    responsabilita = models.CharField(
+        max_length=14,
+        blank=True,
+        choices=[
+            ("GENITORI", "Entrambi i genitori"),
+            ("UNICO_GENITORE", "Un solo genitore"),
+            ("TUTORE", "Un tutore"),
+        ],
+    )
+    genitore_cellulare = models.CharField(max_length=30, blank=True)
+    altro_nome = models.CharField(max_length=80, blank=True)
+    altro_cognome = models.CharField(max_length=80, blank=True)
+    altro_codice_fiscale = models.CharField(max_length=16, blank=True)
+    altro_cellulare = models.CharField(max_length=30, blank=True)
+    altro_email = models.EmailField(blank=True)
 
     stato = models.CharField(
         max_length=10, choices=StatoIscrizione.choices, default=StatoIscrizione.IN_ATTESA
@@ -185,6 +203,28 @@ class RichiestaIscrizione(ModelloTracciato):
 
         return eta_in_data(self.data_nascita, timezone.localdate()) < 18
 
+    def _clean_responsabilita(self) -> None:
+        """Who holds the parental responsibility, with their contacts (DEC-264)."""
+        from apps.anagrafica.servizi import codice_fiscale_valido
+
+        if not self.responsabilita:
+            raise ValidationError(
+                "Indica chi ha la responsabilità genitoriale: entrambi i genitori, uno solo o "
+                "un tutore."
+            )
+        if not self.genitore_cellulare.strip():
+            raise ValidationError("Scrivi il tuo numero di telefono.")
+        if self.responsabilita != "GENITORI":
+            return
+        if not (self.altro_nome.strip() and self.altro_cognome.strip()):
+            raise ValidationError("Scrivi nome e cognome dell'altro genitore.")
+        if not codice_fiscale_valido(self.altro_codice_fiscale):
+            raise ValidationError("Il codice fiscale dell'altro genitore non è valido.")
+        if self.altro_codice_fiscale in (self.codice_fiscale, self.genitore_codice_fiscale):
+            raise ValidationError("Il codice fiscale dell'altro genitore è già usato qui.")
+        if not (self.altro_cellulare.strip() and self.altro_email.strip()):
+            raise ValidationError("Scrivi telefono ed email dell'altro genitore.")
+
     def clean(self) -> None:
         from apps.anagrafica.servizi import codice_fiscale_valido
 
@@ -195,6 +235,8 @@ class RichiestaIscrizione(ModelloTracciato):
             raise ValidationError("La data di nascita non è valida.")
         if not codice_fiscale_valido(self.codice_fiscale):
             raise ValidationError("Il codice fiscale non è valido.")
+        if self.sesso not in ("M", "F"):
+            raise ValidationError("Indica il sesso.")
         if self.data_nascita and self.per_minore:
             if self.unita_id and self.unita.tipo == TipoUnita.COMUNITA_CAPI:
                 raise ValidationError("In Comunità Capi si iscrivono solo maggiorenni.")
@@ -206,6 +248,7 @@ class RichiestaIscrizione(ModelloTracciato):
                 raise ValidationError(
                     "Il codice fiscale del genitore è uguale a quello del figlio."
                 )
+            self._clean_responsabilita()
         elif self.data_nascita and not self.email:
             raise ValidationError("Scrivi l'email.")
 

@@ -52,6 +52,15 @@ class DatiIscrizione:
     genitore_nome: str = ""
     genitore_cognome: str = ""
     genitore_codice_fiscale: str = ""
+    # Since DEC-264, asked at once.
+    sesso: str = ""
+    responsabilita: str = ""
+    genitore_cellulare: str = ""
+    altro_nome: str = ""
+    altro_cognome: str = ""
+    altro_codice_fiscale: str = ""
+    altro_cellulare: str = ""
+    altro_email: str = ""
 
     def pulisci(self) -> DatiIscrizione:
         return DatiIscrizione(
@@ -63,6 +72,14 @@ class DatiIscrizione:
             genitore_nome=self.genitore_nome.strip(),
             genitore_cognome=self.genitore_cognome.strip(),
             genitore_codice_fiscale=self.genitore_codice_fiscale.strip().upper(),
+            sesso=self.sesso.strip().upper(),
+            responsabilita=self.responsabilita.strip(),
+            genitore_cellulare=self.genitore_cellulare.strip(),
+            altro_nome=self.altro_nome.strip(),
+            altro_cognome=self.altro_cognome.strip(),
+            altro_codice_fiscale=self.altro_codice_fiscale.strip().upper(),
+            altro_cellulare=self.altro_cellulare.strip(),
+            altro_email=self.altro_email.strip().lower(),
         )
 
 
@@ -145,6 +162,7 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
         socio.codice_socio = nuovo_codice_provvisorio()
         socio.save(update_fields=["codice_socio", "aggiornato_il"])
     proposti = richiesta.codice.dati_proposti if richiesta.codice else {}
+    _completa(socio, {"sesso": richiesta.sesso})
     _da_lista_attesa(socio, proposti, sua_email=not richiesta.per_minore)
     account = richiesta.utente
     if richiesta.per_minore:
@@ -157,6 +175,7 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
         RelazioneTutela.objects.get_or_create(
             tutore=genitore, minore=socio, defaults={"tipo": TipoTutela.GENITORE}
         )
+        _completa(genitore, {"cellulare": richiesta.genitore_cellulare})
         if proposti and not proposti.get("da_se"):
             _completa(genitore, {"cellulare": proposti.get("telefono", "")})
         titolare = genitore
@@ -186,6 +205,8 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
     richiesta.decisa_da = utente
     richiesta.scadenza_completamento = scadenza
     richiesta.save()
+    if richiesta.per_minore and richiesta.responsabilita:
+        _responsabilita_dalla_richiesta(richiesta)
     if proposti:  # in the card now: the copy on the code goes (DEC-263)
         richiesta.codice.dati_proposti = {}
         richiesta.codice.save(update_fields=["dati_proposti", "aggiornato_il"])
@@ -390,6 +411,31 @@ def _genitori(richiesta, chi_iscrive: Persona, unico: bool, altro: dict | None) 
     RelazioneTutela.objects.get_or_create(
         tutore=persona, minore=socio, defaults={"tipo": TipoTutela.GENITORE}
     )
+
+
+def _responsabilita_dalla_richiesta(richiesta: RichiestaIscrizione) -> None:
+    """At the approval, who holds the parental responsibility as the family said at the
+    request (DEC-264): the other parent, or one parent, or a guardian."""
+    chi_iscrive = genitore(richiesta)
+    if chi_iscrive is None:
+        return
+    if richiesta.responsabilita == "TUTORE":
+        richiesta.genitore_unico = True
+        richiesta.save(update_fields=["genitore_unico", "aggiornato_il"])
+        RelazioneTutela.objects.filter(tutore=chi_iscrive, minore=richiesta.persona).update(
+            tipo=TipoTutela.TUTORE
+        )
+        return
+    altro = None
+    if richiesta.responsabilita == "GENITORI":
+        altro = {
+            "nome": richiesta.altro_nome,
+            "cognome": richiesta.altro_cognome,
+            "codice_fiscale": richiesta.altro_codice_fiscale,
+            "cellulare": richiesta.altro_cellulare,
+            "email": richiesta.altro_email,
+        }
+    _genitori(richiesta, chi_iscrive, richiesta.responsabilita == "UNICO_GENITORE", altro)
 
 
 def persone_sospese(utente) -> set[int]:

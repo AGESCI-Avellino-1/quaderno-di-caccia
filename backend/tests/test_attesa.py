@@ -16,6 +16,14 @@ from tests.conftest import nato_anni_fa
 PUBBLICA = "/api/v1/lista-attesa"
 
 
+@pytest.fixture(autouse=True)
+def _senza_limiti():
+    """The public pages are rate-limited per address: every test starts afresh."""
+    from django.core.cache import cache
+
+    cache.clear()
+
+
 def _client(chi=None) -> Client:
     client = Client()
     if chi is not None:
@@ -179,6 +187,9 @@ def test_iscrizione_dalla_lista(in_lista, reparto, capo, django_capture_on_commi
         genitore_nome="Carla",
         genitore_cognome="Verdi",
         genitore_codice_fiscale="VRDCRL80A41A509X",
+        sesso="F",
+        responsabilita="UNICO_GENITORE",
+        genitore_cellulare="3330000099",
     )
     richiesta = iscrizioni.crea_richiesta(codice, dati, genitore)
     socio = iscrizioni.approva(richiesta, capo.utente, timezone.localdate() + timedelta(days=30))

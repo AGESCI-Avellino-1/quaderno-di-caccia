@@ -27,6 +27,15 @@ const dati = reactive({
   genitore_nome: '',
   genitore_cognome: '',
   genitore_codice_fiscale: '',
+  // Asked at once since DEC-264: sex, who holds the parental responsibility, contacts.
+  sesso: '',
+  responsabilita: '' as '' | 'GENITORI' | 'UNICO_GENITORE' | 'TUTORE',
+  genitore_cellulare: '',
+  altro_nome: '',
+  altro_cognome: '',
+  altro_codice_fiscale: '',
+  altro_cellulare: '',
+  altro_email: '',
 })
 const account = reactive({ email: '', password: '' })
 const verificaInviata = ref(false)
@@ -48,6 +57,8 @@ onMounted(async () => {
       nome: p.nome,
       cognome: p.cognome ?? '',
       data_nascita: p.data_nascita ?? '',
+      sesso: p.sesso ?? '',
+      genitore_cellulare: p.da_se ? '' : (p.telefono ?? ''),
       ...(p.da_se
         ? { email: p.email ?? '' }
         : { genitore_nome: p.contatto_nome ?? '', genitore_cognome: p.contatto_cognome ?? '' }),
@@ -67,6 +78,8 @@ async function invia() {
         genitore_nome: '',
         genitore_cognome: '',
         genitore_codice_fiscale: '',
+        responsabilita: '' as const,
+        genitore_cellulare: '',
       }
   const esito = await esegui(() => api.chiediIscrizione(props.codice, corpo))
   if (!esito) return
@@ -141,6 +154,14 @@ async function invia() {
             />
           </div>
           <div class="col-12 sm:col-6">
+            <label class="form-label small" for="isc-sesso">Sesso</label>
+            <select id="isc-sesso" v-model="dati.sesso" class="form-control" required>
+              <option value="" disabled>Scegli</option>
+              <option value="F">Femmina</option>
+              <option value="M">Maschio</option>
+            </select>
+          </div>
+          <div class="col-12 sm:col-6">
             <label class="form-label small" for="isc-cf">Codice fiscale</label>
             <input
               id="isc-cf"
@@ -165,7 +186,7 @@ async function invia() {
             <label class="form-label small" for="gen-cognome">Cognome</label>
             <input id="gen-cognome" v-model="dati.genitore_cognome" class="form-control" required />
           </div>
-          <div class="col-12">
+          <div class="col-12 sm:col-6">
             <label class="form-label small" for="gen-cf">Il tuo codice fiscale</label>
             <input
               id="gen-cf"
@@ -173,6 +194,99 @@ async function invia() {
               class="form-control"
               maxlength="16"
               autocapitalize="characters"
+              required
+            />
+          </div>
+          <div class="col-12 sm:col-6">
+            <label class="form-label small" for="gen-cell">Il tuo telefono</label>
+            <input
+              id="gen-cell"
+              v-model="dati.genitore_cellulare"
+              type="tel"
+              autocomplete="tel"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <span class="form-label small d-block">Chi ha la responsabilità genitoriale?</span>
+          <div class="form-field">
+            <input
+              id="resp-genitori"
+              v-model="dati.responsabilita"
+              class="radio"
+              type="radio"
+              value="GENITORI"
+              required
+            />
+            <label for="resp-genitori">Entrambi i genitori</label>
+          </div>
+          <div class="form-field">
+            <input
+              id="resp-unico"
+              v-model="dati.responsabilita"
+              class="radio"
+              type="radio"
+              value="UNICO_GENITORE"
+            />
+            <label for="resp-unico">Solo io (genitore con affidamento esclusivo)</label>
+          </div>
+          <div class="form-field">
+            <input
+              id="resp-tutore"
+              v-model="dati.responsabilita"
+              class="radio"
+              type="radio"
+              value="TUTORE"
+            />
+            <label for="resp-tutore">Io, come tutore</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset
+        v-if="perFiglio && dati.responsabilita === 'GENITORI'"
+        class="card card-body vstack gap-3"
+      >
+        <legend class="h6">L'altro genitore</legend>
+        <div class="row g-3">
+          <div class="col-12 sm:col-6">
+            <label class="form-label small" for="altro-nome">Nome</label>
+            <input id="altro-nome" v-model="dati.altro_nome" class="form-control" required />
+          </div>
+          <div class="col-12 sm:col-6">
+            <label class="form-label small" for="altro-cognome">Cognome</label>
+            <input id="altro-cognome" v-model="dati.altro_cognome" class="form-control" required />
+          </div>
+          <div class="col-12 sm:col-6">
+            <label class="form-label small" for="altro-cf">Codice fiscale</label>
+            <input
+              id="altro-cf"
+              v-model="dati.altro_codice_fiscale"
+              class="form-control"
+              maxlength="16"
+              autocapitalize="characters"
+              required
+            />
+          </div>
+          <div class="col-12 sm:col-6">
+            <label class="form-label small" for="altro-cell">Telefono</label>
+            <input
+              id="altro-cell"
+              v-model="dati.altro_cellulare"
+              type="tel"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-12">
+            <label class="form-label small" for="altro-email">Email</label>
+            <input
+              id="altro-email"
+              v-model="dati.altro_email"
+              type="email"
+              class="form-control"
               required
             />
           </div>
@@ -210,7 +324,8 @@ async function invia() {
       </fieldset>
 
       <p class="form-text mb-0">
-        Gli altri dati e i moduli firmati si completano dopo che i capi hanno accolto la richiesta.
+        Residenza, luogo di nascita e moduli firmati si completano dopo che i capi hanno accolto la
+        richiesta.
       </p>
       <button type="submit" class="btn btn-solid theme-primary" :disabled="inCorso">
         Invia la richiesta

@@ -163,6 +163,15 @@ class DatiIscrizioneIn(Schema):
     genitore_nome: str = ""
     genitore_cognome: str = ""
     genitore_codice_fiscale: str = ""
+    # Since DEC-264, asked at once.
+    sesso: str = ""
+    responsabilita: str = ""
+    genitore_cellulare: str = ""
+    altro_nome: str = ""
+    altro_cognome: str = ""
+    altro_codice_fiscale: str = ""
+    altro_cellulare: str = ""
+    altro_email: str = ""
 
 
 class EsitoRichiesta(Schema):
@@ -196,8 +205,10 @@ def info_codice(request, codice: str):
                 "nome",
                 "cognome",
                 "data_nascita",
+                "sesso",
                 "contatto_nome",
                 "contatto_cognome",
+                "telefono",
                 "email",
                 "da_se",
             )

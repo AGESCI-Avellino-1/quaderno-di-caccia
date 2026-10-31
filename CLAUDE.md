@@ -168,7 +168,7 @@ check a class exists in `frontend/node_modules/bootstrap/dist/css/bootstrap.css`
 short: colours via `theme-*` (`btn btn-solid theme-primary`, `btn-outline`,
 `alert theme-danger`, `badge theme-success`); text `fg-*` (`fg-2` for secondary text);
 responsive prefixes `md:col-6`; spacing scale 1, 3, 5, 7, 12 (= v5 1–5); `<select
-class="form-control">`; checkboxes are `input.check` inside `.form-field`, a switch is a
+class="form-control">`; checkboxes are `input.check` inside `.form-field` (radio buttons `input.radio`), a switch is a
 wrapper, `<div class="switch"><input type="checkbox" role="switch"></div>`, then the
 label (on the input itself the browser draws its own checkbox on top); `.alert` is a flex
 box, so wrap mixed content in one `<div>`; the theme is
@@ -290,6 +290,9 @@ implements them:
   codice socio `9` + 9 digits (`anagrafica.servizi.nuovo_codice_provvisorio`); the import
   replaces it by codice fiscale. `policy.e_capo_in_attesa`: a capo with a provisional
   code sees no sensitive data (`_vede`, staff checks, camp, exceptions, access log).
+  Since DEC-264 the request already asks the child's sex and, for a minor, who holds the
+  parental responsibility (both parents, one, a guardian) with contacts; applied at
+  approval (`servizi._responsabilita_dalla_richiesta`).
   Completion by a deadline set at approval (`servizi.completa`, `mancanti`: the data
   BuonaStrada requires, the parents single or both, own mobile and email for adults and
   for minors in Clan/Fuoco or Noviziato); past it

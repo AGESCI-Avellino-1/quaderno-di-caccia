@@ -50,7 +50,6 @@ const tipi = ref<TipoQuota[]>([])
 const unita = ref<Unita[]>([])
 const unitaScelta = ref<number | null>(null)
 const situazione = ref<RigaSituazione[]>([])
-const linkPagamento = ref('')
 const coniugi = ref<Coniugi[]>([])
 const persone = ref<PersonaElenco[]>([])
 const nuoviConiugi = reactive({ a: '', b: '' })
@@ -88,7 +87,6 @@ onMounted(async () => {
   unita.value = (await esegui(() => api.unita())) ?? []
   unitaScelta.value = unitaVisibili.value[0]?.id ?? null
   if (gestisce.value) {
-    linkPagamento.value = (await esegui(() => api.impostazioniQuote()))?.link_pagamento ?? ''
     coniugi.value = (await esegui(() => api.coniugi())) ?? []
     persone.value = (await esegui(() => api.persone())) ?? []
   }
@@ -136,11 +134,6 @@ async function emetti(tipo: TipoQuota) {
     ? `${tipo.nome}: ${esito.emesse} quote emesse.`
     : `${tipo.nome}: nessuna quota nuova da emettere.`
   await Promise.all([caricaTipi(), caricaSituazione()])
-}
-
-async function salvaLink() {
-  const fatto = await esegui(() => api.salvaImpostazioniQuote(linkPagamento.value))
-  if (fatto) messaggio.value = 'Link di pagamento salvato.'
 }
 
 async function aggiungiConiugi() {
@@ -414,26 +407,10 @@ const scadenzaTipo = (t: TipoQuota) =>
         </ul>
       </section>
 
-      <section class="mb-7">
-        <h2 class="h5">Link di pagamento</h2>
-        <form class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="salvaLink">
-          <div class="flex-grow-1">
-            <label class="form-label small" for="link-pagamento">
-              Dove le famiglie possono pagare (es. paypal.me): lo vedono nella pagina delle quote
-            </label>
-            <input
-              id="link-pagamento"
-              v-model="linkPagamento"
-              type="url"
-              class="form-control form-control-sm"
-              placeholder="https://"
-            />
-          </div>
-          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-            Salva
-          </button>
-        </form>
-      </section>
+      <p class="small fg-2 mb-7">
+        Il link dove le famiglie possono pagare si imposta nelle
+        <RouterLink to="/impostazioni">Impostazioni</RouterLink>.
+      </p>
 
       <section>
         <h2 class="h5">Coniugi</h2>

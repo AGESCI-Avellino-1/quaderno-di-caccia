@@ -39,7 +39,8 @@ async function togliLogo() {
 }
 
 const CAMPI: [keyof Intestazione, string, string][] = [
-  ['denominazione_sociale', 'Denominazione', 'AGESCI Gruppo Avellino 1'],
+  ['denominazione', 'Nome del gruppo in BuonaStrada', 'AVELLINO 1'],
+  ['denominazione_sociale', 'Denominazione sociale', 'AGESCI Gruppo Avellino 1'],
   ['codice_fiscale', 'Codice fiscale', ''],
   ['sede_indirizzo', 'Sede: via e numero', ''],
   ['sede_cap', 'CAP', ''],
@@ -55,11 +56,12 @@ const CAMPI: [keyof Intestazione, string, string][] = [
 </script>
 
 <template>
-  <section v-if="dati" class="mt-5">
+  <section v-if="dati" class="mb-7">
     <h2 class="h5">Intestazione delle stampe</h2>
     <p class="small fg-2">
-      Compare sui moduli da firmare (come la scheda sanitaria) e sulle ricevute. RUNTS è il Registro
-      unico nazionale del Terzo settore.
+      I dati ufficiali del gruppo: compaiono sui moduli da firmare (come la scheda sanitaria) e
+      sulle ricevute, non nel titolo del sito. RUNTS è il Registro unico nazionale del Terzo
+      settore.
     </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <div v-if="esito" class="alert theme-success small" role="status">

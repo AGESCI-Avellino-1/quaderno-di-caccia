@@ -81,3 +81,8 @@ body {
     background-color: p.$agesci-bianco;
   }
 }
+
+// Footer: the group's line above the fixed one (DEC-247).
+.qdc-piede {
+  border-top: 1px solid var(--bs-border-color);
+}

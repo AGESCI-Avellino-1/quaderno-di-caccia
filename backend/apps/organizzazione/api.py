@@ -718,6 +718,9 @@ def revoca_deroga(request, deroga_id: int):
 
 
 class IntestazioneIO(Schema):
+    # The official name for the prints, not the one in the title (DEC-245); None
+    # leaves it as it is (older clients).
+    denominazione: str | None = None
     denominazione_sociale: str = ""
     codice_fiscale: str = ""
     sede_indirizzo: str = ""
@@ -738,7 +741,9 @@ class IntestazioneOut(IntestazioneIO):
     puo_modificare: bool = False
 
 
-CAMPI_INTESTAZIONE = [c for c in IntestazioneIO.model_fields if c != "runts_data"]
+CAMPI_INTESTAZIONE = [
+    c for c in IntestazioneIO.model_fields if c not in ("runts_data", "denominazione")
+]
 
 
 def _intestazione(request) -> dict:
@@ -747,6 +752,7 @@ def _intestazione(request) -> dict:
         return {"puo_modificare": False}
     return {
         **{c: getattr(gruppo, c) for c in CAMPI_INTESTAZIONE},
+        "denominazione": gruppo.denominazione,
         "runts_data": gruppo.runts_data,
         "logo": bool(gruppo.logo),
         "puo_modificare": policy.e_capogruppo(request.auth),
@@ -775,6 +781,10 @@ def salva_intestazione(request, dati: IntestazioneIO):
     for campo in CAMPI_INTESTAZIONE:
         setattr(gruppo, campo, getattr(dati, campo).strip())
     gruppo.sede_provincia = gruppo.sede_provincia.upper()
+    if dati.denominazione is not None:
+        if not dati.denominazione.strip():
+            raise HttpError(400, "Scrivi la denominazione del gruppo.")
+        gruppo.denominazione = dati.denominazione.strip()
     gruppo.runts_data = dati.runts_data
     try:
         gruppo.full_clean()

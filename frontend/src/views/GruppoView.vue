@@ -6,7 +6,6 @@ import { api, type IncarichiGruppo } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import FineAnno from '@/components/FineAnno.vue'
-import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
@@ -77,7 +76,6 @@ const sessione = useSessioneStore()
           @cambiato="carica"
         />
       </div>
-      <IntestazioneGruppo />
       <FineAnno v-if="sessione.profilo?.capogruppo" />
     </template>
   </section>

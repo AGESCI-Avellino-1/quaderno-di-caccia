@@ -54,6 +54,38 @@ export interface Profilo {
   impersonazione: { impersonato: string; email: string; scade_il: string } | null
   /** A ragazzo who helps run imprese (CSQ, Consiglio d'impresa): their reparto. */
   imprese_reparto: number | null
+  /** The settings page: capigruppo, technical administrator, group treasurer. */
+  vede_impostazioni?: boolean
+}
+
+/** What every page needs for its title and footer, also before the login (DEC-246). */
+export interface Sito {
+  nome_sito: string
+  sigla_sito: string
+  gruppo: string
+  sigla_gruppo: string
+  anno: string
+  titolo_completo: string
+  titolo_breve: string
+  riga_piede: string
+}
+
+export interface ImpostazioniSito {
+  nome_sito: string
+  sigla_sito: string
+  nome_gruppo: string
+  sigla_gruppo: string
+  titolo_completo: string
+  titolo_breve: string
+  riga_piede: string
+}
+
+export interface Impostazioni extends ImpostazioniSito {
+  /** The group's name in the title when nome_gruppo is empty. */
+  gruppo_predefinito: string
+  puo_modificare: boolean
+  puo_modificare_intestazione: boolean
+  puo_modificare_pagamenti: boolean
 }
 
 export interface Impersonazione {
@@ -677,6 +709,8 @@ export const percorsoNote = (persona: number) => `/api/v1/persone/${persona}/not
 export const percorsoNota = (nota: number) => `/api/v1/note/${nota}`
 
 export interface Intestazione {
+  /** The official name for the prints, not the one in the title (DEC-245). */
+  denominazione: string
   denominazione_sociale: string
   codice_fiscale: string
   sede_indirizzo: string
@@ -1950,6 +1984,10 @@ export const percorsoSanitarie = (persona: number) => `/api/v1/persone/${persona
 
 export const api = {
   profilo: () => richiesta<Profilo>('/api/v1/io'),
+  sito: () => richiesta<Sito>('/api/v1/sito'),
+  impostazioni: () => richiesta<Impostazioni>('/api/v1/impostazioni'),
+  salvaImpostazioniSito: (dati: ImpostazioniSito) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/sito', { metodo: 'PUT', corpo: dati }),
   unita: (tutte = false) => richiesta<Unita[]>(`/api/v1/unita${tutte ? '?tutte=true' : ''}`),
   dettaglioUnita: (id: number) => richiesta<UnitaDettaglio>(`/api/v1/unita/${id}`),
   creaUnita: (dati: UnitaIn) => richiesta<Unita>('/api/v1/unita', { metodo: 'POST', corpo: dati }),

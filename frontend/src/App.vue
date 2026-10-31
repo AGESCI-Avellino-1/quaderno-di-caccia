@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import AggiornamentoApp from '@/components/AggiornamentoApp.vue'
 import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
 import BarraOffline from '@/components/BarraOffline.vue'
+import PiePagina from '@/components/PiePagina.vue'
 import { useBloccoAutomatico } from '@/composables/useBloccoAutomatico'
 import {
   EVENTO_CANCELLAZIONE,
@@ -13,8 +14,19 @@ import {
   type MotivoCancellazione,
 } from '@/sicurezza/cassaforte'
 import { useSessioneStore } from '@/stores/sessione'
+import { useSitoStore } from '@/stores/sito'
 
 const sessione = useSessioneStore()
+const sito = useSitoStore()
+
+// The browser tab shows the short title (DEC-246).
+watchEffect(() => {
+  document.title = sito.titoloBreve
+})
+// Once unlocked, read it again so the device keeps a copy for offline starts.
+watch(stato, (nuovo) => {
+  if (nuovo === 'sbloccata') void sito.carica()
+})
 const router = useRouter()
 
 useBloccoAutomatico()
@@ -45,7 +57,7 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
     <nav class="container d-flex align-items-center gap-5 py-3">
       <RouterLink to="/" class="d-flex align-items-center gap-3 fw-bold">
         <img src="/icons/icon-192.png" alt="" width="32" height="32" class="rounded" />
-        <span>Quaderno di Caccia</span>
+        <span>{{ sito.titoloCompleto }}</span>
       </RouterLink>
       <template v-if="sessione.autenticato && stato !== 'bloccata'">
         <RouterLink to="/persone" class="ms-auto">Persone</RouterLink>
@@ -75,5 +87,6 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
   <main class="container py-5">
     <RouterView />
   </main>
+  <PiePagina />
   <AggiornamentoApp />
 </template>

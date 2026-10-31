@@ -20,7 +20,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 5 | Fascicolo completo | ✅ | a blocchi (dettaglio sotto): scheda medica con stampa, note e regole, fascicolo del ragazzo e dei capi, fine anno e archivio |
 | 6 | Dopo | ✅ | a blocchi: 6.1 bacheca ✅ (DEC-218…DEC-220, provata nel browser il 30/10), 6.2 estratto conto ✅ (DEC-221…DEC-224, provato nel browser il 30/10 con un estratto sintetico; il file vero della banca si legge), 6.3 Carta di clan ✅ (DEC-227…DEC-229, provata nel browser il 30/10). Note: estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
-| 8 | Realizzazione documentazione di uso | 🚧 | analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239); blocco 1 ✅ (30/10): impianto Sphinx, PDF, dati di prova e screenshot automatici, introduzione, primo accesso e protezione del telefono del genitore; blocco 2 ✅ (30/10): il resto della parte genitore (manca il capitolo sulle iscrizioni agli eventi BuonaCaccia); poi ragazzi, capi, capigruppo; da valutare l'account Read the Docs. Era: installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
+| 8 | Realizzazione documentazione di uso | 🚧 | in pausa dal 31/10 per la nuova navigazione, le impostazioni e i modelli delle email (blocchi N.1…N.5 sotto, DEC-241…DEC-251); analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239); blocco 1 ✅ (30/10): impianto Sphinx, PDF, dati di prova e screenshot automatici, introduzione, primo accesso e protezione del telefono del genitore; blocco 2 ✅ (30/10): il resto della parte genitore (manca il capitolo sulle iscrizioni agli eventi BuonaCaccia); poi ragazzi, capi, capigruppo; da valutare l'account Read the Docs. Era: installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
 
 ## Prossimi passi
 
@@ -100,6 +100,21 @@ repository).
 | 5.3 | Fascicolo del ragazzo: foto profilo storicizzata, allegati alla Progressione, autorizzazioni, presenze per anno, report per i passaggi | DEC-38, DEC-41, DEC-42, DEC-200…DEC-205 | ✅ provato nel browser il 30/10 (foto ritagliata, allegato, fascicolo) |
 | 5.4 | Fascicolo dei capi: anni di servizio, unità e ruoli, formazione inserita a mano | DEC-47, DEC-134, DEC-206…DEC-208 | ✅ provato nel browser il 30/10 |
 | 5.5 | Fine anno e uscita: congelamento e riapertura dell'anno, archiviazione dopo due anni con caricamento automatico sul Drive del gruppo, esportazione e importazione del fascicolo tra gruppi | DEC-44…DEC-46, DEC-196, DEC-209…DEC-217 | ✅ provato nel browser il 30/10 (chiusura e riapertura); il caricamento sul Drive vero va provato all'installazione |
+
+### Navigazione, impostazioni ed email (prima di continuare il manuale)
+
+Appunti del maintainer del 31/10/2026, dopo un giro di prova con i dati del manuale; decisioni
+nell'analisi come DEC-241…DEC-251 (sezione «Navigazione, impostazioni ed email»). Il manuale
+(fase 8) è in pausa finché questi blocchi non sono fatti: le schermate e i passi dei capitoli
+già scritti cambiano. Un commit per blocco, provato nel browser.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| N.1 | Impostazioni (capigruppo e amministratore tecnico): nome e sigla del sito e del gruppo, separati dai dati ufficiali per le stampe; titolo completo e breve con segnaposto; riga del piè di pagina sopra quella fissa; intestazione delle stampe e link di pagamento spostati qui dalle quote | DEC-245…DEC-248 | ✅ provato nel browser il 31/10 (titoli, piè di pagina, segnaposto sbagliato rifiutato) |
+| N.2 | Menu laterale (sidebar del tema 3.0.0a2, icone Bootstrap Icons incluse nell'app per l'offline), gruppi e voci secondo i permessi, avatar con il menu del profilo, homepage a gruppi con i contatori, breadcrumb con la tenda, nomi nuovi e pagina Privacy | DEC-241…DEC-244, DEC-251 | ⏳ |
+| N.3 | Modalità di prova delle email con Mailpit: servizio compose, proxy riservato all'amministratore tecnico, permesso del server (`QDC_MAILPIT_CONSENTITO`, sempre in sviluppo), avviso a tutti i collegati e sulla pagina di accesso | DEC-249 | ⏳ |
+| N.4 | Modelli delle email: tutte le email (anche quelle di allauth) da un registro di modelli con segnaposto, editor di testo formattato, HTML ripulito sul server, testo semplice ricavato, segnaposto indispensabili controllati al salvataggio, ritorno al modello di base, anteprima | DEC-250 | ⏳ |
+| N.5 | Manuale: rigenerare le schermate e rivedere i passi dei capitoli già scritti (introduzione, genitore) per la nuova navigazione | DEC-238 | ⏳ |
 
 ### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
 

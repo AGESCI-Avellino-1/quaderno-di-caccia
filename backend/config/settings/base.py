@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "apps.archivio",
     "apps.bacheca",
     "apps.banca",
+    "apps.impostazioni",
 ]
 
 MIDDLEWARE = [

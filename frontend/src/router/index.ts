@@ -3,6 +3,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import * as cassaforte from '@/sicurezza/cassaforte'
 import { controllaRevoca } from '@/sicurezza/dispositivo'
 import { useSessioneStore } from '@/stores/sessione'
+import { useSitoStore } from '@/stores/sito'
+
+import { PAGINE } from './pagine'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -297,6 +300,13 @@ const router = createRouter({
     },
     { path: '/modifiche', name: 'modifiche', component: () => import('@/views/CodaView.vue') },
     {
+      // Capigruppo, the technical administrator, the group treasurer: the API decides
+      // what each one changes (DEC-248).
+      path: '/impostazioni',
+      name: 'impostazioni',
+      component: () => import('@/views/ImpostazioniView.vue'),
+    },
+    {
       path: '/:percorso(.*)*',
       name: 'non-trovata',
       component: () => import('@/views/NonTrovataView.vue'),
@@ -312,6 +322,7 @@ router.beforeEach(async (verso) => {
     await cassaforte.inizializza() // also wipes data past the offline expiry (DEC-97)
     await controllaRevoca() // a lost phone wipes itself here, before the PIN is asked
     inizializzata = true
+    void useSitoStore().carica() // public: the login page has the title too
   }
   // Data just wiped (revocation, expiry, wrong PINs): to the login page, saying why.
   const motivo = cassaforte.ultimoMotivo.value
@@ -345,6 +356,11 @@ router.beforeEach(async (verso) => {
   if (verso.meta.richiede === 'capo' && !sessione.capo) return { name: 'home' }
   if (verso.meta.richiede === 'importazione' && !sessione.puoImportare) return { name: 'home' }
   return true
+})
+
+// The page name for the [Pagina corrente] placeholder of the title (DEC-246).
+router.afterEach((verso) => {
+  useSitoStore().pagina = PAGINE[String(verso.name)]?.titolo ?? ''
 })
 
 export default router

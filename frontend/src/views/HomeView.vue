@@ -247,6 +247,12 @@ onMounted(async () => {
           <strong>La mia scheda</strong>
         </RouterLink>
       </div>
+      <div v-if="sessione.profilo.vede_impostazioni" class="col-12 md:col-6">
+        <RouterLink to="/impostazioni" class="card card-body h-100 text-decoration-none">
+          <strong>Impostazioni</strong>
+          <span class="fg-2 small">Nome e titolo del sito, intestazione delle stampe</span>
+        </RouterLink>
+      </div>
     </div>
     <p class="small mt-7">
       <RouterLink to="/dispositivi">Dispositivi e protezione di questo telefono</RouterLink>

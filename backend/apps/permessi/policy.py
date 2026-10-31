@@ -1475,3 +1475,17 @@ def puo_approvare_carta_clan(user, unita: Unita) -> bool:
     if e_capo_in_attesa(user) or unita.tipo != TipoUnita.CLAN_FUOCO:
         return False
     return e_staff(user, unita) or e_capogruppo(user)
+
+
+# --- Settings (DEC-248) ---------------------------------------------------------------------
+
+
+def puo_modificare_impostazioni(user) -> bool:
+    """Names, titles, footer, email templates: the capigruppo and the technical
+    administrator (DEC-248)."""
+    return e_capogruppo(user) or e_amministratore(user)
+
+
+def vede_impostazioni(user) -> bool:
+    """The settings page: also the group treasurer, for the payment link alone."""
+    return puo_modificare_impostazioni(user) or puo_gestire_quote(user)

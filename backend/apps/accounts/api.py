@@ -78,6 +78,8 @@ class Profilo(Schema):
     impersonazione: ImpersonazioneInCorso | None
     # A ragazzo who helps run imprese (CSQ, Consiglio d'impresa): their reparto (DEC-187).
     imprese_reparto: int | None
+    # The settings page (DEC-248): capigruppo, technical administrator, group treasurer.
+    vede_impostazioni: bool
 
 
 @router.get("/io", response=Profilo)
@@ -125,6 +127,7 @@ def profilo(request):
         ),
         "impersonazione": _impersonazione(request),
         "imprese_reparto": policy.reparto_imprese(user),
+        "vede_impostazioni": policy.vede_impostazioni(user),
     }
 
 

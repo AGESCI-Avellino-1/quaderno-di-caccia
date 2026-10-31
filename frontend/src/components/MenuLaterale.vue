@@ -20,9 +20,9 @@ const router = useRouter()
 const { inCoda, conErrori } = useRete()
 
 const cassetto = ref<HTMLDialogElement | null>(null)
-// Groups closed by the user, to keep the menu short; in memory only (no device storage
-// for the app's state). The group of the page shown opens by itself.
-const chiusi = ref(new Set<string>())
+// An accordion (DEC-241): every group starts closed and one opens at a time; the group
+// of the page shown opens by itself. In memory only (no device storage for app state).
+const gruppoAperto = ref<string | null>(null)
 const ridotto = ref(false)
 const profiloAperto = ref(false)
 
@@ -61,32 +61,41 @@ function suClic(evento: MouseEvent) {
 
 const percorsoDi = (v: Voce) => (v.esterna ? null : router.resolve(v.to).path)
 
-function apriGruppoDellaPagina() {
-  const g = gruppi.value.find((g) => g.voci.some((v) => percorsoDi(v) === rotta.path))
-  if (g && chiusi.value.has(g.chiave)) {
-    const altri = new Set(chiusi.value)
-    altri.delete(g.chiave)
-    chiusi.value = altri
+/** The group holding the page shown, or a page under one of its entries. */
+function gruppoDellaPagina(): string | null {
+  let migliore: { chiave: string; lunghezza: number } | null = null
+  for (const g of gruppi.value) {
+    if (singola(g)) continue
+    for (const v of g.voci) {
+      const p = percorsoDi(v)
+      if (!p || p === '/') continue
+      const dentro = rotta.path === p || rotta.path.startsWith(`${p}/`)
+      if (dentro && (!migliore || p.length > migliore.lunghezza)) {
+        migliore = { chiave: g.chiave, lunghezza: p.length }
+      }
+    }
   }
+  return migliore?.chiave ?? null
 }
 
 function alterna(chiave: string) {
-  const nuovi = new Set(chiusi.value)
-  if (nuovi.has(chiave)) nuovi.delete(chiave)
-  else nuovi.add(chiave)
-  chiusi.value = nuovi
+  gruppoAperto.value = gruppoAperto.value === chiave ? null : chiave
 }
 
-// Reduced to icons, every entry shows: the group titles are hidden.
-const aperto = (g: Gruppo) => ridotto.value || !chiusi.value.has(g.chiave)
+const aperto = (g: Gruppo) => gruppoAperto.value === g.chiave
+
+/** Counters of a closed group, shown on its title. */
+const contatoreDi = (g: Gruppo) => g.voci.reduce((somma, v) => somma + (v.contatore ?? 0), 0)
 
 watch(
   () => rotta.fullPath,
   () => {
     chiudi()
     profiloAperto.value = false
-    apriGruppoDellaPagina()
+    const g = gruppoDellaPagina()
+    if (g) gruppoAperto.value = g
   },
+  { immediate: true },
 )
 
 function bloccaOra() {
@@ -141,18 +150,24 @@ defineExpose({ apri })
         </RouterLink>
       </li>
       <template v-for="g in gruppi" :key="g.chiave">
-        <li v-if="!singola(g)" class="ag-sidebar__section-title">
+        <li v-if="!singola(g)">
           <button
             type="button"
-            class="qdc-titolo-gruppo"
+            class="ag-sidebar__nav-link qdc-voce-pulsante"
+            :class="{ 'qdc-gruppo-aperto': aperto(g) }"
             :aria-expanded="aperto(g)"
-            :tabindex="ridotto ? -1 : 0"
+            :title="g.titolo"
             @click="alterna(g.chiave)"
           >
+            <Icona :nome="g.icona" />
             <span class="ag-sidebar__label">{{ g.titolo }}</span>
+            <span v-if="!aperto(g) && contatoreDi(g)" class="badge theme-warning ms-auto">{{
+              contatoreDi(g)
+            }}</span>
             <Icona
               :nome="aperto(g) ? 'chevron-up' : 'chevron-down'"
-              class="ag-sidebar__label ms-auto"
+              class="ag-sidebar__label qdc-freccia"
+              :class="{ 'ms-auto': aperto(g) || !contatoreDi(g) }"
             />
           </button>
         </li>
@@ -163,7 +178,7 @@ defineExpose({ apri })
           <a
             v-if="v.esterna"
             :href="String(v.to)"
-            class="ag-sidebar__nav-link"
+            class="ag-sidebar__nav-link qdc-nel-gruppo"
             :title="v.nome"
             target="_blank"
             rel="noopener"
@@ -174,7 +189,7 @@ defineExpose({ apri })
             v-else
             :to="v.to"
             class="ag-sidebar__nav-link"
-            :class="{ 'qdc-sottovoce': v.sottovoce }"
+            :class="{ 'qdc-nel-gruppo': !singola(g), 'qdc-sottovoce': v.sottovoce }"
             active-class=""
             exact-active-class="active"
             :title="v.nome"

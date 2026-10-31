@@ -146,19 +146,23 @@ body {
   height: 1.15rem;
 }
 
-// An entry that is a section of the one above (BuonaCaccia under Eventi).
-.ag-sidebar__nav-link.qdc-sottovoce {
-  padding-left: 2.25rem;
+// Entries inside a group sit under its title; a section of the entry above (BuonaCaccia
+// under Eventi) one step further. Reduced to icons, everything aligns.
+.ag-sidebar__nav-link.qdc-nel-gruppo {
+  padding-left: 2rem;
   font-size: 0.85rem;
 }
 
-.ag-sidebar--collapsed .ag-sidebar__nav-link.qdc-sottovoce {
+.ag-sidebar__nav-link.qdc-sottovoce {
+  padding-left: 3rem;
+}
+
+.ag-sidebar--collapsed .ag-sidebar__nav-link.qdc-nel-gruppo {
   padding-left: 1rem;
 }
 
-.ag-sidebar--collapsed .ag-sidebar__section-title {
-  padding: 0.5rem 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+.ag-sidebar__nav-link.qdc-gruppo-aperto {
+  opacity: 1;
 }
 
 // Lock and logout are buttons that look like the links around them.
@@ -200,23 +204,4 @@ body {
 
 .qdc-testo-email {
   white-space: pre-wrap;
-}
-
-// A group title that opens and closes its entries (DEC-241).
-.qdc-titolo-gruppo {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 0;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.qdc-titolo-gruppo:hover {
-  color: var(--ag-on-primary);
 }

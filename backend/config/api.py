@@ -8,6 +8,7 @@ from ninja.security import django_auth
 from apps.accounts.api import router as accounts_router
 from apps.anagrafica.api import router as anagrafica_router
 from apps.archivio.api import router as archivio_router
+from apps.attesa.api import router as attesa_router
 from apps.bacheca.api import router as bacheca_router
 from apps.banca.api import router as banca_router
 from apps.buonacaccia.api import router as buonacaccia_router
@@ -59,3 +60,4 @@ api.add_router("/", archivio_router)
 api.add_router("/", bacheca_router)
 api.add_router("/", banca_router)
 api.add_router("/", impostazioni_router)
+api.add_router("/", attesa_router)

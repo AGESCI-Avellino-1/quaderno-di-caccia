@@ -140,6 +140,16 @@ con la sua sezione del manuale. Decisioni nell'analisi quando confermate.
 | L.5 | Promemoria dei due anni (contati da quando si raggiunge l'età minima di un'unità del gruppo), uscita dopo 30 giorni senza risposta | DEC-262, DEC-263 | ⏳ |
 | L.6 | Manuale: la sezione della lista d'attesa (famiglie e capi) | DEC-238 | ⏳ |
 
+### Privacy policy, termini e cookie (in questa sessione, dopo la lista d'attesa)
+
+Richiesta del maintainer del 31/10/2026.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| P.1 | Privacy policy: pagina pubblica con un testo di base precompilato, che capigruppo e amministratore tecnico modificano con l'editor nelle Impostazioni; link nel piè di pagina e dal modulo della lista d'attesa | — | ⏳ |
+| P.2 | Termini e condizioni: come la privacy policy | — | ⏳ |
+| P.3 | Cookie banner (l'app usa solo cookie tecnici: da decidere con il maintainer se solo informativo) | — | ⏳ |
+
 ### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
 
 Argomenti da spiegare bene ai capi, perché non sono chiari a tutti:

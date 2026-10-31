@@ -47,6 +47,9 @@ class CodiceIscrizione(ModelloTracciato):
     creato_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    # A personal code from the waiting list (DEC-261): its data, to fill in the form and,
+    # at the approval, the new member's card; emptied then.
+    dati_proposti = models.JSONField(default=dict, blank=True)
 
     class Meta:
         verbose_name = "codice di iscrizione"

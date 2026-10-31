@@ -1518,3 +1518,30 @@ def unita_di_servizio(user) -> QuerySet[Unita]:
         .distinct()
         .order_by("tipo", "progressivo")
     )
+
+
+# --- Waiting list (DEC-256…DEC-263) ---------------------------------------------------------
+
+
+def vede_lista_attesa(user) -> bool:
+    """The Co.Ca. decides who joins: every capo, not one still waiting for BuonaStrada
+    (DEC-259, DEC-123)."""
+    return e_capo_censito(user) and not e_capo_in_attesa(user)
+
+
+def puo_gestire_lista_attesa(user, unita: Unita | None = None) -> bool:
+    """Put someone on the list, mark them contacted, enrol them: the capigruppo, and the
+    staff of the unit concerned (any unit's staff when none is given) (DEC-258,
+    DEC-261)."""
+    if not vede_lista_attesa(user):
+        return False
+    if e_capogruppo(user):
+        return True
+    if unita is None:
+        return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+    return e_staff(user, unita)
+
+
+def puo_modificare_eta_unita(user, unita: Unita) -> bool:
+    """The ages of a unit for the waiting list (DEC-260): its staff and the capigruppo."""
+    return e_capogruppo(user) or e_staff(user, unita)

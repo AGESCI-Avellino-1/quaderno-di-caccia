@@ -107,6 +107,26 @@ def _persona(nome: str, cognome: str, codice_fiscale: str, **altri) -> Persona:
 
 
 @transaction.atomic
+def _completa(persona: Persona, valori: dict) -> None:
+    """Fill in what the card does not have yet; never overwrite."""
+    cambiati = [c for c, v in valori.items() if v and not getattr(persona, c)]
+    for campo in cambiati:
+        setattr(persona, campo, valori[campo])
+    if cambiati:
+        persona.save(update_fields=[*cambiati, "aggiornato_il"])
+
+
+def _da_lista_attesa(socio: Persona, proposti: dict, *, sua_email: bool) -> None:
+    """The data given on the waiting list (DEC-261) into the new member's card."""
+    if not proposti:
+        return
+    valori = {c: proposti.get(c, "") for c in ("sesso", "luogo_nascita", "indirizzo", "comune")}
+    valori |= {"provincia": proposti.get("provincia", ""), "cap": proposti.get("cap", "")}
+    if proposti.get("da_se") and sua_email:
+        valori["cellulare"] = proposti.get("telefono", "")
+    _completa(socio, valori)
+
+
 def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
     """The member enters the unit with a provisional codice socio; the family completes
     the data and the forms by `scadenza`."""
@@ -124,6 +144,8 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
     if not socio.codice_socio:
         socio.codice_socio = nuovo_codice_provvisorio()
         socio.save(update_fields=["codice_socio", "aggiornato_il"])
+    proposti = richiesta.codice.dati_proposti if richiesta.codice else {}
+    _da_lista_attesa(socio, proposti, sua_email=not richiesta.per_minore)
     account = richiesta.utente
     if richiesta.per_minore:
         genitore = _persona(
@@ -135,6 +157,8 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
         RelazioneTutela.objects.get_or_create(
             tutore=genitore, minore=socio, defaults={"tipo": TipoTutela.GENITORE}
         )
+        if proposti and not proposti.get("da_se"):
+            _completa(genitore, {"cellulare": proposti.get("telefono", "")})
         titolare = genitore
     else:
         titolare = socio
@@ -162,6 +186,9 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
     richiesta.decisa_da = utente
     richiesta.scadenza_completamento = scadenza
     richiesta.save()
+    if proposti:  # in the card now: the copy on the code goes (DEC-263)
+        richiesta.codice.dati_proposti = {}
+        richiesta.codice.save(update_fields=["dati_proposti", "aggiornato_il"])
     aggiorna_stato(richiesta)  # someone already known to the app may need nothing more
     _scrivi(
         richiesta,

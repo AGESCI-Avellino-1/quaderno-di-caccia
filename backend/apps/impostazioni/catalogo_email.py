@@ -17,6 +17,7 @@ PERSONA = Segnaposto("Persona", "nome e cognome della persona", "Giulia Rossi")
 NOME = Segnaposto("Nome", "il nome della persona", "Giulia")
 UNITA = Segnaposto("Unità", "l'unità", "Reparto Antares (N1)")
 EVENTO = Segnaposto("Evento", "il titolo dell'evento", "Uscita di reparto")
+RAGAZZO = Segnaposto("Ragazzo", "nome e cognome del ragazzo", "Giulia Rossi")
 MOTIVO = Segnaposto("Motivo", "il motivo scritto dal capo", "Il reparto è al completo.", True)
 
 
@@ -157,6 +158,73 @@ _TIPI = [
         "[Nome]. Fino a quando non la completi, nell'app vedi solo l'iscrizione e non la "
         "sua scheda:<br>[Link]</p>",
         (NOME, _scadenza("il termine passato"), _link("la pagina dell'iscrizione")),
+    ),
+    # --- Waiting list (DEC-256…DEC-263) -------------------------------------------------------
+    TipoEmail(
+        "attesa_conferma",
+        "Lista d'attesa: conferma",
+        "A chi si mette in lista d'attesa, o viene messo in lista da un capo.",
+        "[Nome sito]: siete in lista d'attesa",
+        "<p>Ciao,</p><p>[Ragazzo] è in lista d'attesa per entrare in [Gruppo].</p><p>Potrà "
+        "essere contattato [Quando]: i capi chiamano a inizio anno, secondo i posti nelle "
+        "unità, non secondo l'ordine di arrivo.</p><p>Da questo link puoi correggere i dati o "
+        "uscire dalla lista:<br>[Link]</p><p>Conserva questa email; se la perdi, il link si "
+        "richiede di nuovo dal sito.</p>",
+        (
+            RAGAZZO,
+            Segnaposto(
+                "Quando",
+                "da quando può essere contattato",
+                "dall'anno scout 2027/28",
+                indispensabile=True,
+            ),
+            _link("il link personale per correggere o uscire"),
+        ),
+    ),
+    TipoEmail(
+        "attesa_link",
+        "Lista d'attesa: il link personale",
+        "A chi chiede di nuovo il link per correggere i dati o uscire dalla lista.",
+        "[Nome sito]: il tuo link per la lista d'attesa",
+        "<p>Ciao,</p><p>ecco il link per correggere i dati di [Ragazzo] in lista d'attesa o "
+        "per uscire dalla lista:<br>[Link]</p><p>Se non l'hai chiesto tu, ignora questa "
+        "email.</p>",
+        (RAGAZZO, _link("il link personale per correggere o uscire")),
+    ),
+    TipoEmail(
+        "attesa_interesse",
+        "Lista d'attesa: confermi l'interesse?",
+        "Dopo due anni in lista senza essere contattati, e di nuovo dopo 15 giorni.",
+        "[Nome sito]: vuoi restare in lista d'attesa?",
+        "<p>Ciao,</p><p>[Ragazzo] è in lista d'attesa per entrare in [Gruppo] da due anni. "
+        "Se volete restare in lista, confermatelo da qui entro 30 giorni:<br>[Link]</p><p>Senza "
+        "conferma, dopo 30 giorni l'iscrizione alla lista si cancella.</p>",
+        (RAGAZZO, _link("il link personale per confermare")),
+    ),
+    TipoEmail(
+        "attesa_uscita",
+        "Lista d'attesa: uscita",
+        "Quando, dopo la domanda dei due anni, nessuno ha confermato entro 30 giorni.",
+        "[Nome sito]: uscita dalla lista d'attesa",
+        "<p>Ciao,</p><p>non avendo ricevuto conferma, [Ragazzo] non è più in lista d'attesa "
+        "per [Gruppo] e i suoi dati sono stati cancellati.</p><p>Se volete, potete rimettervi "
+        "in lista dal sito.</p>",
+        (RAGAZZO,),
+    ),
+    TipoEmail(
+        "attesa_iscrizione",
+        "Lista d'attesa: iscrizione",
+        "Alla famiglia (o al maggiorenne) quando i capi lo iscrivono in un'unità.",
+        "[Nome sito]: l'iscrizione di [Ragazzo]",
+        "<p>Ciao,</p><p>[Ragazzo] può entrare in [Unità]!</p><p>Per l'iscrizione apri questo "
+        "link entro il [Scadenza]: troverai già i dati della lista d'attesa, da completare "
+        "con quelli che servono all'associazione.<br>[Link]</p>",
+        (
+            RAGAZZO,
+            UNITA,
+            _link("il link per l'iscrizione"),
+            _scadenza("fino a quando vale il link"),
+        ),
     ),
     # --- Events ----------------------------------------------------------------------------
     TipoEmail(

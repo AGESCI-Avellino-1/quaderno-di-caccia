@@ -10,7 +10,8 @@ class IscrizioniConfig(AppConfig):
 
         from . import models
 
-        auditlog.register(models.CodiceIscrizione)
+        # The waiting list's data it may carry leave no trace in the history (DEC-263).
+        auditlog.register(models.CodiceIscrizione, exclude_fields=["dati_proposti"])
         auditlog.register(models.RichiestaIscrizione)
         auditlog.register(models.ModuloVuoto)
         auditlog.register(models.AllegatoIscrizione)

@@ -150,6 +150,8 @@ class InfoCodice(Schema):
     codice: str
     unita: str
     per_capi: bool
+    # From the waiting list (DEC-261): to fill in the form.
+    proposti: dict = {}
 
 
 class DatiIscrizioneIn(Schema):
@@ -183,7 +185,25 @@ def _codice_valido(testo: str) -> CodiceIscrizione:
 @router.get("/iscrizione/{codice}", response=InfoCodice, auth=None, throttle=LIMITI)
 def info_codice(request, codice: str):
     c = _codice_valido(codice)
-    return {"codice": c.codice, "unita": str(c.unita), "per_capi": c.per_capi}
+    proposti = c.dati_proposti
+    return {
+        "codice": c.codice,
+        "unita": str(c.unita),
+        "per_capi": c.per_capi,
+        "proposti": {
+            k: proposti[k]
+            for k in (
+                "nome",
+                "cognome",
+                "data_nascita",
+                "contatto_nome",
+                "contatto_cognome",
+                "email",
+                "da_se",
+            )
+            if k in proposti
+        },
+    }
 
 
 @router.post("/iscrizione/{codice}", response=EsitoRichiesta, auth=None, throttle=LIMITI)

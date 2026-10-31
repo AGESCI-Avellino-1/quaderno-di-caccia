@@ -115,6 +115,10 @@ class Gruppo(ModelloTracciato):
         return self.denominazione
 
 
+# Default ages of each branch for the waiting list (DEC-260): minimum and maximum.
+ETA_DELLA_BRANCA = {Branca.LC: (8, 11), Branca.EG: (12, 16), Branca.RS: (16, 20)}
+
+
 class Unita(ModelloTracciato):
     gruppo = models.ForeignKey(Gruppo, on_delete=models.PROTECT, related_name="unita")
     # Given by the group, not by BuonaStrada, and it may repeat (e.g. "Reparto
@@ -133,6 +137,10 @@ class Unita(ModelloTracciato):
     )
     nota_collegamento = models.CharField(max_length=200, blank=True)
     attiva = models.BooleanField(default=True)
+    # Ages for the waiting list (DEC-260), at the reference date of DEC-37; None = the
+    # branch's default (`ETA_DELLA_BRANCA`). Hints, never constraints.
+    eta_minima = models.PositiveSmallIntegerField(null=True, blank=True)
+    eta_massima = models.PositiveSmallIntegerField(null=True, blank=True)
 
     class Meta:
         verbose_name = "unità"
@@ -184,6 +192,14 @@ class Unita(ModelloTracciato):
     @property
     def branca(self) -> Branca:
         return BRANCA_DEL_TIPO[TipoUnita(self.tipo)]
+
+    @property
+    def eta(self) -> tuple[int, int] | None:
+        """Minimum and maximum age for the waiting list; None for the Co.Ca."""
+        base = ETA_DELLA_BRANCA.get(self.branca)
+        if base is None:
+            return None
+        return (self.eta_minima or base[0], self.eta_massima or base[1])
 
     @property
     def diarchia(self) -> bool:

@@ -199,7 +199,9 @@ Sphinx + MyST Markdown. The user manual and the installation guide are two separ
 the Docs projects on the same account (maintainer, 31/10/2026), each with its own folder,
 `conf.py` and `.readthedocs.yaml`: the manual is `docs/manuale/`, the installation guide
 `docs/installazione/` (online only); each project's `.readthedocs.yaml` path is set in its
-advanced settings on Read the Docs; `docs/_static` is shared; `docs/analisi/`
+advanced settings on Read the Docs (projects `avellino1-qdc` and `qdc-installazione`, created
+31/10/2026); the manual's PDF (`mise run docs:pdf`) is attached to every GitHub release
+(DEC-232), the first one v1.0.0; `docs/_static` is shared; `docs/analisi/`
 is for developers and never published. Pages in `docs/manuale/<profilo>/`, informal
 "tu", step by step. Screenshots are never taken by hand: `frontend/scripts/schermate.ts`
 (Playwright) starts its own Django (port 8001, database `qdc_manuale`) and Vite (5174),

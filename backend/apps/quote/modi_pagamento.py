@@ -4,7 +4,6 @@ own by the group. Never a payment inside the app: these only tell the family how
 
 import re
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
-from urllib.parse import urlsplit
 
 from apps.core.euro import euro
 from apps.organizzazione.models import Gruppo
@@ -35,13 +34,9 @@ def bic_valido(bic: str) -> bool:
 
 
 def link_paypal(base: str, importo: Decimal) -> str:
-    """A paypal.me link with the amount already in it (…/paypalme/nome/50.50), so the
-    family pays exactly that; any other link is left as it is."""
-    parti = urlsplit(base)
-    host = parti.netloc.lower().removeprefix("www.")
-    if host == "paypal.me" or (host == "paypal.com" and parti.path.startswith("/paypalme/")):
-        return f"{base.rstrip('/')}/{importo.quantize(CENTESIMO)}"
-    return base
+    """The group's link with the amount appended (…/paypalme/nome/50.50), whatever the
+    link looks like: if PayPal changes its addresses, the group changes the link."""
+    return f"{base.rstrip('/')}/{importo.quantize(CENTESIMO)}"
 
 
 def _decimale(valore) -> Decimal | None:

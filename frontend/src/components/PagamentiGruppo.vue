@@ -171,7 +171,8 @@ const esempio = computed(() => {
               placeholder="https://paypal.me/…"
             />
             <div class="form-text">
-              Con un link paypal.me il pulsante delle famiglie porta già l'importo da pagare.
+              Il pulsante delle famiglie aggiunge in fondo l'importo da pagare: il link deve essere
+              quello a cui PayPal attacca l'importo (es. https://paypal.me/nome).
             </div>
           </div>
           <div class="col-12 md:col-6">

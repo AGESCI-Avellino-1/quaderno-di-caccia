@@ -529,8 +529,8 @@ def test_link_paypal_con_l_importo():
         link_paypal("https://www.paypal.com/paypalme/nome/", importo)
         == "https://www.paypal.com/paypalme/nome/50.50"
     )
-    # Not a paypal.me link: left as it is.
-    assert link_paypal("https://example.org/paga", importo) == "https://example.org/paga"
+    # Whatever the link looks like, the amount is appended.
+    assert link_paypal("https://example.org/paga", importo) == "https://example.org/paga/50.50"
     assert bic_valido("BPPIITRRXXX") and bic_valido("BPPIITRR") and not bic_valido("BPPI")
 
 

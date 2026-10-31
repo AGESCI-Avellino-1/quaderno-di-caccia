@@ -16,6 +16,7 @@ import EventoBC from '@/components/EventoBC.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache, salvaInCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
 
@@ -26,6 +27,7 @@ import { scrivi } from '@/offline/outbox'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const evento = ref<DettaglioEvento | null>(null)
+useNomePagina(() => evento.value?.titolo)
 const copiaDel = ref<string | null>(null)
 const esito = ref('')
 const presenze = reactive<Record<number, StatoPresenza | null>>({})

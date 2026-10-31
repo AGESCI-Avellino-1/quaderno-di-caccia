@@ -9,6 +9,7 @@ from ninja.errors import HttpError
 from apps.anagrafica.models import Persona
 from apps.iscrizioni.models import DA_COMPLETARE, RichiestaIscrizione, StatoIscrizione
 from apps.permessi import policy
+from apps.progressione.api import ambiente
 
 from .adapters import CHIAVE_SESSIONE_INVITO
 from .models import Invito, MetodoVerificaGenitore, User
@@ -21,6 +22,13 @@ class PersonaBreve(Schema):
     id: int
     nome: str
     cognome: str
+
+
+class UnitaBreve(Schema):
+    id: int
+    nome: str
+    tipo: str
+    branca: str
 
 
 class ImpersonazioneInCorso(Schema):
@@ -80,6 +88,10 @@ class Profilo(Schema):
     imprese_reparto: int | None
     # The settings page (DEC-248): capigruppo, technical administrator, group treasurer.
     vede_impostazioni: bool
+    # Menu (DEC-242, DEC-243): units the capo serves, and the L/C setting of a child's
+    # unit (GIUNGLA, BOSCO or None) that names their Progressione personale.
+    unita_servizio: list[UnitaBreve]
+    ambiente: str | None
 
 
 @router.get("/io", response=Profilo)
@@ -128,6 +140,11 @@ def profilo(request):
         "impersonazione": _impersonazione(request),
         "imprese_reparto": policy.reparto_imprese(user),
         "vede_impostazioni": policy.vede_impostazioni(user),
+        "unita_servizio": [
+            {"id": u.id, "nome": str(u), "tipo": u.tipo, "branca": u.branca.value}
+            for u in policy.unita_di_servizio(user)
+        ],
+        "ambiente": ambiente(persona) if persona is not None else None,
     }
 
 

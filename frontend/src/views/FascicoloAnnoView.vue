@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { api, fascicoloAnnoPdf, fotoProfilo, type FascicoloAnno } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePersona } from '@/composables/useNomePagina'
 
 // The file of a ragazzo for an associative year (DEC-38, DEC-203): every section the
 // user may read, chosen by the API; printed as PDF. Online only: it gathers health
@@ -11,6 +12,10 @@ import { useErrore } from '@/composables/useErrore'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const dati = ref<FascicoloAnno | null>(null)
+useNomePersona(
+  () => props.id,
+  () => dati.value?.persona,
+)
 const anno = ref<number | undefined>(undefined)
 
 async function carica() {

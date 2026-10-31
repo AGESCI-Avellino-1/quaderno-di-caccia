@@ -18,6 +18,7 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
 
 // Staff, roles and patrols of a unit. Reading works offline (cached copy); changes need
@@ -42,6 +43,7 @@ watch(
 )
 
 const unita = computed(() => dettaglio.value?.unita)
+useNomePagina(() => unita.value && nomeUnita(unita.value))
 const rs = computed(() => unita.value?.branca === 'RS')
 
 const breve = (p: PersonaBreve): PersonaBreve => ({ id: p.id, nome: p.nome, cognome: p.cognome })

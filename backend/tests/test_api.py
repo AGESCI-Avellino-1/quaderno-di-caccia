@@ -31,6 +31,17 @@ def test_profilo_del_capo(capo):
     assert dati["branca"] == "capi"
 
 
+def test_profilo_per_il_menu(capo, capogruppo, ragazza, genitore, estraneo, reparto):
+    # The units the capo serves name the Progressione personale entries (DEC-242).
+    dati = _client(capo).get("/api/v1/io").json()
+    assert [u["id"] for u in dati["unita_servizio"]] == [reparto.id]
+    assert dati["unita_servizio"][0]["branca"] == "EG"
+    for chi in (capogruppo, ragazza, genitore, estraneo):
+        assert _client(chi).get("/api/v1/io").json()["unita_servizio"] == []
+    # Not in L/C: no setting.
+    assert _client(ragazza).get("/api/v1/io").json()["ambiente"] is None
+
+
 def test_tema_della_branca_del_ragazzo(ragazza):
     assert _client(ragazza).get("/api/v1/io").json()["branca"] == "eg"
 

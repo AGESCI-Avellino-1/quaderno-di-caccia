@@ -11,6 +11,7 @@ import {
 } from '@/api/qdc'
 import InputDataParziale from '@/components/InputDataParziale.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePersona } from '@/composables/useNomePagina'
 
 // The capi's file (DEC-47, DEC-134, DEC-206…DEC-208): read by the capo and the whole
 // Co.Ca.; the years before the app and the training are written by the capo or a
@@ -20,6 +21,10 @@ import { useErrore } from '@/composables/useErrore'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const dati = ref<FascicoloCapo | null>(null)
+useNomePersona(
+  () => props.id,
+  () => dati.value?.persona,
+)
 const esito = ref('')
 
 async function carica() {

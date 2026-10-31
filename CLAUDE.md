@@ -148,12 +148,15 @@ breaks the parser, add the case to `tests/export_sintetico.py` first.
 
 ### Theme
 
-Colours come from **django-agesci-campania-theme 3.0.0a2**
+Colours and the side menu come from **django-agesci-campania-theme 3.0.0a2**
 (<https://github.com/AGESCI-Campania/django-agesci-campania-theme>), the line built on
 **Bootstrap 6** (`bootstrap@6.0.0-alpha.1`, pinned): the maintainer chose the alpha on
-purpose, to avoid a second migration later. `frontend/src/theme/_palette.scss` and
-`_branche.scss` are copied **byte for byte** (excluded from Prettier). To update: copy
-the two files from the new release, never edit them here. The branch colour is chosen
+purpose, to avoid a second migration later. `frontend/src/theme/_palette.scss`,
+`_branche.scss` and `_sidebar.scss` are copied **byte for byte** (excluded from Prettier).
+To update: copy the three files from the new release, never edit them here. The theme
+loads Bootstrap Icons only on the Django side: the PWA bundles `bootstrap-icons` (MIT) as
+inline SVG, listed in `frontend/src/navigazione/icone.ts` (plus a tent drawn there, which
+the set lacks). The branch colour is chosen
 with `<html data-branca="lc|eg|rs|capi|generico">` (DEC-72); components use
 `var(--ag-primary)` and friends, never hard-coded colours.
 

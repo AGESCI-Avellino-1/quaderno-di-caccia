@@ -30,7 +30,7 @@ async function inizia() {
       class="btn btn-sm btn-outline theme-primary"
       @click="aperto = true"
     >
-      Usa l'app al posto di {{ nome }}
+      Impersona {{ nome }}
     </button>
     <form v-else class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="inizia">
       <div class="flex-grow-1">

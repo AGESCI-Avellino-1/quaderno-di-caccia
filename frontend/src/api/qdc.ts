@@ -56,6 +56,10 @@ export interface Profilo {
   imprese_reparto: number | null
   /** The settings page: capigruppo, technical administrator, group treasurer. */
   vede_impostazioni?: boolean
+  /** Units the capo serves: their Progressione personale entries in the menu. */
+  unita_servizio?: { id: number; nome: string; tipo: string; branca: string }[]
+  /** L/C setting of the child's unit, which names their Progressione personale. */
+  ambiente?: 'GIUNGLA' | 'BOSCO' | null
 }
 
 /** What every page needs for its title and footer, also before the login (DEC-246). */

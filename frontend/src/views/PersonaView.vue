@@ -15,8 +15,8 @@ import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useRete } from '@/composables/useRete'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
-import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -24,6 +24,7 @@ const props = defineProps<{ id: number }>()
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const persona = ref<PersonaDettaglio | null>(null)
+useNomePagina(() => persona.value && `${persona.value.nome} ${persona.value.cognome}`)
 const copiaDel = ref<string | null>(null)
 // Printing and paper dates need the network.
 const { online } = useRete()
@@ -161,7 +162,6 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         />
       </section>
       <NotePersona :persona="persona.id" />
-      <VisibilitaGenitori :id="persona.id" />
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
       <QuotePersona :id="persona.id" />
       <TelefonoSquadriglia :id="persona.id" />

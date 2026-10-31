@@ -67,7 +67,7 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
 
 <template>
   <section>
-    <h1 class="h4 mb-5">Dispositivi</h1>
+    <h1 class="h4 mb-5">Password e sicurezza</h1>
 
     <div class="card card-body mb-5">
       <h2 class="h6">Questo telefono</h2>

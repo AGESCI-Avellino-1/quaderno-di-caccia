@@ -22,6 +22,7 @@ import InputDataParziale from '@/components/InputDataParziale.vue'
 import PercorsoEG from '@/components/PercorsoEG.vue'
 import PuntiStrada from '@/components/PuntiStrada.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePersona } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
 
@@ -36,6 +37,10 @@ import { scrivi } from '@/offline/outbox'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const scheda = ref<SchedaProgressione | null>(null)
+useNomePersona(
+  () => props.id,
+  () => scheda.value?.persona,
+)
 const copiaDel = ref<string | null>(null)
 const esito = ref('')
 const oggi = () => new Date().toLocaleDateString('sv')

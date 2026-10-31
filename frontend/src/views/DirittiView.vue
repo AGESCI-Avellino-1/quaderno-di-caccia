@@ -53,7 +53,7 @@ const scaduta = (r: RichiestaDiritti) => !r.evasa_il && r.scadenza < oggi
 <template>
   <section>
     <div class="d-flex align-items-center mb-3">
-      <h1 class="h4 mb-0">Richieste degli interessati</h1>
+      <h1 class="h4 mb-0">Richieste privacy</h1>
       <button
         v-if="!aperto"
         type="button"

@@ -2,10 +2,12 @@
 import { onMounted, reactive, ref } from 'vue'
 
 import { api, type PreferenzeEmail } from '@/api/qdc'
+import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
-// Which optional emails the user receives (right to object, GDPR art. 21). What the
+// Privacy (DEC-251): what an adult's parents see (DEC-26), and which optional emails
+// the user receives (right to object, GDPR art. 21). What the
 // app needs to work or what proves a payment is always sent. Online only.
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
@@ -47,7 +49,9 @@ const voci = [
 
 <template>
   <section>
-    <h1 class="h4 mb-1">Le mie email</h1>
+    <h1 class="h4 mb-5">Privacy</h1>
+    <VisibilitaGenitori v-if="sessione.profilo?.persona" :id="sessione.profilo.persona.id" />
+    <h2 class="h5 mb-1">Le email che ricevi</h2>
     <p class="fg-2 small">
       Scegli quali email ricevere. Quello che non ricevi per email lo trovi comunque nell'app.
     </p>

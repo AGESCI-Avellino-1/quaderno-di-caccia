@@ -1,6 +1,6 @@
 // =============================================================
 //  QdC theme.
-//  _palette.scss and _branche.scss are copied byte for byte from
+//  _palette.scss, _branche.scss and _sidebar.scss are copied byte for byte from
 //  django-agesci-campania-theme 3.0.0a2 (MIT, AGESCI Campania; Bootstrap 6). Keep them in
 //  sync with the Django package: never invent colours, never hardcode them in components —
 //  use var(--ag-primary), theme-primary and friends. The branch is chosen with
@@ -10,6 +10,7 @@
 @use 'palette' as p;
 
 @use 'branche';
+@use 'sidebar';
 
 // Titillium Web is bundled (SIL OFL 1.1, src/assets/fonts/OFL.txt) so the app keeps its
 // look offline at camp: no Google Fonts request.
@@ -85,4 +86,79 @@ body {
 // Footer: the group's line above the fixed one (DEC-247).
 .qdc-piede {
   border-top: 1px solid var(--bs-border-color);
+}
+
+// --- Side menu (DEC-241): the theme's sidebar next to the page --------------------------
+.qdc-cornice {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.qdc-colonna {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// From lg up the sidebar stays in view while the page scrolls, so the avatar is always
+// at the bottom of the window. Bootstrap's static .lg:drawer sets position and height
+// with !important inside @layer components: only an earlier layer with !important wins
+// (the same trick as the theme's _sidebar.scss).
+@layer layout {
+  @media (min-width: 1024px) {
+    .qdc-cornice > .ag-sidebar {
+      position: sticky !important;
+      top: 0;
+      height: 100dvh !important;
+    }
+  }
+}
+
+.qdc-icona {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.qdc-icona svg {
+  width: 1em;
+  height: 1em;
+}
+
+.ag-sidebar__nav-link .qdc-icona svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+// An entry that is a section of the one above (BuonaCaccia under Eventi).
+.ag-sidebar__nav-link.qdc-sottovoce {
+  padding-left: 2.25rem;
+  font-size: 0.85rem;
+}
+
+.ag-sidebar--collapsed .ag-sidebar__nav-link.qdc-sottovoce {
+  padding-left: 1rem;
+}
+
+.ag-sidebar--collapsed .ag-sidebar__section-title {
+  padding: 0.5rem 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+// Lock and logout are buttons that look like the links around them.
+.qdc-voce-pulsante {
+  width: 100%;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+// The profile menu opens in place, above the avatar.
+.qdc-menu-profilo {
+  flex-grow: 0;
+  padding-top: 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }

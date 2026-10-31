@@ -1489,3 +1489,21 @@ def puo_modificare_impostazioni(user) -> bool:
 def vede_impostazioni(user) -> bool:
     """The settings page: also the group treasurer, for the payment link alone."""
     return puo_modificare_impostazioni(user) or puo_gestire_quote(user)
+
+
+def unita_di_servizio(user) -> QuerySet[Unita]:
+    """Units the capo serves (staff or capo unità): their Progressione personale entries
+    in the PWA menu (DEC-242). Navigation only: every page asks the policy again."""
+    persona = persona_di(user)
+    if persona is None:
+        return Unita.objects.none()
+    return (
+        Unita.objects.filter(
+            incarichi__in=Incarico.objects.attivi().filter(
+                persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}
+            )
+        )
+        .exclude(tipo=TipoUnita.COMUNITA_CAPI)
+        .distinct()
+        .order_by("tipo", "progressivo")
+    )

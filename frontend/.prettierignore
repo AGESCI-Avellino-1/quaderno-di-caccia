@@ -1,6 +1,7 @@
 # Copied verbatim from django-agesci-campania-theme: keep byte-identical (see CLAUDE.md).
 src/theme/_palette.scss
 src/theme/_branche.scss
+src/theme/_sidebar.scss
 dist
 dev-dist
 coverage

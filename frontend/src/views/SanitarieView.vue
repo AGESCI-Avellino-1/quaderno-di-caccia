@@ -11,6 +11,7 @@ import {
   type SanitarieIn,
 } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePersona } from '@/composables/useNomePagina'
 import { leggiConCache, salvaInCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
 
@@ -21,6 +22,7 @@ const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
 
 const nome = ref('')
+useNomePersona(() => props.id, nome)
 const caricata = ref(false)
 const esito = ref<string | null>(null)
 const modulo = reactive<SanitarieIn>({

@@ -17,7 +17,9 @@ vite-plugin-pwa 2 · Vitest 5. Node 22. Read the root `CLAUDE.md` first.
 | `src/stores/sessione.ts` | Profile (`/api/v1/io`), role flags for menus, branch theme |
 | `src/composables/` | `useRete` (online state, queue counters, auto-send), `useErrore` (readable errors), `useBloccoAutomatico` (lock after inactivity) |
 | `src/router/index.ts` | Routes; `meta.pubblica`, `meta.richiede` (menu guard only) |
+| `src/navigazione/` | The menu (DEC-241…DEC-243): `menu.ts` (groups and entries from the profile, shared by `MenuLaterale.vue`, the Home and `Briciole.vue`), `icone.ts` (the icons used). Bootstrap's JavaScript is not loaded: the drawer is a `<dialog>` opened by the component |
 | `src/router/pagine.ts` | Name of every page and the page above it: `[Pagina corrente]` in the title, the breadcrumb (DEC-244, DEC-246) |
+| `src/stores/navigazione.ts`, `src/composables/useNomePagina.ts` | Names of pages with one of their own (a person, a unit, an event) for title and breadcrumb; menu counters |
 | `src/stores/sito.ts`, `src/sito/segnaposto.ts` | Title and footer from `/api/v1/sito` (also before login), placeholders filled in by `riempi()` (DEC-246, DEC-247) |
 | `src/theme/` | AGESCI palette (copied from the Django theme, do not edit) + `qdc.scss` |
 | `docker/` | nginx config for the production `app` container |

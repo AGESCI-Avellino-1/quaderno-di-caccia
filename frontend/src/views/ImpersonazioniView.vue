@@ -32,7 +32,7 @@ const quando = (iso: string) =>
 
 <template>
   <section>
-    <h1 class="h4">Usa l'app al posto di un altro</h1>
+    <h1 class="h4">Impersona</h1>
     <p class="small fg-2">
       Per aiutare qualcuno a compilare o per vedere un problema come lo vede lui. Puoi fare quello
       che fa lui, ma non cambiare il suo account (password, email, accessi, dispositivi) né le sue

@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { api, type AnteprimaCancellazione, type Fascicolo } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
+import { useNomePersona } from '@/composables/useNomePagina'
 
 // Full personal file for a data subject's request (DEC-102), capigruppo only: JSON for
 // portability, this page to print or save as PDF, and erasure. Online only: never
@@ -11,6 +12,10 @@ import { useErrore } from '@/composables/useErrore'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const fascicolo = ref<Fascicolo | null>(null)
+useNomePersona(
+  () => props.id,
+  () => fascicolo.value && `${fascicolo.value.persona.nome} ${fascicolo.value.persona.cognome}`,
+)
 const anteprima = ref<AnteprimaCancellazione | null>(null)
 const cognome = ref('')
 const cancellata = ref<AnteprimaCancellazione | null>(null)
@@ -94,7 +99,7 @@ async function cancella() {
   <section>
     <p class="qdc-non-stampare small">
       <RouterLink :to="{ name: 'persona', params: { id } }">← Torna alla scheda</RouterLink> ·
-      <RouterLink to="/diritti">Richieste degli interessati</RouterLink>
+      <RouterLink to="/diritti">Richieste privacy</RouterLink>
     </p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="cancellata" class="alert theme-success" role="status">

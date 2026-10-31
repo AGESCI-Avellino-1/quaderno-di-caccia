@@ -72,6 +72,8 @@ export interface Sito {
   titolo_completo: string
   titolo_breve: string
   riga_piede: string
+  /** Emails go to Mailpit, nobody receives them (DEC-249). */
+  email_di_prova?: boolean
 }
 
 export interface ImpostazioniSito {
@@ -90,6 +92,9 @@ export interface Impostazioni extends ImpostazioniSito {
   puo_modificare: boolean
   puo_modificare_intestazione: boolean
   puo_modificare_pagamenti: boolean
+  email_di_prova: boolean
+  email_di_prova_consentita: boolean
+  puo_email_di_prova: boolean
 }
 
 export interface Impersonazione {
@@ -1992,6 +1997,11 @@ export const api = {
   impostazioni: () => richiesta<Impostazioni>('/api/v1/impostazioni'),
   salvaImpostazioniSito: (dati: ImpostazioniSito) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/sito', { metodo: 'PUT', corpo: dati }),
+  emailDiProva: (attiva: boolean) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/email-di-prova', {
+      metodo: 'PUT',
+      corpo: { attiva },
+    }),
   unita: (tutte = false) => richiesta<Unita[]>(`/api/v1/unita${tutte ? '?tutte=true' : ''}`),
   dettaglioUnita: (id: number) => richiesta<UnitaDettaglio>(`/api/v1/unita/${id}`),
   creaUnita: (dati: UnitaIn) => richiesta<Unita>('/api/v1/unita', { metodo: 'POST', corpo: dati }),

@@ -94,6 +94,9 @@ mise run frontend     # app su http://localhost:5173  ← si usa questa
 ```
 
 Le email (codici di accesso, inviti) in sviluppo compaiono nel terminale di Django.
+Se l'amministratore tecnico accende le «Email di prova» nelle Impostazioni, finiscono
+invece in Mailpit (avviato da `mise run db` insieme a PostgreSQL), che lui apre dal menu
+Amministrazione all'indirizzo `/mailpit/`.
 `mise tasks` elenca gli altri comandi (`test`, `lint`, `format`, `importa`…).
 
 ### IDE
@@ -177,6 +180,15 @@ correggendo il percorso dell'installazione (con Podman, `podman compose`).
 
 Il comando `promemoria_fine_anno` (ogni giorno) ricorda ai capigruppo di chiudere l'anno
 associativo appena finito e di archiviare chi è uscito da più di due anni.
+
+### Email di prova (Mailpit)
+
+Su un server di prova si possono trattenere tutte le email in Mailpit invece di
+spedirle: in `.env` `QDC_MAILPIT_CONSENTITO=true`, poi
+`COMPOSE_PROFILES=mailpit docker compose up -d`. L'amministratore tecnico la accende e la
+spegne nelle Impostazioni e legge le email su `/mailpit/` (solo lui, attraverso Django:
+Mailpit non pubblica porte). Non usarla sul server con i dati veri: in Mailpit finiscono
+anche i codici di accesso e gli inviti, che fanno entrare come chiunque.
 
 ### Drive del gruppo per l'archivio
 

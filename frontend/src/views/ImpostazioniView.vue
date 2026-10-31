@@ -33,6 +33,13 @@ const anteprima = computed<Sito | null>(() =>
 )
 const esempio = (testo: string) => (anteprima.value ? riempi(testo, anteprima.value, 'Eventi') : '')
 
+async function emailDiProva(attiva: boolean) {
+  const nuovi = await esegui(() => api.emailDiProva(attiva))
+  if (!nuovi) return
+  dati.value = nuovi
+  await sito.carica()
+}
+
 async function salva() {
   if (!dati.value) return
   esito.value = ''
@@ -156,6 +163,35 @@ async function salva() {
       </section>
       <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
       <LinkPagamento v-if="dati.puo_modificare_pagamenti" />
+      <section v-if="dati.puo_email_di_prova" class="mb-7">
+        <h2 class="h5">Email di prova</h2>
+        <p class="small fg-2">
+          Per provare l'app senza disturbare nessuno: le email non partono e restano in Mailpit, che
+          puoi aprire solo tu dal menu Amministrazione. Tutti vedono un avviso finché è attiva.
+          Attenzione: in Mailpit trovi anche i codici di accesso e gli inviti degli altri.
+        </p>
+        <div v-if="!dati.email_di_prova_consentita" class="alert theme-info small" role="status">
+          <div>
+            Su questo server non è permessa: la può attivare solo chi lo installa, ed è pensata per
+            un server di prova, non per quello con i dati veri.
+          </div>
+        </div>
+        <div v-else class="card card-body">
+          <div class="form-field">
+            <div class="switch">
+              <input
+                id="imp-email-prova"
+                type="checkbox"
+                role="switch"
+                :checked="dati.email_di_prova"
+                :disabled="inCorso"
+                @change="emailDiProva(($event.target as HTMLInputElement).checked)"
+              />
+            </div>
+            <label for="imp-email-prova">Trattieni le email in Mailpit</label>
+          </div>
+        </div>
+      </section>
     </template>
   </section>
 </template>

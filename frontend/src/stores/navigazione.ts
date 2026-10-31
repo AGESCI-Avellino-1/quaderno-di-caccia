@@ -4,15 +4,22 @@
  * counters read online. Nothing here is saved on the device.
  */
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { api } from '@/api/qdc'
 import type { Contatori } from '@/navigazione/menu'
 
+import { useSitoStore } from './sito'
+
 export const useNavigazioneStore = defineStore('navigazione', () => {
   /** Name of a page by its path, e.g. '/persone/12' → 'Giulia Rossi'. */
   const nomi = ref<Record<string, string>>({})
-  const contatori = ref<Contatori>({})
+  const letti = ref<Contatori>({})
+  const sito = useSitoStore()
+  const contatori = computed<Contatori>(() => ({
+    ...letti.value,
+    email_di_prova: !!sito.sito.email_di_prova,
+  }))
 
   function nomina(percorso: string, nome: string) {
     nomi.value = { ...nomi.value, [percorso]: nome }
@@ -23,9 +30,9 @@ export const useNavigazioneStore = defineStore('navigazione', () => {
     if (!gestisceCorrezioni || !navigator.onLine) return
     try {
       const correzioni = (await api.correzioni()).filter((c) => c.stato === 'IN_ATTESA').length
-      contatori.value = { ...contatori.value, correzioni }
+      letti.value = { ...letti.value, correzioni }
     } catch {
-      contatori.value = { ...contatori.value, correzioni: null }
+      letti.value = { ...letti.value, correzioni: null }
     }
   }
 

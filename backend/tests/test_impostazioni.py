@@ -121,3 +121,80 @@ def test_denominazione_ufficiale_separata(gruppo, capogruppo):
     assert client.put(url, {}, content_type="application/json").json()["denominazione"] == (
         "Prova Uno"
     )
+
+
+# --- Email test mode with Mailpit (DEC-249) ------------------------------------------------
+
+MAILERS_DI_PROVA = {
+    "default": {"BACKEND": "apps.impostazioni.posta.PostaQdC"},
+    "reale": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"},
+    "mailpit": {"BACKEND": "django.core.mail.backends.dummy.EmailBackend"},
+}
+
+
+def _attiva(utente, attiva=True):
+    return _client(utente).put(
+        f"{URL}/email-di-prova", {"attiva": attiva}, content_type="application/json"
+    )
+
+
+def test_solo_l_amministratore_accende_le_email_di_prova(
+    gruppo, capo, capogruppo, ragazza, genitore, estraneo, amministratore, settings
+):
+    settings.QDC_MAILPIT_CONSENTITO = True
+    for chi in (capo, capogruppo, ragazza, genitore, estraneo):
+        assert _attiva(chi.utente).status_code == 403
+    assert policy.puo_gestire_email_di_prova(amministratore)
+    risposta = _attiva(amministratore)
+    assert risposta.status_code == 200 and risposta.json()["email_di_prova"] is True
+    # Everyone, even before the login, sees that emails are not delivered.
+    assert Client().get("/api/v1/sito").json()["email_di_prova"] is True
+    assert _client(capogruppo.utente).get(URL).json()["puo_email_di_prova"] is False
+
+
+def test_email_di_prova_solo_dove_il_server_la_permette(gruppo, amministratore, settings):
+    settings.QDC_MAILPIT_CONSENTITO = False
+    assert _attiva(amministratore).status_code == 400
+    # Switched on where allowed, then the server stops allowing it: off for everyone.
+    settings.QDC_MAILPIT_CONSENTITO = True
+    assert _attiva(amministratore).status_code == 200
+    settings.QDC_MAILPIT_CONSENTITO = False
+    assert Client().get("/api/v1/sito").json()["email_di_prova"] is False
+    assert _attiva(amministratore, attiva=False).status_code == 200
+
+
+def test_le_email_vanno_a_mailpit_solo_in_prova(db, settings):
+    from django.core import mail
+    from django.core.mail import send_mail
+
+    settings.MAILERS = MAILERS_DI_PROVA
+    settings.QDC_MAILPIT_CONSENTITO = True
+    send_mail("Prova", "Testo", None, ["a@example.invalid"])
+    assert len(mail.outbox) == 1
+    imp = Impostazioni.carica()
+    imp.email_di_prova = True
+    imp.save()
+    send_mail("Prova", "Testo", None, ["a@example.invalid"])
+    assert len(mail.outbox) == 1  # caught by Mailpit (here a dummy), not delivered
+    settings.QDC_MAILPIT_CONSENTITO = False
+    send_mail("Prova", "Testo", None, ["a@example.invalid"])
+    assert len(mail.outbox) == 2
+
+
+def test_mailpit_solo_per_l_amministratore(gruppo, capogruppo, amministratore, settings):
+    from unittest import mock
+
+    settings.QDC_MAILPIT_CONSENTITO = True
+    assert Client().get("/mailpit/").status_code == 404
+    assert _client(capogruppo.utente).get("/mailpit/").status_code == 404
+    risposta = mock.MagicMock(status=200, headers={"Content-Type": "text/html"})
+    risposta.read.return_value = b"<html>Mailpit</html>"
+    risposta.__enter__.return_value = risposta
+    with mock.patch("urllib.request.urlopen", return_value=risposta) as apri:
+        pagina = _client(amministratore).get("/mailpit/api/v1/messages?limit=5")
+    assert pagina.status_code == 200 and pagina.content == b"<html>Mailpit</html>"
+    assert apri.call_args.args[0].full_url == (
+        "http://localhost:8025/mailpit/api/v1/messages?limit=5"
+    )
+    settings.QDC_MAILPIT_CONSENTITO = False
+    assert _client(amministratore).get("/mailpit/").status_code == 404

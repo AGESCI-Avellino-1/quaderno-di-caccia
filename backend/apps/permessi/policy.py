@@ -1486,6 +1486,11 @@ def puo_modificare_impostazioni(user) -> bool:
     return e_capogruppo(user) or e_amministratore(user)
 
 
+def puo_gestire_email_di_prova(user) -> bool:
+    """The email test mode and Mailpit: the technical administrator only (DEC-249)."""
+    return e_amministratore(user)
+
+
 def vede_impostazioni(user) -> bool:
     """The settings page: also the group treasurer, for the payment link alone."""
     return puo_modificare_impostazioni(user) or puo_gestire_quote(user)

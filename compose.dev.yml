@@ -1,4 +1,4 @@
-# Development: only PostgreSQL runs in a container (Docker or Podman); Django and
+# Development: only PostgreSQL (and Mailpit, for the email test mode) runs in a container (Docker or Podman); Django and
 # Vite run on the host (PyCharm / WebStorm). Start with: mise run db
 # (or: docker compose -f compose.dev.yml up -d  /  podman compose -f compose.dev.yml up -d)
 name: qdc-dev
@@ -19,6 +19,17 @@ services:
       test: ["CMD-SHELL", "pg_isready -U qdc -d qdc"]
       interval: 5s
       retries: 10
+
+  # Email test mode (DEC-249): what Django sends while it is on lands here. The web
+  # interface is reached through Django at /mailpit/ (technical administrator only).
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    environment:
+      MP_WEBROOT: /mailpit
+      MP_MAX_MESSAGES: 500
+    ports:
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # web interface
 
 volumes:
   db-dev:

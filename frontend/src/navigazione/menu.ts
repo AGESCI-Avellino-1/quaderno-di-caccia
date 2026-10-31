@@ -34,6 +34,8 @@ export interface Gruppo {
 /** Counters read apart from the profile (online only). */
 export interface Contatori {
   correzioni?: number | null
+  /** The email test mode is on: the technical administrator gets Mailpit (DEC-249). */
+  email_di_prova?: boolean
 }
 
 /** Name of the Progressione personale group for a child (DEC-243). */
@@ -295,6 +297,14 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/impostazioni',
           descrizione: 'Nome e titolo del sito, intestazione delle stampe',
         },
+        p.amministratore_tecnico &&
+          contatori.email_di_prova && {
+            nome: 'Mailpit',
+            icona: 'envelope-open',
+            to: '/mailpit/',
+            esterna: true,
+            descrizione: 'Le email trattenute dalla modalità di prova',
+          },
         p.amministratore_tecnico && {
           nome: 'Pannello di amministrazione',
           icona: 'tools',

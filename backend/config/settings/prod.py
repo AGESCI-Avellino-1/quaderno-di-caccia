@@ -20,17 +20,15 @@ SILENCED_SYSTEM_CHECKS = ["security.W021"]
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
-        "OPTIONS": {
-            "host": env("DJANGO_EMAIL_HOST", default="localhost"),
-            "port": env.int("DJANGO_EMAIL_PORT", default=587),
-            "username": env("DJANGO_EMAIL_HOST_USER", default=""),
-            "password": env("DJANGO_EMAIL_HOST_PASSWORD", default=""),
-            "use_tls": env.bool("DJANGO_EMAIL_USE_TLS", default=True),
-        },
-    }
+MAILERS["reale"] = {
+    "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+    "OPTIONS": {
+        "host": env("DJANGO_EMAIL_HOST", default="localhost"),
+        "port": env.int("DJANGO_EMAIL_PORT", default=587),
+        "username": env("DJANGO_EMAIL_HOST_USER", default=""),
+        "password": env("DJANGO_EMAIL_HOST_PASSWORD", default=""),
+        "use_tls": env.bool("DJANGO_EMAIL_USE_TLS", default=True),
+    },
 }
 
 # Behind a reverse proxy the client IP comes from X-Forwarded-For.

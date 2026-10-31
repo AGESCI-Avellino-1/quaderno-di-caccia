@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import AggiornamentoApp from '@/components/AggiornamentoApp.vue'
+import BarraEmailDiProva from '@/components/BarraEmailDiProva.vue'
 import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
 import BarraOffline from '@/components/BarraOffline.vue'
 import Briciole from '@/components/Briciole.vue'
@@ -74,6 +75,7 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
           </RouterLink>
         </nav>
       </header>
+      <BarraEmailDiProva />
       <BarraImpersonazione />
       <BarraOffline />
       <Briciole v-if="conMenu" />

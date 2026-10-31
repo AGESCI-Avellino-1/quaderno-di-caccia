@@ -15,3 +15,7 @@ MFA_WEBAUTHN_ALLOW_INSECURE_ORIGIN = True
 # allauth headless OpenAPI spec at /_allauth/openapi.html: verify endpoints there,
 # never guess them.
 HEADLESS_SERVE_SPECIFICATION = True
+
+# The email test mode is always possible in development (DEC-249): Mailpit runs with the
+# database (compose.dev.yml).
+QDC_MAILPIT_CONSENTITO = True

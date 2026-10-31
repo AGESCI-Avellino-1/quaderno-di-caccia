@@ -25,6 +25,9 @@ class Impostazioni(ModelloTracciato):
     titolo_breve = models.CharField(max_length=120, default=TITOLO_BREVE)
     # Shown above the fixed line of the footer (DEC-247).
     riga_piede = models.CharField(max_length=300, blank=True)
+    # Email test mode (DEC-249): emails go to Mailpit, nobody receives them. Effective only
+    # where settings.QDC_MAILPIT_CONSENTITO: see `email_di_prova_attiva`.
+    email_di_prova = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "impostazioni"
@@ -46,6 +49,11 @@ class Impostazioni(ModelloTracciato):
     @classmethod
     def carica(cls) -> Impostazioni:
         return cls.objects.get_or_create(pk=1)[0]
+
+    def email_di_prova_attiva(self) -> bool:
+        from django.conf import settings
+
+        return self.email_di_prova and settings.QDC_MAILPIT_CONSENTITO
 
     def nome_del_gruppo(self) -> str:
         if self.nome_gruppo:

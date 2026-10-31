@@ -23,6 +23,8 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-qdc}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-qdc}
+      QDC_MAILPIT_SMTP_HOST: mailpit
+      QDC_MAILPIT_URL: http://mailpit:8025
     volumes:
       # Private uploads (BuonaStrada exports, later receipts): never served directly.
       - media:/data/media
@@ -45,6 +47,17 @@ services:
       interval: 30s
       start_period: 30s
       retries: 3
+
+  # Email test mode (DEC-249), only with QDC_MAILPIT_CONSENTITO=true and started on
+  # purpose: COMPOSE_PROFILES=mailpit docker compose up -d. No published port: its web
+  # interface is reached through Django at /mailpit/, by the technical administrator.
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    restart: unless-stopped
+    profiles: ["mailpit"]
+    environment:
+      MP_WEBROOT: /mailpit
+      MP_MAX_MESSAGES: 500
 
   app:
     build: ./frontend

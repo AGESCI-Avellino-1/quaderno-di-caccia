@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // Paths served by Django. In dev Vite proxies them, so the PWA and the API share the
 // same origin (session cookie + CSRF, no CORS). In production nginx does the same.
-const DJANGO_PATHS = ['/api', '/_allauth', '/accounts', '/admin', '/static']
+const DJANGO_PATHS = ['/api', '/_allauth', '/accounts', '/admin', '/static', '/mailpit']
 const DJANGO_URL = process.env.QDC_DJANGO_URL ?? 'http://localhost:8000'
 
 export default defineConfig({

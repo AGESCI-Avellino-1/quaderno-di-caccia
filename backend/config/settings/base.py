@@ -212,12 +212,33 @@ AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]
 AXES_USERNAME_FORM_FIELD = "email"
 
 # --- Email (Django 6.1 MAILERS; EMAIL_BACKEND is deprecated) ---------------------
-MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
+# "default" sends through "reale", or to Mailpit while the technical administrator has
+# the test mode on (DEC-249, apps/impostazioni/posta.py).
+QDC_MAILPIT_SMTP_HOST = env("QDC_MAILPIT_SMTP_HOST", default="localhost")
+QDC_MAILPIT_SMTP_PORT = env.int("QDC_MAILPIT_SMTP_PORT", default=1025)
+MAILERS = {
+    "default": {"BACKEND": "apps.impostazioni.posta.PostaQdC"},
+    "reale": {"BACKEND": "django.core.mail.backends.console.EmailBackend"},
+    "mailpit": {
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {
+            "host": QDC_MAILPIT_SMTP_HOST,
+            "port": QDC_MAILPIT_SMTP_PORT,
+            "use_tls": False,
+            "timeout": 10,
+        },
+    },
+}
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL", default="Quaderno di Caccia <noreply@localhost>"
 )
 
 # --- QdC -------------------------------------------------------------------------
+# Email test mode with Mailpit (DEC-249): login codes and invitations end up there, so on
+# a server it must be allowed explicitly by whoever installs it (always in development).
+QDC_MAILPIT_CONSENTITO = env.bool("QDC_MAILPIT_CONSENTITO", default=False)
+# Mailpit's web interface, reached by Django only (proxy at /mailpit/, MP_WEBROOT=/mailpit).
+QDC_MAILPIT_URL = env("QDC_MAILPIT_URL", default="http://localhost:8025")
 # Invitation links expire after this many days (DEC-21).
 QDC_INVITO_VALIDITA_GIORNI = env.int("QDC_INVITO_VALIDITA_GIORNI", default=14)
 # A device that does not reach the server for this many days deletes its offline data

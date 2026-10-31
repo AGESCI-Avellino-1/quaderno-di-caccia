@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.impostazioni.views import mailpit
 from config.api import api
 
 urlpatterns = [
@@ -10,4 +11,7 @@ urlpatterns = [
     # Headless authentication API used by the PWA: /_allauth/{browser|app}/v1/...
     path("_allauth/", include("allauth.headless.urls")),
     path("api/v1/", api.urls),
+    # Email test mode (DEC-249): technical administrator only, the view decides.
+    path("mailpit/", mailpit),
+    path("mailpit/<path:percorso>", mailpit),
 ]

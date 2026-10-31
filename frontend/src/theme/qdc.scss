@@ -222,3 +222,32 @@ body {
   margin-top: 1.5rem;
   font-size: 1.1rem;
 }
+
+// Tables and images in the rich text editor and the public pages (DEC-250, DEC-266).
+.qdc-editor-testo table,
+.qdc-pagina-legale table {
+  margin-bottom: 0.5rem;
+  border-collapse: collapse;
+}
+
+.qdc-editor-testo :is(td, th),
+.qdc-pagina-legale :is(td, th) {
+  min-width: 4rem;
+  padding: 0.25rem 0.5rem;
+  vertical-align: top;
+  border: 1px solid var(--bs-border-color);
+}
+
+.qdc-editor-testo :is(td, th) p {
+  margin-bottom: 0;
+}
+
+.qdc-editor-testo img,
+.qdc-pagina-legale img {
+  max-width: 100%;
+  height: auto;
+}
+
+.qdc-editor-testo .selectedCell {
+  background-color: var(--ag-primary-subtle);
+}

@@ -5,8 +5,9 @@ from datetime import date
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.http import FileResponse
 from django.utils import timezone
-from ninja import Router, Schema
+from ninja import File, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 
 from apps.core.anno import AnnoAssociativo
@@ -158,6 +159,8 @@ class ModelloEmailBreve(Schema):
 
 
 class ModelloEmailOut(ModelloEmailBreve):
+    # The common footer is added to this email (DEC-250).
+    con_piede: bool = True
     oggetto: str
     corpo: str
     oggetto_predefinito: str
@@ -218,6 +221,7 @@ def _modello_out(t) -> dict:
             for s in email.segnaposto_di(t)
         ],
         "facoltativa": t.facoltativa,
+        "con_piede": t.chiave not in Impostazioni.carica().email_senza_piede,
     }
 
 
@@ -277,7 +281,138 @@ def anteprima_modello_email(request, chiave: str, dati: ModelloEmailIn):
     t = _tipo(chiave)
     esempi = {s.nome: s.esempio for s in t.segnaposto}
     composta = email.componi_da(t, dati.oggetto, dati.corpo, esempi)
-    return {"oggetto": composta.oggetto, "html": composta.html, "testo": composta.testo}
+    html, testo = composta.html, composta.testo
+    piede_html, piede_testo = email.piede(t.chiave)
+    if piede_html:
+        html += f"<hr>{piede_html}"
+        testo += f"\n-- \n{piede_testo}\n"
+    return {"oggetto": composta.oggetto, "html": html, "testo": testo}
+
+
+class AttivoIn(Schema):
+    attivo: bool
+
+
+@router.put("/impostazioni/email/{chiave}/piede", response=ModelloEmailOut)
+def piede_del_modello(request, chiave: str, dati: AttivoIn):
+    """Whether this email gets the common footer (DEC-250)."""
+    _gestore_modelli(request)
+    t = _tipo(chiave)
+    imp = Impostazioni.carica()
+    senza = [c for c in imp.email_senza_piede if c != t.chiave]
+    imp.email_senza_piede = senza if dati.attivo else [*senza, t.chiave]
+    imp.save(update_fields=["email_senza_piede", "aggiornato_il"])
+    return _modello_out(t)
+
+
+class PiedeEmail(Schema):
+    html: str
+    # Empty: derived from the HTML.
+    testo: str = ""
+
+
+class PiedeEmailOut(PiedeEmail):
+    segnaposto: list[str]
+    anteprima_html: str
+    anteprima_testo: str
+
+
+def _piede_out() -> dict:
+    from . import email
+    from .html import in_testo
+
+    imp = Impostazioni.carica()
+    comuni = email._comuni()
+    html = email._riempi_html(imp.piede_email, comuni, set()) if imp.piede_email else ""
+    testo = email.piede("")[1] if imp.piede_email else ""
+    return {
+        "html": imp.piede_email,
+        "testo": imp.piede_email_testo,
+        "segnaposto": [s.nome for s in email.COMUNI],
+        "anteprima_html": html,
+        "anteprima_testo": testo or (in_testo(html) if html else ""),
+    }
+
+
+@router.get("/impostazioni/email-piede", response=PiedeEmailOut)
+def piede_email(request):
+    _gestore_modelli(request)
+    return _piede_out()
+
+
+@router.put("/impostazioni/email-piede", response=PiedeEmailOut)
+def salva_piede_email(request, dati: PiedeEmail):
+    from . import email
+    from . import segnaposto as sp
+    from .html import pulisci
+
+    _gestore_modelli(request)
+    html = pulisci(dati.html)
+    ammessi = tuple(s.nome for s in email.COMUNI)
+    ignoti = sp.sconosciuti(re.sub(r"<[^>]*>", " ", html) + " " + dati.testo, ammessi)
+    if ignoti:
+        raise HttpError(400, "Segnaposto sconosciuto: " + ", ".join(f"[{n}]" for n in ignoti) + ".")
+    imp = Impostazioni.carica()
+    vuoto = not re.sub(r"<[^>]*>", "", html).strip() and "<img" not in html
+    imp.piede_email = "" if vuoto else html
+    imp.piede_email_testo = dati.testo.strip()
+    imp.save(update_fields=["piede_email", "piede_email_testo", "aggiornato_il"])
+    return _piede_out()
+
+
+# --- Images for the emails and the pages (DEC-250) ------------------------------------------
+
+
+class ImmagineOut(Schema):
+    url: str
+
+
+@router.post("/impostazioni/immagini", response=ImmagineOut)
+def carica_immagine(request, file: File[UploadedFile]):
+    """PNG or JPEG, re-encoded without metadata, at most 1200 px wide and 1 MB."""
+    import io
+    import secrets
+
+    from django.core.files.base import ContentFile
+    from PIL import Image, UnidentifiedImageError
+
+    from .models import ImmagineEmail
+
+    _gestore_modelli(request)
+    if file.size > 10 * 1024 * 1024:
+        raise HttpError(400, "L'immagine è troppo grande: al massimo 10 MB.")
+    try:
+        immagine = Image.open(file)
+        immagine.load()
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as errore:
+        raise HttpError(400, "Carica un'immagine PNG o JPEG.") from errore
+    immagine.thumbnail((1200, 1200))
+    trasparente = immagine.mode in ("RGBA", "LA", "P")
+    buffer = io.BytesIO()
+    if trasparente:
+        immagine.convert("RGBA").save(buffer, "PNG", optimize=True)
+        tipo, estensione = "image/png", "png"
+    else:
+        immagine.convert("RGB").save(buffer, "JPEG", quality=85, optimize=True)
+        tipo, estensione = "image/jpeg", "jpg"
+    if buffer.tell() > 1024 * 1024:
+        raise HttpError(400, "L'immagine resta sopra 1 MB anche ridotta: usane una più leggera.")
+    nuova = ImmagineEmail(tipo=tipo, caricata_da=request.auth)
+    nuova.file.save(
+        f"{secrets.token_hex(16)}.{estensione}", ContentFile(buffer.getvalue()), save=True
+    )
+    return {"url": f"/api/v1/immagini/{nuova.nome}"}
+
+
+@router.get("/immagini/{nome}", auth=None)
+def immagine(request, nome: str):
+    """Logos and the like for the emails and the public pages: public by design."""
+    from .models import ImmagineEmail
+
+    trovata = ImmagineEmail.objects.filter(file__endswith=f"/{nome}").first()
+    if trovata is None or "/" in nome:
+        raise HttpError(404, "Immagine non trovata.")
+    return FileResponse(trovata.file.open("rb"), content_type=trovata.tipo)
 
 
 # --- Privacy policy and terms (DEC-266) -----------------------------------------------------

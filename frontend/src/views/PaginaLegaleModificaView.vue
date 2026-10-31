@@ -61,7 +61,7 @@ async function base() {
         <div>{{ esito }}</div>
       </div>
       <form class="card card-body" @submit.prevent="salva">
-        <EditorTesto ref="editor" v-model="testo" :etichetta="pagina.titolo" />
+        <EditorTesto ref="editor" v-model="testo" :etichetta="pagina.titolo" immagini />
         <div class="mt-3">
           <span class="small">Segnaposto: tocca per inserirlo nel testo</span>
           <div class="d-flex flex-wrap gap-1 mt-1">

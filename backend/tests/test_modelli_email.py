@@ -154,3 +154,74 @@ def test_le_email_di_allauth_dal_modello(gruppo, capogruppo):
     AccountAdapter().send_mail("account/email/login_code", "a@x.it", {"code": "ABCD-EFGH"})
     [inviata] = mail.outbox
     assert inviata.subject == "Entra" and "Il codice: ABCD-EFGH" in inviata.body
+
+
+# --- Common footer, tables and images (DEC-250) ---------------------------------------------
+
+
+def _png() -> bytes:
+    from io import BytesIO
+
+    from PIL import Image
+
+    buffer = BytesIO()
+    Image.new("RGBA", (40, 20), (200, 0, 0, 255)).save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def test_immagini_caricate_e_incorporate(gruppo, capogruppo, genitore):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    url = "/api/v1/impostazioni/immagini"
+    logo = SimpleUploadedFile("logo.png", _png(), content_type="image/png")
+    assert _client(genitore.utente).post(url, {"file": logo}).status_code == 403
+    falso = SimpleUploadedFile("logo.png", b"not an image", content_type="image/png")
+    assert _client(capogruppo.utente).post(url, {"file": falso}).status_code == 400
+    logo = SimpleUploadedFile("logo.png", _png(), content_type="image/png")
+    indirizzo = _client(capogruppo.utente).post(url, {"file": logo}).json()["url"]
+    assert Client().get(indirizzo).status_code == 200  # public, for pages and previews
+    # The footer with the logo and a placeholder; an outside image is dropped.
+    piede = {
+        "html": f'<p>[Gruppo]</p><img src="{indirizzo}" alt="Logo"><img src="https://x.it/a.png">',
+        "testo": "",
+    }
+    salvato = (
+        _client(capogruppo.utente)
+        .put("/api/v1/impostazioni/email-piede", piede, content_type="application/json")
+        .json()
+    )
+    assert "x.it" not in salvato["html"] and "AGESCI Prova 1" in salvato["anteprima_html"]
+    email.invia("invito", VALORI_INVITO, ["giulia@example.invalid"])
+    [inviata] = mail.outbox
+    assert "-- \nAGESCI Prova 1" in inviata.body and "[Logo]" in inviata.body
+    messaggio = inviata.message()
+    immagini = [p for p in messaggio.walk() if p.get_content_maintype() == "image"]
+    assert len(immagini) == 1 and immagini[0]["Content-ID"]
+    html = next(p for p in messaggio.walk() if p.get_content_type() == "text/html")
+    assert "cid:" in html.get_content()
+
+
+def test_piede_tolto_da_un_modello_e_testo_a_mano(gruppo, capogruppo):
+    _client(capogruppo.utente).put(
+        "/api/v1/impostazioni/email-piede",
+        {"html": "<p>Buona strada!</p>", "testo": "Buona strada da [Gruppo]"},
+        content_type="application/json",
+    )
+    toggle = "/api/v1/impostazioni/email/codice_accesso/piede"
+    risposta = _client(capogruppo.utente).put(
+        toggle, {"attivo": False}, content_type="application/json"
+    )
+    assert risposta.json()["con_piede"] is False
+    email.invia("codice_accesso", {"Codice": "AB"}, ["a@example.invalid"])
+    email.invia("invito", VALORI_INVITO, ["b@example.invalid"])
+    senza, con = mail.outbox
+    assert "Buona strada" not in senza.body
+    assert "Buona strada da AGESCI Prova 1" in con.body
+
+
+def test_tabelle_nel_testo():
+    html = pulisci(
+        "<table><tbody><tr><th><p>Nome</p></th><th><p>Quota</p></th></tr>"
+        "<tr><td><p>Giulia</p></td><td><p>35</p></td></tr></tbody></table>"
+    )
+    assert in_testo(html) == "Nome | Quota\nGiulia | 35\n"

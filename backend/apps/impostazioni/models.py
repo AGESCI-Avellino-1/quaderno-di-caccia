@@ -31,6 +31,11 @@ class Impostazioni(ModelloTracciato):
     # Privacy policy and terms (DEC-266): the group's text, cleaned HTML with
     # placeholders; empty = the default in `pagine.PAGINE`. The date tells the cookie
     # banner to show again.
+    # The common footer of the emails (DEC-250): HTML with placeholders; the plain text is
+    # derived from it unless written here; the email types that go without it.
+    piede_email = models.TextField(blank=True)
+    piede_email_testo = models.TextField(blank=True)
+    email_senza_piede = models.JSONField(default=list, blank=True)
     privacy = models.TextField(blank=True)
     privacy_aggiornata_il = models.DateField(null=True, blank=True)
     termini = models.TextField(blank=True)
@@ -92,3 +97,26 @@ class ModelloEmail(ModelloTracciato):
 
     def __str__(self) -> str:
         return self.chiave
+
+
+class ImmagineEmail(ModelloTracciato):
+    """An image for the email templates and the footer (DEC-250): re-encoded on upload
+    (no metadata), under a random name; emails carry it inline, pages show it from
+    `/api/v1/immagini/<nome>`. Logos and the like, never personal photos."""
+
+    file = models.FileField(upload_to="immagini-email/")
+    tipo = models.CharField(max_length=20)
+    caricata_da = models.ForeignKey(
+        "accounts.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "immagine delle email"
+        verbose_name_plural = "immagini delle email"
+
+    def __str__(self) -> str:
+        return self.nome
+
+    @property
+    def nome(self) -> str:
+        return self.file.name.rsplit("/", 1)[-1]

@@ -66,5 +66,6 @@ export const PAGINE: Record<string, Pagina> = {
   modifiche: { titolo: 'Modifiche da inviare' },
   impostazioni: { titolo: 'Impostazioni' },
   'modello-email': { titolo: 'Modello di email', sopra: 'impostazioni' },
+  'piede-email': { titolo: 'Piè di pagina delle email', sopra: 'impostazioni' },
   'non-trovata': { titolo: 'Pagina non trovata' },
 }

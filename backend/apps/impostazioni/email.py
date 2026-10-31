@@ -218,6 +218,60 @@ def _pagina(html: str) -> str:
     )
 
 
+class EmailConImmagini(EmailMultiAlternatives):
+    """An email whose HTML carries its images inline (multipart/related with Content-ID),
+    so they show even where remote images are blocked (DEC-250)."""
+
+    def __init__(self, *args, immagini=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.immagini = list(immagini)  # (cid, bytes, subtype)
+
+    def message(self, *, policy=None):
+        msg = super().message() if policy is None else super().message(policy=policy)
+        if not self.immagini:
+            return msg
+        for parte in msg.walk():
+            if parte.get_content_type() == "text/html":
+                for cid, dati, sottotipo in self.immagini:
+                    parte.add_related(dati, maintype="image", subtype=sottotipo, cid=f"<{cid}>")
+                break
+        return msg
+
+
+_IMMAGINE = re.compile(r'src="/api/v1/immagini/([A-Za-z0-9_.-]+)"')
+
+
+def _incorpora(html: str) -> tuple[str, list[tuple[str, bytes, str]]]:
+    """The app's images become inline parts: src="cid:…"."""
+    from .models import ImmagineEmail
+
+    immagini = []
+    for nome in dict.fromkeys(_IMMAGINE.findall(html)):
+        immagine = ImmagineEmail.objects.filter(file__endswith=f"/{nome}").first()
+        if immagine is None:
+            continue
+        with immagine.file.open("rb") as f:
+            immagini.append((nome, f.read(), immagine.tipo.split("/")[-1]))
+        html = html.replace(f'src="/api/v1/immagini/{nome}"', f'src="cid:{nome}"')
+    return html, immagini
+
+
+def piede(chiave: str) -> tuple[str, str]:
+    """The common footer (HTML, text) for this email type, or empty (DEC-250)."""
+    imp = Impostazioni.carica()
+    if not imp.piede_email or chiave in imp.email_senza_piede:
+        return "", ""
+    comuni = _comuni()
+    html = _riempi_html(pulisci(imp.piede_email), comuni, set())
+    if imp.piede_email_testo.strip():
+        testo = sp.SEGNAPOSTO.sub(
+            lambda m: _valore(comuni, m.group(1).strip()) or m.group(0), imp.piede_email_testo
+        ).strip()
+    else:
+        testo = in_testo(html).strip()
+    return html, testo
+
+
 def messaggio(
     chiave: str,
     valori: dict[str, str],
@@ -229,10 +283,15 @@ def messaggio(
     t = tipo(chiave)
     composta = componi(chiave, valori)
     html, testo = composta.html, composta.testo
+    piede_html, piede_testo = piede(chiave)
+    if piede_html:
+        html += f'<hr style="border:0;border-top:1px solid #ccc">{piede_html}'
+        testo += f"\n-- \n{piede_testo}\n"
     if t.facoltativa:
         piede_html, piede_testo = _piede_facoltative()
         html, testo = html + piede_html, testo + piede_testo
-    email = EmailMultiAlternatives(subject=composta.oggetto, body=testo, to=[a])
+    html, immagini = _incorpora(html)
+    email = EmailConImmagini(subject=composta.oggetto, body=testo, to=[a], immagini=immagini)
     email.attach_alternative(_pagina(html), "text/html")
     for nome, contenuto, tipo_mime in allegati:
         email.attach(nome, contenuto, tipo_mime)

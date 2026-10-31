@@ -355,6 +355,12 @@ const router = createRouter({
       component: () => import('@/views/ImpostazioniView.vue'),
     },
     {
+      // The common footer of the emails (DEC-250).
+      path: '/impostazioni/email-piede',
+      name: 'piede-email',
+      component: () => import('@/views/PiedeEmailView.vue'),
+    },
+    {
       // One email template (DEC-250): capigruppo and the technical administrator.
       path: '/impostazioni/email/:chiave',
       name: 'modello-email',

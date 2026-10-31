@@ -171,6 +171,9 @@ async function salva() {
           Il testo di ogni email che l'app manda. Puoi cambiarlo e tornare quando vuoi al testo di
           base; quello che serve davvero (link, codici, le informazioni da mandare) deve restare.
         </p>
+        <p class="small">
+          <RouterLink to="/impostazioni/email-piede">Piè di pagina comune delle email</RouterLink>
+        </p>
         <div class="list-group">
           <RouterLink
             v-for="m in modelli"

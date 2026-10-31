@@ -27,6 +27,7 @@ import fileEarmarkText from 'bootstrap-icons/icons/file-earmark-text.svg?raw'
 import flag from 'bootstrap-icons/icons/flag.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import hourglassSplit from 'bootstrap-icons/icons/hourglass-split.svg?raw'
+import image from 'bootstrap-icons/icons/image.svg?raw'
 import incognito from 'bootstrap-icons/icons/incognito.svg?raw'
 import journalText from 'bootstrap-icons/icons/journal-text.svg?raw'
 import key from 'bootstrap-icons/icons/key.svg?raw'
@@ -53,8 +54,10 @@ import shieldCheck from 'bootstrap-icons/icons/shield-check.svg?raw'
 import shieldLock from 'bootstrap-icons/icons/shield-lock.svg?raw'
 import signpostSplit from 'bootstrap-icons/icons/signpost-split.svg?raw'
 import sliders from 'bootstrap-icons/icons/sliders.svg?raw'
+import table from 'bootstrap-icons/icons/table.svg?raw'
 import tools from 'bootstrap-icons/icons/tools.svg?raw'
 import trash from 'bootstrap-icons/icons/trash.svg?raw'
+import trash3 from 'bootstrap-icons/icons/trash3.svg?raw'
 import typeBold from 'bootstrap-icons/icons/type-bold.svg?raw'
 import typeItalic from 'bootstrap-icons/icons/type-italic.svg?raw'
 import typeUnderline from 'bootstrap-icons/icons/type-underline.svg?raw'
@@ -89,6 +92,7 @@ export const ICONE = {
   flag: flag,
   gear: gear,
   'hourglass-split': hourglassSplit,
+  image: image,
   incognito: incognito,
   'journal-text': journalText,
   key: key,
@@ -115,8 +119,10 @@ export const ICONE = {
   'shield-lock': shieldLock,
   'signpost-split': signpostSplit,
   sliders: sliders,
+  table: table,
   tools: tools,
   trash: trash,
+  trash3: trash3,
   'type-bold': typeBold,
   'type-italic': typeItalic,
   'type-underline': typeUnderline,

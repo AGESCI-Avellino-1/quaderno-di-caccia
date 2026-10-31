@@ -59,6 +59,11 @@ async function ripristina() {
   esito.value = 'Tornato al testo di base.'
 }
 
+async function piede(attivo: boolean) {
+  const dati = await esegui(() => api.piedeDelModello(props.chiave, attivo))
+  if (dati && modello.value) modello.value.con_piede = dati.con_piede
+}
+
 async function vedi() {
   anteprima.value =
     (await esegui(() =>
@@ -86,7 +91,22 @@ async function vedi() {
       <form class="card card-body mb-5" @submit.prevent="salva">
         <label class="form-label small mb-0" for="email-oggetto">Oggetto</label>
         <input id="email-oggetto" v-model="oggetto" class="form-control mb-3" required />
-        <EditorTesto ref="editor" v-model="corpo" etichetta="Testo dell'email" />
+        <EditorTesto ref="editor" v-model="corpo" etichetta="Testo dell'email" immagini />
+        <div class="form-field mt-3">
+          <div class="switch">
+            <input
+              id="email-piede"
+              type="checkbox"
+              role="switch"
+              :checked="modello.con_piede !== false"
+              :disabled="inCorso"
+              @change="piede(($event.target as HTMLInputElement).checked)"
+            />
+          </div>
+          <label for="email-piede">
+            Aggiungi il <RouterLink to="/impostazioni/email-piede">piè di pagina comune</RouterLink>
+          </label>
+        </div>
         <p v-if="modello.facoltativa" class="form-text">
           In fondo l'app aggiunge sempre la riga per scegliere quali email ricevere.
         </p>

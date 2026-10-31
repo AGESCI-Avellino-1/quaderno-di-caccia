@@ -173,6 +173,18 @@ export interface ModelloEmail extends ModelloEmailBreve {
   corpo_predefinito: string
   segnaposto: { nome: string; descrizione: string; indispensabile: boolean }[]
   facoltativa: boolean
+  /** The common footer is added to this email. */
+  con_piede?: boolean
+}
+
+/** The common footer of the emails (DEC-250). */
+export interface PiedeEmail {
+  html: string
+  /** Empty: derived from the HTML. */
+  testo: string
+  segnaposto: string[]
+  anteprima_html: string
+  anteprima_testo: string
 }
 
 export interface AnteprimaEmail {
@@ -2516,6 +2528,19 @@ export const api = {
   paginaLegaleDiBase: (chiave: string) =>
     richiesta<PaginaLegaleModifica>(`/api/v1/impostazioni/pagine/${encodeURIComponent(chiave)}`, {
       metodo: 'DELETE',
+    }),
+  caricaImmagine: (file: File) => {
+    const corpo = new FormData()
+    corpo.append('file', file)
+    return richiesta<{ url: string }>('/api/v1/impostazioni/immagini', { metodo: 'POST', corpo })
+  },
+  piedeEmail: () => richiesta<PiedeEmail>('/api/v1/impostazioni/email-piede'),
+  salvaPiedeEmail: (dati: { html: string; testo: string }) =>
+    richiesta<PiedeEmail>('/api/v1/impostazioni/email-piede', { metodo: 'PUT', corpo: dati }),
+  piedeDelModello: (chiave: string, attivo: boolean) =>
+    richiesta<ModelloEmail>(`/api/v1/impostazioni/email/${encodeURIComponent(chiave)}/piede`, {
+      metodo: 'PUT',
+      corpo: { attivo },
     }),
   segnalaPagamento: (dati: { metodo: 'PAYPAL' | 'BONIFICO'; quote: number[]; data?: string }) =>
     richiesta<Segnalazione>('/api/v1/mie-quote/segnalazioni', { metodo: 'POST', corpo: dati }),

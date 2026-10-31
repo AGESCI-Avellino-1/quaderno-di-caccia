@@ -465,6 +465,23 @@ const SCENE: Scena[] = [
     intera: true,
   },
   {
+    nome: 'capo/correggi-tappa',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Giulia')(pagina)
+      await apri('Sentiero (Progressione Personale)')(pagina)
+      await pagina.getByRole('button', { name: 'correggi una data…' }).first().click()
+      await pagina
+        .getByLabel('Quale data di Scoperta')
+        .selectOption({ label: 'Riconoscimento (Consiglio della Legge)' })
+      await pagina
+        .getByLabel('Perché la correggi')
+        .fill('Il Consiglio della Legge era il giorno prima')
+    },
+    mostra: 'Tappe',
+  },
+  {
     nome: 'capo/stagioni',
     chi: 'capoCerchio',
     percorso: '/unita',

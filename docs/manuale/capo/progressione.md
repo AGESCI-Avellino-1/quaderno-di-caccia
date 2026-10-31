@@ -30,6 +30,17 @@ precisa (per esempio per ricostruire la storia di chi c'era già).
 **La Promessa.** Tocca **Registra la Promessa** e scrivi la data. Se hai sbagliato, **Correggi
 la data della Promessa** chiede il motivo, che resta nella storia.
 
+**Correggere una data.** Se hai sbagliato una data di una tappa (o di un momento, o di un
+passo), accanto a essa tocca **correggi una data…**: scegli quale (inizio, riconoscimento,
+consegna del distintivo), scrivi la data giusta e perché la correggi, e tocca **Correggi**. Se
+correggi il riconoscimento, correggi anche l'inizio della tappa dopo, che di solito è lo
+stesso giorno.
+
+:::{container} schermate
+![La correzione di una data sul telefono](../img/capo/correggi-tappa-telefono.png){.telefono width="30%"}
+![La correzione di una data sul computer](../img/capo/correggi-tappa-computer.png){.computer width="65%"}
+:::
+
 **Impegni e mete** (obiettivi in clan, prede o voli in branco e cerchio). Il ragazzo li può
 proporre: restano **Bozza** finché non li concordate. Lo staff li porta avanti:
 

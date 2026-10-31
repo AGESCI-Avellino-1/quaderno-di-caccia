@@ -155,6 +155,7 @@ const apertura = ref<
   | 'distintivo'
   | 'colloca'
   | 'rettifica'
+  | 'rettifica-tappa'
   | 'carta'
   | 'rettifica-carta'
   | 'responsabilita'
@@ -164,6 +165,32 @@ const conclusione = reactive({ tipo: '' as TipoConclusione | '', nota: '' })
 const quando = ref<DataParziale>(dataOggi())
 const collocamento = reactive({ fase: 'COMPETENZA' as FaseProgressione, motivazione: '' })
 const rettifica = reactive({ motivo: '' })
+// Correcting a date of a tappa, momento or passo, with the reason (DEC-70).
+const correzione = reactive({
+  tappa: null as TappaSentiero | null,
+  campo: 'inizio' as 'inizio' | 'completata' | 'distintivo',
+})
+function apriCorrezione(t: TappaSentiero) {
+  const stessa = apertura.value === 'rettifica-tappa' && correzione.tappa?.id === t.id
+  apertura.value = stessa ? '' : 'rettifica-tappa'
+  quando.value = dataOggi()
+  correzione.tappa = t
+  correzione.campo = 'inizio'
+  rettifica.motivo = ''
+}
+const nomeCompletata = computed(() =>
+  rs.value
+    ? 'Fine del passo'
+    : lc.value
+      ? 'Riconoscimento'
+      : 'Riconoscimento (Consiglio della Legge)',
+)
+const correggiTappa = () =>
+  online(
+    () =>
+      api.rettificaTappa(correzione.tappa!.id, correzione.campo, quando.value, rettifica.motivo),
+    'Data corretta.',
+  )
 
 function apri(cosa: typeof apertura.value) {
   apertura.value = apertura.value === cosa ? '' : cosa
@@ -462,8 +489,50 @@ async function salvaNuova() {
             >
             <template v-else-if="t.in_corso"> · in corso</template>
           </span>
+          <button
+            v-if="scheda.puo_gestire"
+            type="button"
+            class="btn btn-sm btn-link py-0"
+            @click="apriCorrezione(t)"
+          >
+            correggi una data…
+          </button>
         </li>
       </ol>
+      <form
+        v-if="apertura === 'rettifica-tappa' && correzione.tappa"
+        class="d-flex flex-wrap align-items-end gap-3 mb-3"
+        @submit.prevent="correggiTappa"
+      >
+        <div>
+          <label class="form-label small" for="tappa-campo"
+            >Quale data di {{ correzione.tappa.fase_nome }}</label
+          >
+          <select id="tappa-campo" v-model="correzione.campo" class="form-control form-control-sm">
+            <option value="inizio">Inizio</option>
+            <option v-if="correzione.tappa.completata" value="completata">
+              {{ nomeCompletata }}
+            </option>
+            <option v-if="correzione.tappa.distintivo" value="distintivo">
+              Consegna del distintivo
+            </option>
+          </select>
+        </div>
+        <InputDataParziale id="tappa-r" v-model="quando" etichetta="Data giusta" />
+        <div class="flex-grow-1">
+          <label class="form-label small" for="motivo-tappa">Perché la correggi</label>
+          <input
+            id="motivo-tappa"
+            v-model="rettifica.motivo"
+            class="form-control form-control-sm"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+          Correggi
+        </button>
+        <button type="button" class="btn btn-sm btn-link" @click="apertura = ''">Annulla</button>
+      </form>
       <p v-if="tappa?.fase === 'RESPONSABILITA' && tappa.completata && eg" class="small fg-2">
         Il sentiero continua fino al passaggio in noviziato.
       </p>

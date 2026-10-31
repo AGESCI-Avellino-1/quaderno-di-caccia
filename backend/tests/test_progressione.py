@@ -116,6 +116,20 @@ def test_due_invii_dello_stesso_riconoscimento(capo, ragazza):
     assert Tappa.objects.filter(fase=Fase.COMPETENZA).count() == 1
 
 
+def test_le_date_di_una_tappa_si_correggono_con_il_motivo(capo, altro_capo, ragazza):
+    """A recording mistake is corrected with its reason, by the staff only (DEC-70)."""
+    scoperta = _tappa_in_corso(_apri(capo, ragazza))
+    _post(capo, f"/api/v1/progressione/tappe/{scoperta['id']}/riconosci", _giorno(100))
+    url = f"/api/v1/progressione/tappe/{scoperta['id']}"
+    giusta = {**_giorno(101), "campo": "completata", "motivo": "Il Consiglio era il giorno prima"}
+    assert _put(altro_capo, url, giusta).status_code == 403
+    assert _put(capo, url, {**giusta, "motivo": ""}).status_code == 400
+    assert _put(capo, url, giusta).status_code == 200
+    tappa = Tappa.objects.get(pk=scoperta["id"])
+    assert tappa.completata_il == OGGI - timedelta(days=101)
+    assert tappa.nota_rettifica == "Il Consiglio era il giorno prima"
+
+
 def test_dopo_la_responsabilita_il_sentiero_continua(capo, ragazza):
     """§13 and §19.3: responsabilità concluded in February, passaggio in October: the
     sentiero stays open, new impegni are still possible (V16)."""

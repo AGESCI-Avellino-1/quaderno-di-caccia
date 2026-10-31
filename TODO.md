@@ -126,6 +126,20 @@ già scritti cambiano. Un commit per blocco, provato nel browser.
 | N.4 | Modelli delle email: tutte le email (anche quelle di allauth) da un registro di modelli con segnaposto, editor di testo formattato, HTML ripulito sul server, testo semplice ricavato, segnaposto indispensabili controllati al salvataggio, ritorno al modello di base, anteprima | DEC-250 | ✅ provato nel browser il 31/10 (modello dell'invito: segnaposto mancante rifiutato, reinserito, anteprima); 28 email, comprese le 6 di allauth; ricevute e riepiloghi ora partono uno per indirizzo |
 | N.5 | Manuale: rigenerare le schermate e rivedere i passi dei capitoli già scritti (introduzione, genitore) per la nuova navigazione | DEC-238 | ⏳ |
 
+### Lista d'attesa (prima di continuare il manuale)
+
+Richiesta del maintainer del 31/10/2026: la lista d'attesa di chi vuole entrare nel gruppo,
+con la sua sezione del manuale. Decisioni nell'analisi quando confermate.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| L.1 | Analisi: dati, chi vede e gestisce, conferma dell'email, promemoria dei due anni, età minime e massime delle unità, privacy | DEC-256…DEC-263 | ✅ 31/10 |
+| L.2 | Iscrizione pubblica alla lista (genitore o maggiorenne, senza account), email di conferma con il link per modificare o cancellarsi, link ritrovabile con l'email; inserimento da parte di un capo | DEC-256…DEC-258 | ⏳ |
+| L.3 | Vista dei capi: per età nell'anno in corso e nel successivo, branca e unità consigliate (età minime e massime per unità), contattato / da contattare e per quale unità | DEC-259…DEC-261 | ⏳ |
+| L.4 | Iscrizione: l'unità scelta, il link al genitore (o al maggiorenne) per i dati dell'iscrizione, che prosegue come l'iscrizione dall'app (DEC-120…DEC-127) | DEC-261 | ⏳ |
+| L.5 | Promemoria dei due anni (contati da quando si raggiunge l'età minima di un'unità del gruppo), uscita dopo 30 giorni senza risposta | DEC-262, DEC-263 | ⏳ |
+| L.6 | Manuale: la sezione della lista d'attesa (famiglie e capi) | DEC-238 | ⏳ |
+
 ### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
 
 Argomenti da spiegare bene ai capi, perché non sono chiari a tutti:

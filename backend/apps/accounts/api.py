@@ -92,6 +92,8 @@ class Profilo(Schema):
     # unit (GIUNGLA, BOSCO or None) that names their Progressione personale.
     unita_servizio: list[UnitaBreve]
     ambiente: str | None
+    # Payments families reported that this user may check (DEC-255).
+    pagamenti_da_verificare: int = 0
 
 
 @router.get("/io", response=Profilo)
@@ -145,7 +147,19 @@ def profilo(request):
             for u in policy.unita_di_servizio(user)
         ],
         "ambiente": ambiente(persona) if persona is not None else None,
+        "pagamenti_da_verificare": _pagamenti_da_verificare(user),
     }
+
+
+def _pagamenti_da_verificare(user) -> int:
+    from apps.quote.models import SegnalazionePagamento, StatoSegnalazione
+
+    if not policy.e_capo(user) and not policy.e_tesoriere(user):
+        return 0
+    in_attesa = SegnalazionePagamento.objects.filter(
+        stato=StatoSegnalazione.IN_VERIFICA
+    ).prefetch_related("quote__persona")
+    return sum(1 for s in in_attesa if policy.puo_verificare_segnalazione(user, s))
 
 
 class NuovoInvito(Schema):

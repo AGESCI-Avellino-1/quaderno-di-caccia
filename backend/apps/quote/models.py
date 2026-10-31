@@ -313,6 +313,7 @@ class MetodoPagamento(models.TextChoices):
 
     CONTANTI = "CONTANTI", "Contanti"
     BONIFICO = "BONIFICO", "Bonifico"
+    PAYPAL = "PAYPAL", "PayPal"
     ALTRO = "ALTRO", "Altro"
 
 
@@ -387,3 +388,64 @@ class ContatoreRicevute(models.Model):
 
     def __str__(self) -> str:
         return f"Ricevute {AnnoAssociativo(self.anno).etichetta}: {self.ultimo}"
+
+
+# --- Payments the family reports (DEC-255) -------------------------------------------------
+
+
+class StatoSegnalazione(models.TextChoices):
+    IN_VERIFICA = "IN_VERIFICA", "In verifica"
+    CONFERMATA = "CONFERMATA", "Confermata"
+    RIFIUTATA = "RIFIUTATA", "Non confermata"
+    ANNULLATA = "ANNULLATA", "Annullata"
+
+
+# The ways a family pays by itself, and reports.
+METODI_SEGNALABILI = (MetodoPagamento.PAYPAL, MetodoPagamento.BONIFICO)
+
+
+class SegnalazionePagamento(ModelloTracciato):
+    """A payment the family made outside the app (PayPal, bank transfer) and reports: the
+    fees stay "in verifica" until a capo confirms it, and only then the payment exists,
+    with its receipt and its place in the cash book."""
+
+    metodo = models.CharField(max_length=10, choices=MetodoPagamento.choices)
+    quote = models.ManyToManyField(Quota, related_name="segnalazioni")
+    # What was left to pay on those fees when reported, and PayPal's extra (DEC-253).
+    importo = _euro()
+    maggiorazione = _euro(default=Decimal("0.00"))
+    data = models.DateField()
+    segnalata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    # The family's proof (PDF, JPEG, PNG), under a random name, served by the API only and
+    # deleted at the check (DEC-255, as DEC-200).
+    ricevuta = models.FileField(upload_to="segnalazioni/", blank=True)
+    ricevuta_tipo = models.CharField(max_length=40, blank=True)
+    stato = models.CharField(
+        max_length=12, choices=StatoSegnalazione.choices, default=StatoSegnalazione.IN_VERIFICA
+    )
+    verificata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    verificata_il = models.DateTimeField(null=True, blank=True)
+    motivo_rifiuto = models.CharField(max_length=300, blank=True)
+    pagamento = models.OneToOneField(
+        Pagamento,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="segnalazione",
+    )
+
+    class Meta:
+        verbose_name = "pagamento segnalato"
+        verbose_name_plural = "pagamenti segnalati"
+        ordering = ["creato_il"]
+
+    def __str__(self) -> str:
+        return f"{self.get_metodo_display()} {self.importo} € ({self.get_stato_display()})"

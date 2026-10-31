@@ -385,6 +385,7 @@ async function reinvia(id: number) {
             <select id="paga-metodo" v-model="modulo.metodo" class="form-control form-control-sm">
               <option value="CONTANTI">Contanti</option>
               <option value="BONIFICO">Bonifico</option>
+              <option value="PAYPAL">PayPal</option>
               <option value="ALTRO">Altro</option>
             </select>
           </div>

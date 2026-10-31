@@ -245,6 +245,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
             ? 'Tipi di quota, emissione e chi ha pagato'
             : 'Chi ha pagato nelle unità',
         },
+        ((p.pagamenti_da_verificare ?? 0) > 0 || p.gestisce_quote) && {
+          nome: 'Pagamenti da verificare',
+          icona: 'check2-square',
+          to: '/pagamenti-da-verificare',
+          descrizione: 'PayPal e bonifici segnalati dalle famiglie',
+          contatore: p.pagamenti_da_verificare || undefined,
+        },
         p.vede_cassa && {
           nome: 'Prima nota',
           icona: 'journal-text',

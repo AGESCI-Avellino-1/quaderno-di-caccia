@@ -16,3 +16,4 @@ class QuoteConfig(AppConfig):
         auditlog.register(models.LegameConiugale)
         auditlog.register(models.Pagamento)
         auditlog.register(models.RipartizionePagamento)
+        auditlog.register(models.SegnalazionePagamento)

@@ -40,6 +40,15 @@ class Catalogo:
         )
 
 
+# The app's own categories under a Modello D line, so these movements are easy to find
+# when writing the balance on the national app (DEC-254): (side, line, key, name).
+VOCI_QDC = (
+    (ENTRATA, "A.10", "paypal", "Quota PayPal"),
+    (USCITA, "A.2", "paypal", "Trattenuta PayPal"),
+)
+QUOTA_PAYPAL, TRATTENUTA_PAYPAL = "E:A.10:paypal", "U:A.2:paypal"
+
+
 @cache
 def catalogo() -> Catalogo:
     file = sorted(CATALOGHI.glob("modello_d_*.json"))[-1]
@@ -61,6 +70,10 @@ def catalogo() -> Catalogo:
                     voci.append(
                         Voce(f"{lato}:{riga}:{posizione}", lato, riga, linea["titolo"], nome)
                     )
+    titoli = {(lato, riga): titolo for lato, riga, titolo in righe}
+    for lato, riga, chiave, nome in VOCI_QDC:
+        if (lato, riga) in titoli:
+            voci.append(Voce(f"{lato}:{riga}:{chiave}", lato, riga, titoli[(lato, riga)], nome))
     return Catalogo(dati["anno_bilancio"], tuple(voci), tuple(righe))
 
 

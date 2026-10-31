@@ -635,3 +635,130 @@ def test_la_famiglia_vede_solo_i_modi_abilitati(quote_famiglia, capogruppo, geni
         assert riga["link"] == f"https://www.paypal.com/paypalme/gruppo/{importo:.2f}"
     assert len(paypal["per_quota"]) == len([q for q in dati["quote"] if Decimal(q["residuo"])])
     assert "2,00 €" in modi["paypal"]["regola"]
+
+
+# --- Payments the family reports (DEC-255) and the cash book (DEC-254) ---------------------
+
+PDF = b"%PDF-1.4 ricevuta di prova"
+
+
+def _segnala(chi, quote, metodo="PAYPAL"):
+    return _client(chi).post(
+        "/api/v1/mie-quote/segnalazioni",
+        {"metodo": metodo, "quote": [q.pk for q in quote]},
+        content_type="application/json",
+    )
+
+
+@pytest.fixture
+def conto_paypal(gruppo):
+    from apps.cassa.models import Cassa, TipoCassa
+
+    gruppo.paypal_attivo = True
+    gruppo.link_pagamento = "https://paypal.me/gruppo"
+    gruppo.paypal_maggiorazione = "FISSA"
+    gruppo.paypal_valore = Decimal("2")
+    gruppo.save()
+    return Cassa.objects.create(
+        nome="PayPal",
+        tipo=TipoCassa.PAYPAL,
+        saldo_iniziale=Decimal("0"),
+        data_saldo_iniziale=INIZIO_ANNO,
+    )
+
+
+def test_la_famiglia_segnala_e_la_quota_va_in_verifica(
+    quote_famiglia, conto_paypal, genitore, staff, estraneo
+):
+    sua, del_fratello = quote_famiglia
+    assert _segnala(estraneo, [sua]).status_code == 404
+    assert _segnala(staff, [sua]).status_code == 404  # not their family's fee
+    assert _segnala(genitore, [sua], metodo="CONTANTI").status_code == 400
+    risposta = _segnala(genitore, [sua, del_fratello])
+    assert risposta.status_code == 201
+    dati = risposta.json()
+    assert Decimal(dati["importo"]) == sua.residuo + del_fratello.residuo
+    assert Decimal(dati["maggiorazione"]) == Decimal("2.00")
+    assert _segnala(genitore, [sua]).status_code == 400  # already waiting
+    mie = _client(genitore).get(f"/api/v1/mie-quote?anno={ANNO}").json()
+    assert all(q["in_verifica"] for q in mie["quote"])
+    assert [s["id"] for s in mie["segnalazioni"]] == [dati["id"]]
+    assert _client(staff).get("/api/v1/io").json()["pagamenti_da_verificare"] == 1
+    assert _client(genitore).get("/api/v1/io").json()["pagamenti_da_verificare"] == 0
+
+
+def test_ricevuta_della_famiglia(quote_famiglia, conto_paypal, genitore, staff, estraneo):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    sua, _ = quote_famiglia
+    seg = _segnala(genitore, [sua]).json()["id"]
+    url = f"/api/v1/segnalazioni/{seg}/ricevuta"
+    falso = SimpleUploadedFile("r.pdf", b"not a pdf", content_type="application/pdf")
+    assert _client(genitore).post(url, {"file": falso}).status_code == 400
+    vero = SimpleUploadedFile("r.pdf", PDF, content_type="application/pdf")
+    assert _client(staff).post(url, {"file": vero}).status_code == 403  # not their payment
+    vero = SimpleUploadedFile("r.pdf", PDF, content_type="application/pdf")
+    assert _client(genitore).post(url, {"file": vero}).json()["ricevuta"] is True
+    assert b"".join(_client(staff).get(url).streaming_content) == PDF
+    assert _client(estraneo).get(url).status_code == 404
+
+
+def test_conferma_paypal_in_prima_nota(
+    quote_famiglia, conto_paypal, genitore, staff, django_capture_on_commit_callbacks
+):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.cassa.models import Movimento
+    from apps.quote.models import SegnalazionePagamento
+
+    sua, _ = quote_famiglia
+    residuo = sua.residuo
+    seg = _segnala(genitore, [sua]).json()["id"]
+    ricevuta = SimpleUploadedFile("r.pdf", PDF, content_type="application/pdf")
+    _client(genitore).post(f"/api/v1/segnalazioni/{seg}/ricevuta", {"file": ricevuta})
+    url = f"/api/v1/segnalazioni/{seg}/conferma"
+    assert _client(genitore).post(url, {}, content_type="application/json").status_code == 403
+    # PayPal credited 1,20 € less than the family paid.
+    accreditato = str(residuo + 2 - Decimal("1.20"))
+    with django_capture_on_commit_callbacks(execute=True):
+        risposta = _client(staff).post(
+            url, {"accreditato": accreditato}, content_type="application/json"
+        )
+    assert risposta.status_code == 200 and Decimal(risposta.json()["importo"]) == residuo
+    sua.refresh_from_db()
+    assert sua.residuo == 0
+    movimenti = Movimento.objects.filter(cassa=conto_paypal)
+    assert {(m.voce_nome, m.effetto) for m in movimenti if m.voce_nome.endswith("PayPal")} == {
+        ("Quota PayPal", Decimal("2.00")),
+        ("Trattenuta PayPal", Decimal("-1.20")),
+    }
+    segnalazione = SegnalazionePagamento.objects.get(pk=seg)
+    assert segnalazione.stato == "CONFERMATA" and not segnalazione.ricevuta  # proof deleted
+    assert any("Ricevuta" in m.subject for m in mail.outbox)
+    # Cancelling the payment reverses the PayPal lines too.
+    servizi.annulla_pagamento(segnalazione.pagamento, staff.utente, "prova")
+    assert sum(m.effetto for m in Movimento.objects.filter(cassa=conto_paypal)) == 0
+
+
+def test_rifiuto_e_annullamento(
+    quote_famiglia, conto_paypal, genitore, staff, django_capture_on_commit_callbacks
+):
+    sua, del_fratello = quote_famiglia
+    seg = _segnala(genitore, [sua], metodo="BONIFICO").json()["id"]
+    url = f"/api/v1/segnalazioni/{seg}/rifiuta"
+    assert (
+        _client(staff).post(url, {"motivo": " "}, content_type="application/json").status_code
+        == 400
+    )
+    with django_capture_on_commit_callbacks(execute=True):
+        rifiuto = _client(staff).post(
+            url, {"motivo": "Non lo troviamo in banca."}, content_type="application/json"
+        )
+    assert rifiuto.status_code == 200
+    [avviso] = [m for m in mail.outbox if "non confermato" in m.subject]
+    assert avviso.to == [genitore.utente.email] and "Non lo troviamo in banca." in avviso.body
+    # The family cancels its own report while it waits.
+    altra = _segnala(genitore, [del_fratello]).json()["id"]
+    assert _client(staff).delete(f"/api/v1/segnalazioni/{altra}").status_code == 403
+    assert _client(genitore).delete(f"/api/v1/segnalazioni/{altra}").status_code == 204
+    assert _client(staff).get("/api/v1/segnalazioni").json() == []

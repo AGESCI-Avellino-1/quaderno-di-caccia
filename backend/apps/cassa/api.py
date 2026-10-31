@@ -18,7 +18,15 @@ from apps.permessi import policy
 
 from . import servizi
 from .catalogo import catalogo
-from .models import Cassa, Movimento, SpesaAnticipata, TipoCassa, TipoMovimento, VerificaCassa
+from .models import (
+    CASSE_DI_GRUPPO,
+    Cassa,
+    Movimento,
+    SpesaAnticipata,
+    TipoCassa,
+    TipoMovimento,
+    VerificaCassa,
+)
 
 router = Router(tags=["cassa"])
 
@@ -116,7 +124,7 @@ def _casse_visibili(user):
     casse = Cassa.objects.all()
     if unita is None:
         return casse
-    return casse.filter(unita_id__in=unita) | casse.filter(tipo=TipoCassa.BANCA)
+    return casse.filter(unita_id__in=unita) | casse.filter(tipo__in=CASSE_DI_GRUPPO)
 
 
 @router.get("/casse", response=list[CassaOut])

@@ -32,6 +32,13 @@ def _euro(**campi) -> models.DecimalField:
 class TipoCassa(models.TextChoices):
     BANCA = "BANCA", "Conto bancario"
     CONTANTI = "CONTANTI", "Contanti"
+    # The group's PayPal account (DEC-254): like the bank account, of the whole group;
+    # its transfers to the bank are giroconti.
+    PAYPAL = "PAYPAL", "Conto PayPal"
+
+
+# Accounts of the whole group: no unit on the box, the unit is on each movement.
+CASSE_DI_GRUPPO = (TipoCassa.BANCA, TipoCassa.PAYPAL)
 
 
 class Cassa(ModelloTracciato):
@@ -58,9 +65,10 @@ class Cassa(ModelloTracciato):
         return self.nome
 
     def clean(self) -> None:
-        if self.tipo == TipoCassa.BANCA and self.unita_id:
+        if self.tipo in CASSE_DI_GRUPPO and self.unita_id:
             raise ValidationError(
-                "Il conto bancario è del gruppo: le unità si indicano sui movimenti."
+                f"Il {self.get_tipo_display().lower()} è del gruppo: le unità si indicano sui "
+                "movimenti."
             )
 
     def saldo(self, al_giorno=None) -> Decimal:

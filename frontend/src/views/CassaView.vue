@@ -304,7 +304,7 @@ function apriCassa(c: Cassa | null) {
 async function salvaCassa() {
   const dati = modificaCassa.value
   if (!dati) return
-  const corpo: CassaIn = { ...dati, unita_id: dati.tipo === 'BANCA' ? null : dati.unita_id }
+  const corpo: CassaIn = { ...dati, unita_id: dati.tipo === 'CONTANTI' ? dati.unita_id : null }
   const fatto = await esegui(() =>
     dati.id ? api.modificaCassa(dati.id, corpo) : api.creaCassa(corpo),
   )
@@ -312,6 +312,9 @@ async function salvaCassa() {
   modificaCassa.value = null
   await caricaCasse()
 }
+
+// The group's accounts (bank, PayPal, DEC-254) have no unit: it is on each movement.
+const nomeTipo = (tipo: string) => (tipo === 'PAYPAL' ? 'Conto PayPal' : 'Conto bancario')
 </script>
 
 <template>
@@ -386,7 +389,7 @@ async function salvaCassa() {
           >
             <strong>{{ c.nome }}</strong>
             <span class="small fg-2">{{
-              c.tipo === 'BANCA' ? 'Conto bancario' : etichettaUnita(c.unita_id)
+              c.tipo === 'CONTANTI' ? etichettaUnita(c.unita_id) : nomeTipo(c.tipo)
             }}</span>
             <span v-if="c.saldo !== null">Saldo {{ euro(c.saldo) }}</span>
             <span v-if="c.senza_giustificativo" class="badge theme-warning align-self-start">
@@ -509,7 +512,7 @@ async function salvaCassa() {
                 </option>
               </select>
             </div>
-            <div v-if="cassa.tipo === 'BANCA'" class="md:col-6">
+            <div v-if="cassa.tipo !== 'CONTANTI'" class="md:col-6">
               <label class="form-label small" for="mov-unita">Per l'unità</label>
               <select id="mov-unita" v-model="nuovo.unita_id" class="form-control form-control-sm">
                 <option :value="null">Gruppo</option>
@@ -620,7 +623,9 @@ async function salvaCassa() {
                   m.cassa_id === cassa.id ? `verso ${m.cassa_destinazione}` : `da ${m.cassa}`
                 }}</template
               >
-              <template v-if="cassa.tipo === 'BANCA'"> · {{ nomeDellUnita(m.unita_id) }}</template>
+              <template v-if="cassa.tipo !== 'CONTANTI'">
+                · {{ nomeDellUnita(m.unita_id) }}</template
+              >
               <template v-if="m.evento"> · {{ m.evento }}</template>
               <template v-if="m.registrato_da"> · {{ m.registrato_da }}</template>
             </div>
@@ -895,6 +900,7 @@ async function salvaCassa() {
             >
               <option value="CONTANTI">Contanti</option>
               <option value="BANCA">Conto bancario</option>
+              <option value="PAYPAL">Conto PayPal</option>
             </select>
           </div>
           <div v-if="modificaCassa.tipo === 'CONTANTI'" class="md:col-6">
@@ -959,7 +965,7 @@ async function salvaCassa() {
           <span>
             {{ c.nome }}
             <span class="small fg-2">
-              · {{ c.tipo === 'BANCA' ? 'Conto bancario' : etichettaUnita(c.unita_id) }} · saldo
+              · {{ c.tipo === 'CONTANTI' ? etichettaUnita(c.unita_id) : nomeTipo(c.tipo) }} · saldo
               iniziale {{ euro(c.saldo_iniziale) }} al {{ data(c.data_saldo_iniziale) }}
             </span>
           </span>

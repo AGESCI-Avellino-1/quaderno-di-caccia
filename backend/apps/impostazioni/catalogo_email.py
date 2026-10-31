@@ -238,6 +238,22 @@ _TIPI = [
         ),
         facoltativa=True,
     ),
+    TipoEmail(
+        "pagamento_non_confermato",
+        "Pagamento non confermato",
+        "A chi ha segnalato un pagamento con PayPal o con bonifico, quando un capo non lo "
+        "trova o non lo conferma.",
+        "[Nome sito]: pagamento non confermato",
+        "<p>Ciao,</p><p>il pagamento di [Importo] che hai segnalato il [Data] non è stato "
+        "confermato:<br>[Motivo]</p><p>Le quote restano da pagare; trovi tutto qui:<br>[Link]"
+        "</p><p>Per chiarimenti rivolgiti ai capi.</p>",
+        (
+            Segnaposto("Importo", "l'importo segnalato", "37,00 €", True),
+            Segnaposto("Data", "il giorno del pagamento", "31/10/2026"),
+            MOTIVO,
+            _link("la pagina delle quote"),
+        ),
+    ),
     # --- Notice board ----------------------------------------------------------------------
     TipoEmail(
         "avviso_bacheca",

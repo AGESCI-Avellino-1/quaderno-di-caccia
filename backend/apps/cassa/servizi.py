@@ -219,13 +219,17 @@ def unita_del_socio(persona):
 
 
 def cassa_per_pagamento(pagamento, righe) -> Cassa | None:
-    """Cash goes to the cash box of the first member's unit, everything else to the
-    bank account; None when the group has not set them up yet."""
+    """Cash goes to the cash box of the first member's unit, PayPal to the PayPal
+    account, everything else to the bank account; None when the group has not set them
+    up yet."""
     if pagamento.metodo == "CONTANTI":
         unita = unita_del_socio(righe[0].quota.persona)
         cassa = Cassa.objects.filter(attiva=True, tipo=TipoCassa.CONTANTI, unita=unita).first()
         if cassa:
             return cassa
+    if pagamento.metodo == "PAYPAL":
+        # The PayPal account (DEC-254); without one the payment waits outside the cash book.
+        return Cassa.objects.filter(attiva=True, tipo=TipoCassa.PAYPAL).first()
     return Cassa.objects.filter(attiva=True, tipo=TipoCassa.BANCA).first()
 
 

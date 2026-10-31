@@ -60,6 +60,8 @@ export interface Profilo {
   unita_servizio?: { id: number; nome: string; tipo: string; branca: string }[]
   /** L/C setting of the child's unit, which names their Progressione personale. */
   ambiente?: 'GIUNGLA' | 'BOSCO' | null
+  /** Payments families reported that this user may check (DEC-255). */
+  pagamenti_da_verificare?: number
 }
 
 /** What every page needs for its title and footer, also before the login (DEC-246). */
@@ -811,7 +813,7 @@ export interface Dispositivo {
 
 export type CategoriaQuota = 'CENSIMENTO' | 'GRUPPO' | 'MENSILE'
 export type Destinatari = 'TUTTI' | 'RAGAZZI' | 'CAPI' | 'UNITA'
-export type MetodoPagamento = 'CONTANTI' | 'BONIFICO' | 'ALTRO'
+export type MetodoPagamento = 'CONTANTI' | 'BONIFICO' | 'PAYPAL' | 'ALTRO'
 
 export interface TipoQuotaIn {
   nome: string
@@ -853,6 +855,8 @@ export interface Quota {
   motivo_annullamento: string
   /** Still unpaid from an earlier year, carried over (DEC-216). */
   arretrata: boolean
+  /** A payment the family reported waits for the check (DEC-255). */
+  in_verifica?: boolean
 }
 
 export interface QuotePersona {
@@ -913,7 +917,27 @@ export interface MieQuote {
   pagamenti: Pagamento[]
   /** Missing in a device copy saved before DEC-253. */
   modi_pagamento?: ModiPagamento
+  /** Payments the family reported, waiting for the check (DEC-255). */
+  segnalazioni?: Segnalazione[]
 }
+
+/** A payment the family made outside the app and reported (DEC-255). */
+export interface Segnalazione {
+  id: number
+  metodo: 'PAYPAL' | 'BONIFICO'
+  metodo_nome: string
+  quote: Quota[]
+  importo: string
+  maggiorazione: string
+  data: string
+  segnalata_da: string
+  ricevuta: boolean
+  creata_il: string
+  puo_modificare: boolean
+  puo_verificare: boolean
+}
+
+export const ricevutaSegnalazione = (id: number) => `/api/v1/segnalazioni/${id}/ricevuta`
 
 export interface FasciaPaypal {
   fino_a: string | null
@@ -953,7 +977,7 @@ export interface Coniugi {
 
 // --- Cash book --------------------------------------------------------------------------------
 
-export type TipoCassa = 'BANCA' | 'CONTANTI'
+export type TipoCassa = 'BANCA' | 'CONTANTI' | 'PAYPAL'
 export type TipoMovimento = 'ENTRATA' | 'USCITA' | 'GIROCONTO' | 'RETTIFICA'
 
 export interface VoceModelloD {
@@ -2339,6 +2363,26 @@ export const api = {
     }),
   togliConiugi: (id: number) =>
     richiesta<void>(`/api/v1/quote/coniugi/${id}`, { metodo: 'DELETE' }),
+  segnalaPagamento: (dati: { metodo: 'PAYPAL' | 'BONIFICO'; quote: number[]; data?: string }) =>
+    richiesta<Segnalazione>('/api/v1/mie-quote/segnalazioni', { metodo: 'POST', corpo: dati }),
+  caricaRicevutaSegnalazione: (id: number, file: File) => {
+    const corpo = new FormData()
+    corpo.append('file', file)
+    return richiesta<Segnalazione>(`/api/v1/segnalazioni/${id}/ricevuta`, {
+      metodo: 'POST',
+      corpo,
+    })
+  },
+  annullaSegnalazione: (id: number) =>
+    richiesta<void>(`/api/v1/segnalazioni/${id}`, { metodo: 'DELETE' }),
+  segnalazioni: () => richiesta<Segnalazione[]>('/api/v1/segnalazioni'),
+  confermaSegnalazione: (id: number, dati: { data?: string; accreditato?: string | null }) =>
+    richiesta<Pagamento>(`/api/v1/segnalazioni/${id}/conferma`, { metodo: 'POST', corpo: dati }),
+  rifiutaSegnalazione: (id: number, motivo: string) =>
+    richiesta<Segnalazione>(`/api/v1/segnalazioni/${id}/rifiuta`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
   impostazioniQuote: () => richiesta<ImpostazioniPagamenti>('/api/v1/quote/impostazioni'),
   salvaImpostazioniQuote: (dati: ImpostazioniPagamenti) =>
     richiesta<ImpostazioniPagamenti>('/api/v1/quote/impostazioni', {

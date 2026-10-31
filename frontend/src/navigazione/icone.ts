@@ -13,6 +13,7 @@ import calendarEvent from 'bootstrap-icons/icons/calendar-event.svg?raw'
 import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
 import cash from 'bootstrap-icons/icons/cash.svg?raw'
 import cashCoin from 'bootstrap-icons/icons/cash-coin.svg?raw'
+import check2Square from 'bootstrap-icons/icons/check2-square.svg?raw'
 import chevronDown from 'bootstrap-icons/icons/chevron-down.svg?raw'
 import chevronUp from 'bootstrap-icons/icons/chevron-up.svg?raw'
 import cloudUpload from 'bootstrap-icons/icons/cloud-upload.svg?raw'
@@ -73,6 +74,7 @@ export const ICONE = {
   calendar3: calendar3,
   cash: cash,
   'cash-coin': cashCoin,
+  'check2-square': check2Square,
   'chevron-down': chevronDown,
   'chevron-up': chevronUp,
   'cloud-upload': cloudUpload,

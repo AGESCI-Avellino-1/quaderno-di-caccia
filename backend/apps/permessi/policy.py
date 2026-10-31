@@ -584,6 +584,12 @@ def puo_registrare_pagamenti(user, persona: Persona) -> bool:
     )
 
 
+def puo_verificare_segnalazione(user, segnalazione) -> bool:
+    """A payment the family reported (DEC-255): who may record payments for every member
+    whose fees it covers."""
+    return all(puo_registrare_pagamenti(user, q.persona) for q in segnalazione.quote.all())
+
+
 def puo_annullare_pagamento(user, pagamento) -> bool:
     """The capigruppo and the group treasurer; who recorded it, until a cash check of
     a box it went into (DEC-148)."""
@@ -657,7 +663,7 @@ def puo_registrare_in_cassa(user, cassa) -> bool:
     account, whoever keeps any unit (the movement then says which unit)."""
     if cassa.unita_id is not None:
         return puo_registrare_movimenti(user, cassa.unita_id)
-    if cassa.tipo == "BANCA":
+    if cassa.tipo in ("BANCA", "PAYPAL"):
         return puo_gestire_casse(user) or bool(_unita_tesoreria(user))
     return puo_gestire_casse(user)
 

@@ -158,6 +158,12 @@ const router = createRouter({
       component: () => import('@/views/QuoteView.vue'),
     },
     {
+      // Payments the families reported: who records payments checks them (DEC-255).
+      path: '/pagamenti-da-verificare',
+      name: 'pagamenti-da-verificare',
+      component: () => import('@/views/PagamentiDaVerificareView.vue'),
+    },
+    {
       // The bank statement: group treasurer and capigruppo; the API decides (DEC-221).
       path: '/banca',
       name: 'banca',

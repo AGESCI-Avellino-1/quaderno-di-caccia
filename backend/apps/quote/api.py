@@ -5,9 +5,10 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
-from ninja import Router, Schema
+from django.utils import timezone
+from ninja import File, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 from ninja.responses import Status
 
@@ -17,7 +18,7 @@ from apps.core.chiusura import anno_chiuso
 from apps.organizzazione.models import Gruppo, Unita
 from apps.permessi import policy
 
-from . import modi_pagamento, servizi
+from . import modi_pagamento, segnalazioni, servizi
 from .models import (
     Agevolazione,
     CategoriaQuota,
@@ -26,6 +27,8 @@ from .models import (
     MetodoPagamento,
     Pagamento,
     Quota,
+    SegnalazionePagamento,
+    StatoSegnalazione,
     TipoQuota,
 )
 from .ricevute import pdf
@@ -181,6 +184,8 @@ class QuotaOut(Schema):
     motivo_annullamento: str = ""
     # Unpaid from an earlier year, shown with the year asked (DEC-216).
     arretrata: bool = False
+    # A payment the family reported waits for the check (DEC-255).
+    in_verifica: bool = False
 
 
 def _quota_out(user, quota: Quota) -> dict:
@@ -262,8 +267,10 @@ def quote_persona(request, persona_id: int, anno: int | None = None):
             for q in _quote(altri, anno)
             if not q.annullata_il and q.residuo > 0 and policy.puo_vedere_quote(utente, q.persona)
         ]
+    sue = list(_quote([persona], anno))
+    da_verificare = segnalazioni.in_verifica(sue)
     return {
-        "quote": [_quota_out(utente, q) for q in _quote([persona], anno)],
+        "quote": [{**_quota_out(utente, q), "in_verifica": q.pk in da_verificare} for q in sue],
         "famiglia": famiglia,
         "puo_registrare": puo_registrare,
         "puo_gestire": policy.puo_gestire_quote(utente),
@@ -586,26 +593,43 @@ class MieQuoteOut(Schema):
     quote: list[QuotaOut]
     pagamenti: list[PagamentoOut] = []
     modi_pagamento: ModiPagamentoOut = ModiPagamentoOut()
+    segnalazioni: list[SegnalazioneOut] = []
+
+
+def _persone_della_famiglia(utente) -> list[Persona]:
+    """The user and the children whose fees they see (an adult child's while still
+    linked, DEC-26)."""
+    persone = [p for p in policy.tutelati(utente) if policy.puo_vedere_quote(utente, p)]
+    propria = policy.persona_di(utente)
+    if propria is not None:
+        persone.insert(0, propria)
+    return persone
 
 
 @router.get("/mie-quote", response=MieQuoteOut)
 def mie_quote(request, anno: int | None = None):
     """The user's own fees and those of their children (of an adult child while still
-    linked, DEC-26), with the payments and the group's payment link (DEC-83)."""
+    linked, DEC-26), with the payments, the ways to pay (DEC-253) and the payments
+    reported and waiting for the check (DEC-255)."""
     utente = request.auth
-    persone = [p for p in policy.tutelati(utente) if policy.puo_vedere_quote(utente, p)]
-    propria = policy.persona_di(utente)
-    if propria is not None:
-        persone.insert(0, propria)
+    persone = _persone_della_famiglia(utente)
     anno = _anno(anno)
     pagamenti = Pagamento.objects.filter(
         righe__quota__persona__in=persone, anno_ricevuta=anno
     ).distinct()
     quote = [q for q in _quote(persone, anno) if not q.annullata_il]
+    da_verificare = segnalazioni.in_verifica(quote)
+    sospese = SegnalazionePagamento.objects.filter(
+        quote__in=quote, stato=StatoSegnalazione.IN_VERIFICA
+    ).distinct()
     return {
-        "quote": [_quota_out(utente, q) for q in quote],
+        "quote": [{**_quota_out(utente, q), "in_verifica": q.pk in da_verificare} for q in quote],
+        "segnalazioni": [_segnalazione_out(s, utente) for s in sospese],
         "pagamenti": [_pagamento_out(p, request.auth) for p in pagamenti],
-        "modi_pagamento": modi_pagamento.per_la_famiglia(Gruppo.objects.first(), quote),
+        # What is reported and waiting is not offered again (DEC-255).
+        "modi_pagamento": modi_pagamento.per_la_famiglia(
+            Gruppo.objects.first(), [q for q in quote if q.pk not in da_verificare]
+        ),
     }
 
 
@@ -718,3 +742,172 @@ def salva_impostazioni(request, dati: ImpostazioniQuote):
     _valida(gruppo)
     gruppo.save(update_fields=[*CAMPI_PAGAMENTO, "aggiornato_il"])
     return _impostazioni_out(gruppo)
+
+
+# --- Payments the family reports (DEC-255) -------------------------------------------------
+
+
+class SegnalazioneIn(Schema):
+    metodo: MetodoPagamento
+    quote: list[int]
+    data: date | None = None
+
+
+class SegnalazioneOut(Schema):
+    id: int
+    metodo: MetodoPagamento
+    metodo_nome: str
+    quote: list[QuotaOut]
+    importo: Decimal
+    maggiorazione: Decimal
+    data: date
+    segnalata_da: str
+    ricevuta: bool
+    creata_il: datetime
+    # The family may add the proof and cancel; the capo may confirm or refuse.
+    puo_modificare: bool
+    puo_verificare: bool
+
+
+def _segnalazione_out(segnalazione: SegnalazionePagamento, utente) -> dict:
+    return {
+        "id": segnalazione.pk,
+        "metodo": segnalazione.metodo,
+        "metodo_nome": segnalazione.get_metodo_display(),
+        "quote": [_quota_out(utente, q) for q in segnalazione.quote.all()],
+        "importo": segnalazione.importo,
+        "maggiorazione": segnalazione.maggiorazione,
+        "data": segnalazione.data,
+        "segnalata_da": segnalazioni._nome(segnalazione.segnalata_da),
+        "ricevuta": bool(segnalazione.ricevuta),
+        "creata_il": segnalazione.creato_il,
+        "puo_modificare": _della_famiglia(utente, segnalazione),
+        "puo_verificare": policy.puo_verificare_segnalazione(utente, segnalazione),
+    }
+
+
+def _della_famiglia(utente, segnalazione: SegnalazionePagamento) -> bool:
+    persone = {p.pk for p in _persone_della_famiglia(utente)}
+    return all(q.persona_id in persone for q in segnalazione.quote.all())
+
+
+def _segnalazione(request, segnalazione_id: int) -> SegnalazionePagamento:
+    """Visible to its family and to who may check it; 404 to anyone else."""
+    segnalazione = get_object_or_404(
+        SegnalazionePagamento.objects.prefetch_related("quote__persona", "quote__tipo"),
+        pk=segnalazione_id,
+    )
+    utente = request.auth
+    if not (
+        _della_famiglia(utente, segnalazione)
+        or policy.puo_verificare_segnalazione(utente, segnalazione)
+    ):
+        raise HttpError(404, "Pagamento non trovato.")
+    return segnalazione
+
+
+def _o_errore(funzione, *argomenti, **opzioni):
+    try:
+        return funzione(*argomenti, **opzioni)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+
+
+@router.post("/mie-quote/segnalazioni", response={201: SegnalazioneOut})
+def segnala_pagamento(request, dati: SegnalazioneIn):
+    """The family paid with PayPal or a bank transfer: the fees go "in verifica"."""
+    utente = request.auth
+    persone = {p.pk for p in _persone_della_famiglia(utente)}
+    quote = list(
+        Quota.objects.select_related("tipo", "persona", "agevolazione").filter(
+            pk__in=dati.quote, persona_id__in=persone
+        )
+    )
+    if not quote or len(quote) != len(set(dati.quote)):
+        raise HttpError(404, "Quota non trovata.")
+    segnalazione = _o_errore(
+        segnalazioni.segnala, utente, dati.metodo, quote, dati.data or timezone.localdate()
+    )
+    return Status(201, _segnalazione_out(segnalazione, utente))
+
+
+@router.post("/segnalazioni/{segnalazione_id}/ricevuta", response=SegnalazioneOut)
+def carica_ricevuta_segnalazione(request, segnalazione_id: int, file: File[UploadedFile]):
+    """The proof of the payment (PDF, JPEG, PNG, at most 10 MB), also later."""
+    from apps.iscrizioni.models import DIMENSIONE_MASSIMA, tipo_file
+
+    segnalazione = _segnalazione(request, segnalazione_id)
+    if not _della_famiglia(request.auth, segnalazione):
+        raise HttpError(403, "La ricevuta la carica chi ha pagato.")
+    if file.size > DIMENSIONE_MASSIMA:
+        raise HttpError(400, "Il file è troppo grande: al massimo 10 MB.")
+    contenuto = file.read()
+    tipo = tipo_file(contenuto[:8])
+    if tipo is None:
+        raise HttpError(400, "Carica un PDF o un'immagine JPEG o PNG.")
+    _o_errore(segnalazioni.carica_ricevuta, segnalazione, contenuto, tipo)
+    return _segnalazione_out(segnalazione, request.auth)
+
+
+@router.get("/segnalazioni/{segnalazione_id}/ricevuta")
+def scarica_ricevuta_segnalazione(request, segnalazione_id: int):
+    segnalazione = _segnalazione(request, segnalazione_id)
+    if not segnalazione.ricevuta:
+        raise HttpError(404, "Nessuna ricevuta caricata.")
+    return FileResponse(segnalazione.ricevuta.open("rb"), content_type=segnalazione.ricevuta_tipo)
+
+
+@router.delete("/segnalazioni/{segnalazione_id}", response={204: None})
+def annulla_segnalazione(request, segnalazione_id: int):
+    segnalazione = _segnalazione(request, segnalazione_id)
+    if not _della_famiglia(request.auth, segnalazione):
+        raise HttpError(403, "La segnalazione la annulla chi l'ha fatta.")
+    _o_errore(segnalazioni.annulla, segnalazione)
+    return Status(204, None)
+
+
+@router.get("/segnalazioni", response=list[SegnalazioneOut])
+def segnalazioni_da_verificare(request):
+    """The payments reported and waiting, those this user may check."""
+    utente = request.auth
+    in_attesa = SegnalazionePagamento.objects.filter(
+        stato=StatoSegnalazione.IN_VERIFICA
+    ).prefetch_related("quote__persona", "quote__tipo")
+    return [
+        _segnalazione_out(s, utente)
+        for s in in_attesa
+        if policy.puo_verificare_segnalazione(utente, s)
+    ]
+
+
+class ConfermaIn(Schema):
+    data: date | None = None
+    # What PayPal actually credited: the difference becomes "Trattenuta PayPal".
+    accreditato: Decimal | None = None
+
+
+@router.post("/segnalazioni/{segnalazione_id}/conferma", response=PagamentoOut)
+def conferma_segnalazione(request, segnalazione_id: int, dati: ConfermaIn):
+    segnalazione = _segnalazione(request, segnalazione_id)
+    if not policy.puo_verificare_segnalazione(request.auth, segnalazione):
+        raise HttpError(403, "Il pagamento lo verifica chi registra i pagamenti.")
+    pagamento = _o_errore(
+        segnalazioni.conferma,
+        segnalazione,
+        request.auth,
+        data=dati.data,
+        accreditato=dati.accreditato,
+    )
+    return _pagamento_out(pagamento, request.auth)
+
+
+@router.post("/segnalazioni/{segnalazione_id}/rifiuta", response=SegnalazioneOut)
+def rifiuta_segnalazione(request, segnalazione_id: int, dati: Motivo):
+    segnalazione = _segnalazione(request, segnalazione_id)
+    if not policy.puo_verificare_segnalazione(request.auth, segnalazione):
+        raise HttpError(403, "Il pagamento lo verifica chi registra i pagamenti.")
+    _o_errore(segnalazioni.rifiuta, segnalazione, request.auth, dati.motivo)
+    return _segnalazione_out(segnalazione, request.auth)
+
+
+MieQuoteOut.model_rebuild()

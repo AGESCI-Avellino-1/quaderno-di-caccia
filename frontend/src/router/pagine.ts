@@ -43,6 +43,7 @@ export const PAGINE: Record<string, Pagina> = {
   correzioni: { titolo: 'Correzioni da inoltrare' },
   quote: { titolo: 'Quote' },
   banca: { titolo: 'Estratto conto' },
+  'pagamenti-da-verificare': { titolo: 'Pagamenti da verificare' },
   bacheca: { titolo: 'Bacheca' },
   'mie-quote': { titolo: 'Le mie quote' },
   eventi: { titolo: 'Eventi' },

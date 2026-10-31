@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { api, type Impostazioni, type ModelloEmailBreve, type Sito } from '@/api/qdc'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
-import LinkPagamento from '@/components/LinkPagamento.vue'
+import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
 import { useErrore } from '@/composables/useErrore'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
 import { useSitoStore } from '@/stores/sito'
@@ -188,7 +188,7 @@ async function salva() {
         </div>
       </section>
       <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
-      <LinkPagamento v-if="dati.puo_modificare_pagamenti" />
+      <PagamentiGruppo v-if="dati.puo_modificare_pagamenti" />
       <section v-if="dati.puo_email_di_prova" class="mb-7">
         <h2 class="h5">Email di prova</h2>
         <p class="small fg-2">

@@ -892,10 +892,36 @@ export interface Pagamento {
   puo_annullare: boolean
 }
 
+/** How to pay, only the ways the group enabled (DEC-253). */
+export interface ModiPagamento {
+  contanti: boolean
+  bonifico: { iban: string; intestatario: string } | null
+  paypal: { link: string; regola: string; maggiorazione: string; totale: string } | null
+}
+
 export interface MieQuote {
   quote: Quota[]
   pagamenti: Pagamento[]
+  /** Missing in a device copy saved before DEC-253. */
+  modi_pagamento?: ModiPagamento
+}
+
+export interface FasciaPaypal {
+  fino_a: string | null
+  quota: string
+}
+
+/** The payment section of the settings (DEC-253). */
+export interface ImpostazioniPagamenti {
+  contanti_attivo: boolean
+  bonifico_attivo: boolean
+  iban: string
+  intestatario_conto: string
+  paypal_attivo: boolean
   link_pagamento: string
+  paypal_maggiorazione: 'NESSUNA' | 'FISSA' | 'PERCENTUALE' | 'FASCE'
+  paypal_valore: string | null
+  paypal_fasce: FasciaPaypal[]
 }
 
 export interface RigaSituazione {
@@ -2301,11 +2327,11 @@ export const api = {
     }),
   togliConiugi: (id: number) =>
     richiesta<void>(`/api/v1/quote/coniugi/${id}`, { metodo: 'DELETE' }),
-  impostazioniQuote: () => richiesta<{ link_pagamento: string }>('/api/v1/quote/impostazioni'),
-  salvaImpostazioniQuote: (link_pagamento: string) =>
-    richiesta<{ link_pagamento: string }>('/api/v1/quote/impostazioni', {
+  impostazioniQuote: () => richiesta<ImpostazioniPagamenti>('/api/v1/quote/impostazioni'),
+  salvaImpostazioniQuote: (dati: ImpostazioniPagamenti) =>
+    richiesta<ImpostazioniPagamenti>('/api/v1/quote/impostazioni', {
       metodo: 'PUT',
-      corpo: { link_pagamento },
+      corpo: dati,
     }),
   eventi: (filtri: { dal?: string; al?: string; unita?: number } = {}) => {
     const parametri = new URLSearchParams(

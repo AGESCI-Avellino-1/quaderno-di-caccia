@@ -17,7 +17,7 @@ from apps.core.chiusura import anno_chiuso
 from apps.organizzazione.models import Gruppo, Unita
 from apps.permessi import policy
 
-from . import servizi
+from . import modi_pagamento, servizi
 from .models import (
     Agevolazione,
     CategoriaQuota,
@@ -549,10 +549,31 @@ def annulla_pagamento(request, pagamento_id: int, dati: Motivo):
 # --- The family's page (DEC-16, DEC-92) ----------------------------------------------------
 
 
+class BonificoOut(Schema):
+    iban: str
+    intestatario: str
+
+
+class PaypalOut(Schema):
+    link: str
+    # The rule in words, what to add to the whole amount due, and the total.
+    regola: str
+    maggiorazione: Decimal
+    totale: Decimal
+
+
+class ModiPagamentoOut(Schema):
+    """How to pay, only the ways the group enabled (DEC-253)."""
+
+    contanti: bool = False
+    bonifico: BonificoOut | None = None
+    paypal: PaypalOut | None = None
+
+
 class MieQuoteOut(Schema):
     quote: list[QuotaOut]
     pagamenti: list[PagamentoOut] = []
-    link_pagamento: str = ""
+    modi_pagamento: ModiPagamentoOut = ModiPagamentoOut()
 
 
 @router.get("/mie-quote", response=MieQuoteOut)
@@ -568,11 +589,12 @@ def mie_quote(request, anno: int | None = None):
     pagamenti = Pagamento.objects.filter(
         righe__quota__persona__in=persone, anno_ricevuta=anno
     ).distinct()
-    gruppo = Gruppo.objects.first()
+    quote = [q for q in _quote(persone, anno) if not q.annullata_il]
+    da_pagare = sum((max(q.residuo, Decimal(0)) for q in quote), Decimal(0))
     return {
-        "quote": [_quota_out(utente, q) for q in _quote(persone, anno) if not q.annullata_il],
+        "quote": [_quota_out(utente, q) for q in quote],
         "pagamenti": [_pagamento_out(p, request.auth) for p in pagamenti],
-        "link_pagamento": gruppo.link_pagamento if gruppo else "",
+        "modi_pagamento": modi_pagamento.per_la_famiglia(Gruppo.objects.first(), da_pagare),
     }
 
 
@@ -625,15 +647,38 @@ def togli_coniugi(request, legame_id: int):
 # --- Settings ------------------------------------------------------------------------------
 
 
+class FasciaPaypal(Schema):
+    fino_a: Decimal | None = None
+    quota: Decimal
+
+
 class ImpostazioniQuote(Schema):
+    """The payment section of the settings (DEC-253)."""
+
+    contanti_attivo: bool = True
+    bonifico_attivo: bool = False
+    iban: str = ""
+    intestatario_conto: str = ""
+    paypal_attivo: bool = False
     link_pagamento: str = ""
+    paypal_maggiorazione: str = "NESSUNA"
+    paypal_valore: Decimal | None = None
+    paypal_fasce: list[FasciaPaypal] = []
+
+
+CAMPI_PAGAMENTO = list(ImpostazioniQuote.model_fields)
+
+
+def _impostazioni_out(gruppo: Gruppo | None) -> dict:
+    if gruppo is None:
+        return {}
+    return {c: getattr(gruppo, c) for c in CAMPI_PAGAMENTO}
 
 
 @router.get("/quote/impostazioni", response=ImpostazioniQuote)
 def impostazioni(request):
     _gestore(request)
-    gruppo = Gruppo.objects.first()
-    return {"link_pagamento": gruppo.link_pagamento if gruppo else ""}
+    return _impostazioni_out(Gruppo.objects.first())
 
 
 @router.put("/quote/impostazioni", response=ImpostazioniQuote)
@@ -642,7 +687,18 @@ def salva_impostazioni(request, dati: ImpostazioniQuote):
     gruppo = Gruppo.objects.first()
     if gruppo is None:
         raise HttpError(400, "Importa prima i dati del gruppo da BuonaStrada.")
+    for campo in CAMPI_PAGAMENTO:
+        setattr(gruppo, campo, getattr(dati, campo))
+    gruppo.iban = modi_pagamento.normalizza_iban(dati.iban)
+    gruppo.intestatario_conto = dati.intestatario_conto.strip()
     gruppo.link_pagamento = dati.link_pagamento.strip()
+    gruppo.paypal_fasce = [
+        {"fino_a": None if f.fino_a is None else str(f.fino_a), "quota": str(f.quota)}
+        for f in dati.paypal_fasce
+    ]
+    errori = modi_pagamento.problemi(gruppo)
+    if errori:
+        raise HttpError(400, " ".join(errori))
     _valida(gruppo)
-    gruppo.save(update_fields=["link_pagamento", "aggiornato_il"])
-    return {"link_pagamento": gruppo.link_pagamento}
+    gruppo.save(update_fields=[*CAMPI_PAGAMENTO, "aggiornato_il"])
+    return _impostazioni_out(gruppo)

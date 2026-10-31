@@ -184,7 +184,22 @@ def crea_attivita(email) -> None:
             "scadenza": scadenza,
         },
     )
-    tesoriera("put", "/quote/impostazioni", {"link_pagamento": "https://example.invalid/paga"})
+    # How families pay (DEC-253): cash, transfer to an example IBAN (valid check digits,
+    # no real account), PayPal with 2 € for its costs, as the Avellino 1 does.
+    tesoriera(
+        "put",
+        "/quote/impostazioni",
+        {
+            "contanti_attivo": True,
+            "bonifico_attivo": True,
+            "iban": "IT60X0542811101000000123456",
+            "intestatario_conto": "AGESCI Gruppo Prova 1",
+            "paypal_attivo": True,
+            "link_pagamento": "https://example.invalid/paga",
+            "paypal_maggiorazione": "FISSA",
+            "paypal_valore": "2",
+        },
+    )
     for tipo in (censimento, di_gruppo):
         tesoriera("post", f"/quote/tipi/{tipo['id']}/emetti")
     quote = tesoriera("get", f"/persone/{giulia}/quote")

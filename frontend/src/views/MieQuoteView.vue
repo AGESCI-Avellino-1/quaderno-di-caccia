@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { api, euro, ricevutaPdf, type MieQuote, type Quota } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import Icona from '@/components/Icona.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
@@ -31,6 +32,9 @@ const perPersona = computed(() => {
 const daPagare = computed(() =>
   (dati.value?.quote ?? []).reduce((somma, q) => somma + Number(q.residuo), 0),
 )
+// The ways the group enabled (DEC-253); a device copy from before may lack them.
+const modi = computed(() => dati.value?.modi_pagamento)
+const ibanLeggibile = computed(() => modi.value?.bonifico?.iban.replace(/(.{4})/g, '$1 ').trim())
 const oggi = new Date().toLocaleDateString('sv')
 const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 </script>
@@ -50,19 +54,45 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             >Da pagare: <strong>{{ euro(daPagare) }}</strong></span
           >
           <span v-else class="badge theme-success">Tutto pagato</span>
-          <a
-            v-if="dati.link_pagamento && daPagare > 0"
-            :href="dati.link_pagamento"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-sm btn-solid theme-primary"
-          >
-            Paga online
-          </a>
         </div>
+        <template v-if="daPagare > 0 && modi">
+          <h2 class="h6 mt-3 mb-1">Come pagare</h2>
+          <ul class="list-unstyled mb-1">
+            <li v-if="modi.contanti" class="d-flex align-items-start gap-3 mb-3">
+              <Icona nome="cash" />
+              <span>In contanti, ai capi.</span>
+            </li>
+            <li v-if="modi.bonifico" class="d-flex align-items-start gap-3 mb-3">
+              <Icona nome="bank2" />
+              <span>
+                Con bonifico a {{ modi.bonifico.intestatario }}<br />
+                IBAN <strong class="user-select-all">{{ ibanLeggibile }}</strong>
+              </span>
+            </li>
+            <li v-if="modi.paypal" class="d-flex align-items-start gap-3 mb-3">
+              <Icona nome="paypal" />
+              <span>
+                Con PayPal<template v-if="Number(modi.paypal.maggiorazione)"
+                  >: {{ euro(daPagare) }} più {{ euro(modi.paypal.maggiorazione) }} per i costi, in
+                  tutto <strong>{{ euro(modi.paypal.totale) }}</strong></template
+                >.
+                <span v-if="modi.paypal.regola" class="d-block small fg-2">{{
+                  modi.paypal.regola
+                }}</span>
+                <a
+                  :href="modi.paypal.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-sm btn-solid theme-primary mt-1"
+                >
+                  Paga con PayPal
+                </a>
+              </span>
+            </li>
+          </ul>
+        </template>
         <p class="form-text mb-0">
-          Si paga ai capi, con bonifico o al link indicato dal gruppo: l'app registra il pagamento e
-          ti manda la ricevuta per email.
+          Chi riceve il pagamento lo registra nell'app, e ti arriva la ricevuta per email.
         </p>
       </div>
 

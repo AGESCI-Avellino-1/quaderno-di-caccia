@@ -63,8 +63,29 @@ class Gruppo(ModelloTracciato):
     # Reference date for age (DEC-37), default 30 April.
     mese_riferimento_eta = models.PositiveSmallIntegerField(default=4)
     giorno_riferimento_eta = models.PositiveSmallIntegerField(default=30)
-    # A link where families pay outside the app, e.g. paypal.me (DEC-83).
+    # How families pay (DEC-83, DEC-253), each way enabled on its own: cash to the capi,
+    # bank transfer, PayPal. Checked and computed in quote/modi_pagamento.py.
+    contanti_attivo = models.BooleanField(default=True)
+    bonifico_attivo = models.BooleanField(default=False)
+    iban = models.CharField(max_length=34, blank=True)
+    intestatario_conto = models.CharField(max_length=140, blank=True)
+    paypal_attivo = models.BooleanField(default=False)
+    # The PayPal link, e.g. paypal.me (the name comes from before DEC-253).
     link_pagamento = models.URLField(blank=True)
+    # PayPal's costs passed on to the family: none, a fixed amount, a percentage, or by
+    # bands of amount ([{"fino_a": "10.00" | None, "quota": "0.25"}, …], ascending).
+    paypal_maggiorazione = models.CharField(
+        max_length=12,
+        choices=[
+            ("NESSUNA", "Nessuna"),
+            ("FISSA", "Fissa"),
+            ("PERCENTUALE", "In percentuale"),
+            ("FASCE", "A fasce"),
+        ],
+        default="NESSUNA",
+    )
+    paypal_valore = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    paypal_fasce = models.JSONField(default=list, blank=True)
     # Letterhead of every print (the AGESCI forms, receipts), set by the capigruppo
     # (DEC-192).
     sede_indirizzo = models.CharField(max_length=200, blank=True)

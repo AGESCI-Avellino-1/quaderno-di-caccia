@@ -7,9 +7,11 @@ import arrowLeftRight from 'bootstrap-icons/icons/arrow-left-right.svg?raw'
 import award from 'bootstrap-icons/icons/award.svg?raw'
 import backpack from 'bootstrap-icons/icons/backpack.svg?raw'
 import bank from 'bootstrap-icons/icons/bank.svg?raw'
+import bank2 from 'bootstrap-icons/icons/bank2.svg?raw'
 import boxArrowRight from 'bootstrap-icons/icons/box-arrow-right.svg?raw'
 import calendarEvent from 'bootstrap-icons/icons/calendar-event.svg?raw'
 import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
+import cash from 'bootstrap-icons/icons/cash.svg?raw'
 import cashCoin from 'bootstrap-icons/icons/cash-coin.svg?raw'
 import chevronDown from 'bootstrap-icons/icons/chevron-down.svg?raw'
 import chevronUp from 'bootstrap-icons/icons/chevron-up.svg?raw'
@@ -32,6 +34,7 @@ import listOl from 'bootstrap-icons/icons/list-ol.svg?raw'
 import listUl from 'bootstrap-icons/icons/list-ul.svg?raw'
 import lock from 'bootstrap-icons/icons/lock.svg?raw'
 import megaphone from 'bootstrap-icons/icons/megaphone.svg?raw'
+import paypal from 'bootstrap-icons/icons/paypal.svg?raw'
 import pencilSquare from 'bootstrap-icons/icons/pencil-square.svg?raw'
 import people from 'bootstrap-icons/icons/people.svg?raw'
 import personBadge from 'bootstrap-icons/icons/person-badge.svg?raw'
@@ -40,6 +43,7 @@ import personHeart from 'bootstrap-icons/icons/person-heart.svg?raw'
 import personLinesFill from 'bootstrap-icons/icons/person-lines-fill.svg?raw'
 import personPlus from 'bootstrap-icons/icons/person-plus.svg?raw'
 import personVcard from 'bootstrap-icons/icons/person-vcard.svg?raw'
+import plusLg from 'bootstrap-icons/icons/plus-lg.svg?raw'
 import receipt from 'bootstrap-icons/icons/receipt.svg?raw'
 import receiptCutoff from 'bootstrap-icons/icons/receipt-cutoff.svg?raw'
 import shieldCheck from 'bootstrap-icons/icons/shield-check.svg?raw'
@@ -47,6 +51,7 @@ import shieldLock from 'bootstrap-icons/icons/shield-lock.svg?raw'
 import signpostSplit from 'bootstrap-icons/icons/signpost-split.svg?raw'
 import sliders from 'bootstrap-icons/icons/sliders.svg?raw'
 import tools from 'bootstrap-icons/icons/tools.svg?raw'
+import trash from 'bootstrap-icons/icons/trash.svg?raw'
 import typeBold from 'bootstrap-icons/icons/type-bold.svg?raw'
 import typeItalic from 'bootstrap-icons/icons/type-italic.svg?raw'
 import typeUnderline from 'bootstrap-icons/icons/type-underline.svg?raw'
@@ -61,9 +66,11 @@ export const ICONE = {
   award: award,
   backpack: backpack,
   bank: bank,
+  bank2: bank2,
   'box-arrow-right': boxArrowRight,
   'calendar-event': calendarEvent,
   calendar3: calendar3,
+  cash: cash,
   'cash-coin': cashCoin,
   'chevron-down': chevronDown,
   'chevron-up': chevronUp,
@@ -86,6 +93,7 @@ export const ICONE = {
   'list-ul': listUl,
   lock: lock,
   megaphone: megaphone,
+  paypal: paypal,
   'pencil-square': pencilSquare,
   people: people,
   'person-badge': personBadge,
@@ -94,6 +102,7 @@ export const ICONE = {
   'person-lines-fill': personLinesFill,
   'person-plus': personPlus,
   'person-vcard': personVcard,
+  'plus-lg': plusLg,
   receipt: receipt,
   'receipt-cutoff': receiptCutoff,
   'shield-check': shieldCheck,
@@ -101,6 +110,7 @@ export const ICONE = {
   'signpost-split': signpostSplit,
   sliders: sliders,
   tools: tools,
+  trash: trash,
   'type-bold': typeBold,
   'type-italic': typeItalic,
   'type-underline': typeUnderline,

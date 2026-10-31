@@ -500,3 +500,107 @@ def test_agevolazione_in_anno_chiuso_solo_sulle_pendenze(ragazza, tesoriere_grup
     assert risposta.status_code == 200
     rifiutata = client.put(url.format(saldata.pk), dati, content_type="application/json")
     assert rifiutata.status_code == 400
+
+
+# --- How families pay (DEC-253) ------------------------------------------------------------
+
+IBAN = "IT60X0542811101000000123456"  # the usual example, with valid check digits
+PAGAMENTI = "/api/v1/quote/impostazioni"
+
+
+def _imposta(chi, **dati):
+    return _client(chi).put(PAGAMENTI, dati, content_type="application/json")
+
+
+def test_iban_controllato():
+    from apps.quote.modi_pagamento import iban_valido
+
+    assert iban_valido(IBAN) and iban_valido("it60 x054 2811 1010 0000 0123 456")
+    assert not iban_valido("IT61X0542811101000000123456")
+    assert not iban_valido("IT60X05428")
+
+
+def test_quota_aggiuntiva_paypal(gruppo):
+    from apps.quote.modi_pagamento import maggiorazione_paypal
+
+    gruppo.paypal_maggiorazione = "FISSA"
+    gruppo.paypal_valore = Decimal("2")
+    assert maggiorazione_paypal(gruppo, Decimal("35")) == Decimal("2.00")
+    gruppo.paypal_maggiorazione = "PERCENTUALE"
+    gruppo.paypal_valore = Decimal("3.4")
+    assert maggiorazione_paypal(gruppo, Decimal("35")) == Decimal("1.19")
+    gruppo.paypal_maggiorazione = "FASCE"
+    gruppo.paypal_fasce = [
+        {"fino_a": "10", "quota": "0.25"},
+        {"fino_a": "50", "quota": "0.50"},
+        {"fino_a": None, "quota": "1"},
+    ]
+    assert maggiorazione_paypal(gruppo, Decimal("10")) == Decimal("0.25")
+    assert maggiorazione_paypal(gruppo, Decimal("10.01")) == Decimal("0.50")
+    assert maggiorazione_paypal(gruppo, Decimal("200")) == Decimal("1.00")
+    assert maggiorazione_paypal(gruppo, Decimal("0")) == Decimal("0.00")
+    gruppo.paypal_maggiorazione = "NESSUNA"
+    assert maggiorazione_paypal(gruppo, Decimal("35")) == Decimal("0.00")
+
+
+def test_chi_imposta_i_pagamenti_e_cosa_si_controlla(
+    gruppo, capo, capogruppo, tesoriere_gruppo, genitore, estraneo
+):
+    for chi in (capo, genitore, estraneo):
+        assert _imposta(chi, contanti_attivo=False).status_code == 403
+    assert _imposta(tesoriere_gruppo, bonifico_attivo=True).status_code == 400  # no IBAN
+    sbagliato = _imposta(capogruppo, bonifico_attivo=True, iban="IT61X0542811101000000123456")
+    assert "IBAN" in sbagliato.json()["detail"]
+    assert _imposta(capogruppo, paypal_attivo=True).status_code == 400  # no link
+    fasce = [{"fino_a": "50", "quota": "0.5"}, {"fino_a": "10", "quota": "0.25"}]
+    disordinate = _imposta(
+        capogruppo,
+        paypal_attivo=True,
+        link_pagamento="https://paypal.me/gruppo",
+        paypal_maggiorazione="FASCE",
+        paypal_fasce=fasce,
+    )
+    assert disordinate.status_code == 400
+    senza_oltre = _imposta(
+        capogruppo,
+        paypal_attivo=True,
+        link_pagamento="https://paypal.me/gruppo",
+        paypal_maggiorazione="FASCE",
+        paypal_fasce=[{"fino_a": "10", "quota": "0.25"}],
+    )
+    assert "oltre la fascia più alta" in senza_oltre.json()["detail"]
+    giusto = _imposta(
+        tesoriere_gruppo,
+        bonifico_attivo=True,
+        iban="it60 x054 2811 1010 0000 0123 456",
+        intestatario_conto="AGESCI Gruppo Prova 1",
+        paypal_attivo=True,
+        link_pagamento="https://paypal.me/gruppo",
+        paypal_maggiorazione="FISSA",
+        paypal_valore="2",
+    )
+    assert giusto.status_code == 200 and giusto.json()["iban"] == IBAN
+
+
+def test_la_famiglia_vede_solo_i_modi_abilitati(quote_famiglia, capogruppo, genitore):
+    modi = _client(genitore).get(f"/api/v1/mie-quote?anno={ANNO}").json()["modi_pagamento"]
+    assert modi == {"contanti": True, "bonifico": None, "paypal": None}
+    _imposta(
+        capogruppo,
+        contanti_attivo=False,
+        bonifico_attivo=True,
+        iban=IBAN,
+        intestatario_conto="AGESCI Gruppo Prova 1",
+        paypal_attivo=True,
+        link_pagamento="https://paypal.me/gruppo",
+        paypal_maggiorazione="FISSA",
+        paypal_valore="2",
+    )
+    dati = _client(genitore).get(f"/api/v1/mie-quote?anno={ANNO}").json()
+    da_pagare = sum(Decimal(q["residuo"]) for q in dati["quote"])
+    modi = dati["modi_pagamento"]
+    assert modi["contanti"] is False
+    assert modi["bonifico"] == {"iban": IBAN, "intestatario": "AGESCI Gruppo Prova 1"}
+    assert Decimal(modi["paypal"]["maggiorazione"]) == Decimal("2.00")
+    assert Decimal(modi["paypal"]["totale"]) == da_pagare + 2
+    assert "2,00 €" in modi["paypal"]["regola"]

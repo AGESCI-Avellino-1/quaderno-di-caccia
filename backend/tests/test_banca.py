@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
 
+from apps.anagrafica.models import Appartenenza, RelazioneTutela, RuoloAppartenenza
 from apps.banca import estratto, servizi
 from apps.banca.models import CartaUnita, RigaBanca
 from apps.cassa.models import Cassa, Movimento, TipoCassa, TipoMovimento
@@ -21,7 +22,7 @@ from apps.quote.models import (
     Quota,
     TipoQuota,
 )
-from tests.conftest import INIZIO_ANNO, crea_capo
+from tests.conftest import INIZIO_ANNO, crea_capo, crea_persona, nato_anni_fa
 from tests.estratto_sintetico import bonifico_ricevuto, costruisci_xlsx, movimento
 
 pytestmark = pytest.mark.django_db
@@ -146,6 +147,38 @@ def test_bonifico_proposto_e_pagato(banca, censimento, capogruppo):
     assert censimento.residuo == 0
     assert not servizi.da_abbinare(banca).exists()
     assert banca.saldo() == Decimal("1040.00")
+
+
+@pytest.mark.parametrize("nominato", ["ragazza", "fratello"])
+def test_la_causale_sceglie_la_quota_del_socio_nominato(
+    banca, reparto, ragazza, genitore, nominato
+):
+    """Two siblings owe the same amount: the transfer pays the fee of the one named."""
+    fratello = crea_persona("Luca", "Esploratore", data_nascita=nato_anni_fa(11))
+    Appartenenza.objects.create(
+        persona=fratello, unita=reparto, ruolo=RuoloAppartenenza.RAGAZZO, data_inizio=INIZIO_ANNO
+    )
+    RelazioneTutela.objects.create(tutore=genitore, minore=fratello, tipo="GENITORE")
+    tipo = TipoQuota.objects.create(
+        nome="Censimento",
+        categoria=CategoriaQuota.CENSIMENTO,
+        anno=2026,
+        importo=Decimal("40"),
+        destinatari=Destinatari.TUTTI,
+        scadenza=date(2025, 11, 30),
+    )
+    quote.emetti(tipo, oggi=GENNAIO)
+    chi = {"ragazza": ragazza, "fratello": fratello}[nominato]
+    riga = movimento(
+        GENNAIO,
+        "ACCREDITO BEU CON CONTABILE",
+        "40",
+        bonifico_ricevuto(f"CENSIMENTO {chi.nome} {chi.cognome}".upper(), "GENITORE MARIO"),
+    )
+    servizi.carica(banca, _estratto(riga), None)
+    [proposta] = servizi.quote_proposte(RigaBanca.objects.get())
+    sua = Quota.objects.get(tipo=tipo, persona=chi)
+    assert proposta["ripartizione"] == {sua.pk: Decimal("40.00")}
 
 
 def test_ricevuta_del_bonifico_parte_per_email(

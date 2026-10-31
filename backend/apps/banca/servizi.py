@@ -179,7 +179,20 @@ def quote_proposte(riga: RigaBanca, quante: int = 5) -> list[dict]:
             if p.codice_socio and p.codice_socio in parole:
                 fam.punti += 5
         totale = sum((q.residuo for q in fam.quote), ZERO)
-        singola = next((q for q in fam.quote if q.residuo == riga.importo), None)
+        # Among fees of the same amount, the one of the member named in the bank's text,
+        # then the one whose type is named ("censimento"); else the earliest due.
+        stesso_importo = [q for q in fam.quote if q.residuo == riga.importo]
+        singola = (
+            max(
+                stesso_importo,
+                key=lambda q: (
+                    len(_parole(f"{q.persona.nome} {q.persona.cognome}") & parole),
+                    len(_parole(q.tipo.nome) & parole),
+                ),
+            )
+            if stesso_importo
+            else None
+        )
         if totale == riga.importo:
             fam.punti += 3
             ripartizione = [(q, q.residuo) for q in fam.quote]

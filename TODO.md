@@ -191,7 +191,7 @@ Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manual
 | M.3 | Correggere le date di una tappa (inizio, riconoscimento, distintivo) con il motivo | DEC-171…DEC-173 | ✅ 31/10 (provato nel browser) |
 | M.4 | Modificare un evento | DEC-75, DEC-79 | ✅ 31/10 (provato nel browser: salvataggio e riapertura) |
 | M.5 | Lo staff del reparto delega le riunioni di squadriglia dalla pagina dell'unità (deciso dal maintainer il 31/10) | DEC-267 | ✅ 31/10 (provato nel browser: delega e revoca dallo staff) |
-| M.7 | Estratto conto: il nome nella causale pesa di più nella proposta delle quote, così il bonifico per Luca propone le quote di Luca (maintainer, 31/10) | DEC-222 | 🚧 |
+| M.7 | Estratto conto: il nome nella causale pesa di più nella proposta delle quote, così il bonifico per Luca propone le quote di Luca (maintainer, 31/10) | DEC-222 | ✅ 31/10 (provato nel browser con l'estratto di prova) |
 | M.6 | Nei dati di prova un estratto conto della banca inventato, per le schermate | DEC-235 | ✅ 31/10 |
 
 Appunti per quando ci si arriva:

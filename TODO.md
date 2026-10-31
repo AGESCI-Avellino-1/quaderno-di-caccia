@@ -20,7 +20,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 5 | Fascicolo completo | ✅ | a blocchi (dettaglio sotto): scheda medica con stampa, note e regole, fascicolo del ragazzo e dei capi, fine anno e archivio |
 | 6 | Dopo | ✅ | a blocchi: 6.1 bacheca ✅ (DEC-218…DEC-220, provata nel browser il 30/10), 6.2 estratto conto ✅ (DEC-221…DEC-224, provato nel browser il 30/10 con un estratto sintetico; il file vero della banca si legge), 6.3 Carta di clan ✅ (DEC-227…DEC-229, provata nel browser il 30/10). Note: estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
-| 8 | Realizzazione documentazione di uso | 🚧 | il 31/10 completato il manuale d'uso per tutti i profili (capitolo L/C da far rileggere allo staff L/C) e scritta la guida di installazione (da rileggere); ripresa il 31/10 dopo la nuova navigazione, le impostazioni, i modelli delle email, i pagamenti segnalati, la lista d'attesa, il codice fiscale calcolato e la privacy policy (blocchi N, L, P, C sotto); indice aggiornato con queste funzioni; parte genitore riallineata (N.5, L.6); analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239); blocco 1 ✅ (30/10): impianto Sphinx, PDF, dati di prova e screenshot automatici, introduzione, primo accesso e protezione del telefono del genitore; blocco 2 ✅ (30/10): il resto della parte genitore (manca il capitolo sulle iscrizioni agli eventi BuonaCaccia); poi ragazzi, capi, capigruppo; da valutare l'account Read the Docs. Era: installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
+| 8 | Realizzazione documentazione di uso | 🚧 | il 31/10 completato il manuale d'uso per tutti i profili e scritta la guida di installazione (da rileggere); ripresa il 31/10 dopo la nuova navigazione, le impostazioni, i modelli delle email, i pagamenti segnalati, la lista d'attesa, il codice fiscale calcolato e la privacy policy (blocchi N, L, P, C sotto); indice aggiornato con queste funzioni; parte genitore riallineata (N.5, L.6); analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239); blocco 1 ✅ (30/10): impianto Sphinx, PDF, dati di prova e screenshot automatici, introduzione, primo accesso e protezione del telefono del genitore; blocco 2 ✅ (30/10): il resto della parte genitore (manca il capitolo sulle iscrizioni agli eventi BuonaCaccia); poi ragazzi, capi, capigruppo; da valutare l'account Read the Docs. Era: installazione (per i gruppi che installano la propria copia) e uso per l'Avellino 1, sulla PWA (senza app negli store); l'analisi si fa quando ci si arriva |
 
 ## Prossimi passi
 
@@ -170,7 +170,7 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.3 | Genitore: iscrizioni agli eventi BuonaCaccia (scheda, foto, liberatoria, quota); nei dati di prova un evento BuonaCaccia con l'iscrizione di Giulia | DEC-158…DEC-163, DEC-168 | ✅ 31/10 |
 | 8.4 | Parte ragazzo, comune ed E/G: accesso, scheda (e cosa cambia a 18 anni), Sentiero E/G (proporre mete e impegni, pronto per la verifica), capo squadriglia (telefoni, note, imprese), eventi e privacy; nei dati di prova un impegno e una specialità di Giulia in corso | DEC-237 | ✅ 31/10 |
 | 8.4b | Parte ragazzo, R/S: Carta di clan (proporre una versione), obiettivi, passi, Punto della Strada con la parte riservata; nei dati di prova la strada di Chiara (Carta di clan in vigore e firmata, obiettivo, servizio, Punto della Strada) | DEC-179…DEC-181, DEC-227…DEC-229 | ✅ 31/10 |
-| 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; nei dati di prova la stagione del cerchio, un volo e una specialità di Sofia; bozza scritta il 31/10, segnata `[da verificare]`, da far rileggere allo staff L/C; corretti «Nuovo volo» e la descrizione della Progressione L/C nella Home | DEC-182…DEC-185, DEC-237 | 🚧 bozza fatta, manca la rilettura dello staff L/C |
+| 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; nei dati di prova la stagione del cerchio, un volo e una specialità di Sofia; bozza scritta il 31/10, segnata `[da verificare]`, da far rileggere allo staff L/C; corretti «Nuovo volo» e la descrizione della Progressione L/C nella Home | DEC-182…DEC-185, DEC-237 | ✅ 31/10, approvato dal maintainer |
 | 8.5a | Parte capo, blocco 1: chi sei, accesso e uso senza rete, l'unità (membri, squadriglie, eccezioni, incarichi, età), persone (scheda, correzioni, inviti, foto, codice fiscale), lista d'attesa (L.6) e richieste di iscrizione, al campo (regole sul rapporto con il minore), scheda sanitaria, note; nei dati di prova una richiesta di iscrizione da accogliere, le regole su Luca e una nota di staff | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.5b | Parte capo, blocco 2: eventi e presenze (anche offline), iscrizioni BuonaCaccia, Progressione per branca, passaggi | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.5c | Parte capo, blocco 3: fascicolo dell'anno e del capo, bacheca, le mie spese, usare l'app al posto di un ragazzo o di un genitore | DEC-233, DEC-238 | ✅ 31/10 |
@@ -180,7 +180,20 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.6b | Impostazioni (sito, stampe, pagamenti), modelli delle email, privacy policy e termini; amministratore tecnico (pannello di amministrazione, modalità di prova delle email) | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.6c | Tesorieri: quote, agevolazioni, pagamenti e ricevute, pagamenti da verificare, prima nota e rendiconto, estratto conto | DEC-233, DEC-238 | ✅ 31/10 |
 
-Trovato scrivendo la parte dei capi (31/10), da decidere con il maintainer:
+### Mancanze trovate scrivendo il manuale (31/10)
+
+Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manuale si aggiorna con ogni blocco.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| M.1 | Piccole correzioni: la ricevuta di un pagamento dall'estratto conto parte per email come le altre; l'amministratore tecnico vede «Tutti i dispositivi del gruppo»; descrizione di «Impostazioni» nel menu; percorso in alto nelle pagine dei ragazzi | DEC-84, DEC-222, DEC-23, DEC-244 | 🚧 |
+| M.2 | Scheda della persona: registro degli accessi ai dati delicati e foto precedenti, per i capi | DEC-101, DEC-42 | ⏳ |
+| M.3 | Correggere le date di una tappa (inizio, riconoscimento, distintivo) con il motivo | DEC-171…DEC-173 | ⏳ |
+| M.4 | Modificare un evento | DEC-75, DEC-79 | ⏳ |
+| M.5 | Delega delle riunioni di squadriglia da parte dello staff: la regola del codice (`puo_delegare`) lo permette, l'analisi (DEC-139) dà la delega solo al capo squadriglia: da decidere con il maintainer | DEC-139, DEC-14 | ❓ |
+| M.6 | Nei dati di prova un estratto conto della banca inventato, per le schermate | DEC-235 | ⏳ |
+
+Elenco originale (31/10):
 
 - un evento creato non si modifica dall'app (l'API c'è, nessuna pagina la usa): il manuale dice di annullarlo e crearne uno nuovo;
 - lo staff del reparto può delegare le riunioni di squadriglia (regola `puo_delegare`), ma il riquadro è solo in «La mia squadriglia», che vedono i ragazzi;

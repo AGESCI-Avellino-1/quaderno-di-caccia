@@ -1,8 +1,7 @@
 # Lupetti e coccinelle: il tuo Sentiero
 
-% [da verificare] Bozza da rileggere con lo staff L/C: parole, tono e cosa può fare il
-% bambino da solo. Gli esempi sono del cerchio di prova, nel bosco; per un branco, nella
-% giungla, l'app dice pista, prede e i momenti della caccia.
+% Approvato dal maintainer il 31/10/2026. Gli esempi sono del cerchio di prova, nel bosco;
+% per un branco, nella giungla, l'app dice pista, prede e i momenti della caccia.
 
 :::{admonition} Per i genitori
 Questo capitolo è scritto per i bambini: leggetelo insieme. Un lupetto o una coccinella ha

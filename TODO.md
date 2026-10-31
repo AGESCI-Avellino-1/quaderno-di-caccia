@@ -171,10 +171,19 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.4 | Parte ragazzo, comune ed E/G: accesso, scheda (e cosa cambia a 18 anni), Sentiero E/G (proporre mete e impegni, pronto per la verifica), capo squadriglia (telefoni, note, imprese), eventi e privacy; nei dati di prova un impegno e una specialità di Giulia in corso | DEC-237 | ✅ 31/10 |
 | 8.4b | Parte ragazzo, R/S: Carta di clan (proporre una versione), obiettivi, passi, Punto della Strada con la parte riservata; nei dati di prova la strada di Chiara (Carta di clan in vigore e firmata, obiettivo, servizio, Punto della Strada) | DEC-179…DEC-181, DEC-227…DEC-229 | ✅ 31/10 |
 | 8.4c | Parte ragazzo, L/C: testo semplice con le parole dell'ambientazione (bosco per il cerchio di prova), da rileggere con lo staff L/C; nei dati di prova la stagione del cerchio, un volo e una specialità di Sofia; bozza scritta il 31/10, segnata `[da verificare]`, da far rileggere allo staff L/C; corretti «Nuovo volo» e la descrizione della Progressione L/C nella Home | DEC-182…DEC-185, DEC-237 | 🚧 bozza fatta, manca la rilettura dello staff L/C |
-| 8.5a | Parte capo, blocco 1: chi sei, accesso e uso senza rete, l'unità (membri, squadriglie, eccezioni, incarichi, età), persone (scheda, correzioni, inviti, foto, codice fiscale), lista d'attesa (L.6) e richieste di iscrizione, al campo (regole sul rapporto con il minore), scheda sanitaria, note | DEC-233, DEC-238 | 🚧 |
-| 8.5b | Parte capo, blocco 2: eventi e presenze (anche offline), iscrizioni BuonaCaccia, Progressione per branca, passaggi | DEC-233, DEC-238 | ⏳ |
-| 8.5c | Parte capo, blocco 3: fascicolo dell'anno e del capo, bacheca, le mie spese, usare l'app al posto di un ragazzo o di un genitore | DEC-233, DEC-238 | ⏳ |
+| 8.5a | Parte capo, blocco 1: chi sei, accesso e uso senza rete, l'unità (membri, squadriglie, eccezioni, incarichi, età), persone (scheda, correzioni, inviti, foto, codice fiscale), lista d'attesa (L.6) e richieste di iscrizione, al campo (regole sul rapporto con il minore), scheda sanitaria, note; nei dati di prova una richiesta di iscrizione da accogliere, le regole su Luca e una nota di staff | DEC-233, DEC-238 | ✅ 31/10 |
+| 8.5b | Parte capo, blocco 2: eventi e presenze (anche offline), iscrizioni BuonaCaccia, Progressione per branca, passaggi | DEC-233, DEC-238 | ✅ 31/10 |
+| 8.5c | Parte capo, blocco 3: fascicolo dell'anno e del capo, bacheca, le mie spese, usare l'app al posto di un ragazzo o di un genitore | DEC-233, DEC-238 | 🚧 |
+| 8.R | Due progetti Read the Docs separati sullo stesso account (maintainer, 31/10): il manuale d'uso nella sua cartella Sphinx con il suo `.readthedocs.yaml`; la guida di installazione avrà la sua | DEC-231 | ⏳ dopo il blocco 8.5b |
 | 8.6 | Parte capogruppo, tesorieri, amministratore tecnico | DEC-233 | ⏳ |
+
+Trovato scrivendo la parte dei capi (31/10), da decidere con il maintainer:
+
+- un evento creato non si modifica dall'app (l'API c'è, nessuna pagina la usa): il manuale dice di annullarlo e crearne uno nuovo;
+- lo staff del reparto può delegare le riunioni di squadriglia (regola `puo_delegare`), ma il riquadro è solo in «La mia squadriglia», che vedono i ragazzi;
+- la data di una tappa (inizio, riconoscimento, distintivo) non si corregge dall'app, solo Promessa e firma della Carta di clan;
+- il registro degli accessi ai dati sensibili di una persona non ha una pagina;
+- il percorso in alto è strano in alcune pagine dei ragazzi («Il mio Sentiero › Giulia Rossi › Progressione personale», «Unità › Carta di clan» per una scolta).
 
 Appunti per quando ci si arriva:
 

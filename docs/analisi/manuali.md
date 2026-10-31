@@ -128,6 +128,8 @@ possibile, così non si disallinea.
 
 ## Da decidere
 
-1. Account Read the Docs da collegare (lo stesso del tema?) e nome del progetto: da
-   valutare.
+1. Account Read the Docs: deciso dal maintainer il 31/10/2026: lo stesso account usato per
+   altri progetti, con **due progetti separati** (manuale d'uso e guida di installazione)
+   dallo stesso repository, ognuno con la sua cartella Sphinx e il suo `.readthedocs.yaml`.
+   Restano da scegliere i nomi dei due progetti.
 2. Guida di installazione: il suo indice, dopo il manuale d'uso (concordato).

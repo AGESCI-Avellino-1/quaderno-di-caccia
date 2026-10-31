@@ -41,4 +41,8 @@ iscrizioni
 campo
 sanitaria
 note
+eventi
+buonacaccia
+progressione
+passaggi
 ```

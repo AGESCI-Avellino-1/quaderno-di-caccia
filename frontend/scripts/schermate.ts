@@ -406,6 +406,94 @@ const SCENE: Scena[] = [
     },
     intera: true,
   },
+  {
+    nome: 'capo/evento-nuovo',
+    chi: 'capoReparto',
+    percorso: '/eventi',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Nuovo evento' }).click()
+      await pagina.getByLabel('Titolo').fill('Uscita di primavera')
+    },
+    intera: true,
+  },
+  {
+    nome: 'capo/presenze',
+    chi: 'capoReparto',
+    percorso: '/eventi',
+    prepara: async (pagina) => {
+      await apri('Riunione di reparto')(pagina)
+      await pagina.getByRole('button', { name: 'Presente', exact: true }).first().click()
+    },
+    mostra: 'Partecipanti',
+  },
+  {
+    nome: 'capo/quota-evento',
+    chi: 'capoReparto',
+    percorso: '/eventi',
+    prepara: apri('Uscita di reparto'),
+    mostra: 'Quota',
+  },
+  { nome: 'capo/buonacaccia', chi: 'capoReparto', percorso: '/buonacaccia', intera: true },
+  {
+    nome: 'capo/iscrizione-bc',
+    chi: 'capoReparto',
+    percorso: '/eventi',
+    prepara: apri('Campo di specialità di Zona'),
+    mostra: 'Iscrizioni su BuonaCaccia',
+  },
+  {
+    nome: 'capo/sentiero-unita',
+    chi: 'capoReparto',
+    percorso: '/unita',
+    prepara: async (pagina) => {
+      await apri('Antares')(pagina)
+      await apri('Progressione Personale')(pagina)
+    },
+    intera: true,
+  },
+  {
+    nome: 'capo/sentiero-eg',
+    chi: 'capoReparto',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Giulia')(pagina)
+      await apri('Sentiero (Progressione Personale)')(pagina)
+    },
+    intera: true,
+  },
+  {
+    nome: 'capo/stagioni',
+    chi: 'capoCerchio',
+    percorso: '/unita',
+    prepara: async (pagina) => {
+      await apri('Fiordaliso')(pagina)
+      await apri('Progressione Personale')(pagina)
+    },
+    mostra: 'Stagioni di caccia o di volo',
+  },
+  {
+    // Davide Ricci is the capo of the clan (and the technical administrator).
+    nome: 'capo/punto-strada',
+    chi: 'amministratore',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Russo Chiara')(pagina)
+      await apri('Sentiero (Progressione Personale)')(pagina)
+      await pagina.getByRole('button', { name: 'Nuovo Punto della Strada' }).click()
+    },
+    mostra: 'Punti della Strada',
+  },
+  {
+    nome: 'capo/passaggi',
+    chi: 'capoReparto',
+    percorso: '/unita',
+    prepara: async (pagina) => {
+      await apri('Antares')(pagina)
+      await apri('Passaggi')(pagina)
+      await pagina.getByRole('button', { name: 'Prepara un passaggio' }).click()
+    },
+    intera: true,
+  },
   { nome: 'capo/attesa', chi: 'capoCerchio', percorso: '/attesa', intera: true },
   { nome: 'capo/richieste', chi: 'capoCerchio', percorso: '/iscrizioni', intera: true },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },

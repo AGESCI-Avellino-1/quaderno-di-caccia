@@ -12,8 +12,7 @@ sola.
 | il genitore di un lupetto, una coccinella, un esploratore, una guida, un rover o una scolta | [Genitore](genitore/index) |
 | un lupetto, una coccinella, un esploratore, una guida, un capo squadriglia, un rover o una scolta | [Ragazzo](ragazzo/index) |
 | un capo in servizio in un'unità, come capo unità o nello staff | [Capo e staff di unità](capo/index) |
-
-La parte dei capigruppo e dei tesorieri arriverà presto.
+| capogruppo, tesoriere di gruppo o di unità, amministratore tecnico | [Capogruppo, tesorieri, amministratore tecnico](gruppo/index) |
 
 ```{toctree}
 :maxdepth: 2
@@ -22,4 +21,5 @@ introduzione
 genitore/index
 ragazzo/index
 capo/index
+gruppo/index
 ```

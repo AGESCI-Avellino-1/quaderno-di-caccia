@@ -12,6 +12,7 @@ Refused unless DEBUG is on: it must never run on a server with real data.
 """
 
 from datetime import date
+from pathlib import Path
 
 from allauth.account.models import EmailAddress
 from django.conf import settings
@@ -116,15 +117,22 @@ class Command(BaseCommand):
         parser.add_argument(
             "--azzera", action="store_true", help="Cancella prima tutto il database."
         )
+        parser.add_argument(
+            "--csv",
+            help="Salva anche l'export di BuonaStrada inventato (per l'anteprima nel manuale).",
+        )
 
-    def handle(self, *args, azzera: bool, **options) -> None:
+    def handle(self, *args, azzera: bool, csv: str | None = None, **options) -> None:
         if not settings.DEBUG:
             raise CommandError("Solo in sviluppo (DEBUG attivo): mai su un server con dati veri.")
         if azzera:
             call_command("flush", interactive=False, verbosity=0)
         elif Persona.objects.exists():
             raise CommandError("Il database contiene già persone: usa --azzera per ripartire.")
-        self._crea()
+        esportato = self._crea()
+        if csv:
+            # The manual shows the import preview with the same invented export.
+            Path(csv).write_bytes(esportato)
         self.stdout.write(
             self.style.SUCCESS(f"Dati di prova pronti; password di tutti: {PASSWORD}")
         )
@@ -132,7 +140,7 @@ class Command(BaseCommand):
             self.stdout.write(f"  {email(nome, cognome)}")
 
     @transaction.atomic
-    def _crea(self) -> None:
+    def _crea(self) -> bytes:
         from tests.export_sintetico import costruisci_csv, riga
 
         anno = AnnoAssociativo.corrente()
@@ -167,7 +175,8 @@ class Command(BaseCommand):
                 )
             valori.update(altro)
             righe.append(riga(**valori))
-        applica(leggi_ricerca_soci(costruisci_csv(righe)))
+        esportato = costruisci_csv(righe)
+        applica(leggi_ricerca_soci(esportato))
 
         inizio = anno.inizio
         gruppo = Gruppo.objects.get()
@@ -235,3 +244,4 @@ class Command(BaseCommand):
             creato_da=persona["Marco Ferri"].utente,
         )
         crea_attivita(email)
+        return esportato

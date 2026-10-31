@@ -27,7 +27,7 @@ def test_refused_without_debug():
 
 @pytest.mark.django_db(transaction=True)
 @override_settings(DEBUG=True)
-def test_every_profile_can_log_in():
+def test_every_profile_can_log_in(tmp_path):
     call_command("dati_di_prova", verbosity=0)
 
     assert User.objects.count() == 12
@@ -63,5 +63,8 @@ def test_every_profile_can_log_in():
 
     with pytest.raises(CommandError, match="--azzera"):
         call_command("dati_di_prova", verbosity=0)
-    call_command("dati_di_prova", "--azzera", verbosity=0)
+    # The invented export, saved for the import preview in the manual.
+    export = tmp_path / "export.csv"
+    call_command("dati_di_prova", "--azzera", "--csv", str(export), verbosity=0)
+    assert b"CODICE SOCIO" in export.read_bytes()
     assert User.objects.count() == 12

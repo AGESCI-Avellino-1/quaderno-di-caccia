@@ -10,6 +10,7 @@
  */
 import { spawn, type ChildProcess } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -31,6 +32,8 @@ const ALTEZZA_TELEFONO = 1300
 /** Tallest computer screenshot, in CSS pixels. */
 const ALTEZZA_COMPUTER = 2400
 const DOMINIO = 'example.invalid'
+/** The invented BuonaStrada export of the test data, for the import preview. */
+const EXPORT_DI_PROVA = join(tmpdir(), 'qdc-manuale-export.csv')
 
 /** Who appears in the manual, by profile (DEC-236): the people of `dati_di_prova`. */
 export const PERSONE = {
@@ -548,6 +551,46 @@ const SCENE: Scena[] = [
   },
   { nome: 'capo/attesa', chi: 'capoCerchio', percorso: '/attesa', intera: true },
   { nome: 'capo/richieste', chi: 'capoCerchio', percorso: '/iscrizioni', intera: true },
+  // Francesca Gallo is the group treasurer; Laura Bianchi the capogruppo.
+  { nome: 'gruppo/home', chi: 'capogruppo', percorso: '/', intera: true },
+  {
+    nome: 'gruppo/importazione',
+    chi: 'capogruppo',
+    percorso: '/importazione',
+    prepara: async (pagina) => {
+      await pagina.locator('input[type=file]').setInputFiles(EXPORT_DI_PROVA)
+      await pagina.getByRole('button', { name: 'Anteprima' }).click()
+      await pagina.getByRole('button', { name: "Applica l'importazione" }).waitFor()
+    },
+    intera: true,
+  },
+  { nome: 'gruppo/incarichi', chi: 'capogruppo', percorso: '/gruppo', intera: true },
+  { nome: 'gruppo/impostazioni', chi: 'capogruppo', percorso: '/impostazioni', intera: true },
+  {
+    nome: 'gruppo/impostazioni-pagamenti',
+    chi: 'tesoriera',
+    percorso: '/impostazioni',
+    mostra: 'Pagamenti',
+  },
+  { nome: 'gruppo/quote', chi: 'tesoriera', percorso: '/quote', intera: true },
+  {
+    nome: 'gruppo/pagamento',
+    chi: 'tesoriera',
+    percorso: '/persone',
+    prepara: async (pagina) => {
+      await apri('Rossi Giulia')(pagina)
+      await pagina.getByRole('button', { name: 'Registra un pagamento' }).click()
+    },
+    mostra: 'Pagamento ricevuto',
+  },
+  {
+    nome: 'gruppo/da-verificare',
+    chi: 'tesoriera',
+    percorso: '/pagamenti-da-verificare',
+    intera: true,
+  },
+  { nome: 'gruppo/prima-nota', chi: 'tesoriera', percorso: '/cassa', intera: true },
+  { nome: 'gruppo/estratto-conto', chi: 'tesoriera', percorso: '/banca', intera: true },
   { nome: 'comune/sblocco', chi: 'genitore', percorso: '/sblocco' },
   { nome: 'comune/dispositivi', chi: 'genitore', percorso: '/dispositivi' },
   {
@@ -649,7 +692,7 @@ with psycopg.connect(url._replace(path="/postgres").geturl(), autocommit=True) a
   await esegui('uv', ['run', 'python', 'manage.py', 'migrate', '-v0'], 'backend', ENV_DJANGO)
   await esegui(
     'uv',
-    ['run', 'python', 'manage.py', 'dati_di_prova', '--azzera'],
+    ['run', 'python', 'manage.py', 'dati_di_prova', '--azzera', '--csv', EXPORT_DI_PROVA],
     'backend',
     ENV_DJANGO,
   )

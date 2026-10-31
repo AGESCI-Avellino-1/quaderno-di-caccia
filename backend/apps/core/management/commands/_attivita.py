@@ -227,6 +227,30 @@ def crea_attivita(email) -> None:
             "paypal_valore": "2",
         },
     )
+    # The cash book (DEC-85): the group's bank account and the reparto's cash box, from
+    # the start of the year, before any payment comes in.
+    inizio_casse = date(anno.anno_fine - 1, 10, 1).isoformat()
+    tesoriera(
+        "post",
+        "/casse",
+        {
+            "nome": "Conto del gruppo",
+            "tipo": "BANCA",
+            "saldo_iniziale": "1250.00",
+            "data_saldo_iniziale": inizio_casse,
+        },
+    )
+    cassa_reparto = tesoriera(
+        "post",
+        "/casse",
+        {
+            "nome": "Cassa del reparto",
+            "tipo": "CONTANTI",
+            "unita_id": reparto.pk,
+            "saldo_iniziale": "80.00",
+            "data_saldo_iniziale": inizio_casse,
+        },
+    )
     for tipo in (censimento, di_gruppo):
         tesoriera("post", f"/quote/tipi/{tipo['id']}/emetti")
     quote = tesoriera("get", f"/persone/{giulia}/quote")
@@ -239,6 +263,32 @@ def crea_attivita(email) -> None:
             "metodo": "BONIFICO",
             "versato_da": "Mario Rossi",
             "righe": [{"quota_id": del_censimento["id"], "importo": del_censimento["dovuto"]}],
+        },
+    )
+
+    # A purchase for the reparto, and a transfer the family reports for Luca (DEC-255).
+    capo_reparto(
+        "post",
+        "/movimenti",
+        {
+            "cassa_id": cassa_reparto["id"],
+            "tipo": "USCITA",
+            "data": (date.today() - timedelta(days=5)).isoformat(),
+            "importo": "23.40",
+            "descrizione": "Corde e picchetti per l'uscita",
+            "voce_id": "U:A.1:0",
+        },
+    )
+    luca = persona["Luca Rossi"].pk
+    di_luca = tesoriera("get", f"/persone/{luca}/quote")
+    del_gruppo = next(q for q in di_luca["quote"] if q["categoria"] == "GRUPPO")
+    Api(email("Mario", "Rossi"))(
+        "post",
+        "/mie-quote/segnalazioni",
+        {
+            "metodo": "BONIFICO",
+            "quote": [del_gruppo["id"]],
+            "data": (date.today() - timedelta(days=1)).isoformat(),
         },
     )
 
@@ -344,7 +394,6 @@ def crea_attivita(email) -> None:
 
     # What the parents wrote on the signed form about Luca, and a staff note shared with
     # them (DEC-43, DEC-197…DEC-199).
-    luca = persona["Luca Rossi"].pk
     capo_reparto(
         "put",
         f"/persone/{luca}/regole-rapporto",

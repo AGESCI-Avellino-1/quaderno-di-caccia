@@ -113,6 +113,10 @@ run = "uv run python manage.py importa_buonastrada"
 description = "Manuale d'uso in HTML (docs/_build/manuale/html)"
 run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-build -W docs/manuale docs/_build/manuale/html"
 
+[tasks."docs:installazione"]
+description = "Guida di installazione in HTML (docs/_build/installazione/html)"
+run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-build -W docs/installazione docs/_build/installazione/html"
+
 [tasks."docs:pdf"]
 description = "Manuale d'uso in un unico PDF (docs/_build/manuale/pdf)"
 run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-build -b rinoh docs/manuale docs/_build/manuale/pdf"

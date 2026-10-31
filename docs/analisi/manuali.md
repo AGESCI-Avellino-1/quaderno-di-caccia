@@ -132,4 +132,10 @@ possibile, così non si disallinea.
    altri progetti, con **due progetti separati** (manuale d'uso e guida di installazione)
    dallo stesso repository, ognuno con la sua cartella Sphinx e il suo `.readthedocs.yaml`.
    Restano da scegliere i nomi dei due progetti.
-2. Guida di installazione: il suo indice, dopo il manuale d'uso (concordato).
+2. Guida di installazione: indice proposto il 31/10/2026 (da rivedere con il maintainer),
+   in `docs/installazione/`, per chi installa una copia per il suo gruppo: cos'è e cosa
+   serve; installazione (Docker o Podman, reverse proxy e HTTPS, `.env`, posta); primo
+   avvio (amministratore tecnico, importazione da BuonaStrada, primo capogruppo, prime
+   impostazioni); lavori giornalieri (cron); archivio sul Drive e chiave per i rientri;
+   accesso con Google e Apple; server di prova con Mailpit; backup; aggiornamenti; dati
+   personali e sicurezza. Il ripristino da un backup va scritto dopo averlo provato.

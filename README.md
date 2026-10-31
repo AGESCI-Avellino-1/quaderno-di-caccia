@@ -171,15 +171,13 @@ docker compose exec web python manage.py createsuperuser
 
 Le migrazioni si applicano all'avvio del container `web`.
 
-Tre comandi vanno lanciati una volta al giorno: il riepilogo delle correzioni da
-inoltrare ai capigruppo (`segnala_correzioni`), gli avvisi a chi compie 18 anni
-(`avvisa_maggiore_eta`) e gli avvisi sulle iscrizioni dall'app
-(`promemoria_iscrizioni`). L'esempio pronto è in
-[`deploy/cron/qdc.crontab`](deploy/cron/qdc.crontab): si copia con `crontab -e`
+Alcuni comandi vanno lanciati ogni giorno (quote da emettere, promemoria, riepiloghi ai
+capigruppo, presenze da riassumere): l'esempio pronto, con l'elenco, è in
+[`deploy/cron/qdc.crontab`](deploy/cron/qdc.crontab); si copia con `crontab -e`
 correggendo il percorso dell'installazione (con Podman, `podman compose`).
 
-Il comando `promemoria_fine_anno` (ogni giorno) ricorda ai capigruppo di chiudere l'anno
-associativo appena finito e di archiviare chi è uscito da più di due anni.
+La guida di installazione completa, per chi installa una copia per il suo gruppo, è in
+[`docs/installazione/`](docs/installazione/index.md) (`mise run docs:installazione`).
 
 ### Email di prova (Mailpit)
 

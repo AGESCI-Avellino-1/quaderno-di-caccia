@@ -1,0 +1,17 @@
+# Read the Docs (DEC-231): the installation guide, one version per release. Its own
+# project on the same account as the user manual: set "docs/installazione/.readthedocs.yaml"
+# as the configuration file path in the project's advanced settings.
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.14"
+
+sphinx:
+  configuration: docs/installazione/conf.py
+  fail_on_warning: true
+
+python:
+  install:
+    - requirements: docs/requirements.txt

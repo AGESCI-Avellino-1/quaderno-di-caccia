@@ -35,6 +35,13 @@ useBloccoAutomatico()
 const menu = ref<InstanceType<typeof MenuLaterale> | null>(null)
 const conMenu = computed(() => sessione.autenticato && stato.value !== 'bloccata')
 const navigazione = useNavigazioneStore()
+
+// Only the content scrolls (.qdc-scorrevole): a new page starts from its top.
+const scorrevole = ref<HTMLElement | null>(null)
+watch(
+  () => router.currentRoute.value.path,
+  () => scorrevole.value?.scrollTo({ top: 0 }),
+)
 watch(
   () => sessione.profilo,
   (p) => {
@@ -79,10 +86,15 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
       <BarraImpersonazione />
       <BarraOffline />
       <Briciole v-if="conMenu" />
-      <main class="container py-5 flex-grow-1">
-        <RouterView />
-      </main>
-      <PiePagina />
+      <div ref="scorrevole" class="qdc-scorrevole">
+        <main class="container py-5">
+          <RouterView />
+        </main>
+        <!-- Phone: the footer at the end of the content, seen when scrolled to the bottom. -->
+        <PiePagina class="lg:d-none" />
+      </div>
+      <!-- Computer: always at the bottom of the window. -->
+      <PiePagina class="d-none lg:d-block" />
     </div>
   </div>
   <AggiornamentoApp />

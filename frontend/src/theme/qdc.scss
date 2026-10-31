@@ -86,12 +86,16 @@ body {
 // Footer: the group's line above the fixed one (DEC-247).
 .qdc-piede {
   border-top: 1px solid var(--bs-border-color);
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom)) !important;
 }
 
 // --- Side menu (DEC-241): the theme's sidebar next to the page --------------------------
+// The page fills the window: header, banners, breadcrumb and footer stay in place and
+// only the content (.qdc-scorrevole) scrolls; the sidebar is as tall as the window.
 .qdc-cornice {
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .qdc-colonna {
@@ -101,16 +105,27 @@ body {
   min-width: 0;
 }
 
-// From lg up the sidebar stays in view while the page scrolls, so the avatar is always
-// at the bottom of the window. Bootstrap's static .lg:drawer sets position and height
-// with !important inside @layer components: only an earlier layer with !important wins
-// (the same trick as the theme's _sidebar.scss).
+.qdc-scorrevole {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// On a phone the footer closes the content: short pages still have it at the bottom.
+.qdc-scorrevole > main {
+  flex: 1 0 auto;
+}
+
+// From lg up the sidebar is a static .lg:drawer, whose height Bootstrap sets with
+// !important inside @layer components: only an earlier layer with !important wins (the
+// same trick as the theme's _sidebar.scss).
 @layer layout {
   @media (min-width: 1024px) {
     .qdc-cornice > .ag-sidebar {
-      position: sticky !important;
-      top: 0 !important;
-      height: 100dvh !important;
+      height: 100% !important;
     }
   }
 }
@@ -185,4 +200,23 @@ body {
 
 .qdc-testo-email {
   white-space: pre-wrap;
+}
+
+// A group title that opens and closes its entries (DEC-241).
+.qdc-titolo-gruppo {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.qdc-titolo-gruppo:hover {
+  color: var(--ag-on-primary);
 }

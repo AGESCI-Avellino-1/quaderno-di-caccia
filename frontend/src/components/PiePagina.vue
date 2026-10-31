@@ -6,7 +6,7 @@ const sito = useSitoStore()
 </script>
 
 <template>
-  <footer class="qdc-piede small fg-2 text-center py-5">
+  <footer class="qdc-piede small fg-2 text-center py-3">
     <div class="container">
       <p v-if="sito.rigaPiede" class="mb-1">{{ sito.rigaPiede }}</p>
       <p class="mb-0">

@@ -20,6 +20,9 @@ const router = useRouter()
 const { inCoda, conErrori } = useRete()
 
 const cassetto = ref<HTMLDialogElement | null>(null)
+// Groups closed by the user, to keep the menu short; in memory only (no device storage
+// for the app's state). The group of the page shown opens by itself.
+const chiusi = ref(new Set<string>())
 const ridotto = ref(false)
 const profiloAperto = ref(false)
 
@@ -56,11 +59,33 @@ function suClic(evento: MouseEvent) {
   if (evento.target === cassetto.value) chiudi()
 }
 
+const percorsoDi = (v: Voce) => (v.esterna ? null : router.resolve(v.to).path)
+
+function apriGruppoDellaPagina() {
+  const g = gruppi.value.find((g) => g.voci.some((v) => percorsoDi(v) === rotta.path))
+  if (g && chiusi.value.has(g.chiave)) {
+    const altri = new Set(chiusi.value)
+    altri.delete(g.chiave)
+    chiusi.value = altri
+  }
+}
+
+function alterna(chiave: string) {
+  const nuovi = new Set(chiusi.value)
+  if (nuovi.has(chiave)) nuovi.delete(chiave)
+  else nuovi.add(chiave)
+  chiusi.value = nuovi
+}
+
+// Reduced to icons, every entry shows: the group titles are hidden.
+const aperto = (g: Gruppo) => ridotto.value || !chiusi.value.has(g.chiave)
+
 watch(
   () => rotta.fullPath,
   () => {
     chiudi()
     profiloAperto.value = false
+    apriGruppoDellaPagina()
   },
 )
 
@@ -117,9 +142,24 @@ defineExpose({ apri })
       </li>
       <template v-for="g in gruppi" :key="g.chiave">
         <li v-if="!singola(g)" class="ag-sidebar__section-title">
-          <span class="ag-sidebar__label">{{ g.titolo }}</span>
+          <button
+            type="button"
+            class="qdc-titolo-gruppo"
+            :aria-expanded="aperto(g)"
+            :tabindex="ridotto ? -1 : 0"
+            @click="alterna(g.chiave)"
+          >
+            <span class="ag-sidebar__label">{{ g.titolo }}</span>
+            <Icona
+              :nome="aperto(g) ? 'chevron-up' : 'chevron-down'"
+              class="ag-sidebar__label ms-auto"
+            />
+          </button>
         </li>
-        <li v-for="v in g.voci" :key="`${g.chiave}-${v.nome}-${JSON.stringify(v.to)}`">
+        <li
+          v-for="v in aperto(g) || singola(g) ? g.voci : []"
+          :key="`${g.chiave}-${v.nome}-${JSON.stringify(v.to)}`"
+        >
           <a
             v-if="v.esterna"
             :href="String(v.to)"

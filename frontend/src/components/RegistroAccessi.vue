@@ -43,8 +43,8 @@ async function alterna() {
       <p v-if="!righe.length" class="small fg-2 mt-3 mb-0">Nessun accesso registrato.</p>
       <ul v-else class="list-group mt-3">
         <li v-for="(r, n) in righe" :key="n" class="list-group-item small">
-          <strong>{{ quando(r.quando) }}</strong> · {{ r.chi ?? 'sconosciuto' }} ·
-          {{ r.azione }} · {{ r.categoria }}
+          <strong>{{ quando(r.quando) }}</strong> · {{ r.chi ?? 'sconosciuto' }} · {{ r.azione }} ·
+          {{ r.categoria }}
           <span v-if="r.dispositivo" class="fg-2"> · {{ r.dispositivo }}</span>
         </li>
       </ul>

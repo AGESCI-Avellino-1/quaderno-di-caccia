@@ -138,4 +138,5 @@ possibile, così non si disallinea.
    avvio (amministratore tecnico, importazione da BuonaStrada, primo capogruppo, prime
    impostazioni); lavori giornalieri (cron); archivio sul Drive e chiave per i rientri;
    accesso con Google e Apple; server di prova con Mailpit; backup; aggiornamenti; dati
-   personali e sicurezza. Il ripristino da un backup va scritto dopo averlo provato.
+   personali e sicurezza. Il ripristino da un backup va scritto dopo averlo provato. Per Google e
+   Apple solo la configurazione delle due piattaforme (maintainer, 31/10/2026).

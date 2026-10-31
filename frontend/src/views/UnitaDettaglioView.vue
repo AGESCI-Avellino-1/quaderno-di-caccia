@@ -16,6 +16,7 @@ import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
 import AltaSquadriglia from '@/components/AltaSquadriglia.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import EtaUnita from '@/components/EtaUnita.vue'
+import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -299,6 +300,12 @@ const iniziale = (u: Unita): UnitaIn => ({
           :candidati="candidatiDi(s)"
           vuoto="Nessun capo squadriglia."
           @cambiato="carica()"
+        />
+        <!-- The reparto staff may delegate too (DEC-267); hidden to who may not. -->
+        <DelegaSquadriglia
+          v-if="s.attiva && s.membri.length"
+          :squadriglia="s.id"
+          :membri="s.membri.map((m) => m.persona)"
         />
       </div>
       <div v-if="dettaglio.senza_squadriglia.length" class="border-top pt-3 mt-3">

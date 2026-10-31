@@ -37,6 +37,15 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   squadriglia**, con **Metti in…**.
 - Prima di spostare un capo o vice capo squadriglia, chiudi il suo incarico.
 - Per chiudere una squadriglia tocca **chiudi** (e **riapri** per riaprirla).
+- **Riunioni di squadriglia**: le inseriscono il capo squadriglia e lo staff. Puoi delegare
+  un membro della squadriglia a inserirle anche lui (solo a inserirle, non a segnare le
+  presenze): scegli chi in **Delega a** e tocca **Delega**; **Togli la delega** la toglie.
+  Lo può fare anche il capo squadriglia, dalla sua pagina.
+
+:::{container} schermate
+![La delega delle riunioni di squadriglia sul telefono](../img/capo/delega-telefono.png){.telefono width="30%"}
+![La delega delle riunioni di squadriglia sul computer](../img/capo/delega-computer.png){.computer width="65%"}
+:::
 
 :::{note}
 Le squadriglie sono maschili o femminili. Un ragazzo può entrare in una squadriglia

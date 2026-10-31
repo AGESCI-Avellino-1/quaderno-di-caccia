@@ -15,6 +15,10 @@ vedono. Usali solo per la squadriglia. La pagina funziona anche senza rete.
 
 Gli altri squadriglieri vedono solo i numeri gli uni degli altri.
 
+In fondo, in **Riunioni di squadriglia**, puoi delegare uno squadrigliere a inserire anche
+lui le riunioni (per esempio quando sei assente): scegli chi in **Delega a** e tocca
+**Delega**. Le presenze invece le segni tu.
+
 ## Il cammino degli squadriglieri
 
 Tocca il nome di uno squadrigliere: vedi il suo Sentiero (mete, impegni, specialità e

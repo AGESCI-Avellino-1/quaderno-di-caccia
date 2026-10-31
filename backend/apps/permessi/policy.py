@@ -890,7 +890,7 @@ def vede_note_genitori(user, evento) -> bool:
 
 
 def puo_delegare(user, squadriglia) -> bool:
-    """The CSQ chooses the delegate; the reparto staff may do it too."""
+    """The CSQ chooses the delegate; the reparto staff may do it too (DEC-139, DEC-267)."""
     return squadriglie_guidate(user).filter(pk=squadriglia.pk).exists() or e_staff(
         user, squadriglia.unita
     )

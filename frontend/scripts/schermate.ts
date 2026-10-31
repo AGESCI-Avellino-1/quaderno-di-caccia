@@ -353,6 +353,23 @@ const SCENE: Scena[] = [
     intera: true,
   },
   {
+    // Delegated and revoked again (the data stay as they were), then the choice shown.
+    nome: 'capo/delega',
+    chi: 'capoReparto',
+    percorso: '/unita',
+    prepara: async (pagina) => {
+      await apri('Antares')(pagina)
+      const delega = pagina.getByLabel('Delega a').last()
+      await delega.selectOption({ label: 'Luca Rossi' })
+      await pagina.getByRole('button', { name: 'Delega', exact: true }).last().click()
+      await pagina.getByText('Le può inserire anche Luca Rossi').waitFor()
+      await pagina.getByRole('button', { name: 'Togli la delega' }).click()
+      await pagina.getByText('Le inseriscono il capo squadriglia e lo staff.').last().waitFor()
+      await delega.selectOption({ label: 'Luca Rossi' })
+    },
+    mostra: 'Sq. Volpi',
+  },
+  {
     nome: 'capo/persona',
     chi: 'capoReparto',
     percorso: '/persone',

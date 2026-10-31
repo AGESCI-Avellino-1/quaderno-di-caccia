@@ -472,6 +472,10 @@ def test_api_delega_e_alta_squadriglia(squadriglia, csq, ragazza, staff, reparto
     risposta = _client(csq).put(url, {"persona_id": ragazza.pk}, content_type="application/json")
     assert risposta.json()["persona"] == "Giulia Esploratrice"
     assert _client(ragazza).get(url).json()["persona_id"] == ragazza.pk
+    # The reparto staff delegates too, from the unit page (DEC-267).
+    assert _client(staff).delete(url).status_code == 200
+    risposta = _client(staff).put(url, {"persona_id": ragazza.pk}, content_type="application/json")
+    assert risposta.json()["persona_id"] == ragazza.pk
 
     alta = f"/api/v1/unita/{reparto.pk}/alta-squadriglia"
     corpo = {"anno": 2026, "persone": [ragazza.pk]}

@@ -4,8 +4,9 @@ import { ref, watch } from 'vue'
 import { api, type Delega, type PersonaBreve } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
-// The member the CSQ delegates to create the patrol's meetings (not to mark their
-// attendance). The API answers 404 to whoever may not see it. Online only.
+// The member the CSQ, or the reparto staff, delegates to create the patrol's meetings
+// (not to mark their attendance; DEC-139, DEC-267). The API answers 404 to whoever may
+// not see it. Online only.
 const props = defineProps<{ squadriglia: number; membri: PersonaBreve[] }>()
 const { errore, inCorso, esegui } = useErrore()
 const delega = ref<Delega | null>(null)
@@ -40,7 +41,7 @@ async function revoca() {
     <strong>Riunioni di squadriglia</strong>
     <p class="small mb-1">
       <template v-if="delega.persona">
-        Le può inserire anche {{ delega.persona }}, su delega del capo squadriglia.
+        Le può inserire anche {{ delega.persona }}, su delega.
       </template>
       <template v-else>Le inseriscono il capo squadriglia e lo staff.</template>
     </p>

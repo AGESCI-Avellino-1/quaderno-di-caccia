@@ -10,6 +10,11 @@ confermare riga per riga cosa è. Lo fanno il tesoriere di gruppo e i capigruppo
 L'app controlla i saldi del file e ti dice se il saldo della banca torna con quello della
 prima nota.
 
+:::{container} schermate
+![L'estratto conto sul telefono](../img/gruppo/estratto-conto-telefono.png){.telefono width="30%"}
+![L'estratto conto sul computer](../img/gruppo/estratto-conto-computer.png){.computer width="65%"}
+:::
+
 Per ogni riga in **Da confermare**:
 
 - **Già in prima nota?**: se l'avevi registrata a mano, l'app ti propone il movimento con lo

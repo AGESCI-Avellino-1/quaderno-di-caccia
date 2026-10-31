@@ -191,16 +191,12 @@ Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manual
 | M.3 | Correggere le date di una tappa (inizio, riconoscimento, distintivo) con il motivo | DEC-171…DEC-173 | ✅ 31/10 (provato nel browser) |
 | M.4 | Modificare un evento | DEC-75, DEC-79 | ✅ 31/10 (provato nel browser: salvataggio e riapertura) |
 | M.5 | Delega delle riunioni di squadriglia da parte dello staff: la regola del codice (`puo_delegare`) lo permette, l'analisi (DEC-139) dà la delega solo al capo squadriglia: da decidere con il maintainer | DEC-139, DEC-14 | ❓ |
-| M.6 | Nei dati di prova un estratto conto della banca inventato, per le schermate | DEC-235 | ⏳ |
+| M.6 | Nei dati di prova un estratto conto della banca inventato, per le schermate | DEC-235 | ✅ 31/10 |
 
-Elenco originale (31/10):
+Ancora aperti, da decidere con il maintainer:
 
 - lo staff del reparto può delegare le riunioni di squadriglia (regola `puo_delegare`), ma il riquadro è solo in «La mia squadriglia», che vedono i ragazzi;
-- un pagamento registrato dall'estratto conto ha la ricevuta ma non parte l'email alla famiglia (si manda con «Invia di nuovo»);
-- l'amministratore tecnico può scollegare i dispositivi altrui (regola) ma non vede l'interruttore «Tutti i dispositivi del gruppo»;
-- la descrizione di «Impostazioni» nel menu («Nome e titolo del sito, intestazione delle stampe») non dice di pagamenti, email e pagine legali;
-- nelle schermate l'estratto conto è vuoto: nei dati di prova manca un file della banca inventato;
-- il percorso in alto è strano in alcune pagine dei ragazzi («Il mio Sentiero › Giulia Rossi › Progressione personale», «Unità › Carta di clan» per una scolta).
+- estratto conto: per un bonifico con causale «QUOTA DI GRUPPO LUCA ROSSI» l'app propone la quota di gruppo di Giulia (stesso importo) prima di quella di Luca: il nome nella causale potrebbe pesare di più;
 
 Appunti per quando ci si arriva:
 

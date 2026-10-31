@@ -241,7 +241,7 @@ def crea_attivita(email) -> None:
     # The cash book (DEC-85): the group's bank account and the reparto's cash box, from
     # the start of the year, before any payment comes in.
     inizio_casse = date(anno.anno_fine - 1, 10, 1).isoformat()
-    tesoriera(
+    conto = tesoriera(
         "post",
         "/casse",
         {
@@ -301,6 +301,44 @@ def crea_attivita(email) -> None:
             "quote": [del_gruppo["id"]],
             "data": (date.today() - timedelta(days=1)).isoformat(),
         },
+    )
+
+    # The bank's statement (DEC-221…DEC-223), invented: the transfer already recorded by
+    # hand, the one the family reported for Luca, the account's monthly fee.
+    from tests.estratto_sintetico import bonifico_ricevuto, costruisci_xlsx, movimento
+
+    estratto = costruisci_xlsx(
+        "1250",
+        [
+            movimento(
+                date.today() - timedelta(days=3),
+                "ACCREDITO BEU CON CONTABILE",
+                "40",
+                bonifico_ricevuto("CENSIMENTO GIULIA ROSSI", "ROSSI MARIO"),
+            ),
+            movimento(
+                date.today() - timedelta(days=1),
+                "ACCREDITO BEU CON CONTABILE",
+                "50",
+                bonifico_ricevuto("QUOTA DI GRUPPO LUCA ROSSI", "ROSSI MARIO", "0000000002"),
+            ),
+            movimento(
+                date.today() - timedelta(days=1),
+                "CANONE MENSILE BASE E SERVIZI AGGIUNTIVI",
+                "-5",
+                "CANONE MENSILE",
+            ),
+        ],
+        dal=f"{date(anno.anno_fine - 1, 10, 1):%d.%m.%Y}",
+        al=f"{date.today():%d.%m.%Y}",
+    )
+    tesoriera.carica(
+        f"/banca/{conto['id']}/estratti",
+        SimpleUploadedFile(
+            "lista-movimenti.xlsx",
+            estratto,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
     )
 
     # Notices: one for the reparto families, one for the whole group (DEC-218).

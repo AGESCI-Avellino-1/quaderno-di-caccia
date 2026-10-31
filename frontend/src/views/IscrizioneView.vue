@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 import { allauth, flussoInSospeso } from '@/api/allauth'
 import { api, type InfoCodice } from '@/api/qdc'
+import CampoCodiceFiscale from '@/components/CampoCodiceFiscale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -28,6 +29,7 @@ const dati = reactive({
   genitore_codice_fiscale: '',
   // Asked at once since DEC-264: sex, who holds the parental responsibility, contacts.
   sesso: '',
+  luogo_nascita: '',
   responsabilita: '' as '' | 'GENITORI' | 'UNICO_GENITORE' | 'TUTORE',
   genitore_cellulare: '',
   altro_nome: '',
@@ -55,6 +57,7 @@ onMounted(async () => {
       cognome: p.cognome ?? '',
       data_nascita: p.data_nascita ?? '',
       sesso: p.sesso ?? '',
+      luogo_nascita: p.luogo_nascita ?? '',
       genitore_cellulare: p.da_se ? '' : (p.telefono ?? ''),
       ...(p.da_se
         ? { email: p.email ?? '' }
@@ -171,14 +174,20 @@ async function invia() {
             </select>
           </div>
           <div class="col-12 sm:col-6">
-            <label class="form-label small" for="isc-cf">Codice fiscale</label>
-            <input
+            <label class="form-label small" for="isc-luogo">Comune di nascita</label>
+            <input id="isc-luogo" v-model="dati.luogo_nascita" class="form-control" />
+          </div>
+          <div class="col-12 sm:col-6">
+            <CampoCodiceFiscale
               id="isc-cf"
               v-model="dati.codice_fiscale"
-              class="form-control"
-              maxlength="16"
-              autocapitalize="characters"
-              required
+              etichetta="Codice fiscale"
+              :nome="dati.nome"
+              :cognome="dati.cognome"
+              :sesso="dati.sesso"
+              :data-nascita="dati.data_nascita"
+              :luogo-nascita="dati.luogo_nascita"
+              obbligatorio
             />
           </div>
         </div>
@@ -196,14 +205,13 @@ async function invia() {
             <input id="gen-cognome" v-model="dati.genitore_cognome" class="form-control" required />
           </div>
           <div class="col-12 sm:col-6">
-            <label class="form-label small" for="gen-cf">Il tuo codice fiscale</label>
-            <input
+            <CampoCodiceFiscale
               id="gen-cf"
               v-model="dati.genitore_codice_fiscale"
-              class="form-control"
-              maxlength="16"
-              autocapitalize="characters"
-              required
+              etichetta="Il tuo codice fiscale"
+              :nome="dati.genitore_nome"
+              :cognome="dati.genitore_cognome"
+              obbligatorio
             />
           </div>
           <div class="col-12 sm:col-6">
@@ -269,14 +277,13 @@ async function invia() {
             <input id="altro-cognome" v-model="dati.altro_cognome" class="form-control" required />
           </div>
           <div class="col-12 sm:col-6">
-            <label class="form-label small" for="altro-cf">Codice fiscale</label>
-            <input
+            <CampoCodiceFiscale
               id="altro-cf"
               v-model="dati.altro_codice_fiscale"
-              class="form-control"
-              maxlength="16"
-              autocapitalize="characters"
-              required
+              etichetta="Codice fiscale"
+              :nome="dati.altro_nome"
+              :cognome="dati.altro_cognome"
+              obbligatorio
             />
           </div>
           <div class="col-12 sm:col-6">

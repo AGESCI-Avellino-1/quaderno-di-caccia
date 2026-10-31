@@ -156,7 +156,7 @@ Richiesta del maintainer del 31/10/2026.
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
-| C.1 | Ovunque si scrive un codice fiscale: pulsante che lo calcola da nome, cognome, sesso, data e luogo di nascita e lo propone (chi lo inserisce verifica). Serve l'elenco dei codici dei comuni e degli stati esteri (da scaricare: chiedere al maintainer la fonte) | — | ⏳ |
+| C.1 | Ovunque si scrive un codice fiscale: pulsante che lo calcola da nome, cognome, sesso, data e luogo di nascita e lo propone (chi lo inserisce verifica). Serve l'elenco dei codici dei comuni e degli stati esteri (fonte ISTAT, scelta del 31/10: l'elenco dei comuni c'è; quello degli stati esteri ha i link ISTAT rotti, da chiedere al maintainer) | DEC-265 | ✅ provato nel browser il 31/10 per i comuni; ⏳ stati esteri: serve il file ISTAT dal portale SITUAS |
 
 ### 8. Fase 8 — Documentazione di uso (appunti per quando ci si arriva)
 

@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 
 import { api, type Completamento, type RichiestaIscrizione } from '@/api/qdc'
+import CampoCodiceFiscale from '@/components/CampoCodiceFiscale.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The data still missing after the approval, written straight on the member (BuonaStrada
@@ -213,13 +214,12 @@ async function salva() {
           />
         </div>
         <div class="col-12 sm:col-4">
-          <label class="form-label small" :for="`altro-cf-${id}`">Codice fiscale</label>
-          <input
+          <CampoCodiceFiscale
             :id="`altro-cf-${id}`"
             v-model="dati.altro_genitore.codice_fiscale"
-            class="form-control form-control-sm"
-            maxlength="16"
-            autocapitalize="characters"
+            etichetta="Codice fiscale"
+            :nome="dati.altro_genitore.nome"
+            :cognome="dati.altro_genitore.cognome"
           />
         </div>
         <div class="col-12 sm:col-4">

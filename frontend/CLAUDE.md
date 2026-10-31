@@ -19,6 +19,7 @@ vite-plugin-pwa 2 · Vitest 5. Node 22. Read the root `CLAUDE.md` first.
 | `src/router/index.ts` | Routes; `meta.pubblica`, `meta.richiede` (menu guard only) |
 | `src/navigazione/` | The menu (DEC-241…DEC-243): `menu.ts` (groups and entries from the profile, shared by `MenuLaterale.vue`, the Home and `Briciole.vue`), `icone.ts` (the icons used). Bootstrap's JavaScript is not loaded: the drawer is a `<dialog>` opened by the component |
 | `src/router/pagine.ts` | Name of every page and the page above it: `[Pagina corrente]` in the title, the breadcrumb (DEC-244, DEC-246) |
+| `src/components/CampoCodiceFiscale.vue` | Every codice fiscale input: "Calcola" proposes it from the person's data (server `/codice-fiscale`, municipalities from ISTAT, DEC-265); use it for any new CF field |
 | `src/components/EditorTesto.vue` | TipTap editor for the email templates (DEC-250), loaded only by `ModelloEmailView`; the server cleans the HTML again |
 | `src/stores/navigazione.ts`, `src/composables/useNomePagina.ts` | Names of pages with one of their own (a person, a unit, an event) for title and breadcrumb; menu counters |
 | `src/stores/sito.ts`, `src/sito/segnaposto.ts` | Title and footer from `/api/v1/sito` (also before login), placeholders filled in by `riempi()` (DEC-246, DEC-247) |

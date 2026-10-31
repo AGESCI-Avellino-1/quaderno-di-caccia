@@ -135,6 +135,8 @@ class RichiestaIscrizione(ModelloTracciato):
     # Asked at once since DEC-264: the child's sex, how the parental responsibility is
     # held (both parents, one, a guardian: as BuonaStrada), the contacts.
     sesso = models.CharField(max_length=1, blank=True)
+    # Optional at the request: with sex and date it lets the app propose the codice fiscale.
+    luogo_nascita = models.CharField(max_length=120, blank=True)
     responsabilita = models.CharField(
         max_length=14,
         blank=True,

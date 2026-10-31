@@ -165,6 +165,7 @@ class DatiIscrizioneIn(Schema):
     genitore_codice_fiscale: str = ""
     # Since DEC-264, asked at once.
     sesso: str = ""
+    luogo_nascita: str = ""
     responsabilita: str = ""
     genitore_cellulare: str = ""
     altro_nome: str = ""
@@ -206,6 +207,7 @@ def info_codice(request, codice: str):
                 "cognome",
                 "data_nascita",
                 "sesso",
+                "luogo_nascita",
                 "contatto_nome",
                 "contatto_cognome",
                 "telefono",

@@ -500,6 +500,7 @@ export interface InfoCodice {
     cognome?: string
     data_nascita?: string
     sesso?: string
+    luogo_nascita?: string
     telefono?: string
     contatto_nome?: string
     contatto_cognome?: string
@@ -519,6 +520,7 @@ export interface DatiIscrizione {
   genitore_codice_fiscale: string
   /** Asked at once since DEC-264. */
   sesso?: string
+  luogo_nascita?: string
   responsabilita?: '' | 'GENITORI' | 'UNICO_GENITORE' | 'TUTORE'
   genitore_cellulare?: string
   altro_nome?: string
@@ -2472,6 +2474,19 @@ export const api = {
       metodo: 'PUT',
       corpo: dati,
     }),
+  proponiCodiceFiscale: (dati: {
+    nome: string
+    cognome: string
+    sesso: string
+    data_nascita: string
+    luogo_nascita: string
+  }) =>
+    richiesta<{ codice_fiscale: string; comune: string }>('/api/v1/codice-fiscale', {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  comuni: (cerca: string) =>
+    richiesta<string[]>(`/api/v1/comuni?cerca=${encodeURIComponent(cerca)}`),
   segnalaPagamento: (dati: { metodo: 'PAYPAL' | 'BONIFICO'; quote: number[]; data?: string }) =>
     richiesta<Segnalazione>('/api/v1/mie-quote/segnalazioni', { metodo: 'POST', corpo: dati }),
   caricaRicevutaSegnalazione: (id: number, file: File) => {

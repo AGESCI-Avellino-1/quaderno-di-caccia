@@ -54,6 +54,7 @@ class DatiIscrizione:
     genitore_codice_fiscale: str = ""
     # Since DEC-264, asked at once.
     sesso: str = ""
+    luogo_nascita: str = ""
     responsabilita: str = ""
     genitore_cellulare: str = ""
     altro_nome: str = ""
@@ -73,6 +74,7 @@ class DatiIscrizione:
             genitore_cognome=self.genitore_cognome.strip(),
             genitore_codice_fiscale=self.genitore_codice_fiscale.strip().upper(),
             sesso=self.sesso.strip().upper(),
+            luogo_nascita=self.luogo_nascita.strip(),
             responsabilita=self.responsabilita.strip(),
             genitore_cellulare=self.genitore_cellulare.strip(),
             altro_nome=self.altro_nome.strip(),
@@ -181,7 +183,7 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
         socio.codice_socio = nuovo_codice_provvisorio()
         socio.save(update_fields=["codice_socio", "aggiornato_il"])
     proposti = richiesta.codice.dati_proposti if richiesta.codice else {}
-    _completa(socio, {"sesso": richiesta.sesso})
+    _completa(socio, {"sesso": richiesta.sesso, "luogo_nascita": richiesta.luogo_nascita})
     _da_lista_attesa(socio, proposti, sua_email=not richiesta.per_minore)
     account = richiesta.utente
     if richiesta.per_minore:

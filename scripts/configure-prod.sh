@@ -83,8 +83,10 @@ else
   imposta QDC_PROXY_COUNT 2   # client → proxy on the host → nginx (container) → Django
   mkdir -p "$RADICE/deploy/generated"
   destinazione="$RADICE/deploy/generated/qdc-$PROXY.conf"
-  # Only our two placeholders are replaced: nginx/Apache variables stay untouched.
+  # Only our placeholders are replaced: nginx/Apache variables stay untouched. The
+  # installation folder serves the error page when the containers are down (DEC-270).
   sed -e "s/\${QDC_DOMAIN}/$DOMINIO/g" -e "s/\${QDC_HTTP_PORT}/$PORTA/g" \
+    -e "s|\${QDC_RADICE}|$RADICE|g" \
     "$RADICE/deploy/$PROXY/qdc.conf.template" > "$destinazione"
 fi
 

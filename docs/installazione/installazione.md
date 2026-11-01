@@ -30,6 +30,11 @@ Con `nginx-host`, `apache-host` e `apache-vhost` i container ascoltano solo su `
 sulla porta `8080` (cambiala con `--port`). Con `nginx-host` e `apache-host` segui i comandi
 che lo script stampa per installare il virtual host e prendere il certificato con certbot.
 
+Quando l'app non risponde (per esempio durante un aggiornamento) il reverse proxy mostra una
+pagina che lo spiega con l'aspetto dell'app, presa dalla cartella dell'installazione
+(`frontend/public/errori/`): nginx o Apache devono poterla leggere. Se sposti l'installazione,
+rilancia lo script e rimetti il virtual host o le direttive.
+
 (apache-con-un-pannello)=
 ### Apache con un pannello (Virtualmin e simili)
 

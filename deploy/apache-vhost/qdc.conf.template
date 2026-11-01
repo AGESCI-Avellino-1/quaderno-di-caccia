@@ -15,6 +15,16 @@ ProxyTimeout 120
 # mod_proxy appends the client address to X-Forwarded-For by itself (QDC_PROXY_COUNT=2):
 # do not add other X-Forwarded-For lines.
 RequestHeader set X-Forwarded-Proto "https"
+# The app containers do not answer (DEC-270): Apache's own errors only, the app's answers
+# (the maintenance 503 too) pass untouched (ProxyErrorOverride is off).
+Alias /qdc-errori/ "${QDC_RADICE}/frontend/public/errori/"
+<Directory "${QDC_RADICE}/frontend/public/errori">
+    Require all granted
+</Directory>
+ErrorDocument 502 /qdc-errori/50x.html
+ErrorDocument 503 /qdc-errori/50x.html
+ErrorDocument 504 /qdc-errori/50x.html
+ProxyPass        /qdc-errori/ !
 ProxyPass        /.well-known/ !
 ProxyPass        / http://127.0.0.1:${QDC_HTTP_PORT}/
 ProxyPassReverse / http://127.0.0.1:${QDC_HTTP_PORT}/

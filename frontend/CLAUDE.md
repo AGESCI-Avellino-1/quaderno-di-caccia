@@ -24,7 +24,7 @@ vite-plugin-pwa 2 · Vitest 5. Node 22. Read the root `CLAUDE.md` first.
 | `src/stores/navigazione.ts`, `src/composables/useNomePagina.ts` | Names of pages with one of their own (a person, a unit, an event) for title and breadcrumb; menu counters |
 | `src/stores/sito.ts`, `src/sito/segnaposto.ts` | Title and footer from `/api/v1/sito` (also before login), placeholders filled in by `riempi()` (DEC-246, DEC-247) |
 | `src/theme/` | AGESCI palette (copied from the Django theme, do not edit) + `qdc.scss` |
-| `docker/` | nginx config for the production `app` container |
+| `docker/` | nginx config for the production `app` container; `public/errori/50x.html` is the self-contained page nginx and the reverse proxy on the host show when the server does not answer (DEC-270; Django's own error pages are `backend/templates/{400,403,403_csrf,404,500}.html`) |
 
 ## Rules
 

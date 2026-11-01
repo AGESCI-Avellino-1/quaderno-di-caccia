@@ -190,7 +190,7 @@ Richiesta del maintainer del 01/11; decisioni nell'analisi come DEC-268, DEC-269
 | A.1 | Manutenzione: interruttore e messaggio nelle Impostazioni per l'amministratore tecnico; tutti gli altri fermati (anche le pagine pubbliche, tranne accesso, privacy e termini), con la coda offline al sicuro; barra per l'amministratore tecnico | DEC-268 | ✅ 01/11 (provato nel browser con le schermate del manuale: accensione dalla pagina, genitore già dentro fermato, elenco dei blocchi) |
 | A.2 | Sblocco degli accessi: blocchi in corso per account e per indirizzo, sblocco del singolo blocco | DEC-269 | ✅ 01/11 (provato nel browser con le schermate del manuale: accensione dalla pagina, genitore già dentro fermato, elenco dei blocchi) |
 | A.3 | Manuale: le due funzioni nella parte dell'amministratore tecnico | DEC-238 | ✅ 01/11 |
-| A.4 | Pagine di errore nel tema del sito, con messaggi che spiegano cosa fare senza dettagli tecnici: 40x e 50x nella PWA, nelle pagine di Django fuori dalle API e nell'nginx del container `app` quando Django non risponde (richiesta del maintainer, 01/11) | | ⏳ |
+| A.4 | Pagine di errore nel tema del sito, con messaggi che spiegano cosa fare senza dettagli tecnici: 40x e 50x nella PWA, nelle pagine di Django fuori dalle API e nell'nginx del container `app` quando Django non risponde (richiesta del maintainer, 01/11) | DEC-270 | ✅ 01/11: provato con i container veri (la 503 della manutenzione passa intatta da nginx, Apache e nginx sull'host; con Django o con tutto il container spenti si vede la pagina dell'app) e nel browser (pagina non trovata della PWA) |
 
 ### Mancanze trovate scrivendo il manuale (31/10)
 

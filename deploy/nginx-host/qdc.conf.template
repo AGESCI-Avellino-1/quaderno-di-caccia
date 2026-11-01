@@ -27,5 +27,13 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_read_timeout 120s;
+        # The app containers do not answer (DEC-270). Only nginx's own errors: the app's
+        # answers, the maintenance 503 too, pass untouched (proxy_intercept_errors off).
+        error_page 502 503 504 /qdc-errori/50x.html;
+    }
+
+    location = /qdc-errori/50x.html {
+        internal;
+        alias "${QDC_RADICE}/frontend/public/errori/50x.html";
     }
 }

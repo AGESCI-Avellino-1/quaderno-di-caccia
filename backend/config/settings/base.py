@@ -78,6 +78,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # Maintenance: only the technical administrators get in (DEC-268). Before the device
+    # and impersonation checks: it asks about the real user.
+    "apps.impostazioni.manutenzione.ManutenzioneMiddleware",
     "auditlog.middleware.AuditlogMiddleware",
     # Revoked devices are logged out; the offline window is renewed (DEC-97).
     "apps.dispositivi.middleware.DispositivoMiddleware",

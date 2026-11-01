@@ -1497,6 +1497,18 @@ def puo_gestire_email_di_prova(user) -> bool:
     return e_amministratore(user)
 
 
+def puo_gestire_manutenzione(user) -> bool:
+    """Maintenance on and off, and getting in while it lasts: the technical administrator
+    only (DEC-268)."""
+    return e_amministratore(user)
+
+
+def puo_sbloccare_accessi(user) -> bool:
+    """Locks for too many wrong logins, by account and by address: the technical
+    administrator only (DEC-269)."""
+    return e_amministratore(user)
+
+
 def vede_impostazioni(user) -> bool:
     """The settings page: also the group treasurer, for the payment link alone."""
     return puo_modificare_impostazioni(user) or puo_gestire_quote(user)

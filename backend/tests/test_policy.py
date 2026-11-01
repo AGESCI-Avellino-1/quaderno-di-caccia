@@ -60,6 +60,18 @@ def test_amministratore_tecnico_non_vede_dati_educativi(db, ragazza):
     assert policy.livello_accesso(admin, ragazza) == LivelloAccesso.NESSUNO
 
 
+def test_manutenzione_e_sblocchi_solo_per_l_amministratore_tecnico(
+    capo, capogruppo, csq, ragazza, genitore, estraneo
+):
+    from apps.accounts.models import User
+
+    admin = User.objects.create_user(email="admin@example.invalid", amministratore_tecnico=True)
+    assert policy.puo_gestire_manutenzione(admin) and policy.puo_sbloccare_accessi(admin)
+    for chi in (capo, capogruppo, csq, ragazza, genitore, estraneo):
+        assert not policy.puo_gestire_manutenzione(chi.utente)
+        assert not policy.puo_sbloccare_accessi(chi.utente)
+
+
 def test_capo_che_lascia_il_servizio_perde_l_accesso(capo, ragazza):
     Appartenenza.objects.filter(persona=capo).update(data_fine=date.today())
     assert policy.livello_accesso(capo.utente, ragazza) == LivelloAccesso.NESSUNO

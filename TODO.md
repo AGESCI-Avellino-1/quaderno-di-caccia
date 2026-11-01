@@ -181,6 +181,17 @@ Un commit per blocco; le schermate vengono sempre da `mise run docs:schermate`.
 | 8.6c | Tesorieri: quote, agevolazioni, pagamenti e ricevute, pagamenti da verificare, prima nota e rendiconto, estratto conto | DEC-233, DEC-238 | ✅ 31/10 |
 | 8.8 | Apache con un virtual host già creato da un pannello (il caso reale è Virtualmin, ma vale per qualunque pannello): `configure-prod.sh --proxy apache-vhost` genera solo le direttive da aggiungere al virtual host HTTPS che c'è già, certificato e porta 80 restano al pannello; pagina della guida di installazione (richiesta del maintainer, 01/11) | DEC-231 | ✅ 01/11, provato con un Apache in container configurato come un sito di Virtualmin (app, API, accesso con CSRF, `/.well-known/` lasciato al pannello, redirect); percorso del menu di Virtualmin confermato dal maintainer (01/11). Trovati e corretti nella prova: l'IP del client per axes e auditlog (prima era sempre quello dell'nginx del container) e l'nginx di `app` che restava sull'indirizzo vecchio di `web` dopo una modifica di `.env` |
 
+### Manutenzione e sblocchi (01/11)
+
+Richiesta del maintainer del 01/11; decisioni nell'analisi come DEC-268, DEC-269.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| A.1 | Manutenzione: interruttore e messaggio nelle Impostazioni per l'amministratore tecnico; tutti gli altri fermati (anche le pagine pubbliche, tranne accesso, privacy e termini), con la coda offline al sicuro; barra per l'amministratore tecnico | DEC-268 | ✅ 01/11 (provato nel browser con le schermate del manuale: accensione dalla pagina, genitore già dentro fermato, elenco dei blocchi) |
+| A.2 | Sblocco degli accessi: blocchi in corso per account e per indirizzo, sblocco del singolo blocco | DEC-269 | ✅ 01/11 (provato nel browser con le schermate del manuale: accensione dalla pagina, genitore già dentro fermato, elenco dei blocchi) |
+| A.3 | Manuale: le due funzioni nella parte dell'amministratore tecnico | DEC-238 | ✅ 01/11 |
+| A.4 | Pagine di errore nel tema del sito, con messaggi che spiegano cosa fare senza dettagli tecnici: 40x e 50x nella PWA, nelle pagine di Django fuori dalle API e nell'nginx del container `app` quando Django non risponde (richiesta del maintainer, 01/11) | | ⏳ |
+
 ### Mancanze trovate scrivendo il manuale (31/10)
 
 Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manuale si aggiorna con ogni blocco.

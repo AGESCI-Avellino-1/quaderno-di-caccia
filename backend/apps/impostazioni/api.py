@@ -13,7 +13,8 @@ from ninja.errors import HttpError
 from apps.core.anno import AnnoAssociativo
 from apps.permessi import policy
 
-from .models import Impostazioni, ModelloEmail
+from . import blocchi
+from .models import MESSAGGIO_MANUTENZIONE, Impostazioni, ModelloEmail
 
 router = Router(tags=["impostazioni"])
 
@@ -33,6 +34,9 @@ class SitoOut(Schema):
     email_di_prova: bool
     # When the privacy policy changed: the cookie banner shows again (DEC-266).
     privacy_aggiornata_il: str = ""
+    # Maintenance (DEC-268): the PWA shows the message, the login page too.
+    manutenzione: bool = False
+    messaggio_manutenzione: str = ""
 
 
 def _sito() -> dict:
@@ -50,6 +54,8 @@ def _sito() -> dict:
         "privacy_aggiornata_il": (
             imp.privacy_aggiornata_il.isoformat() if imp.privacy_aggiornata_il else ""
         ),
+        "manutenzione": imp.manutenzione,
+        "messaggio_manutenzione": imp.avviso_manutenzione() if imp.manutenzione else "",
     }
 
 
@@ -78,6 +84,12 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     email_di_prova: bool
     email_di_prova_consentita: bool
     puo_email_di_prova: bool
+    # Maintenance (DEC-268) and login locks (DEC-269): the technical administrator.
+    manutenzione: bool
+    messaggio_manutenzione: str
+    messaggio_manutenzione_predefinito: str
+    puo_manutenzione: bool
+    puo_sbloccare_accessi: bool
 
 
 CAMPI_SITO = list(ImpostazioniSitoIO.model_fields)
@@ -95,6 +107,11 @@ def _impostazioni(request) -> dict:
         "email_di_prova": imp.email_di_prova_attiva(),
         "email_di_prova_consentita": settings.QDC_MAILPIT_CONSENTITO,
         "puo_email_di_prova": policy.puo_gestire_email_di_prova(request.auth),
+        "manutenzione": imp.manutenzione,
+        "messaggio_manutenzione": imp.messaggio_manutenzione,
+        "messaggio_manutenzione_predefinito": MESSAGGIO_MANUTENZIONE,
+        "puo_manutenzione": policy.puo_gestire_manutenzione(request.auth),
+        "puo_sbloccare_accessi": policy.puo_sbloccare_accessi(request.auth),
     }
 
 
@@ -138,6 +155,58 @@ def email_di_prova(request, dati: EmailDiProvaIn):
     imp.email_di_prova = dati.attiva
     imp.save(update_fields=["email_di_prova", "aggiornato_il"])
     return _impostazioni(request)
+
+
+class ManutenzioneIn(Schema):
+    attiva: bool
+    messaggio: str = ""
+
+
+@router.put("/impostazioni/manutenzione", response=ImpostazioniOut)
+def manutenzione(request, dati: ManutenzioneIn):
+    """DEC-268: only the technical administrators get in while it is on."""
+    if not policy.puo_gestire_manutenzione(request.auth):
+        raise HttpError(403, "La manutenzione la decide l'amministratore tecnico.")
+    imp = Impostazioni.carica()
+    imp.manutenzione = dati.attiva
+    imp.messaggio_manutenzione = dati.messaggio.strip()
+    imp.save(update_fields=["manutenzione", "messaggio_manutenzione", "aggiornato_il"])
+    return _impostazioni(request)
+
+
+class BloccoOut(Schema):
+    tipo: str
+    valore: str
+    tentativi: int
+    fino_al: str
+
+
+class SbloccaIn(Schema):
+    tipo: str
+    valore: str
+
+
+def _sblocchi(request) -> None:
+    if not policy.puo_sbloccare_accessi(request.auth):
+        raise HttpError(403, "Gli accessi bloccati li sblocca l'amministratore tecnico.")
+
+
+@router.get("/impostazioni/blocchi-accesso", response=list[BloccoOut])
+def blocchi_accesso(request):
+    """DEC-269: who cannot log in now after too many wrong attempts."""
+    _sblocchi(request)
+    return [
+        {**b, "fino_al": timezone.localtime(b["fino_al"]).isoformat()} for b in blocchi.in_corso()
+    ]
+
+
+@router.post("/impostazioni/blocchi-accesso/sblocca", response=list[BloccoOut])
+def sblocca_accesso(request, dati: SbloccaIn):
+    _sblocchi(request)
+    if dati.tipo not in blocchi.TIPI or not dati.valore.strip():
+        raise HttpError(400, "Indica l'account o l'indirizzo da sbloccare.")
+    blocchi.sblocca(dati.tipo, dati.valore.strip())
+    return blocchi_accesso(request)
 
 
 # --- Email templates (DEC-250) --------------------------------------------------------------

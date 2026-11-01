@@ -7,6 +7,11 @@ from . import segnaposto
 
 TITOLO_COMPLETO = "[Nome sito] - [Gruppo]"
 TITOLO_BREVE = "[Sigla sito] - [Sigla gruppo]"
+# Shown when the technical administrator leaves the message empty (DEC-268).
+MESSAGGIO_MANUTENZIONE = (
+    "L'app è in manutenzione. Torna tra un po': i dati salvati sul telefono e le modifiche "
+    "in attesa non si perdono."
+)
 
 
 class Impostazioni(ModelloTracciato):
@@ -40,6 +45,10 @@ class Impostazioni(ModelloTracciato):
     privacy_aggiornata_il = models.DateField(null=True, blank=True)
     termini = models.TextField(blank=True)
     termini_aggiornati_il = models.DateField(null=True, blank=True)
+    # Maintenance (DEC-268): only the technical administrators get in
+    # (`manutenzione.ManutenzioneMiddleware`); the message is shown to everybody else.
+    manutenzione = models.BooleanField(default=False)
+    messaggio_manutenzione = models.TextField(blank=True)
 
     class Meta:
         verbose_name = "impostazioni"
@@ -66,6 +75,9 @@ class Impostazioni(ModelloTracciato):
         from django.conf import settings
 
         return self.email_di_prova and settings.QDC_MAILPIT_CONSENTITO
+
+    def avviso_manutenzione(self) -> str:
+        return self.messaggio_manutenzione.strip() or MESSAGGIO_MANUTENZIONE
 
     def nome_del_gruppo(self) -> str:
         if self.nome_gruppo:

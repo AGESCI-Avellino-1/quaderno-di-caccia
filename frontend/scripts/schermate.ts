@@ -73,6 +73,8 @@ interface Scena {
   mostra?: string
   /** Keep the cookie notice, closed in every other scene. */
   cookie?: boolean
+  /** Put back what `prepara` changed on the server, after the screenshot. */
+  dopo?: () => Promise<void>
 }
 
 /** The side menu with the profile menu open: on the phone it opens from the top button. */
@@ -82,6 +84,37 @@ async function apriMenu(pagina: Page): Promise<void> {
   await pagina.locator('.ag-sidebar__user-toggle').click()
   await pagina.locator('#menu-profilo').waitFor()
 }
+
+/** Python run by Django on the manual's database, for a state no page can create. */
+function django(codice: string): Promise<void> {
+  return esegui('uv', ['run', 'python', 'manage.py', 'shell', '-c', codice], 'backend', ENV_DJANGO)
+}
+
+const MANUTENZIONE = (attiva: boolean) => `
+from apps.impostazioni.models import Impostazioni
+imp = Impostazioni.carica()
+imp.manutenzione = ${attiva ? 'True' : 'False'}
+imp.messaggio_manutenzione = "Stiamo aggiornando l'app: torna dopo le 18."
+imp.save()
+`
+
+// Wrong passwords of the last minutes (they count for an hour): one account, one address.
+// Run once per format: the same rows again.
+const TENTATIVI_SBAGLIATI = `
+from axes.models import AccessAttempt
+for email, ip, browser, n in [
+    ("${PERSONE.esploratore}@${DOMINIO}", "203.0.113.40", "Firefox", 5),
+    ("${PERSONE.genitore}@${DOMINIO}", "198.51.100.23", "Safari", 3),
+    ("${PERSONE.genitoreLc}@${DOMINIO}", "198.51.100.23", "Chrome", 2),
+]:
+    AccessAttempt.objects.update_or_create(
+        username=email, ip_address=ip, user_agent=browser,
+        defaults=dict(
+            http_accept="*/*", path_info="/_allauth/browser/v1/auth/login", get_data="",
+            post_data="", failures_since_start=n,
+        ),
+    )
+`
 
 const SCENE: Scena[] = [
   { nome: 'comune/accesso', percorso: '/accesso' },
@@ -637,6 +670,48 @@ const SCENE: Scena[] = [
   { nome: 'gruppo/incarichi', chi: 'capogruppo', percorso: '/gruppo', intera: true },
   { nome: 'gruppo/impostazioni', chi: 'capogruppo', percorso: '/impostazioni', intera: true },
   {
+    // Switched on from the page itself; the bar says only administrators get in.
+    nome: 'gruppo/manutenzione',
+    chi: 'amministratore',
+    percorso: '/impostazioni',
+    prepara: async (pagina) => {
+      await pagina.getByLabel('Messaggio').fill("Stiamo aggiornando l'app: torna dopo le 18.")
+      await pagina.getByRole('button', { name: 'Metti in manutenzione' }).click()
+      await pagina.getByRole('button', { name: 'Termina la manutenzione' }).waitFor()
+      await pagina.getByText('Manutenzione in corso:').waitFor()
+    },
+    mostra: 'Manutenzione',
+    dopo: () => django(MANUTENZIONE(false)),
+  },
+  {
+    nome: 'gruppo/accessi-bloccati',
+    chi: 'amministratore',
+    percorso: '/impostazioni',
+    prepara: async (pagina) => {
+      await django(TENTATIVI_SBAGLIATI)
+      await pagina.getByRole('button', { name: "Aggiorna l'elenco" }).click()
+      await pagina.getByRole('button', { name: 'Sblocca' }).first().waitFor()
+    },
+    mostra: 'Accessi bloccati',
+  },
+  {
+    // A parent already in the app when the maintenance starts.
+    nome: 'comune/manutenzione',
+    chi: 'genitore',
+    percorso: '/',
+    prepara: async (pagina) => {
+      await django(MANUTENZIONE(true))
+      await pagina.reload()
+      await pagina.waitForLoadState('networkidle')
+      if (new URL(pagina.url()).pathname === '/sblocco') {
+        await pagina.getByPlaceholder('PIN').fill(PIN)
+        await pagina.getByRole('button', { name: 'Sblocca' }).click()
+      }
+      await pagina.getByRole('heading', { name: "L'app è in manutenzione" }).waitFor()
+    },
+    dopo: () => django(MANUTENZIONE(false)),
+  },
+  {
     nome: 'gruppo/impostazioni-pagamenti',
     chi: 'tesoriera',
     percorso: '/impostazioni',
@@ -898,6 +973,7 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
     const file = join(IMMAGINI, `${scena.nome}-${formato.suffisso}.png`)
     await mkdir(dirname(file), { recursive: true })
     await writeFile(file, immagine)
+    await scena.dopo?.()
     console.log(`  ${scena.nome}-${formato.suffisso}.png`)
   }
   await contesto?.close()

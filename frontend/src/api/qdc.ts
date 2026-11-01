@@ -129,6 +129,9 @@ export interface Sito {
   email_di_prova?: boolean
   /** When the privacy policy changed: the cookie banner shows again (DEC-266). */
   privacy_aggiornata_il?: string
+  /** Maintenance (DEC-268): only the technical administrators get in. */
+  manutenzione?: boolean
+  messaggio_manutenzione?: string
 }
 
 /** Privacy policy or terms, as published (DEC-266). */
@@ -202,6 +205,21 @@ export interface Impostazioni extends ImpostazioniSito {
   email_di_prova: boolean
   email_di_prova_consentita: boolean
   puo_email_di_prova: boolean
+  /** Maintenance (DEC-268): the saved message, empty = the default one. */
+  manutenzione: boolean
+  messaggio_manutenzione: string
+  messaggio_manutenzione_predefinito: string
+  puo_manutenzione: boolean
+  /** Login locks (DEC-269). */
+  puo_sbloccare_accessi: boolean
+}
+
+/** A login lock for too many wrong attempts (DEC-269): an account (email) or an address. */
+export interface BloccoAccesso {
+  tipo: 'account' | 'indirizzo'
+  valore: string
+  tentativi: number
+  fino_al: string
 }
 
 export interface Impersonazione {
@@ -2218,6 +2236,17 @@ export const api = {
       `/api/v1/impostazioni/email/${encodeURIComponent(chiave)}/anteprima`,
       { metodo: 'POST', corpo: dati },
     ),
+  manutenzione: (attiva: boolean, messaggio: string) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/manutenzione', {
+      metodo: 'PUT',
+      corpo: { attiva, messaggio },
+    }),
+  blocchiAccesso: () => richiesta<BloccoAccesso[]>('/api/v1/impostazioni/blocchi-accesso'),
+  sbloccaAccesso: (blocco: Pick<BloccoAccesso, 'tipo' | 'valore'>) =>
+    richiesta<BloccoAccesso[]>('/api/v1/impostazioni/blocchi-accesso/sblocca', {
+      metodo: 'POST',
+      corpo: { tipo: blocco.tipo, valore: blocco.valore },
+    }),
   emailDiProva: (attiva: boolean) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/email-di-prova', {
       metodo: 'PUT',

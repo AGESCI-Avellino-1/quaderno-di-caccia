@@ -6,11 +6,13 @@ import AggiornamentoApp from '@/components/AggiornamentoApp.vue'
 import BannerCookie from '@/components/BannerCookie.vue'
 import BarraEmailDiProva from '@/components/BarraEmailDiProva.vue'
 import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
+import BarraManutenzione from '@/components/BarraManutenzione.vue'
 import BarraOffline from '@/components/BarraOffline.vue'
 import Briciole from '@/components/Briciole.vue'
 import Icona from '@/components/Icona.vue'
 import MenuLaterale from '@/components/MenuLaterale.vue'
 import PiePagina from '@/components/PiePagina.vue'
+import SchermataManutenzione from '@/components/SchermataManutenzione.vue'
 import { useBloccoAutomatico } from '@/composables/useBloccoAutomatico'
 import { EVENTO_CANCELLAZIONE, stato, type MotivoCancellazione } from '@/sicurezza/cassaforte'
 import { useNavigazioneStore } from '@/stores/navigazione'
@@ -32,9 +34,27 @@ const router = useRouter()
 
 useBloccoAutomatico()
 
+// Maintenance (DEC-268): everyone but the technical administrators sees the message
+// instead of the page. Open: privacy and terms, and the way in of an administrator
+// (login, password reset, unlocking the phone: the profile is not read before it).
+const APERTE_IN_MANUTENZIONE = new Set([
+  'accesso',
+  'reimposta-password',
+  'sblocco',
+  'protezione',
+  'privacy',
+  'termini',
+])
+const fermato = computed(
+  () =>
+    !!sito.sito.manutenzione &&
+    !sessione.profilo?.amministratore_tecnico &&
+    !APERTE_IN_MANUTENZIONE.has(String(router.currentRoute.value.name)),
+)
+
 // The side menu (DEC-241) once logged in and unlocked; lock and logout are in it.
 const menu = ref<InstanceType<typeof MenuLaterale> | null>(null)
-const conMenu = computed(() => sessione.autenticato && stato.value !== 'bloccata')
+const conMenu = computed(() => sessione.autenticato && stato.value !== 'bloccata' && !fermato.value)
 const navigazione = useNavigazioneStore()
 
 // Only the content scrolls (.qdc-scorrevole): a new page starts from its top.
@@ -84,12 +104,14 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
         </nav>
       </header>
       <BarraEmailDiProva />
+      <BarraManutenzione v-if="!fermato" />
       <BarraImpersonazione />
       <BarraOffline />
       <Briciole v-if="conMenu" />
       <div ref="scorrevole" class="qdc-scorrevole">
         <main class="container py-5">
-          <RouterView />
+          <SchermataManutenzione v-if="fermato" />
+          <RouterView v-else />
         </main>
         <!-- Phone: the footer at the end of the content, seen when scrolled to the bottom. -->
         <PiePagina class="lg:d-none" />

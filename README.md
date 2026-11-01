@@ -212,8 +212,9 @@ cancella i dati, tenendo nome e anni nel gruppo. Per collegare il Drive, una vol
 5. riavvia `web`. Nella pagina del gruppo, sezione «Archivio», sparisce l'avviso
    «L'archivio non è ancora configurato».
 
-Per il backup del database: `scripts/backup-db.sh` (il file contiene dati di minori: va
-conservato cifrato).
+Per il backup: `scripts/backup-db.sh` salva il database e i file caricati (contengono dati
+di minori: vanno conservati cifrati); il ripristino è nella guida di installazione, pagina
+«Backup e ripristino».
 
 ## Dati personali e sicurezza
 

@@ -31,6 +31,6 @@ MAILERS["reale"] = {
     },
 }
 
-# Behind a reverse proxy the client IP comes from X-Forwarded-For.
-AXES_IPWARE_PROXY_COUNT = env.int("QDC_PROXY_COUNT", default=1)
-AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
+# Always behind at least the app container's nginx: the client IP comes from
+# X-Forwarded-For (apps.core.proxy).
+QDC_PROXY_COUNT = env.int("QDC_PROXY_COUNT", default=1)

@@ -65,6 +65,9 @@ services:
     depends_on:
       web:
         condition: service_healthy
+        # nginx resolves "web" only at start: when Compose recreates web (new .env, new
+        # image) it may get another address, so app restarts with it.
+        restart: true
     ports:
       # Reached only by the reverse proxy on the host (nginx-host, apache-host).
       - "127.0.0.1:${QDC_HTTP_PORT:-8080}:80"

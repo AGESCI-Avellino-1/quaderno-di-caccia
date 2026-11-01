@@ -67,6 +67,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First: the client's address from X-Forwarded-For, for axes and auditlog.
+    "apps.core.proxy.IndirizzoClienteMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -241,6 +243,9 @@ QDC_MAILPIT_CONSENTITO = env.bool("QDC_MAILPIT_CONSENTITO", default=False)
 # Mailpit's web interface, reached by Django only (proxy at /mailpit/, MP_WEBROOT=/mailpit).
 QDC_MAILPIT_URL = env("QDC_MAILPIT_URL", default="http://localhost:8025")
 # Invitation links expire after this many days (DEC-21).
+# Reverse proxies in front of gunicorn (written by scripts/configure-prod.sh); 0 = none,
+# REMOTE_ADDR is the client (apps.core.proxy).
+QDC_PROXY_COUNT = env.int("QDC_PROXY_COUNT", default=0)
 QDC_INVITO_VALIDITA_GIORNI = env.int("QDC_INVITO_VALIDITA_GIORNI", default=14)
 # A device that does not reach the server for this many days deletes its offline data
 # by itself (DEC-97). Camps last up to 12 days (DEC-94).

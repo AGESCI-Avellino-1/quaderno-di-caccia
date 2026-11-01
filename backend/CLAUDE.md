@@ -65,8 +65,11 @@ Read the root `CLAUDE.md` first.
   `pyproject.toml`) and allows WebAuthn on http://localhost.
 - `prod.py` expects `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`,
   `DJANGO_CSRF_TRUSTED_ORIGINS`; `QDC_PROXY_COUNT` must equal the number of proxies in
-  front of gunicorn (written by `scripts/configure-prod.sh`), or django-axes locks the
-  wrong IP. `check --deploy --fail-level WARNING` must stay clean (CI enforces it).
+  front of gunicorn (written by `scripts/configure-prod.sh`): `apps.core.proxy` takes the
+  client IP from that entry of X-Forwarded-For (counted from the right) and puts it in
+  `REMOTE_ADDR` for django-axes and auditlog; wrong, and axes locks the wrong IP (with
+  nginx's address, everybody at once). No django-ipware: its strict mode turns a forged
+  header into "no IP". `check --deploy --fail-level WARNING` must stay clean (CI enforces it).
 
 ## Tests
 

@@ -1,6 +1,8 @@
 # Primo avvio
 
 Su un'installazione vuota nessuno può ancora invitare qualcuno dall'app. L'ordine è questo.
+Prima la posta deve funzionare (vedi [Installazione](installazione)): ogni accesso nuovo
+passa da un codice mandato per email.
 
 ## 1. L'amministratore tecnico
 
@@ -11,6 +13,11 @@ docker compose exec web python manage.py createsuperuser
 È l'**amministratore tecnico**: gestisce account, importazioni e impostazioni del sito, ma
 **non vede i dati educativi e sanitari** dei ragazzi. Gli altri amministratori li nominano poi
 i capigruppo dall'app, e devono essere capi.
+
+Al primo accesso nell'app, con l'email e la password appena scelte, arriva per email un
+codice per confermare l'indirizzo; poi l'app chiede di proteggere il dispositivo con un PIN.
+Se il codice non arriva, controlla le voci SMTP in `.env` e i log con
+`docker compose logs web`.
 
 ## 2. I dati da BuonaStrada
 

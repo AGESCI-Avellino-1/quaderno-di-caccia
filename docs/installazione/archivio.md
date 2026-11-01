@@ -21,15 +21,16 @@ Per collegarlo, una volta:
    QDC_DRIVE_CARTELLA=<id della cartella>
    ```
 
-4. Genera **una volta** la chiave che riconosce chi rientra dopo l'archiviazione e mettila in
-   `.env`:
+4. Controlla che in `.env` ci sia `QDC_IMPRONTA_CHIAVE`, la chiave che riconosce chi rientra
+   dopo l'archiviazione: la genera lo script di configurazione. Se manca (installazioni fatte
+   prima che lo script la generasse), creala **una volta**:
 
    ```bash
    openssl rand -hex 32   # QDC_IMPRONTA_CHIAVE=<il risultato>
    ```
 
-5. Riavvia: `docker compose up -d`. Nella pagina **Incarichi di gruppo**, riquadro
-   **Archivio**, l'avviso sparisce.
+5. Riavvia: `docker compose up -d`. Un capogruppo, nella pagina **Incarichi di gruppo**,
+   riquadro **Archivio**, non vede più l'avviso (il riquadro lo vedono solo i capigruppo).
 
 :::{danger}
 Conserva `QDC_IMPRONTA_CHIAVE` insieme ai backup e **non cambiarla mai**, nemmeno se rigeneri

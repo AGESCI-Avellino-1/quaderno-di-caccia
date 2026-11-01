@@ -10,8 +10,11 @@ scripts/backup-db.sh               # crea backups/qdc-<data>.sql.gz e backups/qd
 KEEP_DAYS=30 scripts/backup-db.sh  # e cancella quelli più vecchi di 30 giorni
 ```
 
-Va lanciato con l'app in funzione. Usa Docker se c'è, altrimenti Podman. Puoi lanciarlo ogni
-notte dal cron, come i lavori giornalieri.
+Va lanciato con l'app in funzione. Usa Docker se c'è, altrimenti Podman. L'esempio dei
+[lavori giornalieri](lavori-giornalieri) lo lancia ogni notte e tiene gli ultimi 30 giorni.
+
+Un backup che resta solo sul server si perde insieme al server: copia regolarmente i file di
+`backups/` su un altro computer o su uno spazio esterno, sempre cifrati.
 
 I due file vanno sempre insieme: il database dice quali moduli e foto esistono, l'archivio dei
 file li contiene. Con il solo database l'app mostra i moduli, ma non riesce ad aprirli.

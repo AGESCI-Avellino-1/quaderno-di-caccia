@@ -15,6 +15,11 @@ sono facoltative.
   più del necessario, né messi nel repository; si spostano solo cifrati.
 - La modalità di prova delle email (Mailpit) resta **spenta** sul server con i dati veri.
 - Il server va tenuto aggiornato (sistema, Docker) e raggiungibile solo in HTTPS.
+- Chi sbaglia la password 5 volte resta bloccato per un'ora; l'amministratore tecnico vede i
+  blocchi e li toglie dalle Impostazioni. Per un intervento sul server, la **manutenzione**
+  lascia entrare solo gli amministratori tecnici.
 
-Per segnalare un problema di sicurezza scrivi al responsabile del progetto, non aprire una
-segnalazione pubblica.
+Per segnalare un problema di sicurezza non aprire una segnalazione pubblica: usa la
+[segnalazione privata](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories/new)
+del progetto su GitHub (pagina **Security**, **Report a vulnerability**), come spiegato in
+`SECURITY.md`.

@@ -1,11 +1,12 @@
 # Lavori giornalieri
 
-Alcuni comandi vanno lanciati ogni giorno: emettono le quote, mandano promemoria e
-riepiloghi, riassumono le presenze vecchie. L'esempio pronto è in
+Alcuni comandi vanno lanciati ogni giorno: fanno il backup, emettono le quote, mandano
+promemoria e riepiloghi, riassumono le presenze vecchie. L'esempio pronto è in
 `deploy/cron/qdc.crontab`.
 
 | Comando | Cosa fa | Ora nell'esempio |
 | --- | --- | --- |
+| `scripts/backup-db.sh` | il [backup](backup) del database e dei file caricati, tenuto 30 giorni | 02:30 |
 | `riassumi_presenze` | le presenze più vecchie di due anni diventano totali per anno | 03:40 |
 | `emetti_quote` | emette le quote il cui periodo è iniziato (le mensili il primo del mese) | 06:05 |
 | `segnala_correzioni` | ai capigruppo, le correzioni da inoltrare a BuonaStrada | 07:15 |

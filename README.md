@@ -205,12 +205,13 @@ cancella i dati, tenendo nome e anni nel gruppo. Per collegare il Drive, una vol
 3. metti la chiave in `secrets/drive.json` accanto a `compose.prod.yml` (la cartella
    `secrets/` non va mai nel repository) e in `.env`:
    `QDC_DRIVE_CREDENZIALI=/run/qdc-secrets/drive.json` e `QDC_DRIVE_CARTELLA=<id>`;
-4. genera una volta la chiave che riconosce chi rientra dopo l'archiviazione
-   (`openssl rand -hex 32`) e mettila in `.env` come `QDC_IMPRONTA_CHIAVE`. **Conservala
+4. la chiave che riconosce chi rientra dopo l'archiviazione, `QDC_IMPRONTA_CHIAVE`, la
+   genera `scripts/configure-prod.sh` (se manca: `openssl rand -hex 32`). **Conservala
    insieme ai backup e non cambiarla mai**, nemmeno se rigeneri `DJANGO_SECRET_KEY` o
    sposti l'app su un altro server: con una chiave diversa chi è stato archiviato non viene
    più riconosciuto in automatico quando torna (resta solo il caricamento a mano dello ZIP);
-5. riavvia `web`. Nella pagina del gruppo, sezione «Archivio», sparisce l'avviso
+5. riavvia (`docker compose up -d`). Nella pagina «Incarichi di gruppo», riquadro
+   «Archivio», un capogruppo non vede più l'avviso
    «L'archivio non è ancora configurato».
 
 Per il backup: `scripts/backup-db.sh` salva il database e i file caricati (contengono dati

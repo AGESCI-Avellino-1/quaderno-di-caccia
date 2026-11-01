@@ -5,7 +5,13 @@
 ```bash
 git clone https://github.com/AGESCI-Avellino-1/quaderno-di-caccia.git /srv/qdc
 cd /srv/qdc
+git checkout v1.0.0
 ```
+
+Installa sempre una **versione rilasciata**: le trovi, con il PDF del manuale d'uso, nella
+pagina [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases) del
+progetto; al posto di `v1.0.0` metti l'ultima. Il ramo `main` è quello di sviluppo e può
+contenere lavori non ancora provati.
 
 Negli esempi l'installazione è in `/srv/qdc`: se scegli un'altra cartella, cambiala anche
 nei lavori giornalieri.
@@ -25,6 +31,15 @@ scripts/configure-prod.sh --proxy nginx-host --domain qdc.esempio.org
 | `nginx-host` | Sul server c'è già nginx: lo script genera il virtual host in `deploy/generated/` |
 | `apache-host` | Sul server c'è già Apache: lo script genera il virtual host in `deploy/generated/` |
 | `apache-vhost` | Sul server c'è già Apache e il virtual host del dominio lo crea un pannello (Virtualmin, ISPConfig, Plesk…): lo script genera solo le direttive da aggiungere, vedi [sotto](#apache-con-un-pannello) |
+
+Lo script genera anche `QDC_IMPRONTA_CHIAVE`, la chiave che riconosce chi torna nel gruppo
+dopo l'archiviazione: non si può rigenerare, quindi conserva una copia di `.env` insieme ai
+backup (vedi [Archivio sul Drive](archivio)).
+
+:::{warning}
+`.env` contiene password e chiavi: resta sul server, leggibile solo dal suo proprietario
+(lo script lo imposta così), e non va mai nel repository.
+:::
 
 Con `nginx-host`, `apache-host` e `apache-vhost` i container ascoltano solo su `127.0.0.1`,
 sulla porta `8080` (cambiala con `--port`). Con `nginx-host` e `apache-host` segui i comandi
@@ -79,11 +94,6 @@ l'app usa per bloccare chi sbaglia la password troppe volte.
 
 Se rifai il sito dal pannello (o lo ricrea un ripristino del pannello), rimetti le direttive.
 
-:::{warning}
-`.env` contiene password e chiavi: resta sul server, leggibile solo dal suo proprietario
-(lo script lo imposta così), e non va mai nel repository.
-:::
-
 ## La posta
 
 In `.env` completa le voci SMTP:
@@ -106,6 +116,18 @@ docker compose up -d --build
 Il file `.env` dice a Compose quali file usare. Le migrazioni del database si applicano da
 sole all'avvio del container `web`. Quando `docker compose ps` mostra `web` in salute, apri
 l'indirizzo del sito: vedi la pagina di accesso.
+
+Quando il server si riavvia, con Docker i container ripartono da soli. Con Podman serve il
+servizio che li riavvia, da attivare una volta per l'utente che li ha avviati:
+
+```bash
+systemctl --user enable --now podman-restart.service
+loginctl enable-linger "$USER"   # i container partono anche senza che l'utente entri
+```
+
+Poi riavvia il server una volta e controlla con `podman ps` che i container siano ripartiti:
+le versioni più vecchie di Podman riavviano solo i container con la regola `always`, non
+quelli con `unless-stopped` usata dall'app.
 
 ## Altre impostazioni in `.env`
 

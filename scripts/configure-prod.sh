@@ -65,6 +65,8 @@ if [[ -z "$attuale" || "$attuale" == "change-me" ]]; then imposta DJANGO_SECRET_
 [[ -n "$(valore POSTGRES_PASSWORD)" ]] || imposta POSTGRES_PASSWORD "$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 [[ -n "$(valore POSTGRES_DB)" ]] || imposta POSTGRES_DB qdc
 [[ -n "$(valore POSTGRES_USER)" ]] || imposta POSTGRES_USER qdc
+# Recognises who comes back after archiving (DEC-217): generated once, never changed.
+[[ -n "$(valore QDC_IMPRONTA_CHIAVE)" ]] || imposta QDC_IMPRONTA_CHIAVE "$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
 
 imposta DJANGO_DEBUG false
 imposta DJANGO_ALLOWED_HOSTS "$DOMINIO"
@@ -93,6 +95,7 @@ fi
 echo
 echo "Configurazione scritta in .env (proxy: $PROXY, dominio: $DOMINIO)."
 echo "Completa le voci SMTP (DJANGO_EMAIL_*) in .env prima di avviare."
+echo "Conserva una copia di .env con i backup: QDC_IMPRONTA_CHIAVE non si può rigenerare."
 case "$PROXY" in
   nginx-docker)
     cat <<EOT

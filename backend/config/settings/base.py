@@ -216,6 +216,8 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1  # hours
 AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]
 AXES_USERNAME_FORM_FIELD = "email"
+# No personal data in axes' log lines: address and path only.
+AXES_CLIENT_STR_CALLABLE = "apps.core.proxy.descrizione_cliente"
 
 # --- Email (Django 6.1 MAILERS; EMAIL_BACKEND is deprecated) ---------------------
 # "default" sends through "reale", or to Mailpit while the technical administrator has

@@ -69,7 +69,9 @@ Read the root `CLAUDE.md` first.
   client IP from that entry of X-Forwarded-For (counted from the right) and puts it in
   `REMOTE_ADDR` for django-axes and auditlog; wrong, and axes locks the wrong IP (with
   nginx's address, everybody at once). No django-ipware: its strict mode turns a forged
-  header into "no IP". `check --deploy --fail-level WARNING` must stay clean (CI enforces it).
+  header into "no IP". Axes names clients in its log lines through
+  `apps.core.proxy.descrizione_cliente` (`AXES_CLIENT_STR_CALLABLE`): address and path,
+  never the email typed nor the browser. `check --deploy --fail-level WARNING` must stay clean (CI enforces it).
 
 ## Tests
 

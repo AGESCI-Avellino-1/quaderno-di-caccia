@@ -24,3 +24,12 @@ class IndirizzoClienteMiddleware:
             if len(voci) >= self.proxy:
                 request.META["REMOTE_ADDR"] = voci[-self.proxy]
         return self.get_response(request)
+
+
+def descrizione_cliente(username, ip_address, user_agent, path_info, request) -> str:
+    """How django-axes names a client in its log lines (AXES_CLIENT_STR_CALLABLE): the
+    address and the path, never the email typed nor the browser, which axes would log at
+    INFO and WARNING on every login."""
+    if isinstance(path_info, (tuple, list)):
+        path_info = path_info[0] if path_info else ""
+    return f'{{ip_address: "{ip_address}", path_info: "{path_info}"}}'

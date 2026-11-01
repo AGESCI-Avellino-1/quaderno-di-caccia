@@ -60,3 +60,30 @@ def test_viene_prima_di_axes_e_auditlog():
     ordine = settings.MIDDLEWARE
     assert ordine[0] == "apps.core.proxy.IndirizzoClienteMiddleware"
     assert ordine.index("auditlog.middleware.AuditlogMiddleware") > 0
+
+
+@pytest.mark.django_db
+def test_axes_non_scrive_email_ne_browser_nei_log(caplog, settings):
+    from allauth.account.models import EmailAddress
+    from django.test import Client
+
+    from apps.accounts.models import User
+
+    settings.AXES_ENABLED = True
+    utente = User.objects.create_user(email="mario@example.invalid", password="una-password")
+    EmailAddress.objects.create(user=utente, email=utente.email, verified=True, primary=True)
+    client = Client(HTTP_USER_AGENT="BrowserDiProva/1.0", REMOTE_ADDR=CLIENTE)
+    login = "/_allauth/browser/v1/auth/login"
+    with caplog.at_level("INFO", logger="axes"):
+        for password in ("sbagliata", "una-password"):
+            client.post(
+                login,
+                {"email": "mario@example.invalid", "password": password},
+                content_type="application/json",
+            )
+    righe = [r.getMessage() for r in caplog.records if r.name.startswith("axes")]
+    assert any("login failure" in r for r in righe)
+    assert any("Successful login" in r for r in righe)
+    for riga in righe:
+        assert "mario" not in riga and "BrowserDiProva" not in riga
+    assert any(CLIENTE in r for r in righe)

@@ -160,6 +160,7 @@ scripts/configure-prod.sh --proxy nginx-host --domain qdc.esempio.org
 | `nginx-docker` | Server dedicato: l'nginx del container pubblica le porte 80/443 e gestisce il certificato |
 | `nginx-host` | Sul server c'è già nginx: lo script genera il virtual host in `deploy/generated/` |
 | `apache-host` | Sul server c'è già Apache: idem, per Apache |
+| `apache-vhost` | Sul server c'è già Apache e il virtual host lo crea un pannello (Virtualmin…): lo script genera solo le direttive da aggiungere |
 
 Lo script crea `.env` (con segreti generati, che non sovrascrive se lo rilanci),
 imposta dominio e numero di proxy e stampa i passi successivi (certificato, attivazione

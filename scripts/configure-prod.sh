@@ -7,8 +7,9 @@
 # --proxy  nginx-docker  nginx runs in Docker, publishes 80/443 and terminates TLS
 #          nginx-host    nginx already on the server proxies to 127.0.0.1:<port>
 #          apache-host   Apache already on the server proxies to 127.0.0.1:<port>
+#          apache-vhost  like apache-host, in a virtual host made by a panel (Virtualmin…)
 # --domain public host name (no https://)
-# --port   local port of the containers for the *-host modes (default 8080)
+# --port   local port of the containers for the other modes (default 8080)
 #
 # Safe to run again: existing secrets are kept, the other values are updated.
 set -euo pipefail
@@ -19,7 +20,7 @@ PROXY=""
 DOMINIO=""
 PORTA="8080"
 
-uso() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+uso() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -32,13 +33,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$PROXY" ]]; then
-  echo "Reverse proxy: 1) nginx-docker  2) nginx-host  3) apache-host"
+  echo "Reverse proxy: 1) nginx-docker  2) nginx-host  3) apache-host  4) apache-vhost"
   read -r -p "Scelta [2]: " scelta
-  case "${scelta:-2}" in 1) PROXY=nginx-docker ;; 2) PROXY=nginx-host ;; 3) PROXY=apache-host ;; esac
+  case "${scelta:-2}" in 1) PROXY=nginx-docker ;; 2) PROXY=nginx-host ;; 3) PROXY=apache-host ;; 4) PROXY=apache-vhost ;; esac
 fi
 [[ -z "$DOMINIO" ]] && read -r -p "Dominio (es. qdc.esempio.org): " DOMINIO
 
-case "$PROXY" in nginx-docker|nginx-host|apache-host) ;; *) echo "Proxy non valido: $PROXY" >&2; exit 1 ;; esac
+case "$PROXY" in nginx-docker|nginx-host|apache-host|apache-vhost) ;; *) echo "Proxy non valido: $PROXY" >&2; exit 1 ;; esac
 [[ "$DOMINIO" =~ ^[A-Za-z0-9.-]+$ ]] || { echo "Dominio non valido: $DOMINIO" >&2; exit 1; }
 [[ "$PORTA" =~ ^[0-9]+$ ]] || { echo "Porta non valida: $PORTA" >&2; exit 1; }
 
@@ -118,6 +119,17 @@ Virtual host generato: deploy/generated/qdc-apache-host.conf
   sudo a2enmod proxy proxy_http headers ssl rewrite http2
   sudo cp deploy/generated/qdc-apache-host.conf /etc/apache2/sites-available/qdc.conf
   sudo a2ensite qdc && sudo certbot --apache -d $DOMINIO && sudo systemctl reload apache2
+Avvio:   docker compose up -d --build
+EOT
+    ;;
+  apache-vhost)
+    cat <<EOT
+
+Direttive generate: deploy/generated/qdc-apache-vhost.conf
+  Il virtual host di $DOMINIO e il suo certificato li crea il pannello (es. Virtualmin).
+  Aggiungi le direttive del file al virtual host HTTPS (porta 443) di $DOMINIO, poi:
+  sudo a2enmod proxy proxy_http headers
+  sudo apachectl configtest && sudo systemctl reload apache2
 Avvio:   docker compose up -d --build
 EOT
     ;;

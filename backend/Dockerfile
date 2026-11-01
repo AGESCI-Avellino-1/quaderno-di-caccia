@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # QdC backend: Django + gunicorn. Built by compose.prod.yml (see README, "Produzione").
 
-FROM python:3.14-slim AS build
+FROM python:3.15-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -15,7 +15,7 @@ COPY . .
 RUN DJANGO_SETTINGS_MODULE=config.settings.base DJANGO_SECRET_KEY=collectstatic-only \
     /opt/venv/bin/python manage.py collectstatic --noinput
 
-FROM python:3.14-slim
+FROM python:3.15-slim
 RUN groupadd --system qdc && useradd --system --gid qdc --home-dir /app qdc \
     && mkdir -p /data/media && chown qdc:qdc /data/media
 ENV PATH=/opt/venv/bin:$PATH \

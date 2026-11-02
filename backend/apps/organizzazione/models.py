@@ -241,6 +241,9 @@ class RuoloIncarico(models.TextChoices):
     VCSQ are the ragazzi's."""
 
     CAPOGRUPPO = "CAPOGRUPPO", "Capogruppo"
+    # The group's assistente ecclesiastico: the powers of a capogruppo everywhere,
+    # appointed by the capigruppo (DEC-281).
+    AE_GRUPPO = "AE_GRUPPO", "Assistente ecclesiastico di gruppo"
     TESORIERE_GRUPPO = "TESORIERE_GRUPPO", "Tesoriere di gruppo"
     CAPO_UNITA = "CAPO_UNITA", "Capo unità"
     # The capi serving a unit (DEC-09, DEC-10). An Incarico, not an Appartenenza: capi
@@ -248,6 +251,9 @@ class RuoloIncarico(models.TextChoices):
     # would look to the import like a change of unit.
     STAFF = "STAFF", "Staff di unità"
     TESORIERE_UNITA = "TESORIERE_UNITA", "Tesoriere di unità"
+    # A unit's assistente ecclesiastico: counts as its staff, appointed by the capo unità
+    # and the capigruppo (DEC-281).
+    AE_UNITA = "AE_UNITA", "Assistente ecclesiastico di unità"
     # A capo of the Co.Ca. serving in no unit for now; excludes any unit service (DEC-165).
     A_DISPOSIZIONE = "A_DISPOSIZIONE", "A disposizione"
     # Appointed by the capigruppo; the first one is created from the command line
@@ -273,12 +279,14 @@ TITOLARI_MASSIMI = {
 
 RUOLI_DI_GRUPPO = {
     RuoloIncarico.CAPOGRUPPO,
+    RuoloIncarico.AE_GRUPPO,
     RuoloIncarico.TESORIERE_GRUPPO,
     RuoloIncarico.A_DISPOSIZIONE,
     RuoloIncarico.AMMINISTRATORE,
 }
 RUOLI_DI_UNITA = {
     RuoloIncarico.CAPO_UNITA,
+    RuoloIncarico.AE_UNITA,
     RuoloIncarico.TESORIERE_UNITA,
     RuoloIncarico.STAFF,
     RuoloIncarico.CONSIGLIO_ANZIANI,
@@ -286,14 +294,18 @@ RUOLI_DI_UNITA = {
 RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
 # Every capo of the Co.Ca. has a service: one or more units, or at disposal (not both,
 # DEC-165).
+# DEC-165; the assistenti ecclesiastici serve the group or a unit (DEC-281).
 INCARICHI_DI_SERVIZIO = {
     RuoloIncarico.CAPO_UNITA,
     RuoloIncarico.STAFF,
+    RuoloIncarico.AE_UNITA,
+    RuoloIncarico.AE_GRUPPO,
     RuoloIncarico.A_DISPOSIZIONE,
 }
-SERVIZIO_IN_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF}
+SERVIZIO_IN_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF, RuoloIncarico.AE_UNITA}
 RUOLI_AGGIUNTIVI = {
     RuoloIncarico.CAPOGRUPPO,
+    RuoloIncarico.AE_GRUPPO,
     RuoloIncarico.TESORIERE_GRUPPO,
     RuoloIncarico.TESORIERE_UNITA,
     RuoloIncarico.AMMINISTRATORE,

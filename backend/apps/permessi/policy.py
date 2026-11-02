@@ -109,10 +109,13 @@ def _ha_incarico(user, ruoli: set[RuoloIncarico], **filtri) -> bool:
 
 
 def e_capogruppo(user) -> bool:
-    return _ha_incarico(user, {RuoloIncarico.CAPOGRUPPO})
+    """A capogruppo, or the group's assistente ecclesiastico, who has the same powers
+    everywhere (DEC-281)."""
+    return _ha_incarico(user, {RuoloIncarico.CAPOGRUPPO, RuoloIncarico.AE_GRUPPO})
 
 
-STAFF_DI_UNITA = frozenset({RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+# The staff of a unit: capo unità, staff and the unit's assistente ecclesiastico (DEC-281).
+STAFF_DI_UNITA = frozenset({RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA, RuoloIncarico.AE_UNITA})
 
 
 def _con_collegate(unita_ids) -> set[int]:
@@ -484,9 +487,13 @@ def puo_nominare(
         )
     if ruolo in {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}:
         return e_capogruppo(user)  # DEC-10
-    if ruolo in {RuoloIncarico.A_DISPOSIZIONE, RuoloIncarico.AMMINISTRATORE}:
-        return e_capogruppo(user)  # DEC-165, DEC-166
-    if ruolo == RuoloIncarico.TESORIERE_UNITA:
+    if ruolo in {
+        RuoloIncarico.A_DISPOSIZIONE,
+        RuoloIncarico.AMMINISTRATORE,
+        RuoloIncarico.AE_GRUPPO,
+    }:
+        return e_capogruppo(user)  # DEC-165, DEC-166, DEC-281
+    if ruolo in {RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.AE_UNITA}:
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
         return squadriglia is not None and e_staff(user, squadriglia.unita)  # DEC-14
@@ -773,7 +780,7 @@ def puo_creare_evento(
             Incarico.objects.attivi()
             .filter(
                 persona=persona,
-                ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
+                ruolo__in=STAFF_DI_UNITA,
                 unita__tipo__in=tipi,
             )
             .exists()
@@ -1028,11 +1035,7 @@ def puo_impersonare_qualcuno(user) -> bool:
     serves a unit."""
     if not e_capo_censito(user):
         return False
-    return (
-        e_capogruppo(user)
-        or e_amministratore(user)
-        or _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
-    )
+    return e_capogruppo(user) or e_amministratore(user) or _ha_incarico(user, STAFF_DI_UNITA)
 
 
 def puo_impersonare(user, bersaglio) -> bool:
@@ -1550,7 +1553,7 @@ def puo_gestire_lista_attesa(user, unita: Unita | None = None) -> bool:
     if e_capogruppo(user):
         return True
     if unita is None:
-        return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+        return _ha_incarico(user, STAFF_DI_UNITA)
     return e_staff(user, unita)
 
 

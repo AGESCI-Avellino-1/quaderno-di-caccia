@@ -173,9 +173,9 @@ def test_dettaglio_unita(capo, capogruppo, staff, csq, reparto):
     assert dati["puo_gestire_squadriglie"] is True
 
     del_capo = _client(capo).get(f"/api/v1/unita/{reparto.pk}").json()
-    assert _valori(del_capo["nomina"]) == ["TESORIERE_UNITA"]
+    assert _valori(del_capo["nomina"]) == ["AE_UNITA", "TESORIERE_UNITA"]
     del_cg = _client(capogruppo).get(f"/api/v1/unita/{reparto.pk}").json()
-    assert _valori(del_cg["nomina"]) == ["CAPO_UNITA", "STAFF", "TESORIERE_UNITA"]
+    assert _valori(del_cg["nomina"]) == ["CAPO_UNITA", "STAFF", "AE_UNITA", "TESORIERE_UNITA"]
     assert del_cg["puo_modificare"] is True
     assert del_cg["squadriglie"][0]["nomina"] == []
 
@@ -244,7 +244,12 @@ def test_amministratore_nomina_il_primo_capogruppo(amministratore, capo_semplice
     assert _nomina(capo_semplice, secondo, "CAPOGRUPPO").status_code == 201
     dati = _client(capo_semplice).get("/api/v1/gruppo/incarichi").json()
     assert len(dati["incarichi"]) == 2
-    assert _valori(dati["nomina"]) == ["CAPOGRUPPO", "TESORIERE_GRUPPO", "AMMINISTRATORE"]
+    assert _valori(dati["nomina"]) == [
+        "CAPOGRUPPO",
+        "AE_GRUPPO",
+        "TESORIERE_GRUPPO",
+        "AMMINISTRATORE",
+    ]
 
 
 @pytest.mark.parametrize("ruolo", ["csq", "ragazza", "genitore", "estraneo"])
@@ -742,3 +747,36 @@ def test_squadriglia_dell_altro_sesso_segnalata_e_chiudibile(capogruppo, gruppo,
         ).status_code
         == 201
     )  # noqa: E501
+
+
+# --- Assistenti ecclesiastici (DEC-281) -----------------------------------------------------
+
+
+def test_assistente_ecclesiastico_di_gruppo_come_un_capogruppo(
+    capogruppo, capo, capo_semplice, gruppo
+):
+    assert _nomina(capo, capo_semplice, "AE_GRUPPO").status_code == 403
+    assert _nomina(capogruppo, capo_semplice, "AE_GRUPPO").status_code == 201
+    ae = capo_semplice.utente
+    assert policy.e_capogruppo(ae)
+    assert policy.puo_gestire_unita(ae)
+    assert policy.puo_gestire_diritti(ae)
+    assert policy.puo_gestire_fine_anno(ae)
+    assert policy.puo_nominare(ae, R.CAPOGRUPPO)
+    # A service: not among the capi to sort out.
+    dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
+    assert capo_semplice.pk not in {p["id"] for p in dati["senza_servizio"]}
+
+
+def test_assistente_ecclesiastico_di_unita_come_lo_staff(
+    capogruppo, capo, capo_semplice, reparto, ragazza, estraneo
+):
+    assert _nomina(estraneo, capo_semplice, "AE_UNITA", unita_id=reparto.pk).status_code == 403
+    # The capo unità appoints it, like the capigruppo.
+    assert _nomina(capo, capo_semplice, "AE_UNITA", unita_id=reparto.pk).status_code == 201
+    ae = capo_semplice.utente
+    assert policy.e_staff(ae, reparto)
+    assert policy.puo_gestire_progressione(ae, ragazza)
+    assert policy.puo_modificare_sanitarie(ae, ragazza)
+    assert not policy.e_capo_unita(ae, reparto)
+    assert not policy.e_capogruppo(ae)

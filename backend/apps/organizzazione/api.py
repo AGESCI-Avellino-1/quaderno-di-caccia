@@ -404,6 +404,7 @@ def dettaglio_unita(request, unita_id: int):
             (
                 RuoloIncarico.CAPO_UNITA,
                 RuoloIncarico.STAFF,
+                RuoloIncarico.AE_UNITA,
                 RuoloIncarico.TESORIERE_UNITA,
                 RuoloIncarico.CONSIGLIO_ANZIANI,
             ),
@@ -425,6 +426,7 @@ class IncarichiGruppo(Schema):
 
 RUOLI_AGGIUNTIVI_DI_GRUPPO = (
     RuoloIncarico.CAPOGRUPPO,
+    RuoloIncarico.AE_GRUPPO,
     RuoloIncarico.TESORIERE_GRUPPO,
     RuoloIncarico.AMMINISTRATORE,
 )

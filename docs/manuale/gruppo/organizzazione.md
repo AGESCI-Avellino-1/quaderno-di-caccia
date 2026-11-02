@@ -33,6 +33,9 @@ Nella pagina dell'unità, in **Staff e incarichi**, scegli **Capo unità** o **S
 massimo due nelle unità miste e in Comunità capi, uno nelle altre. Per chiudere un incarico,
 **chiudi**.
 
+L'**Assistente ecclesiastico di unità** si assegna allo stesso modo, dai capigruppo o dal
+capo unità: nell'app conta come lo staff dell'unità.
+
 ## Gli incarichi di gruppo
 
 In **Il mio gruppo**, tocca **Incarichi di gruppo**.
@@ -44,7 +47,8 @@ In **Il mio gruppo**, tocca **Incarichi di gruppo**.
 
 - **Capigruppo, tesorieri e amministratori**: capogruppo e tesoriere di gruppo (al massimo
   due ciascuno), amministratore tecnico. Si aggiungono al servizio: lo stesso capo può
-  essere capo unità e tesoriere.
+  essere capo unità e tesoriere. Qui si nomina anche l'**Assistente ecclesiastico di
+  gruppo**, che nell'app ha gli stessi poteri di un capogruppo.
 - **A disposizione**: i capi della Comunità capi che oggi non fanno servizio in un'unità.
   Quando un capo viene assegnato a un'unità, «a disposizione» finisce da solo.
 

@@ -122,6 +122,12 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     gmail_secret_salvato: bool = False
     gmail_indirizzo: str = ""
     gmail_redirect_uri: str = ""
+    # The texts of the medical form (DEC-289): the group's, and the base ones.
+    scheda_dichiarazione: str = ""
+    scheda_consenso: str = ""
+    scheda_dichiarazione_base: str = ""
+    scheda_consenso_base: str = ""
+    puo_modificare_scheda: bool = False
 
 
 CAMPI_SITO = list(ImpostazioniSitoIO.model_fields)
@@ -150,7 +156,45 @@ def _impostazioni(request) -> dict:
         "email_scartate": imp.email_scartate,
         "puo_destinatari_email": policy.puo_scegliere_destinatari_email(request.auth),
         **_smtp(request, imp),
+        **_testi_scheda(request, imp),
     }
+
+
+def _testi_scheda(request, imp: Impostazioni) -> dict:
+    from apps.sanitaria.testi import CONSENSO, DICHIARAZIONE
+
+    return {
+        "scheda_dichiarazione": imp.scheda_dichiarazione or DICHIARAZIONE,
+        "scheda_consenso": imp.scheda_consenso or CONSENSO,
+        "scheda_dichiarazione_base": DICHIARAZIONE,
+        "scheda_consenso_base": CONSENSO,
+        "puo_modificare_scheda": policy.e_capogruppo(request.auth),
+    }
+
+
+class TestiSchedaIn(Schema):
+    # Empty: back to the base text.
+    dichiarazione: str = ""
+    consenso: str = ""
+
+
+@router.put("/impostazioni/scheda-sanitaria", response=ImpostazioniOut)
+def salva_testi_scheda(request, dati: TestiSchedaIn):
+    """The declaration and consent printed on the medical form (DEC-289): capigruppo."""
+    from apps.sanitaria.testi import CONSENSO, DICHIARAZIONE
+
+    if not policy.e_capogruppo(request.auth):
+        raise HttpError(403, "I testi della scheda sanitaria li cambiano i capigruppo.")
+    imp = Impostazioni.carica()
+    dichiarazione = " ".join(dati.dichiarazione.split())
+    consenso = " ".join(dati.consenso.split())
+    if len(dichiarazione) > 2000 or len(consenso) > 2000:
+        raise HttpError(400, "I testi vanno scritti in breve: al massimo 2000 caratteri ciascuno.")
+    # The base text saved as it is stays "the base": it follows future versions.
+    imp.scheda_dichiarazione = "" if dichiarazione == DICHIARAZIONE else dichiarazione
+    imp.scheda_consenso = "" if consenso == CONSENSO else consenso
+    imp.save(update_fields=["scheda_dichiarazione", "scheda_consenso"])
+    return _impostazioni(request)
 
 
 def _smtp(request, imp: Impostazioni) -> dict:

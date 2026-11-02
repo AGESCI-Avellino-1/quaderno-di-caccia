@@ -60,6 +60,10 @@ class Impostazioni(ModelloTracciato):
     privacy_aggiornata_il = models.DateField(null=True, blank=True)
     termini = models.TextField(blank=True)
     termini_aggiornati_il = models.DateField(null=True, blank=True)
+    # The declaration and the consent of the group's medical form (DEC-289); empty: the
+    # base texts in sanitaria.testi.
+    scheda_dichiarazione = models.TextField(blank=True)
+    scheda_consenso = models.TextField(blank=True)
     # Maintenance (DEC-268): only the technical administrators get in
     # (`manutenzione.ManutenzioneMiddleware`); the message is shown to everybody else.
     manutenzione = models.BooleanField(default=False)

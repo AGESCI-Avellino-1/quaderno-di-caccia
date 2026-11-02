@@ -105,3 +105,18 @@ def test_telefono_fisso_dei_genitori(genitore, ragazza, capo, estraneo):
     assert _client(capo).get(_url(ragazza)).json()["genitori"][0]["telefono_fisso"] == (
         "0825 222222"
     )
+
+
+def test_testi_della_scheda(capogruppo, capo):
+    from apps.sanitaria.testi import CONSENSO, DICHIARAZIONE, testi
+
+    url = "/api/v1/impostazioni/scheda-sanitaria"
+    assert _put(capo, url, {"dichiarazione": "Altro"}).status_code == 403
+    risposta = _put(capogruppo, url, {"dichiarazione": "  Dichiaro  il vero. ", "consenso": ""})
+    assert risposta.status_code == 200
+    assert testi() == ("Dichiaro il vero.", CONSENSO)
+    dati = _client(capogruppo).get("/api/v1/impostazioni").json()
+    assert dati["scheda_dichiarazione"] == "Dichiaro il vero." and dati["puo_modificare_scheda"]
+    # Back to the base text.
+    _put(capogruppo, url, {"dichiarazione": DICHIARAZIONE, "consenso": CONSENSO})
+    assert testi() == (DICHIARAZIONE, CONSENSO)

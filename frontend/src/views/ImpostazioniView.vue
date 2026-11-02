@@ -9,6 +9,7 @@ import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
 import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
 import ServerPosta from '@/components/ServerPosta.vue'
+import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
 import { useErrore } from '@/composables/useErrore'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
 import { useSitoStore } from '@/stores/sito'
@@ -212,6 +213,11 @@ async function salva() {
           >
         </div>
       </section>
+      <TestiSchedaSanitaria
+        v-if="dati.puo_modificare_scheda"
+        :impostazioni="dati"
+        @aggiornate="dati = $event"
+      />
       <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
       <PagamentiGruppo v-if="dati.puo_modificare_pagamenti" />
       <ManutenzioneSito

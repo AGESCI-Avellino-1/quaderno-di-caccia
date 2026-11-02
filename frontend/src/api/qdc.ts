@@ -236,6 +236,12 @@ export interface Impostazioni extends ImpostazioniSito {
   gmail_secret_salvato?: boolean
   gmail_indirizzo?: string
   gmail_redirect_uri?: string
+  /** The texts of the medical form (DEC-289): the group's, and the base ones. */
+  scheda_dichiarazione?: string
+  scheda_consenso?: string
+  scheda_dichiarazione_base?: string
+  scheda_consenso_base?: string
+  puo_modificare_scheda?: boolean
 }
 
 export interface SmtpIn {
@@ -2430,6 +2436,11 @@ export const api = {
   impostazioni: () => richiesta<Impostazioni>('/api/v1/impostazioni'),
   salvaImpostazioniSito: (dati: ImpostazioniSito) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/sito', { metodo: 'PUT', corpo: dati }),
+  salvaTestiScheda: (dati: { dichiarazione: string; consenso: string }) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/scheda-sanitaria', {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
   modelliEmail: () => richiesta<ModelloEmailBreve[]>('/api/v1/impostazioni/email'),
   modelloEmail: (chiave: string) =>
     richiesta<ModelloEmail>(`/api/v1/impostazioni/email/${encodeURIComponent(chiave)}`),

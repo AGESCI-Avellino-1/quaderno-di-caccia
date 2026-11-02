@@ -1,8 +1,10 @@
 # Primo avvio
 
 Su un'installazione vuota nessuno può ancora invitare qualcuno dall'app. L'ordine è questo.
-Prima la posta deve funzionare (vedi [Installazione](installazione)): ogni accesso nuovo
-passa da un codice mandato per email.
+Prima la posta deve funzionare: ogni accesso nuovo passa da un codice mandato per email, e
+dall'app la posta si imposta solo dopo essere entrati. Quindi completa le voci SMTP in
+`.env` (vedi [La posta](installazione.md#la-posta)) **prima** di creare l'amministratore
+tecnico, e riavvia con `docker compose up -d`.
 
 ## 1. L'amministratore tecnico
 
@@ -52,9 +54,19 @@ Le importazioni successive le fanno i capigruppo dall'app.
 docker compose exec web python manage.py crea_invito <codice socio> <email> --capogruppo
 ```
 
-Al capogruppo arriva l'invito per email. In alternativa, l'amministratore tecnico può entrare
-nell'app e nominare il primo capogruppo da **Incarichi di gruppo**. Da lì in poi gli inviti
-partono dall'app.
+Al capogruppo arriva l'invito per email. Il comando registra anche l'incarico di
+capogruppo (`--capogruppo`).
+
+L'amministratore tecnico può anche nominare il primo capogruppo dall'app, da **Incarichi di
+gruppo**, ma dall'app non può invitarlo: gli inviti partono solo dai capigruppo e dai capi
+unità. In quel caso l'invito si fa comunque con `crea_invito`, senza `--capogruppo` perché
+l'incarico c'è già:
+
+```bash
+docker compose exec web python manage.py crea_invito <codice socio> <email>
+```
+
+Da lì in poi gli inviti partono dall'app.
 
 ## 4. Le prime impostazioni
 

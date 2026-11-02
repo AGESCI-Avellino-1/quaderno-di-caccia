@@ -17,6 +17,7 @@ Leggi [Dati personali e sicurezza](sicurezza) prima di partire.
 
 requisiti
 installazione
+controlli
 primo-avvio
 lavori-giornalieri
 posta

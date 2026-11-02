@@ -61,6 +61,9 @@ nuovo: basta aggiungere a quello che c'è le direttive che mandano tutto all'app
 
 1. Nel pannello crea il sito per il dominio (per esempio `qdc.esempio.org`), con HTTPS e il
    certificato Let's Encrypt. PHP, database e posta del pannello non servono all'app.
+   Se il pannello ha già messo nel virtual host direttive di proxy (`ProxyPass`,
+   `ProxyPassReverse`, righe con `X-Forwarded-For`), toglile: un `ProxyPass /` verso un'altra
+   porta che viene prima delle direttive dell'app vince su di loro, e l'app non si vede.
 2. Genera le direttive:
 
    ```bash
@@ -94,7 +97,10 @@ Virtualmin: Apache aggiunge già da solo l'indirizzo di chi si collega, ed è qu
 l'app usa per bloccare chi sbaglia la password troppe volte.
 :::
 
-Se rifai il sito dal pannello (o lo ricrea un ripristino del pannello), rimetti le direttive.
+Il pannello riscrive il virtual host quando cambi le impostazioni del sito, rinnovi il
+certificato da lì o ripristini un backup del pannello: ogni volta ricontrolla che le
+direttive dell'app ci siano ancora e che non siano tornate quelle di proxy del pannello (i
+[controlli](controlli) dicono subito se l'app risponde dal dominio).
 
 ## La posta
 
@@ -125,7 +131,8 @@ docker compose up -d --build
 
 Il file `.env` dice a Compose quali file usare. Le migrazioni del database si applicano da
 sole all'avvio del container `web`. Quando `docker compose ps` mostra `web` in salute, apri
-l'indirizzo del sito: vedi la pagina di accesso.
+l'indirizzo del sito: vedi la pagina di accesso. Se non la vedi, segui i
+[controlli](controlli) passo per passo.
 
 Quando il server si riavvia, con Docker i container ripartono da soli. Con Podman serve il
 servizio che li riavvia, da attivare una volta per l'utente che li ha avviati:

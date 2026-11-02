@@ -10,6 +10,13 @@
 - Una **casella di posta** con accesso SMTP, da cui partono codici di accesso, inviti,
   ricevute e avvisi: per esempio di Google Workspace (con una password per le app) o di un
   altro fornitore. Si imposta dall'app.
+- **Un solo utente** che gestisce l'app: avvia i container, esegue i lavori giornalieri
+  (cron) e i backup. Con Docker deve essere root o stare nel gruppo `docker`, che però
+  equivale a dare i permessi di root; con Podman basta un utente normale. Usa sempre lo
+  stesso: i container avviati da un utente non si vedono dagli altri.
+- **Docker oppure Podman, non tutti e due**: se sul server ci sono entrambi, scegline uno e
+  usa solo quello (i container, le immagini e i volumi dell'uno non si vedono dall'altro, e
+  le porte si contendono).
 - `git` e `python3` sul server (lo script di configurazione genera i segreti con Python).
 - Per l'**archivio** dei fascicoli (facoltativo ma consigliato): un **Drive condiviso** di
   Google Workspace del gruppo (vedi [Archivio sul Drive](archivio)).

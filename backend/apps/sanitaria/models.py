@@ -198,3 +198,47 @@ class ReperibilitaEvento(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Reperibilità di {self.persona} per {self.evento}"
+
+
+class TipoAllegatoSanitario(models.TextChoices):
+    """The documents attached to the form (DEC-290), and the signed form itself."""
+
+    TESSERA = "TESSERA", "Tessera sanitaria o codice fiscale"
+    DOCUMENTO = "DOCUMENTO", "Documento d'identità del ragazzo o dell'interessato"
+    DOCUMENTO_GENITORE = "DOC_GENITORE", "Documento d'identità del genitore che firma"
+    SCHEDA_FIRMATA = "SCHEDA", "Scheda sanitaria firmata"
+
+
+class SalvatoSu(models.TextChoices):
+    DRIVE = "DRIVE", "Drive del gruppo"
+    COMPUTER = "COMPUTER", "Computer del capo"
+
+
+class AllegatoSanitario(ModelloTracciato):
+    """A scan uploaded with the medical form (DEC-290): kept on the server only until a
+    capo verifies it and saves it on the group's Drive or on their computer; then the
+    file is deleted and only who verified it, when and where stays. Never in the admin;
+    every read goes to the access log (DEC-101)."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="allegati_sanitari")
+    tipo = models.CharField(max_length=12, choices=TipoAllegatoSanitario.choices)
+    # Empty once verified.
+    file = models.FileField(upload_to="sanitarie/%Y/", blank=True)
+    nome_file = models.CharField(max_length=200)
+    tipo_contenuto = models.CharField(max_length=40)
+    caricato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    verificato_il = models.DateTimeField(null=True, blank=True)
+    verificato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    salvato_su = models.CharField(max_length=10, choices=SalvatoSu.choices, blank=True)
+
+    class Meta:
+        verbose_name = "allegato della scheda sanitaria"
+        verbose_name_plural = "allegati della scheda sanitaria"
+        ordering = ["creato_il"]
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()} di {self.persona}"

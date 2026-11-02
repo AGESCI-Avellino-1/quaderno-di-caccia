@@ -730,6 +730,28 @@ export const esportazioneBuonaStrada = (formato: 'xlsx' | 'pdf') =>
 export const fileModulo = (id: number) => `/api/v1/modulistica/${id}/file`
 export const fileModuloFirmato = (id: number) => `/api/v1/moduli-firmati/${id}/file`
 
+/** Documents of the medical form (DEC-290): on the server only until a capo saves them. */
+export interface AllegatoSanitario {
+  id: number
+  tipo: string
+  tipo_nome: string
+  nome_file: string
+  caricato_il: string
+  verificato_il: string | null
+  verificato_da: string | null
+  salvato_su: string
+}
+
+export interface AllegatiSanitari {
+  allegati: AllegatoSanitario[]
+  tipi: { valore: string; nome: string }[]
+  puo_caricare: boolean
+  puo_verificare: boolean
+  drive: boolean
+}
+
+export const fileAllegatoSanitario = (id: number) => `/api/v1/allegati-sanitari/${id}/file`
+
 function conFile(campi: Record<string, string>, file: File): FormData {
   const dati = new FormData()
   for (const [nome, valore] of Object.entries(campi)) dati.append(nome, valore)
@@ -2687,6 +2709,25 @@ export const api = {
       corpo: { telefono },
     }),
   sanitarie: (persona: number) => richiesta<Sanitarie>(percorsoSanitarie(persona)),
+  allegatiSanitari: (persona: number) =>
+    richiesta<AllegatiSanitari>(`/api/v1/persone/${persona}/sanitarie/allegati`),
+  caricaAllegatoSanitario: (persona: number, tipo: string, file: File) =>
+    richiesta<AllegatiSanitari>(`/api/v1/persone/${persona}/sanitarie/allegati`, {
+      metodo: 'POST',
+      corpo: conFile({ tipo }, file),
+    }),
+  togliAllegatoSanitario: (id: number) =>
+    richiesta<AllegatiSanitari>(`/api/v1/allegati-sanitari/${id}`, { metodo: 'DELETE' }),
+  allegatoSulDrive: (id: number, firmataIl: string | null) =>
+    richiesta<AllegatiSanitari>(`/api/v1/allegati-sanitari/${id}/drive`, {
+      metodo: 'POST',
+      corpo: { firmata_il: firmataIl },
+    }),
+  allegatoScaricato: (id: number, firmataIl: string | null) =>
+    richiesta<AllegatiSanitari>(`/api/v1/allegati-sanitari/${id}/conferma`, {
+      metodo: 'POST',
+      corpo: { firmata_il: firmataIl },
+    }),
   cartaSanitaria: (
     persona: number,
     dati: { firmata_il: string | null; prescrizione_consegnata_il: string | null },

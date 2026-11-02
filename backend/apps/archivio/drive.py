@@ -61,9 +61,10 @@ def _token() -> str:
     return risposta.json()["access_token"]
 
 
-def carica(nome: str, contenuto: bytes) -> dict:
-    """Upload a ZIP into the configured folder; the checksum Google computes must match
-    ours, or the archive does not count as saved."""
+def carica(nome: str, contenuto: bytes, tipo: str = "application/zip") -> dict:
+    """Upload a file (an archive ZIP, a scan of the medical form, DEC-290) into the
+    configured folder; the checksum Google computes must match ours, or it does not
+    count as saved."""
     if not configurato():
         raise ErroreDrive(
             "Il Drive del gruppo non è ancora collegato: avvisa chi ha installato l'app."
@@ -73,7 +74,7 @@ def carica(nome: str, contenuto: bytes) -> dict:
     corpo = (
         (
             f"--{confine}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{metadati}\r\n"
-            f"--{confine}\r\nContent-Type: application/zip\r\n\r\n"
+            f"--{confine}\r\nContent-Type: {tipo}\r\n\r\n"
         ).encode()
         + contenuto
         + f"\r\n--{confine}--".encode()

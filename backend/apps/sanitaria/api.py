@@ -5,7 +5,7 @@ from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import Router, Schema
+from ninja import File, Form, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela
@@ -665,3 +665,173 @@ def registro_accessi(request, persona_id: int):
         }
         for r in righe
     ]
+
+
+# --- Attachments and the signed form (DEC-290) -------------------------------------------
+
+
+class AllegatoSanitarioOut(Schema):
+    id: int
+    tipo: str
+    tipo_nome: str
+    nome_file: str
+    caricato_il: datetime
+    verificato_il: datetime | None
+    verificato_da: str | None
+    salvato_su: str
+
+
+class AllegatiSanitari(Schema):
+    allegati: list[AllegatoSanitarioOut]
+    tipi: list[dict]
+    puo_caricare: bool
+    puo_verificare: bool
+    # The group's Drive is linked: the capo may save there.
+    drive: bool
+
+
+class ConfermaAllegato(Schema):
+    # Only for the signed form: the day it was signed (DEC-52).
+    firmata_il: date | None = None
+
+
+def _nome(utente) -> str | None:
+    persona = getattr(utente, "persona", None) if utente else None
+    return f"{persona.nome} {persona.cognome}" if persona else None
+
+
+def _allegati(request, persona: Persona) -> dict:
+    from apps.archivio import drive
+
+    from .models import AllegatoSanitario, TipoAllegatoSanitario
+
+    tipi = [
+        {"valore": t.value, "nome": t.label}
+        for t in TipoAllegatoSanitario
+        # An adult signs for themself: no parent's document.
+        if persona.e_minorenne() or t != TipoAllegatoSanitario.DOCUMENTO_GENITORE
+    ]
+    return {
+        "allegati": [
+            {
+                "id": a.pk,
+                "tipo": a.tipo,
+                "tipo_nome": a.get_tipo_display(),
+                "nome_file": a.nome_file,
+                "caricato_il": a.creato_il,
+                "verificato_il": a.verificato_il,
+                "verificato_da": _nome(a.verificato_da),
+                "salvato_su": a.get_salvato_su_display() if a.salvato_su else "",
+            }
+            for a in AllegatoSanitario.objects.filter(persona=persona).select_related(
+                "verificato_da__persona"
+            )
+        ],
+        "tipi": tipi,
+        "puo_caricare": policy.puo_modificare_sanitarie(request.auth, persona),
+        "puo_verificare": policy.puo_registrare_firma_sanitaria(request.auth, persona),
+        "drive": drive.configurato(),
+    }
+
+
+def _errore_validazione(funzione, *argomenti):
+    from django.core.exceptions import ValidationError
+
+    try:
+        return funzione(*argomenti)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+
+
+@router.get("/persone/{persona_id}/sanitarie/allegati", response=AllegatiSanitari)
+def allegati_sanitari(request, persona_id: int):
+    return _allegati(request, _persona_visibile(request, persona_id))
+
+
+@router.post("/persone/{persona_id}/sanitarie/allegati", response=AllegatiSanitari)
+def carica_allegato_sanitario(request, persona_id: int, tipo: Form[str], file: File[UploadedFile]):
+    from . import allegati
+
+    persona = _persona_visibile(request, persona_id)
+    if not policy.puo_modificare_sanitarie(request.auth, persona):
+        raise HttpError(403, "I documenti li caricano la famiglia, l'interessato e i capi.")
+    _errore_validazione(allegati.carica, persona, tipo, file, request.auth)
+    registra_accessi(request, [persona], Categoria.SANITARIE, Azione.MODIFICA)
+    return _allegati(request, persona)
+
+
+def _allegato(request, allegato_id: int):
+    from .models import AllegatoSanitario
+
+    allegato = get_object_or_404(
+        AllegatoSanitario.objects.select_related("persona"), pk=allegato_id
+    )
+    _persona_visibile(request, allegato.persona_id)
+    return allegato
+
+
+def _verificabile(request, allegato_id: int):
+    allegato = _allegato(request, allegato_id)
+    if not policy.puo_registrare_firma_sanitaria(request.auth, allegato.persona):
+        raise HttpError(403, "I documenti li verificano lo staff dell'unità e i capigruppo.")
+    return allegato
+
+
+@router.get("/allegati-sanitari/{allegato_id}/file")
+def scarica_allegato_sanitario(request, allegato_id: int):
+    """Who uploaded it, and who verifies it; every read in the access log (DEC-101)."""
+    from django.http import FileResponse
+
+    allegato = _allegato(request, allegato_id)
+    if allegato.caricato_da_id != request.auth.pk and not policy.puo_registrare_firma_sanitaria(
+        request.auth, allegato.persona
+    ):
+        raise HttpError(403, "I documenti li verificano lo staff dell'unità e i capigruppo.")
+    if not allegato.file:
+        raise HttpError(404, "Il documento è già stato salvato e tolto dal server.")
+    registra_accessi(request, [allegato.persona], Categoria.SANITARIE, Azione.LETTURA)
+    return FileResponse(
+        allegato.file.open("rb"),
+        content_type=allegato.tipo_contenuto,
+        filename=allegato.nome_file,
+        as_attachment=True,
+    )
+
+
+@router.delete("/allegati-sanitari/{allegato_id}", response=AllegatiSanitari)
+def togli_allegato_sanitario(request, allegato_id: int):
+    from . import allegati
+
+    allegato = _allegato(request, allegato_id)
+    persona = allegato.persona
+    if allegato.caricato_da_id != request.auth.pk and not policy.puo_registrare_firma_sanitaria(
+        request.auth, persona
+    ):
+        raise HttpError(403, "Lo toglie chi l'ha caricato o chi verifica i documenti.")
+    _errore_validazione(allegati.togli, allegato)
+    registra_accessi(request, [persona], Categoria.SANITARIE, Azione.MODIFICA)
+    return _allegati(request, persona)
+
+
+@router.post("/allegati-sanitari/{allegato_id}/drive", response=AllegatiSanitari)
+def allegato_sul_drive(request, allegato_id: int, dati: ConfermaAllegato):
+    from . import allegati
+
+    allegato = _verificabile(request, allegato_id)
+    _errore_validazione(allegati.salva_sul_drive, allegato, request.auth, dati.firmata_il)
+    registra_accessi(request, [allegato.persona], Categoria.SANITARIE, Azione.ARCHIVIAZIONE)
+    return _allegati(request, allegato.persona)
+
+
+@router.post("/allegati-sanitari/{allegato_id}/conferma", response=AllegatiSanitari)
+def allegato_scaricato(request, allegato_id: int, dati: ConfermaAllegato):
+    """The capo saved it on their computer: the server deletes it."""
+    from . import allegati
+    from .models import SalvatoSu
+
+    allegato = _verificabile(request, allegato_id)
+    _errore_validazione(
+        allegati.conferma, allegato, request.auth, SalvatoSu.COMPUTER, dati.firmata_il
+    )
+    registra_accessi(request, [allegato.persona], Categoria.SANITARIE, Azione.MODIFICA)
+    return _allegati(request, allegato.persona)

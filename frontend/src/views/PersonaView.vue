@@ -8,6 +8,7 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
 import DerogheSquadriglia from '@/components/DerogheSquadriglia.vue'
 import QuotePersona from '@/components/QuotePersona.vue'
+import AllegatiSanitari from '@/components/AllegatiSanitari.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import FotoProfilo from '@/components/FotoProfilo.vue'
 import IscrizioneCapoGenitore from '@/components/IscrizioneCapoGenitore.vue'
@@ -57,6 +58,11 @@ async function caricaSanitarie(id: number) {
   } catch {
     sanitarie.value = null // 404: not visible to this user; offline without a copy
   }
+}
+
+// A signed form confirmed by a capo sets the date of the signature (DEC-290).
+async function ricaricaSanitarie() {
+  if (persona.value) await caricaSanitarie(persona.value.id)
 }
 
 // What is shown depends on the access level computed by the backend (policy.py):
@@ -164,6 +170,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           :dati="sanitarie"
           @cambiata="(nuovi) => (sanitarie = nuovi)"
         />
+        <AllegatiSanitari v-if="online" :persona="persona.id" @cambiati="ricaricaSanitarie" />
       </section>
       <NotePersona :persona="persona.id" />
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />

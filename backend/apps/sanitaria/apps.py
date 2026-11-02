@@ -17,3 +17,5 @@ class SanitariaConfig(AppConfig):
             models.ReperibilitaEvento,
         ):
             auditlog.register(modello)
+        # The original file name may carry the person's name: out of the audit log.
+        auditlog.register(models.AllegatoSanitario, exclude_fields=["nome_file", "file"])

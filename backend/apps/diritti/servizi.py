@@ -36,7 +36,7 @@ from apps.note.models import Nota, RegoleRapporto
 from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
 from apps.quote.models import Quota
-from apps.sanitaria.models import InformazioniSanitarie, ReperibilitaEvento
+from apps.sanitaria.models import AllegatoSanitario, InformazioniSanitarie, ReperibilitaEvento
 
 from .models import RichiestaDiritti
 
@@ -214,6 +214,16 @@ def fascicolo(persona: Persona) -> dict:
                 "Gruppo": s.gruppo,
             }
             for s in ServizioPassato.objects.filter(persona=persona).select_related("unita")
+        ],
+        # Documents of the medical form (DEC-290): the files are never in the export.
+        "documenti_della_scheda_sanitaria": [
+            {
+                "Documento": a.get_tipo_display(),
+                "Caricato il": _giorno(a.creato_il),
+                "Verificato il": _giorno(a.verificato_il),
+                "Salvato su": a.get_salvato_su_display() if a.salvato_su else "",
+            }
+            for a in AllegatoSanitario.objects.filter(persona=persona)
         ],
         # Periods outside the app's units: other groups, years rebuilt (DEC-287).
         "percorso_scout": [
@@ -589,6 +599,13 @@ def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
         if sanitarie is not None:
             _cancella_storico([*sanitarie.allergie.all(), *sanitarie.farmaci.all(), sanitarie])
             sanitarie.delete()
+        # Scans of the medical form still on the server, and the records of the
+        # verified ones (DEC-290).
+        allegati = list(AllegatoSanitario.objects.filter(persona=persona))
+        _cancella_storico(allegati)
+        for a in allegati:
+            a.file.delete(save=False)
+            a.delete()
         foto = list(FotoProfilo.objects.filter(persona=persona))
         _cancella_storico(foto)
         for f in foto:

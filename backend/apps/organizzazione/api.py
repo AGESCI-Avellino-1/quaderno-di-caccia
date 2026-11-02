@@ -3,9 +3,10 @@ from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import File, Router, Schema, Status, UploadedFile
+from ninja import File, Query, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import (
@@ -459,6 +460,65 @@ def incarichi_di_gruppo(request):
             list(capi_senza_servizio()) if policy.e_capogruppo(request.auth) else []
         ),
     }
+
+
+class OpzioneElenco(Schema):
+    valore: str
+    nome: str
+
+
+class OpzioniElencoIncarichi(Schema):
+    ruoli: list[OpzioneElenco]
+    # Associative years with roles, latest first: "2026" = 2025/26 (DEC-37).
+    anni: list[OpzioneElenco]
+
+
+@router.get("/gruppo/incarichi/elenco", response=OpzioniElencoIncarichi)
+def opzioni_elenco_incarichi(request):
+    """What the PDF list of the roles can include (DEC-284)."""
+    if not policy.puo_esportare_incarichi(request.auth):
+        raise HttpError(403, "Riservato ai capigruppo.")
+    from apps.core.anno import AnnoAssociativo
+
+    from .elenco_incarichi import RUOLI_ELENCO
+
+    corrente = AnnoAssociativo.corrente().anno_fine
+    primo = Incarico.objects.filter(ruolo__in=RUOLI_ELENCO).order_by("data_inizio").first()
+    dal = AnnoAssociativo.da_data(primo.data_inizio).anno_fine if primo else corrente
+    return {
+        "ruoli": [{"valore": r.value, "nome": r.label} for r in RUOLI_ELENCO],
+        "anni": [
+            {"valore": str(a), "nome": AnnoAssociativo(a).etichetta}
+            for a in range(corrente, dal - 1, -1)
+        ],
+    }
+
+
+@router.get("/gruppo/incarichi/elenco.pdf")
+def elenco_incarichi_pdf(
+    request,
+    ruoli: Query[list[str]],
+    raggruppa: str = "unita",
+    anno: int | None = None,
+):
+    """The group's roles on the letterhead, never stored (DEC-284)."""
+    if not policy.puo_esportare_incarichi(request.auth):
+        raise HttpError(403, "Riservato ai capigruppo.")
+    from . import elenco_incarichi as elenco
+
+    validi = {r.value for r in elenco.RUOLI_ELENCO}
+    if not ruoli or not set(ruoli) <= validi:
+        raise HttpError(400, "Scegli almeno un tipo di incarico tra quelli proposti.")
+    if raggruppa not in ("unita", "incarico"):
+        raise HttpError(400, "Raggruppa per unità o per incarico.")
+    giorno = elenco.giorno_di_riferimento(anno)
+    if giorno > date.today():
+        raise HttpError(400, "Scegli l'anno in corso o uno passato.")
+    contenuto = elenco.pdf(elenco.sezioni(set(ruoli), raggruppa, giorno), giorno, raggruppa)
+    risposta = HttpResponse(contenuto, content_type="application/pdf")
+    risposta["Content-Disposition"] = 'attachment; filename="incarichi-del-gruppo.pdf"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
 
 
 @router.get("/capi", response=list[PersonaBreve])

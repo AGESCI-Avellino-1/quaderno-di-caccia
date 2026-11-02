@@ -444,6 +444,11 @@ def puo_vedere_organizzazione(user) -> bool:
     return e_capo(user)
 
 
+def puo_esportare_incarichi(user) -> bool:
+    """The PDF list of the group's roles: the capigruppo only (DEC-284)."""
+    return e_capogruppo(user)
+
+
 def puo_vedere_incarichi_di_gruppo(user) -> bool:
     """Capigruppo and group treasurers, and the list of capi to choose them from: any
     capo, and the technical administrator, who appoints the first capogruppo."""

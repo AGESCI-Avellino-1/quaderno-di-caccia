@@ -2255,6 +2255,24 @@ export const giustificativoMovimento = (id: number) => `/api/v1/movimenti/${id}/
 export const giustificativoSpesa = (id: number) => `/api/v1/spese-anticipate/${id}/giustificativo`
 
 export const PERCORSO_PAGAMENTI = '/api/v1/pagamenti'
+/** What the PDF list of the group's roles can include (DEC-284). */
+export interface OpzioniElencoIncarichi {
+  ruoli: { valore: string; nome: string }[]
+  anni: { valore: string; nome: string }[]
+}
+
+/** The PDF list of the group's roles: chosen kinds, grouped by unit or role (DEC-284). */
+export function elencoIncarichiPdf(
+  ruoli: string[],
+  raggruppa: 'unita' | 'incarico',
+  anno: string | null,
+): string {
+  const parametri = new URLSearchParams(ruoli.map((r) => ['ruoli', r]))
+  parametri.set('raggruppa', raggruppa)
+  if (anno) parametri.set('anno', anno)
+  return `/api/v1/gruppo/incarichi/elenco.pdf?${parametri}`
+}
+
 export const ricevutaPdf = (pagamento: number) => `/api/v1/pagamenti/${pagamento}/ricevuta.pdf`
 export const moduloSanitarioPdf = (persona: number) =>
   `/api/v1/persone/${persona}/sanitarie/modulo.pdf`
@@ -2331,6 +2349,8 @@ export const api = {
   modificaSquadriglia: (id: number, dati: { nome: string; sesso: string; attiva: boolean }) =>
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
+  opzioniElencoIncarichi: () =>
+    richiesta<OpzioniElencoIncarichi>('/api/v1/gruppo/incarichi/elenco'),
   capi: () => richiesta<PersonaBreve[]>('/api/v1/capi'),
   aggiungiMembro: (squadriglia: number, persona: number) =>
     richiesta<Membro>(`/api/v1/squadriglie/${squadriglia}/membri`, {

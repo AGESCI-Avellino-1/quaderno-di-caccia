@@ -25,7 +25,12 @@ def _anni(dal: date, al: date | None) -> range:
 
 
 def anni_di_servizio(persona: Persona) -> list[dict]:
-    """Per associative year, newest first: roles from the app, or rebuilt by hand."""
+    """Per associative year, newest first: roles from the app, or rebuilt by hand, and
+    the years in the Co.Ca. of other groups (DEC-287). Each year says its group."""
+    from apps.anagrafica.models import PeriodoPercorso
+    from apps.impostazioni.models import Impostazioni
+
+    nostro = Impostazioni.carica().nome_del_gruppo()
     anni: dict[int, dict] = {}
 
     def anno(n: int) -> dict:
@@ -37,12 +42,16 @@ def anni_di_servizio(persona: Persona) -> list[dict]:
                 "ruoli": [],
                 "in_coca": False,
                 "ricostruiti": [],
+                # Service in the Co.Ca. of other groups, as text (DEC-287).
+                "altri_gruppi": [],
+                "gruppo": "",
             },
         )
 
     for a in Appartenenza.objects.filter(persona=persona, ruolo=RuoloAppartenenza.CAPO):
         for n in _anni(a.data_inizio, a.data_fine):
             anno(n)["in_coca"] = True
+            anno(n)["gruppo"] = nostro
     for i in (
         Incarico.objects.filter(persona=persona)
         .exclude(ruolo__in=DEI_RAGAZZI)
@@ -51,16 +60,27 @@ def anni_di_servizio(persona: Persona) -> list[dict]:
         dove = f", {i.unita}" if i.unita_id else ""
         for n in _anni(i.data_inizio, i.data_fine):
             testo = f"{i.get_ruolo_display()}{dove}"
+            anno(n)["gruppo"] = nostro
             if testo not in anno(n)["ruoli"]:
                 anno(n)["ruoli"].append(testo)
     for s in ServizioPassato.objects.filter(persona=persona).select_related("unita"):
         dove = str(s.unita) if s.unita_id else s.unita_testo
+        if not s.gruppo:
+            anno(s.anno)["gruppo"] = nostro
         anno(s.anno)["ricostruiti"].append(
             {
                 "id": s.pk,
-                "testo": ", ".join(x for x in (s.get_ruolo_display(), dove, s.note) if x),
+                # Another group's name only: an empty one is this group (DEC-287).
+                "testo": ", ".join(x for x in (s.get_ruolo_display(), dove, s.gruppo, s.note) if x),
             }
         )
+    for p in PeriodoPercorso.objects.filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exclude(
+        gruppo=""
+    ):
+        for n in range(p.anno_inizio, p.anno_fine + 1):
+            testo = f"{p.unita}, {p.gruppo}"
+            if testo not in anno(n)["altri_gruppi"]:
+                anno(n)["altri_gruppi"].append(testo)
     return [anni[n] for n in sorted(anni, reverse=True)]
 
 
@@ -113,7 +133,9 @@ def fascicolo(persona: Persona) -> dict:
         "anno_ingresso_coca": persona.anno_ingresso_coca,
         "numero_nomina": persona.numero_nomina,
         "data_nomina": persona.data_nomina,
-        "anni_di_servizio": sum(1 for a in anni if a["ruoli"] or a["ricostruiti"]),
+        "anni_di_servizio": sum(
+            1 for a in anni if a["ruoli"] or a["ricostruiti"] or a["altri_gruppi"]
+        ),
         "anni": anni,
         "formazione": formazione(persona),
     }

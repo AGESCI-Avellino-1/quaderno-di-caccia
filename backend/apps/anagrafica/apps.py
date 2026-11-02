@@ -19,6 +19,7 @@ class AnagraficaConfig(AppConfig):
             models.VisibilitaGenitori,
             models.PreferenzeEmail,
             models.FotoProfilo,
+            models.PeriodoPercorso,
         ):
             auditlog.register(modello)
         # Special-category data: the reason stays out of the audit log (which the admin

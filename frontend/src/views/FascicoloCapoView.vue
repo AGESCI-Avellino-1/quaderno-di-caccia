@@ -42,19 +42,27 @@ async function fatto(azione: () => Promise<FascicoloCapo>, messaggio: string) {
 }
 
 // --- Years before the app ------------------------------------------------------------
-const servizio = reactive({ aperto: false, anno: 0, unita_testo: '', ruolo: 'STAFF', note: '' })
+const servizio = reactive({
+  aperto: false,
+  anno: 0,
+  unita_testo: '',
+  gruppo: '',
+  ruolo: 'STAFF',
+  note: '',
+})
 async function salvaServizio() {
   const ok = await fatto(
     () =>
       api.nuovoServizioPassato(props.id, {
         anno: servizio.anno,
         unita_testo: servizio.unita_testo,
+        gruppo: servizio.gruppo,
         ruolo: servizio.ruolo,
         note: servizio.note,
       }),
     'Anno di servizio aggiunto.',
   )
-  if (ok) Object.assign(servizio, { aperto: false, unita_testo: '', note: '' })
+  if (ok) Object.assign(servizio, { aperto: false, unita_testo: '', gruppo: '', note: '' })
 }
 
 // --- Training -----------------------------------------------------------------------
@@ -178,6 +186,16 @@ const serveSpecifica = () => formazione.tipo === 'MODULO' || formazione.tipo ===
               />
             </div>
             <div class="col-12">
+              <label class="form-label small" for="srv-gruppo">Gruppo</label>
+              <input
+                id="srv-gruppo"
+                v-model="servizio.gruppo"
+                class="form-control form-control-sm"
+                maxlength="160"
+                placeholder="Vuoto se era il nostro gruppo"
+              />
+            </div>
+            <div class="col-12">
               <label class="form-label small" for="srv-note">
                 Note{{ servizio.ruolo === 'ALTRO' ? ' (quale ruolo)' : '' }}
               </label>
@@ -205,8 +223,10 @@ const serveSpecifica = () => formazione.tipo === 'MODULO' || formazione.tipo ===
         <ul v-else class="list-group">
           <li v-for="a in dati.anni" :key="a.anno" class="list-group-item small">
             <strong>{{ a.etichetta }}</strong>
+            <template v-if="a.gruppo"> · {{ a.gruppo }}</template>
             <template v-if="a.ruoli.length"> · {{ a.ruoli.join('; ') }}</template>
             <template v-else-if="a.in_coca && !a.ricostruiti.length"> · in Comunità capi</template>
+            <div v-for="g in a.altri_gruppi" :key="g">{{ g }}</div>
             <div v-for="r in a.ricostruiti" :key="r.id">
               <span class="badge theme-secondary me-1">ricostruito</span>{{ r.testo }}
               <button

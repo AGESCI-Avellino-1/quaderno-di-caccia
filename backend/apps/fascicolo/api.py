@@ -126,6 +126,10 @@ class AnnoServizio(Schema):
     ruoli: list[str]
     in_coca: bool
     ricostruiti: list[RicostruitoOut]
+    # In the Co.Ca. of other groups, as text (DEC-287).
+    altri_gruppi: list[str] = []
+    # This group's name when the year comes from the app.
+    gruppo: str = ""
 
 
 class FormazioneOut(Schema):
@@ -199,6 +203,8 @@ class ServizioIn(Schema):
     anno: int
     unita_id: int | None = None
     unita_testo: str = ""
+    # Empty: this group (DEC-287).
+    gruppo: str = ""
     ruolo: str
     note: str = ""
 
@@ -227,6 +233,7 @@ def nuovo_servizio(request, persona_id: int, dati: ServizioIn):
             anno=dati.anno,
             unita_id=dati.unita_id,
             unita_testo=dati.unita_testo.strip()[:120],
+            gruppo=dati.gruppo.strip()[:160],
             ruolo=dati.ruolo,
             note=dati.note.strip()[:300],
             registrato_da=request.auth,

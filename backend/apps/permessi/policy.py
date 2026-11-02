@@ -1371,6 +1371,24 @@ def puo_modificare_fascicolo_capo(user, persona: Persona) -> bool:
     return e_capogruppo(user) and not e_capo_in_attesa(user)
 
 
+def vede_percorso(user, persona: Persona) -> bool:
+    """The scout path (DEC-287): the capi, the person themself, the parents of a minor."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return True
+    if _capo_pieno(user):
+        return True
+    return persona.e_minorenne() and tutelati(user).filter(pk=persona.pk).exists()
+
+
+def puo_modificare_percorso(user, persona: Persona) -> bool:
+    """Periods rebuilt by hand (DEC-287): a capo for themself, the capigruppo for anyone."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk and e_capo(user):
+        return True
+    return e_capogruppo(user) and not e_capo_in_attesa(user)
+
+
 def puo_gestire_fine_anno(user) -> bool:
     """Closing and reopening years, archiving, moving a file to another group: the
     capigruppo (DEC-45, DEC-44, DEC-46)."""

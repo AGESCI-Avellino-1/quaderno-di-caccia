@@ -34,6 +34,8 @@ class ServizioPassato(ModelloTracciato):
     )
     # A unit that is not (or no longer) in the app.
     unita_testo = models.CharField(max_length=120, blank=True)
+    # The group of the year of service; empty: this group (DEC-287).
+    gruppo = models.CharField(max_length=160, blank=True)
     ruolo = models.CharField(max_length=16, choices=RuoloPassato.choices)
     note = models.CharField(max_length=300, blank=True)
     registrato_da = models.ForeignKey(

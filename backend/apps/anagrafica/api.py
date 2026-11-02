@@ -618,3 +618,98 @@ def carica_foto(request, persona_id: int, file: File[UploadedFile]):
     nuova = FotoProfilo(persona=persona, caricata_da=request.auth)
     nuova.file.save(f"{uuid.uuid4().hex}.jpg", ContentFile(jpeg), save=True)
     return Status(201, dettaglio_persona(request, persona_id))
+
+
+# --- Scout path (DEC-287) ---------------------------------------------------------------
+
+
+class PeriodoPercorsoOut(Schema):
+    id: int | None
+    gruppo: str
+    altro_gruppo: bool
+    unita: str
+    ruolo: str
+    ruolo_nome: str
+    anni: str
+    ricostruito: bool
+    rimovibile: bool
+
+
+class PercorsoOut(Schema):
+    anno_ingresso: str
+    periodi: list[PeriodoPercorsoOut]
+    puo_modificare: bool
+
+
+class PeriodoPercorsoIn(Schema):
+    # Empty: this group.
+    gruppo: str = ""
+    unita: str
+    ruolo: str
+    anno_inizio: int
+    anno_fine: int
+
+
+def _percorso(request, persona: Persona) -> dict:
+    from .percorso import percorso
+
+    return percorso(persona) | {
+        "puo_modificare": policy.puo_modificare_percorso(request.auth, persona)
+    }
+
+
+@router.get("/persone/{persona_id}/percorso", response=PercorsoOut)
+def percorso_scout(request, persona_id: int):
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.vede_percorso(request.auth, persona):
+        raise HttpError(404, "Persona non trovata.")
+    return _percorso(request, persona)
+
+
+@router.post("/persone/{persona_id}/percorso", response={201: PercorsoOut})
+def aggiungi_periodo_percorso(request, persona_id: int, dati: PeriodoPercorsoIn):
+    from apps.core.models import FonteDato
+
+    from .models import PeriodoPercorso, RuoloAppartenenza
+
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.vede_percorso(request.auth, persona):
+        raise HttpError(404, "Persona non trovata.")
+    if not policy.puo_modificare_percorso(request.auth, persona):
+        raise HttpError(403, "Il percorso lo completano il capo stesso o i capigruppo.")
+    if dati.ruolo not in RuoloAppartenenza.values:
+        raise HttpError(400, "Indica se era ragazzo o capo.")
+    periodo = PeriodoPercorso(
+        persona=persona,
+        gruppo=dati.gruppo.strip()[:160],
+        unita=dati.unita.strip()[:160],
+        ruolo=dati.ruolo,
+        anno_inizio=dati.anno_inizio,
+        anno_fine=dati.anno_fine,
+        fonte=FonteDato.RICOSTRUITO,
+        registrato_da=request.auth,
+    )
+    try:
+        periodo.full_clean()
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    periodo.save()
+    return Status(201, _percorso(request, persona))
+
+
+@router.delete("/percorso/{periodo_id}", response=PercorsoOut)
+def togli_periodo_percorso(request, periodo_id: int):
+    from apps.core.models import FonteDato
+
+    from .models import PeriodoPercorso
+
+    periodo = get_object_or_404(PeriodoPercorso, pk=periodo_id)
+    persona = periodo.persona
+    if not policy.vede_percorso(request.auth, persona):
+        raise HttpError(404, "Periodo non trovato.")
+    if not policy.puo_modificare_percorso(request.auth, persona):
+        raise HttpError(403, "Il percorso lo completano il capo stesso o i capigruppo.")
+    if periodo.fonte != FonteDato.RICOSTRUITO:
+        raise HttpError(400, "Si tolgono solo i periodi aggiunti a mano.")
+    periodo.delete()
+    return _percorso(request, persona)

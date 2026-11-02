@@ -12,6 +12,7 @@ import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import FotoProfilo from '@/components/FotoProfilo.vue'
 import IscrizioneCapoGenitore from '@/components/IscrizioneCapoGenitore.vue'
 import NotePersona from '@/components/NotePersona.vue'
+import PercorsoScout from '@/components/PercorsoScout.vue'
 import RegistroAccessi from '@/components/RegistroAccessi.vue'
 import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
@@ -144,6 +145,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <dd class="col-7 md:col-9">{{ persona.consenso_foto ? 'Sì' : 'No' }}</dd>
         </template>
       </dl>
+      <PercorsoScout v-if="online" :persona="persona.id" />
       <RegoleRapporto :persona="persona.id" />
       <section v-if="sanitarie" class="card card-body mb-5">
         <div class="d-flex align-items-center">

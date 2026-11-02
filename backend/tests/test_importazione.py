@@ -539,12 +539,35 @@ def test_storico_avvisi_solo_dell_ultima_riga():
     assert not any("futuro" in a["messaggio"] for a in riepilogo.avvisi)
 
 
-def test_storico_righe_di_altri_gruppi_saltate():
+def test_storico_anni_in_altri_gruppi_nel_percorso():
+    from apps.anagrafica.models import PeriodoPercorso
+
     righe = _storico()
     altro = _anno(righe[0], 2021, ORDINALE="T0002", GRUPPO="ALTRO GRUPPO 2", CUN="O")
     riepilogo = applica(_risultato([altro, *righe]), oggi=OGGI)
     assert Gruppo.objects.get().ordinale == "T9999"
+    # No unit of another group in the app: the year is text in the member's path.
     assert not Unita.objects.filter(codice_unita="O").exists()
+    assert not any("altro gruppo" in a["messaggio"] for a in riepilogo.avvisi)
+    periodo = PeriodoPercorso.objects.get()
+    assert periodo.persona.codice_socio == altro["CODICE SOCIO"].strip('="')
+    assert (periodo.gruppo, periodo.anno_inizio, periodo.anno_fine) == (
+        "AGESCI Altro Gruppo 2",
+        2021,
+        2021,
+    )
+    assert periodo.unita.endswith("(O1)")
+    assert len(riepilogo.periodi_altri_gruppi) == 1
+    # Imported again: not doubled.
+    applica(_risultato([altro, *righe]), oggi=OGGI)
+    assert PeriodoPercorso.objects.count() == 1
+
+
+def test_righe_di_altri_gruppi_di_chi_non_e_dei_nostri_saltate():
+    righe = _storico()
+    estraneo = _anno(righe[0], 2021, ORDINALE="T0002", GRUPPO="ALTRO GRUPPO 2", CUN="O")
+    estraneo["CODICE SOCIO"] = "8888888"
+    riepilogo = applica(_risultato([estraneo, *righe]), oggi=OGGI)
     assert any("altro gruppo" in a["messaggio"] for a in riepilogo.avvisi)
 
 

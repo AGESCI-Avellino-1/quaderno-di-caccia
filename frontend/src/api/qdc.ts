@@ -519,6 +519,8 @@ export interface EsitoImportazione {
     appartenenze_chiuse: string[]
     /** Past periods in the units, from an export with several years (DEC-271). Missing in older imports. */
     periodi_passati?: string[]
+    /** Years in other groups of the members imported (DEC-287). Missing in older imports. */
+    periodi_altri_gruppi?: string[]
     /** Members who have just left, imported as suspended (DEC-274). Missing in older imports. */
     sospesi?: string[]
     /** Members who joined from the app, now with their real code. Missing in older imports. */
@@ -1849,6 +1851,10 @@ export interface FascicoloCapo {
     ruoli: string[]
     in_coca: boolean
     ricostruiti: { id: number; testo: string }[]
+    /** In the Co.Ca. of other groups (DEC-287). */
+    altri_gruppi: string[]
+    /** This group's name when the year comes from the app. */
+    gruppo: string
   }[]
   formazione: {
     id: number | null
@@ -1869,8 +1875,35 @@ export interface FascicoloCapo {
 export interface ServizioPassatoIn {
   anno: number
   unita_testo: string
+  /** Empty: this group (DEC-287). */
+  gruppo: string
   ruolo: string
   note: string
+}
+
+/** The scout path of a member (DEC-287): one line per period. */
+export interface Percorso {
+  anno_ingresso: string
+  periodi: {
+    id: number | null
+    gruppo: string
+    altro_gruppo: boolean
+    unita: string
+    ruolo: string
+    ruolo_nome: string
+    anni: string
+    ricostruito: boolean
+    rimovibile: boolean
+  }[]
+  puo_modificare: boolean
+}
+
+export interface PeriodoPercorsoIn {
+  gruppo: string
+  unita: string
+  ruolo: string
+  anno_inizio: number
+  anno_fine: number
 }
 
 export interface FormazioneIn {
@@ -2998,6 +3031,11 @@ export const api = {
     }),
   fascicoloCapo: (persona: number) =>
     richiesta<FascicoloCapo>(`/api/v1/persone/${persona}/fascicolo-capo`),
+  percorso: (persona: number) => richiesta<Percorso>(`/api/v1/persone/${persona}/percorso`),
+  nuovoPeriodoPercorso: (persona: number, dati: PeriodoPercorsoIn) =>
+    richiesta<Percorso>(`/api/v1/persone/${persona}/percorso`, { metodo: 'POST', corpo: dati }),
+  togliPeriodoPercorso: (periodo: number) =>
+    richiesta<Percorso>(`/api/v1/percorso/${periodo}`, { metodo: 'DELETE' }),
   nuovoServizioPassato: (persona: number, dati: ServizioPassatoIn) =>
     richiesta<FascicoloCapo>(`/api/v1/persone/${persona}/fascicolo-capo/servizi`, {
       metodo: 'POST',

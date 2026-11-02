@@ -95,6 +95,8 @@ class Riepilogo:
     appartenenze_chiuse: list[str] = field(default_factory=list)
     # Past periods in the units from an export with several years (DEC-271).
     periodi_passati: list[str] = field(default_factory=list)
+    # Years in other groups of the members imported, kept as text (DEC-287).
+    periodi_altri_gruppi: list[str] = field(default_factory=list)
     # Members who have just left, imported as suspended (DEC-274).
     sospesi: list[str] = field(default_factory=list)
     differenze: list[Differenza] = field(default_factory=list)
@@ -187,7 +189,28 @@ def _esegui(risultato: RisultatoParsing, r: Riepilogo, oggi: date) -> None:
     anni = {x.anno_scout for x in righe}
     if len(anni) > 1:
         _esegui_storico(gruppo, righe, max(anni), r, oggi)
-        return
+    else:
+        _esegui_anno(gruppo, righe, r, oggi)
+    _altri_gruppi(risultato.righe, righe, r)
+
+
+def _altri_gruppi(tutte: list[RigaSocio], nostre: list[RigaSocio], r: Riepilogo) -> None:
+    """The years of our members in other groups become their path as text (DEC-287)."""
+    from apps.anagrafica.percorso import registra_altri_gruppi
+
+    nostri = {x.codice_socio for x in nostre}
+    gia = {id(x) for x in nostre}
+    altre: dict[str, list[RigaSocio]] = defaultdict(list)
+    for x in tutte:
+        if id(x) not in gia and x.codice_socio in nostri:
+            altre[x.codice_socio].append(x)
+    for codice, righe in altre.items():
+        persona = Persona.objects.filter(codice_socio=codice).first()
+        if persona is not None:
+            r.periodi_altri_gruppi += registra_altri_gruppi(persona, righe)
+
+
+def _esegui_anno(gruppo: Gruppo, righe: list[RigaSocio], r: Riepilogo, oggi: date) -> None:
     adesso = timezone.now()
     for riga in righe:
         if riga.stato == "D":
@@ -216,8 +239,10 @@ def _righe_del_gruppo(righe: list[RigaSocio], r: Riepilogo) -> list[RigaSocio]:
     nostre = [x for x in righe if not x.gruppo.ordinale or x.gruppo.ordinale == ordinale]
     if not nostre:
         return righe  # all of another group: _gruppo refuses the file
+    # The other years of our members go into their path (DEC-287): no warning.
+    nostri = {x.codice_socio for x in nostre}
     for x in righe:
-        if x.gruppo.ordinale and x.gruppo.ordinale != ordinale:
+        if x.gruppo.ordinale and x.gruppo.ordinale != ordinale and x.codice_socio not in nostri:
             r.avvisi.append(
                 {
                     "gravita": "avviso",

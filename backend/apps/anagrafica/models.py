@@ -237,6 +237,46 @@ class Appartenenza(ModelloTracciato):
             raise ValidationError("La data di fine deve seguire quella di inizio.")
 
 
+class PeriodoPercorso(ModelloTracciato):
+    """A period of the scout path outside the app's units (DEC-287): in another group,
+    from the BuonaStrada export or rebuilt by hand, or in this group before BuonaStrada
+    (by hand). Group and unit are text: no unit of another group is created."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="periodi_percorso")
+    # Empty: this group.
+    gruppo = models.CharField(max_length=160, blank=True)
+    unita = models.CharField(max_length=160)
+    ruolo = models.CharField(max_length=10, choices=RuoloAppartenenza.choices)
+    # Associative years by their end year, as BuonaStrada (2025/26 = 2026), both included.
+    anno_inizio = models.PositiveSmallIntegerField()
+    anno_fine = models.PositiveSmallIntegerField()
+    fonte = models.CharField(
+        max_length=12, choices=FonteDato.choices, default=FonteDato.RICOSTRUITO
+    )
+    registrato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "periodo del percorso scout"
+        verbose_name_plural = "periodi del percorso scout"
+        ordering = ["anno_inizio"]
+
+    def __str__(self) -> str:
+        return f"{self.persona}: {self.unita}, {self.anno_inizio}–{self.anno_fine}"
+
+    def clean(self) -> None:
+        from apps.core.anno import AnnoAssociativo
+
+        if not self.unita.strip():
+            raise ValidationError("Indica l'unità.")
+        ultimo = AnnoAssociativo.corrente().anno_fine
+        if not 1950 < self.anno_inizio <= self.anno_fine <= ultimo:
+            raise ValidationError(
+                "Controlla gli anni: il primo non può venire dopo l'ultimo, né dopo quello in corso."
+            )
+
+
 class AppartenenzaSquadriglia(ModelloTracciato):
     """Patrol membership; patrols are per year and may change mid-year (DEC-65)."""
 

@@ -20,6 +20,7 @@ from apps.anagrafica.models import (
     CorrezioneAnagrafica,
     DerogaSquadriglia,
     FotoProfilo,
+    PeriodoPercorso,
     Persona,
     PreferenzeEmail,
     RelazioneTutela,
@@ -27,6 +28,7 @@ from apps.anagrafica.models import (
 )
 from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
 from apps.buonacaccia.models import IscrizioneBuonaCaccia, QuotaFormazione
+from apps.core.anno import AnnoAssociativo
 from apps.dispositivi.models import Dispositivo
 from apps.fascicolo.models import Formazione, ServizioPassato
 from apps.iscrizioni.models import RichiestaIscrizione
@@ -184,8 +186,25 @@ def fascicolo(persona: Persona) -> dict:
             persona.regole_rapporto.testo if hasattr(persona, "regole_rapporto") else ""
         ),
         "servizio_ricostruito": [
-            {"Anno": s.anno, "Ruolo": s.get_ruolo_display(), "Unità": str(s.unita or s.unita_testo)}
+            {
+                "Anno": s.anno,
+                "Ruolo": s.get_ruolo_display(),
+                "Unità": str(s.unita or s.unita_testo),
+                "Gruppo": s.gruppo,
+            }
             for s in ServizioPassato.objects.filter(persona=persona).select_related("unita")
+        ],
+        # Periods outside the app's units: other groups, years rebuilt (DEC-287).
+        "percorso_scout": [
+            {
+                "Gruppo": p.gruppo,
+                "Unità": p.unita,
+                "Ruolo": p.get_ruolo_display(),
+                "Dal": AnnoAssociativo(p.anno_inizio).etichetta,
+                "Al": AnnoAssociativo(p.anno_fine).etichetta,
+                "Origine": p.get_fonte_display(),
+            }
+            for p in PeriodoPercorso.objects.filter(persona=persona)
         ],
         "formazione_capi": [
             {
@@ -554,7 +573,7 @@ def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
         for f in foto:
             f.file.delete(save=False)
             f.delete()
-        for modello in (Nota, RegoleRapporto, ServizioPassato, Formazione):
+        for modello in (Nota, RegoleRapporto, ServizioPassato, Formazione, PeriodoPercorso):
             oggetti = list(modello.objects.filter(persona=persona))
             _cancella_storico(oggetti)
             for oggetto in oggetti:

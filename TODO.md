@@ -217,6 +217,14 @@ ragazzi; decisioni nell'analisi come DEC-276…DEC-278.
 | E.4 | Gmail con accesso Google una tantum (OAuth, API di Gmail); guida: client OAuth in Google Cloud e relay SMTP di Google | DEC-278 | ✅ 02/11 (test con Google simulato; il collegamento vero si prova all'installazione) |
 | E.3 | Microsoft 365 con OAuth (Graph) | DEC-277 | 💤 (si sente prima AGESCI per il tenant istituzionale) |
 
+### Note dall'installazione dell'Avellino 1 (02/11)
+
+Annotate dal maintainer durante l'installazione; da fare dopo, non ora.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| N.1 | `scripts/configure-prod.sh`: `--port` esiste già, ma lo script non controlla che la porta sia libera; con `nginx-host`, `apache-host` e `apache-vhost` controllarla e, se occupata, proporre la prima libera | — | ⏳ |
+
 ### Mancanze trovate scrivendo il manuale (31/10)
 
 Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manuale si aggiorna con ogni blocco.

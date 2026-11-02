@@ -6,11 +6,13 @@ import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
+import { useNavigazioneStore } from '@/stores/navigazione'
 import { useSessioneStore } from '@/stores/sessione'
 
 // Members (capi and ragazzi) or parents, each with its own search.
 const props = defineProps<{ tipo: 'soci' | 'genitori' }>()
 const sessione = useSessioneStore()
+const navigazione = useNavigazioneStore()
 const route = useRoute()
 const { errore, inCorso, esegui } = useErrore()
 
@@ -54,6 +56,11 @@ watch(
     filtro.value = ''
     caricaPersone()
   },
+)
+watch(
+  () => props.tipo,
+  (tipo) => (navigazione.elencoPersone = tipo === 'genitori' ? 'genitori' : 'persone'),
+  { immediate: true },
 )
 </script>
 

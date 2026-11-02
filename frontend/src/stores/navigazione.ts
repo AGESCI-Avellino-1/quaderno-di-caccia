@@ -21,6 +21,9 @@ export const useNavigazioneStore = defineStore('navigazione', () => {
     email_di_prova: !!sito.sito.email_di_prova,
   }))
 
+  /** The people list last opened, Soci or Genitori: the page above a person's card. */
+  const elencoPersone = ref<'persone' | 'genitori'>('persone')
+
   function nomina(percorso: string, nome: string) {
     nomi.value = { ...nomi.value, [percorso]: nome }
   }
@@ -36,5 +39,5 @@ export const useNavigazioneStore = defineStore('navigazione', () => {
     }
   }
 
-  return { nomi, contatori, nomina, caricaContatori }
+  return { nomi, contatori, elencoPersone, nomina, caricaContatori }
 })

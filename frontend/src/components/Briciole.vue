@@ -36,7 +36,8 @@ const briciole = computed(() => {
     const percorso = percorsoDi({ name: nome, params: rotta.params })
     if (percorso === null) break
     catena.unshift({ pagina: nome, percorso, nome: navigazione.nomi[percorso] ?? pagina.titolo })
-    nome = pagina.sopra
+    // A card opened from Genitori goes back to Genitori, not to Soci.
+    nome = pagina.sopra === 'persone' ? navigazione.elencoPersone : pagina.sopra
   }
   return calcola(catena, gruppiMenu(p, navigazione.contatori), vociProfilo(p), p.capo, (v) =>
     percorsoDi(v.to),

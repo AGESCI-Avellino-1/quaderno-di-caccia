@@ -405,3 +405,132 @@ def test_ambientazione_alla_prima_importazione_poi_resta():
     applica(_risultato(con_lupetta("BOSCO")), oggi=OGGI)
     lc.refresh_from_db()
     assert lc.ambiente == Ambiente.GIUNGLA  # the group's setting stays
+
+
+# --- History: an export with several years (DEC-271…DEC-273) ------------------------------
+
+
+def _anno(riga_base: dict[str, str], anno: int, **valori: str) -> dict[str, str]:
+    return riga_base | {"ANNO SCOUT": str(anno)} | valori
+
+
+def _storico() -> list[dict[str, str]]:
+    giulia, _, paolo, laura, _ = righe_standard()
+    branco = {
+        "BRANCA": "Branca L/C",
+        "TIPO UNITA": "BRANCO/CERCHIO MISTO",
+        "CUN": "L",
+        "AMBIENTE UNITA": "GIUNGLA",
+    }
+    ex = giulia | {"CODICE SOCIO": "9000050", "NOME": "Sara", "CODICE FISCALE": "RSSSRA10A41A509X"}
+    clan = {"BRANCA": "Branca R/S", "TIPO UNITA": "CLAN/FUOCO", "CUN": "T", "COMUNITA SOCIO": ""}
+    return [
+        # Laura was a scolta: the clan is first met in a past period, yet still active.
+        _anno(laura, 2009, **clan),
+        _anno(giulia, 2022, **branco),
+        _anno(giulia, 2023, **branco),
+        _anno(giulia, 2024, **{"CODICE STATUS SOCIO": "S"}),  # a year out of the group
+        _anno(giulia, 2025),
+        _anno(giulia, 2026),
+        # the reparto had the jungle setting in an old export: not for a reparto
+        _anno(
+            paolo,
+            2025,
+            **{
+                "TIPO UNITA": "REPARTO MASCHILE",
+                "CUN": "M",
+                "COMUNITA SOCIO": "",
+                "AMBIENTE UNITA": "GIUNGLA",
+            },
+        ),
+        _anno(paolo, 2026),
+        _anno(laura, 2025),
+        _anno(laura, 2026, **{"CODICE STATUS SOCIO": "S"}),  # census: still active
+        _anno(ex, 2023, **branco),  # left before the last year: an ex member
+        _anno(ex, 2024),
+    ]
+
+
+def test_storico_solo_chi_e_attivo_nell_ultimo_anno():
+    riepilogo = applica(_risultato(_storico()), oggi=OGGI)
+    assert not Persona.objects.filter(codice_socio="9000050").exists()
+    assert Persona.objects.filter(codice_socio__isnull=False).count() == 3
+    assert len(riepilogo.periodi_passati) == 3
+
+
+def test_storico_periodi_passati_chiusi_e_periodo_attuale_dal_suo_inizio():
+    applica(_risultato(_storico()), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    periodi = list(
+        Appartenenza.objects.filter(persona=giulia)
+        .order_by("data_inizio")
+        .values_list("unita__codice_unita", "data_inizio", "data_fine")
+    )
+    # 2023/24 (status S) is a year out of the group: the reparto starts again in 2024/25.
+    assert periodi == [
+        ("L", date(2021, 10, 1), date(2023, 10, 1)),
+        ("N", date(2024, 10, 1), None),
+    ]
+    laura = Persona.objects.get(codice_socio="9000004")
+    assert Appartenenza.objects.attive(OGGI).get(persona=laura).data_inizio == date(2024, 10, 1)
+
+
+def test_storico_unita_del_passato_disattivate():
+    riepilogo = applica(_risultato(_storico()), oggi=OGGI)
+    branco = Unita.objects.get(codice_unita="L")
+    assert not branco.attiva
+    assert "Branco (L1) (disattivata)" in riepilogo.unita_create
+    assert Unita.objects.get(codice_unita="N").attiva
+    assert Unita.objects.get(codice_unita="T").attiva
+    # The setting is only for branco/cerchio (DEC-225).
+    from apps.organizzazione.models import Ambiente
+
+    assert Unita.objects.get(codice_unita="M").ambiente == Ambiente.NESSUNO
+
+
+def test_storico_idempotente():
+    applica(_risultato(_storico()), oggi=OGGI)
+    riepilogo = applica(_risultato(_storico()), oggi=OGGI)
+    assert riepilogo.periodi_passati == []
+    assert riepilogo.appartenenze_aperte == []
+    assert riepilogo.persone_create == []
+
+
+def test_storico_avvisi_solo_dell_ultima_riga():
+    righe = _storico()
+    righe[1] = righe[1] | {"DATA NASCITA": "17/11/9900"}  # a typo of 2022, fixed since
+    riepilogo = applica(_risultato(righe), oggi=OGGI)
+    assert not any("futuro" in a["messaggio"] for a in riepilogo.avvisi)
+
+
+def test_storico_righe_di_altri_gruppi_saltate():
+    righe = _storico()
+    altro = _anno(righe[0], 2021, ORDINALE="T0002", GRUPPO="ALTRO GRUPPO 2", CUN="O")
+    riepilogo = applica(_risultato([altro, *righe]), oggi=OGGI)
+    assert Gruppo.objects.get().ordinale == "T9999"
+    assert not Unita.objects.filter(codice_unita="O").exists()
+    assert any("altro gruppo" in a["messaggio"] for a in riepilogo.avvisi)
+
+
+def test_stato_i_attivo_con_nota_se_creato():
+    from apps.note.models import Nota
+
+    righe = righe_standard()
+    righe[0] |= {"CODICE STATUS SOCIO": "I", "STATUS SOCIO": "RINNOVO CON TRASFERIMENTO"}
+    applica(_risultato(righe), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    assert giulia.stato_socio == "R"
+    assert Appartenenza.objects.attive(OGGI).filter(persona=giulia).exists()
+    assert [n.testo for n in Nota.objects.filter(persona=giulia)] == ["Iscritto da altro gruppo"]
+    assert not Nota.objects.exclude(persona=giulia).exists()
+
+
+def test_stato_i_per_chi_e_gia_nell_app_non_cambia_nulla():
+    from apps.note.models import Nota
+
+    applica(_risultato(), oggi=OGGI)
+    righe = righe_standard()
+    righe[0] |= {"CODICE STATUS SOCIO": "I", "STATUS SOCIO": "RINNOVO CON TRASFERIMENTO"}
+    riepilogo = applica(_risultato(righe), oggi=OGGI)
+    assert riepilogo.persone_aggiornate == []
+    assert not Nota.objects.exists()

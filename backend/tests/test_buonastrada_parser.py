@@ -13,7 +13,14 @@ from apps.importazione.buonastrada import (
     separa_nome_completo,
 )
 from apps.organizzazione.models import Composizione, TipoUnita
-from tests.export_sintetico import GENITORI_ROSSI, costruisci_csv, riga, righe_standard
+from tests.export_sintetico import (
+    GENITORE_DATA_SENZA_ZERI,
+    GENITORE_NATO_ALL_ESTERO,
+    GENITORI_ROSSI,
+    costruisci_csv,
+    riga,
+    righe_standard,
+)
 
 OGGI = date(2026, 10, 21)
 
@@ -114,6 +121,18 @@ def test_genitori_letti_dalla_stringa_buonastrada():
     assert genitori[1].codice_fiscale == "DLCNMR82C41A509Z"
     assert genitori[1].data_nascita == date(1982, 3, 1)
     assert genitori[0].cellulare == "3330000001"
+
+
+def test_data_del_genitore_senza_zeri():
+    genitori, illeggibili = leggi_genitori(GENITORE_DATA_SENZA_ZERI)
+    assert illeggibili == []
+    assert genitori[0].data_nascita == date(1974, 8, 8)
+
+
+def test_genitore_nato_all_estero_senza_provincia():
+    genitori, illeggibili = leggi_genitori(GENITORE_NATO_ALL_ESTERO)
+    assert illeggibili == []
+    assert (genitori[0].luogo_nascita, genitori[0].provincia_nascita) == ("ROMANIA", "")
 
 
 def test_genitore_illeggibile_segnalato():

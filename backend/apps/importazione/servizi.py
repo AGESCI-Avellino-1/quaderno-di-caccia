@@ -17,9 +17,15 @@ Rules:
     asked at upload; on the same day the app (DEC-130). Choosing
     BuonaStrada closes the
     correction as superseded;
-  * guardians are deduplicated by codice fiscale (DEC-32, DEC-33).
+  * guardians are deduplicated by codice fiscale (DEC-32, DEC-33);
+  * an export with several years (history) brings only the members active in its last
+    year; their past years become closed periods in the units, and units seen only in
+    the past are created inactive. Rows of other groups are skipped (DEC-271, DEC-273);
+  * status I (renewed with a transfer) is active like R; a member it creates gets a
+    staff note saying they come from another group (DEC-272).
 """
 
+from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from datetime import date
 
@@ -47,7 +53,7 @@ from apps.anagrafica.servizi import (
 from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
 from apps.iscrizioni.servizi import recepisci
-from apps.organizzazione.models import Ambiente, Gruppo, TipoUnita, Unita
+from apps.organizzazione.models import BRANCA_DEL_TIPO, Ambiente, Branca, Gruppo, TipoUnita, Unita
 from apps.organizzazione.servizi import esci_dal_reparto
 
 from .buonastrada import Genitore, RigaSocio, RisultatoParsing
@@ -84,6 +90,8 @@ class Riepilogo:
     unita_create: list[str] = field(default_factory=list)
     appartenenze_aperte: list[str] = field(default_factory=list)
     appartenenze_chiuse: list[str] = field(default_factory=list)
+    # Past periods in the units from an export with several years (DEC-271).
+    periodi_passati: list[str] = field(default_factory=list)
     differenze: list[Differenza] = field(default_factory=list)
     correzioni_recepite: list[str] = field(default_factory=list)
     # Members who joined from the app, now in BuonaStrada with their real code.
@@ -105,6 +113,12 @@ class Riepilogo:
         aggiornato = date.fromisoformat(self.aggiornato_al) if self.aggiornato_al else None
         proposta = APP if aggiornato is None or modificato_il >= aggiornato else BUONASTRADA
         return proposta, self.scelte.get(chiave, proposta)
+
+
+# Status of a member in a past year of the history: S and D are years out of the group
+# (DEC-271); I is a member coming from another group (DEC-272).
+STATI_ATTIVI = {"N", "R", "I"}
+NOTA_ALTRO_GRUPPO = "Iscritto da altro gruppo"
 
 
 class _Anteprima(Exception):
@@ -161,13 +175,20 @@ def _esegui(risultato: RisultatoParsing, r: Riepilogo, oggi: date) -> None:
     ]
     if not risultato.righe:
         return
-    gruppo = _gruppo(risultato.righe[0])
+    gruppo = _gruppo(_righe_del_gruppo(risultato.righe, r))
+    righe = [
+        x for x in risultato.righe if not x.gruppo.ordinale or x.gruppo.ordinale == gruppo.ordinale
+    ]
+    anni = {x.anno_scout for x in righe}
+    if len(anni) > 1:
+        _esegui_storico(gruppo, righe, max(anni), r, oggi)
+        return
     adesso = timezone.now()
-    for riga in risultato.righe:
+    for riga in righe:
         if riga.stato == "D":
             _chiudi_decaduto(riga, r, oggi)
             continue
-        persona = _persona(riga, r, adesso)
+        persona = _persona(riga, r, adesso, altro_gruppo=riga.stato == "I")
         unita = _unita(gruppo, riga, r)
         if unita is not None:
             _appartenenza(persona, unita, riga, r, oggi)
@@ -175,8 +196,140 @@ def _esegui(risultato: RisultatoParsing, r: Riepilogo, oggi: date) -> None:
             _genitore(persona, genitore, riga, r)
 
 
-def _gruppo(riga: RigaSocio) -> Gruppo:
-    dati = riga.gruppo
+def _righe_del_gruppo(righe: list[RigaSocio], r: Riepilogo) -> list[RigaSocio]:
+    """The rows of this installation's group, or of the group most present in the last
+    year when it is the first import; the others are reported and skipped (DEC-271)."""
+    esistente = Gruppo.objects.first()
+    ordinale = esistente.ordinale if esistente and esistente.ordinale else ""
+    if not ordinale:
+        ultimo = max(x.anno_scout for x in righe)
+        conteggio: dict[str, int] = defaultdict(int)
+        for x in righe:
+            if x.anno_scout == ultimo:
+                conteggio[x.gruppo.ordinale] += 1
+        ordinale = max(conteggio, key=conteggio.__getitem__)
+    nostre = [x for x in righe if not x.gruppo.ordinale or x.gruppo.ordinale == ordinale]
+    if not nostre:
+        return righe  # all of another group: _gruppo refuses the file
+    for x in righe:
+        if x.gruppo.ordinale and x.gruppo.ordinale != ordinale:
+            r.avvisi.append(
+                {
+                    "gravita": "avviso",
+                    "messaggio": (
+                        f"Riga di un altro gruppo ({x.gruppo.denominazione or x.gruppo.ordinale}, "
+                        f"anno {x.anno_scout}): non importata."
+                    ),
+                    "riga": x.numero_riga,
+                    "codice_socio": x.codice_socio,
+                }
+            )
+    return nostre
+
+
+def _esegui_storico(
+    gruppo: Gruppo, righe: list[RigaSocio], ultimo: int, r: Riepilogo, oggi: date
+) -> None:
+    """An export with several years (DEC-271): one pass per member, oldest year first.
+    Only who is active in the last year is imported; ex members stay out (DEC-28)."""
+    adesso = timezone.now()
+    per_socio: dict[str, dict[int, RigaSocio]] = defaultdict(dict)
+    for riga in righe:
+        # One row per year: BuonaStrada repeats a member once per role.
+        per_socio[riga.codice_socio].setdefault(riga.anno_scout, riga)
+    # Units are found by their BuonaStrada code (see _unita).
+    attuali = {(x.codice_unita, x.progressivo) for x in righe if x.anno_scout == ultimo}
+    # Only the last row of each member gives their data: the warnings on older rows
+    # would be noise.
+    ultime = {
+        max(anni.values(), key=lambda x: x.anno_scout).numero_riga for anni in per_socio.values()
+    }
+    vecchie = {x.numero_riga for x in righe} - ultime
+    r.avvisi = [a for a in r.avvisi if a["riga"] not in vecchie]
+    for anni in per_socio.values():
+        storia = [anni[a] for a in sorted(anni)]
+        attuale = storia[-1]
+        if attuale.stato == "D":
+            _chiudi_decaduto(attuale, r, oggi)
+            continue
+        if attuale.anno_scout != ultimo:
+            continue  # left the group before the last year: an ex member
+        nostre = [x for x in storia if x.stato in STATI_ATTIVI or x is attuale]
+        persona = _persona(attuale, r, adesso, altro_gruppo=nostre[0].stato == "I")
+        periodi = _periodi(nostre)
+        for periodo in periodi[:-1]:
+            unita = _unita(
+                gruppo,
+                periodo[0],
+                r,
+                attiva=(periodo[0].codice_unita, periodo[0].progressivo) in attuali,
+            )
+            if unita is not None:
+                _periodo_passato(persona, unita, periodo, r)
+        unita = _unita(gruppo, attuale, r)
+        if unita is not None:
+            inizio = (
+                periodi[-1][0].anno_scout if _chiave(periodi[-1][0]) == _chiave(attuale) else None
+            )
+            _appartenenza(persona, unita, attuale, r, oggi, dal_anno=inizio)
+        for genitore in attuale.genitori:
+            _genitore(persona, genitore, attuale, r)
+
+
+def _chiave(riga: RigaSocio) -> tuple:
+    return (riga.tipo_unita, riga.codice_unita, riga.progressivo)
+
+
+def _periodi(storia: list[RigaSocio]) -> list[list[RigaSocio]]:
+    """Consecutive years in the same unit; a missing year ends the period."""
+    periodi: list[list[RigaSocio]] = []
+    for riga in storia:
+        ultimo = periodi[-1][-1] if periodi else None
+        if (
+            ultimo is not None
+            and riga.anno_scout == ultimo.anno_scout + 1
+            and _chiave(riga) == _chiave(ultimo)
+        ):
+            periodi[-1].append(riga)
+        else:
+            periodi.append([riga])
+    return periodi
+
+
+def _periodo_passato(
+    persona: Persona, unita: Unita, periodo: list[RigaSocio], r: Riepilogo
+) -> None:
+    inizio = AnnoAssociativo(periodo[0].anno_scout).inizio
+    fine = AnnoAssociativo(periodo[-1].anno_scout).successivo().inizio
+    ruolo = _ruolo(unita)
+    if Appartenenza.objects.filter(
+        persona=persona, unita=unita, ruolo=ruolo, data_inizio=inizio
+    ).exists():
+        return
+    Appartenenza.objects.create(
+        persona=persona,
+        unita=unita,
+        ruolo=ruolo,
+        data_inizio=inizio,
+        data_fine=fine,
+        fonte=FonteDato.BUONASTRADA,
+    )
+    r.periodi_passati.append(
+        f"{persona} — {unita}, {AnnoAssociativo(periodo[0].anno_scout).etichetta}"
+        f"–{AnnoAssociativo(periodo[-1].anno_scout).etichetta}"
+    )
+
+
+def _ruolo(unita: Unita) -> str:
+    return (
+        RuoloAppartenenza.CAPO
+        if unita.tipo == TipoUnita.COMUNITA_CAPI
+        else RuoloAppartenenza.RAGAZZO
+    )
+
+
+def _gruppo(righe: list[RigaSocio]) -> Gruppo:
+    dati = righe[0].gruppo
     gruppo = Gruppo.objects.first()
     if gruppo is None:
         gruppo = Gruppo(denominazione=dati.denominazione or "Gruppo")
@@ -270,7 +423,7 @@ def _rientro(codice_fiscale: str) -> Persona | None:
     return archiviazione.persona if archiviazione else None
 
 
-def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
+def _persona(riga: RigaSocio, r: Riepilogo, adesso, altro_gruppo: bool = False) -> Persona:
     valori = {
         "nome": riga.nome,
         "cognome": riga.cognome,
@@ -285,7 +438,8 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
         "cap": riga.cap,
         "email": riga.email,
         "cellulare": riga.cellulare,
-        "stato_socio": riga.stato,
+        # I is a renewal with a transfer: in the app, a member like R (DEC-272).
+        "stato_socio": "R" if riga.stato == "I" else riga.stato,
         "consenso_iscrizione": riga.consenso_iscrizione,
         "consenso_foto": riga.consenso_foto,
         "consenso_commerciale": riga.consenso_commerciale,
@@ -308,6 +462,8 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
         persona.ultima_importazione = adesso
         persona.save()
         r.persone_create.append(str(persona))
+        if altro_gruppo:
+            _nota_altro_gruppo(persona)
         return persona
     if e_codice_provvisorio(persona.codice_socio):
         # Joined from the app: BuonaStrada's code replaces the provisional one.
@@ -321,7 +477,14 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso) -> Persona:
     return persona
 
 
-def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
+def _nota_altro_gruppo(persona: Persona) -> None:
+    """Joined from another group (DEC-272): its history is not in this export."""
+    from apps.note.models import Nota, TipoNota
+
+    Nota.objects.create(persona=persona, tipo=TipoNota.STAFF, testo=NOTA_ALTRO_GRUPPO)
+
+
+def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo, attiva: bool = True) -> Unita | None:
     if riga.tipo_unita is None:
         return None
     # Noviziato: BuonaStrada keeps it as COMUNITA SOCIO inside the Clan/Fuoco (DEC-34).
@@ -334,6 +497,11 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
     unita = Unita.objects.filter(
         gruppo=gruppo, codice_unita=riga.codice_unita, progressivo=riga.progressivo
     ).first()
+    # The setting (giungla or bosco) is only for branco/cerchio (DEC-225); old exports
+    # also give it to reparti.
+    ambiente = (
+        riga.ambiente if BRANCA_DEL_TIPO.get(riga.tipo_unita) == Branca.LC else Ambiente.NESSUNO
+    )
     if unita is None:
         unita = Unita.objects.create(
             gruppo=gruppo,
@@ -342,28 +510,32 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo) -> Unita | None:
             nome="",
             tipo=riga.tipo_unita,
             composizione=riga.composizione,
-            ambiente=riga.ambiente,
+            ambiente=ambiente,
             codice_unita=riga.codice_unita,
             progressivo=riga.progressivo,
             durata_anni=riga.durata_anni,
+            # Seen only in the past years of the export: kept for the history (DEC-273).
+            attiva=attiva,
         )
-        r.unita_create.append(str(unita))
-    elif unita.ambiente == Ambiente.NESSUNO and riga.ambiente != Ambiente.NESSUNO:
+        r.unita_create.append(str(unita) if attiva else f"{unita} (disattivata)")
+    elif unita.ambiente == Ambiente.NESSUNO and ambiente != Ambiente.NESSUNO:
         # The setting is set by the first import that gives it, then it stays the
         # group's: a later export never changes it (DEC-225).
-        unita.ambiente = riga.ambiente
+        unita.ambiente = ambiente
         unita.save(update_fields=["ambiente", "aggiornato_il"])
     return unita
 
 
 def _appartenenza(
-    persona: Persona, unita: Unita, riga: RigaSocio, r: Riepilogo, oggi: date
+    persona: Persona,
+    unita: Unita,
+    riga: RigaSocio,
+    r: Riepilogo,
+    oggi: date,
+    dal_anno: int | None = None,
 ) -> None:
-    ruolo = (
-        RuoloAppartenenza.CAPO
-        if unita.tipo == TipoUnita.COMUNITA_CAPI
-        else RuoloAppartenenza.RAGAZZO
-    )
+    """`dal_anno`: from the history, the first year of the current period (DEC-271)."""
+    ruolo = _ruolo(unita)
     attive = Appartenenza.objects.attive(oggi).filter(persona=persona, ruolo=ruolo)
     if attive.filter(unita=unita).exists():
         return
@@ -396,7 +568,7 @@ def _appartenenza(
     for appartenenza in altre:
         _chiudi_appartenenza(appartenenza, r, oggi)
     # A change of unit starts today; a first membership starts with the associative year.
-    inizio = oggi if altre else AnnoAssociativo(riga.anno_scout).inizio
+    inizio = oggi if altre else AnnoAssociativo(dal_anno or riga.anno_scout).inizio
     Appartenenza.objects.create(
         persona=persona, unita=unita, ruolo=ruolo, data_inizio=inizio, fonte=FonteDato.BUONASTRADA
     )

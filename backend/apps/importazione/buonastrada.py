@@ -85,7 +85,7 @@ class RigaSocio:
     sesso: str
     data_nascita: date | None
     luogo_nascita: str
-    stato: str  # R, S or D
+    stato: str  # N, R, I, S or D
     codice_fiscale: str
     indirizzo: str
     civico: str
@@ -261,8 +261,10 @@ def separa_nome_completo(nome_completo: str, codice_fiscale: str) -> tuple[str, 
 
 _GENITORE = re.compile(
     r"^(?P<nome>.+?) \[C\.F\.(?P<cf>[^\]]*)\]"
-    r" - Nato/a a: (?P<luogo>.*?) \((?P<prov>[^)]*)\)"
-    r" - il: (?P<data>\d{2}/\d{2}/\d{4})?"
+    # No province for a parent born abroad (seen 2026-11-02).
+    r" - Nato/a a: (?P<luogo>.*?)(?: \((?P<prov>[^)]*)\))?"
+    # Day and month without leading zeros in the 2027 exports (seen 2026-11-02).
+    r" - il: (?P<data>\d{1,2}/\d{1,2}/\d{4})?"
     r"\s*e-mail: (?P<email>\S*)\s*Cellulare: (?P<cell>\S*)\s*$"
 )
 
@@ -286,7 +288,7 @@ def leggi_genitori(testo: str) -> tuple[list[Genitore], list[str]]:
                 nome_completo=match["nome"],
                 codice_fiscale=match["cf"].upper(),
                 luogo_nascita=match["luogo"],
-                provincia_nascita=match["prov"],
+                provincia_nascita=match["prov"] or "",
                 data_nascita=_data(match["data"] or ""),
                 email=match["email"],
                 cellulare=match["cell"],
@@ -350,8 +352,9 @@ def _costruisci_riga(
         avvisa(Gravita.ERRORE, "Codice socio mancante: riga saltata.")
         return None
     stato = v.get("CODICE STATUS SOCIO", "")
-    # N: a new member this year (seen in a real export, 2026-10-30).
-    if stato not in {"N", "R", "S", "D"}:
+    # N: a new member this year (seen in a real export, 2026-10-30); I: renewed with a
+    # transfer, a member coming from another group, active like R (DEC-272).
+    if stato not in {"N", "R", "I", "S", "D"}:
         avvisa(Gravita.ERRORE, f"Stato socio sconosciuto '{stato}': riga saltata.")
         return None
 

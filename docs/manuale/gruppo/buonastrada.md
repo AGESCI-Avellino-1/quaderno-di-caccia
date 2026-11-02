@@ -35,7 +35,17 @@ Cosa succede:
 - chi rientra dopo essere stato archiviato viene riconosciuto (vedi [Fine anno e
   archivio](fine-anno));
 - denominazione sociale e codice fiscale del gruppo, se li hai corretti nelle Impostazioni,
-  restano quelli dell'app.
+  restano quelli dell'app;
+- chi arriva da un altro gruppo (in BuonaStrada «rinnovo con trasferimento») entra come un
+  nuovo socio, con una nota di staff «Iscritto da altro gruppo».
+
+### Un file con più anni
+
+Se in **Ricerca soci** scegli più anni, l'app porta dentro solo chi c'è nell'ultimo anno del
+file. Per loro gli anni passati diventano i periodi nelle unità: si vede quando sono entrati
+nel gruppo e in quali unità sono stati. Chi è uscito prima non entra nell'app. Le unità che
+esistevano solo negli anni passati nascono **disattivate** e restano per lo storico. I ruoli
+dei capi negli anni passati non sono nel file: li aggiungi a mano nel fascicolo del capo.
 
 ## Correzioni da inoltrare
 

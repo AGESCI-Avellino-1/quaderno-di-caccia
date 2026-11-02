@@ -192,6 +192,18 @@ Richiesta del maintainer del 01/11; decisioni nell'analisi come DEC-268, DEC-269
 | A.3 | Manuale: le due funzioni nella parte dell'amministratore tecnico | DEC-238 | ✅ 01/11 |
 | A.4 | Pagine di errore nel tema del sito, con messaggi che spiegano cosa fare senza dettagli tecnici: 40x e 50x nella PWA, nelle pagine di Django fuori dalle API e nell'nginx del container `app` quando Django non risponde (richiesta del maintainer, 01/11) | DEC-270 | ✅ 01/11: provato con i container veri (la 503 della manutenzione passa intatta da nginx, Apache e nginx sull'host; con Django o con tutto il container spenti si vede la pagina dell'app) e nel browser (pagina non trovata della PWA) |
 
+### Primo import con lo storico (02/11)
+
+Richiesta del maintainer del 02/11, prima dell'installazione per l'Avellino 1; decisioni
+nell'analisi come DEC-271…DEC-273. Il file da importare si prepara in `ignored/` (mai
+nel repository).
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| I.1 | Import con più anni: solo i soci attivi nell'ultimo anno, con i periodi passati chiusi nelle unità; righe di altri gruppi saltate; stato I come R; unità solo del passato create disattivate; date dei genitori senza zeri e genitori nati all'estero (export 2027) | DEC-271…DEC-273 | ✅ 02/11 (provato con il file vero su un database di prova: 52 soci, 65 genitori, 82 periodi passati, Branco L1 e Reparti O1/O2 disattivati) |
+| I.2 | Cancellare un'unità disattivata e vuota (creata per errore) | DEC-273 | ⏳ (da chiarire: unità con soli soci archiviati) |
+| I.3 | File unico per l'Avellino 1: storico + 2027 scelto dal maintainer + capo da altro gruppo + due capi riattivati | DEC-271 | ⏳ (attende la selezione del 2027) |
+
 ### Mancanze trovate scrivendo il manuale (31/10)
 
 Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manuale si aggiorna con ogni blocco.

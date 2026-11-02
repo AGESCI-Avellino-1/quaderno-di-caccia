@@ -48,6 +48,19 @@ GENITORI_ROSSI = (
 )
 
 
+# The 2027 exports write the parents' birth dates without leading zeros (seen 2026-11-02).
+GENITORE_DATA_SENZA_ZERI = (
+    "Gialli Rosa [C.F.GLLRSO74M48A509Q] - Nato/a a: AVELLINO (AV) - il: 8/8/1974 "
+    "e-mail: rosa.gialli@example.invalid Cellulare: 3330000009"
+)
+
+
+GENITORE_NATO_ALL_ESTERO = (
+    "Blu Ana [C.F.BLUNAA75C59Z129K] - Nato/a a: ROMANIA - il: 19/3/1975 "
+    "e-mail: ana.blu@example.invalid Cellulare: 3330000010"
+)
+
+
 def riga(**valori: str) -> dict[str, str]:
     base = {h: "" for h in INTESTAZIONI}
     base.update(GRUPPO)

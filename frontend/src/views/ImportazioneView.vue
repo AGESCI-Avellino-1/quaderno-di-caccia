@@ -26,6 +26,7 @@ const conteggi = computed(() => {
     ['Unità nuove', r.unita_create.length],
     ['Appartenenze aperte', r.appartenenze_aperte.length],
     ['Appartenenze chiuse', r.appartenenze_chiuse.length],
+    ['Periodi passati nelle unità', r.periodi_passati?.length ?? 0],
     ['Correzioni recepite da BuonaStrada', r.correzioni_recepite?.length ?? 0],
     ["Iscrizioni dall'app ora in BuonaStrada", r.iscrizioni_recepite?.length ?? 0],
     ['Rientri dopo l’archiviazione', r.rientri?.length ?? 0],

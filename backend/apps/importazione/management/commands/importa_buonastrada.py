@@ -36,6 +36,7 @@ class Command(BaseCommand):
             ("Unità create", riepilogo.unita_create),
             ("Appartenenze aperte", riepilogo.appartenenze_aperte),
             ("Appartenenze chiuse", riepilogo.appartenenze_chiuse),
+            ("Periodi passati", riepilogo.periodi_passati),
         ):
             self.stdout.write(f"{etichetta}: {len(valori)}")
         for differenza in riepilogo.differenze:

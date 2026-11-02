@@ -96,7 +96,14 @@ Se rifai il sito dal pannello (o lo ricrea un ripristino del pannello), rimetti 
 
 ## La posta
 
-In `.env` completa le voci SMTP:
+Il server di posta lo imposta l'amministratore tecnico dall'app, in **Impostazioni**, **Server
+di posta**, con un'email di prova: la password si salva cifrata con la chiave
+`QDC_CHIAVE_SEGRETI`, che lo script di configurazione genera da solo (conservala con i backup:
+se cambia, la password va inserita di nuovo). Funzionano Google Workspace e Gmail con una
+password per le app, Microsoft 365 finché il tenant accetta utente e password, e qualsiasi
+SMTP.
+
+In alternativa, o finché nessuno la imposta dall'app, completa in `.env` le voci SMTP:
 
 ```bash
 DJANGO_EMAIL_HOST=smtp.esempio.org
@@ -106,6 +113,9 @@ DJANGO_EMAIL_HOST_PASSWORD=…
 DJANGO_EMAIL_USE_TLS=true
 DJANGO_DEFAULT_FROM_EMAIL=Quaderno di Caccia <noreply@esempio.org>
 ```
+
+Le email ai capi, ai genitori e ai ragazzi partono solo dopo che i capigruppo le accendono
+nelle Impostazioni (**Chi riceve le email**): codici di accesso e inviti partono sempre.
 
 ## Avviare
 

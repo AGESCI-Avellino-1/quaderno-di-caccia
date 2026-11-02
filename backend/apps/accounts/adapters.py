@@ -73,6 +73,17 @@ class AccountAdapter(DefaultAccountAdapter):
         }
         messaggio(modello, valori, email).send()
 
+    def render_mail(self, template_prefix, email, context, headers=None):
+        """allauth's other emails (account notices) always go (DEC-276)."""
+        from apps.impostazioni.posta import INTESTAZIONE_TIPO, TIPO_ACCOUNT
+
+        return super().render_mail(
+            template_prefix,
+            email,
+            context,
+            headers={**(headers or {}), INTESTAZIONE_TIPO: TIPO_ACCOUNT},
+        )
+
     def get_login_stages(self) -> list[str]:
         """Passkeys are a way in, not a second factor (DEC-240): see stages.py."""
         return [

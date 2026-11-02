@@ -1,16 +1,146 @@
-"""The default mailer (DEC-249): every email goes through the "reale" mailer, or to
-Mailpit while the technical administrator has the test mode on and the server allows it.
+"""The default mailer (DEC-249, DEC-276, DEC-277).
 
-Commands run by cron send through here too, so the test mode covers them as well.
+Every email goes through here, the ones sent by the cron commands too:
+  * while the technical administrator has the test mode on (and the server allows it),
+    to Mailpit;
+  * otherwise each recipient is checked against the groups switched on in the settings:
+    capi, parents, ragazzi; an email to a group switched off is dropped and only
+    counted (DEC-276). What a person asks for, invitations, the joining from the app and
+    the waiting list always go;
+  * through the SMTP server set in the settings, or the server's configuration (DEC-277).
+
+The email type travels in a header set by `email.messaggio()`, removed before sending.
 """
+
+import logging
 
 from django.core.mail import mailers
 from django.core.mail.backends.base import BaseEmailBackend
+from django.core.mail.backends.smtp import EmailBackend as SmtpBackend
+from django.db.models import Q
+
+logger = logging.getLogger(__name__)
+
+INTESTAZIONE_TIPO = "X-QdC-Tipo"
+# allauth's emails without a template of ours (account notices).
+TIPO_ACCOUNT = "account"
+# Always delivered, to anyone (DEC-276).
+SEMPRE = {
+    TIPO_ACCOUNT,
+    "codice_accesso",
+    "reimposta_password",
+    "verifica_email_registrazione",
+    "verifica_email",
+    "account_esistente",
+    "account_sconosciuto",
+    "invito",
+    "iscrizione_accolta",
+    "iscrizione_rifiutata",
+    "iscrizione_da_completare",
+    "iscrizione_sospesa",
+    "attesa_conferma",
+    "attesa_link",
+    "attesa_interesse",
+    "attesa_uscita",
+    "attesa_iscrizione",
+}
+
+
+def gruppi_di(indirizzo: str) -> set[str]:
+    """The groups of whoever has this address: capi, genitori, ragazzi; empty if nobody
+    in the registry has it."""
+    from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela, RuoloAppartenenza
+
+    persone = Persona.objects.filter(
+        Q(email__iexact=indirizzo) | Q(utente__email__iexact=indirizzo)
+    )
+    gruppi = set()
+    for persona in persone:
+        ruoli = set(Appartenenza.objects.filter(persona=persona).values_list("ruolo", flat=True))
+        if RuoloAppartenenza.CAPO in ruoli:
+            gruppi.add("capi")
+        if RuoloAppartenenza.RAGAZZO in ruoli:
+            gruppi.add("ragazzi")
+        if RelazioneTutela.objects.filter(tutore=persona).exists():
+            gruppi.add("genitori")
+    return gruppi
+
+
+def _filtra(email, accesi: set[str], scartate: dict[str, int]):
+    """The email with only the recipients it may reach, or None (DEC-276)."""
+    tipo = email.extra_headers.pop(INTESTAZIONE_TIPO, "")
+    if tipo in SEMPRE:
+        return email
+    tenuti = {}
+    for campo in ("to", "cc", "bcc"):
+        tenuti[campo] = []
+        for indirizzo in getattr(email, campo):
+            gruppi = gruppi_di(indirizzo)
+            if not gruppi or gruppi & accesi:
+                tenuti[campo].append(indirizzo)
+            else:
+                for gruppo in gruppi:
+                    scartate[gruppo] = scartate.get(gruppo, 0) + 1
+    if not any(tenuti.values()):
+        return None
+    for campo, indirizzi in tenuti.items():
+        setattr(email, campo, indirizzi)
+    return email
+
+
+def connessione(imp):
+    """The SMTP server of the settings, or the server's configuration (DEC-277)."""
+    from . import segreti
+    from .models import SicurezzaSmtp
+
+    if not imp.smtp_host:
+        return mailers["reale"]
+    return SmtpBackend(
+        alias="impostazioni",
+        host=imp.smtp_host,
+        port=imp.smtp_porta,
+        username=imp.smtp_utente,
+        password=segreti.decifra(imp.smtp_password) or "",
+        use_tls=imp.smtp_sicurezza == SicurezzaSmtp.STARTTLS,
+        use_ssl=imp.smtp_sicurezza == SicurezzaSmtp.SSL,
+        timeout=20,
+    )
 
 
 class PostaQdC(BaseEmailBackend):
     def send_messages(self, email_messages):
         from .models import Impostazioni
 
-        alias = "mailpit" if Impostazioni.carica().email_di_prova_attiva() else "reale"
-        return mailers[alias].send_messages(email_messages)
+        imp = Impostazioni.carica()
+        if imp.email_di_prova_attiva():
+            for email in email_messages:
+                email.extra_headers.pop(INTESTAZIONE_TIPO, None)
+            return mailers["mailpit"].send_messages(email_messages)
+        accesi = imp.email_accese()
+        scartate: dict[str, int] = {}
+        da_inviare = [e for e in (_filtra(e, accesi, scartate) for e in email_messages) if e]
+        if scartate:
+            _conta(scartate)
+        if imp.mittente:
+            from django.conf import settings
+
+            for email in da_inviare:
+                if email.from_email in (None, settings.DEFAULT_FROM_EMAIL):
+                    email.from_email = imp.mittente
+        if not da_inviare:
+            return 0
+        return connessione(imp).send_messages(da_inviare)
+
+
+def _conta(scartate: dict[str, int]) -> None:
+    from django.db import transaction
+
+    from .models import Impostazioni
+
+    with transaction.atomic():
+        imp = Impostazioni.objects.select_for_update().get(pk=Impostazioni.carica().pk)
+        for gruppo, n in scartate.items():
+            imp.email_scartate[gruppo] = imp.email_scartate.get(gruppo, 0) + n
+        imp.save(update_fields=["email_scartate", "aggiornato_il"])
+    # Counts only: never the addresses.
+    logger.info("Email non inviate per gruppi spenti: %s", scartate)

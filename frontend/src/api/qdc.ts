@@ -212,6 +212,32 @@ export interface Impostazioni extends ImpostazioniSito {
   puo_manutenzione: boolean
   /** Login locks (DEC-269). */
   puo_sbloccare_accessi: boolean
+  /** Who receives the emails (DEC-276) and how many a group switched off did not get. */
+  email_capi?: boolean
+  email_genitori?: boolean
+  email_ragazzi?: boolean
+  email_scartate?: Record<string, number>
+  puo_destinatari_email?: boolean
+  /** The SMTP server (DEC-277): the technical administrator only; never the password. */
+  puo_smtp?: boolean
+  smtp_disponibile?: boolean
+  smtp_host?: string
+  smtp_porta?: number
+  smtp_sicurezza?: string
+  smtp_utente?: string
+  smtp_password_salvata?: boolean
+  mittente?: string
+  mittente_predefinito?: string
+}
+
+export interface SmtpIn {
+  host: string
+  porta: number
+  sicurezza: string
+  utente: string
+  /** Empty: the saved one stays. */
+  password: string
+  mittente: string
 }
 
 /** A login lock for too many wrong attempts (DEC-269): an account (email) or an address. */
@@ -2259,6 +2285,15 @@ export const api = {
       metodo: 'POST',
       corpo: { tipo: blocco.tipo, valore: blocco.valore },
     }),
+  destinatariEmail: (gruppi: { capi: boolean; genitori: boolean; ragazzi: boolean }) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/destinatari-email', {
+      metodo: 'PUT',
+      corpo: gruppi,
+    }),
+  salvaSmtp: (dati: SmtpIn) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/smtp', { metodo: 'PUT', corpo: dati }),
+  provaSmtp: () =>
+    richiesta<{ inviata_a: string }>('/api/v1/impostazioni/smtp/prova', { metodo: 'POST' }),
   emailDiProva: (attiva: boolean) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/email-di-prova', {
       metodo: 'PUT',

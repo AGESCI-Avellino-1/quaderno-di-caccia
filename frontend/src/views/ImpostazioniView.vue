@@ -4,9 +4,11 @@ import { RouterLink } from 'vue-router'
 
 import { api, type Impostazioni, type ModelloEmailBreve, type Sito } from '@/api/qdc'
 import BlocchiAccesso from '@/components/BlocchiAccesso.vue'
+import DestinatariEmail from '@/components/DestinatariEmail.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
 import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
+import ServerPosta from '@/components/ServerPosta.vue'
 import { useErrore } from '@/composables/useErrore'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
 import { useSitoStore } from '@/stores/sito'
@@ -217,6 +219,12 @@ async function salva() {
         :impostazioni="dati"
         @aggiornate="dati = $event"
       />
+      <DestinatariEmail
+        v-if="dati.puo_destinatari_email"
+        :impostazioni="dati"
+        @aggiornate="dati = $event"
+      />
+      <ServerPosta v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
       <BlocchiAccesso v-if="dati.puo_sbloccare_accessi" />
       <section v-if="dati.puo_email_di_prova" class="mb-7">
         <h2 class="h5">Email di prova</h2>

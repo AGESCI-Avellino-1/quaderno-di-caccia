@@ -58,6 +58,20 @@ Con **Torna al testo di base** annulli le tue modifiche. Il **Piè di pagina com
 email** (per esempio con il logo) si aggiunge a tutte le email, tranne quelle in cui lo togli
 dal loro modello.
 
+## Chi riceve le email
+
+Quando inizi a usare l'app, le email non arrivano a nessuno: puoi importare i dati e
+preparare tutto con calma. In **Chi riceve le email** accendi un gruppo alla volta, quando
+gli hai presentato l'app: prima **Capi**, poi **Genitori** e **Ragazzi**.
+
+- Finché un gruppo è spento, le email per lui non partono e non vengono tenute da parte:
+  accendendolo non arrivano promemoria vecchi. Accanto al gruppo vedi quante non sono partite.
+- Chi è in più gruppi, per esempio un capo che è anche genitore, le riceve se almeno uno è
+  acceso.
+- Partono sempre, a chiunque: i codici per entrare, il cambio della password, gli **inviti**
+  (puoi invitare i capi anche prima di accendere i loro avvisi) e le email dell'iscrizione
+  dall'app e della lista d'attesa.
+
 ## Privacy policy e termini
 
 Le pagine pubbliche linkate in fondo a ogni pagina. Partono da un testo di base: cambialo con

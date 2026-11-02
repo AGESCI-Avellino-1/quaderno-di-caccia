@@ -24,6 +24,7 @@ from apps.core.anno import AnnoAssociativo
 from . import segnaposto as sp
 from .html import in_testo, pulisci
 from .models import Impostazioni, ModelloEmail
+from .posta import INTESTAZIONE_TIPO
 
 logger = logging.getLogger(__name__)
 
@@ -291,7 +292,14 @@ def messaggio(
         piede_html, piede_testo = _piede_facoltative()
         html, testo = html + piede_html, testo + piede_testo
     html, immagini = _incorpora(html)
-    email = EmailConImmagini(subject=composta.oggetto, body=testo, to=[a], immagini=immagini)
+    email = EmailConImmagini(
+        subject=composta.oggetto,
+        body=testo,
+        to=[a],
+        immagini=immagini,
+        # Read by the mailer to tell what always goes (DEC-276), removed before sending.
+        headers={INTESTAZIONE_TIPO: chiave},
+    )
     email.attach_alternative(_pagina(html), "text/html")
     for nome, contenuto, tipo_mime in allegati:
         email.attach(nome, contenuto, tipo_mime)

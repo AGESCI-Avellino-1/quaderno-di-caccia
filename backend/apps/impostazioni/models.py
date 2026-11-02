@@ -14,6 +14,16 @@ MESSAGGIO_MANUTENZIONE = (
 )
 
 
+class SicurezzaSmtp(models.TextChoices):
+    STARTTLS = "STARTTLS", "STARTTLS (di solito porta 587)"
+    SSL = "SSL", "SSL/TLS (di solito porta 465)"
+    NESSUNA = "NESSUNA", "Nessuna (solo in una rete fidata)"
+
+
+# Who receives the emails, by group (DEC-276).
+GRUPPI_EMAIL = ("capi", "genitori", "ragazzi")
+
+
 class Impostazioni(ModelloTracciato):
     """The installation's settings, one row (DEC-245…DEC-248).
 
@@ -49,6 +59,23 @@ class Impostazioni(ModelloTracciato):
     # (`manutenzione.ManutenzioneMiddleware`); the message is shown to everybody else.
     manutenzione = models.BooleanField(default=False)
     messaggio_manutenzione = models.TextField(blank=True)
+    # Who receives the emails (DEC-276): off at first, switched on one group at a time;
+    # the emails a group did not get are only counted.
+    email_capi = models.BooleanField(default=False)
+    email_genitori = models.BooleanField(default=False)
+    email_ragazzi = models.BooleanField(default=False)
+    email_scartate = models.JSONField(default=dict, blank=True)
+    # The SMTP server (DEC-277); no host = the one in the server's configuration. The
+    # password is encrypted (`segreti`) and never sent back.
+    smtp_host = models.CharField(max_length=200, blank=True)
+    smtp_porta = models.PositiveIntegerField(default=587)
+    smtp_sicurezza = models.CharField(
+        max_length=8, choices=SicurezzaSmtp.choices, default=SicurezzaSmtp.STARTTLS
+    )
+    smtp_utente = models.CharField(max_length=200, blank=True)
+    smtp_password = models.TextField(blank=True)
+    # "Name <address>"; empty = the server's configuration.
+    mittente = models.CharField(max_length=200, blank=True)
 
     class Meta:
         verbose_name = "impostazioni"
@@ -75,6 +102,9 @@ class Impostazioni(ModelloTracciato):
         from django.conf import settings
 
         return self.email_di_prova and settings.QDC_MAILPIT_CONSENTITO
+
+    def email_accese(self) -> set[str]:
+        return {g for g in GRUPPI_EMAIL if getattr(self, f"email_{g}")}
 
     def avviso_manutenzione(self) -> str:
         return self.messaggio_manutenzione.strip() or MESSAGGIO_MANUTENZIONE

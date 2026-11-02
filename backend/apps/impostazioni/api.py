@@ -13,8 +13,8 @@ from ninja.errors import HttpError
 from apps.core.anno import AnnoAssociativo
 from apps.permessi import policy
 
-from . import blocchi
-from .models import MESSAGGIO_MANUTENZIONE, Impostazioni, ModelloEmail
+from . import blocchi, segreti
+from .models import MESSAGGIO_MANUTENZIONE, Impostazioni, ModelloEmail, SicurezzaSmtp
 
 router = Router(tags=["impostazioni"])
 
@@ -90,6 +90,23 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     messaggio_manutenzione_predefinito: str
     puo_manutenzione: bool
     puo_sbloccare_accessi: bool
+    # Who receives the emails (DEC-276), and how many a group switched off did not get.
+    email_capi: bool = False
+    email_genitori: bool = False
+    email_ragazzi: bool = False
+    email_scartate: dict[str, int] = {}
+    puo_destinatari_email: bool = False
+    # The SMTP server (DEC-277): for the technical administrator only, never the password.
+    puo_smtp: bool = False
+    smtp_disponibile: bool = False
+    smtp_host: str = ""
+    smtp_porta: int = 587
+    smtp_sicurezza: str = "STARTTLS"
+    smtp_utente: str = ""
+    smtp_password_salvata: bool = False
+    mittente: str = ""
+    # Used when the settings name no SMTP server.
+    mittente_predefinito: str = ""
 
 
 CAMPI_SITO = list(ImpostazioniSitoIO.model_fields)
@@ -112,6 +129,28 @@ def _impostazioni(request) -> dict:
         "messaggio_manutenzione_predefinito": MESSAGGIO_MANUTENZIONE,
         "puo_manutenzione": policy.puo_gestire_manutenzione(request.auth),
         "puo_sbloccare_accessi": policy.puo_sbloccare_accessi(request.auth),
+        "email_capi": imp.email_capi,
+        "email_genitori": imp.email_genitori,
+        "email_ragazzi": imp.email_ragazzi,
+        "email_scartate": imp.email_scartate,
+        "puo_destinatari_email": policy.puo_scegliere_destinatari_email(request.auth),
+        **_smtp(request, imp),
+    }
+
+
+def _smtp(request, imp: Impostazioni) -> dict:
+    if not policy.puo_configurare_smtp(request.auth):
+        return {}
+    return {
+        "puo_smtp": True,
+        "smtp_disponibile": segreti.disponibile(),
+        "smtp_host": imp.smtp_host,
+        "smtp_porta": imp.smtp_porta,
+        "smtp_sicurezza": imp.smtp_sicurezza,
+        "smtp_utente": imp.smtp_utente,
+        "smtp_password_salvata": bool(imp.smtp_password),
+        "mittente": imp.mittente,
+        "mittente_predefinito": settings.DEFAULT_FROM_EMAIL,
     }
 
 
@@ -155,6 +194,125 @@ def email_di_prova(request, dati: EmailDiProvaIn):
     imp.email_di_prova = dati.attiva
     imp.save(update_fields=["email_di_prova", "aggiornato_il"])
     return _impostazioni(request)
+
+
+class DestinatariEmailIn(Schema):
+    capi: bool
+    genitori: bool
+    ragazzi: bool
+
+
+@router.put("/impostazioni/destinatari-email", response=ImpostazioniOut)
+def destinatari_email(request, dati: DestinatariEmailIn):
+    """DEC-276: to a group switched off the emails are dropped, only counted."""
+    if not policy.puo_scegliere_destinatari_email(request.auth):
+        raise HttpError(403, "Chi riceve le email lo scelgono i capigruppo.")
+    imp = Impostazioni.carica()
+    imp.email_capi, imp.email_genitori, imp.email_ragazzi = dati.capi, dati.genitori, dati.ragazzi
+    imp.save(update_fields=["email_capi", "email_genitori", "email_ragazzi", "aggiornato_il"])
+    return _impostazioni(request)
+
+
+class SmtpIn(Schema):
+    host: str = ""
+    porta: int = 587
+    sicurezza: str = SicurezzaSmtp.STARTTLS
+    utente: str = ""
+    # Empty: the saved one stays.
+    password: str = ""
+    mittente: str = ""
+
+
+def _controlla_smtp(dati: SmtpIn) -> None:
+    from email.utils import parseaddr
+
+    from django.core.validators import validate_email
+
+    if dati.host and (" " in dati.host.strip() or "/" in dati.host):
+        raise HttpError(400, "Scrivi solo il nome del server, per esempio smtp.gmail.com.")
+    if not 1 <= dati.porta <= 65535:
+        raise HttpError(400, "La porta è un numero tra 1 e 65535.")
+    if dati.sicurezza not in SicurezzaSmtp.values:
+        raise HttpError(400, "Scegli la sicurezza della connessione.")
+    if dati.mittente.strip():
+        try:
+            validate_email(parseaddr(dati.mittente)[1])
+        except ValidationError as errore:
+            raise HttpError(
+                400, "Il mittente va scritto come «Nome <indirizzo@dominio.it>»."
+            ) from errore
+
+
+@router.put("/impostazioni/smtp", response=ImpostazioniOut)
+def salva_smtp(request, dati: SmtpIn):
+    """DEC-277: no server = the one in the server's configuration; the password is
+    encrypted and never sent back."""
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "Il server di posta lo imposta l'amministratore tecnico.")
+    _controlla_smtp(dati)
+    imp = Impostazioni.carica()
+    imp.smtp_host = dati.host.strip()
+    imp.smtp_porta = dati.porta
+    imp.smtp_sicurezza = dati.sicurezza
+    imp.smtp_utente = dati.utente.strip()
+    imp.mittente = " ".join(dati.mittente.split())
+    if not imp.smtp_host:
+        imp.smtp_password = ""
+    elif dati.password:
+        if not segreti.disponibile():
+            raise HttpError(
+                400,
+                "Manca la chiave per conservare la password: la imposta chi ha installato "
+                "l'app (QDC_CHIAVE_SEGRETI).",
+            )
+        imp.smtp_password = segreti.cifra(dati.password)
+    imp.save()
+    return _impostazioni(request)
+
+
+class ProvaSmtpOut(Schema):
+    inviata_a: str
+
+
+@router.post("/impostazioni/smtp/prova", response=ProvaSmtpOut)
+def prova_smtp(request):
+    """An email to the technical administrator themself, straight through the server
+    in use: what goes wrong comes back in plain words (DEC-277)."""
+    import smtplib
+
+    from django.core.mail import EmailMessage
+
+    from .posta import connessione
+
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "Il server di posta lo imposta l'amministratore tecnico.")
+    imp = Impostazioni.carica()
+    indirizzo = request.auth.email
+    email = EmailMessage(
+        subject="Prova del server di posta",
+        body=(
+            f"Ciao,\n\nquesta è l'email di prova di {imp.nome_sito}: se la leggi, il server "
+            "di posta funziona.\n"
+        ),
+        from_email=imp.mittente or None,
+        to=[indirizzo],
+    )
+    try:
+        connessione(imp).send_messages([email])
+    except smtplib.SMTPAuthenticationError as errore:
+        raise HttpError(
+            400,
+            "Il server ha rifiutato utente o password. Con Gmail serve una password per le "
+            "app; con Microsoft 365 l'accesso con password può essere disattivato.",
+        ) from errore
+    except smtplib.SMTPSenderRefused as errore:
+        raise HttpError(400, "Il server non accetta questo mittente: controllalo.") from errore
+    except (smtplib.SMTPException, OSError) as errore:
+        raise HttpError(
+            400,
+            "Non riesco a mandare l'email: controlla server, porta e sicurezza della connessione.",
+        ) from errore
+    return {"inviata_a": indirizzo}
 
 
 class ManutenzioneIn(Schema):

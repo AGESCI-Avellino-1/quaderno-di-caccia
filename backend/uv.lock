@@ -854,6 +854,7 @@ name = "qdc-backend"
 version = "1.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "django" },
     { name = "django-allauth", extra = ["headless-spec", "mfa", "socialaccount"] },
     { name = "django-auditlog" },
@@ -882,6 +883,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=50.0.2" },
     { name = "django", specifier = ">=6.1,<6.2" },
     { name = "django-allauth", extras = ["headless-spec", "mfa", "socialaccount"], specifier = ">=65.20" },
     { name = "django-auditlog", specifier = ">=3.4" },

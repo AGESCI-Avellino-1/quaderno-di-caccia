@@ -129,6 +129,13 @@ class Command(BaseCommand):
             call_command("flush", interactive=False, verbosity=0)
         elif Persona.objects.exists():
             raise CommandError("Il database contiene già persone: usa --azzera per ripartire.")
+        # Every group receives the emails, as a group already presented the app to all
+        # (DEC-276): the screenshots show them.
+        from apps.impostazioni.models import Impostazioni
+
+        Impostazioni.objects.update_or_create(
+            pk=1, defaults={"email_capi": True, "email_genitori": True, "email_ragazzi": True}
+        )
         esportato = self._crea()
         if csv:
             # The manual shows the import preview with the same invented export.

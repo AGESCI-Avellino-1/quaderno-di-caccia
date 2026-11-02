@@ -10,7 +10,8 @@ Può:
   [Impostazioni](impostazioni));
 - importare da BuonaStrada e gestire le correzioni (vedi [BuonaStrada](buonastrada));
 - nominare il **primo capogruppo**, quando il gruppo non ne ha (in **Incarichi di gruppo**);
-- aprire il **Pannello di amministrazione** e la **modalità di prova delle email**;
+- impostare il **server di posta** e aprire il **Pannello di amministrazione** e la
+  **modalità di prova delle email**;
 - mettere l'app in **manutenzione** e **sbloccare gli accessi** di chi ha sbagliato la
   password troppe volte.
 
@@ -25,6 +26,23 @@ Le schede sanitarie, le note e le regole sul rapporto con i minori non sono nel 
 Il **registro delle modifiche** però conserva i valori cambiati, anche dei dati sanitari: per
 questo l'amministratore tecnico è sempre un capo, o ha una delega dei capigruppo per i dati.
 :::
+
+## Il server di posta
+
+In **Impostazioni**, **Server di posta**, scegli da dove partono le email: server, porta,
+sicurezza, utente, password e mittente. Se lo lasci vuoto vale quello configurato da chi ha
+installato l'app. Poi tocca **Manda un'email di prova a me**: se qualcosa non va, l'app ti
+dice cosa controllare.
+
+- **Google Workspace o Gmail**: server `smtp.gmail.com`, porta 587, STARTTLS, utente
+  l'indirizzo e come password una **password per le app** (la crei nell'account Google, con la
+  verifica in due passaggi attiva; nel Workspace l'amministratore deve permetterle).
+- **Microsoft 365**: server `smtp.office365.com`, porta 587, STARTTLS, finché il tenant
+  accetta utente e password. Per la posta istituzionale AGESCI decide chi amministra il tenant.
+- **Un altro fornitore**: i dati che ti dà per l'SMTP.
+
+La password resta cifrata sul server: dopo averla salvata non la rivedi più, puoi solo
+sostituirla.
 
 ## La modalità di prova delle email
 

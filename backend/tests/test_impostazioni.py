@@ -232,3 +232,174 @@ def test_chi_cambia_privacy_e_termini(gruppo, capo, capogruppo, genitore, ammini
         _client(amministratore).put(url, ignoto, content_type="application/json").status_code == 400
     )
     assert _client(amministratore).delete(url).json()["personalizzata"] is False
+
+
+# --- Who receives the emails (DEC-276) -------------------------------------------------------
+
+MAILERS_VERI = {
+    "default": {"BACKEND": "apps.impostazioni.posta.PostaQdC"},
+    "reale": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"},
+    "mailpit": {"BACKEND": "django.core.mail.backends.dummy.EmailBackend"},
+}
+
+
+def _manda(tipo: str | None, *indirizzi: str) -> list[str]:
+    """Send one email per address; return the addresses that got one."""
+    from django.core import mail
+    from django.core.mail import EmailMessage, mailers
+
+    from apps.impostazioni.posta import INTESTAZIONE_TIPO
+
+    mail.outbox = []
+    intestazioni = {INTESTAZIONE_TIPO: tipo} if tipo else {}
+    mailers.default.send_messages(
+        [EmailMessage("Prova", "Testo", to=[a], headers=dict(intestazioni)) for a in indirizzi]
+    )
+    for email in mail.outbox:
+        assert INTESTAZIONE_TIPO not in email.extra_headers  # never leaves the server
+    return sorted(a for email in mail.outbox for a in email.to)
+
+
+def _accendi(**gruppi):
+    imp = Impostazioni.carica()
+    for gruppo in ("capi", "genitori", "ragazzi"):
+        setattr(imp, f"email_{gruppo}", gruppi.get(gruppo, False))
+    imp.save()
+
+
+def test_email_solo_ai_gruppi_accesi(capo, ragazza, genitore, settings):
+    settings.MAILERS = MAILERS_VERI
+    tutti = (capo.utente.email, ragazza.utente.email, genitore.utente.email, "x@example.invalid")
+    # All off at first: only who is not in the registry gets it; the rest is counted.
+    assert _manda("evento_nuovo", *tutti) == ["x@example.invalid"]
+    assert Impostazioni.carica().email_scartate == {"capi": 1, "ragazzi": 1, "genitori": 1}
+    _accendi(capi=True)
+    assert _manda("evento_nuovo", *tutti) == ["capo@example.invalid", "x@example.invalid"]
+    _accendi(capi=True, genitori=True, ragazzi=True)
+    assert len(_manda(None, *tutti)) == 4  # an email without a type follows the switches too
+
+
+def test_alcune_email_partono_sempre(capo, genitore, settings):
+    settings.MAILERS = MAILERS_VERI
+    for tipo in ("codice_accesso", "invito", "iscrizione_accolta", "attesa_conferma", "account"):
+        assert _manda(tipo, capo.utente.email, genitore.utente.email) == [
+            "capo@example.invalid",
+            "genitore@example.invalid",
+        ]
+    assert Impostazioni.carica().email_scartate == {}
+
+
+def test_capo_che_e_anche_genitore(capo, ragazza, settings):
+    from apps.anagrafica.models import RelazioneTutela, TipoTutela
+
+    settings.MAILERS = MAILERS_VERI
+    RelazioneTutela.objects.create(tutore=capo, minore=ragazza, tipo=TipoTutela.GENITORE)
+    _accendi(genitori=True)
+    assert _manda("promemoria_quote", capo.utente.email) == ["capo@example.invalid"]
+
+
+def test_chi_sceglie_chi_riceve_le_email(
+    gruppo, capo, capogruppo, ragazza, genitore, estraneo, amministratore
+):
+    def scegli(utente):
+        return _client(utente).put(
+            f"{URL}/destinatari-email",
+            {"capi": True, "genitori": False, "ragazzi": False},
+            content_type="application/json",
+        )
+
+    for chi in (capo, ragazza, genitore, estraneo):
+        assert not policy.puo_scegliere_destinatari_email(chi.utente)
+        assert scegli(chi.utente).status_code == 403
+    for utente in (capogruppo.utente, amministratore):
+        risposta = scegli(utente)
+        assert risposta.status_code == 200 and risposta.json()["email_capi"] is True
+    assert Impostazioni.carica().email_accese() == {"capi"}
+
+
+# --- The SMTP server from the settings (DEC-277) ----------------------------------------------
+
+SMTP = {
+    "host": "smtp.gmail.com",
+    "porta": 587,
+    "sicurezza": "STARTTLS",
+    "utente": "gruppo@example.invalid",
+    "password": "abcd efgh ijkl mnop",
+    "mittente": "AGESCI Prova 1 <gruppo@example.invalid>",
+}
+
+
+def _smtp(utente, dati):
+    return _client(utente).put(f"{URL}/smtp", dati, content_type="application/json")
+
+
+def test_solo_l_amministratore_imposta_il_server_di_posta(
+    gruppo, capo, capogruppo, ragazza, genitore, estraneo, amministratore
+):
+    for chi in (capo, capogruppo, ragazza, genitore, estraneo):
+        assert not policy.puo_configurare_smtp(chi.utente)
+        assert _smtp(chi.utente, SMTP).status_code == 403
+        assert _client(chi.utente).post(f"{URL}/smtp/prova").status_code in (403,)
+    # The capigruppo do not even see the server.
+    assert _client(capogruppo.utente).get(URL).json()["smtp_host"] == ""
+    assert policy.puo_configurare_smtp(amministratore)
+
+
+def test_password_cifrata_e_mai_restituita(gruppo, amministratore):
+    from apps.impostazioni import segreti
+
+    risposta = _smtp(amministratore, SMTP)
+    assert risposta.status_code == 200
+    dati = risposta.json()
+    assert dati["smtp_password_salvata"] is True and "password" not in dati
+    assert SMTP["password"] not in risposta.content.decode()
+    imp = Impostazioni.carica()
+    assert imp.smtp_password != SMTP["password"]
+    assert segreti.decifra(imp.smtp_password) == SMTP["password"]
+    # Saved again without a password: the old one stays.
+    assert _smtp(amministratore, SMTP | {"password": "", "porta": 465}).status_code == 200
+    assert segreti.decifra(Impostazioni.carica().smtp_password) == SMTP["password"]
+    # No server: back to the server's configuration, the password goes.
+    _smtp(amministratore, SMTP | {"host": "", "password": ""})
+    assert Impostazioni.carica().smtp_password == ""
+
+
+def test_server_di_posta_dati_non_validi(gruppo, amministratore, settings):
+    assert _smtp(amministratore, SMTP | {"mittente": "non un indirizzo"}).status_code == 400
+    assert _smtp(amministratore, SMTP | {"porta": 0}).status_code == 400
+    assert _smtp(amministratore, SMTP | {"host": "https://smtp.gmail.com"}).status_code == 400
+    settings.QDC_CHIAVE_SEGRETI = ""
+    risposta = _smtp(amministratore, SMTP)
+    assert risposta.status_code == 400 and "QDC_CHIAVE_SEGRETI" in risposta.json()["detail"]
+
+
+def test_le_email_passano_dal_server_delle_impostazioni(gruppo, amministratore, settings):
+    from unittest import mock
+
+    from django.core.mail import EmailMessage, mailers
+
+    settings.MAILERS = MAILERS_VERI
+    _smtp(amministratore, SMTP)
+    with mock.patch("apps.impostazioni.posta.SmtpBackend") as smtp:
+        mailers.default.send_messages([EmailMessage("Prova", "Testo", to=["x@example.invalid"])])
+    opzioni = smtp.call_args.kwargs
+    assert opzioni["host"] == "smtp.gmail.com" and opzioni["password"] == SMTP["password"]
+    assert opzioni["use_tls"] is True and opzioni["use_ssl"] is False
+    email = smtp.return_value.send_messages.call_args.args[0][0]
+    assert email.from_email == SMTP["mittente"]
+
+
+def test_email_di_prova_del_server(gruppo, amministratore):
+    import smtplib
+    from unittest import mock
+
+    _smtp(amministratore, SMTP)
+    url = f"{URL}/smtp/prova"
+    with mock.patch("apps.impostazioni.posta.SmtpBackend") as smtp:
+        risposta = _client(amministratore).post(url)
+    assert risposta.status_code == 200 and risposta.json()["inviata_a"] == "admin@example.invalid"
+    assert smtp.return_value.send_messages.call_args.args[0][0].to == ["admin@example.invalid"]
+    with mock.patch("apps.impostazioni.posta.SmtpBackend") as smtp:
+        smtp.return_value.send_messages.side_effect = smtplib.SMTPAuthenticationError(535, b"no")
+        risposta = _client(amministratore).post(url)
+    assert risposta.status_code == 400 and "password per le app" in risposta.json()["detail"]

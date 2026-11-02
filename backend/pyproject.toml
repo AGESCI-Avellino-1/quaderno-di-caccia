@@ -6,6 +6,7 @@ requires-python = ">=3.14"
 license = "MIT"
 authors = [{ name = "Andrea Bruno" }]
 dependencies = [
+    "cryptography>=50.0.2",
     "django>=6.1,<6.2",
     "django-allauth[headless-spec,mfa,socialaccount]>=65.20",
     "django-auditlog>=3.4",

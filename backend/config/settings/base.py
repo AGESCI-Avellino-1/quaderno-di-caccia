@@ -263,6 +263,8 @@ QDC_DRIVE_CARTELLA = env("QDC_DRIVE_CARTELLA", default="")
 # that: set once and never changed, or who comes back is no longer recognised. Empty:
 # archiving is not available.
 QDC_IMPRONTA_CHIAVE = env("QDC_IMPRONTA_CHIAVE", default="")
+# Encrypts the secrets saved in the settings, such as the SMTP password (DEC-277).
+QDC_CHIAVE_SEGRETI = env("QDC_CHIAVE_SEGRETI", default="")
 
 LOGGING = {
     "version": 1,

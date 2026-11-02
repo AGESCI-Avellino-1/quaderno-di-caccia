@@ -205,6 +205,17 @@ nel repository).
 | I.2 | Cancellare un'unità disattivata e vuota (creata per errore); archiviare un'unità con soli archiviati nello storico, ripristinata al rientro | DEC-273, DEC-275 | ✅ 02/11 (test; non ancora provato nel browser) |
 | I.3 | File unico per l'Avellino 1: storico + 2027 scelto dal maintainer + capo da altro gruppo + due capi riattivati | DEC-271, DEC-274 | ✅ 02/11: `ignored/primoimport/import-iniziale.csv` dalle conferme del maintainer (38 confermati, 14 appena usciti con i dati della riga 2027) |
 
+### Email un po' alla volta e server di posta (02/11)
+
+Richiesta del maintainer del 02/11, per presentare l'app prima ai capi, poi a genitori e
+ragazzi; decisioni nell'analisi come DEC-276, DEC-277.
+
+| # | Attività | Rif. | Stato |
+| --- | --- | --- | --- |
+| E.1 | Interruttori Capi, Genitori, Ragazzi: email scartate per i gruppi spenti, con il conteggio; sempre consegnati accesso, inviti, iscrizione e lista d'attesa | DEC-276 | ✅ 02/11 (test; non ancora provato nel browser) |
+| E.2 | Server SMTP dalle Impostazioni (amministratore tecnico), password cifrata, email di prova | DEC-277 | ✅ 02/11 (test; non ancora provato nel browser) |
+| E.3 | Microsoft 365 con OAuth (Graph) ed eventualmente API di Gmail con l'account di servizio | DEC-277 | 💤 (si sente prima AGESCI per il tenant istituzionale) |
+
 ### Mancanze trovate scrivendo il manuale (31/10)
 
 Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manuale si aggiorna con ogni blocco.

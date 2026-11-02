@@ -10,5 +10,6 @@ class ImpostazioniConfig(AppConfig):
 
         from . import models
 
-        auditlog.register(models.Impostazioni)
+        # The SMTP password stays out of the audit log, even encrypted (DEC-277).
+        auditlog.register(models.Impostazioni, exclude_fields=["smtp_password"])
         auditlog.register(models.ModelloEmail)

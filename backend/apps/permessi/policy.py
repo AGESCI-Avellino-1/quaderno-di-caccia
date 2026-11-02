@@ -1492,6 +1492,17 @@ def puo_modificare_impostazioni(user) -> bool:
     return e_capogruppo(user) or e_amministratore(user)
 
 
+def puo_scegliere_destinatari_email(user) -> bool:
+    """Which groups receive the emails: the capigruppo and the technical administrator
+    (DEC-276)."""
+    return e_capogruppo(user) or e_amministratore(user)
+
+
+def puo_configurare_smtp(user) -> bool:
+    """The SMTP server and its password: the technical administrator only (DEC-277)."""
+    return e_amministratore(user)
+
+
 def puo_gestire_email_di_prova(user) -> bool:
     """The email test mode and Mailpit: the technical administrator only (DEC-249)."""
     return e_amministratore(user)

@@ -8,7 +8,8 @@
 - Davanti ai container, un **reverse proxy**: l'nginx incluso, se il server è dedicato,
   oppure l'nginx o l'Apache già presenti sul server.
 - Una **casella di posta** con accesso SMTP, da cui partono codici di accesso, inviti,
-  ricevute e avvisi.
+  ricevute e avvisi: per esempio di Google Workspace (con una password per le app) o di un
+  altro fornitore. Si imposta dall'app.
 - `git` e `python3` sul server (lo script di configurazione genera i segreti con Python).
 - Per l'**archivio** dei fascicoli (facoltativo ma consigliato): un **Drive condiviso** di
   Google Workspace del gruppo (vedi [Archivio sul Drive](archivio)).

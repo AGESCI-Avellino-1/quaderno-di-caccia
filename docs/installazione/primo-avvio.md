@@ -17,7 +17,8 @@ i capigruppo dall'app, e devono essere capi.
 Al primo accesso nell'app, con l'email e la password appena scelte, arriva per email un
 codice per confermare l'indirizzo; poi l'app chiede di proteggere il dispositivo con un PIN.
 Se il codice non arriva, controlla le voci SMTP in `.env` e i log con
-`docker compose logs web`.
+`docker compose logs web`. Una volta dentro puoi impostare il server di posta dall'app
+(**Impostazioni**, **Server di posta**) e provarlo con un'email a te.
 
 ## 2. I dati da BuonaStrada
 

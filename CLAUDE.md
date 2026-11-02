@@ -394,5 +394,13 @@ implements them:
   device and bypasses the offline queue (`sicurezza/impersonazione.ts`), hides "Esci"
   (it would wipe the capo's device) and shows "Torna a te". The person sees the list in
   their account (Dispositivi page); the Co.Ca. sees all of it (`/impersonazioni`).
+- Emails (DEC-276, DEC-277): every email goes through `impostazioni.posta.PostaQdC`. It
+  drops what is addressed to a group (capi, genitori, ragazzi) switched off in the
+  settings, counting it; the email type travels in the `X-QdC-Tipo` header set by
+  `email.messaggio()`, and `posta.SEMPRE` lists what always goes (login, invitations,
+  joining, waiting list). The SMTP server may come from the settings, with the password
+  encrypted by `QDC_CHIAVE_SEGRETI` (`impostazioni.segreti`). A new email type that must
+  always go is added to `SEMPRE`. Tests use locmem directly; `MAILERS_VERI` in
+  `tests/test_impostazioni.py` exercises the real path.
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

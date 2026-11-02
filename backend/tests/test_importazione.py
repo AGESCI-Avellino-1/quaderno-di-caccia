@@ -14,7 +14,12 @@ from apps.core.models import FonteDato
 from apps.importazione.buonastrada import leggi_ricerca_soci
 from apps.importazione.servizi import GruppoNonCorrispondente, anteprima, applica
 from apps.organizzazione.models import Gruppo, TipoUnita, Unita
-from tests.export_sintetico import costruisci_csv, righe_standard
+from tests.export_sintetico import (
+    CELLULARE_CON_EMAIL,
+    GENITORE_CF_LUNGO,
+    costruisci_csv,
+    righe_standard,
+)
 
 OGGI = date(2026, 10, 21)
 pytestmark = pytest.mark.django_db
@@ -575,3 +580,15 @@ def test_unita_archiviata_ripristinata_se_torna_nell_export():
     reparto = Unita.objects.get(codice_unita="N")
     assert reparto.archiviata_il is None and not reparto.attiva
     assert riepilogo.unita_create == ["Reparto (N1) (ripristinata dall'archivio)"]
+
+
+def test_dato_non_valido_non_ferma_l_importazione():
+    """An email in the mobile column and a 17-character CF: imported without them."""
+    righe = righe_standard()
+    righe[0]["CELLULARE"] = CELLULARE_CON_EMAIL
+    righe[0]["RESP.GENITORIALE DATI"] = GENITORE_CF_LUNGO
+    riepilogo = applica(_risultato(righe), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    assert giulia.cellulare == ""
+    assert not Persona.objects.filter(cognome="Grigi").exists()
+    assert sum(a["codice_socio"] == "9000001" for a in riepilogo.avvisi) == 2

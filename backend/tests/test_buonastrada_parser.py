@@ -14,6 +14,8 @@ from apps.importazione.buonastrada import (
 )
 from apps.organizzazione.models import Composizione, TipoUnita
 from tests.export_sintetico import (
+    CELLULARE_CON_EMAIL,
+    GENITORE_CF_LUNGO,
     GENITORE_DATA_SENZA_ZERI,
     GENITORE_NATO_ALL_ESTERO,
     GENITORI_ROSSI,
@@ -133,6 +135,34 @@ def test_genitore_nato_all_estero_senza_provincia():
     genitori, illeggibili = leggi_genitori(GENITORE_NATO_ALL_ESTERO)
     assert illeggibili == []
     assert (genitori[0].luogo_nascita, genitori[0].provincia_nascita) == ("ROMANIA", "")
+
+
+def _con_dati_non_validi():
+    righe = righe_standard()
+    righe[0]["CELLULARE"] = CELLULARE_CON_EMAIL
+    righe[0]["RESP.GENITORIALE DATI"] = GENITORE_CF_LUNGO
+    righe[1]["EMAIL"] = "non-un-indirizzo"
+    righe[1]["CODICE FISCALE"] = "RSSLCU15B02A509"  # 15 characters
+    return righe
+
+
+def test_dati_non_validi_scartati_con_avviso():
+    risultato = leggi_ricerca_soci(costruisci_csv(_con_dati_non_validi()), oggi=OGGI)
+    giulia, luca = risultato.righe[0], risultato.righe[1]
+    assert giulia.cellulare == ""
+    assert giulia.genitori[0].codice_fiscale == ""
+    assert luca.email == "" and luca.codice_fiscale == ""
+    assert risultato.errori == []  # warnings, the rows are imported
+    messaggi = [(a.codice_socio, a.messaggio) for a in risultato.avvisi]
+    assert (
+        "9000001",
+        "Cellulare non valido, scartato: chiedi il dato corretto e aggiornalo su BuonaStrada.",
+    ) in messaggi  # noqa: E501
+    assert any(c == "9000001" and "genitore non valido" in m for c, m in messaggi)
+    assert any(c == "9000002" and m.startswith("Email non valida") for c, m in messaggi)
+    assert any(c == "9000002" and m.startswith("Codice fiscale non valido") for c, m in messaggi)
+    # The wrong values are never echoed back in the warnings.
+    assert not any(CELLULARE_CON_EMAIL in m or "A509KX" in m for _, m in messaggi)
 
 
 def test_genitore_illeggibile_segnalato():

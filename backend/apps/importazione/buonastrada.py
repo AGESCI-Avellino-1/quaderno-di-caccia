@@ -384,7 +384,8 @@ def _costruisci_riga(
     for segmento in illeggibili:
         avvisa(Gravita.AVVISO, f"Dati del genitore non leggibili: '{segmento[:60]}…'")
     for genitore in genitori:
-        if not genitore.nome_verificato:
+        # A parent with an invalid CF is not imported: _scarta_non_validi says so.
+        if not genitore.nome_verificato and _CODICE_FISCALE.match(genitore.codice_fiscale):
             avvisa(
                 Gravita.AVVISO,
                 f"Cognome e nome del genitore '{genitore.nome_completo}' separati senza "
@@ -392,7 +393,7 @@ def _costruisci_riga(
             )
 
     ambiente = v.get("AMBIENTE UNITA", "").upper()
-    return RigaSocio(
+    riga = RigaSocio(
         numero_riga=numero,
         anno_scout=_intero(v.get("ANNO SCOUT", "")) or oggi.year,
         codice_socio=codice,
@@ -438,3 +439,62 @@ def _costruisci_riga(
         tipo_responsabilita=v.get("RESP.GENITORIALE TIPO", ""),
         genitori=genitori,
     )
+    _scarta_non_validi(riga, avvisa)
+    return riga
+
+
+# --- invalid values (DEC-29) -------------------------------------------------------------
+
+# Seen in the first real export (2026-11-02): an email in the mobile column, a parent's
+# codice fiscale of 17 characters. A bad value must not stop the import (on PostgreSQL a
+# value longer than the column aborts the whole transaction): it is dropped with a warning,
+# so whoever imports asks for the right one and corrects it on BuonaStrada.
+_CODICE_FISCALE = re.compile(r"^[A-Z0-9]{16}$")
+_TELEFONO = re.compile(r"^\+?[0-9][0-9 ./()-]{3,28}$")
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_DA_CHIEDERE = "scartato: chiedi il dato corretto e aggiornalo su BuonaStrada."
+
+# Free-text fields and the size of the column they end in (anagrafica.Persona).
+_LUNGHEZZE = {
+    "luogo_nascita": ("Comune di nascita", 120),
+    "indirizzo": ("Indirizzo", 200),
+    "civico": ("Numero civico", 20),
+    "comune": ("Comune di residenza", 120),
+    "cap": ("CAP", 5),
+    "numero_nomina": ("Numero di nomina", 20),
+}
+
+
+def _scarta_non_validi(riga: RigaSocio, avvisa) -> None:
+    """Drop the values the database would refuse; the values are never echoed back."""
+    if riga.codice_fiscale and not _CODICE_FISCALE.match(riga.codice_fiscale):
+        avvisa(Gravita.AVVISO, f"Codice fiscale non valido, {_DA_CHIEDERE}")
+        riga.codice_fiscale = ""
+    if riga.cellulare and not _TELEFONO.match(riga.cellulare):
+        avvisa(Gravita.AVVISO, f"Cellulare non valido, {_DA_CHIEDERE}")
+        riga.cellulare = ""
+    if riga.email and (len(riga.email) > 254 or not _EMAIL.match(riga.email)):
+        avvisa(Gravita.AVVISO, f"Email non valida, {_DA_CHIEDERE}")
+        riga.email = ""
+    for campo, (etichetta, massimo) in _LUNGHEZZE.items():
+        if len(getattr(riga, campo)) > massimo:
+            avvisa(Gravita.AVVISO, f"{etichetta} troppo lungo, {_DA_CHIEDERE}")
+            setattr(riga, campo, "")
+    for genitore in riga.genitori:
+        if genitore.codice_fiscale and not _CODICE_FISCALE.match(genitore.codice_fiscale):
+            # Parents are recognised by codice fiscale: without one they are not imported.
+            avvisa(
+                Gravita.AVVISO,
+                "Codice fiscale di un genitore non valido: il genitore non viene importato "
+                "finché non è corretto su BuonaStrada.",
+            )
+            genitore.codice_fiscale = ""
+        if genitore.cellulare and not _TELEFONO.match(genitore.cellulare):
+            avvisa(Gravita.AVVISO, f"Cellulare di un genitore non valido, {_DA_CHIEDERE}")
+            genitore.cellulare = ""
+        if genitore.email and (len(genitore.email) > 254 or not _EMAIL.match(genitore.email)):
+            avvisa(Gravita.AVVISO, f"Email di un genitore non valida, {_DA_CHIEDERE}")
+            genitore.email = ""
+        if len(genitore.luogo_nascita) > 120:
+            avvisa(Gravita.AVVISO, f"Comune di nascita di un genitore troppo lungo, {_DA_CHIEDERE}")
+            genitore.luogo_nascita = ""

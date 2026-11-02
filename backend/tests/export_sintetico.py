@@ -61,6 +61,15 @@ GENITORE_NATO_ALL_ESTERO = (
 )
 
 
+# Invalid values seen in the first real export (2026-11-02): an email in the mobile column
+# (longer than the column) and a parent's codice fiscale of 17 characters.
+GENITORE_CF_LUNGO = (
+    "Grigi Piero [C.F.GRGPRI76A01A509KX] - Nato/a a: AVELLINO (AV) - il: 01/01/1976 "
+    "e-mail: piero.grigi@example.invalid Cellulare: 3330000011"
+)
+CELLULARE_CON_EMAIL = "nome.cognome.lungo@example.invalid"
+
+
 def riga(**valori: str) -> dict[str, str]:
     base = {h: "" for h in INTESTAZIONI}
     base.update(GRUPPO)

@@ -151,7 +151,9 @@ an archived unit (`Unita.archiviata_il`, DEC-275) found again by the import, or 
 returning archived member, comes back still closed;
 `TIPO UNITA` `BRANCO/CERCHIO` of any composition stays one: branco or cerchio is the
 setting `AMBIENTE UNITA` (GIUNGLA/BOSCO), taken by the first import that gives it, then
-the group's (DEC-225); there is no noviziato unit (checked on a zone-wide export, 2026-10-30). All handled in
+the group's (DEC-225); there is no noviziato unit (checked on a zone-wide export, 2026-10-30); a value the database
+would refuse (an email in the mobile column, a 17-character codice fiscale) is dropped with a
+warning, never stopping the import (a parent with an invalid CF is not imported). All handled in
 `backend/apps/importazione/buonastrada.py`, with a test for each trap. If a new export
 breaks the parser, add the case to `tests/export_sintetico.py` first.
 

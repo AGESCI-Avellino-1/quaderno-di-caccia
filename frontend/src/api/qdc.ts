@@ -1544,6 +1544,23 @@ export interface Calendario {
   viste: { vista: string; nome: string; url: string }[]
 }
 
+/** An event on the calendar page (DEC-286): only title, kind, dates and place. */
+export interface EventoCalendario {
+  id: number
+  titolo: string
+  tipo_nome: string
+  inizio: string
+  fine: string
+  luogo: string
+  annullato: boolean
+}
+
+/** The calendar as a file, for a capo in one of the views (DEC-286). */
+export const calendarioIcs = (vista: string) =>
+  `/api/v1/calendario.ics${vista ? `?vista=${encodeURIComponent(vista)}` : ''}`
+/** One event as a file, to add it to the phone's calendar (DEC-286). */
+export const eventoIcs = (evento: number) => `/api/v1/eventi/${evento}/evento.ics`
+
 export interface Delega {
   persona_id: number | null
   persona: string | null
@@ -2798,6 +2815,13 @@ export const api = {
   scegliPreferenzeEmail: (dati: PreferenzeEmail) =>
     richiesta<PreferenzeEmail>('/api/v1/io/email', { metodo: 'PUT', corpo: dati }),
   calendario: () => richiesta<Calendario>('/api/v1/calendario'),
+  eventiDelCalendario: (vista: string, dal?: string, al?: string) => {
+    const parametri = new URLSearchParams()
+    if (vista) parametri.set('vista', vista)
+    if (dal) parametri.set('dal', dal)
+    if (al) parametri.set('al', al)
+    return richiesta<EventoCalendario[]>(`/api/v1/calendario/eventi?${parametri}`)
+  },
   rigeneraCalendario: () =>
     richiesta<Calendario>('/api/v1/calendario/rigenera', { metodo: 'POST' }),
   fuoriPrimaNota: () =>

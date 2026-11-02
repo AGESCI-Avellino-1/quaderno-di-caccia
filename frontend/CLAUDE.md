@@ -32,8 +32,9 @@ vite-plugin-pwa 2 · Vitest 5. Node 22. Read the root `CLAUDE.md` first.
   `meta.richiede` only hide UI. Every check that matters is in the backend policy.
 - **Do not put data in `localStorage` or directly in Dexie.** The exceptions are the
   cookie notice's "Ho capito" (`BannerCookie.vue`, DEC-266) and the closing of the install
-  banner (`pwa/installazione.ts`, DEC-283), and the Home group open last
-  (`navigazione/gruppoAperto.ts`, DEC-285): a date or a key each, no personal data. Reads for offline use go
+  banner (`pwa/installazione.ts`, DEC-283), the Home group open last
+  (`navigazione/gruppoAperto.ts`, DEC-285) and the calendar's month/list and view
+  (`eventi/calendario.ts`, DEC-286): a date or a key each, no personal data. Reads for offline use go
   through `leggiConCache` / `salvaInCache` (encrypted, nothing saved in "solo online"
   mode); the service worker caches only the app shell, never API responses.
 - **Writes** go through `scrivi({metodo, percorso, corpo, descrizione})`: queued and

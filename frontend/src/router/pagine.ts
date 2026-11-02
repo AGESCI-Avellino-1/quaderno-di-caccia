@@ -57,6 +57,7 @@ export const PAGINE: Record<string, Pagina> = {
   'mie-quote': { titolo: 'Le mie quote' },
   eventi: { titolo: 'Eventi' },
   evento: { titolo: 'Evento', sopra: 'eventi' },
+  calendario: { titolo: 'Calendario', sopra: 'eventi' },
   buonacaccia: { titolo: 'Eventi su BuonaCaccia', sopra: 'eventi' },
   'schede-buonacaccia': { titolo: 'Schede degli eventi', sopra: 'buonacaccia' },
   'formazione-capi': { titolo: 'Formazione capi', sopra: 'buonacaccia' },

@@ -767,6 +767,74 @@ def rigenera_calendario(request):
     return _calendario_out(request, calendario)
 
 
+class EventoCalendario(Schema):
+    id: int
+    titolo: str
+    tipo_nome: str
+    inizio: datetime
+    fine: datetime
+    luogo: str
+    annullato: bool
+
+
+def _vista(vista: str) -> str:
+    from .calendario import VISTE
+
+    if vista not in VISTE:
+        raise HttpError(400, "Vista del calendario sconosciuta.")
+    return vista
+
+
+@router.get("/calendario/eventi", response=list[EventoCalendario])
+def eventi_del_mio_calendario(
+    request, vista: str = "unita", dal: date | None = None, al: date | None = None
+):
+    """The calendar page (DEC-286): the same events as the personal feed, by view for a
+    capo (DEC-143), as a month or as a list of the next ones."""
+    from .calendario import eventi_del_calendario
+
+    elenco = eventi_del_calendario(request.auth, _vista(vista))
+    if dal:
+        elenco = elenco.filter(fine__date__gte=dal)
+    if al:
+        elenco = elenco.filter(inizio__date__lte=al)
+    return [
+        {
+            "id": e.pk,
+            "titolo": e.titolo,
+            "tipo_nome": e.get_tipo_display(),
+            "inizio": e.inizio,
+            "fine": e.fine,
+            "luogo": e.luogo,
+            "annullato": e.annullato_il is not None,
+        }
+        for e in elenco
+    ]
+
+
+def _file_ics(eventi, nome: str) -> HttpResponse:
+    from .calendario import ics
+
+    risposta = HttpResponse(ics(eventi), content_type="text/calendar; charset=utf-8")
+    risposta["Content-Disposition"] = f'attachment; filename="{nome}"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
+
+
+@router.get("/calendario.ics")
+def scarica_mio_calendario(request, vista: str = "unita"):
+    """The calendar as a file, once, for who does not subscribe (DEC-286)."""
+    from .calendario import eventi_del_calendario
+
+    return _file_ics(eventi_del_calendario(request.auth, _vista(vista)), "calendario.ics")
+
+
+@router.get("/eventi/{evento_id}/evento.ics")
+def scarica_evento(request, evento_id: int):
+    """One event as a file, to add it to the phone's calendar (DEC-286)."""
+    return _file_ics([_evento(request, evento_id)], f"evento-{evento_id}.ics")
+
+
 # Calendar apps check every few hours; guessing a 43-character token is hopeless.
 LIMITI_CALENDARIO = [AnonRateThrottle("120/h")]
 

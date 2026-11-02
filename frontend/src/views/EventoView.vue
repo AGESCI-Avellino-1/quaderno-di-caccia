@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 
 import {
   api,
+  eventoIcs,
   foglioPresenze,
   percorsoPresenze,
   schedeSanitarieEventoPdf,
@@ -231,6 +232,9 @@ const STATI: [StatoPresenza, string][] = [
         <strong>Fine</strong> {{ dataOra(evento.fine) }}
       </div>
       <div v-if="evento.luogo"><strong>Luogo</strong> {{ evento.luogo }}</div>
+      <div v-if="!evento.annullato" class="mt-1">
+        <a :href="eventoIcs(evento.id)" class="small" download>Aggiungi al calendario</a>
+      </div>
       <p v-if="evento.descrizione" class="mb-0 mt-3 testo-a-capo">{{ evento.descrizione }}</p>
       <div v-if="evento.note_genitori" class="mt-3">
         <strong>Note per i genitori</strong>

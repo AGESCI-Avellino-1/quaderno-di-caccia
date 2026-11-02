@@ -12,7 +12,6 @@ import {
   type Unita,
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
-import MioCalendario from '@/components/MioCalendario.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
@@ -385,7 +384,10 @@ const statoMio = {
       </li>
     </ul>
 
-    <MioCalendario v-if="!passati" />
+    <p v-if="!passati" class="small mb-5">
+      Vuoi gli eventi nel calendario del telefono? Vai al
+      <RouterLink to="/calendario">Calendario</RouterLink>.
+    </p>
 
     <section v-if="sessione.capo && !passati">
       <h2 class="h5">Riunioni ricorrenti</h2>

@@ -243,6 +243,12 @@ const router = createRouter({
       component: () => import('@/views/EventiView.vue'),
     },
     {
+      // Month or list of the user's events, files and subscription (DEC-286).
+      path: '/calendario',
+      name: 'calendario',
+      component: () => import('@/views/CalendarioView.vue'),
+    },
+    {
       path: '/eventi/:id(\\d+)',
       name: 'evento',
       component: () => import('@/views/EventoView.vue'),

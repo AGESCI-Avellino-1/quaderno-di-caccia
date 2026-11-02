@@ -25,8 +25,17 @@ const gruppi = computed<Gruppo[]>(() => {
   const p = sessione.profilo
   if (!p) return []
   const profilo = vociProfilo(p)
+  // The Calendario is in the menu under Eventi, on the Home next to the Bacheca (DEC-286).
+  const tutti = gruppiMenu(p, navigazione.contatori)
+  const calendario = tutti.flatMap((g) => g.voci).find((v) => v.to === '/calendario')
+  const menu = tutti.map((g) => {
+    if (g.chiave === 'bacheca' && calendario) {
+      return { ...g, voci: [...g.voci, { ...calendario, sottovoce: false }] }
+    }
+    return { ...g, voci: g.voci.filter((v) => v !== calendario) }
+  })
   return [
-    ...gruppiMenu(p, navigazione.contatori),
+    ...menu.filter((g) => g.voci.length),
     ...(profilo.length
       ? [{ chiave: 'profilo', titolo: 'Profilo', icona: 'person-circle' as const, voci: profilo }]
       : []),
@@ -67,14 +76,7 @@ onMounted(async () => {
     </div>
     <template v-for="g in gruppi" :key="g.chiave">
       <section v-if="SEMPRE_APERTI.has(g.chiave)" class="mb-7">
-        <!-- A group with one entry of the same name (Bacheca) needs no heading. -->
-        <h2
-          v-if="!(g.voci.length === 1 && g.voci[0]!.nome === g.titolo)"
-          class="h5 d-flex align-items-center gap-3"
-        >
-          <Icona :nome="g.icona" />
-          {{ g.titolo }}
-        </h2>
+        <!-- Bacheca and Calendario need no heading. -->
         <VociHome :voci="g.voci" />
       </section>
       <details

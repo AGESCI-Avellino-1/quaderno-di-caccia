@@ -82,6 +82,31 @@ def test_feed_con_link_segreto(reparto, staff, ragazza, genitore, estraneo):
     assert not estraneo_feed.exists()
 
 
+def test_pagina_del_calendario_e_file(reparto, staff, ragazza, genitore, estraneo):
+    evento = _uscita(reparto, staff)
+    lontano = _uscita(reparto, staff, titolo="Campo", inizio=_futuro(90), fine=_futuro(95))
+    elenco = _client(genitore).get("/api/v1/calendario/eventi").json()
+    assert [e["id"] for e in elenco] == [evento.pk, lontano.pk]
+    assert elenco[0]["titolo"] == "Uscita, al lago" and not elenco[0]["annullato"]
+    # One month only.
+    al = (date.today() + timedelta(days=60)).isoformat()
+    elenco = _client(genitore).get(f"/api/v1/calendario/eventi?al={al}").json()
+    assert [e["id"] for e in elenco] == [evento.pk]
+    assert _client(estraneo).get("/api/v1/calendario/eventi").json() == []
+    assert _client(staff).get("/api/v1/calendario/eventi?vista=altro").status_code == 400
+    assert Client().get("/api/v1/calendario/eventi").status_code == 401
+
+    # The whole calendar as a file, and one event.
+    tutto = _client(genitore).get("/api/v1/calendario.ics")
+    assert tutto["Content-Type"].startswith("text/calendar")
+    assert "attachment" in tutto["Content-Disposition"]
+    assert f"UID:evento-{lontano.pk}@" in tutto.content.decode()
+    uno = _client(genitore).get(f"/api/v1/eventi/{evento.pk}/evento.ics").content.decode()
+    assert f"UID:evento-{evento.pk}@" in uno and f"evento-{lontano.pk}@" not in uno
+    # An event one cannot see is not there.
+    assert _client(estraneo).get(f"/api/v1/eventi/{evento.pk}/evento.ics").status_code == 404
+
+
 def test_feed_del_capo_e_di_chi_non_partecipa(reparto, staff, ragazza, genitore):
     evento = _uscita(reparto, staff)
     assert calendario.eventi_del_calendario(staff.utente).filter(pk=evento.pk).exists()

@@ -433,9 +433,12 @@ RUOLI_AGGIUNTIVI_DI_GRUPPO = (
 
 
 def capi_senza_servizio():
-    """Active capi with neither a unit nor "a disposizione" (DEC-165)."""
+    """Active capi with neither a unit nor "a disposizione" (DEC-165). A capogruppo
+    serves the group: not one to sort out (maintainer, 02/11)."""
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
-    in_servizio = Incarico.objects.attivi().filter(ruolo__in=INCARICHI_DI_SERVIZIO)
+    in_servizio = Incarico.objects.attivi().filter(
+        ruolo__in=INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO}
+    )
     return (
         Persona.objects.filter(pk__in=capi.values("persona_id"))
         .exclude(pk__in=in_servizio.values("persona_id"))

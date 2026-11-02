@@ -591,6 +591,8 @@ def test_capi_senza_servizio_per_i_capigruppo(capogruppo, capo, capo_semplice):
     dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
     senza = {p["id"] for p in dati["senza_servizio"]}
     assert capo_semplice.pk in senza and capo.pk not in senza
+    # A capogruppo with no unit is not flagged.
+    assert capogruppo.pk not in senza
     _nomina(capogruppo, capo_semplice, "A_DISPOSIZIONE")
     dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
     assert capo_semplice.pk not in {p["id"] for p in dati["senza_servizio"]}

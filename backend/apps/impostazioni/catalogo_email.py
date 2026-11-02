@@ -132,6 +132,16 @@ _TIPI = [
         (NOME, UNITA, _scadenza("entro quando completare"), _link("la pagina dell'iscrizione")),
     ),
     TipoEmail(
+        "iscrizione_capo",
+        "Iscrizione in Comunità capi di un genitore",
+        "A un genitore, quando un capogruppo avvia la sua iscrizione in Comunità capi.",
+        "[Nome sito]: la tua iscrizione in [Unità]",
+        "<p>Ciao [Nome],</p><p>i capigruppo ti propongono di entrare in [Unità]!</p><p>Per "
+        "l'iscrizione apri questo link entro il [Scadenza]: troverai già i dati che l'app ha "
+        "di te, da completare con quelli che servono all'associazione.<br>[Link]</p>",
+        (NOME, UNITA, _link("il link per l'iscrizione"), _scadenza("fino a quando vale il link")),
+    ),
+    TipoEmail(
         "iscrizione_rifiutata",
         "Iscrizione non accolta",
         "A chi ha chiesto l'iscrizione, quando un capo non la accoglie.",

@@ -22,7 +22,7 @@ from apps.anagrafica.servizi import codice_fiscale_valido, nuovo_codice_provviso
 from apps.core.anno import eta_in_data
 from apps.core.models import FonteDato
 from apps.impostazioni.email import invia
-from apps.organizzazione.models import TipoUnita
+from apps.organizzazione.models import TipoUnita, Unita
 
 from .models import (
     CAMPI_CONTATTO_OBBLIGATORI,
@@ -35,6 +35,7 @@ from .models import (
     CodiceIscrizione,
     RichiestaIscrizione,
     StatoIscrizione,
+    TipoCodice,
     tipo_file,
 )
 
@@ -91,6 +92,13 @@ def _stessa_persona(codice: CodiceIscrizione, dati: DatiIscrizione) -> None:
     proposti = codice.dati_proposti
     if not proposti:
         return
+    if proposti.get("codice_fiscale"):  # a parent becoming a capo (DEC-282)
+        if dati.codice_fiscale.strip().upper() == proposti["codice_fiscale"]:
+            return
+        raise ValidationError(
+            f"Questo link è per l'iscrizione di {proposti.get('nome')} {proposti.get('cognome')}: "
+            "non si può usare per un'altra persona."
+        )
     uguali = (
         dati.nome.strip().casefold() == proposti.get("nome", "").casefold()
         and dati.cognome.strip().casefold() == proposti.get("cognome", "").casefold()
@@ -607,3 +615,61 @@ def riga_per_buonastrada(richiesta: RichiestaIscrizione) -> list[str]:
         g.cellulare if g else "",
         richiesta.get_stato_display(),
     ]
+
+
+# --- A parent who becomes a capo (DEC-282) -----------------------------------------------------
+
+
+@transaction.atomic
+def iscrivi_genitore_in_coca(genitore: Persona, utente) -> CodiceIscrizione:
+    """A capogruppo starts the joining of a parent to the Co.Ca.: a personal code with
+    what the app already knows of them, mailed to them; the request then goes on as any
+    other from the app (DEC-120…DEC-127), and the approval finds the same card by codice
+    fiscale."""
+    from apps.attesa.servizi import VALIDITA_CODICE
+
+    if not RelazioneTutela.objects.filter(tutore=genitore).exists():
+        raise ValidationError("Questa persona non è genitore di un socio.")
+    if (
+        Appartenenza.objects.attive()
+        .filter(persona=genitore, ruolo=RuoloAppartenenza.CAPO)
+        .exists()
+    ):
+        raise ValidationError(f"{genitore} è già in Comunità capi.")
+    email = genitore.email or (genitore.utente.email if genitore.utente_id else "")
+    if not email:
+        raise ValidationError(
+            f"Di {genitore} non c'è un'email: aggiungila alla scheda, poi riprova."
+        )
+    coca = Unita.objects.filter(tipo=TipoUnita.COMUNITA_CAPI, attiva=True).first()
+    if coca is None:
+        raise ValidationError("Il gruppo non ha una Comunità capi attiva.")
+    codice = CodiceIscrizione.objects.create(
+        unita=coca,
+        tipo=TipoCodice.PERSONALE,
+        scadenza=timezone.localdate() + VALIDITA_CODICE,
+        creato_da=utente,
+        dati_proposti={
+            "nome": genitore.nome,
+            "cognome": genitore.cognome,
+            "data_nascita": (genitore.data_nascita.isoformat() if genitore.data_nascita else ""),
+            "sesso": genitore.sesso,
+            "luogo_nascita": genitore.luogo_nascita,
+            "codice_fiscale": genitore.codice_fiscale or "",
+            "indirizzo": genitore.indirizzo,
+            "comune": genitore.comune,
+            "provincia": genitore.provincia,
+            "cap": genitore.cap,
+            "da_se": True,
+            "telefono": genitore.cellulare,
+            "email": email,
+        },
+    )
+    valori = {
+        "Nome": genitore.nome,
+        "Unità": str(coca),
+        "Link": f"{settings.FRONTEND_URL}/iscrizione/{codice.codice}",
+        "Scadenza": codice.scadenza.strftime("%d/%m/%Y"),
+    }
+    transaction.on_commit(lambda: invia("iscrizione_capo", valori, [email]))
+    return codice

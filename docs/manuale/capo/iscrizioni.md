@@ -47,6 +47,15 @@ gruppo) crea un codice nella pagina della tua unità, in **Codici di iscrizione*
 Dai alla famiglia il codice, il link (**copia il link**) o il **QR code**. Con
 **disattiva** lo fermi prima della scadenza.
 
+### Un genitore che diventa capo
+
+Se sei capogruppo, apri la scheda del genitore (in **Genitori**) e, in **Iscrizione in
+Comunità capi**, tocca **Iscrivi in Comunità capi…** e **Manda il link**. Al genitore arriva
+per email un link personale, valido 30 giorni, con i dati che l'app ha già di lui (nome,
+codice fiscale, contatti, indirizzo): completa solo quello che manca. La richiesta arriva poi
+in **Richieste di iscrizione** come le altre, e accolta entra nella sua stessa scheda: resta
+genitore dei suoi figli. Serve un'email nella scheda.
+
 ## Accogliere una richiesta
 
 Nella Home, in **Il mio gruppo**, tocca **Richieste di iscrizione**: il numero accanto dice

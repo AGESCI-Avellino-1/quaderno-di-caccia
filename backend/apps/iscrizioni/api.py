@@ -126,6 +126,26 @@ def _codice_gestibile(request, codice_id: int) -> CodiceIscrizione:
     return codice
 
 
+class IscrizioneCapoOut(Schema):
+    email: str
+    scadenza: date
+
+
+@router.post("/persone/{persona_id}/iscrizione-coca", response={201: IscrizioneCapoOut})
+def iscrivi_genitore_in_coca(request, persona_id: int):
+    """A parent who becomes a capo: the link with their data goes to their email
+    (DEC-282)."""
+    from apps.anagrafica.models import Persona
+
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_iscrivere_genitore_in_coca(request.auth, persona):
+        raise HttpError(
+            403, "Solo i capigruppo avviano l'iscrizione in Comunità capi di un genitore."
+        )
+    codice = _errore(servizi.iscrivi_genitore_in_coca, persona, request.auth)
+    return Status(201, {"email": codice.dati_proposti["email"], "scadenza": codice.scadenza})
+
+
 @router.post("/codici-iscrizione/{codice_id}/disattiva", response=CodiceOut)
 def disattiva_codice(request, codice_id: int):
     codice = _codice_gestibile(request, codice_id)
@@ -208,6 +228,7 @@ def info_codice(request, codice: str):
                 "data_nascita",
                 "sesso",
                 "luogo_nascita",
+                "codice_fiscale",
                 "contatto_nome",
                 "contatto_cognome",
                 "telefono",

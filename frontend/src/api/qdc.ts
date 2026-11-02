@@ -296,6 +296,8 @@ export interface PersonaDettaglio extends PersonaBreve {
   /** Profile photo (DEC-201): there is one the user may see; who may upload one. */
   foto?: boolean
   puo_caricare_foto?: boolean
+  /** A parent who becomes a capo: a capogruppo sends the joining link (DEC-282). */
+  puo_iscrivere_in_coca?: boolean
   vede_storico_foto?: boolean
   vede_registro_accessi?: boolean
   /** The capi's file (DEC-47, DEC-206), when the person has been a capo. */
@@ -596,6 +598,7 @@ export interface InfoCodice {
     data_nascita?: string
     sesso?: string
     luogo_nascita?: string
+    codice_fiscale?: string
     telefono?: string
     contatto_nome?: string
     contatto_cognome?: string
@@ -2484,6 +2487,10 @@ export const api = {
   },
   persona: (id: number) => richiesta<PersonaDettaglio>(`/api/v1/persone/${id}`),
   statoAccount: (persona: number) => richiesta<StatoAccount>(`/api/v1/persone/${persona}/account`),
+  iscriviGenitoreInCoca: (persona: number) =>
+    richiesta<{ email: string; scadenza: string }>(`/api/v1/persone/${persona}/iscrizione-coca`, {
+      metodo: 'POST',
+    }),
   invita: (dati: NuovoInvito) =>
     richiesta<{ id: number }>('/api/v1/inviti', { metodo: 'POST', corpo: dati }),
   annullaInvito: (id: number) =>

@@ -510,6 +510,20 @@ def puo_nominare(
 # --- Joining from the app (DEC-120…DEC-127) --------------------------------------------
 
 
+def puo_iscrivere_genitore_in_coca(user, persona: Persona) -> bool:
+    """A parent who becomes a capo: a capogruppo starts the joining from the parent's card
+    (DEC-282). Only for a parent not already in the Co.Ca."""
+    if not e_capogruppo(user) or e_capo_in_attesa(user):
+        return False
+    from apps.anagrafica.models import RelazioneTutela
+
+    if not RelazioneTutela.objects.filter(tutore=persona).exists():
+        return False
+    return not (
+        Appartenenza.objects.attive().filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exists()
+    )
+
+
 def puo_creare_codici(user, unita: Unita) -> bool:
     """Registration codes: the unit staff for their unit, the capigruppo for any; for
     the Co.Ca. only the capigruppo."""

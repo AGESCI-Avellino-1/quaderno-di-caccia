@@ -43,6 +43,7 @@ SEMPRE = {
     "attesa_interesse",
     "attesa_uscita",
     "attesa_iscrizione",
+    "iscrizione_capo",
 }
 
 

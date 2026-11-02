@@ -770,3 +770,72 @@ def test_un_tutore(codice_reparto, genitore_nuovo, capo):
     richiesta = servizi.crea_richiesta(codice_reparto, dati, genitore_nuovo)
     figlia = servizi.approva(richiesta, capo.utente, TRA_UN_MESE)
     assert list(figlia.tutori.values_list("tipo", flat=True)) == [TipoTutela.TUTORE]
+
+
+# --- A parent who becomes a capo (DEC-282) -------------------------------------------------
+
+
+def test_il_capogruppo_iscrive_un_genitore_in_coca(
+    capogruppo, capo, coca, genitore, ragazza, estraneo, django_capture_on_commit_callbacks
+):
+    Persona.objects.filter(pk=genitore.pk).update(
+        codice_fiscale=CF_GENITORE, data_nascita=date(1980, 1, 1), cellulare="3330000099"
+    )
+    url = f"/api/v1/persone/{genitore.pk}/iscrizione-coca"
+    for chi in (capo, genitore, estraneo):
+        assert _post(_client(chi), url).status_code == 403
+    assert not policy.puo_iscrivere_genitore_in_coca(capogruppo.utente, ragazza)  # no parent
+    mail.outbox.clear()
+    with django_capture_on_commit_callbacks(execute=True):
+        risposta = _post(_client(capogruppo), url)
+    assert risposta.status_code == 201, risposta.content
+    assert risposta.json()["email"] == "genitore@example.invalid"
+    [email] = mail.outbox
+    assert email.to == ["genitore@example.invalid"]
+    codice = CodiceIscrizione.objects.get(unita=coca)
+    assert codice.tipo == TipoCodice.PERSONALE
+
+    # The form comes filled in with what the app knows.
+    proposti = Client().get(f"/api/v1/iscrizione/{codice.codice}").json()["proposti"]
+    assert proposti["codice_fiscale"] == CF_GENITORE and proposti["da_se"] is True
+    dati = {
+        "nome": proposti["nome"],
+        "cognome": proposti["cognome"],
+        "data_nascita": proposti["data_nascita"],
+        "codice_fiscale": proposti["codice_fiscale"],
+        "email": proposti["email"],
+        "sesso": "M",
+    }
+    # For them only.
+    altro = dati | {"codice_fiscale": CF_CAPO}
+    assert _post(_client(genitore), f"/api/v1/iscrizione/{codice.codice}", altro).status_code == 400
+    fatta = _post(_client(genitore), f"/api/v1/iscrizione/{codice.codice}", dati)
+    assert fatta.status_code in (200, 201), fatta.content
+
+    # The capigruppo approve: the same card enters the Co.Ca., still a parent.
+    richiesta_id = fatta.json()["richiesta_id"]
+    approvata = _post(
+        _client(capogruppo),
+        f"/api/v1/iscrizioni/{richiesta_id}/approva",
+        {"scadenza_completamento": TRA_UN_MESE.isoformat()},
+    )
+    assert approvata.status_code == 200, approvata.content
+    genitore.refresh_from_db()
+    assert e_codice_provvisorio(genitore.codice_socio)
+    assert (
+        Appartenenza.objects.attive()
+        .filter(persona=genitore, unita=coca, ruolo=RuoloAppartenenza.CAPO)
+        .exists()
+    )
+    assert RelazioneTutela.objects.filter(tutore=genitore, minore=ragazza).exists()
+    assert Persona.objects.filter(codice_fiscale=CF_GENITORE).count() == 1
+    # Already in the Co.Ca. now.
+    assert _post(_client(capogruppo), url).status_code == 403
+
+
+def test_genitore_senza_email_non_si_iscrive(capogruppo, coca, genitrice_senza_account):
+    Persona.objects.filter(pk=genitrice_senza_account.pk).update(email="")
+    url = f"/api/v1/persone/{genitrice_senza_account.pk}/iscrizione-coca"
+    risposta = _post(_client(capogruppo), url)
+    assert risposta.status_code == 400
+    assert "email" in risposta.json()["detail"]

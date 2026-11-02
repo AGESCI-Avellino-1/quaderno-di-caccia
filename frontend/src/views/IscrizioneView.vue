@@ -58,6 +58,8 @@ onMounted(async () => {
       data_nascita: p.data_nascita ?? '',
       sesso: p.sesso ?? '',
       luogo_nascita: p.luogo_nascita ?? '',
+      // A parent becoming a capo (DEC-282): their codice fiscale is already known.
+      codice_fiscale: p.codice_fiscale ?? '',
       genitore_cellulare: p.da_se ? '' : (p.telefono ?? ''),
       ...(p.da_se
         ? { email: p.email ?? '' }
@@ -159,7 +161,7 @@ async function invia() {
               id="isc-nascita"
               v-model="dati.data_nascita"
               type="date"
-              :readonly="bloccato"
+              :readonly="bloccato && !!info?.proposti?.data_nascita"
               class="form-control"
               :max="oggi"
               required

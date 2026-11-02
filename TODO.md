@@ -195,14 +195,15 @@ Richiesta del maintainer del 01/11; decisioni nell'analisi come DEC-268, DEC-269
 ### Primo import con lo storico (02/11)
 
 Richiesta del maintainer del 02/11, prima dell'installazione per l'Avellino 1; decisioni
-nell'analisi come DEC-271…DEC-273. Il file da importare si prepara in `ignored/` (mai
+nell'analisi come DEC-271…DEC-274. Il file da importare si prepara in `ignored/` (mai
 nel repository).
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
 | I.1 | Import con più anni: solo i soci attivi nell'ultimo anno, con i periodi passati chiusi nelle unità; righe di altri gruppi saltate; stato I come R; unità solo del passato create disattivate; date dei genitori senza zeri e genitori nati all'estero (export 2027) | DEC-271…DEC-273 | ✅ 02/11 (provato con il file vero su un database di prova: 52 soci, 65 genitori, 82 periodi passati, Branco L1 e Reparti O1/O2 disattivati) |
+| I.4 | Chi si è appena disiscritto entra sospeso, con lo storico chiuso e i genitori; dopo due anni l'archiviazione | DEC-274 | ✅ 02/11 (provato con il file vero: 14 sospesi, 38 attivi) |
 | I.2 | Cancellare un'unità disattivata e vuota (creata per errore) | DEC-273 | ⏳ (da chiarire: unità con soli soci archiviati) |
-| I.3 | File unico per l'Avellino 1: storico + 2027 scelto dal maintainer + capo da altro gruppo + due capi riattivati | DEC-271 | ⏳ (attende la selezione del 2027) |
+| I.3 | File unico per l'Avellino 1: storico + 2027 scelto dal maintainer + capo da altro gruppo + due capi riattivati | DEC-271, DEC-274 | ✅ 02/11: `ignored/primoimport/import-iniziale.csv` dalle conferme del maintainer (38 confermati, 14 appena usciti con i dati della riga 2027) |
 
 ### Mancanze trovate scrivendo il manuale (31/10)
 

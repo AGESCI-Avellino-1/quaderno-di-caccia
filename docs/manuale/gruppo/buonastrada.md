@@ -43,7 +43,10 @@ Cosa succede:
 
 Se in **Ricerca soci** scegli più anni, l'app porta dentro solo chi c'è nell'ultimo anno del
 file. Per loro gli anni passati diventano i periodi nelle unità: si vede quando sono entrati
-nel gruppo e in quali unità sono stati. Chi è uscito prima non entra nell'app. Le unità che
+nel gruppo e in quali unità sono stati. Chi c'era l'anno prima e manca nell'ultimo si è
+appena disiscritto: entra come **sospeso**, senza unità ma con il suo storico, così lo
+ritrovi se torna; dopo due anni te lo propone l'archiviazione. Chi è uscito prima non entra
+nell'app. Le unità che
 esistevano solo negli anni passati nascono **disattivate** e restano per lo storico. I ruoli
 dei capi negli anni passati non sono nel file: li aggiungi a mano nel fascicolo del capo.
 

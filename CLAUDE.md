@@ -145,7 +145,8 @@ are split using the codice fiscale; in 2027 exports their birth dates lose the l
 (`8/8/1974`) and a parent born abroad has no `(province)`; `CODICE STATUS SOCIO` N (new member)
 and I (renewed with a transfer from another group, DEC-272) are as active as R; an export with
 several years brings only who is active in its last year, the older years as closed periods,
-units seen only in the past created inactive (DEC-271, DEC-273);
+units seen only in the past created inactive (DEC-271, DEC-273); who was active the year
+before and is missing from the last one comes in suspended, every period closed (DEC-274);
 `TIPO UNITA` `BRANCO/CERCHIO` of any composition stays one: branco or cerchio is the
 setting `AMBIENTE UNITA` (GIUNGLA/BOSCO), taken by the first import that gives it, then
 the group's (DEC-225); there is no noviziato unit (checked on a zone-wide export, 2026-10-30). All handled in

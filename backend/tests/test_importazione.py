@@ -423,6 +423,11 @@ def _storico() -> list[dict[str, str]]:
         "AMBIENTE UNITA": "GIUNGLA",
     }
     ex = giulia | {"CODICE SOCIO": "9000050", "NOME": "Sara", "CODICE FISCALE": "RSSSRA10A41A509X"}
+    uscito = giulia | {
+        "CODICE SOCIO": "9000051",
+        "NOME": "Elena",
+        "CODICE FISCALE": "RSSLNE11A41A509Y",
+    }
     clan = {"BRANCA": "Branca R/S", "TIPO UNITA": "CLAN/FUOCO", "CUN": "T", "COMUNITA SOCIO": ""}
     return [
         # Laura was a scolta: the clan is first met in a past period, yet still active.
@@ -446,16 +451,18 @@ def _storico() -> list[dict[str, str]]:
         _anno(paolo, 2026),
         _anno(laura, 2025),
         _anno(laura, 2026, **{"CODICE STATUS SOCIO": "S"}),  # census: still active
-        _anno(ex, 2023, **branco),  # left before the last year: an ex member
+        _anno(ex, 2023, **branco),  # left before the last year but one: an ex member
         _anno(ex, 2024),
+        _anno(uscito, 2024, **branco),  # just left: active in 2025, not in 2026
+        _anno(uscito, 2025),
     ]
 
 
 def test_storico_solo_chi_e_attivo_nell_ultimo_anno():
     riepilogo = applica(_risultato(_storico()), oggi=OGGI)
     assert not Persona.objects.filter(codice_socio="9000050").exists()
-    assert Persona.objects.filter(codice_socio__isnull=False).count() == 3
-    assert len(riepilogo.periodi_passati) == 3
+    assert Persona.objects.filter(codice_socio__isnull=False).count() == 4
+    assert len(riepilogo.periodi_passati) == 5
 
 
 def test_storico_periodi_passati_chiusi_e_periodo_attuale_dal_suo_inizio():
@@ -473,6 +480,29 @@ def test_storico_periodi_passati_chiusi_e_periodo_attuale_dal_suo_inizio():
     ]
     laura = Persona.objects.get(codice_socio="9000004")
     assert Appartenenza.objects.attive(OGGI).get(persona=laura).data_inizio == date(2024, 10, 1)
+
+
+def test_storico_appena_uscito_sospeso_con_periodi_chiusi():
+    riepilogo = applica(_risultato(_storico()), oggi=OGGI)
+    elena = Persona.objects.get(codice_socio="9000051")
+    assert elena.stato_socio == "S"
+    assert riepilogo.sospesi == [str(elena)]
+    assert not Appartenenza.objects.attive(OGGI).filter(persona=elena).exists()
+    periodi = list(
+        Appartenenza.objects.filter(persona=elena)
+        .order_by("data_inizio")
+        .values_list("unita__codice_unita", "data_inizio", "data_fine")
+    )
+    assert periodi == [
+        ("L", date(2023, 10, 1), date(2024, 10, 1)),
+        ("N", date(2024, 10, 1), date(2025, 10, 1)),
+    ]
+    assert RelazioneTutela.objects.filter(minore=elena).count() == 2
+    # Two years after leaving, the archiving proposes them like anyone else (DEC-44).
+    from apps.archivio.servizi import da_archiviare
+
+    assert not da_archiviare(OGGI).filter(pk=elena.pk).exists()
+    assert da_archiviare(date(2027, 10, 1)).filter(pk=elena.pk).exists()
 
 
 def test_storico_unita_del_passato_disattivate():
@@ -494,6 +524,7 @@ def test_storico_idempotente():
     assert riepilogo.periodi_passati == []
     assert riepilogo.appartenenze_aperte == []
     assert riepilogo.persone_create == []
+    assert riepilogo.sospesi == []
 
 
 def test_storico_avvisi_solo_dell_ultima_riga():

@@ -37,6 +37,7 @@ class Command(BaseCommand):
             ("Appartenenze aperte", riepilogo.appartenenze_aperte),
             ("Appartenenze chiuse", riepilogo.appartenenze_chiuse),
             ("Periodi passati", riepilogo.periodi_passati),
+            ("Appena usciti, sospesi", riepilogo.sospesi),
         ):
             self.stdout.write(f"{etichetta}: {len(valori)}")
         for differenza in riepilogo.differenze:

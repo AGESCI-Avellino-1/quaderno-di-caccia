@@ -473,6 +473,8 @@ export interface EsitoImportazione {
     appartenenze_chiuse: string[]
     /** Past periods in the units, from an export with several years (DEC-271). Missing in older imports. */
     periodi_passati?: string[]
+    /** Members who have just left, imported as suspended (DEC-274). Missing in older imports. */
+    sospesi?: string[]
     /** Members who joined from the app, now with their real code. Missing in older imports. */
     iscrizioni_recepite?: string[]
     /** Archived people who come back (DEC-217). Missing in older imports. */

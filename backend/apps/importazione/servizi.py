@@ -21,6 +21,9 @@ Rules:
   * an export with several years (history) brings only the members active in its last
     year; their past years become closed periods in the units, and units seen only in
     the past are created inactive. Rows of other groups are skipped (DEC-271, DEC-273);
+  * who was active the year before the last and is missing from the last one has just
+    left: imported as suspended, every period closed, so a comeback is recognised and
+    the archiving after two years applies (DEC-274);
   * status I (renewed with a transfer) is active like R; a member it creates gets a
     staff note saying they come from another group (DEC-272).
 """
@@ -92,6 +95,8 @@ class Riepilogo:
     appartenenze_chiuse: list[str] = field(default_factory=list)
     # Past periods in the units from an export with several years (DEC-271).
     periodi_passati: list[str] = field(default_factory=list)
+    # Members who have just left, imported as suspended (DEC-274).
+    sospesi: list[str] = field(default_factory=list)
     differenze: list[Differenza] = field(default_factory=list)
     correzioni_recepite: list[str] = field(default_factory=list)
     # Members who joined from the app, now in BuonaStrada with their real code.
@@ -239,6 +244,10 @@ def _esegui_storico(
         per_socio[riga.codice_socio].setdefault(riga.anno_scout, riga)
     # Units are found by their BuonaStrada code (see _unita).
     attuali = {(x.codice_unita, x.progressivo) for x in righe if x.anno_scout == ultimo}
+
+    def _attuale(riga: RigaSocio) -> bool:
+        return (riga.codice_unita, riga.progressivo) in attuali
+
     # Only the last row of each member gives their data: the warnings on older rows
     # would be noise.
     ultime = {
@@ -252,18 +261,35 @@ def _esegui_storico(
         if attuale.stato == "D":
             _chiudi_decaduto(attuale, r, oggi)
             continue
-        if attuale.anno_scout != ultimo:
-            continue  # left the group before the last year: an ex member
+        appena_uscito = attuale.anno_scout == ultimo - 1 and attuale.stato in STATI_ATTIVI
+        if attuale.anno_scout != ultimo and not appena_uscito:
+            continue  # left the group earlier: an ex member (DEC-28)
         nostre = [x for x in storia if x.stato in STATI_ATTIVI or x is attuale]
-        persona = _persona(attuale, r, adesso, altro_gruppo=nostre[0].stato == "I")
+        gia_sospeso = (
+            appena_uscito
+            and Persona.objects.filter(codice_socio=attuale.codice_socio, stato_socio="S").exists()
+        )
+        persona = _persona(
+            attuale,
+            r,
+            adesso,
+            altro_gruppo=nostre[0].stato == "I",
+            stato="S" if appena_uscito else None,
+        )
         periodi = _periodi(nostre)
+        if appena_uscito:
+            # Just left: every period is closed, the person stays suspended (DEC-274).
+            for periodo in periodi:
+                unita = _unita(gruppo, periodo[0], r, attiva=_attuale(periodo[0]))
+                if unita is not None:
+                    _periodo_passato(persona, unita, periodo, r)
+            for genitore in attuale.genitori:
+                _genitore(persona, genitore, attuale, r)
+            if not gia_sospeso:
+                r.sospesi.append(str(persona))
+            continue
         for periodo in periodi[:-1]:
-            unita = _unita(
-                gruppo,
-                periodo[0],
-                r,
-                attiva=(periodo[0].codice_unita, periodo[0].progressivo) in attuali,
-            )
+            unita = _unita(gruppo, periodo[0], r, attiva=_attuale(periodo[0]))
             if unita is not None:
                 _periodo_passato(persona, unita, periodo, r)
         unita = _unita(gruppo, attuale, r)
@@ -423,7 +449,13 @@ def _rientro(codice_fiscale: str) -> Persona | None:
     return archiviazione.persona if archiviazione else None
 
 
-def _persona(riga: RigaSocio, r: Riepilogo, adesso, altro_gruppo: bool = False) -> Persona:
+def _persona(
+    riga: RigaSocio,
+    r: Riepilogo,
+    adesso,
+    altro_gruppo: bool = False,
+    stato: str | None = None,
+) -> Persona:
     valori = {
         "nome": riga.nome,
         "cognome": riga.cognome,
@@ -439,7 +471,7 @@ def _persona(riga: RigaSocio, r: Riepilogo, adesso, altro_gruppo: bool = False) 
         "email": riga.email,
         "cellulare": riga.cellulare,
         # I is a renewal with a transfer: in the app, a member like R (DEC-272).
-        "stato_socio": "R" if riga.stato == "I" else riga.stato,
+        "stato_socio": stato or ("R" if riga.stato == "I" else riga.stato),
         "consenso_iscrizione": riga.consenso_iscrizione,
         "consenso_foto": riga.consenso_foto,
         "consenso_commerciale": riga.consenso_commerciale,

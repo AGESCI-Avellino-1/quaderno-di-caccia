@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.db.models import Case, When
 from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza
@@ -224,7 +225,16 @@ def cassa_per_pagamento(pagamento, righe) -> Cassa | None:
     up yet."""
     if pagamento.metodo == "CONTANTI":
         unita = unita_del_socio(righe[0].quota.persona)
-        cassa = Cassa.objects.filter(attiva=True, tipo=TipoCassa.CONTANTI, unita=unita).first()
+        # The shared box of two linked units (DEC-288) is of one of them.
+        cassa = (
+            Cassa.objects.filter(
+                attiva=True,
+                tipo=TipoCassa.CONTANTI,
+                unita_id__in=coppia(unita.pk if unita else None),
+            )
+            .order_by(Case(When(unita=unita, then=0), default=1), "pk")
+            .first()
+        )
         if cassa:
             return cassa
     if pagamento.metodo == "PAYPAL":
@@ -317,3 +327,100 @@ def modello_d(anno: AnnoAssociativo, movimenti=None) -> dict:
         "uscite": sum((r["totale"] for r in righe if r["lato"] == USCITA), ZERO),
         "rettifiche": rettifiche,
     }
+
+
+# --- Shared cash of two linked units (DEC-288) ---------------------------------------------
+
+
+def coppia(unita_id: int | None) -> set[int]:
+    """The unit and, when their cash is shared, its linked one."""
+    from apps.organizzazione.models import Unita
+
+    if unita_id is None:
+        return set()
+    unita = Unita.objects.filter(pk=unita_id).only("collegata_a_id", "cassa_comune_dal").first()
+    if unita is None:
+        return set()
+    if unita.cassa_comune_dal and unita.collegata_a_id:
+        return {unita_id, unita.collegata_a_id}
+    return {unita_id}
+
+
+def unisci_casse(unita, utente, oggi: date | None = None) -> Cassa | None:
+    """One cash box for two linked units from today: the other active cash boxes of
+    the two pour their balance into it with a transfer and are closed. Returns the box
+    kept (None when neither unit has one yet)."""
+    oggi = oggi or date.today()
+    altra = unita.collegata_a
+    if altra is None or altra.collegata_a_id != unita.pk:
+        raise ValidationError("Si uniscono solo le casse di due unità collegate.")
+    if unita.cassa_comune_dal:
+        raise ValidationError("Le casse di queste unità sono già unite.")
+    with transaction.atomic():
+        casse = list(
+            Cassa.objects.filter(
+                attiva=True, tipo=TipoCassa.CONTANTI, unita_id__in=(unita.pk, altra.pk)
+            ).order_by(
+                # The box of the unit asking first, the oldest.
+                Case(When(unita_id=unita.pk, then=0), default=1),
+                "pk",
+            )
+        )
+        tenuta = casse[0] if casse else None
+        for cassa in casse[1:]:
+            saldo = cassa.saldo()
+            if saldo:
+                da, a = (cassa, tenuta) if saldo > 0 else (tenuta, cassa)
+                registra(
+                    cassa=da,
+                    tipo=TipoMovimento.GIROCONTO,
+                    data=oggi,
+                    importo=abs(saldo),
+                    descrizione=f"Casse unite: saldo di «{cassa.nome}» in «{tenuta.nome}»",
+                    cassa_destinazione=a,
+                    utente=utente,
+                )
+            cassa.attiva = False
+            cassa.save(update_fields=["attiva", "aggiornato_il"])
+        for u in (unita, altra):
+            u.cassa_comune_dal = oggi
+            u.save(update_fields=["cassa_comune_dal", "aggiornato_il"])
+    return tenuta
+
+
+def puo_dividere(unita, oggi: date | None = None) -> bool:
+    """Only at the start of an associative year, before any movement of the pair in it."""
+    if not unita.cassa_comune_dal:
+        return False
+    anno = AnnoAssociativo.da_data(oggi or date.today())
+    return not Movimento.objects.filter(
+        unita_id__in=coppia(unita.pk), data__gte=anno.inizio
+    ).exists()
+
+
+def dividi_casse(unita, oggi: date | None = None) -> None:
+    """Each unit with its own cash box again: the closed box of the other unit opens
+    again (with the balance it had at the union, zero, the money stays where it is)."""
+    if not unita.cassa_comune_dal:
+        raise ValidationError("Le casse di queste unità non sono unite.")
+    if not puo_dividere(unita, oggi):
+        raise ValidationError(
+            "Le casse si dividono solo all'inizio di un anno associativo, prima di ogni "
+            "movimento dell'anno."
+        )
+    altra = unita.collegata_a
+    with transaction.atomic():
+        for u in (unita, altra):
+            if u is None:
+                continue
+            u.cassa_comune_dal = None
+            u.save(update_fields=["cassa_comune_dal", "aggiornato_il"])
+            if not Cassa.objects.filter(attiva=True, tipo=TipoCassa.CONTANTI, unita=u).exists():
+                chiusa = (
+                    Cassa.objects.filter(attiva=False, tipo=TipoCassa.CONTANTI, unita=u)
+                    .order_by("-pk")
+                    .first()
+                )
+                if chiusa is not None:
+                    chiusa.attiva = True
+                    chiusa.save(update_fields=["attiva", "aggiornato_il"])

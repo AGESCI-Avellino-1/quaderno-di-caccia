@@ -280,7 +280,8 @@ implements them:
   the import like a change of unit. `policy.e_staff` counts the capo unità too. Linked
   units (`Unita.collegata_a`, two-way and in pairs, set only by `organizzazione.servizi.
   collega`) have one staff for every permission: staff checks go through
-  `policy._unita_servite` (DEC-279); unit cash and treasurers stay per unit. The
+  `policy._unita_servite` (DEC-279); unit cash and treasurers stay per unit until the
+  two unite their cash (`Unita.cassa_comune_dal`, `cassa.servizi.unisci_casse`, DEC-288). The
   assistenti ecclesiastici (DEC-281): `AE_GRUPPO` counts in `policy.e_capogruppo`,
   `AE_UNITA` in `policy.STAFF_DI_UNITA`; emails to the capigruppo stay to the capigruppo.
 - Who appoints CSQ/VCSQ (the reparto staff), group roles (capigruppo in office; the

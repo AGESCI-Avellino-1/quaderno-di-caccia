@@ -580,6 +580,30 @@ def puo_gestire_quote(user) -> bool:
     return e_capogruppo(user) or _ha_incarico(user, {RuoloIncarico.TESORIERE_GRUPPO})
 
 
+def _con_cassa_comune(unita_ids) -> set[int]:
+    """The units and, when their cash is shared, the linked ones (DEC-288): the
+    treasurers of either unit count for both."""
+    unita_ids = set(unita_ids)
+    if not unita_ids:
+        return unita_ids
+    collegate = Unita.objects.filter(
+        pk__in=unita_ids, cassa_comune_dal__isnull=False, collegata_a__isnull=False
+    ).values_list("collegata_a_id", flat=True)
+    return unita_ids | set(collegate)
+
+
+def _unita_del_tesoriere(user) -> set[int]:
+    """Units of a unit treasurer, both of a pair with shared cash (DEC-288)."""
+    persona = persona_di(user)
+    if persona is None:
+        return set()
+    return _con_cassa_comune(
+        Incarico.objects.attivi()
+        .filter(persona=persona, ruolo=RuoloIncarico.TESORIERE_UNITA)
+        .values_list("unita_id", flat=True)
+    )
+
+
 def puo_vedere_situazione_quote(user, unita: Unita | None = None) -> bool:
     """Who paid and who did not: the Co.Ca. (DEC-92) and, for their unit, its treasurer
     even if an R/S (DEC-11)."""
@@ -587,21 +611,14 @@ def puo_vedere_situazione_quote(user, unita: Unita | None = None) -> bool:
         return True
     if unita is None:
         return False
-    return _ha_incarico(user, {RuoloIncarico.TESORIERE_UNITA}, unita=unita)
+    return unita.pk in _unita_del_tesoriere(user)
 
 
 def unita_situazione_quote(user) -> list[int]:
     """Units whose payment situation the user may see (menus of the PWA)."""
     if e_capo_censito(user):
         return list(Unita.objects.filter(attiva=True).values_list("pk", flat=True))
-    persona = persona_di(user)
-    if persona is None:
-        return []
-    return list(
-        Incarico.objects.attivi()
-        .filter(persona=persona, ruolo=RuoloIncarico.TESORIERE_UNITA)
-        .values_list("unita_id", flat=True)
-    )
+    return sorted(_unita_del_tesoriere(user))
 
 
 def puo_vedere_quote(user, persona: Persona) -> bool:
@@ -614,9 +631,8 @@ def puo_vedere_quote(user, persona: Persona) -> bool:
         return True
     if livello == LivelloAccesso.TUTORE:
         return genitori_vedono(persona, "quote")
-    return _ha_incarico(
-        user, {RuoloIncarico.TESORIERE_UNITA}, unita_id__in=_unita_della_persona(persona)
-    )
+    unita = set(_unita_della_persona(persona).values_list("unita_id", flat=True))
+    return bool(unita & _unita_del_tesoriere(user))
 
 
 def puo_registrare_pagamenti(user, persona: Persona) -> bool:
@@ -627,9 +643,7 @@ def puo_registrare_pagamenti(user, persona: Persona) -> bool:
     if puo_gestire_quote(user):
         return True
     unita = set(_unita_della_persona(persona).values_list("unita_id", flat=True))
-    return bool(unita & _unita_servite(user)) or _ha_incarico(
-        user, {RuoloIncarico.TESORIERE_UNITA}, unita_id__in=unita
-    )
+    return bool(unita & _unita_servite(user)) or bool(unita & _unita_del_tesoriere(user))
 
 
 def puo_verificare_segnalazione(user, segnalazione) -> bool:
@@ -678,11 +692,12 @@ def puo_registrare_agevolazioni(user) -> bool:
 
 
 def _unita_tesoreria(user) -> set[int]:
-    """Units whose cash the user keeps: unit treasurer or capo unità."""
+    """Units whose cash the user keeps: unit treasurer or capo unità; both units of a
+    pair with shared cash (DEC-288)."""
     persona = persona_di(user)
     if persona is None or e_capo_in_attesa(user):
         return set()
-    return set(
+    return _con_cassa_comune(
         Incarico.objects.attivi()
         .filter(
             persona=persona, ruolo__in={RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.CAPO_UNITA}
@@ -720,19 +735,24 @@ def unita_cassa_visibili(user) -> set[int] | None:
     """None = every unit (the Co.Ca.); otherwise the units of an R/S treasurer."""
     if e_capo_censito(user):
         return None
-    persona = persona_di(user)
-    if persona is None:
-        return set()
-    return set(
-        Incarico.objects.attivi()
-        .filter(persona=persona, ruolo=RuoloIncarico.TESORIERE_UNITA)
-        .values_list("unita_id", flat=True)
-    )
+    return _unita_del_tesoriere(user)
 
 
 def puo_vedere_cassa(user) -> bool:
     visibili = unita_cassa_visibili(user)
     return visibili is None or bool(visibili)
+
+
+def puo_unire_casse(user, unita: Unita) -> bool:
+    """Unite or split the cash of two linked units (DEC-288): the capi unità of either,
+    the capigruppo."""
+    if e_capo_in_attesa(user) or unita.collegata_a_id is None:
+        return False
+    if e_capogruppo(user):
+        return True
+    return _ha_incarico(
+        user, {RuoloIncarico.CAPO_UNITA}, unita_id__in={unita.pk, unita.collegata_a_id}
+    )
 
 
 def puo_registrare_spesa_anticipata(user, capo: Persona) -> bool:

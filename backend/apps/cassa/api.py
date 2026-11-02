@@ -248,7 +248,8 @@ def movimenti(request, cassa: int | None = None, anno: int | None = None, unita:
     if cassa is not None:
         elenco = elenco.filter(cassa_id=cassa) | elenco.filter(cassa_destinazione_id=cassa)
     if unita is not None:
-        elenco = elenco.filter(unita_id=unita)
+        # Two linked units with shared cash: their movements together (DEC-288).
+        elenco = elenco.filter(unita_id__in=servizi.coppia(unita))
     elenco = elenco.select_related(
         "cassa", "cassa_destinazione", "registrato_da__persona", "evento"
     )

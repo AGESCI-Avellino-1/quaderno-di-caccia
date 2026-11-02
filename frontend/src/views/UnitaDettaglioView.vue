@@ -95,6 +95,17 @@ async function salva(dati: UnitaIn) {
   }
 }
 
+// Two linked units with one cash box (DEC-288): united any day, split only at the start
+// of a year, before its first movement.
+const confermaCasse = ref(false)
+async function unisciCasse() {
+  confermaCasse.value = false
+  if (await esegui(() => api.unisciCasse(props.id))) await carica()
+}
+async function dividiCasse() {
+  if (await esegui(() => api.dividiCasse(props.id))) await carica()
+}
+
 // Only a closed unit nobody was ever in: created by mistake (DEC-273).
 const eliminando = ref(false)
 async function elimina() {
@@ -175,8 +186,60 @@ const iniziale = (u: Unita): UnitaIn => ({
           unita.collegata_nome
         }}</RouterLink>
         <span v-if="unita.nota_collegamento" class="fg-2"> ({{ unita.nota_collegamento }})</span>
+        <template v-if="unita.cassa_comune_dal">
+          · cassa in comune dal {{ new Date(unita.cassa_comune_dal).toLocaleDateString('it-IT') }}
+        </template>
       </template>
     </p>
+    <div
+      v-if="dettaglio && (dettaglio.puo_unire_casse || dettaglio.puo_dividere_casse)"
+      class="card card-body small mb-5"
+    >
+      <template v-if="dettaglio.puo_unire_casse">
+        <p class="mb-3">
+          Le due unità collegate possono avere una sola cassa contanti: da oggi i saldi si sommano,
+          i tesorieri di ciascuna valgono per tutte e due e il rendiconto le mostra insieme. Si
+          dividono di nuovo solo all'inizio di un anno associativo, prima di ogni movimento.
+        </p>
+        <div class="d-flex gap-3">
+          <button
+            v-if="!confermaCasse"
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            @click="confermaCasse = true"
+          >
+            Unisci le casse
+          </button>
+          <template v-else>
+            <button
+              type="button"
+              class="btn btn-sm btn-solid theme-primary"
+              :disabled="inCorso"
+              @click="unisciCasse"
+            >
+              Sì, unisci le casse da oggi
+            </button>
+            <button type="button" class="btn btn-sm btn-link" @click="confermaCasse = false">
+              Annulla
+            </button>
+          </template>
+        </div>
+      </template>
+      <template v-else>
+        <p class="mb-3">
+          L'anno associativo è appena cominciato e non ci sono ancora movimenti: puoi dividere di
+          nuovo le casse delle due unità.
+        </p>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline theme-primary align-self-start"
+          :disabled="inCorso"
+          @click="dividiCasse"
+        >
+          Dividi le casse
+        </button>
+      </template>
+    </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <EtaUnita
       v-if="unita && dettaglio"

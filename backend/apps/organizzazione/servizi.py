@@ -169,6 +169,11 @@ def collega(unita: Unita, altra: Unita | None, nota: str = "") -> None:
     """
     nota = nota.strip()
     attuale = unita.collegata_a
+    if unita.cassa_comune_dal and (altra is None or altra.pk != getattr(attuale, "pk", None)):
+        raise ValidationError(
+            "Queste unità hanno la cassa in comune: dividi prima le casse, poi cambia il "
+            "collegamento."
+        )
     with transaction.atomic():
         if altra is None:
             if attuale is not None and attuale.collegata_a_id == unita.pk:

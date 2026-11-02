@@ -73,6 +73,8 @@ class UnitaOut(Schema):
     collegata_a: int | None
     collegata_nome: str = ""
     nota_collegamento: str
+    # Shared cash with the linked unit since this day (DEC-288).
+    cassa_comune_dal: date | None = None
     # Ages for the waiting list (DEC-260); None for the Co.Ca.
     eta_minima: int | None = None
     eta_massima: int | None = None
@@ -249,6 +251,51 @@ class UnitaDettaglio(Schema):
     puo_eliminare: bool = False
     # Unit roles the caller may assign (and close).
     nomina: list[Scelta]
+    # Shared cash with the linked unit (DEC-288): may unite, may split now.
+    puo_unire_casse: bool = False
+    puo_dividere_casse: bool = False
+
+
+def _casse_unite(utente, unita: Unita) -> dict:
+    from apps.cassa.servizi import puo_dividere
+
+    puo = policy.puo_unire_casse(utente, unita)
+    return {
+        "puo_unire_casse": puo and not unita.cassa_comune_dal,
+        "puo_dividere_casse": puo and puo_dividere(unita),
+    }
+
+
+@router.post("/unita/{unita_id}/casse-unite", response=UnitaOut)
+def unisci_casse(request, unita_id: int):
+    """One cash box for two linked units from today (DEC-288)."""
+    from apps.cassa.servizi import unisci_casse as unisci
+
+    unita = get_object_or_404(Unita, pk=unita_id)
+    if not policy.puo_unire_casse(request.auth, unita):
+        raise HttpError(403, "Uniscono le casse i capi unità delle due unità e i capigruppo.")
+    try:
+        unisci(unita, request.auth)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    unita.refresh_from_db()
+    return unita
+
+
+@router.delete("/unita/{unita_id}/casse-unite", response=UnitaOut)
+def dividi_casse(request, unita_id: int):
+    """Each unit with its own cash again: at the start of a year only (DEC-288)."""
+    from apps.cassa.servizi import dividi_casse as dividi
+
+    unita = get_object_or_404(Unita, pk=unita_id)
+    if not policy.puo_unire_casse(request.auth, unita):
+        raise HttpError(403, "Dividono le casse i capi unità delle due unità e i capigruppo.")
+    try:
+        dividi(unita)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    unita.refresh_from_db()
+    return unita
 
 
 def _avvisi_maggiore_eta(unita: Unita) -> list[str]:
@@ -400,6 +447,7 @@ def dettaglio_unita(request, unita_id: int):
         and policy.puo_gestire_squadriglie(utente, unita),
         "puo_modificare_eta": unita.eta is not None
         and policy.puo_modificare_eta_unita(utente, unita),
+        **_casse_unite(utente, unita),
         "nomina": _nomina(
             utente,
             (

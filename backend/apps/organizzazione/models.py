@@ -137,6 +137,9 @@ class Unita(ModelloTracciato):
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     nota_collegamento = models.CharField(max_length=200, blank=True)
+    # Linked units with one cash box since this day (DEC-288), the same on both; None:
+    # each unit has its own. Set only by cassa.servizi.unisci_casse / dividi_casse.
+    cassa_comune_dal = models.DateField(null=True, blank=True)
     attiva = models.BooleanField(default=True)
     # Closed, with only archived people in its history: out of every list, back when one
     # of them returns (DEC-275).

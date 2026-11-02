@@ -357,6 +357,8 @@ export interface Unita {
   /** The linked unit as "type name (code)"; links are two-way (DEC-279). */
   collegata_nome?: string
   nota_collegamento: string
+  /** Shared cash with the linked unit since this day (DEC-288). */
+  cassa_comune_dal?: string | null
   /** Ages for the waiting list (DEC-260); null for the Co.Ca. */
   eta_minima?: number | null
   eta_massima?: number | null
@@ -458,6 +460,9 @@ export interface UnitaDettaglio {
   /** Closed and empty, created by mistake: the capigruppo may delete it (DEC-273). */
   puo_eliminare?: boolean
   nomina: Scelta[]
+  /** Shared cash with the linked unit (DEC-288): may unite, may split now. */
+  puo_unire_casse?: boolean
+  puo_dividere_casse?: boolean
 }
 
 /** Exception to single-sex patrols decided by the Co.Ca. Special-category data: capi
@@ -2394,6 +2399,10 @@ export const api = {
   modificaUnita: (id: number, dati: UnitaIn) =>
     richiesta<Unita>(`/api/v1/unita/${id}`, { metodo: 'PUT', corpo: dati }),
   eliminaUnita: (id: number) => richiesta<void>(`/api/v1/unita/${id}`, { metodo: 'DELETE' }),
+  unisciCasse: (id: number) =>
+    richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'POST' }),
+  dividiCasse: (id: number) =>
+    richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'DELETE' }),
   creaSquadriglia: (unita: number, dati: { nome: string; sesso: string }) =>
     richiesta<Squadriglia>(`/api/v1/unita/${unita}/squadriglie`, { metodo: 'POST', corpo: dati }),
   modificaSquadriglia: (id: number, dati: { nome: string; sesso: string; attiva: boolean }) =>

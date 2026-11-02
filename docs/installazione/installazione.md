@@ -42,7 +42,9 @@ backup (vedi [Archivio sul Drive](archivio)).
 :::
 
 Con `nginx-host`, `apache-host` e `apache-vhost` i container ascoltano solo su `127.0.0.1`,
-sulla porta `8080` (cambiala con `--port`). Con `nginx-host` e `apache-host` segui i comandi
+sulla porta `8080` (cambiala con `--port`). Lo script controlla che la porta sia libera: se
+la usa già un altro programma propone la prima libera (o, lanciato senza terminale, la
+indica e si ferma). Con `nginx-host` e `apache-host` segui i comandi
 che lo script stampa per installare il virtual host e prendere il certificato con certbot.
 
 Quando l'app non risponde (per esempio durante un aggiornamento) il reverse proxy mostra una

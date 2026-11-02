@@ -48,6 +48,32 @@ chmod 600 "$ENV_FILE"
 
 valore() { grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- || true; }
 
+# True when nothing listens on 127.0.0.1:<port> (binding succeeds).
+porta_libera() {
+  python3 -c "import socket,sys; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', int(sys.argv[1])))" "$1" 2>/dev/null
+}
+
+# The host proxy reaches the containers on a local port: it must be free, unless it is
+# the port of this installation already running (same QDC_HTTP_PORT in .env).
+if [[ "$PROXY" != "nginx-docker" ]] && ! porta_libera "$PORTA"; then
+  if [[ "$PORTA" == "$(valore QDC_HTTP_PORT)" ]]; then
+    echo "La porta $PORTA è occupata: se è questa installazione già avviata va bene, altrimenti scegline un'altra con --port."
+  else
+    libera="$PORTA"
+    while ! porta_libera "$libera"; do
+      libera=$((libera + 1))
+      (( libera <= 65535 )) || { echo "Nessuna porta libera dopo $PORTA." >&2; exit 1; }
+    done
+    if [[ -t 0 ]]; then
+      read -r -p "La porta $PORTA è già usata da un altro programma. Usare la $libera? [S/n] " risposta
+      case "${risposta:-s}" in [sSyY]*) PORTA="$libera" ;; *) echo "Scegli un'altra porta con --port." >&2; exit 1 ;; esac
+    else
+      echo "La porta $PORTA è già usata da un altro programma; la prima libera è la $libera (--port $libera)." >&2
+      exit 1
+    fi
+  fi
+fi
+
 imposta() {
   local chiave="$1" nuovo="$2" tmp
   tmp="$(mktemp)"

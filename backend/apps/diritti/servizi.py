@@ -77,7 +77,10 @@ def fascicolo(persona: Persona) -> dict:
         "anagrafica": {
             ETICHETTE_CAMPI[campo]: _valore(persona, campo) for campo in CAMPI_BUONASTRADA
         }
-        | {"Codice socio": persona.codice_socio or ""},
+        | {
+            "Codice socio": persona.codice_socio or "",
+            "Telefono fisso o di lavoro": persona.telefono_fisso,
+        },
         "account": (
             {
                 "Email di accesso": utente.email,
@@ -161,7 +164,25 @@ def fascicolo(persona: Persona) -> dict:
                 "Ulteriori note sanitarie": sanitarie.note_sanitarie,
                 "Gruppo sanguigno": sanitarie.gruppo_sanguigno,
                 "Medico curante": sanitarie.medico_curante,
+                "Telefono del medico": sanitarie.medico_telefono,
                 "Altre vaccinazioni": sanitarie.altre_vaccinazioni,
+                # The group's form (DEC-289).
+                "Patologie rilevanti": sanitarie.patologie,
+                "Patologie: dettaglio": sanitarie.patologie_dettaglio,
+                "Interventi o traumi recenti": sanitarie.interventi,
+                "Interventi: dettaglio": sanitarie.interventi_dettaglio,
+                "Disturbi del sonno": sanitarie.disturbi_sonno,
+                "Disturbi del sonno: dettaglio": sanitarie.disturbi_sonno_dettaglio,
+                "Occhiali, lenti o apparecchi": sanitarie.occhiali,
+                "Occhiali: dettaglio": sanitarie.occhiali_dettaglio,
+                "Allergie a farmaci": sanitarie.allergie_farmaci,
+                "Allergie alimentari": sanitarie.allergie_alimentari,
+                "Intolleranze alimentari": sanitarie.intolleranze_alimentari,
+                "Allergie a punture d'insetto": sanitarie.allergie_insetti,
+                "Allergie ambientali": sanitarie.allergie_ambientali,
+                "Farmaco salvavita": sanitarie.farmaco_salvavita,
+                "Ultimo richiamo antitetanico": come_testo(sanitarie.antitetanica_data),
+                "Farmaci da banco autorizzati": sanitarie.farmaci_da_banco,
                 "Modulo firmato il": come_testo(sanitarie.firmata_il),
                 "Prescrizione consegnata il": come_testo(sanitarie.prescrizione_consegnata_il),
                 "Inserite da": sanitarie.get_inserite_da_display(),

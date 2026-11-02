@@ -16,6 +16,7 @@ from apps.permessi.models import AccessoDatoSensibile, Azione, Categoria, regist
 
 from . import stampa
 from .models import (
+    CAMPO_DEL_TIPO,
     Allergia,
     Farmaco,
     Gravita,
@@ -29,7 +30,8 @@ router = Router(tags=["sanitaria"])
 
 
 class AllergiaIO(Schema):
-    tipo: TipoAllergia
+    # "ALLERGIA" from a request queued by an older app: a food allergy (DEC-289).
+    tipo: str
     sostanza: str
     gravita: Gravita
     reazione: str = ""
@@ -60,6 +62,24 @@ class SanitarieIn(Schema):
     gruppo_sanguigno: str | None = None
     medico_curante: str | None = None
     altre_vaccinazioni: str | None = None
+    # The group's form (DEC-289); None = unchanged, as above.
+    medico_telefono: str | None = None
+    patologie_dettaglio: str | None = None
+    interventi_dettaglio: str | None = None
+    disturbi_sonno_dettaglio: str | None = None
+    occhiali_dettaglio: str | None = None
+    patologie: bool | None = None
+    interventi: bool | None = None
+    disturbi_sonno: bool | None = None
+    occhiali: bool | None = None
+    allergie_farmaci: bool | None = None
+    allergie_alimentari: bool | None = None
+    intolleranze_alimentari: bool | None = None
+    allergie_insetti: bool | None = None
+    allergie_ambientali: bool | None = None
+    farmaco_salvavita: bool | None = None
+    farmaci_da_banco: bool | None = None
+    antitetanica_data: date | None = None
 
 
 CAMPI_SCHEDA = (
@@ -70,7 +90,40 @@ CAMPI_SCHEDA = (
     "gruppo_sanguigno",
     "medico_curante",
     "altre_vaccinazioni",
+    "medico_telefono",
+    "patologie_dettaglio",
+    "interventi_dettaglio",
+    "disturbi_sonno_dettaglio",
+    "occhiali_dettaglio",
 )
+# Yes/no answers of the group's form (DEC-289): a null in the request clears them only
+# when sent on purpose.
+CAMPI_SI_NO = (
+    "patologie",
+    "interventi",
+    "disturbi_sonno",
+    "occhiali",
+    *CAMPO_DEL_TIPO.values(),
+    "farmaco_salvavita",
+    "farmaci_da_banco",
+)
+ANAMNESI = {
+    "patologie": "le patologie",
+    "interventi": "gli interventi o i traumi",
+    "disturbi_sonno": "i disturbi del sonno",
+    "occhiali": "occhiali, lenti o apparecchi",
+}
+
+
+class GenitoreScheda(Schema):
+    """A parent on the form, with the phones (DEC-289): the mobile from BuonaStrada,
+    the landline or work number entered in the app, on the parent's own record."""
+
+    id: int
+    nome: str
+    cellulare: str
+    telefono_fisso: str
+    puo_modificare: bool
 
 
 class SanitarieOut(Schema):
@@ -91,6 +144,24 @@ class SanitarieOut(Schema):
     gruppo_sanguigno: str = ""
     medico_curante: str = ""
     altre_vaccinazioni: str = ""
+    medico_telefono: str = ""
+    patologie: bool | None = None
+    patologie_dettaglio: str = ""
+    interventi: bool | None = None
+    interventi_dettaglio: str = ""
+    disturbi_sonno: bool | None = None
+    disturbi_sonno_dettaglio: str = ""
+    occhiali: bool | None = None
+    occhiali_dettaglio: str = ""
+    allergie_farmaci: bool | None = None
+    allergie_alimentari: bool | None = None
+    intolleranze_alimentari: bool | None = None
+    allergie_insetti: bool | None = None
+    allergie_ambientali: bool | None = None
+    farmaco_salvavita: bool | None = None
+    farmaci_da_banco: bool | None = None
+    antitetanica_data: date | None = None
+    genitori: list[GenitoreScheda] = []
     # Paper (DEC-52, DEC-54): the last signature, and whether the data changed after it.
     firmata_il: date | None = None
     da_rifirmare: bool = False
@@ -129,7 +200,9 @@ def _sanitarie(info: InformazioniSanitarie | None) -> dict:
         "inserite_da": info.get_inserite_da_display(),
         "aggiornate_il": info.dati_modificati_il or info.aggiornato_il,
         **{campo: getattr(info, campo) for campo in CAMPI_SCHEDA},
+        **{campo: getattr(info, campo) for campo in CAMPI_SI_NO},
         "antitetanica": info.antitetanica,
+        "antitetanica_data": info.antitetanica_data,
         "firmata_il": info.firmata_il,
         "da_rifirmare": info.da_rifirmare,
         "prescrizione_consegnata_il": info.prescrizione_consegnata_il,
@@ -147,6 +220,9 @@ ESSENZIALI = (
     "farmaci",
     "inserite_da",
     "aggiornate_il",
+    # Also offline at camp (DEC-291).
+    "farmaco_salvavita",
+    "farmaci_da_banco",
 )
 
 
@@ -183,15 +259,52 @@ def _persona_visibile(request, persona_id: int) -> Persona:
     return persona
 
 
+def _genitori(request, persona: Persona) -> list[dict]:
+    """The parents of a minor with their phones (DEC-289); none for an adult, who signs
+    the form themself."""
+    if not persona.e_minorenne():
+        return []
+    return [
+        {
+            "id": r.tutore.pk,
+            "nome": f"{r.tutore.nome} {r.tutore.cognome}",
+            "cellulare": r.tutore.cellulare,
+            "telefono_fisso": r.tutore.telefono_fisso,
+            "puo_modificare": policy.puo_modificare_telefono_fisso(request.auth, r.tutore),
+        }
+        for r in RelazioneTutela.objects.filter(minore=persona).select_related("tutore")
+    ]
+
+
+def _con_permessi(request, persona: Persona, info) -> dict:
+    return _sanitarie(info) | {
+        "puo_modificare": policy.puo_modificare_sanitarie(request.auth, persona),
+        "puo_registrare_firma": policy.puo_registrare_firma_sanitaria(request.auth, persona),
+        "genitori": _genitori(request, persona),
+    }
+
+
 @router.get("/persone/{persona_id}/sanitarie", response=SanitarieOut)
 def leggi_sanitarie(request, persona_id: int):
     persona = _persona_visibile(request, persona_id)
     info = InformazioniSanitarie.objects.filter(persona=persona).first()
     registra_accessi(request, [persona], Categoria.SANITARIE, Azione.LETTURA)
-    return _sanitarie(info) | {
-        "puo_modificare": policy.puo_modificare_sanitarie(request.auth, persona),
-        "puo_registrare_firma": policy.puo_registrare_firma_sanitaria(request.auth, persona),
-    }
+    return _con_permessi(request, persona, info)
+
+
+class TelefonoFisso(Schema):
+    telefono: str = ""
+
+
+@router.put("/persone/{persona_id}/telefono-fisso", response=TelefonoFisso)
+def telefono_fisso(request, persona_id: int, dati: TelefonoFisso):
+    """A parent's landline or work number, on the medical form of every child (DEC-289)."""
+    genitore = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_modificare_telefono_fisso(request.auth, genitore):
+        raise HttpError(404, "Persona non trovata.")
+    genitore.telefono_fisso = dati.telefono.strip()[:30]
+    genitore.save(update_fields=["telefono_fisso", "aggiornato_il"])
+    return {"telefono": genitore.telefono_fisso}
 
 
 @router.put("/persone/{persona_id}/sanitarie", response=SanitarieOut)
@@ -202,8 +315,24 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
         if policy.puo_vedere_sanitarie(request.auth, persona):
             raise HttpError(403, "Puoi leggere queste informazioni ma non modificarle.")
         raise HttpError(404, "Persona non trovata.")
+    for allergia in dati.allergie:
+        # A request queued by an older app (DEC-289).
+        if allergia.tipo == "ALLERGIA":
+            allergia.tipo = TipoAllergia.ALIMENTARE
+        if allergia.tipo not in TipoAllergia.values:
+            raise HttpError(400, "Tipo di allergia sconosciuto.")
     if dati.nessuna_allergia and dati.allergie:
         raise HttpError(400, "Hai indicato «nessuna allergia» ma ne hai elencate alcune.")
+    for tipo, campo in CAMPO_DEL_TIPO.items():
+        if getattr(dati, campo) is False and any(a.tipo == tipo for a in dati.allergie):
+            raise HttpError(
+                400, f"Hai risposto no a «{tipo.label}» ma ne hai elencate alcune: togli il no."
+            )
+    for campo, cosa in ANAMNESI.items():
+        if getattr(dati, campo) and not (getattr(dati, f"{campo}_dettaglio") or "").strip():
+            raise HttpError(400, f"Hai risposto sì: spiega in breve {cosa}.")
+    if dati.antitetanica_data and dati.antitetanica_data > timezone.localdate():
+        raise HttpError(400, "La data del richiamo antitetanico non può essere nel futuro.")
     if dati.nessun_farmaco and dati.farmaci:
         raise HttpError(400, "Hai indicato «nessun farmaco» ma ne hai elencati alcuni.")
     for allergia in dati.allergie:
@@ -244,6 +373,20 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
                 )
         if dati.antitetanica is not None or "antitetanica" in dati.model_fields_set:
             info.antitetanica = dati.antitetanica
+        for campo in CAMPI_SI_NO:
+            if campo in dati.model_fields_set:
+                setattr(info, campo, getattr(dati, campo))
+        if "antitetanica_data" in dati.model_fields_set:
+            info.antitetanica_data = dati.antitetanica_data
+            if dati.antitetanica_data:
+                info.antitetanica = True
+        # The five kinds answered "no": no allergy at all; an older app sends only that.
+        risposte = [getattr(info, c) for c in CAMPO_DEL_TIPO.values()]
+        if dati.nessuna_allergia and all(r is None for r in risposte):
+            for c in CAMPO_DEL_TIPO.values():
+                setattr(info, c, False)
+        elif any(r is not None for r in risposte):
+            info.nessuna_allergia = all(r is False for r in risposte)
         info.inserite_da = inserite_da
         info.aggiornate_da = request.auth
         info.dati_modificati_il = timezone.now()
@@ -273,10 +416,7 @@ def scrivi_sanitarie(request, persona_id: int, dati: SanitarieIn):
             for f in dati.farmaci
         )
         registra_accessi(request, [persona], Categoria.SANITARIE, Azione.MODIFICA)
-    return _sanitarie(info) | {
-        "puo_modificare": True,
-        "puo_registrare_firma": policy.puo_registrare_firma_sanitaria(request.auth, persona),
-    }
+    return _con_permessi(request, persona, info)
 
 
 class CartaIn(Schema):

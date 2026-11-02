@@ -103,15 +103,30 @@ def crea_attivita(email) -> None:
     capo_cerchio = Api(email("Elena", "Conti"))
     capo_clan = Api(email("Davide", "Ricci"))
 
-    # Health essentials, written by the unit staff (DEC-113).
+    # The group's medical form (DEC-289), written by the unit staff (DEC-113).
     giulia = persona["Giulia Rossi"].pk
     capo_reparto(
         "put",
         f"/persone/{giulia}/sanitarie",
         {
+            "patologie": False,
+            "interventi": False,
+            "disturbi_sonno": False,
+            "occhiali": True,
+            "occhiali_dettaglio": "Occhiali da vista per leggere",
+            "allergie_farmaci": False,
+            "allergie_alimentari": False,
+            "intolleranze_alimentari": True,
+            "allergie_insetti": False,
+            "allergie_ambientali": True,
+            "farmaco_salvavita": False,
+            "farmaci_da_banco": True,
+            "antitetanica_data": anno.inizio.replace(year=anno.inizio.year - 3).isoformat(),
+            "medico_curante": "Dott.ssa Anna Verdi",
+            "medico_telefono": "0825000099",
             "allergie": [
                 {
-                    "tipo": "ALLERGIA",
+                    "tipo": "AMBIENTALE",
                     "sostanza": "Graminacee",
                     "gravita": "LIEVE",
                     "reazione": "Starnuti e occhi arrossati",

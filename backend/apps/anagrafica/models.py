@@ -40,6 +40,9 @@ class Persona(ModelloTracciato):
     cap = models.CharField(max_length=5, blank=True)
     email = models.EmailField(blank=True)
     cellulare = models.CharField(max_length=30, blank=True)
+    # A landline or work number, entered in the app (not in BuonaStrada): on the medical
+    # form of every child (DEC-289).
+    telefono_fisso = models.CharField(max_length=30, blank=True)
     stato_socio = models.CharField(max_length=1, choices=StatoSocio.choices, blank=True)
     # Consents imported from BuonaStrada (DEC-30, consents table in the requirements).
     consenso_iscrizione = models.BooleanField(null=True, blank=True)  # CONSENSO 2A

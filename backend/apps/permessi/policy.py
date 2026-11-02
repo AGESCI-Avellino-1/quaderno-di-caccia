@@ -335,6 +335,16 @@ def puo_modificare_sanitarie(user, persona: Persona) -> bool:
     return _staff_della_persona(user, persona)
 
 
+def puo_modificare_telefono_fisso(user, genitore: Persona) -> bool:
+    """A parent's landline or work number on the medical forms (DEC-289): the parent,
+    and whoever writes the medical form of one of their children."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == genitore.pk:
+        return True
+    figli = Persona.objects.filter(tutori__tutore=genitore)
+    return any(puo_modificare_sanitarie(user, figlio) for figlio in figli)
+
+
 def puo_registrare_firma_sanitaria(user, persona: Persona) -> bool:
     """The paper form signed, the prescription handed over (DEC-52, DEC-54): who receives
     the paper, the staff of the person's unit and the capigruppo (DEC-193)."""

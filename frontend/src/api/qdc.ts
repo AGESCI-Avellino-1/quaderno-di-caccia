@@ -840,7 +840,61 @@ export interface SchedaCorrezioni {
 
 // --- Health essentials (DEC-48 core, DEC-55) -------------------------------------------
 
-export type TipoAllergia = 'ALLERGIA' | 'INTOLLERANZA'
+/** The five kinds of the group's form (DEC-289). */
+export type TipoAllergia = 'FARMACI' | 'ALIMENTARE' | 'INTOLLERANZA' | 'INSETTI' | 'AMBIENTALE'
+
+/** Each kind, its label and its yes/no field (DEC-289), in the order of the form. */
+export const TIPI_ALLERGIA = [
+  {
+    tipo: 'FARMACI',
+    nome: 'Allergie a farmaci',
+    esempio: 'es. antibiotici',
+    campo: 'allergie_farmaci',
+  },
+  { tipo: 'ALIMENTARE', nome: 'Allergie alimentari', esempio: '', campo: 'allergie_alimentari' },
+  {
+    tipo: 'INTOLLERANZA',
+    nome: 'Intolleranze alimentari',
+    esempio: 'es. celiachia, lattosio',
+    campo: 'intolleranze_alimentari',
+  },
+  {
+    tipo: 'INSETTI',
+    nome: "Allergie a punture d'insetto",
+    esempio: 'api, vespe',
+    campo: 'allergie_insetti',
+  },
+  {
+    tipo: 'AMBIENTALE',
+    nome: 'Allergie ambientali',
+    esempio: 'polline, polvere',
+    campo: 'allergie_ambientali',
+  },
+] as const
+
+/** The four questions of the medical history (DEC-289). */
+export const ANAMNESI = [
+  {
+    campo: 'patologie',
+    domanda: 'Soffre o ha sofferto di patologie rilevanti?',
+    esempio: 'es. asma, epilessia, diabete, problemi cardiaci, convulsioni febbrili',
+  },
+  {
+    campo: 'interventi',
+    domanda: 'Ha subito interventi chirurgici o traumi recenti?',
+    esempio: '',
+  },
+  {
+    campo: 'disturbi_sonno',
+    domanda: 'Soffre di disturbi del sonno?',
+    esempio: 'es. sonnambulismo, incubi frequenti, enuresi notturna',
+  },
+  {
+    campo: 'occhiali',
+    domanda: 'Porta occhiali da vista, lenti a contatto o apparecchi ortodontici mobili?',
+    esempio: '',
+  },
+] as const
 export type Gravita = 'LIEVE' | 'MODERATA' | 'GRAVE'
 
 export interface Allergia {
@@ -876,6 +930,34 @@ export interface SanitarieIn {
   gruppo_sanguigno?: string
   medico_curante?: string
   altre_vaccinazioni?: string
+  // The group's form (DEC-289); null = not answered yet.
+  medico_telefono?: string
+  patologie?: boolean | null
+  patologie_dettaglio?: string
+  interventi?: boolean | null
+  interventi_dettaglio?: string
+  disturbi_sonno?: boolean | null
+  disturbi_sonno_dettaglio?: string
+  occhiali?: boolean | null
+  occhiali_dettaglio?: string
+  allergie_farmaci?: boolean | null
+  allergie_alimentari?: boolean | null
+  intolleranze_alimentari?: boolean | null
+  allergie_insetti?: boolean | null
+  allergie_ambientali?: boolean | null
+  /** Also offline at camp (DEC-291). */
+  farmaco_salvavita?: boolean | null
+  farmaci_da_banco?: boolean | null
+  antitetanica_data?: string | null
+}
+
+/** A parent on the form with the phones (DEC-289): the landline is on the parent. */
+export interface GenitoreScheda {
+  id: number
+  nome: string
+  cellulare: string
+  telefono_fisso: string
+  puo_modificare: boolean
 }
 
 export interface Sanitarie extends SanitarieIn {
@@ -888,6 +970,7 @@ export interface Sanitarie extends SanitarieIn {
   da_rifirmare?: boolean
   prescrizione_consegnata_il?: string | null
   puo_registrare_firma?: boolean
+  genitori?: GenitoreScheda[]
 }
 
 export type TipoNota = 'STAFF' | 'CSQ'
@@ -2587,6 +2670,11 @@ export const api = {
     dati.append('aggiornato_al', aggiornatoAl)
     return richiesta<EsitoImportazione>('/api/v1/importazioni', { metodo: 'POST', corpo: dati })
   },
+  telefonoFisso: (genitore: number, telefono: string) =>
+    richiesta<{ telefono: string }>(`/api/v1/persone/${genitore}/telefono-fisso`, {
+      metodo: 'PUT',
+      corpo: { telefono },
+    }),
   sanitarie: (persona: number) => richiesta<Sanitarie>(percorsoSanitarie(persona)),
   cartaSanitaria: (
     persona: number,

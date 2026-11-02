@@ -40,7 +40,8 @@ class InformazioniSanitarie(ModelloTracciato):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
     inserite_da = models.CharField(max_length=12, choices=InseritoDa.choices)
-    # The rest of the AGESCI form (DEC-48).
+    # The rest of the form (DEC-48, DEC-289). The emergency contact is the form's
+    # "contatto di fiducia", replaced for one event by ReperibilitaEvento (DEC-53).
     tessera_sanitaria = models.CharField(max_length=30, blank=True)
     reperibilita_nome = models.CharField(max_length=120, blank=True)
     reperibilita_telefono = models.CharField(max_length=30, blank=True)
@@ -48,8 +49,32 @@ class InformazioniSanitarie(ModelloTracciato):
     note_sanitarie = models.TextField(blank=True)
     # Optional, with their own consent line on the print (DEC-49, DEC-51).
     gruppo_sanguigno = models.CharField(max_length=10, blank=True)
+    # The doctor (DEC-289): name and phone apart.
     medico_curante = models.CharField(max_length=200, blank=True)
+    medico_telefono = models.CharField(max_length=30, blank=True)
     altre_vaccinazioni = models.CharField(max_length=300, blank=True)
+    # The group's form (DEC-289): four yes/no questions with the details when yes.
+    # None = not answered yet.
+    patologie = models.BooleanField(null=True, blank=True)
+    patologie_dettaglio = models.CharField(max_length=300, blank=True)
+    interventi = models.BooleanField(null=True, blank=True)
+    interventi_dettaglio = models.CharField(max_length=300, blank=True)
+    disturbi_sonno = models.BooleanField(null=True, blank=True)
+    disturbi_sonno_dettaglio = models.CharField(max_length=300, blank=True)
+    occhiali = models.BooleanField(null=True, blank=True)
+    occhiali_dettaglio = models.CharField(max_length=300, blank=True)
+    # The five kinds of allergy of the form, each answered yes or no (None: not yet);
+    # the items of a "yes" are in `allergie` with that `tipo`.
+    allergie_farmaci = models.BooleanField(null=True, blank=True)
+    allergie_alimentari = models.BooleanField(null=True, blank=True)
+    intolleranze_alimentari = models.BooleanField(null=True, blank=True)
+    allergie_insetti = models.BooleanField(null=True, blank=True)
+    allergie_ambientali = models.BooleanField(null=True, blank=True)
+    # A life-saving medicine (adrenaline…) handed to the capi before leaving.
+    farmaco_salvavita = models.BooleanField(null=True, blank=True)
+    antitetanica_data = models.DateField(null=True, blank=True)
+    # Over-the-counter medicines for small ailments, after a phone call when possible.
+    farmaci_da_banco = models.BooleanField(null=True, blank=True)
     # When the health data last changed (not the signature dates): a form signed
     # before that must be signed again (DEC-52).
     dati_modificati_il = models.DateTimeField(null=True, blank=True)
@@ -78,8 +103,24 @@ class InformazioniSanitarie(ModelloTracciato):
 
 
 class TipoAllergia(models.TextChoices):
-    ALLERGIA = "ALLERGIA", "Allergia"
-    INTOLLERANZA = "INTOLLERANZA", "Intolleranza"
+    """The five kinds of the group's form (DEC-289). INTOLLERANZA keeps its old value;
+    the old ALLERGIA became ALIMENTARE (migration 0004)."""
+
+    FARMACI = "FARMACI", "Allergia a farmaci"
+    ALIMENTARE = "ALIMENTARE", "Allergia alimentare"
+    INTOLLERANZA = "INTOLLERANZA", "Intolleranza alimentare"
+    INSETTI = "INSETTI", "Allergia a punture d'insetto"
+    AMBIENTALE = "AMBIENTALE", "Allergia ambientale"
+
+
+# The yes/no field of each kind (DEC-289).
+CAMPO_DEL_TIPO = {
+    TipoAllergia.FARMACI: "allergie_farmaci",
+    TipoAllergia.ALIMENTARE: "allergie_alimentari",
+    TipoAllergia.INTOLLERANZA: "intolleranze_alimentari",
+    TipoAllergia.INSETTI: "allergie_insetti",
+    TipoAllergia.AMBIENTALE: "allergie_ambientali",
+}
 
 
 class Gravita(models.TextChoices):

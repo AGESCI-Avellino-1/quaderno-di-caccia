@@ -132,6 +132,8 @@ export interface Sito {
   /** Maintenance (DEC-268): only the technical administrators get in. */
   manutenzione?: boolean
   messaggio_manutenzione?: string
+  /** Days before a closed install banner shows again (DEC-283). */
+  banner_installazione_giorni?: number
 }
 
 /** Privacy policy or terms, as published (DEC-266). */

@@ -43,6 +43,8 @@ class SitoOut(Schema):
     # Maintenance (DEC-268): the PWA shows the message, the login page too.
     manutenzione: bool = False
     messaggio_manutenzione: str = ""
+    # Days before a closed banner suggesting to install the app shows again (DEC-283).
+    banner_installazione_giorni: int = 14
 
 
 def _sito() -> dict:
@@ -62,6 +64,7 @@ def _sito() -> dict:
         ),
         "manutenzione": imp.manutenzione,
         "messaggio_manutenzione": imp.avviso_manutenzione() if imp.manutenzione else "",
+        "banner_installazione_giorni": settings.QDC_BANNER_INSTALLAZIONE_GIORNI,
     }
 
 

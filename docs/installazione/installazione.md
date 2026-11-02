@@ -152,6 +152,7 @@ quelli con `unless-stopped` usata dall'app.
 | --- | --- | --- |
 | `QDC_INVITO_VALIDITA_GIORNI` | per quanti giorni vale un invito | 14 |
 | `QDC_OFFLINE_GIORNI` | per quanti giorni un telefono tiene i dati senza collegarsi | 14 |
+| `QDC_BANNER_INSTALLAZIONE_GIORNI` | dopo quanti giorni l'invito a installare l'app, chiuso, può ricomparire | 14 |
 | `QDC_DRIVE_CREDENZIALI`, `QDC_DRIVE_CARTELLA`, `QDC_IMPRONTA_CHIAVE` | archivio sul Drive | vuote: vedi [Archivio sul Drive](archivio) |
 | `QDC_GOOGLE_*`, `QDC_APPLE_*` | accesso con Google e Apple | vuote: vedi [Accesso con Google e Apple](google-apple) |
 | `QDC_MAILPIT_CONSENTITO` | permette la modalità di prova delle email | `false`: vedi [Server di prova](prova) |

@@ -61,6 +61,12 @@ def test_sito_di_base_anche_senza_accesso(gruppo):
     assert dati["titolo_completo"] == "[Nome sito] - [Gruppo]"
     assert dati["titolo_breve"] == "[Sigla sito] - [Sigla gruppo]"
     assert "/" in dati["anno"]
+    assert dati["banner_installazione_giorni"] == 14
+
+
+def test_sito_giorni_del_banner_di_installazione(gruppo, settings):
+    settings.QDC_BANNER_INSTALLAZIONE_GIORNI = 30
+    assert Client().get("/api/v1/sito").json()["banner_installazione_giorni"] == 30
 
 
 def test_policy_impostazioni(

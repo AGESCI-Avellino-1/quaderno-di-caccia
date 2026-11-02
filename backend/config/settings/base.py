@@ -255,6 +255,8 @@ QDC_INVITO_VALIDITA_GIORNI = env.int("QDC_INVITO_VALIDITA_GIORNI", default=14)
 # A device that does not reach the server for this many days deletes its offline data
 # by itself (DEC-97). Camps last up to 12 days (DEC-94).
 QDC_OFFLINE_GIORNI = env.int("QDC_OFFLINE_GIORNI", default=14)
+# Days after which a closed banner suggesting to install the app may show again (DEC-283).
+QDC_BANNER_INSTALLAZIONE_GIORNI = env.int("QDC_BANNER_INSTALLAZIONE_GIORNI", default=14)
 # The group's shared Drive for the archives (DEC-196, DEC-212): the path of the service
 # account's JSON key and the id of the folder. Empty: archiving is not available.
 QDC_DRIVE_CREDENZIALI = env("QDC_DRIVE_CREDENZIALI", default="")

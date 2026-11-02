@@ -65,6 +65,12 @@ body {
   color: p.$agesci-nero;
 }
 
+// The banner suggesting to install the app (DEC-283).
+.qdc-barra-installazione {
+  background-color: var(--bs-bg-body);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
 // Texts written by people (event descriptions, notes): keep their line breaks.
 .testo-a-capo {
   white-space: pre-line;
@@ -74,6 +80,7 @@ body {
 @media print {
   .qdc-intestazione,
   .qdc-barra-offline,
+  .qdc-barra-installazione,
   .qdc-non-stampare {
     display: none !important;
   }

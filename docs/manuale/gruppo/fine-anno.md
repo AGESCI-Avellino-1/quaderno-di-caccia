@@ -28,6 +28,12 @@ Il collegamento al Drive lo configura chi ha installato l'app. Finché manca, il
 dice e non si archivia niente.
 :::
 
+Sotto, in **Unità**, trovi le unità chiuse in cui tutti sono stati archiviati: tocca
+**Archivia** e spariscono dagli elenchi, anche da quello delle unità chiuse. Non va niente sul
+Drive: un'unità non contiene dati delle persone. Se rientra qualcuno che ne ha fatto parte,
+l'unità torna da sola tra quelle chiuse; puoi anche riportarla tu da **Unità archiviate** con
+**Ripristina**.
+
 ## Chi arriva da un altro gruppo, chi rientra
 
 - **Esporta per un altro gruppo**: dalla scheda di chi va in un altro gruppo che usa il

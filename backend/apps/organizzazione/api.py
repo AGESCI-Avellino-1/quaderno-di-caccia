@@ -19,6 +19,7 @@ from apps.core.anno import compie_anni
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
+from . import servizi
 from .models import (
     INCARICHI_DI_SERVIZIO,
     RUOLI_DI_GRUPPO,
@@ -66,6 +67,8 @@ class UnitaOut(Schema):
     composizione: str
     ambiente: str
     attiva: bool
+    # Archived: out of the lists, back when someone of its history returns (DEC-275).
+    archiviata_il: date | None = None
     collegata_a: int | None
     nota_collegamento: str
     # Ages for the waiting list (DEC-260); None for the Co.Ca.
@@ -102,10 +105,15 @@ class UnitaIn(Schema):
 
 @router.get("/unita", response=list[UnitaOut])
 def elenco_unita(request, tutte: bool = False):
-    """Units of the group: visible to any capo (DEC-09). `tutte` adds closed ones."""
+    """Units of the group: visible to any capo (DEC-09). `tutte` adds closed ones, not
+    the archived ones (DEC-275)."""
     if not policy.puo_vedere_organizzazione(request.auth):
         raise HttpError(403, "Riservato ai capi.")
-    unita = Unita.objects.all() if tutte else Unita.objects.filter(attiva=True)
+    unita = (
+        Unita.objects.filter(archiviata_il__isnull=True)
+        if tutte
+        else Unita.objects.filter(attiva=True)
+    )
     return unita.order_by("tipo", "nome")
 
 
@@ -140,6 +148,18 @@ def modifica_unita(request, unita_id: int, dati: UnitaIn):
     if not policy.puo_gestire_unita(request.auth):
         raise HttpError(403, "Solo i capigruppo modificano le unità.")
     return _applica_unita(get_object_or_404(Unita, pk=unita_id), dati)
+
+
+@router.delete("/unita/{unita_id}", response={204: None})
+def elimina_unita(request, unita_id: int):
+    """Only a closed unit nobody was ever in and nothing refers to (DEC-273)."""
+    if not policy.puo_gestire_unita(request.auth):
+        raise HttpError(403, "Solo i capigruppo eliminano le unità.")
+    try:
+        servizi.cancella_unita(get_object_or_404(Unita, pk=unita_id))
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    return Status(204, None)
 
 
 # --- Roles (DEC-11, DEC-14, DEC-18) --------------------------------------------------------
@@ -209,6 +229,8 @@ class UnitaDettaglio(Schema):
     puo_gestire_squadriglie: bool
     # The ages for the waiting list (DEC-260): its staff and the capigruppo.
     puo_modificare_eta: bool = False
+    # Closed and empty: created by mistake, the capigruppo may delete it (DEC-273).
+    puo_eliminare: bool = False
     # Unit roles the caller may assign (and close).
     nomina: list[Scelta]
 
@@ -327,6 +349,9 @@ def dettaglio_unita(request, unita_id: int):
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + _avvisi_maggiore_eta(unita),
         "puo_modificare": policy.puo_gestire_unita(utente),
+        "puo_eliminare": policy.puo_gestire_unita(utente)
+        and not unita.attiva
+        and not unita.appartenenze.exists(),
         "puo_gestire_squadriglie": unita.tipo == TipoUnita.REPARTO
         and policy.puo_gestire_squadriglie(utente, unita),
         "puo_modificare_eta": unita.eta is not None

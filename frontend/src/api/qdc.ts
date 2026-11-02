@@ -311,6 +311,8 @@ export interface Unita {
   composizione: string
   ambiente: string
   attiva: boolean
+  /** Archived: out of the lists, back when someone of its history returns (DEC-275). */
+  archiviata_il?: string | null
   collegata_a: number | null
   nota_collegamento: string
   /** Ages for the waiting list (DEC-260); null for the Co.Ca. */
@@ -411,6 +413,8 @@ export interface UnitaDettaglio {
   puo_gestire_squadriglie: boolean
   /** The ages for the waiting list (DEC-260). */
   puo_modificare_eta?: boolean
+  /** Closed and empty, created by mistake: the capigruppo may delete it (DEC-273). */
+  puo_eliminare?: boolean
   nomina: Scelta[]
 }
 
@@ -1837,6 +1841,10 @@ export interface ArchivioGruppo {
   /** With the parents that go with them (DEC-214). */
   da_archiviare: { id: number; nome: string; uscita: string; genitori: string[] }[]
   archiviate: { nome: string; nome_file: string; archiviata_il: string }[]
+  /** Closed units with only archived people in their history, and the archived ones
+   * (DEC-275). */
+  unita_da_archiviare?: { id: number; nome: string }[]
+  unita_archiviate?: { id: number; nome: string; archiviata_il: string }[]
 }
 
 export interface EsitoImportazione {
@@ -2261,6 +2269,7 @@ export const api = {
   creaUnita: (dati: UnitaIn) => richiesta<Unita>('/api/v1/unita', { metodo: 'POST', corpo: dati }),
   modificaUnita: (id: number, dati: UnitaIn) =>
     richiesta<Unita>(`/api/v1/unita/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaUnita: (id: number) => richiesta<void>(`/api/v1/unita/${id}`, { metodo: 'DELETE' }),
   creaSquadriglia: (unita: number, dati: { nome: string; sesso: string }) =>
     richiesta<Squadriglia>(`/api/v1/unita/${unita}/squadriglie`, { metodo: 'POST', corpo: dati }),
   modificaSquadriglia: (id: number, dati: { nome: string; sesso: string; attiva: boolean }) =>
@@ -2868,6 +2877,10 @@ export const api = {
   archivio: () => richiesta<ArchivioGruppo>('/api/v1/archivio'),
   archivia: (persona: number) =>
     richiesta<ArchivioGruppo>(`/api/v1/archivio/${persona}`, { metodo: 'POST' }),
+  archiviaUnita: (unita: number) =>
+    richiesta<ArchivioGruppo>(`/api/v1/archivio/unita/${unita}`, { metodo: 'POST' }),
+  ripristinaUnita: (unita: number) =>
+    richiesta<ArchivioGruppo>(`/api/v1/archivio/unita/${unita}/ripristina`, { metodo: 'POST' }),
   importaTrasferimento: (file: File) =>
     richiesta<EsitoImportazione>('/api/v1/trasferimenti', {
       metodo: 'POST',

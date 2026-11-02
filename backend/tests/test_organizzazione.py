@@ -592,3 +592,47 @@ def test_capi_senza_servizio_per_i_capigruppo(capogruppo, capo, capo_semplice):
     assert [i["persona"]["id"] for i in dati["a_disposizione"]] == [capo_semplice.pk]
     # Other capi see the roles, not the list to sort out.
     assert _client(capo).get("/api/v1/gruppo/incarichi").json()["senza_servizio"] == []
+
+
+def _delete(chi, url):
+    return _client(chi).delete(url)
+
+
+def test_elimina_solo_unita_chiusa_e_vuota(gruppo, coca, capo, capogruppo, ragazza, reparto):
+    """Created by mistake: closed, nobody ever in it, nothing linked (DEC-273)."""
+    from datetime import date
+
+    from apps.fascicolo.models import RuoloPassato, ServizioPassato
+    from apps.iscrizioni.models import CodiceIscrizione, TipoCodice
+
+    sbagliata = Unita.objects.create(
+        gruppo=gruppo, nome="Doppione", tipo=TipoUnita.REPARTO, composizione=Composizione.MISTA
+    )
+    url = f"/api/v1/unita/{sbagliata.pk}"
+    assert _delete(capogruppo, url).status_code == 400  # still open
+    sbagliata.attiva = False
+    sbagliata.save()
+    assert _delete(capo, url).status_code == 403
+    # Someone was in it: never deleted.
+    reparto.attiva = False
+    reparto.save()
+    risposta = _delete(capogruppo, f"/api/v1/unita/{reparto.pk}")
+    assert risposta.status_code == 400 and "archiviarla" in risposta.json()["detail"]
+    # Something still linked: named in the answer.
+    codice = CodiceIscrizione.objects.create(
+        unita=sbagliata, tipo=TipoCodice.UNITA, scadenza=date(2030, 1, 1)
+    )
+    risposta = _delete(capogruppo, url)
+    assert risposta.status_code == 400 and "codici di iscrizione" in risposta.json()["detail"]
+    codice.delete()
+    # A year of service rebuilt by hand keeps the unit by name.
+    servizio = ServizioPassato.objects.create(
+        persona=capo, anno=2010, unita=sbagliata, ruolo=RuoloPassato.STAFF
+    )
+    dettaglio = _client(capogruppo).get(url).json()
+    assert dettaglio["puo_eliminare"] is True
+    assert _client(capo).get(url).json()["puo_eliminare"] is False
+    assert _delete(capogruppo, url).status_code == 204
+    assert not Unita.objects.filter(pk=sbagliata.pk).exists()
+    servizio.refresh_from_db()
+    assert servizio.unita is None and servizio.unita_testo == "Reparto Doppione"

@@ -565,3 +565,13 @@ def test_stato_i_per_chi_e_gia_nell_app_non_cambia_nulla():
     riepilogo = applica(_risultato(righe), oggi=OGGI)
     assert riepilogo.persone_aggiornate == []
     assert not Nota.objects.exists()
+
+
+def test_unita_archiviata_ripristinata_se_torna_nell_export():
+    """Back in BuonaStrada: the archived unit comes back, its state unchanged (DEC-275)."""
+    applica(_risultato(), oggi=OGGI)
+    Unita.objects.filter(codice_unita="N").update(archiviata_il=OGGI, attiva=False)
+    riepilogo = applica(_risultato(), oggi=OGGI)
+    reparto = Unita.objects.get(codice_unita="N")
+    assert reparto.archiviata_il is None and not reparto.attiva
+    assert riepilogo.unita_create == ["Reparto (N1) (ripristinata dall'archivio)"]

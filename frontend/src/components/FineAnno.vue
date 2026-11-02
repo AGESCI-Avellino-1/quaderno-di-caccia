@@ -52,6 +52,24 @@ async function archivia(id: number) {
   }
 }
 
+// Units with only archived people in their history (DEC-275): a change of state, back
+// by themselves when one of them returns.
+async function archiviaUnita(id: number) {
+  const nuovi = await esegui(() => api.archiviaUnita(id))
+  if (nuovi) {
+    archivio.value = nuovi
+    esito.value = 'Unità archiviata: torna da sola se rientra qualcuno che ne ha fatto parte.'
+  }
+}
+
+async function ripristinaUnita(id: number) {
+  const nuovi = await esegui(() => api.ripristinaUnita(id))
+  if (nuovi) {
+    archivio.value = nuovi
+    esito.value = 'Unità ripristinata: è di nuovo tra le unità chiuse.'
+  }
+}
+
 async function importa(evento: Event) {
   const input = evento.target as HTMLInputElement
   const file = input.files?.[0]
@@ -204,6 +222,50 @@ async function importa(evento: Event) {
         <ul class="mb-0">
           <li v-for="a in archivio.archiviate" :key="a.nome_file">
             {{ a.nome }} · {{ data(a.archiviata_il) }} · sul Drive: «{{ a.nome_file }}»
+          </li>
+        </ul>
+      </details>
+
+      <h3 class="h6">Unità</h3>
+      <p class="small fg-2">
+        Un'unità chiusa in cui tutti sono stati archiviati si archivia: sparisce dagli elenchi e
+        torna da sola, sempre chiusa, se rientra qualcuno che ne ha fatto parte.
+      </p>
+      <p v-if="!archivio.unita_da_archiviare?.length" class="small">Nessuna unità da archiviare.</p>
+      <ul v-else class="list-group mb-3">
+        <li
+          v-for="u in archivio.unita_da_archiviare"
+          :key="u.id"
+          class="list-group-item small d-flex flex-wrap align-items-center gap-3"
+        >
+          <span>{{ u.nome }}</span>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline theme-primary ms-auto"
+            :disabled="inCorso"
+            @click="archiviaUnita(u.id)"
+          >
+            Archivia
+          </button>
+        </li>
+      </ul>
+      <details v-if="archivio.unita_archiviate?.length" class="small mb-5">
+        <summary>Unità archiviate ({{ archivio.unita_archiviate.length }})</summary>
+        <ul class="list-unstyled mb-0">
+          <li
+            v-for="u in archivio.unita_archiviate"
+            :key="u.id"
+            class="d-flex flex-wrap align-items-center gap-3 mb-1"
+          >
+            <span>{{ u.nome }} · archiviata il {{ data(u.archiviata_il) }}</span>
+            <button
+              type="button"
+              class="btn btn-sm btn-link"
+              :disabled="inCorso"
+              @click="ripristinaUnita(u.id)"
+            >
+              Ripristina
+            </button>
           </li>
         </ul>
       </details>

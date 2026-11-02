@@ -1,12 +1,24 @@
-"""What follows a ragazzo leaving a reparto (DEC-65).
+"""What follows a ragazzo leaving a reparto (DEC-65), and the end of a unit.
 
 The patrol is the basic body of the reparto: every ragazzo of the reparto is in one,
 and whoever leaves the reparto leaves the patrol (DEC-133).
+
+A closed unit is deleted only when nothing refers to it (created by mistake, DEC-273);
+with only archived people in its history it is archived instead, and comes back when
+one of them returns (DEC-275).
 """
 
 from datetime import date
 
-from apps.anagrafica.models import AppartenenzaSquadriglia, DerogaSquadriglia, Persona
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
+
+from apps.anagrafica.models import (
+    Appartenenza,
+    AppartenenzaSquadriglia,
+    DerogaSquadriglia,
+    Persona,
+)
 
 from .models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico, TipoUnita, Unita
 
@@ -55,3 +67,91 @@ def esci_dal_reparto(persona: Persona, unita: Unita, giorno: date) -> list[str]:
         deroga.revocata_il = giorno
         deroga.save(update_fields=["revocata_il", "aggiornato_il"])
     return chiusi
+
+
+# --- The end of a unit (DEC-273, DEC-275) ------------------------------------------------
+
+
+def _persone_non_archiviate(unita: Unita) -> models.QuerySet:
+    return Appartenenza.objects.filter(unita=unita, persona__archiviazioni__isnull=True)
+
+
+def unita_da_archiviare() -> models.QuerySet:
+    """Closed units with someone in their history, all of them archived (DEC-275)."""
+    return (
+        Unita.objects.filter(attiva=False, archiviata_il__isnull=True, appartenenze__isnull=False)
+        .exclude(appartenenze__persona__archiviazioni__isnull=True)
+        .distinct()
+        .order_by("tipo", "codice_unita", "progressivo")
+    )
+
+
+def archivia_unita(unita: Unita, oggi: date | None = None) -> None:
+    if unita.attiva:
+        raise ValidationError("Prima chiudi l'unità.")
+    if _persone_non_archiviate(unita).exists():
+        raise ValidationError(
+            "Nello storico dell'unità c'è ancora qualcuno che non è stato archiviato."
+        )
+    if not unita.appartenenze.exists():
+        raise ValidationError("Nell'unità non c'è mai stato nessuno: si può eliminare.")
+    unita.archiviata_il = oggi or date.today()
+    unita.save(update_fields=["archiviata_il", "aggiornato_il"])
+
+
+def ripristina_unita(unita: Unita) -> bool:
+    """Back among the closed units (DEC-275). True if it was archived."""
+    if unita.archiviata_il is None:
+        return False
+    unita.archiviata_il = None
+    unita.save(update_fields=["archiviata_il", "aggiornato_il"])
+    return True
+
+
+def ripristina_unita_di(persona: Persona) -> list[Unita]:
+    """Someone archived comes back: the archived units of their history come back too,
+    still closed (DEC-275)."""
+    unita = Unita.objects.filter(appartenenze__persona=persona, archiviata_il__isnull=False)
+    return [u for u in unita.distinct() if ripristina_unita(u)]
+
+
+def _collegati(unita: Unita) -> list[str]:
+    """What still refers to the unit, by name; what is only unlinked (SET_NULL) does not
+    count."""
+    collegati = []
+    for relazione in Unita._meta.get_fields(include_hidden=True):
+        if not (relazione.auto_created and not relazione.concrete):
+            continue  # not a reverse relation
+        if getattr(relazione, "on_delete", None) is models.SET_NULL:
+            continue
+        modello = relazione.related_model
+        if modello._meta.auto_created:
+            continue  # a many-to-many table: its model is counted by the other relation
+        if modello._default_manager.filter(**{relazione.field.name: unita}).exists():
+            collegati.append(str(modello._meta.verbose_name_plural))
+    return sorted(set(collegati))
+
+
+def cancella_unita(unita: Unita) -> None:
+    """Only a closed unit nobody was ever in and nothing refers to: created by mistake
+    (DEC-273)."""
+    if unita.attiva:
+        raise ValidationError("Prima chiudi l'unità.")
+    if unita.appartenenze.exists():
+        raise ValidationError(
+            "Nell'unità c'è stato qualcuno: non si può eliminare. Quando tutte le persone "
+            "del suo storico saranno archiviate, potrai archiviarla."
+        )
+    collegati = _collegati(unita)
+    if collegati:
+        raise ValidationError(
+            f"All'unità sono ancora collegati: {', '.join(collegati)}. Non si può eliminare."
+        )
+    from apps.fascicolo.models import ServizioPassato
+
+    with transaction.atomic():
+        # A year rebuilt by hand keeps the unit by name (DEC-207).
+        for servizio in ServizioPassato.objects.filter(unita=unita):
+            servizio.unita_testo = str(unita)
+            servizio.save(update_fields=["unita_testo", "aggiornato_il"])
+        unita.delete()

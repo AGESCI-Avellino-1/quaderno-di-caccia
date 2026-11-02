@@ -51,12 +51,15 @@ def _riunisci(persona: Persona, dati: dict) -> bool:
     rimasto = Persona.objects.filter(pk=rimasto_id, archiviazioni__isnull=False).first()
     if rimasto is None:
         return False
-    if rimasto.pk == persona.pk:
-        return True  # already joined by the BuonaStrada import (DEC-217)
-    for modello in (Appartenenza, AppartenenzaSquadriglia, Incarico, AccessoDatoSensibile):
-        modello.objects.filter(persona=rimasto).update(persona=persona)
-    Archiviazione.objects.filter(persona=rimasto).update(persona=persona)
-    rimasto.delete()
+    from apps.organizzazione.servizi import ripristina_unita_di
+
+    if rimasto.pk != persona.pk:  # else already joined by the BuonaStrada import (DEC-217)
+        for modello in (Appartenenza, AppartenenzaSquadriglia, Incarico, AccessoDatoSensibile):
+            modello.objects.filter(persona=rimasto).update(persona=persona)
+        Archiviazione.objects.filter(persona=rimasto).update(persona=persona)
+        rimasto.delete()
+    # The archived units of their years come back, closed (DEC-275).
+    ripristina_unita_di(persona)
     return True
 
 

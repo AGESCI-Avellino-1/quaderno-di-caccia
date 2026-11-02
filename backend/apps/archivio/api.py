@@ -9,6 +9,8 @@ from ninja import Router, Schema
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
+from apps.organizzazione import servizi as servizi_unita
+from apps.organizzazione.models import Unita
 from apps.permessi import policy
 
 from . import drive, servizi
@@ -87,11 +89,21 @@ class ArchiviazioneOut(Schema):
     archiviata_il: datetime
 
 
+class UnitaArchivioOut(Schema):
+    id: int
+    nome: str
+    archiviata_il: date | None = None
+
+
 class ArchivioOut(Schema):
     # The shared Drive is set up by who installs the app (DEC-212).
     drive_configurato: bool
     da_archiviare: list[CandidatoOut]
     archiviate: list[ArchiviazioneOut]
+    # Closed units with only archived people in their history, and the archived ones
+    # (DEC-275).
+    unita_da_archiviare: list[UnitaArchivioOut] = []
+    unita_archiviate: list[UnitaArchivioOut] = []
 
 
 def _archivio() -> dict:
@@ -111,6 +123,15 @@ def _archivio() -> dict:
             {"nome": a.nome, "nome_file": a.nome_file, "archiviata_il": a.creato_il}
             for a in Archiviazione.objects.all()[:50]
         ],
+        "unita_da_archiviare": [
+            {"id": u.pk, "nome": str(u)} for u in servizi_unita.unita_da_archiviare()
+        ],
+        "unita_archiviate": [
+            {"id": u.pk, "nome": str(u), "archiviata_il": u.archiviata_il}
+            for u in Unita.objects.filter(archiviata_il__isnull=False).order_by(
+                "tipo", "codice_unita", "progressivo"
+            )
+        ],
     }
 
 
@@ -126,4 +147,20 @@ def archivia(request, persona_id: int):
     _capogruppo(request)
     persona = get_object_or_404(Persona, pk=persona_id)
     _esegui(servizi.archivia, request, persona)
+    return _archivio()
+
+
+@router.post("/archivio/unita/{unita_id}", response=ArchivioOut)
+def archivia_unita(request, unita_id: int):
+    """A closed unit with only archived people in its history (DEC-275)."""
+    _capogruppo(request)
+    _esegui(servizi_unita.archivia_unita, get_object_or_404(Unita, pk=unita_id))
+    return _archivio()
+
+
+@router.post("/archivio/unita/{unita_id}/ripristina", response=ArchivioOut)
+def ripristina_unita(request, unita_id: int):
+    """Back among the closed units (DEC-275)."""
+    _capogruppo(request)
+    servizi_unita.ripristina_unita(get_object_or_404(Unita, pk=unita_id))
     return _archivio()

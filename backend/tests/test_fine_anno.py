@@ -362,3 +362,49 @@ def test_rientro_da_capo(capo, capogruppo, settings, tmp_path):
     esito = _client(capogruppo).post("/api/v1/trasferimenti", {"file": file}).json()
     assert esito["formazione"] == 1 and esito["anni_di_servizio"] == 0  # roles came back
     assert Incarico.objects.filter(persona=tornato).exists()
+
+
+def test_unita_archiviata_e_ripristinata_al_rientro(uscito, capo, capogruppo, settings, tmp_path):
+    """A closed unit with only archived people in its history is archived; it comes
+    back, still closed, with whoever returns (DEC-275)."""
+    from tests.conftest import crea_persona
+
+    settings.MEDIA_ROOT = tmp_path
+    reparto = Appartenenza.objects.get(persona=uscito).unita
+    reparto.attiva = False
+    reparto.save()
+    # Someone in its history is not archived yet: not proposed, refused.
+    assert not _client(capogruppo).get("/api/v1/archivio").json()["unita_da_archiviare"]
+    assert _post(capogruppo, f"/api/v1/archivio/unita/{reparto.pk}").status_code == 400
+    uscito.codice_fiscale = "ESPGLI13A41Z000X"  # fictional
+    uscito.save()
+    zip_archivio = _archivia(capogruppo, uscito)
+    dati = _client(capogruppo).get("/api/v1/archivio").json()
+    assert [u["id"] for u in dati["unita_da_archiviare"]] == [reparto.pk]
+    assert _post(capo, f"/api/v1/archivio/unita/{reparto.pk}").status_code == 403
+    dati = _post(capogruppo, f"/api/v1/archivio/unita/{reparto.pk}").json()
+    assert dati["unita_da_archiviare"] == []
+    assert [u["id"] for u in dati["unita_archiviate"]] == [reparto.pk]
+    # Out of every list, even the closed units.
+    unita = _client(capo).get("/api/v1/unita?tutte=true").json()
+    assert reparto.pk not in [u["id"] for u in unita]
+    # She comes back: the unit is restored, still closed, and her years point to it.
+    tornata = crea_persona("Giulia", "Esploratrice", codice_fiscale="ESPGLI13A41Z000X")
+    file = SimpleUploadedFile("archivio.zip", zip_archivio)
+    assert _client(capogruppo).post("/api/v1/trasferimenti", {"file": file}).status_code == 200
+    reparto.refresh_from_db()
+    assert reparto.archiviata_il is None and not reparto.attiva
+    assert Appartenenza.objects.get(persona=tornata).unita == reparto
+
+
+def test_unita_ripristinata_a_mano(uscito, capogruppo, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    reparto = Appartenenza.objects.get(persona=uscito).unita
+    reparto.attiva = False
+    reparto.save()
+    _archivia(capogruppo, uscito)
+    _post(capogruppo, f"/api/v1/archivio/unita/{reparto.pk}")
+    dati = _post(capogruppo, f"/api/v1/archivio/unita/{reparto.pk}/ripristina").json()
+    assert dati["unita_archiviate"] == []
+    reparto.refresh_from_db()
+    assert reparto.archiviata_il is None and not reparto.attiva

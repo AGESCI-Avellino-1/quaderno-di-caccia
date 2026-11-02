@@ -57,7 +57,7 @@ from apps.core.anno import AnnoAssociativo
 from apps.core.models import FonteDato
 from apps.iscrizioni.servizi import recepisci
 from apps.organizzazione.models import BRANCA_DEL_TIPO, Ambiente, Branca, Gruppo, TipoUnita, Unita
-from apps.organizzazione.servizi import esci_dal_reparto
+from apps.organizzazione.servizi import esci_dal_reparto, ripristina_unita, ripristina_unita_di
 
 from .buonastrada import Genitore, RigaSocio, RisultatoParsing
 
@@ -489,6 +489,9 @@ def _persona(
         persona = _rientro(riga.codice_fiscale)
         if persona is not None:
             r.rientri.append(str(persona))
+            # The archived units of their years come back, closed (DEC-275).
+            for unita in ripristina_unita_di(persona):
+                r.unita_create.append(f"{unita} (ripristinata dall'archivio)")
     if persona is None:
         persona = Persona(codice_socio=riga.codice_socio, **valori)
         persona.ultima_importazione = adesso
@@ -550,7 +553,10 @@ def _unita(gruppo: Gruppo, riga: RigaSocio, r: Riepilogo, attiva: bool = True) -
             attiva=attiva,
         )
         r.unita_create.append(str(unita) if attiva else f"{unita} (disattivata)")
-    elif unita.ambiente == Ambiente.NESSUNO and ambiente != Ambiente.NESSUNO:
+    elif ripristina_unita(unita):
+        # In the export again: back from the archive, still closed (DEC-275).
+        r.unita_create.append(f"{unita} (ripristinata dall'archivio)")
+    if unita.ambiente == Ambiente.NESSUNO and ambiente != Ambiente.NESSUNO:
         # The setting is set by the first import that gives it, then it stays the
         # group's: a later export never changes it (DEC-225).
         unita.ambiente = ambiente

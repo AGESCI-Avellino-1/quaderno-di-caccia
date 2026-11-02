@@ -13,6 +13,11 @@ unità.
 Le unità arrivano di solito dall'importazione da BuonaStrada, senza nome: il riquadro **Da
 controllare** dell'unità te lo ricorda.
 
+Un'unità chiusa in cui non c'è mai stato nessuno, per esempio creata per errore, si elimina
+dalla sua pagina: **Elimina…** e **Confermo**. Se ci è stato qualcuno resta, chiusa, per lo
+storico; quando tutte le persone del suo storico sono archiviate, la archivi da [Fine anno e
+archivio](fine-anno).
+
 ## Lo staff delle unità
 
 Nella pagina dell'unità, in **Staff e incarichi**, scegli **Capo unità** o **Staff** in

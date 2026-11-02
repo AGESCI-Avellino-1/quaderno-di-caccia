@@ -137,6 +137,9 @@ class Unita(ModelloTracciato):
     )
     nota_collegamento = models.CharField(max_length=200, blank=True)
     attiva = models.BooleanField(default=True)
+    # Closed, with only archived people in its history: out of every list, back when one
+    # of them returns (DEC-275).
+    archiviata_il = models.DateField(null=True, blank=True)
     # Ages for the waiting list (DEC-260), at the reference date of DEC-37; None = the
     # branch's default (`ETA_DELLA_BRANCA`). Hints, never constraints.
     eta_minima = models.PositiveSmallIntegerField(null=True, blank=True)

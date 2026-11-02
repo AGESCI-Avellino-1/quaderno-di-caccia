@@ -39,8 +39,7 @@ def mailpit(request, percorso: str = ""):
         stato, intestazioni, corpo = errore.code, errore.headers, errore.read()
     except urllib.error.URLError, TimeoutError:
         return HttpResponse(
-            "Mailpit non risponde: va avviato insieme al server (vedi la guida di "
-            "installazione).",
+            "Mailpit non risponde: va avviato insieme al server (vedi la guida di installazione).",
             status=503,
             content_type="text/plain; charset=utf-8",
         )

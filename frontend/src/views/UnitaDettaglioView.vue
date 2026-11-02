@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import {
   api,
@@ -26,6 +26,7 @@ import { leggiConCache } from '@/offline/cache'
 // Staff, roles and patrols of a unit. Reading works offline (cached copy); changes need
 // the network. What each user may change comes from the backend (`nomina`, `puo_*`).
 const props = defineProps<{ id: number }>()
+const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
 const dettaglio = ref<UnitaDettaglio | null>(null)
 const copiaDel = ref<string | null>(null)
@@ -94,6 +95,13 @@ async function salva(dati: UnitaIn) {
   }
 }
 
+// Only a closed unit nobody was ever in: created by mistake (DEC-273).
+const eliminando = ref(false)
+async function elimina() {
+  await esegui(() => api.eliminaUnita(props.id))
+  if (!errore.value) await router.push({ name: 'unita' })
+}
+
 async function creaSquadriglia() {
   const dati = { nome: nuovaSquadriglia.nome.trim(), sesso: nuovaSquadriglia.sesso }
   if (await esegui(() => api.creaSquadriglia(props.id, dati))) {
@@ -122,7 +130,8 @@ const iniziale = (u: Unita): UnitaIn => ({
   <section v-if="unita && dettaglio" :data-branca="temaDellaBranca(unita.branca)">
     <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
       <h1 class="h4 mb-0">{{ nomeUnita(unita) }}</h1>
-      <span v-if="!unita.attiva" class="badge theme-secondary">Chiusa</span>
+      <span v-if="unita.archiviata_il" class="badge theme-secondary">Archiviata</span>
+      <span v-else-if="!unita.attiva" class="badge theme-secondary">Chiusa</span>
       <button
         v-if="dettaglio.puo_modificare && !modifica"
         type="button"
@@ -169,6 +178,34 @@ const iniziale = (u: Unita): UnitaIn => ({
         <ul class="mb-0 ps-5">
           <li v-for="(a, i) in dettaglio.avvisi" :key="i">{{ a }}</li>
         </ul>
+      </div>
+    </div>
+
+    <div v-if="dettaglio.puo_eliminare" class="alert theme-info small" role="status">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <span
+          >Nell'unità non c'è mai stato nessuno: se l'hai creata per errore puoi eliminarla.</span
+        >
+        <button
+          v-if="!eliminando"
+          type="button"
+          class="btn btn-sm btn-outline theme-danger ms-auto"
+          @click="eliminando = true"
+        >
+          Elimina…
+        </button>
+        <span v-else class="ms-auto d-flex align-items-center gap-1">
+          Eliminarla per sempre?
+          <button
+            type="button"
+            class="btn btn-sm btn-solid theme-danger"
+            :disabled="inCorso"
+            @click="elimina"
+          >
+            Confermo
+          </button>
+          <button type="button" class="btn btn-sm btn-link" @click="eliminando = false">No</button>
+        </span>
       </div>
     </div>
 

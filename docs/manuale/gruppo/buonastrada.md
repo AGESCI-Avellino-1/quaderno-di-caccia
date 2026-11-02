@@ -18,7 +18,10 @@ cambiamento importante.
    nell'app), in **L'app e BuonaStrada non coincidono** scegli per ogni dato quale tenere: è
    proposto il più recente. Se vince l'app, ricordati di correggere BuonaStrada.
 6. Leggi gli **Avvisi** (righe saltate, dati non leggibili) e tocca **Applica
-   l'importazione**.
+   l'importazione**. Un dato sbagliato in BuonaStrada, per esempio un'email nella colonna del
+   cellulare o un codice fiscale con un carattere in più, non ferma l'importazione: viene
+   lasciato fuori e l'avviso lo dice. Chiedi il dato giusto alla famiglia e correggilo su
+   BuonaStrada; un genitore con il codice fiscale sbagliato entra solo dopo la correzione.
 
 :::{container} schermate
 ![L'importazione da BuonaStrada sul telefono](../img/gruppo/importazione-telefono.png){.telefono width="30%"}

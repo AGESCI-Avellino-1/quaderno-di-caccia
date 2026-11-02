@@ -8,6 +8,11 @@ squadriglia**. Il riquadro **Da controllare** segnala cosa manca: per esempio un
 compie 18 anni senza account (invitalo, così sceglie cosa vedono i genitori), o qualcuno in
 una squadriglia dell'altro sesso senza un'eccezione.
 
+Se la tua unità è **collegata** a un'altra (per esempio il reparto parallelo), accanto agli
+altri collegamenti c'è **Collegata a** con il suo nome. Lo staff delle due unità conta come
+uno solo: nell'altra unità puoi fare tutto quello che fai nella tua (progressione, dati
+sanitari, squadriglie, eventi e presenze), tranne la cassa, che resta di ogni unità.
+
 :::{container} schermate
 ![La pagina del reparto sul telefono](../img/capo/unita-telefono.png){.telefono width="30%"}
 ![La pagina del reparto sul computer](../img/capo/unita-computer.png){.computer width="65%"}

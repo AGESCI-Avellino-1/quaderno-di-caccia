@@ -43,7 +43,8 @@ In [Google Cloud Console](https://console.cloud.google.com/), con l'account del 
 
 1. Crea un progetto, per esempio «QdC posta». Usa un progetto **a parte** da quello per
    l'[accesso con Google](google-apple): il permesso di inviare email cambia le regole della
-   schermata di consenso di tutto il progetto.
+   schermata di consenso di tutto il progetto. Va bene invece il progetto dell'[archivio sul
+   Drive](archivio): il suo account di servizio non usa la schermata di consenso.
 2. In **API e servizi › Libreria** cerca **Gmail API** e tocca **Abilita**.
 3. Configura la schermata di consenso (**Google Auth Platform**, o **API e servizi ›
    Schermata consenso OAuth**): nome dell'app, email di assistenza e contatto dello

@@ -9,7 +9,8 @@ archivia niente.
 Per collegarlo, una volta:
 
 1. In Google Cloud crea un progetto, abilita la **Google Drive API** e crea un **account di
-   servizio**; scaricane la chiave JSON.
+   servizio**; scaricane la chiave JSON. Puoi usare lo stesso progetto della [posta con
+   Gmail](posta): l'account di servizio non usa la schermata di consenso.
 2. Nel Drive condiviso del gruppo aggiungi l'indirizzo email dell'account di servizio come
    **Gestore contenuti** e crea la cartella per gli archivi; copiane l'id (la parte finale
    dell'indirizzo della cartella).

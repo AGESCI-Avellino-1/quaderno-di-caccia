@@ -13,8 +13,14 @@ from ninja.errors import HttpError
 from apps.core.anno import AnnoAssociativo
 from apps.permessi import policy
 
-from . import blocchi, segreti
-from .models import MESSAGGIO_MANUTENZIONE, Impostazioni, ModelloEmail, SicurezzaSmtp
+from . import blocchi, gmail, segreti
+from .models import (
+    MESSAGGIO_MANUTENZIONE,
+    Impostazioni,
+    ModelloEmail,
+    ModoInvio,
+    SicurezzaSmtp,
+)
 
 router = Router(tags=["impostazioni"])
 
@@ -107,6 +113,12 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     mittente: str = ""
     # Used when the settings name no SMTP server.
     mittente_predefinito: str = ""
+    # Gmail linked with a Google login (DEC-278); never the secret nor the token.
+    modo_invio: str = "SMTP"
+    gmail_client_id: str = ""
+    gmail_secret_salvato: bool = False
+    gmail_indirizzo: str = ""
+    gmail_redirect_uri: str = ""
 
 
 CAMPI_SITO = list(ImpostazioniSitoIO.model_fields)
@@ -151,6 +163,11 @@ def _smtp(request, imp: Impostazioni) -> dict:
         "smtp_password_salvata": bool(imp.smtp_password),
         "mittente": imp.mittente,
         "mittente_predefinito": settings.DEFAULT_FROM_EMAIL,
+        "modo_invio": imp.modo_invio,
+        "gmail_client_id": imp.gmail_client_id,
+        "gmail_secret_salvato": bool(imp.gmail_client_secret),
+        "gmail_indirizzo": imp.gmail_indirizzo if imp.gmail_refresh_token else "",
+        "gmail_redirect_uri": gmail.indirizzo_di_ritorno(),
     }
 
 
@@ -221,6 +238,10 @@ class SmtpIn(Schema):
     # Empty: the saved one stays.
     password: str = ""
     mittente: str = ""
+    modo: str = ModoInvio.SMTP
+    gmail_client_id: str = ""
+    # Empty: the saved one stays.
+    gmail_client_secret: str = ""
 
 
 def _controlla_smtp(dati: SmtpIn) -> None:
@@ -232,6 +253,8 @@ def _controlla_smtp(dati: SmtpIn) -> None:
         raise HttpError(400, "Scrivi solo il nome del server, per esempio smtp.gmail.com.")
     if not 1 <= dati.porta <= 65535:
         raise HttpError(400, "La porta è un numero tra 1 e 65535.")
+    if dati.modo not in ModoInvio.values:
+        raise HttpError(400, "Scegli come partono le email.")
     if dati.sicurezza not in SicurezzaSmtp.values:
         raise HttpError(400, "Scegli la sicurezza della connessione.")
     if dati.mittente.strip():
@@ -259,13 +282,91 @@ def salva_smtp(request, dati: SmtpIn):
     if not imp.smtp_host:
         imp.smtp_password = ""
     elif dati.password:
-        if not segreti.disponibile():
-            raise HttpError(
-                400,
-                "Manca la chiave per conservare la password: la imposta chi ha installato "
-                "l'app (QDC_CHIAVE_SEGRETI).",
-            )
-        imp.smtp_password = segreti.cifra(dati.password)
+        imp.smtp_password = _cifra(dati.password)
+    imp.modo_invio = dati.modo
+    client_id = dati.gmail_client_id.strip()
+    if client_id != imp.gmail_client_id:
+        # The link belongs to the client: another client, link again (DEC-278).
+        gmail.revoca(imp)
+        imp.gmail_refresh_token, imp.gmail_indirizzo = "", ""
+        if not dati.gmail_client_secret:
+            imp.gmail_client_secret = ""
+        imp.gmail_client_id = client_id
+    if dati.gmail_client_secret:
+        imp.gmail_client_secret = _cifra(dati.gmail_client_secret.strip())
+    imp.save()
+    return _impostazioni(request)
+
+
+def _cifra(testo: str) -> str:
+    if not segreti.disponibile():
+        raise HttpError(
+            400,
+            "Manca la chiave per conservare password e segreti: la imposta chi ha installato "
+            "l'app (QDC_CHIAVE_SEGRETI).",
+        )
+    return segreti.cifra(testo)
+
+
+CHIAVE_STATO_GMAIL = "qdc_gmail_stato"
+
+
+class CollegaGmailOut(Schema):
+    url: str
+
+
+@router.post("/impostazioni/gmail/collega", response=CollegaGmailOut)
+def collega_gmail(request):
+    """Where to send the browser: Google's login, asking only to send mail (DEC-278)."""
+    import secrets
+
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "Il server di posta lo imposta l'amministratore tecnico.")
+    imp = Impostazioni.carica()
+    if not imp.gmail_client_id or not imp.gmail_client_secret:
+        raise HttpError(400, "Prima salva ID e segreto del client OAuth.")
+    stato = secrets.token_urlsafe(24)
+    request.session[CHIAVE_STATO_GMAIL] = stato
+    return {"url": gmail.url_autorizzazione(imp, stato)}
+
+
+@router.get("/impostazioni/gmail/ritorno")
+def ritorno_gmail(request, state: str = "", code: str = "", error: str = ""):
+    """Google sends the browser back here; then back to the settings page."""
+    from urllib.parse import urlencode
+
+    from django.http import HttpResponseRedirect
+
+    def torna(**esito) -> HttpResponseRedirect:
+        return HttpResponseRedirect(f"{settings.FRONTEND_URL}/impostazioni?{urlencode(esito)}")
+
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "Il server di posta lo imposta l'amministratore tecnico.")
+    atteso = request.session.pop(CHIAVE_STATO_GMAIL, None)
+    if not atteso or state != atteso:
+        return torna(gmail="errore", motivo="Il collegamento è scaduto: riprova.")
+    if error or not code:
+        return torna(gmail="errore", motivo="Su Google il permesso non è stato dato.")
+    imp = Impostazioni.carica()
+    try:
+        token, indirizzo = gmail.scambia_codice(imp, code)
+    except gmail.ErroreGmail as errore:
+        return torna(gmail="errore", motivo=str(errore))
+    imp.gmail_refresh_token = _cifra(token)
+    imp.gmail_indirizzo = indirizzo
+    imp.modo_invio = ModoInvio.GMAIL
+    imp.save()
+    return torna(gmail="collegato")
+
+
+@router.post("/impostazioni/gmail/scollega", response=ImpostazioniOut)
+def scollega_gmail(request):
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "Il server di posta lo imposta l'amministratore tecnico.")
+    imp = Impostazioni.carica()
+    gmail.revoca(imp)
+    imp.gmail_refresh_token, imp.gmail_indirizzo = "", ""
+    imp.modo_invio = ModoInvio.SMTP
     imp.save()
     return _impostazioni(request)
 
@@ -288,17 +389,21 @@ def prova_smtp(request):
         raise HttpError(403, "Il server di posta lo imposta l'amministratore tecnico.")
     imp = Impostazioni.carica()
     indirizzo = request.auth.email
+    from .posta import mittente_di
+
     email = EmailMessage(
         subject="Prova del server di posta",
         body=(
             f"Ciao,\n\nquesta è l'email di prova di {imp.nome_sito}: se la leggi, il server "
             "di posta funziona.\n"
         ),
-        from_email=imp.mittente or None,
+        from_email=mittente_di(imp) or None,
         to=[indirizzo],
     )
     try:
         connessione(imp).send_messages([email])
+    except gmail.ErroreGmail as errore:
+        raise HttpError(400, str(errore)) from errore
     except smtplib.SMTPAuthenticationError as errore:
         raise HttpError(
             400,

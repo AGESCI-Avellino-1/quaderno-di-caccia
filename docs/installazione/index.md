@@ -19,6 +19,7 @@ requisiti
 installazione
 primo-avvio
 lavori-giornalieri
+posta
 archivio
 google-apple
 prova

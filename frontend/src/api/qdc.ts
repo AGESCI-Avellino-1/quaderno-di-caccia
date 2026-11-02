@@ -228,6 +228,12 @@ export interface Impostazioni extends ImpostazioniSito {
   smtp_password_salvata?: boolean
   mittente?: string
   mittente_predefinito?: string
+  /** Gmail linked with a Google login (DEC-278); never the secret nor the token. */
+  modo_invio?: 'SMTP' | 'GMAIL'
+  gmail_client_id?: string
+  gmail_secret_salvato?: boolean
+  gmail_indirizzo?: string
+  gmail_redirect_uri?: string
 }
 
 export interface SmtpIn {
@@ -238,6 +244,10 @@ export interface SmtpIn {
   /** Empty: the saved one stays. */
   password: string
   mittente: string
+  modo: 'SMTP' | 'GMAIL'
+  gmail_client_id: string
+  /** Empty: the saved one stays. */
+  gmail_client_secret: string
 }
 
 /** A login lock for too many wrong attempts (DEC-269): an account (email) or an address. */
@@ -2292,6 +2302,10 @@ export const api = {
     }),
   salvaSmtp: (dati: SmtpIn) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/smtp', { metodo: 'PUT', corpo: dati }),
+  collegaGmail: () =>
+    richiesta<{ url: string }>('/api/v1/impostazioni/gmail/collega', { metodo: 'POST' }),
+  scollegaGmail: () =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/gmail/scollega', { metodo: 'POST' }),
   provaSmtp: () =>
     richiesta<{ inviata_a: string }>('/api/v1/impostazioni/smtp/prova', { metodo: 'POST' }),
   emailDiProva: (attiva: boolean) =>

@@ -20,6 +20,11 @@ class SicurezzaSmtp(models.TextChoices):
     NESSUNA = "NESSUNA", "Nessuna (solo in una rete fidata)"
 
 
+class ModoInvio(models.TextChoices):
+    SMTP = "SMTP", "Server SMTP"
+    GMAIL = "GMAIL", "Gmail con accesso Google"
+
+
 # Who receives the emails, by group (DEC-276).
 GRUPPI_EMAIL = ("capi", "genitori", "ragazzi")
 
@@ -76,6 +81,13 @@ class Impostazioni(ModelloTracciato):
     smtp_password = models.TextField(blank=True)
     # "Name <address>"; empty = the server's configuration.
     mittente = models.CharField(max_length=200, blank=True)
+    # Or Gmail, linked once with a Google login (DEC-278): the group's OAuth client, its
+    # secret and the refresh token encrypted like the SMTP password.
+    modo_invio = models.CharField(max_length=5, choices=ModoInvio.choices, default=ModoInvio.SMTP)
+    gmail_client_id = models.CharField(max_length=200, blank=True)
+    gmail_client_secret = models.TextField(blank=True)
+    gmail_refresh_token = models.TextField(blank=True)
+    gmail_indirizzo = models.EmailField(blank=True)
 
     class Meta:
         verbose_name = "impostazioni"

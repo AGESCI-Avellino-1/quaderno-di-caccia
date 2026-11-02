@@ -97,11 +97,9 @@ Se rifai il sito dal pannello (o lo ricrea un ripristino del pannello), rimetti 
 ## La posta
 
 Il server di posta lo imposta l'amministratore tecnico dall'app, in **Impostazioni**, **Server
-di posta**, con un'email di prova: la password si salva cifrata con la chiave
-`QDC_CHIAVE_SEGRETI`, che lo script di configurazione genera da solo (conservala con i backup:
-se cambia, la password va inserita di nuovo). Funzionano Google Workspace e Gmail con una
-password per le app, Microsoft 365 finché il tenant accetta utente e password, e qualsiasi
-SMTP.
+di posta**, con un'email di prova: SMTP, oppure Gmail con un accesso Google senza password.
+Le strade, con il client OAuth di Google e il relay SMTP di Google, sono in [La
+posta](posta).
 
 In alternativa, o finché nessuno la imposta dall'app, completa in `.env` le voci SMTP:
 

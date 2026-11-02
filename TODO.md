@@ -208,13 +208,14 @@ nel repository).
 ### Email un po' alla volta e server di posta (02/11)
 
 Richiesta del maintainer del 02/11, per presentare l'app prima ai capi, poi a genitori e
-ragazzi; decisioni nell'analisi come DEC-276, DEC-277.
+ragazzi; decisioni nell'analisi come DEC-276…DEC-278.
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
 | E.1 | Interruttori Capi, Genitori, Ragazzi: email scartate per i gruppi spenti, con il conteggio; sempre consegnati accesso, inviti, iscrizione e lista d'attesa | DEC-276 | ✅ 02/11 (test; non ancora provato nel browser) |
 | E.2 | Server SMTP dalle Impostazioni (amministratore tecnico), password cifrata, email di prova | DEC-277 | ✅ 02/11 (test; non ancora provato nel browser) |
-| E.3 | Microsoft 365 con OAuth (Graph) ed eventualmente API di Gmail con l'account di servizio | DEC-277 | 💤 (si sente prima AGESCI per il tenant istituzionale) |
+| E.4 | Gmail con accesso Google una tantum (OAuth, API di Gmail); guida: client OAuth in Google Cloud e relay SMTP di Google | DEC-278 | ✅ 02/11 (test con Google simulato; il collegamento vero si prova all'installazione) |
+| E.3 | Microsoft 365 con OAuth (Graph) | DEC-277 | 💤 (si sente prima AGESCI per il tenant istituzionale) |
 
 ### Mancanze trovate scrivendo il manuale (31/10)
 

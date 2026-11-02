@@ -399,7 +399,9 @@ implements them:
   settings, counting it; the email type travels in the `X-QdC-Tipo` header set by
   `email.messaggio()`, and `posta.SEMPRE` lists what always goes (login, invitations,
   joining, waiting list). The SMTP server may come from the settings, with the password
-  encrypted by `QDC_CHIAVE_SEGRETI` (`impostazioni.segreti`). A new email type that must
+  encrypted by `QDC_CHIAVE_SEGRETI` (`impostazioni.segreti`), or be a Gmail mailbox linked
+  once with a Google login (`impostazioni.gmail`, DEC-278: the group's OAuth client, scope
+  `gmail.send`, refresh token encrypted, sent through the Gmail API upload endpoint). A new email type that must
   always go is added to `SEMPRE`. Tests use locmem directly; `MAILERS_VERI` in
   `tests/test_impostazioni.py` exercises the real path.
 - Device revocation and idempotency work with the browser session only; the store app

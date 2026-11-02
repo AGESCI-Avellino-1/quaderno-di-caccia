@@ -34,15 +34,20 @@ sicurezza, utente, password e mittente. Se lo lasci vuoto vale quello configurat
 installato l'app. Poi tocca **Manda un'email di prova a me**: se qualcosa non va, l'app ti
 dice cosa controllare.
 
-- **Google Workspace o Gmail**: server `smtp.gmail.com`, porta 587, STARTTLS, utente
+- **Gmail con accesso Google**, senza password: scegli questa voce, inserisci ID e segreto
+  del client OAuth (li prepara chi installa, come spiega la guida di installazione), tocca
+  **Salva** e poi **Collega Gmail**, ed entra con l'account da cui partono le email. Con
+  **Scollega** togli il collegamento.
+- **Google Workspace o Gmail via SMTP**: server `smtp.gmail.com`, porta 587, STARTTLS, utente
   l'indirizzo e come password una **password per le app** (la crei nell'account Google, con la
-  verifica in due passaggi attiva; nel Workspace l'amministratore deve permetterle).
+  verifica in due passaggi attiva; nel Workspace l'amministratore deve permetterle). Con il
+  relay SMTP di Google: `smtp-relay.gmail.com`, senza utente né password.
 - **Microsoft 365**: server `smtp.office365.com`, porta 587, STARTTLS, finché il tenant
   accetta utente e password. Per la posta istituzionale AGESCI decide chi amministra il tenant.
 - **Un altro fornitore**: i dati che ti dà per l'SMTP.
 
-La password resta cifrata sul server: dopo averla salvata non la rivedi più, puoi solo
-sostituirla.
+Password e segreti restano cifrati sul server: dopo averli salvati non li rivedi più, puoi
+solo sostituirli.
 
 ## La modalità di prova delle email
 

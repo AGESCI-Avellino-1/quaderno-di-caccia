@@ -89,10 +89,17 @@ def _filtra(email, accesi: set[str], scartate: dict[str, int]):
 
 
 def connessione(imp):
-    """The SMTP server of the settings, or the server's configuration (DEC-277)."""
+    """Gmail once linked (DEC-278), the SMTP server of the settings, or the server's
+    configuration (DEC-277)."""
     from . import segreti
-    from .models import SicurezzaSmtp
+    from .models import ModoInvio, SicurezzaSmtp
 
+    if imp.modo_invio == ModoInvio.GMAIL:
+        if imp.gmail_refresh_token:
+            from .gmail import GmailBackend
+
+            return GmailBackend(imp)
+        return mailers["reale"]
     if not imp.smtp_host:
         return mailers["reale"]
     return SmtpBackend(
@@ -105,6 +112,22 @@ def connessione(imp):
         use_ssl=imp.smtp_sicurezza == SicurezzaSmtp.SSL,
         timeout=20,
     )
+
+
+def mittente_di(imp) -> str:
+    """The sender of the settings; with Gmail and none written, the linked address with
+    the name of the server's configuration (Gmail would replace any other address)."""
+    from email.utils import formataddr, parseaddr
+
+    from django.conf import settings
+
+    from .models import ModoInvio
+
+    if imp.mittente:
+        return imp.mittente
+    if imp.modo_invio == ModoInvio.GMAIL and imp.gmail_indirizzo:
+        return formataddr((parseaddr(settings.DEFAULT_FROM_EMAIL)[0], imp.gmail_indirizzo))
+    return ""
 
 
 class PostaQdC(BaseEmailBackend):
@@ -121,12 +144,13 @@ class PostaQdC(BaseEmailBackend):
         da_inviare = [e for e in (_filtra(e, accesi, scartate) for e in email_messages) if e]
         if scartate:
             _conta(scartate)
-        if imp.mittente:
+        mittente = mittente_di(imp)
+        if mittente:
             from django.conf import settings
 
             for email in da_inviare:
                 if email.from_email in (None, settings.DEFAULT_FROM_EMAIL):
-                    email.from_email = imp.mittente
+                    email.from_email = mittente
         if not da_inviare:
             return 0
         return connessione(imp).send_messages(da_inviare)

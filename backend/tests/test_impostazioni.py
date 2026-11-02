@@ -403,3 +403,120 @@ def test_email_di_prova_del_server(gruppo, amministratore):
         smtp.return_value.send_messages.side_effect = smtplib.SMTPAuthenticationError(535, b"no")
         risposta = _client(amministratore).post(url)
     assert risposta.status_code == 400 and "password per le app" in risposta.json()["detail"]
+
+
+# --- Gmail with a Google login (DEC-278) -------------------------------------------------------
+
+
+def _risposta(status=200, **json):
+    from unittest import mock
+
+    return mock.MagicMock(status_code=status, json=mock.MagicMock(return_value=json))
+
+
+def _client_oauth(amministratore):
+    return _smtp(
+        amministratore,
+        SMTP
+        | {
+            "host": "",
+            "password": "",
+            "modo": "GMAIL",
+            "gmail_client_id": "123.apps.googleusercontent.com",
+            "gmail_client_secret": "GOCSPX-segreto",
+        },
+    )
+
+
+def _collega(client):
+    """Start the link and come back from Google with a code; returns the redirect."""
+    from unittest import mock
+
+    import jwt as pyjwt
+
+    url = client.post(f"{URL}/gmail/collega").json()["url"]
+    stato = url.split("state=")[1].split("&")[0]
+    identita = pyjwt.encode({"email": "gruppo@example.invalid"}, "x" * 32, algorithm="HS256")
+    with mock.patch("apps.impostazioni.gmail.requests.post") as post:
+        post.return_value = _risposta(refresh_token="1//rinnovo", id_token=identita)
+        risposta = client.get(f"{URL}/gmail/ritorno", {"state": stato, "code": "4/codice"})
+    return url, risposta
+
+
+def test_gmail_collegato_con_accesso_google(gruppo, amministratore):
+    from apps.impostazioni import segreti
+
+    dati = _client_oauth(amministratore).json()
+    assert dati["gmail_secret_salvato"] is True and "GOCSPX" not in str(dati)
+    assert dati["gmail_redirect_uri"].endswith("/api/v1/impostazioni/gmail/ritorno")
+    url, risposta = _collega(_client(amministratore))
+    assert url.startswith("https://accounts.google.com/o/oauth2/v2/auth?")
+    assert "gmail.send" in url and "access_type=offline" in url
+    assert risposta.status_code == 302 and risposta.url.endswith("/impostazioni?gmail=collegato")
+    imp = Impostazioni.carica()
+    assert imp.modo_invio == "GMAIL" and imp.gmail_indirizzo == "gruppo@example.invalid"
+    assert segreti.decifra(imp.gmail_refresh_token) == "1//rinnovo"
+    assert _client(amministratore).get(URL).json()["gmail_indirizzo"] == "gruppo@example.invalid"
+
+
+def test_gmail_ritorno_con_stato_sbagliato(gruppo, amministratore):
+    _client_oauth(amministratore)
+    client = _client(amministratore)
+    client.post(f"{URL}/gmail/collega")
+    risposta = client.get(f"{URL}/gmail/ritorno", {"state": "altro", "code": "4/codice"})
+    assert "gmail=errore" in risposta.url
+    assert Impostazioni.carica().gmail_refresh_token == ""
+
+
+def test_solo_l_amministratore_collega_gmail(gruppo, capogruppo, amministratore):
+    _client_oauth(amministratore)
+    for percorso in ("collega", "scollega"):
+        assert _client(capogruppo.utente).post(f"{URL}/gmail/{percorso}").status_code == 403
+    assert _client(capogruppo.utente).get(f"{URL}/gmail/ritorno").status_code == 403
+
+
+def test_le_email_partono_con_l_api_di_gmail(gruppo, amministratore, settings):
+    from unittest import mock
+
+    from django.core.mail import EmailMessage, mailers
+
+    settings.MAILERS = MAILERS_VERI
+    settings.DEFAULT_FROM_EMAIL = "Quaderno di Caccia <noreply@example.invalid>"
+    _client_oauth(amministratore)
+    _collega(_client(amministratore))
+    Impostazioni.objects.update(mittente="")
+    with mock.patch("apps.impostazioni.gmail.requests.post") as post:
+        post.side_effect = [_risposta(access_token="ya29.accesso", expires_in=3600), _risposta()]
+        mailers.default.send_messages([EmailMessage("Prova", "Testo", to=["x@example.invalid"])])
+    invio = post.call_args_list[1]
+    assert invio.args[0].startswith("https://gmail.googleapis.com/upload/gmail/v1/users/me/")
+    assert invio.kwargs["headers"]["Authorization"] == "Bearer ya29.accesso"
+    grezza = invio.kwargs["data"].decode()
+    # With no sender written, the linked address with the configured name.
+    assert "From: Quaderno di Caccia <gruppo@example.invalid>" in grezza
+
+
+def test_gmail_revocato_detto_in_parole_semplici(gruppo, amministratore):
+    from unittest import mock
+
+    from apps.impostazioni import gmail
+
+    _client_oauth(amministratore)
+    _collega(_client(amministratore))
+    gmail._cache.clear()
+    with mock.patch("apps.impostazioni.gmail.requests.post") as post:
+        post.return_value = _risposta(400, error="invalid_grant")
+        risposta = _client(amministratore).post(f"{URL}/smtp/prova")
+    assert risposta.status_code == 400 and "collega di nuovo" in risposta.json()["detail"]
+
+
+def test_gmail_scollegato(gruppo, amministratore):
+    from unittest import mock
+
+    _client_oauth(amministratore)
+    _collega(_client(amministratore))
+    with mock.patch("apps.impostazioni.gmail.requests.post") as post:
+        dati = _client(amministratore).post(f"{URL}/gmail/scollega").json()
+    assert post.call_args.args[0] == "https://oauth2.googleapis.com/revoke"
+    assert dati["modo_invio"] == "SMTP" and dati["gmail_indirizzo"] == ""
+    assert Impostazioni.carica().gmail_refresh_token == ""

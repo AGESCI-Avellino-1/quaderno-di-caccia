@@ -32,6 +32,16 @@ Per collegarlo, una volta:
 
 5. Riavvia: `docker compose up -d`. Un capogruppo, nella pagina **Incarichi di gruppo**,
    riquadro **Archivio**, non vede più l'avviso (il riquadro lo vedono solo i capigruppo).
+6. Controlla l'impostazione, senza scrivere niente sul Drive:
+
+   ```bash
+   docker compose exec web python manage.py controlla_drive
+   ```
+
+   Verifica un passo alla volta le voci in `.env`, la chiave dell'account di servizio, che
+   Google la accetti, che la cartella esista e sia in un Drive condiviso, e che l'account
+   possa scriverci. Si ferma al primo punto segnato `NO` e dice cosa correggere; alla fine
+   stampa «Il Drive dell'archivio è pronto.».
 
 :::{danger}
 Conserva `QDC_IMPRONTA_CHIAVE` insieme ai backup e **non cambiarla mai**, nemmeno se rigeneri

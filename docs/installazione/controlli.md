@@ -75,7 +75,18 @@ Deve rispondere `{"stato": "ok"}`. Usa una richiesta normale (GET), come qui: co
 `curl -I`, che chiede solo le intestazioni (HEAD), l'API risponde `405` anche quando tutto
 funziona.
 
-## 7. La posta parte
+## 7. Il Drive dell'archivio
+
+Se usi l'[archivio sul Drive](archivio):
+
+```bash
+docker compose exec web python manage.py controlla_drive
+```
+
+Ogni riga `NO` dice cosa correggere; se tutto va, l'ultima è «Il Drive dell'archivio è
+pronto.».
+
+## 8. La posta parte
 
 Il primo accesso dell'amministratore tecnico passa da un codice mandato per email, e a quel
 punto nessuno può ancora impostare la posta dall'app. Quindi, **prima** di

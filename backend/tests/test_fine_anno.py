@@ -408,3 +408,63 @@ def test_unita_ripristinata_a_mano(uscito, capogruppo, settings, tmp_path):
     assert dati["unita_archiviate"] == []
     reparto.refresh_from_db()
     assert reparto.archiviata_il is None and not reparto.attiva
+
+
+# --- Checking the Drive setup ----------------------------------------------------------------
+
+
+def _chiave_drive(settings, tmp_path, **altro):
+    chiave = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = chiave.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
+    ).decode()
+    credenziali = tmp_path / "chiave.json"
+    dati = {"type": "service_account", "client_email": "qdc@p.iam.example", "private_key": pem}
+    credenziali.write_text(json.dumps(dati | altro))
+    settings.QDC_DRIVE_CREDENZIALI = str(credenziali)
+    settings.QDC_DRIVE_CARTELLA = "cartella"
+
+
+def _r(stato, dati=None):
+    r = mock.Mock(status_code=stato)
+    r.json.return_value = dati or {}
+    return r
+
+
+def _controlla(cartella):
+    token = _r(200, {"access_token": "t"})
+    with (
+        mock.patch.object(drive.requests, "post", return_value=token),
+        mock.patch.object(drive.requests, "get", return_value=cartella),
+    ):
+        return drive.controlla()
+
+
+def test_controllo_drive_non_impostato(settings):
+    settings.QDC_DRIVE_CREDENZIALI = ""
+    settings.QDC_DRIVE_CARTELLA = ""
+    [(ok, messaggio)] = drive.controlla()
+    assert not ok and "QDC_DRIVE_CREDENZIALI, QDC_DRIVE_CARTELLA" in messaggio
+
+
+def test_controllo_drive_chiave_sbagliata(settings, tmp_path):
+    settings.QDC_DRIVE_CREDENZIALI = str(tmp_path / "manca.json")
+    settings.QDC_DRIVE_CARTELLA = "cartella"
+    assert "non si legge" in drive.controlla()[-1][1]
+    _chiave_drive(settings, tmp_path, type="authorized_user")
+    assert "account di servizio" in drive.controlla()[-1][1]
+    _chiave_drive(settings, tmp_path)
+    with mock.patch.object(drive.requests, "post", return_value=_r(400)):
+        assert "non accetta" in drive.controlla()[-1][1]
+
+
+def test_controllo_drive_cartella(settings, tmp_path):
+    _chiave_drive(settings, tmp_path)
+    cartella = {"name": "Archivio", "mimeType": drive.CARTELLA, "driveId": "d"}
+    assert "non si trova" in _controlla(_r(404))[-1][1]
+    assert "non è una cartella" in _controlla(_r(200, cartella | {"mimeType": "x"}))[-1][1]
+    assert "Drive condiviso" in _controlla(_r(200, cartella | {"driveId": None}))[-1][1]
+    senza_permesso = cartella | {"capabilities": {"canAddChildren": False}}
+    assert "Gestore dei contenuti" in _controlla(_r(200, senza_permesso))[-1][1]
+    pronta = _controlla(_r(200, cartella | {"capabilities": {"canAddChildren": True}}))
+    assert all(ok for ok, _ in pronta) and len(pronta) == 5

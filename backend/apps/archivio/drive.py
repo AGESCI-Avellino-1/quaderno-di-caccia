@@ -101,3 +101,97 @@ def carica(nome: str, contenuto: bytes) -> dict:
             "Il file sul Drive non corrisponde a quello preparato: niente è stato cancellato."
         )
     return {"id": dati["id"], "md5": md5, "dimensione": len(contenuto)}
+
+
+FILE = "https://www.googleapis.com/drive/v3/files"
+CARTELLA = "application/vnd.google-apps.folder"
+
+
+def controlla() -> list[tuple[bool, str]]:
+    """Check the setup step by step, as (ok, message) pairs; it stops at the first step
+    that fails, whose message says what to correct. Nothing is written on the Drive."""
+    esiti: list[tuple[bool, str]] = []
+    if not settings.QDC_DRIVE_CREDENZIALI or not settings.QDC_DRIVE_CARTELLA:
+        mancano = [
+            n for n in ("QDC_DRIVE_CREDENZIALI", "QDC_DRIVE_CARTELLA") if not getattr(settings, n)
+        ]
+        return [(False, f"Manca in .env: {', '.join(mancano)}.")]
+    esiti.append((True, "QDC_DRIVE_CREDENZIALI e QDC_DRIVE_CARTELLA sono impostate."))
+    try:
+        chiave = _credenziali()
+    except ErroreDrive:
+        return [
+            *esiti,
+            (
+                False,
+                f"Il file {settings.QDC_DRIVE_CREDENZIALI} non si legge o non è JSON: "
+                "controlla il percorso (dentro il container) e i permessi.",
+            ),
+        ]
+    if chiave.get("type") != "service_account" or not chiave.get("private_key"):
+        return [
+            *esiti,
+            (False, "Il file JSON non è la chiave di un account di servizio di Google Cloud."),
+        ]
+    esiti.append((True, f"Chiave dell'account di servizio {chiave.get('client_email')}."))
+    try:
+        token = _token()
+    except (ErroreDrive, requests.RequestException, ValueError) as errore:
+        return [
+            *esiti,
+            (
+                False,
+                "Google non accetta la chiave (revocata, progetto senza Google Drive API "
+                f"attiva, orologio del server sbagliato?): {errore}",
+            ),
+        ]
+    esiti.append((True, "Google accetta la chiave."))
+    risposta = requests.get(
+        f"{FILE}/{settings.QDC_DRIVE_CARTELLA}",
+        params={
+            "supportsAllDrives": "true",
+            "fields": "id,name,mimeType,driveId,capabilities(canAddChildren)",
+        },
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=30,
+    )
+    if risposta.status_code == 404:
+        return [
+            *esiti,
+            (
+                False,
+                "La cartella non si trova: controlla l'id in QDC_DRIVE_CARTELLA e che "
+                f"{chiave.get('client_email')} sia membro del Drive condiviso.",
+            ),
+        ]
+    if risposta.status_code == 403:
+        return [
+            *esiti,
+            (False, "Google rifiuta l'accesso: la Google Drive API è attiva nel progetto?"),
+        ]
+    if risposta.status_code != 200:
+        return [*esiti, (False, f"Risposta inattesa del Drive ({risposta.status_code}).")]
+    dati = risposta.json()
+    if dati.get("mimeType") != CARTELLA:
+        return [*esiti, (False, f"«{dati.get('name')}» non è una cartella.")]
+    esiti.append((True, f"Cartella «{dati.get('name')}» trovata."))
+    if not dati.get("driveId"):
+        esiti.append(
+            (
+                False,
+                "La cartella non è in un Drive condiviso: spostala in uno, perché i file "
+                "di un account di servizio non occupino il suo spazio e restino del gruppo.",
+            )
+        )
+        return esiti
+    if not dati.get("capabilities", {}).get("canAddChildren"):
+        esiti.append(
+            (
+                False,
+                f"{chiave.get('client_email')} non può scrivere nella cartella: aggiungilo "
+                "al Drive condiviso come Gestore dei contenuti.",
+            )
+        )
+        return esiti
+    esiti.append((True, "L'account di servizio può scrivere nella cartella."))
+    return esiti

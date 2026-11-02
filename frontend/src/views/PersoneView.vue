@@ -8,6 +8,8 @@ import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
 
+// Members (capi and ragazzi) or parents, each with its own search.
+const props = defineProps<{ tipo: 'soci' | 'genitori' }>()
 const sessione = useSessioneStore()
 const route = useRoute()
 const { errore, inCorso, esegui } = useErrore()
@@ -28,7 +30,9 @@ const visibili = computed(() => {
 
 async function caricaPersone() {
   const letto = await esegui(() =>
-    leggiConCache(`persone:${unitaScelta.value ?? 'tutte'}`, () => api.persone(unitaScelta.value)),
+    leggiConCache(`persone:${props.tipo}:${unitaScelta.value ?? 'tutte'}`, () =>
+      api.persone(unitaScelta.value, props.tipo),
+    ),
   )
   if (letto) {
     persone.value = letto.dati
@@ -44,11 +48,18 @@ onMounted(async () => {
   await caricaPersone()
 })
 watch(unitaScelta, caricaPersone)
+watch(
+  () => props.tipo,
+  () => {
+    filtro.value = ''
+    caricaPersone()
+  },
+)
 </script>
 
 <template>
   <section>
-    <h1 class="h4 mb-5">Persone</h1>
+    <h1 class="h4 mb-5">{{ tipo === 'soci' ? 'Soci' : 'Genitori' }}</h1>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
     <div class="row g-3 mb-5">
@@ -73,7 +84,9 @@ watch(unitaScelta, caricaPersone)
         <span>{{ p.cognome }} {{ p.nome }}</span>
         <span v-if="p.codice_socio" class="fg-2 small">{{ p.codice_socio }}</span>
       </RouterLink>
-      <p v-if="!visibili.length" class="fg-2">Nessuna persona.</p>
+      <p v-if="!visibili.length" class="fg-2">
+        {{ tipo === 'soci' ? 'Nessun socio.' : 'Nessun genitore.' }}
+      </p>
     </div>
   </section>
 </template>

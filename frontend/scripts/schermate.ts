@@ -405,28 +405,28 @@ const SCENE: Scena[] = [
   {
     nome: 'capo/persona',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: apri('Rossi Luca'),
     intera: true,
   },
   {
     nome: 'capo/regole',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: apri('Rossi Luca'),
     mostra: 'Regole sul rapporto con il minore',
   },
   {
     nome: 'capo/note',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: apri('Rossi Luca'),
     mostra: 'Note',
   },
   {
     nome: 'capo/sanitaria',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Giulia')(pagina)
       await pagina.getByText('Segna la consegna su carta…').click()
@@ -436,7 +436,7 @@ const SCENE: Scena[] = [
   {
     nome: 'capo/invito',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Marino Alice')(pagina)
       await pagina.getByRole('button', { name: 'Invita' }).first().click()
@@ -521,7 +521,7 @@ const SCENE: Scena[] = [
   {
     nome: 'capo/sentiero-eg',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Giulia')(pagina)
       await apri('Sentiero (Progressione Personale)')(pagina)
@@ -531,7 +531,7 @@ const SCENE: Scena[] = [
   {
     nome: 'capo/correggi-tappa',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Giulia')(pagina)
       await apri('Sentiero (Progressione Personale)')(pagina)
@@ -559,7 +559,7 @@ const SCENE: Scena[] = [
     // Davide Ricci is the capo of the clan (and the technical administrator).
     nome: 'capo/punto-strada',
     chi: 'amministratore',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Russo Chiara')(pagina)
       await apri('Sentiero (Progressione Personale)')(pagina)
@@ -581,7 +581,7 @@ const SCENE: Scena[] = [
   {
     nome: 'capo/fascicolo-anno',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Luca')(pagina)
       await apri("Fascicolo dell'anno")(pagina)
@@ -634,7 +634,7 @@ const SCENE: Scena[] = [
     // After the camp download and the year's file: their reads are in the log.
     nome: 'capo/registro-accessi',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Giulia')(pagina)
       await pagina.getByRole('button', { name: 'Mostra il registro' }).click()
@@ -645,7 +645,7 @@ const SCENE: Scena[] = [
   {
     nome: 'capo/foto-precedenti',
     chi: 'capoReparto',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Giulia')(pagina)
       await pagina.getByRole('button', { name: 'Foto precedenti' }).click()
@@ -721,7 +721,7 @@ const SCENE: Scena[] = [
   {
     nome: 'gruppo/pagamento',
     chi: 'tesoriera',
-    percorso: '/persone',
+    percorso: '/soci',
     prepara: async (pagina) => {
       await apri('Rossi Giulia')(pagina)
       await pagina.getByRole('button', { name: 'Registra un pagamento' }).click()

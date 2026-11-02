@@ -106,7 +106,8 @@ describe('menu', () => {
       'Passaggi',
     ])
     expect(voci(capo, 'gruppo')).toEqual([
-      'Persone',
+      'Soci',
+      'Genitori',
       'Unità',
       'Incarichi di gruppo',
       'Richieste di iscrizione',

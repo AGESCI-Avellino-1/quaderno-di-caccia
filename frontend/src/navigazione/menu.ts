@@ -160,10 +160,16 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
       icona: 'diagram-3',
       voci: solo([
         p.capo && {
-          nome: 'Persone',
+          nome: 'Soci',
           icona: 'person-vcard',
-          to: '/persone',
-          descrizione: 'Anagrafiche visibili con il tuo ruolo',
+          to: '/soci',
+          descrizione: 'Capi e ragazzi censiti',
+        },
+        p.capo && {
+          nome: 'Genitori',
+          icona: 'people',
+          to: '/genitori',
+          descrizione: 'Chi ha la responsabilità genitoriale dei ragazzi',
         },
         p.capo && {
           nome: 'Unità',

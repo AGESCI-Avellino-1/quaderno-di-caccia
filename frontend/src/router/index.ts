@@ -58,7 +58,20 @@ const router = createRouter({
       meta: { pubblica: true },
       props: true,
     },
-    { path: '/persone', name: 'persone', component: () => import('@/views/PersoneView.vue') },
+    // Members and parents apart, two pages of the same view; the old address is the members.
+    {
+      path: '/soci',
+      name: 'persone',
+      component: () => import('@/views/PersoneView.vue'),
+      props: { tipo: 'soci' },
+    },
+    {
+      path: '/genitori',
+      name: 'genitori',
+      component: () => import('@/views/PersoneView.vue'),
+      props: { tipo: 'genitori' },
+    },
+    { path: '/persone', redirect: (to) => ({ name: 'persone', query: to.query }) },
     {
       path: '/persone/:id(\\d+)',
       name: 'persona',

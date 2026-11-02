@@ -5,6 +5,7 @@ from django.test import Client
 
 from apps.accounts.adapters import CHIAVE_SESSIONE_INVITO, AccountAdapter
 from apps.accounts.models import Invito, User
+from apps.anagrafica.models import Persona
 from tests.export_sintetico import costruisci_csv, righe_standard
 
 pytestmark = pytest.mark.django_db
@@ -149,3 +150,18 @@ def test_documentazione_api_nascosta_in_produzione(db):
     # Test settings run with DEBUG=False, like production.
     assert Client().get("/api/v1/docs").status_code == 404
     assert Client().get("/api/v1/openapi.json").status_code == 404
+
+
+# --- Members and parents listed apart -------------------------------------------------------
+
+
+def test_elenco_soci_e_genitori(capo, ragazza, genitore, reparto):
+    client = Client()
+    client.force_login(capo.utente)
+    Persona.objects.filter(pk=ragazza.pk).update(codice_socio="9000001")
+    soci = {p["id"] for p in client.get("/api/v1/persone?tipo=soci").json()}
+    genitori = {p["id"] for p in client.get("/api/v1/persone?tipo=genitori").json()}
+    assert ragazza.pk in soci and genitore.pk not in soci
+    assert genitore.pk in genitori and ragazza.pk not in genitori
+    del_reparto = client.get(f"/api/v1/persone?tipo=genitori&unita={reparto.pk}").json()
+    assert [p["id"] for p in del_reparto] == [genitore.pk]

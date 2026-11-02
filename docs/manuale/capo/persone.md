@@ -1,7 +1,9 @@
-# Persone
+# Soci e genitori
 
-Nella Home, in **Il mio gruppo**, tocca **Persone**. Vedi tutte le persone del gruppo:
-scegli un'unità o cerca per nome, poi tocca una persona per aprire la sua scheda.
+Nella Home, in **Il mio gruppo**, tocca **Soci** per i capi e i ragazzi censiti, oppure
+**Genitori** per chi ha la responsabilità genitoriale dei ragazzi. In tutte e due scegli
+un'unità (in **Genitori**: i genitori dei ragazzi di quell'unità) o cerca per nome, poi
+tocca una persona per aprire la sua scheda. Un capo che è anche genitore è in tutte e due.
 
 Nella scheda trovi, nell'ordine: i collegamenti alla Progressione e al fascicolo dell'anno,
 la foto, i dati di BuonaStrada, le regole sul rapporto con il minore, la scheda sanitaria,

@@ -18,7 +18,7 @@ registrare le eccezioni sulle squadriglie, inoltrare le correzioni a BuonaStrada
 unità, oltre allo staff, invita le persone nell'app e nomina il tesoriere dell'unità.
 :::
 
-Quando entri, la Home ti mostra i gruppi di funzioni: **Il mio gruppo** (Persone, Unità,
+Quando entri, la Home ti mostra i gruppi di funzioni: **Il mio gruppo** (Soci, Genitori, Unità,
 Richieste di iscrizione, Lista d'attesa), **Attività** (Eventi, Al campo),
 **Progressione personale** (le unità in cui fai servizio) e il tuo **Profilo**. Le stesse
 voci sono nel menu (vedi [Come ci si muove](../introduzione.md#come-ci-si-muove)).

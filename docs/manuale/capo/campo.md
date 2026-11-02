@@ -51,7 +51,7 @@ ragazzo.
 - Le scrivono lo staff dell'unità del ragazzo e i capigruppo, ricopiandole dal modulo.
 - Valgono finché i genitori non danno nuove indicazioni scritte.
 
-Per scriverle o cambiarle, apri la scheda del ragazzo (vedi [Persone](persone)): sopra la
+Per scriverle o cambiarle, apri la scheda del ragazzo (vedi [Soci e genitori](persone)): sopra la
 scheda sanitaria tocca **Regole sul rapporto con il minore indicate dai genitori…** (o
 **Modifica**), ricopia il testo del modulo e tocca **Salva**. Se non ce ne sono più, svuota
 il testo e salva. Si fa solo con la rete.

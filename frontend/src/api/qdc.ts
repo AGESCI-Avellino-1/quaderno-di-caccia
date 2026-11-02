@@ -2474,8 +2474,14 @@ export const api = {
       metodo: 'POST',
       corpo: {},
     }),
-  persone: (unita?: number) =>
-    richiesta<PersonaElenco[]>(`/api/v1/persone${unita ? `?unita=${unita}` : ''}`),
+  /** `tipo`: members (capi and ragazzi) or parents; `unita`: of that unit. */
+  persone: (unita?: number, tipo?: 'soci' | 'genitori') => {
+    const query = new URLSearchParams()
+    if (unita) query.set('unita', String(unita))
+    if (tipo) query.set('tipo', tipo)
+    const testo = query.toString()
+    return richiesta<PersonaElenco[]>(`/api/v1/persone${testo ? `?${testo}` : ''}`)
+  },
   persona: (id: number) => richiesta<PersonaDettaglio>(`/api/v1/persone/${id}`),
   statoAccount: (persona: number) => richiesta<StatoAccount>(`/api/v1/persone/${persona}/account`),
   invita: (dati: NuovoInvito) =>

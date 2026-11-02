@@ -22,6 +22,7 @@ from .models import (
     CorrezioneAnagrafica,
     FotoProfilo,
     Persona,
+    RelazioneTutela,
     StatoCorrezione,
     VisibilitaGenitori,
 )
@@ -66,11 +67,24 @@ class PersonaDettaglio(Schema):
 
 
 @router.get("/persone", response=list[PersonaElenco])
-def elenco_persone(request, unita: int | None = None):
+def elenco_persone(request, unita: int | None = None, tipo: str | None = None):
+    """The people the caller sees. `tipo`: "soci" (members, capi and ragazzi, provisional
+    codes included) or "genitori" (who holds parental responsibility for someone); with
+    `unita`, the unit's members or their parents. A capo who is also a parent is in both."""
     persone = policy.persone_visibili(request.auth)
+    membri = Appartenenza.objects.attive()
     if unita is not None:
-        ids = Appartenenza.objects.attive().filter(unita_id=unita).values("persona_id")
-        persone = persone.filter(pk__in=ids)
+        membri = membri.filter(unita_id=unita)
+    if tipo == "genitori":
+        tutori = RelazioneTutela.objects.all()
+        if unita is not None:
+            tutori = tutori.filter(minore_id__in=membri.values("persona_id"))
+        persone = persone.filter(pk__in=tutori.values("tutore_id"))
+    else:
+        if unita is not None:
+            persone = persone.filter(pk__in=membri.values("persona_id"))
+        if tipo == "soci":
+            persone = persone.exclude(codice_socio__isnull=True).exclude(codice_socio="")
     return persone.order_by("cognome", "nome")
 
 

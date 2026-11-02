@@ -6,7 +6,7 @@ possono anche **ricopiare** dal modulo di carta, per una famiglia che non usa l'
 
 ## Ricopiarla dal modulo
 
-1. Apri la scheda del ragazzo (vedi [Persone](persone)).
+1. Apri la scheda del ragazzo (vedi [Soci e genitori](persone)).
 2. Nel riquadro **Scheda sanitaria** tocca **Compila** (o **Modifica**).
 3. Compila come farebbe un genitore: dati del modulo, allergie e intolleranze, farmaci,
    esigenze alimentari, dati facoltativi (i campi sono spiegati in [Scheda

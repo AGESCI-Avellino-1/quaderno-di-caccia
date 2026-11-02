@@ -102,8 +102,14 @@ async function elimina() {
   if (!errore.value) await router.push({ name: 'unita' })
 }
 
+// A single-sex reparto has patrols of its own sex only (DEC-280): no choice to make.
+const sessoDelReparto = computed(() =>
+  unita.value && unita.value.composizione !== 'X' ? unita.value.composizione : null,
+)
+
 async function creaSquadriglia() {
-  const dati = { nome: nuovaSquadriglia.nome.trim(), sesso: nuovaSquadriglia.sesso }
+  const sesso = sessoDelReparto.value ?? nuovaSquadriglia.sesso
+  const dati = { nome: nuovaSquadriglia.nome.trim(), sesso }
   if (await esegui(() => api.creaSquadriglia(props.id, dati))) {
     Object.assign(nuovaSquadriglia, { aperta: false, nome: '' })
     await carica()
@@ -263,7 +269,7 @@ const iniziale = (u: Unita): UnitaIn => ({
             required
           />
         </div>
-        <div class="col-6 sm:col-3">
+        <div v-if="!sessoDelReparto" class="col-6 sm:col-3">
           <select
             v-model="nuovaSquadriglia.sesso"
             class="form-control form-control-sm"

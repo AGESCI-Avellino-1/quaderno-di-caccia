@@ -701,3 +701,44 @@ def test_collegamento_a_senso_unico_segnalato(capogruppo, reparto, gruppo):
 def test_ambientazione_solo_per_branco_cerchio(capogruppo, reparto):
     risposta = _modifica(capogruppo, reparto, ambiente="GIUNGLA")
     assert risposta.json()["ambiente"] == "NESSUNO"
+
+
+# --- Patrols of a single-sex reparto (DEC-280) ---------------------------------------------
+
+
+def test_squadriglia_del_sesso_del_reparto(capogruppo, gruppo):
+    maschile = _unita(gruppo, "Maschile")
+    url = f"/api/v1/unita/{maschile.pk}/squadriglie"
+    rifiutata = _post(capogruppo, url, {"nome": "Gazzelle", "sesso": "F"})
+    assert rifiutata.status_code == 400
+    assert "solo maschili" in rifiutata.json()["detail"]
+    creata = _post(capogruppo, url, {"nome": "Lupi", "sesso": "M"})
+    assert creata.status_code == 201
+    cambio = _client(capogruppo).put(
+        f"/api/v1/squadriglie/{creata.json()['id']}",
+        {"nome": "Lupi", "sesso": "F"},
+        content_type="application/json",
+    )
+    assert cambio.status_code == 400
+
+
+def test_squadriglia_dell_altro_sesso_segnalata_e_chiudibile(capogruppo, gruppo, reparto):
+    from apps.organizzazione.models import Squadriglia
+
+    femminile = _unita(gruppo, "Femminile", composizione=Composizione.FEMMINILE)
+    vecchia = Squadriglia.objects.create(unita=femminile, nome="Volpi", sesso="M")
+    avvisi = _client(capogruppo).get(f"/api/v1/unita/{femminile.pk}").json()["avvisi"]
+    assert any("Volpi" in a and "correggila o chiudila" in a for a in avvisi)
+    chiusa = _client(capogruppo).put(
+        f"/api/v1/squadriglie/{vecchia.pk}",
+        {"nome": "Volpi", "sesso": "M", "attiva": False},
+        content_type="application/json",
+    )
+    assert chiusa.status_code == 200
+    # A mixed reparto keeps both.
+    assert (
+        _post(
+            capogruppo, f"/api/v1/unita/{reparto.pk}/squadriglie", {"nome": "Orsi", "sesso": "M"}
+        ).status_code
+        == 201
+    )  # noqa: E501

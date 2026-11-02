@@ -31,7 +31,9 @@ Scegli il ruolo in **Assegna un incarico…**, poi la persona in **Chi**, e tocc
 Le squadriglie le compongono lo staff del reparto e i capigruppo.
 
 - **Nuova squadriglia**: scrivi il nome, scegli **Femminile** o **Maschile** e tocca
-  **Crea**.
+  **Crea**. In un reparto maschile o femminile non si sceglie: la squadriglia è dello stesso
+  sesso del reparto, e una dell'altro sesso rimasta da prima è segnalata in **Da
+  controllare**, da correggere o chiudere.
 - Per spostare un ragazzo, accanto al suo nome scegli **Sposta in…** e la squadriglia (o
   **Nessuna squadriglia**): vale da oggi. Chi non è in nessuna squadriglia è in **Senza
   squadriglia**, con **Metti in…**.

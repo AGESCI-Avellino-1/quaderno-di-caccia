@@ -318,6 +318,17 @@ def _avvisi_collegamento(unita: Unita) -> list[str]:
     ]
 
 
+def _avvisi_sesso_squadriglie(unita: Unita) -> list[str]:
+    """Patrols of the other sex in a single-sex reparto, left from before (DEC-280)."""
+    if unita.composizione == Composizione.MISTA:
+        return []
+    return [
+        f"La squadriglia {s.nome} è {s.get_sesso_display().lower()}, ma il reparto è "
+        f"{unita.get_composizione_display().lower()}: correggila o chiudila."
+        for s in unita.squadriglie.filter(attiva=True).exclude(sesso=unita.composizione)
+    ]
+
+
 def _incarichi(**filtri):
     return (
         Incarico.objects.attivi()
@@ -377,6 +388,7 @@ def dettaglio_unita(request, unita_id: int):
             else []
         )
         + _avvisi_collegamento(unita)
+        + (_avvisi_sesso_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + _avvisi_maggiore_eta(unita),
         "puo_modificare": policy.puo_gestire_unita(utente),
@@ -553,6 +565,19 @@ class SquadrigliaBreve(Schema):
 
 
 def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squadriglia:
+    # A single-sex reparto has patrols of its own sex only (DEC-280). One of the other sex
+    # left from before may still be renamed or closed, not created or turned into one.
+    composizione = squadriglia.unita.composizione
+    if (
+        composizione != Composizione.MISTA
+        and dati.sesso != composizione
+        and (squadriglia.pk is None or dati.sesso != squadriglia.sesso)
+    ):
+        genere = "maschili" if composizione == Composizione.MASCHILE else "femminili"
+        raise HttpError(
+            400,
+            f"Il reparto è {Composizione(composizione).label.lower()}: le sue squadriglie sono solo {genere}.",
+        )
     squadriglia.nome = dati.nome.strip()
     squadriglia.sesso = dati.sesso
     squadriglia.attiva = dati.attiva

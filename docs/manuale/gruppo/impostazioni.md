@@ -25,6 +25,13 @@ ricevute: denominazione sociale, codice fiscale, sede, contatti, iscrizione al R
 Registro unico nazionale del Terzo settore) e il **logo** (PNG o JPEG). Denominazione e codice
 fiscale arrivano da BuonaStrada; se li correggi qui, l'importazione non li cambia più.
 
+## Testi della scheda sanitaria
+
+La scheda sanitaria stampata (vedi [Scheda sanitaria](../capo/sanitaria)) ha, sopra le firme,
+una dichiarazione e un consenso al trattamento dei dati. In **Testi della scheda sanitaria**
+un capogruppo li cambia e tocca **Salva**; **Torna al testo di base** rimette quelli del
+modello del gruppo.
+
 ## Pagamenti
 
 Come le famiglie possono pagare: accendi i modi che il gruppo accetta.

@@ -28,6 +28,8 @@ persona trovi:
 - le **allergie** e **intolleranze**, le gravi per prime (il riquadro ha il bordo rosso),
   con cosa succede e cosa fare;
 - i **farmaci**, con quanto e quando, e se lo prende da solo o glielo dà un capo;
+- **Salvavita**, se ha un farmaco salvavita per un'allergia grave, e se i genitori
+  autorizzano i **farmaci da banco** per piccoli malesseri;
 - **A tavola**: cosa non mangia, per motivi non medici;
 - i **contatti**: il suo cellulare e quelli dei genitori; tocca il numero per chiamare.
 

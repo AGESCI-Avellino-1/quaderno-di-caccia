@@ -42,8 +42,12 @@ quali sono i tuoi diritti) e ai **Termini e condizioni**.
 
 ## Come ci si muove
 
-Quando entri vedi la **Home**: le funzioni che puoi usare, divise in gruppi (per esempio
-**La mia famiglia** e **Attività**). Tocca un riquadro per aprirlo.
+Quando entri vedi la **Home**: in cima la **Bacheca** e il **Calendario**, sotto le altre
+funzioni che puoi usare, divise in gruppi (per esempio **La mia famiglia** e **Attività**).
+Tocca il nome di un gruppo per aprirlo e vedere i suoi riquadri; se ne apri un altro, il
+primo si chiude. L'app si ricorda quale gruppo avevi aperto e lo riapre la volta dopo. Un
+numero accanto al nome di un gruppo chiuso dice quante cose ci sono da guardare dentro
+(per esempio richieste da decidere). Tocca un riquadro per aprirlo.
 
 Le stesse funzioni sono nel **menu laterale**. Sul computer è sempre a sinistra; sul
 telefono lo apri con il pulsante con le tre righe, in alto a sinistra. Tocca il nome di

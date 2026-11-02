@@ -31,9 +31,11 @@ presenze. Non contiene note né regole sul rapporto con il minore.
 Nella tua scheda (**Il mio profilo**) tocca **Servizio e formazione**. Lo legge tutta la
 Comunità capi; lo modifichi tu (o un capogruppo).
 
-- **Anni di servizio**: si riempiono da soli con i tuoi incarichi nell'app. Per gli anni di
-  prima, tocca **Aggiungi un anno prima dell'app**: l'anno (quello in cui finisce: 2014/15 è
-  2015), il ruolo, l'unità.
+- **Anni di servizio**: si riempiono da soli con i tuoi incarichi nell'app; ogni anno dice
+  di quale gruppo era. Gli anni in Comunità capi di un altro gruppo arrivano da BuonaStrada,
+  quando l'esportazione li ha. Per gli anni di prima, tocca **Aggiungi un anno prima
+  dell'app**: l'anno (quello in cui finisce: 2014/15 è 2015), il ruolo, l'unità e, se non
+  era il nostro, il gruppo.
 - **Formazione**: tocca **Aggiungi** per un campo (CFT, CFM, CFA, campo per capigruppo), un
   modulo formativo o altro, con quando e dove. I campi di formazione capi registrati come
   eventi su BuonaCaccia compaiono da soli.

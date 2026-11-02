@@ -12,7 +12,7 @@ import boxArrowRight from 'bootstrap-icons/icons/box-arrow-right.svg?raw'
 import boxArrowUp from 'bootstrap-icons/icons/box-arrow-up.svg?raw'
 import calendarEvent from 'bootstrap-icons/icons/calendar-event.svg?raw'
 import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
-import calendarMonth from 'bootstrap-icons/icons/calendar-month.svg?raw'
+import calendarWeek from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import cash from 'bootstrap-icons/icons/cash.svg?raw'
 import cashCoin from 'bootstrap-icons/icons/cash-coin.svg?raw'
 import check2Square from 'bootstrap-icons/icons/check2-square.svg?raw'
@@ -81,7 +81,7 @@ export const ICONE = {
   'box-arrow-up': boxArrowUp,
   'calendar-event': calendarEvent,
   calendar3: calendar3,
-  'calendar-month': calendarMonth,
+  'calendar-week': calendarWeek,
   cash: cash,
   'cash-coin': cashCoin,
   'check2-square': check2Square,

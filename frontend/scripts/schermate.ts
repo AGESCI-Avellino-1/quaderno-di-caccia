@@ -217,10 +217,12 @@ const SCENE: Scena[] = [
     intera: true,
   },
   { nome: 'genitore/eventi', chi: 'genitore', percorso: '/eventi', intera: true },
+  // The calendar page (DEC-286): the month, then the subscription link.
+  { nome: 'genitore/calendario-mese', chi: 'genitore', percorso: '/calendario' },
   {
     nome: 'genitore/calendario',
     chi: 'genitore',
-    percorso: '/eventi',
+    percorso: '/calendario',
     prepara: async (pagina) => {
       await pagina.getByRole('button', { name: 'Mostra il link' }).click()
       await pagina.getByRole('button', { name: 'Copia' }).first().waitFor()
@@ -415,6 +417,13 @@ const SCENE: Scena[] = [
     percorso: '/soci',
     prepara: apri('Rossi Luca'),
     intera: true,
+  },
+  {
+    nome: 'capo/percorso',
+    chi: 'capoReparto',
+    percorso: '/soci',
+    prepara: apri('Rossi Luca'),
+    mostra: 'Percorso scout',
   },
   {
     nome: 'capo/regole',
@@ -675,6 +684,12 @@ const SCENE: Scena[] = [
     intera: true,
   },
   { nome: 'gruppo/incarichi', chi: 'capogruppo', percorso: '/gruppo', intera: true },
+  {
+    nome: 'gruppo/elenco-incarichi',
+    chi: 'capogruppo',
+    percorso: '/gruppo',
+    mostra: 'Elenco degli incarichi',
+  },
   { nome: 'gruppo/impostazioni', chi: 'capogruppo', percorso: '/impostazioni', intera: true },
   {
     // Switched on from the page itself; the bar says only administrators get in.

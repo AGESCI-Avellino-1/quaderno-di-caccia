@@ -14,9 +14,17 @@ unità.
 femminile paralleli, si collegano con **Collegata a**: il collegamento vale per tutte e due,
 e lo staff delle due unità conta come uno solo: chi è nello staff di una può fare nell'altra
 tutto quello che fa nella sua (progressione, dati sanitari, squadriglie, eventi e presenze),
-tranne la cassa, che resta di ogni unità.
+tranne la cassa, che resta di ogni unità finché non unite le casse (vedi sotto).
 Un'unità si collega a una sola altra unità, attiva e non ancora collegata. Per cambiare
 collegamento, prima scegli **Nessuna** e salva, poi collega la nuova unità.
+
+**Cassa comune.** Due unità collegate possono avere una sola cassa contanti. Nella pagina di
+una delle due, un capo unità o un capogruppo tocca **Unisci le casse** e conferma: da
+quel giorno i saldi delle due casse si sommano in una sola (l'app registra il giroconto),
+i tesorieri di ciascuna unità valgono per tutte e due e la prima nota di una mostra i
+movimenti di entrambe. Si dividono di nuovo, con **Dividi le casse**, solo all'inizio di un
+anno scout, prima di ogni movimento dell'anno. Finché le casse sono unite, il
+collegamento tra le due unità non si toglie.
 
 Le unità arrivano di solito dall'importazione da BuonaStrada, senza nome: il riquadro **Da
 controllare** dell'unità te lo ricorda.
@@ -53,7 +61,28 @@ In **Il mio gruppo**, tocca **Incarichi di gruppo**.
   Quando un capo viene assegnato a un'unità, «a disposizione» finisce da solo.
 
 In alto un avviso elenca i **capi senza servizio**: assegnali a un'unità o mettili a
-disposizione.
+disposizione. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è il gruppo.
+
+### L'elenco degli incarichi
+
+In fondo alla pagina, in **Elenco degli incarichi**, un capogruppo stampa un PDF su carta
+intestata del gruppo con codice socio, cognome, nome e livello di formazione capi di ogni
+capo.
+
+1. Spunta gli **Incarichi da includere** (di base ci sono tutti).
+2. Scegli come raggruppare i capi: **Per unità** (chi è a disposizione, e i capigruppo e
+   l'assistente ecclesiastico di gruppo senza un'unità, vanno in Comunità capi; accanto al
+   nome gli altri incarichi spuntati, per esempio tesoriere) o **Per incarico**.
+3. Scegli l'**Anno associativo**: quello in corso dà gli incarichi di oggi; un anno passato
+   quelli che erano in corso alla sua fine, il 30 settembre.
+4. Tocca **Scarica il PDF**.
+
+:::{container} schermate
+![L'elenco degli incarichi sul telefono](../img/gruppo/elenco-incarichi-telefono.png){.telefono width="30%"}
+![L'elenco degli incarichi sul computer](../img/gruppo/elenco-incarichi-computer.png){.computer width="65%"}
+:::
+
+Il livello di formazione è sempre quello di oggi, anche per un anno passato.
 
 ## Le eccezioni sulle squadriglie
 

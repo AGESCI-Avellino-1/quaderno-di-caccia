@@ -6,6 +6,11 @@ caricamento l'app cancella i dati, tenendo nome e anni nel gruppo. Finché il Dr
 collegato, i capigruppo vedono l'avviso «L'archivio non è ancora configurato» e non si
 archivia niente.
 
+Nella stessa cartella i capi salvano anche i documenti della scheda sanitaria (la scheda
+firmata, la tessera sanitaria, i documenti d'identità) dopo averli controllati: l'app li
+carica e poi li cancella dal server. Senza il Drive collegato, i capi li scaricano sul
+proprio computer.
+
 Per collegarlo, una volta:
 
 1. In Google Cloud crea un progetto, abilita la **Google Drive API** e crea un **account di

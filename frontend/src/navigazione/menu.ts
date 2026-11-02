@@ -226,7 +226,7 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
         // On the Home next to the Bacheca (DEC-286, HomeView).
         membro && {
           nome: 'Calendario',
-          icona: 'calendar-month',
+          icona: 'calendar-week',
           to: '/calendario',
           descrizione: 'I prossimi eventi tuoi e dei tuoi figli, da aggiungere al telefono',
           sottovoce: true,

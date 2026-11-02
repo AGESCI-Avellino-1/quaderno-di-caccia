@@ -3,9 +3,9 @@
 ## Eventi
 
 Nella Home, in **Attività**, tocca **Eventi**: riunioni, uscite e campi della tua unità e del
-gruppo. Tocca un evento per vedere date, luogo e cosa portare. Puoi aggiungerli al
-calendario del telefono con **Il mio calendario**, in fondo alla pagina (i passi sono in
-[Eventi e calendario](../genitore/eventi.md#il-calendario-del-telefono)).
+gruppo. Tocca un evento per vedere date, luogo e cosa portare. Nella Home, accanto alla
+**Bacheca**, il **Calendario** li mostra per mese o in elenco, e li aggiunge al calendario
+del telefono (i passi sono in [Eventi e calendario](../genitore/eventi.md#gli-eventi-nel-calendario-del-telefono)).
 
 Se sei minorenne, sono i tuoi genitori a dire se partecipi; da maggiorenne lo dici tu.
 

@@ -6,8 +6,8 @@ un'unità (in **Genitori**: i genitori dei ragazzi di quell'unità) o cerca per 
 tocca una persona per aprire la sua scheda. Un capo che è anche genitore è in tutte e due.
 
 Nella scheda trovi, nell'ordine: i collegamenti alla Progressione e al fascicolo dell'anno,
-la foto, i dati di BuonaStrada, le regole sul rapporto con il minore, la scheda sanitaria,
-le note, le quote, il telefono in squadriglia e l'accesso all'app.
+la foto, i dati di BuonaStrada, il percorso scout, le regole sul rapporto con il minore, la
+scheda sanitaria, le note, le quote, il telefono in squadriglia e l'accesso all'app.
 
 :::{container} schermate
 ![La scheda di Luca vista dal capo reparto, sul telefono](../img/capo/persona-telefono.png){.telefono width="30%"}
@@ -21,6 +21,25 @@ dato](../genitore/figli.md#correggere-un-dato-di-buonastrada)): vale subito nell
 capigruppo lo mandano alla segreteria. Per i ragazzi della tua unità puoi correggere quasi
 tutto, anche il sesso e il luogo di nascita; nome, cognome, data di nascita e codice fiscale
 li correggono solo i capigruppo.
+
+## Il percorso scout
+
+Il riquadro **Percorso scout** elenca tutti i periodi della persona, da ragazzo e da capo,
+uno per riga con l'unità, gli anni e il gruppo, e da quando è nel gruppo. I periodi nel
+nostro gruppo vengono da BuonaStrada e dall'app; quelli in un altro gruppo da BuonaStrada,
+quando l'esportazione li ha (per esempio per chi è arrivato da un altro gruppo). Lo vedono
+i capi, la persona stessa e i genitori di un minore.
+
+Gli anni che mancano (prima di BuonaStrada, o in un gruppo che l'esportazione non porta) li
+aggiunge un capogruppo, o il capo stesso nel suo percorso: tocca **Aggiungi un periodo**,
+scrivi l'unità, il gruppo (vuoto se era il nostro), se era ragazzo o capo e gli anni
+(quello in cui finiscono: 2014/15 è 2015), poi **Salva**. Questi periodi sono segnati come
+«ricostruito» e si tolgono con **Togli**.
+
+:::{container} schermate
+![Il percorso scout sul telefono](../img/capo/percorso-telefono.png){.telefono width="30%"}
+![Il percorso scout sul computer](../img/capo/percorso-computer.png){.computer width="65%"}
+:::
 
 ## La foto
 

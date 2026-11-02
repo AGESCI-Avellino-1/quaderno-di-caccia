@@ -53,6 +53,13 @@ export const PERSONE = {
 
 /** Opens a card of the home page, e.g. a child's page. */
 const apri = (testo: string) => async (pagina: Page) => {
+  // On the Home the entry may be in a closed group (DEC-285): open it first.
+  const gruppo = pagina
+    .locator('details.qdc-gruppo-home:not([open])')
+    .filter({ has: pagina.getByRole('link', { name: testo, includeHidden: true }) })
+  if (!(await pagina.getByRole('link', { name: testo }).first().isVisible())) {
+    if (await gruppo.count()) await gruppo.first().locator('summary').click()
+  }
   await pagina.getByRole('link', { name: testo }).first().click()
   await pagina.waitForLoadState('networkidle')
 }

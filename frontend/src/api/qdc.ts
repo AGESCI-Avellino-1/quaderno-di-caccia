@@ -350,6 +350,8 @@ export interface Unita {
   /** Archived: out of the lists, back when someone of its history returns (DEC-275). */
   archiviata_il?: string | null
   collegata_a: number | null
+  /** The linked unit as "type name (code)"; links are two-way (DEC-279). */
+  collegata_nome?: string
   nota_collegamento: string
   /** Ages for the waiting list (DEC-260); null for the Co.Ca. */
   eta_minima?: number | null

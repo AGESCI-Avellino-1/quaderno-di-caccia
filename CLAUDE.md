@@ -277,7 +277,10 @@ implements them:
 
 - "Staff dell'unità" (DEC-09, DEC-110) is an `Incarico` with role `STAFF`, not an `Appartenenza`:
   capi belong to the Co.Ca. from the import, and a second CAPO membership would look to
-  the import like a change of unit. `policy.e_staff` counts the capo unità too.
+  the import like a change of unit. `policy.e_staff` counts the capo unità too. Linked
+  units (`Unita.collegata_a`, two-way and in pairs, set only by `organizzazione.servizi.
+  collega`) have one staff for every permission: staff checks go through
+  `policy._unita_servite` (DEC-279); unit cash and treasurers stay per unit.
 - Who appoints CSQ/VCSQ (the reparto staff), group roles (capigruppo in office; the
   technical administrator only when there is none) and unit treasurers (capo unità and
   capigruppo), DEC-111: `policy.puo_nominare`.

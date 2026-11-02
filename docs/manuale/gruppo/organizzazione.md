@@ -5,10 +5,18 @@
 In **Il mio gruppo**, tocca **Unità**. Solo i capigruppo creano, rinominano e chiudono le
 unità.
 
-- **Nuova unità**: nome, tipo, composizione (maschile, femminile, mista) e, per branco e
-  cerchio, l'ambientazione (giungla o bosco). La Comunità capi può non avere nome.
+- **Nuova unità**: nome, tipo, composizione (maschile, femminile, mista) e, per un
+  Branco/Cerchio, l'ambientazione (giungla o bosco). La Comunità capi può non avere nome.
 - Nella pagina di un'unità, **Modifica** per cambiare nome o ambientazione, collegarla a
   un'altra unità o chiuderla (togli la spunta da **Unità attiva**).
+
+**Unità collegate.** Due unità che lavorano insieme, per esempio un reparto maschile e uno
+femminile paralleli, si collegano con **Collegata a**: il collegamento vale per tutte e due,
+e lo staff delle due unità conta come uno solo: chi è nello staff di una può fare nell'altra
+tutto quello che fa nella sua (progressione, dati sanitari, squadriglie, eventi e presenze),
+tranne la cassa, che resta di ogni unità.
+Un'unità si collega a una sola altra unità, attiva e non ancora collegata. Per cambiare
+collegamento, prima scegli **Nessuna** e salva, poi collega la nuova unità.
 
 Le unità arrivano di solito dall'importazione da BuonaStrada, senza nome: il riquadro **Da
 controllare** dell'unità te lo ricorda.

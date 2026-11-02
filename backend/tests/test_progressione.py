@@ -9,9 +9,10 @@ import pytest
 from auditlog.models import LogEntry
 from django.test import Client
 
+from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita, Unita
 from apps.permessi import policy
 from apps.progressione.models import Fase, Impegno, Obiettivo, PeriodoBranca, Stato, Tappa
-from tests.conftest import crea_capo
+from tests.conftest import INIZIO_ANNO, crea_capo
 
 pytestmark = pytest.mark.django_db
 
@@ -316,3 +317,28 @@ def test_vista_del_reparto(capo, altro_capo, ragazza, csq, reparto):
     assert righe[csq.pk]["sentiero_aperto"] is False
     assert dati["puo_gestire"] is False  # another capo sees, the staff writes
     assert _client(csq).get(f"/api/v1/unita/{reparto.pk}/progressione").status_code == 403
+
+
+# --- Linked units: both staffs follow the pair's ragazzi (DEC-279) -------------------------
+
+
+def test_staff_dell_unita_collegata_gestisce_la_progressione(
+    capo, altro_capo, ragazza, reparto, gruppo, estraneo
+):
+    from apps.organizzazione.servizi import collega
+
+    parallelo = Unita.objects.create(
+        gruppo=gruppo, nome="Parallelo", tipo=TipoUnita.REPARTO, composizione="M"
+    )
+    Incarico.objects.create(
+        persona=altro_capo, ruolo=RuoloIncarico.CAPO_UNITA, unita=parallelo, data_inizio=INIZIO_ANNO
+    )
+    assert not policy.puo_gestire_progressione(altro_capo.utente, ragazza)
+    collega(parallelo, reparto)
+    assert policy.puo_gestire_progressione(altro_capo.utente, ragazza)
+    assert policy.e_staff(altro_capo.utente, reparto)
+    assert policy.e_staff(capo.utente, parallelo)
+    assert reparto.pk in {u.pk for u in policy.unita_progressione(altro_capo.utente)}
+    assert not policy.puo_gestire_progressione(estraneo.utente, ragazza)
+    collega(parallelo, None)
+    assert not policy.puo_gestire_progressione(altro_capo.utente, ragazza)

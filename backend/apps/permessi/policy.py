@@ -112,14 +112,43 @@ def e_capogruppo(user) -> bool:
     return _ha_incarico(user, {RuoloIncarico.CAPOGRUPPO})
 
 
+STAFF_DI_UNITA = frozenset({RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
+
+
+def _con_collegate(unita_ids) -> set[int]:
+    """The units and those linked to them (DEC-279)."""
+    ids = set(unita_ids)
+    collegate = Unita.objects.filter(pk__in=ids, collegata_a__isnull=False).values_list(
+        "collegata_a_id", flat=True
+    )
+    return ids | set(collegate)
+
+
+def _unita_servite(user, ruoli=STAFF_DI_UNITA) -> set[int]:
+    """Units where the user holds one of `ruoli` (staff and capo unità by default), and
+    the units linked to them: the staffs of two linked units count as one for every
+    permission (DEC-279)."""
+    persona = persona_di(user)
+    if persona is None:
+        return set()
+    proprie = (
+        Incarico.objects.attivi()
+        .filter(persona=persona, ruolo__in=ruoli, unita__isnull=False)
+        .values_list("unita_id", flat=True)
+    )
+    return _con_collegate(proprie)
+
+
 def e_capo_unita(user, unita=None) -> bool:
-    filtri = {"unita": unita} if unita is not None else {}
-    return _ha_incarico(user, {RuoloIncarico.CAPO_UNITA}, **filtri)
+    if unita is None:
+        return _ha_incarico(user, {RuoloIncarico.CAPO_UNITA})
+    return unita.pk in _unita_servite(user, {RuoloIncarico.CAPO_UNITA})
 
 
 def e_staff(user, unita) -> bool:
-    """Capo serving the unit: its staff, capo unità included (DEC-09, DEC-10)."""
-    return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita=unita)
+    """Capo serving the unit: its staff, capo unità included (DEC-09, DEC-10), or the
+    staff of the unit linked to it (DEC-279)."""
+    return unita.pk in _unita_servite(user)
 
 
 def e_tesoriere(user) -> bool:
@@ -253,7 +282,7 @@ def puo_invitare(user, persona: Persona) -> bool:
     attive = Appartenenza.objects.attive()
     unita = set(attive.filter(persona=persona).values_list("unita_id", flat=True))
     unita |= set(attive.filter(persona__tutori__tutore=persona).values_list("unita_id", flat=True))
-    return _ha_incarico(user, {RuoloIncarico.CAPO_UNITA}, unita_id__in=unita)
+    return bool(unita & _unita_servite(user, {RuoloIncarico.CAPO_UNITA}))
 
 
 def tema_branca(user) -> str:
@@ -320,8 +349,8 @@ def puo_stampare_schede_evento(user, evento) -> bool:
 def _staff_della_persona(user, persona: Persona) -> bool:
     if e_capo_in_attesa(user):
         return False  # sensitive data and corrections wait for BuonaStrada
-    unita = Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
-    return _ha_incarico(user, {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita_id__in=unita)
+    unita = Appartenenza.objects.attive().filter(persona=persona).values_list("unita_id", flat=True)
+    return bool(set(unita) & _unita_servite(user))
 
 
 def campi_correggibili(user, persona: Persona) -> set[str]:
@@ -495,13 +524,7 @@ def unita_da_approvare(user) -> QuerySet[Unita]:
         return Unita.objects.all()
     if e_capo_in_attesa(user):
         return Unita.objects.none()
-    persona = persona_di(user)
-    if persona is None:
-        return Unita.objects.none()
-    ids = Incarico.objects.attivi().filter(
-        persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}
-    )
-    return Unita.objects.filter(pk__in=ids.values("unita_id")).exclude(tipo=TipoUnita.COMUNITA_CAPI)
+    return Unita.objects.filter(pk__in=_unita_servite(user)).exclude(tipo=TipoUnita.COMUNITA_CAPI)
 
 
 def puo_gestire_modulistica(user) -> bool:
@@ -577,10 +600,9 @@ def puo_registrare_pagamenti(user, persona: Persona) -> bool:
         return False
     if puo_gestire_quote(user):
         return True
-    return _ha_incarico(
-        user,
-        {RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF},
-        unita_id__in=_unita_della_persona(persona),
+    unita = set(_unita_della_persona(persona).values_list("unita_id", flat=True))
+    return bool(unita & _unita_servite(user)) or _ha_incarico(
+        user, {RuoloIncarico.TESORIERE_UNITA}, unita_id__in=unita
     )
 
 
@@ -707,15 +729,7 @@ def _staff_di_tutte(user, unita_ids) -> bool:
     unita_ids = set(unita_ids)
     if not unita_ids:
         return False
-    persona = persona_di(user)
-    if persona is None:
-        return False
-    proprie = set(
-        Incarico.objects.attivi()
-        .filter(persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
-        .values_list("unita_id", flat=True)
-    )
-    return unita_ids <= proprie
+    return unita_ids <= _unita_servite(user)
 
 
 def _delegato(user, squadriglia) -> bool:
@@ -816,18 +830,7 @@ def puo_segnare_presenze(user, evento) -> bool:
         return True
     if evento.livello == "GRUPPO":
         return e_capo(user)
-    persona = persona_di(user)
-    if persona is None:
-        return False
-    return (
-        Incarico.objects.attivi()
-        .filter(
-            persona=persona,
-            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
-            unita_id__in=_unita_ids_evento(evento),
-        )
-        .exists()
-    )
+    return bool(set(_unita_ids_evento(evento)) & _unita_servite(user))
 
 
 def puo_non_invitare(user, evento) -> bool:
@@ -1009,14 +1012,7 @@ def _impersonabili_dallo_staff(user) -> QuerySet[Persona]:
     """The ragazzi of the units the user serves and their parents, not capi."""
     from apps.anagrafica.models import RelazioneTutela
 
-    persona = persona_di(user)
-    if persona is None:
-        return Persona.objects.none()
-    servite = (
-        Incarico.objects.attivi()
-        .filter(persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA})
-        .values("unita_id")
-    )
+    servite = _unita_servite(user)
     ragazzi = (
         Appartenenza.objects.attive()
         .filter(unita_id__in=servite, ruolo=RuoloAppartenenza.RAGAZZO)
@@ -1107,7 +1103,8 @@ def puo_scrivere_voce_punto_strada(user, persona: Persona) -> bool:
 
 def puo_gestire_progressione(user, persona: Persona) -> bool:
     """Sentiero, tappe, Promessa, badges, agreeing and validating: the staff of the
-    person's unit (DEC-09: a capo writes for the unit they serve)."""
+    person's unit (DEC-09: a capo writes for the unit they serve), linked units included
+    (DEC-279)."""
     return _staff_della_persona(user, persona)
 
 
@@ -1525,20 +1522,12 @@ def vede_impostazioni(user) -> bool:
     return puo_modificare_impostazioni(user) or puo_gestire_quote(user)
 
 
-def unita_di_servizio(user) -> QuerySet[Unita]:
-    """Units the capo serves (staff or capo unità): their Progressione personale entries
-    in the PWA menu (DEC-242). Navigation only: every page asks the policy again."""
-    persona = persona_di(user)
-    if persona is None:
-        return Unita.objects.none()
+def unita_progressione(user) -> QuerySet[Unita]:
+    """The Progressione personale entries of the PWA menu: the units the capo serves and
+    those linked to them (DEC-242, DEC-279)."""
     return (
-        Unita.objects.filter(
-            incarichi__in=Incarico.objects.attivi().filter(
-                persona=persona, ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}
-            )
-        )
+        Unita.objects.filter(pk__in=_unita_servite(user))
         .exclude(tipo=TipoUnita.COMUNITA_CAPI)
-        .distinct()
         .order_by("tipo", "progressivo")
     )
 

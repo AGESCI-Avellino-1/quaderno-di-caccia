@@ -146,7 +146,7 @@ def profilo(request):
         "vede_impostazioni": policy.vede_impostazioni(user),
         "unita_servizio": [
             {"id": u.id, "nome": str(u), "tipo": u.tipo, "branca": u.branca.value}
-            for u in policy.unita_di_servizio(user)
+            for u in policy.unita_progressione(user)
         ],
         "ambiente": ambiente(persona) if persona is not None else None,
         "pagamenti_da_verificare": _pagamenti_da_verificare(user),

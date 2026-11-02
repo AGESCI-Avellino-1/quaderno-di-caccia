@@ -636,3 +636,68 @@ def test_elimina_solo_unita_chiusa_e_vuota(gruppo, coca, capo, capogruppo, ragaz
     assert not Unita.objects.filter(pk=sbagliata.pk).exists()
     servizio.refresh_from_db()
     assert servizio.unita is None and servizio.unita_testo == "Reparto Doppione"
+
+
+# --- Linked units: both ways, in pairs (DEC-279) -------------------------------------------
+
+
+def _unita(gruppo, nome, **campi) -> Unita:
+    valori = {"tipo": TipoUnita.REPARTO, "composizione": Composizione.MASCHILE} | campi
+    return Unita.objects.create(gruppo=gruppo, nome=nome, **valori)
+
+
+def _modifica(chi, unita, **campi):
+    dati = {"nome": unita.nome, "tipo": unita.tipo, "composizione": unita.composizione} | campi
+    return _client(chi).put(f"/api/v1/unita/{unita.pk}", dati, content_type="application/json")
+
+
+def test_collegamento_reciproco(capogruppo, reparto, gruppo):
+    maschile = _unita(gruppo, "Maschile")
+    risposta = _modifica(
+        capogruppo, maschile, collegata_a=reparto.pk, nota_collegamento="Parallelo"
+    )
+    assert risposta.status_code == 200, risposta.content
+    assert risposta.json()["collegata_nome"] == str(reparto)
+    reparto.refresh_from_db()
+    assert reparto.collegata_a == maschile
+    assert reparto.nota_collegamento == "Parallelo"
+    # Removing it from the other side removes both.
+    assert _modifica(capogruppo, reparto, collegata_a=None).status_code == 200
+    maschile.refresh_from_db()
+    assert maschile.collegata_a is None and maschile.nota_collegamento == ""
+
+
+def test_collegamento_solo_a_coppie(capogruppo, reparto, gruppo):
+    a, b = _unita(gruppo, "A"), _unita(gruppo, "B")
+    assert _modifica(capogruppo, a, collegata_a=reparto.pk).status_code == 200
+    # b cannot take reparto, already linked to a…
+    risposta = _modifica(capogruppo, b, collegata_a=reparto.pk)
+    assert risposta.status_code == 400
+    assert "togli prima" in risposta.json()["detail"]
+    # …and a cannot switch to b without removing its link first.
+    assert _modifica(capogruppo, a, collegata_a=b.pk).status_code == 400
+    a.refresh_from_db()
+    reparto.refresh_from_db()
+    assert a.collegata_a == reparto and reparto.collegata_a == a
+    assert _modifica(capogruppo, a, collegata_a=None).status_code == 200
+    assert _modifica(capogruppo, a, collegata_a=b.pk).status_code == 200
+
+
+def test_collegamento_solo_tra_unita_attive(capogruppo, reparto, gruppo):
+    chiusa = _unita(gruppo, "Chiusa", attiva=False)
+    assert _modifica(capogruppo, reparto, collegata_a=chiusa.pk).status_code == 400
+    chiusa.refresh_from_db()
+    assert chiusa.collegata_a is None
+
+
+def test_collegamento_a_senso_unico_segnalato(capogruppo, reparto, gruppo):
+    a, b = _unita(gruppo, "A"), _unita(gruppo, "B")
+    Unita.objects.filter(pk=a.pk).update(collegata_a=b)  # as left by an old one-way link
+    Unita.objects.filter(pk=b.pk).update(collegata_a=reparto)
+    avvisi = _client(capogruppo).get(f"/api/v1/unita/{a.pk}").json()["avvisi"]
+    assert any("vale solo da questa parte" in avviso for avviso in avvisi)
+
+
+def test_ambientazione_solo_per_branco_cerchio(capogruppo, reparto):
+    risposta = _modifica(capogruppo, reparto, ambiente="GIUNGLA")
+    assert risposta.json()["ambiente"] == "NESSUNO"

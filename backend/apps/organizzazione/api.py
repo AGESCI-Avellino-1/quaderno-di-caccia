@@ -70,6 +70,7 @@ class UnitaOut(Schema):
     # Archived: out of the lists, back when someone of its history returns (DEC-275).
     archiviata_il: date | None = None
     collegata_a: int | None
+    collegata_nome: str = ""
     nota_collegamento: str
     # Ages for the waiting list (DEC-260); None for the Co.Ca.
     eta_minima: int | None = None
@@ -91,13 +92,17 @@ class UnitaOut(Schema):
     def resolve_collegata_a(obj: Unita) -> int | None:
         return obj.collegata_a_id
 
+    @staticmethod
+    def resolve_collegata_nome(obj: Unita) -> str:
+        return str(obj.collegata_a) if obj.collegata_a_id else ""
+
 
 class UnitaIn(Schema):
     nome: str
     tipo: TipoUnita
     composizione: Composizione
     ambiente: Ambiente = Ambiente.NESSUNO
-    # Parallel male/female units are linked by a note (DEC-36).
+    # Parallel units, linked both ways and in pairs (DEC-36, DEC-279).
     collegata_a: int | None = None
     nota_collegamento: str = ""
     attiva: bool = True
@@ -117,20 +122,30 @@ def elenco_unita(request, tutte: bool = False):
     return unita.order_by("tipo", "nome")
 
 
+@transaction.atomic
 def _applica_unita(unita: Unita, dati: UnitaIn) -> Unita:
+    altra = None
     if dati.collegata_a is not None:
         if dati.collegata_a == unita.pk:
             raise HttpError(400, "Un'unità non può essere collegata a sé stessa.")
-        unita.collegata_a = get_object_or_404(Unita, pk=dati.collegata_a, gruppo=unita.gruppo)
-    else:
-        unita.collegata_a = None
+        altra = get_object_or_404(Unita, pk=dati.collegata_a, gruppo=unita.gruppo)
     unita.nome = dati.nome.strip()
     unita.tipo = dati.tipo
     unita.composizione = dati.composizione
-    unita.ambiente = dati.ambiente
-    unita.nota_collegamento = dati.nota_collegamento.strip()
+    # The setting tells a branco from a cerchio (DEC-225): chosen for a Branco/Cerchio,
+    # implied by a Branco or a Cerchio, none outside L/C.
+    unita.ambiente = {
+        TipoUnita.BRANCO: Ambiente.GIUNGLA,
+        TipoUnita.CERCHIO: Ambiente.BOSCO,
+        TipoUnita.BRANCO_CERCHIO: dati.ambiente,
+    }.get(unita.tipo, Ambiente.NESSUNO)
     unita.attiva = dati.attiva
     _salva(unita)
+    # Linked both ways, in pairs only (DEC-279).
+    try:
+        servizi.collega(unita, altra, dati.nota_collegamento)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
     return unita
 
 
@@ -288,6 +303,21 @@ def _avvisi_squadriglie(unita: Unita) -> list[str]:
     return avvisi
 
 
+def _avvisi_collegamento(unita: Unita) -> list[str]:
+    """A one-way link left by the migration to two-way links (DEC-279)."""
+    altra = unita.collegata_a
+    if altra is None or altra.collegata_a_id == unita.pk:
+        return []
+    return [
+        (
+            f"Il collegamento con {altra} vale solo da questa parte: {altra} è collegata a "
+            f"{altra.collegata_a}. Togli uno dei due collegamenti con «Modifica» e rifallo."
+            if altra.collegata_a_id
+            else f"Il collegamento con {altra} vale solo da questa parte: rifallo con «Modifica»."
+        )
+    ]
+
+
 def _incarichi(**filtri):
     return (
         Incarico.objects.attivi()
@@ -346,6 +376,7 @@ def dettaglio_unita(request, unita_id: int):
             if unita.senza_ambiente
             else []
         )
+        + _avvisi_collegamento(unita)
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + _avvisi_maggiore_eta(unita),
         "puo_modificare": policy.puo_gestire_unita(utente),

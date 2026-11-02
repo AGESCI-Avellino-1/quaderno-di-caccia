@@ -163,7 +163,13 @@ const iniziale = (u: Unita): UnitaIn => ({
           Imprese e specialità di squadriglia
         </RouterLink>
       </template>
-      <span v-if="unita.nota_collegamento" class="fg-2"> · {{ unita.nota_collegamento }}</span>
+      <template v-if="unita.collegata_a">
+        · Collegata a
+        <RouterLink :to="{ name: 'unita-dettaglio', params: { id: unita.collegata_a } }">{{
+          unita.collegata_nome
+        }}</RouterLink>
+        <span v-if="unita.nota_collegamento" class="fg-2"> ({{ unita.nota_collegamento }})</span>
+      </template>
     </p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <EtaUnita
@@ -213,6 +219,7 @@ const iniziale = (u: Unita): UnitaIn => ({
       <ModuloUnita
         :iniziale="iniziale(unita)"
         :altre="altre"
+        :unita-id="unita.id"
         :in-corso="inCorso"
         etichetta="Salva"
         @salva="salva"

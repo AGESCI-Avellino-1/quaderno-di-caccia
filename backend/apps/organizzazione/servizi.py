@@ -155,3 +155,42 @@ def cancella_unita(unita: Unita) -> None:
             servizio.unita_testo = str(unita)
             servizio.save(update_fields=["unita_testo", "aggiornato_il"])
         unita.delete()
+
+
+# --- Linked units (DEC-36, DEC-279) ---------------------------------------------------------
+
+
+def collega(unita: Unita, altra: Unita | None, nota: str = "") -> None:
+    """Link two units both ways, or unlink them (`altra` None).
+
+    Units are linked in pairs: changing a link means removing the old one first, on
+    purpose, so neither side loses a link without anyone noticing. Only active units are
+    linked. The note is the same on both sides. `unita` must be saved.
+    """
+    nota = nota.strip()
+    attuale = unita.collegata_a
+    with transaction.atomic():
+        if altra is None:
+            if attuale is not None and attuale.collegata_a_id == unita.pk:
+                attuale.collegata_a, attuale.nota_collegamento = None, ""
+                attuale.save(update_fields=["collegata_a", "nota_collegamento", "aggiornato_il"])
+            unita.collegata_a, unita.nota_collegamento = None, ""
+        else:
+            if altra.pk == unita.pk:
+                raise ValidationError("Un'unità non può essere collegata a sé stessa.")
+            if attuale is not None and attuale.pk != altra.pk:
+                raise ValidationError(
+                    f"{unita} è già collegata a {attuale}: togli prima quel collegamento "
+                    "(«Collegata a»: Nessuna), poi scegli la nuova unità."
+                )
+            if altra.collegata_a_id not in (None, unita.pk):
+                raise ValidationError(
+                    f"{altra} è già collegata a {altra.collegata_a}: togli prima quel "
+                    "collegamento dalla sua pagina."
+                )
+            if attuale is None and (not altra.attiva or altra.archiviata_il):
+                raise ValidationError("Si collegano solo unità attive.")
+            altra.collegata_a, altra.nota_collegamento = unita, nota
+            altra.save(update_fields=["collegata_a", "nota_collegamento", "aggiornato_il"])
+            unita.collegata_a, unita.nota_collegamento = altra, nota
+        unita.save(update_fields=["collegata_a", "nota_collegamento", "aggiornato_il"])

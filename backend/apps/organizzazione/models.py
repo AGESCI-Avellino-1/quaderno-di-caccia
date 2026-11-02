@@ -131,7 +131,8 @@ class Unita(ModelloTracciato):
     codice_unita = models.CharField(max_length=4, blank=True)
     progressivo = models.PositiveSmallIntegerField(null=True, blank=True)
     durata_anni = models.PositiveSmallIntegerField(null=True, blank=True)
-    # Parallel male/female units working together are two units linked by a note (DEC-36).
+    # Parallel units working together are two units linked by a note (DEC-36), both ways
+    # and in pairs only: set through `servizi.collega` (DEC-279).
     collegata_a = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )

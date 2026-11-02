@@ -158,3 +158,33 @@ def test_estratto_conto(capo, capogruppo, csq, ragazza, genitore, estraneo):
     for chi in (capo, csq, ragazza, genitore, estraneo):
         assert not policy.puo_gestire_estratto_conto(chi.utente)
         assert not policy.puo_configurare_carte(chi.utente)
+
+
+# --- Linked units: one staff for every permission (DEC-279) ---------------------------------
+
+
+def test_staff_delle_unita_collegate_congiunto(capo, ragazza, reparto, gruppo, estraneo):
+    from apps.organizzazione.servizi import collega
+
+    parallelo = Unita.objects.create(
+        gruppo=gruppo, nome="Parallelo", tipo=TipoUnita.REPARTO, composizione=Composizione.MASCHILE
+    )
+    altro = crea_capo("Piero", "Parallelo", "parallelo@example.invalid")
+    Incarico.objects.create(
+        persona=altro, ruolo=RuoloIncarico.STAFF, unita=parallelo, data_inizio=INIZIO_ANNO
+    )
+    permessi = (
+        lambda u: policy.e_staff(u, reparto),
+        lambda u: policy.puo_modificare_sanitarie(u, ragazza),
+        lambda u: policy.puo_gestire_squadriglie(u, reparto),
+        lambda u: policy.puo_impersonare(u, ragazza.utente),
+        lambda u: reparto in policy.unita_da_approvare(u),
+    )
+    assert not any(p(altro.utente) for p in permessi)
+    collega(parallelo, reparto)
+    assert all(p(altro.utente) for p in permessi)
+    # And the other way round: the reparto's capo unità for the parallel unit.
+    assert policy.e_capo_unita(capo.utente, parallelo)
+    assert not policy.e_staff(estraneo.utente, reparto)
+    collega(parallelo, None)
+    assert not any(p(altro.utente) for p in permessi)

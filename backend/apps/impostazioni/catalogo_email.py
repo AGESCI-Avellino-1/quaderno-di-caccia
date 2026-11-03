@@ -9,7 +9,7 @@ where it is sent.
 from .email import Segnaposto, TipoEmail
 
 
-def _link(descrizione: str, esempio: str = "https://qdc.avellino1.it/…") -> Segnaposto:
+def _link(descrizione: str, esempio: str = "https://qdc.esempio.it/…") -> Segnaposto:
     return Segnaposto("Link", descrizione, esempio, indispensabile=True, link=True)
 
 
@@ -395,7 +395,7 @@ _TIPI = [
         (
             _elenco(
                 "per ogni iscrizione, cosa serve e il link",
-                "Per Giulia (Campetto, https://qdc.avellino1.it/eventi/5) ci serve:\n"
+                "Per Giulia (Campetto, https://qdc.esempio.it/eventi/5) ci serve:\n"
                 "- la liberatoria firmata dai genitori",
             ),
         ),

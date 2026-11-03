@@ -123,6 +123,24 @@ DJANGO_DEFAULT_FROM_EMAIL=Quaderno di Caccia <noreply@esempio.org>
 Le email ai capi, ai genitori e ai ragazzi partono solo dopo che i capigruppo le accendono
 nelle Impostazioni (**Chi riceve le email**): codici di accesso e inviti partono sempre.
 
+## Il logo del gruppo
+
+Le icone dell'app (quella sul telefono e nel browser) e il logo nella barra in alto sono, di
+base, il logo AGESCI. Per usare quello del gruppo:
+
+1. copia il file nella cartella `resources/` dell'installazione: un SVG, oppure un PNG
+   quadrato di almeno 512 pixel di lato;
+2. scrivi il suo percorso in `.env`:
+
+   ```bash
+   QDC_LOGO=resources/logo-gruppo.svg
+   ```
+
+Le icone si ricavano dal file quando si costruisce l'app: se cambi il logo dopo l'avvio, dai
+di nuovo `docker compose up -d --build`. Il file in `resources/` non fa parte del codice: gli
+aggiornamenti non lo toccano. Il logo della carta intestata (stampe, ricevute) è un'altra
+cosa: lo carica un capogruppo dall'app, in **Impostazioni**.
+
 ## Avviare
 
 ```bash
@@ -173,6 +191,7 @@ servizio senza fermare l'app: `sudo scripts/installa-servizio.sh --rimuovi`.
 | --- | --- | --- |
 | `QDC_INVITO_VALIDITA_GIORNI` | per quanti giorni vale un invito | 14 |
 | `QDC_OFFLINE_GIORNI` | per quanti giorni un telefono tiene i dati senza collegarsi | 14 |
+| `QDC_LOGO` | il logo del gruppo per le icone dell'app | vuota: il logo AGESCI (vedi sopra) |
 | `QDC_BANNER_INSTALLAZIONE_GIORNI` | dopo quanti giorni l'invito a installare l'app, chiuso, può ricomparire | 14 |
 | `QDC_DRIVE_CREDENZIALI`, `QDC_DRIVE_CARTELLA`, `QDC_IMPRONTA_CHIAVE` | archivio sul Drive | vuote: vedi [Archivio sul Drive](archivio) |
 | `QDC_GOOGLE_*`, `QDC_APPLE_*` | accesso con Google e Apple | vuote: vedi [Accesso con Google e Apple](google-apple) |

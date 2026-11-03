@@ -60,7 +60,13 @@ services:
       MP_MAX_MESSAGES: 500
 
   app:
-    build: ./frontend
+    build:
+      # The repository root: the PWA and the logos in resources/ (.dockerignore keeps the
+      # rest out). QDC_LOGO in .env: the group's own logo (DEC-294), empty = AGESCI.
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        QDC_LOGO: ${QDC_LOGO:-}
     restart: unless-stopped
     depends_on:
       web:

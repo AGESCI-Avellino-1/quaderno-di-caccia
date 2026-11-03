@@ -871,6 +871,9 @@ with psycopg.connect(url._replace(path="/postgres").geturl(), autocommit=True) a
   )
   avvia('npx', ['vite', '--port', String(PORTA_VITE), '--strictPort'], 'frontend', {
     QDC_DJANGO_URL: `http://localhost:${PORTA_DJANGO}`,
+    // The manual is Avellino 1's: its logo, not the AGESCI one of a new installation
+    // (DEC-294).
+    QDC_LOGO: 'resources/logo-avellino1.png',
   })
   await attendi(`http://localhost:${PORTA_DJANGO}/api/v1/docs`)
   await attendi(APP)

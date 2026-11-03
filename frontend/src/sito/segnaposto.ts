@@ -8,7 +8,7 @@ import type { Sito } from '@/api/qdc'
 export const SEGNAPOSTO_TITOLO = [
   ['Nome sito', 'il nome del sito, es. Quaderno di Caccia'],
   ['Sigla sito', 'la sigla del sito, es. QdC'],
-  ['Gruppo', 'il nome del gruppo, es. AGESCI Avellino 1'],
+  ['Gruppo', 'il nome del gruppo, es. AGESCI Nomeluogo 1'],
   ['Sigla gruppo', 'la sigla del gruppo, es. AV1'],
   ['Anno', "l'anno scout, es. 2025/26"],
   ['Pagina corrente', 'il nome della pagina aperta, es. Eventi'],

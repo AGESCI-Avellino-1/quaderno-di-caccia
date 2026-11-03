@@ -1,15 +1,39 @@
+import { cp, readFile, rm } from 'node:fs/promises'
+import { isAbsolute, join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+import { generaIcone, RADICE } from './scripts/icone'
+
 // Paths served by Django. In dev Vite proxies them, so the PWA and the API share the
 // same origin (session cookie + CSRF, no CORS). In production nginx does the same.
 const DJANGO_PATHS = ['/api', '/_allauth', '/accounts', '/admin', '/static', '/mailpit']
 const DJANGO_URL = process.env.QDC_DJANGO_URL ?? 'http://localhost:8000'
 
-export default defineConfig({
+/**
+ * The group's own logo (DEC-294): `QDC_LOGO` in `.env`, a path from the repository root
+ * (e.g. `resources/logo-gruppo.svg`). Its icons go into a copy of `public/`, so the files
+ * in git keep the AGESCI ones. Empty: `public/` as it is.
+ */
+async function cartellaPubblica(): Promise<string> {
+  const logo = process.env.QDC_LOGO?.trim()
+  if (!logo) return 'public'
+  const percorso = isAbsolute(logo) ? logo : join(RADICE, logo)
+  const contenuto = await readFile(percorso).catch(() => {
+    throw new Error(`Il logo indicato in QDC_LOGO non c'è: ${percorso}`)
+  })
+  const copia = fileURLToPath(new URL('./node_modules/.qdc-public', import.meta.url))
+  await rm(copia, { recursive: true, force: true })
+  await cp(fileURLToPath(new URL('./public', import.meta.url)), copia, { recursive: true })
+  await generaIcone(contenuto, copia)
+  return copia
+}
+
+export default defineConfig(async () => ({
+  publicDir: await cartellaPubblica(),
   plugins: [
     vue(),
     VitePWA({
@@ -52,4 +76,4 @@ export default defineConfig({
     port: 5173,
     proxy: Object.fromEntries(DJANGO_PATHS.map((p) => [p, { target: DJANGO_URL }])),
   },
-})
+}))

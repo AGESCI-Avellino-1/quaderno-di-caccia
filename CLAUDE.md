@@ -182,7 +182,11 @@ class="form-control">`; checkboxes are `input.check` inside `.form-field` (radio
 wrapper, `<div class="switch"><input type="checkbox" role="switch"></div>`, then the
 label (on the input itself the browser draws its own checkbox on top); `.alert` is a flex
 box, so wrap mixed content in one `<div>`; the theme is
-light only (`data-bs-theme="light"`). Minimum browsers: Chrome/Edge 130, Firefox 132,
+light only (`data-bs-theme="light"`). The app's icons are the AGESCI logo (`resources/AGESCI.svg`, PNGs in
+`frontend/public` made by `frontend/scripts/icone.ts`); a group's logo is `QDC_LOGO` in `.env`,
+applied by `vite.config.ts` to a copy of `public/` at build time (DEC-294). The app image is
+built from the repository root (root `.dockerignore`) to read `resources/`. The manual keeps
+Avellino 1's logo (`resources/logo-avellino1.png`, also in its screenshots). Minimum browsers: Chrome/Edge 130, Firefox 132,
 Safari 18. Font: Titillium Web, bundled
 (SIL OFL, `frontend/src/assets/fonts/OFL.txt`) so it works offline.
 

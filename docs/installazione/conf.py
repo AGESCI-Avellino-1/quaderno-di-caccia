@@ -16,8 +16,9 @@ release = _pyproject["project"]["version"]
 version = ".".join(release.split(".")[:2])
 
 project = "Quaderno di Caccia — Guida di installazione"
-copyright = "AGESCI Avellino 1"
-author = "AGESCI Avellino 1"
+# The guide is for any group: no group's name or logo (DEC-294).
+copyright = "Andrea Bruno"
+author = "Andrea Bruno"
 language = "it"
 
 extensions = [
@@ -30,7 +31,7 @@ exclude_patterns = ["Thumbs.db", ".DS_Store"]
 
 html_theme = "furo"
 html_title = "Quaderno di Caccia — Installazione"
-html_logo = "../_static/logo.png"
+html_logo = "../../resources/AGESCI.svg"
 html_static_path = ["../_static"]
 html_css_files = ["qdc.css"]
 html_theme_options = {
@@ -43,6 +44,15 @@ html_theme_options = {
         "color-brand-primary": "#8fa9dd",
         "color-brand-content": "#8fa9dd",
     },
+    # The author's site, next to the copyright.
+    "footer_icons": [
+        {
+            "name": "Andrea Bruno",
+            "url": "https://bruand81.it",
+            "html": "bruand81.it",
+            "class": "",
+        }
+    ],
 }
 
 myst_enable_extensions = ["colon_fence", "deflist", "attrs_inline", "attrs_block"]

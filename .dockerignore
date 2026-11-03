@@ -1,0 +1,9 @@
+# Build context of the app image (compose.prod.yml: context ., frontend/Dockerfile): only
+# the PWA and the logos in resources/. The backend image has its own (backend/).
+*
+!frontend
+!resources
+frontend/node_modules
+frontend/dist
+frontend/dev-dist
+frontend/coverage

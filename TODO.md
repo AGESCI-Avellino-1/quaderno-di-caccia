@@ -12,7 +12,9 @@ In cima ci sono i punti aperti; sotto, le fasi e lo storico di quello che è sta
 
 ### Da sviluppare
 
-#### N.26 — Logo AGESCI per le installazioni generiche ⏳ (in attesa del via)
+#### N.26 — Logo AGESCI per le installazioni generiche ✅ 03/11
+
+Fatto (DEC-294): icone AGESCI in `frontend/public` da `resources/AGESCI.svg` (`scripts/icone.ts`, con `sharp`); `QDC_LOGO` in `.env` applicato da `vite.config.ts` a una copia di `public/`; immagine dell'app costruita dalla radice del repository (`.dockerignore`), provata con Podman con il logo dell'Avellino 1; logo dell'Avellino 1 in `resources/logo-avellino1.png` per le schermate del manuale; guida di installazione con logo AGESCI e autore Andrea Bruno (link a bruand81.it nel piè di pagina); esempi generici; sezione «Il logo del gruppo» nella guida. Il file HTML scaricato per errore (`File_AGESCI.svg`) non è entrato nel repository.
 
 Richiesta del maintainer (03/11): chi installa l'app per un altro gruppo deve trovare un
 sistema pulito, senza riferimenti all'Avellino 1. Nuovo DEC nell'analisi prima di

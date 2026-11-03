@@ -39,8 +39,8 @@ async function togliLogo() {
 }
 
 const CAMPI: [keyof Intestazione, string, string][] = [
-  ['denominazione', 'Nome del gruppo in BuonaStrada', 'AVELLINO 1'],
-  ['denominazione_sociale', 'Denominazione sociale', 'AGESCI Gruppo Avellino 1'],
+  ['denominazione', 'Nome del gruppo in BuonaStrada', 'NOMELUOGO 1'],
+  ['denominazione_sociale', 'Denominazione sociale', 'AGESCI Gruppo Nomeluogo 1'],
   ['codice_fiscale', 'Codice fiscale', ''],
   ['sede_indirizzo', 'Sede: via e numero', ''],
   ['sede_cap', 'CAP', ''],

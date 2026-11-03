@@ -55,7 +55,7 @@ class TipoEmail:
 COMUNI = (
     Segnaposto(sp.NOME_SITO, "il nome del sito", "Quaderno di Caccia"),
     Segnaposto(sp.SIGLA_SITO, "la sigla del sito", "QdC"),
-    Segnaposto(sp.GRUPPO, "il nome del gruppo", "AGESCI Avellino 1"),
+    Segnaposto(sp.GRUPPO, "il nome del gruppo", "AGESCI Nomeluogo 1"),
     Segnaposto(sp.SIGLA_GRUPPO, "la sigla del gruppo", "AV1"),
     Segnaposto(sp.ANNO, "l'anno scout", "2025/26"),
 )

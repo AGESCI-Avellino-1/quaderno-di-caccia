@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import type { DatiAttesa } from '@/api/qdc'
 
 // The waiting list's data (DEC-256): the child, who to contact, where they live. The
-// same form for the family, for its corrections and for a capo (DEC-258).
+// same form for the family, for its corrections and for a capo (DEC-258). The age
+// decides who is contacted, not a choice (as the server does): an adult directly, a
+// minor through a parent; an adult already on the list through a parent stays so.
 const dati = defineModel<DatiAttesa>({ required: true })
-defineProps<{ prefisso: string }>()
+const props = defineProps<{ prefisso: string; esistente?: boolean }>()
 
 const maggiorenne = computed(() => {
   if (!dati.value.data_nascita) return false
@@ -14,6 +16,14 @@ const maggiorenne = computed(() => {
   const diciotto = new Date(nascita.getFullYear() + 18, nascita.getMonth(), nascita.getDate())
   return diciotto <= new Date()
 })
+const daSePrima = dati.value.da_se
+watch(
+  maggiorenne,
+  (adulto) => {
+    dati.value.da_se = adulto && (!props.esistente || daSePrima)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -56,10 +66,9 @@ const maggiorenne = computed(() => {
         />
       </div>
     </div>
-    <div v-if="maggiorenne" class="form-field mt-3">
-      <input :id="`${prefisso}-da-se`" v-model="dati.da_se" class="check" type="checkbox" />
-      <label :for="`${prefisso}-da-se`">Sono io: sono maggiorenne e mi iscrivo da solo</label>
-    </div>
+    <p v-if="dati.da_se" class="small fg-2 mt-3 mb-0">
+      È maggiorenne: si contatta direttamente, senza un genitore.
+    </p>
   </fieldset>
 
   <fieldset class="mb-5">

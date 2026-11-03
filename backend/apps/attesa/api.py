@@ -35,6 +35,7 @@ class DatiAttesaIn(Schema):
     sesso: str
     data_nascita: date
     luogo_nascita: str
+    # Ignored: the age decides (servizi._applica); kept for pages already open.
     da_se: bool = False
     contatto_nome: str = ""
     contatto_cognome: str = ""

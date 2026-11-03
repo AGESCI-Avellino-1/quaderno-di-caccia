@@ -183,14 +183,18 @@ class DatiAttesa:
 
 
 def _applica(voce: InAttesa, dati: DatiAttesa) -> None:
+    da_se_prima = voce.da_se
     for campo in CAMPI:
         valore = getattr(dati, campo)
         setattr(voce, campo, valore.strip() if isinstance(valore, str) else valore)
     voce.email = voce.email.lower()
     voce.provincia = voce.provincia.upper()
+    # The age decides, not a choice (DEC-256, as for the registration form, DEC-261): an
+    # adult is contacted directly, a minor through a parent. An adult put on the list by
+    # a parent before this rule keeps the parent as contact (maintainer, 03/11).
+    maggiorenne = eta_in_data(voce.data_nascita, timezone.localdate()) >= 18
+    voce.da_se = maggiorenne and (voce.pk is None or da_se_prima)
     if voce.da_se:
-        if eta_in_data(voce.data_nascita, timezone.localdate()) < 18:
-            raise ValidationError("Chi è minorenne lo mette in lista un genitore.")
         voce.contatto_nome, voce.contatto_cognome = voce.nome, voce.cognome
     if voce.data_nascita > timezone.localdate():
         raise ValidationError("La data di nascita non può essere nel futuro.")

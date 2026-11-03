@@ -105,7 +105,7 @@ async function esci() {
         I capi chiamano a inizio anno, secondo i posti nelle unità.
       </p>
       <form class="card card-body mb-5" @submit.prevent="salva">
-        <ModuloAttesa v-model="dati" prefisso="mia" />
+        <ModuloAttesa v-model="dati" prefisso="mia" esistente />
         <div>
           <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
             Salva le correzioni

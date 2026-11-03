@@ -80,12 +80,36 @@ def test_mettersi_in_lista(in_lista):
 def test_modulo_pubblico_controllato(reparto):
     senza_privacy = _client().post(PUBBLICA, _dati(), content_type="application/json")
     assert senza_privacy.status_code in (400, 422)
-    minorenne_da_se = {**_dati(anni=15), "da_se": True, "privacy": True}
-    assert (
-        _client().post(PUBBLICA, minorenne_da_se, content_type="application/json").status_code
-        == 400
-    )
     assert not InAttesa.objects.exists()
+
+
+def test_l_eta_decide_chi_si_contatta(reparto, gruppo):
+    # A minor asking to be contacted directly: the parent is the contact anyway.
+    minorenne = {**_dati(anni=15), "da_se": True, "privacy": True}
+    assert _client().post(PUBBLICA, minorenne, content_type="application/json").status_code == 201
+    voce = InAttesa.objects.get()
+    assert not voce.da_se and voce.contatto_nome == "Carla"
+    # An adult: contacted directly, with no parent, ticking nothing.
+    adulto = {**_dati(anni=19, email="marta@example.invalid"), "privacy": True}
+    adulto.update(contatto_nome="", contatto_cognome="")
+    assert _client().post(PUBBLICA, adulto, content_type="application/json").status_code == 201
+    voce = InAttesa.objects.get(email="marta@example.invalid")
+    assert voce.da_se and (voce.contatto_nome, voce.contatto_cognome) == ("Marta", "Verdi")
+
+
+def test_maggiorenne_messo_in_lista_da_un_genitore_resta_cosi(reparto):
+    # Recorded before the rule (maintainer, 03/11): the parent stays the contact.
+    voce = InAttesa.objects.create(
+        **{k: v for k, v in _dati(anni=19).items() if k != "data_nascita"},
+        data_nascita=nato_anni_fa(19),
+        privacy_accettata_il=timezone.now(),
+    )
+    risposta = _client().put(
+        f"{PUBBLICA}/{voce.token}", _dati(anni=19, nome="Martina"), content_type="application/json"
+    )
+    assert risposta.status_code == 200
+    voce.refresh_from_db()
+    assert not voce.da_se and voce.contatto_nome == "Carla" and voce.nome == "Martina"
 
 
 def test_link_personale_e_uscita(in_lista):

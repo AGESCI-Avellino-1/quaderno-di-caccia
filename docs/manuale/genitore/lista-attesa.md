@@ -15,8 +15,8 @@ nelle unità, non per ordine di arrivo.
 5. Leggi la privacy policy (il link è nel modulo), spunta la casella e tocca **Mettiti in
    lista**.
 
-Se hai già 18 anni e vuoi entrare tu, spunta **Sono io: sono maggiorenne e mi iscrivo da
-solo** e scrivi i tuoi contatti.
+Se hai già 18 anni e vuoi entrare tu, scrivi i tuoi dati: con la tua data di nascita il
+modulo non chiede un genitore, ma i tuoi contatti.
 
 :::{container} schermate
 ![La lista d'attesa sul telefono](../img/genitore/lista-attesa-telefono.png){.telefono width="30%"}

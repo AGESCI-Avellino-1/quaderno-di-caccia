@@ -44,7 +44,9 @@ sempre, anche se quel tipo non è tra quelli scelti per la stampa; solo nel PDF,
 registrare l'incarico [da verificare: vedi «Da decidere»].
 `organizzazione/elenco_incarichi._per_unita`, test in `tests/test_elenco_incarichi.py`.
 
-#### N.21 — Lista d'attesa di un maggiorenne ⏳
+#### N.21 — Lista d'attesa di un maggiorenne ✅ 03/11
+
+Fatto con test (server e componente): la casella non c'è più, l'età decide anche sul server; manuale aggiornato.
 
 Rif. DEC-256…DEC-258, DEC-261. Se chi viene messo in lista è maggiorenne, il modulo non
 chiede i dati del genitore (maintainer, 03/11). Oggi `components/ModuloAttesa.vue` mostra

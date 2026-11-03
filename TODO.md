@@ -246,7 +246,7 @@ Fatto: pagina «Invita nel gruppo» (`/invita`, `InvitaView.vue`) con `Condividi
 `puo_modificare_volantino_attesa`. Da provare sui telefoni veri: «Condividi» e la lettura del QR
 stampato.
 
-#### N.38 — Immagini ridimensionabili e HTML nell'editor di testo (da decidere, poi via)
+#### N.38 — Immagini ridimensionabili e HTML nell'editor di testo ✅ 03/11 (DEC-305)
 
 Segnalazione del maintainer (03/11, con il logo nel piè di pagina delle email, enorme): in tutti
 i campi con l'editor di testo (`EditorTesto.vue`: modelli e piè di pagina delle email, privacy
@@ -254,6 +254,31 @@ policy e termini) un'immagine inserita si deve poter ridimensionare, e si vuole 
 direttamente l'HTML. Oggi il server pulisce l'HTML (`impostazioni/html.py`, nh3) e per `img`
 tiene solo `src`, `alt` e `width`; Tiptap 3.32 ha già il ridimensionamento delle immagini
 (`resize` in `@tiptap/extension-image`).
+
+Deciso il 03/11:
+
+- **Dimensione delle immagini**: si trascina l'angolo dell'immagine; selezionandola compaiono
+  anche Piccola, Media, Grande e Originale (comode sul telefono). La larghezza resta in
+  `width`, come oggi; nelle email l'immagine non supera mai la larghezza del messaggio.
+- **HTML**: un pulsante «HTML» passa dal testo al codice e ritorno, per chiunque può già
+  modificare quel testo.
+- **Cosa resta**: gli elementi di oggi più l'allineamento (sinistra, centro, destra) di testo e
+  immagini; il resto lo toglie il server, e l'editor avvisa quando qualcosa è stato tolto.
+
+Fatto: `EditorTesto.vue` con le immagini in linea e ridimensionabili (`Image.extend` applica la
+larghezza scelta con i pulsanti, che Tiptap applicherebbe solo trascinando), `TextAlign` e il modo
+HTML con `sito/html.ts` (copia della lista del server, solo per avvisare); il server tiene
+`style` solo con `text-align` e aggiunge alle immagini delle email `max-width:100%`
+(`html.per_email`).
+
+#### N.39 — Lo script di aggiornamento mostra cosa cambia ✅ 03/11
+
+Richiesta del maintainer (03/11, prima della release): `scripts/aggiorna.sh` mostra l'elenco
+delle modifiche dalla versione installata a quella nuova. Deciso il 03/11: un `CHANGELOG.md` in
+italiano nel progetto, ricostruito dalle note delle release passate e aggiornato a ogni
+release; lo script ne mostra le sezioni tra la versione installata e la nuova **prima** di
+chiedere se aggiornare. Lo script che gira è quello della versione installata: l'elenco compare
+negli aggiornamenti che partono dalla 1.10.
 
 ### Fatto nel giro del 03/11
 
@@ -434,7 +459,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 5 | Fascicolo completo | ✅ | a blocchi (dettaglio sotto): scheda medica con stampa, note e regole, fascicolo del ragazzo e dei capi, fine anno e archivio |
 | 6 | Dopo | ✅ | a blocchi: 6.1 bacheca ✅ (DEC-218…DEC-220, provata nel browser il 30/10), 6.2 estratto conto ✅ (DEC-221…DEC-224, provato nel browser il 30/10 con un estratto sintetico; il file vero della banca si legge), 6.3 Carta di clan ✅ (DEC-227…DEC-229, provata nel browser il 30/10). Note: estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
-| 8 | Realizzazione documentazione di uso | ✅ | manuale d'uso ✅ 31/10 per tutti i profili (genitore, ragazzo E/G, R/S e L/C, capo, capigruppo, tesorieri, amministratore tecnico), su https://avellino1-qdc.readthedocs.io e in PDF nelle release (v1.0.0 il 31/10, v1.1.0 il 01/11 con manutenzione, sblocchi, pagine di errore, Apache con un pannello e le correzioni su IP del client, nginx dopo una modifica di `.env` e log di axes; v1.2.0 il 02/11 con lo storico da BuonaStrada, l'archiviazione delle unità, le email un gruppo alla volta e il server di posta dalle Impostazioni, anche Gmail con un accesso Google; v1.2.1 il 02/11 con la guida di installazione che chiarisce quale progetto Google Cloud usare per Gmail e per il Drive; v1.3.0 il 02/11 con le note dell'installazione: unità collegate, assistenti ecclesiastici, Soci e Genitori, genitore che diventa capo, squadriglie dei reparti monosessuali, import che non si ferma su un dato sbagliato, controlli dell'installazione e del Drive; v1.4.0 il 03/11 con il banner per installare l'app, i gruppi della Home richiudibili, il calendario, il percorso scout, l'elenco degli incarichi in PDF, la cassa comune delle unità collegate e la scheda sanitaria del gruppo con i suoi allegati; v1.5.0 il 03/11 con i servizi di supporto al posto di «a disposizione», la lista d'attesa di un maggiorenne, il percorso scout nel trasferimento del fascicolo, la passkey di sblocco e il servizio systemd con lo script di aggiornamento; v1.6.0 il 03/11 con il logo AGESCI di base e quello del gruppo scelto all'installazione, e una sola passkey per entrare e sbloccare; v1.6.1 il 03/11 con l'elenco degli incarichi per unità che mostra ogni capo in ogni sezione dei suoi incarichi; v1.7.0 il 03/11 con la professione da BuonaStrada, la regola degli assistenti ecclesiastici, l'ordine delle unità nel PDF degli incarichi e la foto nell'avatar; v1.8.0 il 03/11 con i componenti di Bootstrap 6 del tema 3.0.0a3, il PIN di 6 cifre, l'Organigramma, i modelli delle email in una pagina, la Progressione per unità, i pulsanti accanto ai telefoni e i numeri nella rubrica; v1.9.0 il 03/11 con «Invita nel gruppo»: link, QR code e volantino della lista d'attesa); guida di installazione (https://qdc-installazione.readthedocs.io) riletta con il maintainer il 01/11; ripristino da un backup scritto e provato il 01/11 (8.7). Dettaglio dei blocchi sotto; analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239) |
+| 8 | Realizzazione documentazione di uso | ✅ | manuale d'uso ✅ 31/10 per tutti i profili (genitore, ragazzo E/G, R/S e L/C, capo, capigruppo, tesorieri, amministratore tecnico), su https://avellino1-qdc.readthedocs.io e in PDF nelle release (v1.0.0 il 31/10, v1.1.0 il 01/11 con manutenzione, sblocchi, pagine di errore, Apache con un pannello e le correzioni su IP del client, nginx dopo una modifica di `.env` e log di axes; v1.2.0 il 02/11 con lo storico da BuonaStrada, l'archiviazione delle unità, le email un gruppo alla volta e il server di posta dalle Impostazioni, anche Gmail con un accesso Google; v1.2.1 il 02/11 con la guida di installazione che chiarisce quale progetto Google Cloud usare per Gmail e per il Drive; v1.3.0 il 02/11 con le note dell'installazione: unità collegate, assistenti ecclesiastici, Soci e Genitori, genitore che diventa capo, squadriglie dei reparti monosessuali, import che non si ferma su un dato sbagliato, controlli dell'installazione e del Drive; v1.4.0 il 03/11 con il banner per installare l'app, i gruppi della Home richiudibili, il calendario, il percorso scout, l'elenco degli incarichi in PDF, la cassa comune delle unità collegate e la scheda sanitaria del gruppo con i suoi allegati; v1.5.0 il 03/11 con i servizi di supporto al posto di «a disposizione», la lista d'attesa di un maggiorenne, il percorso scout nel trasferimento del fascicolo, la passkey di sblocco e il servizio systemd con lo script di aggiornamento; v1.6.0 il 03/11 con il logo AGESCI di base e quello del gruppo scelto all'installazione, e una sola passkey per entrare e sbloccare; v1.6.1 il 03/11 con l'elenco degli incarichi per unità che mostra ogni capo in ogni sezione dei suoi incarichi; v1.7.0 il 03/11 con la professione da BuonaStrada, la regola degli assistenti ecclesiastici, l'ordine delle unità nel PDF degli incarichi e la foto nell'avatar; v1.8.0 il 03/11 con i componenti di Bootstrap 6 del tema 3.0.0a3, il PIN di 6 cifre, l'Organigramma, i modelli delle email in una pagina, la Progressione per unità, i pulsanti accanto ai telefoni e i numeri nella rubrica; v1.9.0 il 03/11 con «Invita nel gruppo»: link, QR code e volantino della lista d'attesa; v1.10.0 il 03/11 con le immagini ridimensionabili, l'allineamento e l'HTML nell'editor di testo, le novità mostrate dallo script di aggiornamento e Node 26); guida di installazione (https://qdc-installazione.readthedocs.io) riletta con il maintainer il 01/11; ripristino da un backup scritto e provato il 01/11 (8.7). Dettaglio dei blocchi sotto; analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239) |
 
 ## Storico dei lavori
 

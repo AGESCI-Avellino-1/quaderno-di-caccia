@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Image from '@tiptap/extension-image'
 import { TableKit } from '@tiptap/extension-table'
+import TextAlign from '@tiptap/extension-text-align'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { onBeforeUnmount, ref, watch } from 'vue'
@@ -8,14 +9,41 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { api } from '@/api/qdc'
 import Icona from '@/components/Icona.vue'
 import { useErrore } from '@/composables/useErrore'
+import { nonPermessi } from '@/sito/html'
 
 // Formatted text for the email templates and the public pages (DEC-250, DEC-266): only
 // what an email needs (bold, italic, underline, lists, links, two heading levels,
-// tables, images uploaded to the app). The server cleans the HTML again before saving
-// it, so this is a convenience, not a protection.
+// tables, images uploaded to the app, alignment). Images are resized by dragging their
+// corner or with a few sizes; the HTML can be written by hand (DEC-305). The server cleans
+// the HTML again before saving it, so this is a convenience, not a protection.
 const html = defineModel<string>({ required: true })
 const props = defineProps<{ etichetta: string; immagini?: boolean }>()
 const { errore: erroreImmagine, inCorso: caricaInCorso, esegui: eseguiCaricamento } = useErrore()
+
+// Tiptap's resizable image applies the width only when drawn and while dragging: a size
+// chosen with the buttons must show at once too (DEC-305).
+const Immagine = Image.extend({
+  addNodeView() {
+    const originale = this.parent?.()
+    if (!originale) return null
+    return (props) => {
+      const vista = originale(props)
+      const applica = (nodo: typeof props.node) => {
+        const img = vista.dom instanceof HTMLElement ? vista.dom.querySelector('img') : null
+        if (!img) return
+        img.style.width = nodo.attrs.width ? `${nodo.attrs.width}px` : ''
+        img.style.height = ''
+      }
+      const aggiorna = vista.update?.bind(vista)
+      vista.update = (nodo, ...resto) => {
+        const fatto = aggiorna ? aggiorna(nodo, ...resto) : false
+        if (fatto) applica(nodo)
+        return fatto
+      }
+      return vista
+    }
+  },
+})
 
 const editor = useEditor({
   content: html.value,
@@ -29,7 +57,21 @@ const editor = useEditor({
       link: { openOnClick: false, autolink: true, protocols: ['mailto'] },
     }),
     TableKit.configure({ table: { resizable: false } }),
-    Image.configure({ inline: false }),
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+      alignments: ['left', 'center', 'right'],
+    }),
+    // Inline, so that the paragraph's alignment moves it too (DEC-305).
+    Immagine.configure({
+      inline: true,
+      resize: {
+        enabled: true,
+        directions: ['bottom-right', 'bottom-left'],
+        minWidth: 40,
+        minHeight: 20,
+        alwaysPreserveAspectRatio: true,
+      },
+    }),
   ],
   editorProps: { attributes: { class: 'form-control qdc-editor-testo' } },
   onUpdate: ({ editor: e }) => {
@@ -45,6 +87,66 @@ watch(html, (nuovo) => {
 })
 
 onBeforeUnmount(() => editor.value?.destroy())
+
+// The HTML written by hand (DEC-305): back to the editor, what the server would drop is
+// named, and the editor keeps only what it knows.
+const modoHtml = ref(false)
+const codice = ref('')
+const tolti = ref<string[]>([])
+
+// What is typed is the text: saving while the HTML is open keeps it.
+watch(codice, (nuovo) => {
+  if (!modoHtml.value) return
+  html.value = nuovo
+  tolti.value = nonPermessi(nuovo)
+})
+watch(html, (nuovo) => {
+  if (modoHtml.value && nuovo !== codice.value) codice.value = nuovo
+})
+
+function alternaHtml() {
+  if (!editor.value) return
+  if (!modoHtml.value) {
+    codice.value = editor.value.getHTML()
+    tolti.value = []
+    modoHtml.value = true
+    return
+  }
+  tolti.value = nonPermessi(codice.value)
+  editor.value.commands.setContent(codice.value, { emitUpdate: false })
+  html.value = editor.value.getHTML()
+  modoHtml.value = false
+}
+
+// Image sizes, handier than dragging on a phone (DEC-305): widths in pixels.
+const MISURE = [
+  { nome: 'Piccola', larghezza: 120 },
+  { nome: 'Media', larghezza: 240 },
+  { nome: 'Grande', larghezza: 480 },
+  { nome: 'Originale', larghezza: null },
+] as const
+
+function misura(larghezza: number | null) {
+  const e = editor.value
+  if (!e) return
+  // The image stays selected, to try another size.
+  const posizione = e.state.selection.from
+  e.chain()
+    .focus()
+    .updateAttributes('image', { width: larghezza, height: null })
+    .setNodeSelection(posizione)
+    .run()
+}
+
+const ALLINEAMENTI = [
+  { valore: 'left', nome: 'Allinea a sinistra', icona: 'text-left' },
+  { valore: 'center', nome: 'Allinea al centro', icona: 'text-center' },
+  { valore: 'right', nome: 'Allinea a destra', icona: 'text-right' },
+] as const
+
+function allinea(valore: (typeof ALLINEAMENTI)[number]['valore']) {
+  editor.value?.chain().focus().setTextAlign(valore).run()
+}
 
 const indirizzo = ref('')
 const chiediLink = ref(false)
@@ -129,9 +231,24 @@ function esegui(comando: (typeof PULSANTI)[number]['comando']) {
         :title="p.nome"
         :aria-label="p.nome"
         :aria-pressed="!!editor?.isActive(p.attivo)"
+        :disabled="modoHtml"
         @click="esegui(p.comando)"
       >
         <Icona :nome="p.icona" />
+      </button>
+      <button
+        v-for="a in ALLINEAMENTI"
+        :key="a.valore"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary"
+        :class="{ active: editor?.isActive({ textAlign: a.valore }) }"
+        :title="a.nome"
+        :aria-label="a.nome"
+        :aria-pressed="!!editor?.isActive({ textAlign: a.valore })"
+        :disabled="modoHtml"
+        @click="allinea(a.valore)"
+      >
+        <Icona :nome="a.icona" />
       </button>
       <button
         type="button"
@@ -139,6 +256,7 @@ function esegui(comando: (typeof PULSANTI)[number]['comando']) {
         :class="{ active: editor?.isActive('link') }"
         title="Link"
         aria-label="Link"
+        :disabled="modoHtml"
         @click="apriLink"
       >
         <Icona nome="link-45deg" />
@@ -148,11 +266,12 @@ function esegui(comando: (typeof PULSANTI)[number]['comando']) {
         class="btn btn-sm btn-outline theme-primary"
         title="Inserisci una tabella"
         aria-label="Inserisci una tabella"
+        :disabled="modoHtml"
         @click="tabella('inserisci')"
       >
         <Icona nome="table" />
       </button>
-      <template v-if="editor?.isActive('table')">
+      <template v-if="!modoHtml && editor?.isActive('table')">
         <button type="button" class="btn btn-sm btn-outline theme-primary" @click="tabella('riga')">
           + riga
         </button>
@@ -191,12 +310,45 @@ function esegui(comando: (typeof PULSANTI)[number]['comando']) {
         v-if="immagini"
         class="btn btn-sm btn-outline theme-primary mb-0"
         title="Inserisci un'immagine (PNG o JPEG)"
-        :class="{ disabled: caricaInCorso }"
+        :class="{ disabled: caricaInCorso || modoHtml }"
       >
         <Icona nome="image" />
         <span class="visually-hidden">Inserisci un'immagine</span>
         <input type="file" accept="image/png,image/jpeg" class="d-none" @change="caricaImmagine" />
       </label>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline theme-primary"
+        :class="{ active: modoHtml }"
+        :aria-pressed="modoHtml"
+        title="Modifica l'HTML"
+        @click="alternaHtml"
+      >
+        <Icona nome="code-slash" /> HTML
+      </button>
+    </div>
+    <div
+      v-if="!modoHtml && editor?.isActive('image')"
+      class="d-flex flex-wrap align-items-center gap-1 mb-1"
+      role="group"
+      aria-label="Dimensione dell'immagine"
+    >
+      <span class="small fg-2 me-1">Immagine:</span>
+      <button
+        v-for="m in MISURE"
+        :key="m.nome"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary"
+        :class="{ active: (editor?.getAttributes('image').width ?? null) === m.larghezza }"
+        @click="misura(m.larghezza)"
+      >
+        {{ m.nome }}
+      </button>
+    </div>
+    <div v-if="tolti.length" class="alert theme-warning small" role="status">
+      <div>
+        Alcune parti dell'HTML non sono permesse e sono state tolte: {{ tolti.join(', ') }}.
+      </div>
     </div>
     <form v-if="chiediLink" class="d-flex gap-3 mb-1" @submit.prevent="applicaLink">
       <input
@@ -212,6 +364,14 @@ function esegui(comando: (typeof PULSANTI)[number]['comando']) {
     <div v-if="erroreImmagine" class="alert theme-danger small" role="alert">
       {{ erroreImmagine }}
     </div>
-    <EditorContent :editor="editor" />
+    <textarea
+      v-if="modoHtml"
+      v-model="codice"
+      class="form-control font-monospace small qdc-editor-testo"
+      rows="12"
+      spellcheck="false"
+      :aria-label="`HTML: ${etichetta}`"
+    />
+    <EditorContent v-show="!modoHtml" :editor="editor" />
   </div>
 </template>

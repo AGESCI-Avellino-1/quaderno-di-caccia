@@ -16,9 +16,16 @@ TAG |= {"table", "thead", "tbody", "tr", "th", "td", "img"}
 ATTRIBUTI = {
     "a": {"href"},
     "img": {"src", "alt", "width"},
-    "th": {"colspan", "rowspan"},
-    "td": {"colspan", "rowspan"},
+    "th": {"colspan", "rowspan", "style"},
+    "td": {"colspan", "rowspan", "style"},
+    # The alignment of text, and of the images inside a paragraph (DEC-305).
+    "p": {"style"},
+    "h2": {"style"},
+    "h3": {"style"},
 }
+ALLINEAMENTI = {"left", "center", "right"}
+# The images of an email never wider than the message (DEC-305): added when sending.
+STILE_IMMAGINE = "max-width:100%;height:auto"
 SCHEMI = {"http", "https", "mailto"}
 # Images only from the app's own store (`ImmagineEmail`): never from elsewhere.
 IMMAGINI = "/api/v1/immagini/"
@@ -29,7 +36,23 @@ def _filtra(tag: str, attributo: str, valore: str) -> str | None:
         return None
     if attributo in ("width", "colspan", "rowspan") and not valore.isdigit():
         return None
+    if attributo == "style":
+        return _allineamento(valore)
     return valore
+
+
+def _allineamento(stile: str) -> str | None:
+    """Of a style, only `text-align` left, center or right survives."""
+    for dichiarazione in stile.split(";"):
+        nome, _, valore = dichiarazione.partition(":")
+        if nome.strip().lower() == "text-align" and valore.strip().lower() in ALLINEAMENTI:
+            return f"text-align: {valore.strip().lower()}"
+    return None
+
+
+def per_email(html: str) -> str:
+    """Images fitting the message on a phone too, whatever their width (DEC-305)."""
+    return re.sub(r"<img\b", f'<img style="{STILE_IMMAGINE}"', html)
 
 
 def pulisci(html: str) -> str:

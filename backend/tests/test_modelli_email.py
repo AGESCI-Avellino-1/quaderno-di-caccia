@@ -63,6 +63,24 @@ def test_html_ripulito_e_testo_ricavato():
     assert in_testo(html) == "Ciao Giulia\n\nno\n\n- uno\n- due (https://a.it)\n"
 
 
+def test_allineamento_e_dimensione_delle_immagini():
+    """Of the styles only the alignment survives; the image keeps its width, not its
+    height, so it never comes out stretched."""
+    sporco = (
+        '<p style="text-align: center; color: red">Al centro '
+        '<img src="/api/v1/immagini/a.png" width="120" height="80" style="float:left"></p>'
+        '<h2 style="TEXT-ALIGN:Right">Destra</h2><p style="color: red">Rosso</p>'
+        '<td style="text-align: justify">x</td><div style="text-align:center">via</div>'
+    )
+    pulito = pulisci(sporco)
+    assert '<p style="text-align: center">' in pulito
+    assert '<img src="/api/v1/immagini/a.png" width="120">' in pulito
+    assert '<h2 style="text-align: right">' in pulito
+    assert "<p>Rosso</p>" in pulito
+    assert "color" not in pulito and "justify" not in pulito and "<div" not in pulito
+    assert pulisci(pulito) == pulito
+
+
 def test_valori_sicuri_e_link_cliccabili(db):
     composta = email.componi(
         "iscrizione_rifiutata",
@@ -199,6 +217,8 @@ def test_immagini_caricate_e_incorporate(gruppo, capogruppo, genitore):
     assert len(immagini) == 1 and immagini[0]["Content-ID"]
     html = next(p for p in messaggio.walk() if p.get_content_type() == "text/html")
     assert "cid:" in html.get_content()
+    # Never wider than the message, whatever its width.
+    assert 'style="max-width:100%;height:auto"' in html.get_content()
 
 
 def test_piede_tolto_da_un_modello_e_testo_a_mano(gruppo, capogruppo):

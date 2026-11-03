@@ -81,6 +81,26 @@ Con **Torna al testo di base** annulli le tue modifiche. Il **Piè di pagina com
 email**, in cima alla stessa pagina (per esempio con il logo) si aggiunge a tutte le email, tranne quelle in cui lo togli
 dal loro modello.
 
+### L'editor di testo
+
+È lo stesso nei modelli, nel piè di pagina e nella privacy policy e nei termini.
+
+- **Allineamento**: con i tre pulsanti accanto agli elenchi metti il paragrafo a sinistra, al
+  centro o a destra; vale anche per un'immagine dentro il paragrafo (per esempio il logo al
+  centro).
+- **Dimensione di un'immagine**: toccala; sotto i pulsanti compaiono **Piccola**, **Media**,
+  **Grande** e **Originale**. Sul computer puoi anche trascinare uno degli angoli in basso.
+  Nelle email un'immagine non è mai più larga del messaggio, anche sul telefono.
+- **HTML**: il pulsante **HTML** mostra il codice del testo, da modificare a mano; toccalo di
+  nuovo per tornare all'editor. Restano solo gli elementi che le email possono contenere
+  (paragrafi, titoli, grassetto, corsivo, sottolineato, elenchi, link, tabelle, immagini
+  caricate nell'app e allineamento): il resto si toglie, e l'editor ti dice cosa ha tolto.
+
+:::{container} schermate
+![Il piè di pagina delle email con il logo, sul telefono](../img/gruppo/editor-testo-telefono.png){.telefono width="30%"}
+![Il piè di pagina delle email con il logo, sul computer](../img/gruppo/editor-testo-computer.png){.computer width="65%"}
+:::
+
 ## Chi riceve le email
 
 Quando inizi a usare l'app, le email non arrivano a nessuno: puoi importare i dati e

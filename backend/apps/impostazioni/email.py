@@ -22,7 +22,7 @@ from django.utils import timezone
 from apps.core.anno import AnnoAssociativo
 
 from . import segnaposto as sp
-from .html import in_testo, pulisci
+from .html import in_testo, per_email, pulisci
 from .models import Impostazioni, ModelloEmail
 from .posta import INTESTAZIONE_TIPO
 
@@ -291,7 +291,7 @@ def messaggio(
     if t.facoltativa:
         piede_html, piede_testo = _piede_facoltative()
         html, testo = html + piede_html, testo + piede_testo
-    html, immagini = _incorpora(html)
+    html, immagini = _incorpora(per_email(html))
     email = EmailConImmagini(
         subject=composta.oggetto,
         body=testo,

@@ -277,9 +277,37 @@ body {
   margin-bottom: 0.5rem;
 }
 
+// Images in the editor never wider than it; dragging a corner resizes them (DEC-305).
+.qdc-editor-testo img {
+  max-width: 100%;
+  height: auto;
+}
+
+.qdc-editor-testo [data-resize-handle] {
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: var(--ag-primary);
+  border: 2px solid var(--bs-bg-body);
+  border-radius: 50%;
+}
+
+.qdc-editor-testo [data-resize-handle='bottom-right'] {
+  cursor: nwse-resize;
+}
+
+.qdc-editor-testo [data-resize-handle='bottom-left'] {
+  cursor: nesw-resize;
+}
+
 .qdc-anteprima-email {
   min-height: 20rem;
   background-color: var(--bs-bg-body);
+}
+
+// As in the email sent (DEC-305): an image never wider than the message.
+.qdc-anteprima-email img {
+  max-width: 100%;
+  height: auto;
 }
 
 .qdc-testo-email {

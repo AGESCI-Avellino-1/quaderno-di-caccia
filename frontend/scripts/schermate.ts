@@ -694,6 +694,26 @@ const SCENE: Scena[] = [
   },
   { nome: 'gruppo/impostazioni', chi: 'capogruppo', percorso: '/impostazioni', intera: true },
   {
+    // The editor with the group's logo, centred and made small; nothing is saved.
+    nome: 'gruppo/editor-testo',
+    chi: 'capogruppo',
+    percorso: '/impostazioni/email-piede',
+    prepara: async (pagina) => {
+      const editor = pagina.locator('.ProseMirror').first()
+      await editor.click()
+      await pagina
+        .locator('input[type=file][accept="image/png,image/jpeg"]')
+        .first()
+        .setInputFiles(join(RADICE, 'resources', 'logo-avellino1.png'))
+      const logo = editor.locator('img[src^="/api/v1/immagini/"]').first()
+      await logo.waitFor()
+      await pagina.getByRole('button', { name: 'Allinea al centro' }).first().click()
+      await logo.click()
+      await pagina.getByRole('button', { name: 'Piccola' }).click()
+      await pagina.getByRole('group', { name: "Dimensione dell'immagine" }).waitFor()
+    },
+  },
+  {
     nome: 'gruppo/volantino',
     chi: 'capogruppo',
     percorso: '/impostazioni',

@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CampoOtp from '@/components/CampoOtp.vue'
 import { MINUTI_BLOCCO } from '@/composables/useBloccoAutomatico'
 import { useErrore } from '@/composables/useErrore'
 import { salvaInCache } from '@/offline/cache'
@@ -12,10 +13,11 @@ import {
   biometriaForseDisponibile,
 } from '@/sicurezza/biometria'
 import {
-  LUNGHEZZA_MINIMA_PIN,
+  LUNGHEZZA_PIN,
   TENTATIVI_MASSIMI,
   attivaBiometria,
   configura,
+  pinValido,
   sceltaSoloOnline,
   stato,
 } from '@/sicurezza/cassaforte'
@@ -48,8 +50,8 @@ const prossima = () => (typeof route.query.prossima === 'string' ? route.query.p
 
 async function attiva() {
   avviso.value = null
-  if (!/^\d+$/.test(pin.value) || pin.value.length < LUNGHEZZA_MINIMA_PIN) {
-    errore.value = `Il PIN deve avere almeno ${LUNGHEZZA_MINIMA_PIN} cifre.`
+  if (!pinValido(pin.value)) {
+    errore.value = `Il PIN deve avere ${LUNGHEZZA_PIN} cifre.`
     return
   }
   if (pin.value !== conferma.value) {
@@ -121,28 +123,16 @@ async function soloOnline() {
     <form v-if="!avviso" class="vstack gap-3" @submit.prevent="attiva">
       <label class="form-label mb-0" for="nome-dispositivo">Nome di questo dispositivo</label>
       <input id="nome-dispositivo" v-model="nome" class="form-control" maxlength="80" required />
-      <label class="form-label mb-0 mt-3" for="pin"
-        >PIN (almeno {{ LUNGHEZZA_MINIMA_PIN }} cifre)</label
-      >
-      <input
-        id="pin"
-        v-model="pin"
-        class="form-control"
-        type="password"
-        inputmode="numeric"
-        autocomplete="new-password"
-        :minlength="LUNGHEZZA_MINIMA_PIN"
-        required
-      />
+      <!-- Six boxes, digits hidden (DEC-298). -->
+      <label class="form-label mb-0 mt-3" for="pin">PIN di {{ LUNGHEZZA_PIN }} cifre</label>
+      <CampoOtp id="pin" v-model="pin" :lunghezza="LUNGHEZZA_PIN" maschera autocomplete="off" />
       <label class="form-label mb-0" for="conferma-pin">Ripeti il PIN</label>
-      <input
+      <CampoOtp
         id="conferma-pin"
         v-model="conferma"
-        class="form-control"
-        type="password"
-        inputmode="numeric"
-        autocomplete="new-password"
-        required
+        :lunghezza="LUNGHEZZA_PIN"
+        maschera
+        autocomplete="off"
       />
       <div v-if="biometriaPossibile" class="form-field mt-3">
         <input id="biometria" v-model="conBiometria" class="check" type="checkbox" />

@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
+import Avatar from '@/components/Avatar.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
@@ -86,9 +87,10 @@ watch(
         v-for="p in visibili"
         :key="p.id"
         :to="{ name: 'persona', params: { id: p.id } }"
-        class="list-group-item list-group-item-action d-flex justify-content-between"
+        class="list-group-item list-group-item-action d-flex align-items-center gap-3"
       >
-        <span>{{ p.cognome }} {{ p.nome }}</span>
+        <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="sm" tenue aria-hidden="true" />
+        <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
         <span v-if="p.codice_socio" class="fg-2 small">{{ p.codice_socio }}</span>
       </RouterLink>
       <p v-if="!visibili.length" class="fg-2">

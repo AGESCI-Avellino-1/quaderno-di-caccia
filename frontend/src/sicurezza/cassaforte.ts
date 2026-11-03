@@ -39,7 +39,14 @@ export type StatoCassaforte = 'da_configurare' | 'solo_online' | 'bloccata' | 's
 export type MotivoCancellazione = 'revocato' | 'scaduto' | 'tentativi' | 'altro_account' | 'uscita'
 
 export const TENTATIVI_MASSIMI = 5
-export const LUNGHEZZA_MINIMA_PIN = 6
+// Exactly 6 digits since DEC-298 (before: at least 6). A longer PIN set before still
+// unlocks, and the unlock page then asks for a new one.
+export const LUNGHEZZA_PIN = 6
+
+/** True for a PIN that can be chosen now. */
+export function pinValido(pin: string): boolean {
+  return new RegExp(`^\\d{${LUNGHEZZA_PIN}}$`).test(pin)
+}
 
 export class PinErrato extends Error {
   constructor(public readonly rimasti: number) {
@@ -162,9 +169,7 @@ export async function configura(
   pin: string,
   iterazioni = ITERAZIONI_PIN,
 ): Promise<void> {
-  if (!/^\d+$/.test(pin) || pin.length < LUNGHEZZA_MINIMA_PIN) {
-    throw new Error(`Il PIN deve avere almeno ${LUNGHEZZA_MINIMA_PIN} cifre.`)
-  }
+  if (!pinValido(pin)) throw new Error(`Il PIN deve avere ${LUNGHEZZA_PIN} cifre.`)
   await svuotaDatiLocali(database)
   const nuova = await nuovaChiaveDati()
   const sale = casuali(16)
@@ -195,6 +200,20 @@ export async function sbloccaConPin(pin: string): Promise<void> {
     await salva()
     throw new PinErrato(rimasti)
   }
+  configurazione.tentativiFalliti = 0
+  await salva()
+}
+
+/**
+ * A new PIN for the unlocked vault (DEC-298: after unlocking with a PIN longer than 6
+ * digits): the data key is wrapped again, the data on the device stay.
+ */
+export async function cambiaPin(pin: string, iterazioni = ITERAZIONI_PIN): Promise<void> {
+  if (!pinValido(pin)) throw new Error(`Il PIN deve avere ${LUNGHEZZA_PIN} cifre.`)
+  if (!chiaveDati || !configurazione?.pin) throw new CassaforteBloccata()
+  const sale = casuali(16)
+  const avvolta = await avvolgi(chiaveDati, await chiaveDaPin(pin, sale, iterazioni))
+  configurazione.pin = { ...avvolta, sale, iterazioni }
   configurazione.tentativiFalliti = 0
   await salva()
 }

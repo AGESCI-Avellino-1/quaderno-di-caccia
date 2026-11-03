@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { allauth, flussoInSospeso } from '@/api/allauth'
 import { api, type InfoCodice } from '@/api/qdc'
 import CampoCodiceFiscale from '@/components/CampoCodiceFiscale.vue'
+import CampoPassword from '@/components/CampoPassword.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -330,12 +331,12 @@ async function invia() {
         </div>
         <div>
           <label class="form-label small" for="acc-password">Scegli una password</label>
-          <input
+          <CampoPassword
             id="acc-password"
             v-model="account.password"
-            type="password"
-            class="form-control"
+            robustezza
             autocomplete="new-password"
+            minlength="8"
             required
           />
         </div>

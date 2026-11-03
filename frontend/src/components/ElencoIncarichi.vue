@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 
 import { api, type DoveIncarico, type Incarico, type PersonaBreve, type Scelta } from '@/api/qdc'
+import Avatar from '@/components/Avatar.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // Active roles of the group, a unit or a patrol, with "assign" and "close" for the roles
@@ -52,8 +53,14 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
   <div>
     <div v-if="errore" class="alert theme-danger py-3 small" role="alert">{{ errore }}</div>
     <ul class="list-unstyled mb-3">
-      <li v-for="i in incarichi" :key="i.id" class="d-flex flex-wrap align-items-baseline gap-3">
+      <li v-for="i in incarichi" :key="i.id" class="d-flex flex-wrap align-items-center gap-3">
         <span class="fg-2 small">{{ i.ruolo_nome }}</span>
+        <Avatar
+          :nome="`${i.persona.nome} ${i.persona.cognome}`"
+          dimensione="xs"
+          tenue
+          aria-hidden="true"
+        />
         <span>{{ i.persona.nome }} {{ i.persona.cognome }}</span>
         <span class="fg-2 small">dal {{ data(i.data_inizio) }}</span>
         <template v-if="gestibili.has(i.ruolo)">

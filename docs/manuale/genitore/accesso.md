@@ -12,7 +12,8 @@ I capi ti mandano un'email con un link. L'invito vale 14 giorni ed è legato al 
 indirizzo email: se scade, chiedine un altro ai capi.
 
 1. Apri il link dell'email. Vedi il tuo nome e il tuo indirizzo email.
-2. Scegli una password (almeno 8 caratteri) e tocca **Crea l'account**.
+2. Scegli una password (almeno 8 caratteri) e tocca **Crea l'account**. Sotto il campo vedi
+   quanto è robusta; l'occhio accanto la mostra in chiaro, per controllare cosa hai scritto.
    In alternativa tocca **Continua con Google** o **Continua con Apple**, se hai un
    account Google o Apple con la stessa email.
 3. Sei dentro: l'app ti chiede subito di [proteggere il telefono](protezione).
@@ -36,7 +37,8 @@ Apri <https://qdc.avellino1.it>. Puoi entrare in quattro modi.
 Non serve ricordare la password.
 
 1. Nella scheda **Codice via email** scrivi la tua email e tocca **Inviami il codice**.
-2. Ti arriva un'email con un codice. Scrivilo e tocca **Accedi**.
+2. Ti arriva un'email con un codice di 8 lettere e cifre. Scrivilo nelle caselle, con o senza
+   il trattino: appena è completo, entri.
    Il codice vale 3 minuti: se scade, chiedine un altro.
 
 :::{container} schermate

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { fotoProfilo } from '@/api/qdc'
+import Avatar from '@/components/Avatar.vue'
 import Icona from '@/components/Icona.vue'
 import { useRete } from '@/composables/useRete'
 import { gruppiMenu, vociProfilo, type Gruppo, type Voce } from '@/navigazione/menu'
@@ -49,10 +50,10 @@ const fotoAvatar = computed(() => {
   if (!p?.persona || !p.foto_id || fotoMancante.value === p.foto_id) return null
   return `${fotoProfilo(p.persona.id)}?v=${p.foto_id}`
 })
-const iniziali = computed(() => {
+// The initials: of name and surname, or the first letter of the email.
+const nomeAvatar = computed(() => {
   const p = sessione.profilo?.persona
-  if (p) return `${p.nome[0] ?? ''}${p.cognome[0] ?? ''}`.toUpperCase()
-  return (sessione.profilo?.email[0] ?? '?').toUpperCase()
+  return p ? `${p.nome} ${p.cognome}` : (sessione.profilo?.email ?? '?')
 })
 
 function apri() {
@@ -250,16 +251,15 @@ defineExpose({ apri })
         :title="nome"
         @click="profiloAperto = !profiloAperto"
       >
-        <span class="ag-sidebar__user-avatar" aria-hidden="true">
-          <img
-            v-if="fotoAvatar"
-            :src="fotoAvatar"
-            alt=""
-            class="qdc-avatar-foto"
-            @error="fotoMancante = sessione.profilo?.foto_id ?? null"
-          />
-          <template v-else>{{ iniziali }}</template>
-        </span>
+        <!-- Bootstrap's avatar (DEC-298), coloured by the theme's sidebar. -->
+        <Avatar
+          :nome="nomeAvatar"
+          :foto="fotoAvatar"
+          dimensione="sm"
+          class="ag-sidebar__user-avatar"
+          aria-hidden="true"
+          @errore="fotoMancante = sessione.profilo?.foto_id ?? null"
+        />
         <span class="ag-sidebar__label text-truncate">{{ nome }}</span>
         <Icona :nome="profiloAperto ? 'chevron-down' : 'chevron-up'" class="ms-auto" />
       </button>

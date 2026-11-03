@@ -9,6 +9,7 @@ import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
 import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
 import ServerPosta from '@/components/ServerPosta.vue'
+import SezioneApribile from '@/components/SezioneApribile.vue'
 import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
 import { useErrore } from '@/composables/useErrore'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
@@ -155,14 +156,13 @@ async function salva() {
               </div>
             </div>
           </div>
-          <details class="small mt-3">
-            <summary>Cosa puoi scrivere tra parentesi quadre</summary>
-            <ul class="mb-0 mt-1">
+          <SezioneApribile titolo="Cosa puoi scrivere tra parentesi quadre" class="mt-3">
+            <ul class="mb-0">
               <li v-for="[nome, spiegazione] in SEGNAPOSTO_TITOLO" :key="nome">
                 <code>[{{ nome }}]</code>: {{ spiegazione }}
               </li>
             </ul>
-          </details>
+          </SezioneApribile>
           <div class="mt-3">
             <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
               Salva

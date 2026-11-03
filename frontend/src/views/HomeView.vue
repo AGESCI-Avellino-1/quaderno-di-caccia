@@ -42,6 +42,10 @@ const gruppi = computed<Gruppo[]>(() => {
   ]
 })
 
+// The Bacheca stays open on top (DEC-285); the others are the accordion.
+const sempreAperti = computed(() => gruppi.value.filter((g) => SEMPRE_APERTI.has(g.chiave)))
+const apribili = computed(() => gruppi.value.filter((g) => !SEMPRE_APERTI.has(g.chiave)))
+
 const aperto = ref(leggiGruppoAperto())
 
 // <details name="…"> closes the others by itself; this keeps the choice for next time.
@@ -74,19 +78,21 @@ onMounted(async () => {
         dati sanitari e gli altri dati delicati dei soci.
       </div>
     </div>
-    <template v-for="g in gruppi" :key="g.chiave">
-      <section v-if="SEMPRE_APERTI.has(g.chiave)" class="mb-7">
-        <!-- Bacheca and Calendario need no heading. -->
-        <VociHome :voci="g.voci" />
-      </section>
+    <section v-for="g in sempreAperti" :key="g.chiave" class="mb-7">
+      <!-- Bacheca and Calendario need no heading. -->
+      <VociHome :voci="g.voci" />
+    </section>
+    <!-- Bootstrap 6 accordion (DEC-298) on <details name>: one group open at a time. -->
+    <div v-if="apribili.length" class="accordion accordion-gap theme-primary">
       <details
-        v-else
+        v-for="g in apribili"
+        :key="g.chiave"
         name="gruppi-home"
-        class="qdc-gruppo-home mb-5"
+        class="accordion-item"
         :open="aperto === g.chiave"
         @toggle="suToggle(g.chiave, $event)"
       >
-        <summary class="h5 d-flex align-items-center gap-3 py-3">
+        <summary class="accordion-header h5 mb-0 gap-3">
           <Icona :nome="g.icona" />
           {{ g.titolo }}
           <span
@@ -95,10 +101,12 @@ onMounted(async () => {
             :aria-label="`${totaleContatori(g)} da fare`"
             >{{ totaleContatori(g) }}</span
           >
-          <Icona :nome="aperto === g.chiave ? 'chevron-up' : 'chevron-down'" class="ms-auto" />
+          <Icona nome="chevron-down" class="accordion-icon" />
         </summary>
-        <VociHome :voci="g.voci" class="pb-5" />
+        <div class="accordion-body">
+          <VociHome :voci="g.voci" />
+        </div>
       </details>
-    </template>
+    </div>
   </section>
 </template>

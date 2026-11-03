@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import { allauth } from '@/api/allauth'
+import CampoPassword from '@/components/CampoPassword.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // Without a key: ask for the email. With the key from the email link: choose a new one.
@@ -34,11 +35,12 @@ async function reimposta() {
       <button class="btn btn-solid theme-primary" :disabled="inCorso">Invia il link</button>
     </form>
     <form v-else class="vstack gap-3" @submit.prevent="reimposta">
-      <input
+      <CampoPassword
+        id="nuova-password"
         v-model="password"
-        class="form-control"
-        type="password"
+        robustezza
         placeholder="Nuova password"
+        aria-label="Nuova password"
         autocomplete="new-password"
         minlength="8"
         required

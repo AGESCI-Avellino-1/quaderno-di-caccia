@@ -162,7 +162,7 @@ breaks the parser, add the case to `tests/export_sintetico.py` first.
 
 ### Theme
 
-Colours and the side menu come from **django-agesci-campania-theme 3.0.0a2**
+Colours and the side menu come from **django-agesci-campania-theme 3.0.0a3**
 (<https://github.com/AGESCI-Campania/django-agesci-campania-theme>), the line built on
 **Bootstrap 6** (`bootstrap@6.0.0-alpha.1`, pinned): the maintainer chose the alpha on
 purpose, to avoid a second migration later. `frontend/src/theme/_palette.scss`,

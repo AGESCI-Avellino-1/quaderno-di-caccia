@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 
 import { api, type AnniGruppo, type ArchivioGruppo, type EsitoImportazione } from '@/api/qdc'
+import SezioneApribile from '@/components/SezioneApribile.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // For the capigruppo (DEC-44…DEC-46, DEC-209…DEC-213): close a year once accounts and
@@ -217,14 +218,17 @@ async function importa(evento: Event) {
           </template>
         </li>
       </ul>
-      <details v-if="archivio.archiviate.length" class="small mb-5">
-        <summary>Già archiviati ({{ archivio.archiviate.length }})</summary>
+      <SezioneApribile
+        v-if="archivio.archiviate.length"
+        :titolo="`Già archiviati (${archivio.archiviate.length})`"
+        class="mb-5"
+      >
         <ul class="mb-0">
           <li v-for="a in archivio.archiviate" :key="a.nome_file">
             {{ a.nome }} · {{ data(a.archiviata_il) }} · sul Drive: «{{ a.nome_file }}»
           </li>
         </ul>
-      </details>
+      </SezioneApribile>
 
       <h3 class="h6">Unità</h3>
       <p class="small fg-2">
@@ -249,8 +253,11 @@ async function importa(evento: Event) {
           </button>
         </li>
       </ul>
-      <details v-if="archivio.unita_archiviate?.length" class="small mb-5">
-        <summary>Unità archiviate ({{ archivio.unita_archiviate.length }})</summary>
+      <SezioneApribile
+        v-if="archivio.unita_archiviate?.length"
+        :titolo="`Unità archiviate (${archivio.unita_archiviate.length})`"
+        class="mb-5"
+      >
         <ul class="list-unstyled mb-0">
           <li
             v-for="u in archivio.unita_archiviate"
@@ -268,7 +275,7 @@ async function importa(evento: Event) {
             </button>
           </li>
         </ul>
-      </details>
+      </SezioneApribile>
 
       <h2 class="h5">Fascicolo da un altro gruppo o dall'archivio</h2>
       <p class="small fg-2">

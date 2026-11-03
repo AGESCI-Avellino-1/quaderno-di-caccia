@@ -13,6 +13,7 @@
 //  sempre sui suoi default.
 // =============================================================
 @use "sass:color";
+@use "sass:math";
 @use "sass:map";
 @use "palette" as p;
 
@@ -26,6 +27,14 @@ $branche: (
   "viola":    p.$agesci-viola,        // alias esplicito
   "generico2": p.$agesci-generico-2,  // variante "Generico 2"
 );
+
+// Funzione: schiarisce il primario senza superare il 95% di luminosità.
+// color.adjust non limita il risultato: col generico (luminosità 60%) +42%
+// dava hsl(…, 102%), cioè bianco, e i componenti "subtle" sparivano.
+@function schiarisci($c, $quanto) {
+  $l: color.channel($c, "lightness", $space: hsl);
+  @return color.change($c, $lightness: math.min($l + $quanto, 95%), $space: hsl);
+}
 
 // Funzione: restituisce un colore di testo leggibile sul primario
 @function on-color($c) {
@@ -42,9 +51,9 @@ $branche: (
   --bs-primary-bg: #{$primario};
   --bs-primary-fg: #{$primario};
   --bs-primary-fg-emphasis: #{color.adjust($primario, $lightness: -20%)};
-  --bs-primary-bg-subtle: #{color.adjust($primario, $lightness: 42%)};
-  --bs-primary-bg-muted: #{color.adjust($primario, $lightness: 32%)};
-  --bs-primary-border: #{color.adjust($primario, $lightness: 18%)};
+  --bs-primary-bg-subtle: #{schiarisci($primario, 42%)};
+  --bs-primary-bg-muted: #{schiarisci($primario, 32%)};
+  --bs-primary-border: #{schiarisci($primario, 18%)};
   --bs-primary-focus-ring: color-mix(in srgb, #{$primario} 50%, white);
   --bs-primary-contrast: #{on-color($primario)};
 
@@ -52,7 +61,7 @@ $branche: (
   --ag-primary: #{$primario};
   --ag-primary-hover: #{color.adjust($primario, $lightness: -8%)};
   --ag-primary-active: #{color.adjust($primario, $lightness: -14%)};
-  --ag-primary-subtle: #{color.adjust($primario, $lightness: 42%)};
+  --ag-primary-subtle: #{schiarisci($primario, 42%)};
   --ag-on-primary: #{on-color($primario)};
 }
 

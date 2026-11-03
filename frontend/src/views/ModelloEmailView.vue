@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { api, type AnteprimaEmail, type ModelloEmail } from '@/api/qdc'
 import EditorTesto from '@/components/EditorTesto.vue'
+import SezioneApribile from '@/components/SezioneApribile.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePagina } from '@/composables/useNomePagina'
 
@@ -171,10 +172,9 @@ async function vedi() {
           :srcdoc="anteprima.html"
           title="Anteprima dell'email formattata"
         ></iframe>
-        <details class="small mt-3">
-          <summary>Versione solo testo</summary>
-          <pre class="mt-1 mb-0 qdc-testo-email">{{ anteprima.testo }}</pre>
-        </details>
+        <SezioneApribile titolo="Versione solo testo" class="mt-3">
+          <pre class="mb-0 qdc-testo-email">{{ anteprima.testo }}</pre>
+        </SezioneApribile>
       </section>
     </template>
   </section>

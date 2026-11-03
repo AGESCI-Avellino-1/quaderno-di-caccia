@@ -27,6 +27,8 @@ import creditCard from 'bootstrap-icons/icons/credit-card.svg?raw'
 import diagram3 from 'bootstrap-icons/icons/diagram-3.svg?raw'
 import envelopeOpen from 'bootstrap-icons/icons/envelope-open.svg?raw'
 import envelopePaper from 'bootstrap-icons/icons/envelope-paper.svg?raw'
+import eye from 'bootstrap-icons/icons/eye.svg?raw'
+import eyeSlash from 'bootstrap-icons/icons/eye-slash.svg?raw'
 import fileEarmarkText from 'bootstrap-icons/icons/file-earmark-text.svg?raw'
 import flag from 'bootstrap-icons/icons/flag.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
@@ -96,6 +98,8 @@ export const ICONE = {
   'diagram-3': diagram3,
   'envelope-open': envelopeOpen,
   'envelope-paper': envelopePaper,
+  eye: eye,
+  'eye-slash': eyeSlash,
   'file-earmark-text': fileEarmarkText,
   flag: flag,
   gear: gear,

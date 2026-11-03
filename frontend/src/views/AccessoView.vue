@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { allauth, flussoInSospeso, type SessioneAllauth } from '@/api/allauth'
 import { ErroreApi } from '@/api/http'
+import CampoOtp from '@/components/CampoOtp.vue'
+import CampoPassword from '@/components/CampoPassword.vue'
 import { useErrore } from '@/composables/useErrore'
 import { MESSAGGI_CANCELLAZIONE, protetta, type MotivoCancellazione } from '@/sicurezza/cassaforte'
 import { ricollegaDispositivo } from '@/sicurezza/dispositivo'
@@ -25,6 +27,8 @@ const password = ref('')
 const codice = ref('')
 const codiceInviato = ref(false)
 const secondoFattore = ref(false)
+// Recovery codes are not 6 digits: they go in a plain field.
+const conCodiceDiRecupero = ref(false)
 // After a wipe (revocation, expiry, wrong PINs) App.vue sends here with the reason.
 const motivo = route.query.motivo as MotivoCancellazione | undefined
 const avviso = ref<string | null>((motivo && MESSAGGI_CANCELLAZIONE[motivo]) || null)
@@ -84,16 +88,34 @@ const provider = (nome: 'google' | 'apple') =>
     <div v-if="avviso" class="alert theme-info" role="status">{{ avviso }}</div>
 
     <form v-if="secondoFattore" class="vstack gap-3" @submit.prevent="confermaTotp">
-      <label class="form-label" for="totp">Codice dell'app di autenticazione</label>
-      <input
-        id="totp"
-        v-model="codice"
-        class="form-control"
-        inputmode="numeric"
-        autocomplete="one-time-code"
-        required
-      />
+      <template v-if="conCodiceDiRecupero">
+        <label class="form-label mb-0" for="recupero">Codice di recupero</label>
+        <input id="recupero" v-model="codice" class="form-control" autocomplete="off" required />
+      </template>
+      <template v-else>
+        <!-- 6 digits, confirmed as soon as they are all there (DEC-298). -->
+        <label class="form-label mb-0" for="totp">Codice dell'app di autenticazione</label>
+        <CampoOtp
+          id="totp"
+          v-model="codice"
+          :lunghezza="6"
+          autocomplete="one-time-code"
+          :disabled="inCorso"
+          @completo="confermaTotp"
+        />
+      </template>
       <button class="btn btn-solid theme-primary" :disabled="inCorso">Conferma</button>
+      <button
+        type="button"
+        class="btn btn-link btn-sm"
+        @click="((conCodiceDiRecupero = !conCodiceDiRecupero), (codice = ''))"
+      >
+        {{
+          conCodiceDiRecupero
+            ? "Usa il codice dell'app"
+            : 'Non hai l’app? Usa un codice di recupero'
+        }}
+      </button>
     </form>
 
     <template v-else>
@@ -139,11 +161,11 @@ const provider = (nome: 'google' | 'apple') =>
           autocomplete="username"
           required
         />
-        <input
+        <CampoPassword
+          id="password"
           v-model="password"
-          class="form-control"
-          type="password"
           placeholder="Password"
+          aria-label="Password"
           autocomplete="current-password"
           required
         />
@@ -166,13 +188,21 @@ const provider = (nome: 'google' | 'apple') =>
       </form>
 
       <form v-else class="vstack gap-3" @submit.prevent="confermaCodice">
-        <p class="small mb-1">Abbiamo inviato un codice a {{ email }}.</p>
-        <input
+        <label class="small mb-1" for="codice-email"
+          >Abbiamo inviato un codice a {{ email }}: scrivilo qui.</label
+        >
+        <!-- 8 letters and digits in two groups, as in the email; confirmed as soon as it is
+             complete (DEC-298). The dash is optional for the server. -->
+        <CampoOtp
+          id="codice-email"
           v-model="codice"
-          class="form-control"
-          placeholder="Codice"
+          :lunghezza="8"
+          tipo="alphanumeric"
+          :gruppi="[4, 4]"
           autocomplete="one-time-code"
-          required
+          autocapitalize="characters"
+          :disabled="inCorso"
+          @completo="confermaCodice"
         />
         <button class="btn btn-solid theme-primary" :disabled="inCorso">Accedi</button>
       </form>

@@ -14,6 +14,7 @@ import {
   type Unita,
   type VoceModelloD,
 } from '@/api/qdc'
+import SezioneApribile from '@/components/SezioneApribile.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The bank statement (DEC-93, DEC-221…DEC-224): the group treasurer and the
@@ -346,11 +347,12 @@ const data = (d: string) => new Date(d).toLocaleDateString('it-IT')
             </button>
           </div>
 
-          <details v-if="scelte[r.id]" :open="!entrata(r) && r.uscita?.tipo !== 'GIROCONTO'">
-            <summary class="small">
-              {{ entrata(r) ? 'Altra entrata' : 'Spesa o altra uscita' }}
-            </summary>
-            <div class="row g-3 mt-1">
+          <SezioneApribile
+            v-if="scelte[r.id]"
+            :titolo="entrata(r) ? 'Altra entrata' : 'Spesa o altra uscita'"
+            :aperta="!entrata(r) && r.uscita?.tipo !== 'GIROCONTO'"
+          >
+            <div class="row g-3">
               <div class="col-12 md:col-5">
                 <label class="form-label small" :for="`voce-${r.id}`">Voce del Modello D</label>
                 <select
@@ -395,7 +397,7 @@ const data = (d: string) => new Date(d).toLocaleDateString('it-IT')
             >
               Registra in prima nota
             </button>
-          </details>
+          </SezioneApribile>
         </article>
       </template>
 

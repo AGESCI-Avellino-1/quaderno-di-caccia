@@ -3,6 +3,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { api, type Impostazioni, type SmtpIn } from '@/api/qdc'
+import CampoPassword from '@/components/CampoPassword.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // How the emails go out, for the technical administrator: an SMTP server (DEC-277) or a
@@ -183,11 +184,10 @@ async function prova() {
           </div>
           <div class="md:col-6">
             <label class="form-label small" for="smtp-password">Password</label>
-            <input
+            <CampoPassword
               id="smtp-password"
               v-model="dati.password"
-              type="password"
-              class="form-control form-control-sm"
+              class="form-control-sm"
               autocomplete="new-password"
               :placeholder="
                 impostazioni.smtp_password_salvata ? 'Salvata: lascia vuoto per non cambiarla' : ''
@@ -216,11 +216,10 @@ async function prova() {
           </div>
           <div class="md:col-6">
             <label class="form-label small" for="gmail-segreto">Segreto client</label>
-            <input
+            <CampoPassword
               id="gmail-segreto"
               v-model="dati.gmail_client_secret"
-              type="password"
-              class="form-control form-control-sm"
+              class="form-control-sm"
               autocomplete="new-password"
               :placeholder="
                 impostazioni.gmail_secret_salvato ? 'Salvato: lascia vuoto per non cambiarlo' : ''

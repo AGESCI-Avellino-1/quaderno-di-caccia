@@ -118,11 +118,11 @@ Fatto con test (DEC-297): `/io` dice `foto_id`, il menu laterale mostra la foto 
 Richiesta del maintainer (03/11): se la persona collegata all'account ha una foto nel profilo,
 l'avatar (in basso nel menu laterale, oggi le iniziali) mostra quella foto.
 
-#### N.31 — Tema 3.0.0a3: i componenti nuovi di Bootstrap 6 nella PWA ⏳
+#### N.31 — Tema 3.0.0a3: i componenti nuovi di Bootstrap 6 nella PWA 🚧 (DEC-298)
 
 Richiesta del maintainer (03/11): con il tema 3.0.0a3 (stesso Bootstrap 6.0.0-alpha.1) usare
 i componenti nuovi ovunque si può. Nuovo DEC nell'analisi prima di svilupparla (cambia DEC-97
-sul PIN). Analisi:
+sul PIN: DEC-298). Via del maintainer il 03/11. Analisi:
 
 - **Il tema**: dei tre file copiati cambia solo `_branche.scss` (colori «subtle» della branca
   `generico`, prima bianchi): da ricopiare byte per byte. I tag del tema sono template Django:
@@ -148,6 +148,8 @@ sul PIN). Analisi:
   (tappe del sentiero E/G, stagioni L/C, sezioni dell'iscrizione), chip (destinatari delle
   email, filtri). Non servono: datepicker (i campi data del browser vanno bene sul telefono),
   carousel, range.
+
+Blocco 1 fatto con test (03/11): `_branche.scss` del tema 3.0.0a3; `CampoPassword` (occhio, robustezza nelle password nuove), `CampoOtp` (codice via email, app di autenticazione, PIN), PIN di 6 cifre con sblocco alla sesta e ripiego per i PIN più lunghi (`cassaforte.cambiaPin`, tiene i dati), `Avatar` (menu, elenchi di persone, squadriglia, staff e incarichi: iniziali, perché gli elenchi non portano la foto), accordion nella Home e `SezioneApribile` al posto degli altri `<details>`; manuale e schermate di accesso, protezione e sblocco rifatte (provate con Playwright). Da fare: «€» negli importi, stepper, chip.
 
 Il secondo fattore accetta anche i codici di recupero (non di 6 cifre): sotto l'OTP un link
 «Usa un codice di recupero» con il campo normale.

@@ -18,7 +18,8 @@ email: usa la tua, non quella dei tuoi genitori.
 ## Entrare le volte successive
 
 Apri <https://qdc.avellino1.it>. Il modo più semplice è il **codice via email**: scrivi la
-tua email, tocca **Inviami il codice** e scrivi il codice che ti arriva (vale 3 minuti).
+tua email, tocca **Inviami il codice** e scrivi nelle caselle il codice che ti arriva (vale 3 minuti):
+appena è completo, entri.
 Puoi entrare anche con la password, con Google o Apple, o con una passkey (l'impronta o il
 volto del telefono): i passi sono gli stessi dei genitori, in [Primo
 accesso](../genitore/accesso).
@@ -34,7 +35,7 @@ L'app tiene sul telefono una copia cifrata dei dati, per funzionare anche senza 
 prima volta ti chiede un PIN.
 
 1. Controlla il nome del dispositivo (per esempio «Telefono di Giulia»).
-2. Scegli un PIN di almeno 6 cifre e ripetilo. Se il telefono lo permette, lascia la
+2. Scegli un PIN di 6 cifre e ripetilo. Se il telefono lo permette, lascia la
    spunta su **Sblocca anche con impronta o volto**.
 3. Tocca **Attiva la protezione**. Se il telefono non è tuo, tocca **Usa solo online**.
 
@@ -43,7 +44,8 @@ prima volta ti chiede un PIN.
 ![La protezione dal computer](../img/comune/protezione-computer.png){.computer width="65%"}
 :::
 
-Dopo 5 minuti senza usarla l'app si blocca: scrivi il PIN e tocca **Sblocca**.
+Dopo 5 minuti senza usarla l'app si blocca: scrivi il PIN, e alla sesta cifra si sblocca da
+sola.
 
 :::{warning}
 Non dire il PIN a nessuno, nemmeno agli amici di squadriglia. Dopo 5 PIN sbagliati la copia

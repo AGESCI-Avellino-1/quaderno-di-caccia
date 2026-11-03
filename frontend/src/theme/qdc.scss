@@ -1,7 +1,7 @@
 // =============================================================
 //  QdC theme.
 //  _palette.scss, _branche.scss and _sidebar.scss are copied byte for byte from
-//  django-agesci-campania-theme 3.0.0a2 (MIT, AGESCI Campania; Bootstrap 6). Keep them in
+//  django-agesci-campania-theme 3.0.0a3 (MIT, AGESCI Campania; Bootstrap 6). Keep them in
 //  sync with the Django package: never invent colours, never hardcode them in components —
 //  use var(--ag-primary), theme-primary and friends. The branch is chosen with
 //  <html data-branca>. Bootstrap 6 lives in @layer: this file is unlayered and wins, so
@@ -69,21 +69,6 @@ body {
 .qdc-barra-installazione {
   background-color: var(--bs-bg-body);
   border-bottom: 1px solid var(--bs-border-color);
-}
-
-// The collapsible groups of the Home (DEC-285).
-.qdc-gruppo-home {
-  border-bottom: 1px solid var(--bs-border-color);
-
-  > summary {
-    margin-bottom: 0;
-    cursor: pointer;
-    list-style: none;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-  }
 }
 
 // The month of the calendar page (DEC-286): on the phone a dot-sized title per event.
@@ -338,12 +323,11 @@ body {
   background-color: var(--ag-primary-subtle);
 }
 
-// One's own profile photo in the avatar of the side menu (DEC-297), in the theme's circle.
-.ag-sidebar__user-avatar {
-  overflow: hidden;
+// The boxes of a code (DEC-298) never go past the page: the 8 of the email code shrink on
+// a narrow phone.
+.otp-slots {
+  max-width: 100%;
 }
-.qdc-avatar-foto {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.otp-slot {
+  min-width: 0;
 }

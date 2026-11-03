@@ -14,7 +14,7 @@ si apre solo con un PIN che scegli tu (o con l'impronta o il volto).
 
 1. Controlla il **nome di questo dispositivo** (per esempio «Telefono di Mario»): ti
    servirà per riconoscerlo nell'elenco dei dispositivi.
-2. Scegli un **PIN** di almeno 6 cifre e ripetilo.
+2. Scegli un **PIN** di 6 cifre, una per casella, e ripetilo.
 3. Se il telefono lo permette, lascia la spunta su **Sblocca anche con impronta o
    volto**: l'app crea la passkey di questo dispositivo, che ti fa anche entrare senza
    codice.
@@ -35,8 +35,12 @@ funziona solo con la rete.
 
 ## Quando l'app si blocca
 
-Dopo 5 minuti senza usarla, o quando la riapri, l'app si blocca. Scrivi il PIN (o usa
-l'impronta) e tocca **Sblocca**. Puoi bloccarla anche tu: nel menu del profilo, sotto il
+Dopo 5 minuti senza usarla, o quando la riapri, l'app si blocca. Scrivi il PIN: alla sesta
+cifra l'app si sblocca da sola. Puoi usare anche l'impronta o il volto.
+
+Se avevi scelto un PIN più lungo di 6 cifre, prima che il PIN diventasse di 6 cifre esatte,
+tocca **Il tuo PIN è più lungo di 6 cifre?**, scrivilo e tocca **Sblocca**. Subito dopo l'app ti
+chiede un PIN nuovo di 6 cifre; i dati sul telefono restano. Puoi bloccarla anche tu: nel menu del profilo, sotto il
 tuo nome, tocca **Blocca l'app**.
 
 :::{container} schermate

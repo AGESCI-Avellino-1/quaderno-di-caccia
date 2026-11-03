@@ -12,6 +12,7 @@ import {
   type UnitaDettaglio,
   type UnitaIn,
 } from '@/api/qdc'
+import Avatar from '@/components/Avatar.vue'
 import CodiciIscrizione from '@/components/CodiciIscrizione.vue'
 import AltaSquadriglia from '@/components/AltaSquadriglia.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
@@ -383,6 +384,12 @@ const iniziale = (u: Unita): UnitaIn => ({
             :key="m.id"
             class="d-flex align-items-center flex-wrap gap-3 py-1"
           >
+            <Avatar
+              :nome="`${m.persona.nome} ${m.persona.cognome}`"
+              dimensione="xs"
+              tenue
+              aria-hidden="true"
+            />
             <RouterLink :to="{ name: 'persona', params: { id: m.persona.id } }">
               {{ m.persona.nome }} {{ m.persona.cognome }}
             </RouterLink>
@@ -430,6 +437,7 @@ const iniziale = (u: Unita): UnitaIn => ({
             :key="p.id"
             class="d-flex align-items-center flex-wrap gap-3 py-1"
           >
+            <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="xs" tenue aria-hidden="true" />
             <RouterLink :to="{ name: 'persona', params: { id: p.id } }">
               {{ p.nome }} {{ p.cognome }}
             </RouterLink>

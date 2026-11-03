@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 
 import { api, type DerogheSquadriglia } from '@/api/qdc'
+import SezioneApribile from '@/components/SezioneApribile.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // Exceptions to single-sex patrols (gender identity, transition): decided by the Co.Ca.,
@@ -117,10 +118,9 @@ const oggi = () => new Date().toLocaleDateString('sv')
         <template v-if="d.registrata_da">, registrata da {{ d.registrata_da }}</template>
         <template v-if="d.revocata_il">, revocata il {{ data(d.revocata_il) }}</template>
       </div>
-      <details>
-        <summary>Motivazione</summary>
+      <SezioneApribile titolo="Motivazione" class="mt-1">
         <p class="mb-0" style="white-space: pre-line">{{ d.motivazione }}</p>
-      </details>
+      </SezioneApribile>
     </div>
 
     <form v-if="aperto" class="row g-3 mt-1" @submit.prevent="registra">

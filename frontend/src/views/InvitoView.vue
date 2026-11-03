@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 import { allauth, flussoInSospeso } from '@/api/allauth'
 import { api } from '@/api/qdc'
+import CampoPassword from '@/components/CampoPassword.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -53,11 +54,10 @@ const provider = (nome: 'google' | 'apple') =>
       </p>
       <form class="vstack gap-3" @submit.prevent="registrati">
         <label class="form-label" for="nuova-password">Scegli una password</label>
-        <input
+        <CampoPassword
           id="nuova-password"
           v-model="password"
-          class="form-control"
-          type="password"
+          robustezza
           autocomplete="new-password"
           minlength="8"
           required

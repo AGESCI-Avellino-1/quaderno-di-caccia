@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, type MiaSquadriglia } from '@/api/qdc'
+import Avatar from '@/components/Avatar.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -36,7 +37,8 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
       <p class="fg-2 small mb-3">{{ s.reparto }}</p>
       <ul class="list-group">
         <li v-for="m in s.membri" :key="m.id" class="list-group-item">
-          <div class="d-flex flex-wrap align-items-baseline gap-3">
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            <Avatar :nome="`${m.nome} ${m.cognome}`" dimensione="sm" tenue aria-hidden="true" />
             <RouterLink
               v-if="s.sono_capo"
               :to="{ name: 'persona', params: { id: m.id } }"

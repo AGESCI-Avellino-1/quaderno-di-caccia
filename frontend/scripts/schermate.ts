@@ -55,7 +55,7 @@ export const PERSONE = {
 const apri = (testo: string) => async (pagina: Page) => {
   // On the Home the entry may be in a closed group (DEC-285): open it first.
   const gruppo = pagina
-    .locator('details.qdc-gruppo-home:not([open])')
+    .locator('details.accordion-item:not([open])')
     .filter({ has: pagina.getByRole('link', { name: testo, includeHidden: true }) })
   if (!(await pagina.getByRole('link', { name: testo }).first().isVisible())) {
     if (await gruppo.count()) await gruppo.first().locator('summary').click()
@@ -139,7 +139,7 @@ const SCENE: Scena[] = [
     prepara: async (pagina) => {
       await pagina.getByPlaceholder('Email').fill(`${PERSONE.genitore}@${DOMINIO}`)
       await pagina.getByRole('button', { name: 'Inviami il codice' }).click()
-      await pagina.getByPlaceholder('Codice').waitFor()
+      await pagina.getByLabel('Abbiamo inviato un codice').waitFor()
     },
   },
   { nome: 'comune/invito', percorso: '/invito/invito-di-prova' },
@@ -726,8 +726,8 @@ const SCENE: Scena[] = [
       await pagina.reload()
       await pagina.waitForLoadState('networkidle')
       if (new URL(pagina.url()).pathname === '/sblocco') {
-        await pagina.getByPlaceholder('PIN').fill(PIN)
-        await pagina.getByRole('button', { name: 'Sblocca' }).click()
+        // Six boxes: the app unlocks at the sixth digit.
+        await pagina.getByLabel('PIN', { exact: true }).fill(PIN)
       }
       await pagina.getByRole('heading', { name: "L'app è in manutenzione" }).waitFor()
     },
@@ -889,7 +889,7 @@ async function entra(pagina: Page, chi: keyof typeof PERSONE, proteggi: boolean)
   await pagina.getByRole('button', { name: 'Accedi', exact: true }).click()
   await pagina.waitForURL('**/protezione**')
   if (!proteggi) return
-  await pagina.getByLabel('PIN (almeno').fill(PIN)
+  await pagina.getByLabel('PIN di 6 cifre').fill(PIN)
   await pagina.getByLabel('Ripeti il PIN').fill(PIN)
   // Fingerprint or face would open the browser's passkey dialog: PIN only.
   const biometria = pagina.getByLabel('Sblocca anche con impronta o volto')
@@ -952,8 +952,7 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
     await pagina.waitForLoadState('networkidle')
     // A reload locks the app (the key lives only in memory): unlock, back to the page.
     if (new URL(pagina.url()).pathname === '/sblocco' && scena.percorso !== '/sblocco') {
-      await pagina.getByPlaceholder('PIN').fill(PIN)
-      await pagina.getByRole('button', { name: 'Sblocca' }).click()
+      await pagina.getByLabel('PIN', { exact: true }).fill(PIN)
       await pagina.waitForURL((url) => url.pathname !== '/sblocco')
       await pagina.waitForLoadState('networkidle')
     }

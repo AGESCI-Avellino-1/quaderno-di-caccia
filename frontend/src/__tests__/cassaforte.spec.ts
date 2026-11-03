@@ -4,6 +4,7 @@ import { leggiDallaCache, salvaInCache } from '@/offline/cache'
 import type { DatabaseQdc } from '@/offline/db'
 import type { creaPasskeyDiSblocco } from '@/sicurezza/biometria'
 import * as cassaforte from '@/sicurezza/cassaforte'
+import { avvolgi, casuali, chiaveDaPin, svolgi } from '@/sicurezza/cripto'
 
 import { ITERAZIONI_TEST, PIN, cassaforteSbloccata, nuovoDatabase } from './aiuti'
 
@@ -27,9 +28,46 @@ describe('cassaforte', () => {
     expect(cassaforte.stato.value).toBe('da_configurare')
   })
 
-  it('rifiuta PIN corti o non numerici', async () => {
+  it('rifiuta PIN che non sono di 6 cifre', async () => {
     await expect(cassaforte.configura('a@b', '1234', ITERAZIONI_TEST)).rejects.toThrow('6 cifre')
+    await expect(cassaforte.configura('a@b', '1234567', ITERAZIONI_TEST)).rejects.toThrow('6 cifre')
     await expect(cassaforte.configura('a@b', 'abcdef', ITERAZIONI_TEST)).rejects.toThrow()
+  })
+
+  it('un PIN più lungo scelto prima sblocca ancora; il PIN nuovo tiene i dati', async () => {
+    await cassaforteSbloccata()
+    await salvaInCache('k', { v: 3 }, database)
+    // A vault protected before DEC-298 with 8 digits: wrap the same data key again.
+    await cassaforte.cambiaPin(PIN, ITERAZIONI_TEST)
+    const config = (await database.protezione.get('config'))!
+    const chiave = await svolgi(
+      config.pin!,
+      await chiaveDaPin(PIN, config.pin!.sale, ITERAZIONI_TEST),
+    )
+    const sale = casuali(16)
+    const avvolta = await avvolgi(chiave, await chiaveDaPin('12345678', sale, ITERAZIONI_TEST))
+    await database.protezione.put({
+      ...config,
+      pin: { ...avvolta, sale, iterazioni: ITERAZIONI_TEST },
+    })
+    cassaforte.blocca()
+    await cassaforte.inizializza()
+
+    await cassaforte.sbloccaConPin('12345678')
+    await expect(cassaforte.cambiaPin('1234567', ITERAZIONI_TEST)).rejects.toThrow('6 cifre')
+    await cassaforte.cambiaPin('654321', ITERAZIONI_TEST)
+    cassaforte.blocca()
+    await expect(cassaforte.sbloccaConPin('12345678')).rejects.toBeInstanceOf(cassaforte.PinErrato)
+    await cassaforte.sbloccaConPin('654321')
+    expect((await leggiDallaCache('k', database))!.dati).toEqual({ v: 3 })
+  })
+
+  it('il PIN si cambia solo a cassaforte sbloccata', async () => {
+    await cassaforteSbloccata()
+    cassaforte.blocca()
+    await expect(cassaforte.cambiaPin('654321', ITERAZIONI_TEST)).rejects.toBeInstanceOf(
+      cassaforte.CassaforteBloccata,
+    )
   })
 
   it('i dati sul dispositivo sono cifrati', async () => {

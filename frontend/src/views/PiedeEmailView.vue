@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { api, type PiedeEmail } from '@/api/qdc'
 import EditorTesto from '@/components/EditorTesto.vue'
+import SezioneApribile from '@/components/SezioneApribile.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The common footer of the emails (DEC-250): formatted, with images (they travel inside
@@ -88,10 +89,9 @@ async function salva() {
         :srcdoc="piede.anteprima_html"
         title="Anteprima del piè di pagina"
       ></iframe>
-      <details class="small mt-3">
-        <summary>Versione solo testo</summary>
-        <pre class="mt-1 mb-0 qdc-testo-email">{{ piede.anteprima_testo }}</pre>
-      </details>
+      <SezioneApribile titolo="Versione solo testo" class="mt-3">
+        <pre class="mb-0 qdc-testo-email">{{ piede.anteprima_testo }}</pre>
+      </SezioneApribile>
     </section>
   </section>
 </template>

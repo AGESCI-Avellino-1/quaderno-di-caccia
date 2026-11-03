@@ -3,6 +3,7 @@ import { WebAuthnError } from '@simplewebauthn/browser'
 import { onMounted, ref, watch } from 'vue'
 
 import { passkey, RiautenticazioneRichiesta, type Passkey } from '@/api/allauth'
+import CampoPassword from '@/components/CampoPassword.vue'
 import { testoErrore } from '@/composables/useErrore'
 import { base64url, dimenticaCredenziale, SbloccoNonDisponibile } from '@/sicurezza/biometria'
 import {
@@ -166,11 +167,9 @@ const data = (secondi: number) => new Date(secondi * 1000).toLocaleDateString('i
         <p class="small mb-0">Per sicurezza, conferma che sei tu.</p>
         <template v-if="conferma.conPassword">
           <label class="form-label mb-0" for="password-conferma">La tua password</label>
-          <input
+          <CampoPassword
             id="password-conferma"
             v-model="password"
-            class="form-control"
-            type="password"
             autocomplete="current-password"
             required
           />

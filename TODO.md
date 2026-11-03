@@ -41,7 +41,7 @@ Rif. DEC-284. Un capo con solo un incarico aggiuntivo (per esempio tesoriere, ne
 incarico di servizio), nel raggruppamento per unità, resta in Co.Ca. (maintainer, 03/11).
 Deciso il 03/11, con N.25: accanto al nome compare «Servizio di supporto al gruppo»,
 sempre, anche se quel tipo non è tra quelli scelti per la stampa; solo nel PDF, senza
-registrare l'incarico [da verificare: vedi «Da decidere»].
+registrare l'incarico (confermato dal maintainer il 03/11).
 `organizzazione/elenco_incarichi._per_unita`, test in `tests/test_elenco_incarichi.py`.
 
 #### N.21 — Lista d'attesa di un maggiorenne ✅ 03/11
@@ -134,7 +134,6 @@ del tag, `docker compose up -d --build`). Deciso il 03/11:
 
 | Punto | Rif. |
 | --- | --- |
-| N.22: «Servizio di supporto al gruppo» accanto al capo con solo un incarico aggiuntivo resta una scritta solo nel PDF (si sviluppa così), oppure il capo deve avere davvero l'incarico e, se non ce l'ha, compare fra i «Capi senza servizio»? | DEC-284 |
 | Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
 
 ### Da provare

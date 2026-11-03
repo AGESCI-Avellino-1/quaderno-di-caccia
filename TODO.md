@@ -280,6 +280,132 @@ release; lo script ne mostra le sezioni tra la versione installata e la nuova **
 chiedere se aggiornare. Lo script che gira è quello della versione installata: l'elenco compare
 negli aggiornamenti che partono dalla 1.10.
 
+### Richieste del 03/11 (sera), da raccogliere
+
+Richieste del maintainer del 03/11, solo annotate: si sviluppano quando il maintainer dice di
+partire. Prima dello sviluppo, i DEC nuovi nell'analisi. Le domande aperte sono sotto ogni punto.
+
+#### N.40 — Organigramma: ruoli scelti da un menu a selezione multipla ⏳
+
+Nell'Organigramma i ruoli si scelgono oggi con caselle di spunta: al loro posto un menu a
+tendina con più scelte (combobox). Da verificare cosa offre Bootstrap 6 alpha (il tema non ha
+una select multipla con ricerca: forse un componente nostro).
+
+- Domanda: vale solo per la scelta dei tipi di incarico nel PDF dell'organigramma, o anche per
+  l'assegnazione degli incarichi a un capo?
+
+#### N.41 — Genitore che diventa capo, in due passi annullabili ⏳ (cambia DEC-282)
+
+Oggi (DEC-282) il capogruppo manda al genitore un link di iscrizione in Co.Ca. con i dati già
+compilati. Nuovo flusso: **1.** il genitore entra in Co.Ca. subito, con i dati minimi che l'app
+ha già (quelli da genitore), e il passo si può annullare; **2.** poi gli si può mandare l'invito.
+
+- Domande: chi lo fa (solo i capigruppo, come oggi)? Prende un codice socio provvisorio `9…`
+  come chi si iscrive dall'app (DEC-120)? Fino a quando si può annullare (finché non ha accettato
+  l'invito, finché non arriva l'import di BuonaStrada)? Il link di iscrizione di DEC-282 resta come
+  alternativa o si toglie? L'invito è quello dell'account (se non ne ha già uno da genitore) o
+  serve a completare i dati da capo?
+
+#### N.42 — Inviti a più persone insieme ⏳
+
+Selezione multipla di genitori e maggiorenni (capi e ragazzi) che hanno un'email e **non hanno
+ancora un account**, per mandare a tutti l'invito in un colpo. Va con l'invio graduale (N.46).
+
+- Domanda: da quale pagina (elenco delle persone con un filtro «senza account», la pagina
+  dell'unità, una pagina nuova)? Chi può farlo (oggi gli inviti li manda chi: capigruppo e staff
+  dell'unità)?
+
+#### N.43 — Minorenni invitati con un link personale ⏳ (cambia DEC-116/DEC-117)
+
+Il minorenne riceve un link personale (con il codice socio, che non è un dato sensibile) che si
+può mandare anche per altri canali (WhatsApp…); aprendolo, il ragazzo inserisce la sua email e
+attiva l'account. Anche il **capo squadriglia** può generarlo per i suoi squadriglieri. Solo per
+chi non ha ancora un account.
+
+- Domande: chi altro lo genera (staff dell'unità, capigruppo)? Da che età (oggi dai 14 anni,
+  DEC-117)? Chi apre il link deve dimostrare qualcosa oltre al link (per esempio la data di
+  nascita), visto che il codice socio da solo è indovinabile? Proposta: il link porta un segreto
+  casuale oltre al codice socio, scade (per esempio dopo 30 giorni) e vale una volta sola. Vanno
+  avvisati i genitori quando il figlio attiva l'account?
+
+#### N.44 — Riunioni separate dagli eventi, con serie, località e uniforme ⏳
+
+Oggi una riunione ricorrente (`eventi.RiunioneRicorrente`) genera un `Evento` di tipo `RIUNIONE`
+per ogni data. Richiesta: le riunioni **non sono eventi** (mai quote).
+
+- **Serie**: ripetizione (per esempio ogni sabato 16:30–18:30 dal 1° ottobre al 31 maggio); si
+  annullano singole riunioni.
+- **Uniforme sì/no** per tutta la serie o per la singola riunione.
+- **Informazioni** sulla singola riunione con l'editor di testo.
+- **Tipi e chi le crea**: di unità (Co.Ca. compresa); di squadriglia (le inserisce il capo
+  squadriglia); di Alta Squadriglia (staff, eventualmente di unità collegate); Consiglio Capi e
+  Con.Ca.Vi. (staff dell'unità); Consiglio degli Anziani (staff, eventualmente congiunto).
+- **In calendario** (anche nel feed iCal).
+- **Località predefinite** del gruppo (la sede, le sedi, una base) e una località nuova inserita
+  durante la creazione.
+
+Domande:
+- Le presenze restano sulle riunioni come oggi (offline, append-only)?
+- Cosa succede alle riunioni ricorrenti e agli eventi `RIUNIONE` già creati: si convertono?
+  E le riunioni e missioni di squadriglia di oggi (la missione resta un evento)?
+- Chi gestisce l'elenco delle località (capigruppo)? Una località nuova creata in una riunione
+  entra nell'elenco per tutti o resta solo lì?
+- Le email per una riunione (oggi non si mandano per le singole ricorrenti) restano così?
+- Chi vede le informazioni della riunione: ragazzi e genitori dell'unità?
+
+#### N.45 — Turni di squadriglia e di sestiglia ⏳
+
+Lo staff (eventualmente di unità collegate) sceglie i turni (per esempio pulizia, preghiera,
+cassa) e li assegna a rotazione alle squadriglie o sestiglie, **ogni settimana o ogni mese**; con
+la rotazione settimanale, una settimana senza riunioni non conta e il turno passa alla riunione
+successiva. Squadriglieri, genitori e ragazzi della sestiglia vedono il proprio turno per quella
+riunione e per le successive, legato alla riunione in calendario. Dipende da N.44.
+
+- Attenzione: le **sestiglie non esistono ancora** nell'app (ci sono solo le squadriglie del
+  reparto). Vanno create come le squadriglie (composte dallo staff del branco/cerchio)? Hanno un
+  capo sestiglia con qualche potere?
+- Domande: con la rotazione mensile il turno cambia il primo giorno del mese o alla prima
+  riunione del mese? Lo staff può spostare a mano un turno su una riunione?
+
+#### N.46 — Invio graduale delle email in blocco ⏳
+
+Le email mandate a molte persone insieme partono a blocchi, per non finire nello spam; quelle
+importanti e singole (codici di accesso, nuova password…) partono subito, con precedenza.
+
+Proposta da confermare: **una coda di invio** sul server, smaltita da un comando ogni minuto
+(cron, come gli altri); **blocchi di 20 email, poi 2 minuti di pausa** (circa 600 l'ora, sotto i
+limiti di Gmail/Workspace: 500 al giorno per un @gmail.com, 2000 per Workspace) e un **tetto al
+giorno impostabile** (di base 400), oltre il quale le email aspettano il giorno dopo. Valori
+modificabili dall'amministratore tecnico nelle Impostazioni. Restano fuori dalla coda e partono
+subito le email di `posta.SEMPRE` chieste dalla persona (accesso, password, conferma
+dell'indirizzo); gli inviti in blocco (N.42) passano dalla coda. Si vede quante sono in attesa.
+
+- Domande: vanno bene i numeri? Il gruppo usa Gmail @gmail.com o Workspace (cambia il tetto)?
+
+#### N.47 — Elenco degli account per l'amministratore tecnico ⏳
+
+Pagina con tutti gli account della piattaforma.
+
+- Domande: cosa mostra (email, persona collegata, ultimo accesso, metodi di accesso, dispositivi,
+  bloccato da django-axes)? Si può fare qualcosa da lì (disattivare, sbloccare, rimandare
+  l'invito) o solo guardare? L'amministratore tecnico vede comunque solo email e nome, non i dati
+  della persona?
+
+#### N.48 — Dall'avatar alla scheda della persona ⏳
+
+Cliccando sull'avatar accanto a un nome (solo sull'avatar, per non aprire schede per errore) si
+apre la scheda della persona o del genitore, **solo se si hanno i permessi** (`policy`).
+Componente `components/Avatar.vue`.
+
+- Domanda: il server dice in ogni elenco se la scheda si può aprire (un campo in più nelle
+  risposte), così la PWA non mostra un link che porta a un errore: va bene?
+
+#### N.49 — PDF degli incarichi: «NUOVO CENSITO» al posto del codice provvisorio ⏳
+
+Nell'elenco degli incarichi in PDF (`organizzazione/elenco_incarichi.py`, DEC-284), per i capi con
+codice socio provvisorio (`9…`, nuovi iscritti, DEC-120) al posto del codice va scritto «NUOVO
+CENSITO». Nessuna domanda aperta.
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,

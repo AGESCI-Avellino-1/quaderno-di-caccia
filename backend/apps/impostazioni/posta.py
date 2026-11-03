@@ -46,6 +46,7 @@ SEMPRE = {
     "attesa_uscita",
     "attesa_iscrizione",
     "iscrizione_capo",
+    "account_modificato",
 }
 # What the person asks for themself: never waits in the queue (DEC-311).
 SUBITO = {
@@ -56,6 +57,7 @@ SUBITO = {
     "verifica_email",
     "account_esistente",
     "account_sconosciuto",
+    "account_modificato",
 }
 
 

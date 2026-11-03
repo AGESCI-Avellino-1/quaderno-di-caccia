@@ -746,6 +746,17 @@ const SCENE: Scena[] = [
     mostra: "Invio un po' alla volta",
   },
   {
+    // One account opened, the action chosen, nothing confirmed.
+    nome: 'gruppo/account',
+    chi: 'amministratore',
+    percorso: '/amministrazione/account',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Gestisci' }).first().click()
+      await pagina.getByLabel('Cosa fare').selectOption('DISATTIVA')
+      await pagina.getByLabel('Motivo').fill('Ha perso il telefono')
+    },
+  },
+  {
     nome: 'gruppo/accessi-bloccati',
     chi: 'amministratore',
     percorso: '/impostazioni',

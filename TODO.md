@@ -384,7 +384,7 @@ e indirizzi si svuotano, la riga resta due giorni per contare), `posta.SUBITO`, 
 «Invio un po' alla volta» nelle Impostazioni (con «Riprova» dopo 5 tentativi falliti),
 `QDC_EMAIL_IN_CODA` (spenta in sviluppo e nei test); guida di installazione e manuale.
 
-#### N.47 — Account della piattaforma per l'amministratore tecnico ⏳ (DEC-313)
+#### N.47 — Account della piattaforma per l'amministratore tecnico ✅ 03/11 (DEC-313)
 
 Deciso il 03/11: pagina con tutti gli account: email, persona collegata (o nessuna), creazione
 e ultimo accesso, metodi di accesso (password, passkey, Google, Apple, secondo fattore),
@@ -395,7 +395,11 @@ passkey, dispositivi, sessioni): la persona e i suoi dati restano (per quelli c'
 dell'interessato, DEC-102). Ogni azione chiede un **motivo**, resta nel registro delle modifiche,
 e l'interessato riceve un'**email** quando cambiano l'email o i metodi di accesso o l'account è
 cancellato. Pagina e azioni sono **bloccate mentre si usa l'app al posto di un altro**
-(DEC-167, `middleware.BLOCCATE`), confermato il 03/11.
+(DEC-167, `middleware.BLOCCATE`), confermato il 03/11. Fatto: `accounts/gestione.py`,
+`AzioneAccount` (nel registro delle modifiche), `/amministrazione/account`, email
+`account_modificato` (sempre, subito), pagina «Account» nel menu Amministrazione; non sul proprio
+account (disattiva, cancella); un account con pagamenti segnalati (legame protetto) non si
+cancella: si disattiva. Manuale e schermata.
 
 #### N.48 — Dall'avatar alla scheda della persona ✅ 03/11 (DEC-314)
 

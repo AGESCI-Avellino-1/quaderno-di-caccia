@@ -12,6 +12,43 @@ export function temaDellaBranca(branca: string): Branca {
   return (['lc', 'eg', 'rs'] as const).find((b) => b === tema) ?? 'generico'
 }
 
+/** An account of the platform, for the technical administrator (DEC-313). */
+export interface AccountPiattaforma {
+  id: number
+  email: string
+  attivo: boolean
+  persona: { id: number; nome: string; cognome: string } | null
+  creato_il: string
+  ultimo_accesso: string | null
+  password: boolean
+  passkey: number
+  secondo_fattore: boolean
+  accessi_esterni: string[]
+  dispositivi: number
+  bloccato: boolean
+  amministratore_tecnico: boolean
+}
+
+export type TipoAzioneAccount =
+  | 'SBLOCCA'
+  | 'DISATTIVA'
+  | 'RIATTIVA'
+  | 'CAMBIA_EMAIL'
+  | 'REVOCA_DISPOSITIVI'
+  | 'TOGLI_PASSKEY'
+  | 'TOGLI_SECONDO_FATTORE'
+  | 'CANCELLA'
+
+export interface AzioneAccountFatta {
+  creato_il: string
+  email: string
+  tipo: TipoAzioneAccount
+  tipo_nome: string
+  motivo: string
+  dettaglio: string
+  fatta_da: string
+}
+
 export interface PersonaBreve {
   id: number
   nome: string
@@ -2537,6 +2574,16 @@ export const api = {
     richiesta<Impostazioni>('/api/v1/impostazioni/coda-email', { metodo: 'PUT', corpo: dati }),
   riprovaCodaEmail: () =>
     richiesta<Impostazioni>('/api/v1/impostazioni/coda-email/riprova', { metodo: 'POST' }),
+  accountPiattaforma: (cerca = '') =>
+    richiesta<AccountPiattaforma[]>(
+      `/api/v1/amministrazione/account${cerca ? `?cerca=${encodeURIComponent(cerca)}` : ''}`,
+    ),
+  azioneAccount: (id: number, tipo: TipoAzioneAccount, motivo: string, email = '') =>
+    richiesta<AccountPiattaforma[]>(`/api/v1/amministrazione/account/${id}`, {
+      metodo: 'POST',
+      corpo: { tipo, motivo, email },
+    }),
+  azioniAccount: () => richiesta<AzioneAccountFatta[]>('/api/v1/amministrazione/account-azioni'),
   provaSmtp: () =>
     richiesta<{ inviata_a: string }>('/api/v1/impostazioni/smtp/prova', { metodo: 'POST' }),
   emailDiProva: (attiva: boolean) =>

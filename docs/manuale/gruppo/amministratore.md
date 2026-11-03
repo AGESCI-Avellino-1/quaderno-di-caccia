@@ -159,3 +159,34 @@ Sblocca quando la persona ti conferma di aver sbagliato lei. Se nessuno ha sbagl
 essere qualcuno che prova a entrare al posto suo: in quel caso lascia il blocco e avvisa i
 capigruppo.
 :::
+
+## Gli account
+
+Nel menu **Amministrazione**, **Account** elenca tutti gli account dell'app: l'email, la
+persona collegata, da quando esiste e l'ultimo accesso, con cosa entra (password, passkey,
+secondo fattore, Google, Apple), quanti dispositivi ha e se è bloccato per troppi tentativi.
+Non ci sono i dati delle schede. Cerca per email in alto.
+
+Tocca **Gestisci** accanto a un account, scegli **Cosa fare** e scrivi il **Motivo**, poi
+tocca **Conferma**:
+
+- **Sblocca i tentativi di accesso**, se è bloccato;
+- **Disattiva l'account**: non entra più finché non lo **riattivi**, e i suoi dispositivi sono
+  revocati;
+- **Cambia l'email**: il nuovo indirizzo è quello con cui entra;
+- **Revoca i dispositivi**: telefoni e computer cancellano i dati al prossimo avvio;
+- **Togli le passkey** o **Togli il secondo fattore**, per chi li ha persi: entrerà con la
+  password o con il codice via email;
+- **Cancella l'account**: toglie solo l'accesso. La persona e i suoi dati restano; per entrare
+  di nuovo serve un nuovo invito. Per cancellare i dati di una persona c'è la richiesta
+  dell'interessato.
+
+Il motivo resta nel registro delle modifiche e in **Ultime azioni**, in fondo alla pagina.
+Quando cambi l'email o i modi per entrare, o cancelli l'account, la persona riceve un'email
+che glielo dice. Il tuo account non lo puoi disattivare né cancellare da qui. Mentre usi l'app
+al posto di un altro, la pagina non si apre.
+
+:::{container} schermate
+![Gli account sul telefono](../img/gruppo/account-telefono.png){.telefono width="30%"}
+![Gli account sul computer](../img/gruppo/account-computer.png){.computer width="65%"}
+:::

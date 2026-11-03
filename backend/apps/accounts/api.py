@@ -387,3 +387,92 @@ def accetta_invito(request, dati: AccettaInvito):
         raise HttpError(404, "Invito non valido o scaduto.")
     request.session[CHIAVE_SESSIONE_INVITO] = invito.token
     return {"email": invito.email, "persona": str(invito.persona)}
+
+
+# --- Every account, for the technical administrator (DEC-313) -----------------------------
+
+
+class AccountPersona(Schema):
+    id: int
+    nome: str
+    cognome: str
+
+
+class AccountOut(Schema):
+    id: int
+    email: str
+    attivo: bool
+    persona: AccountPersona | None
+    creato_il: datetime
+    ultimo_accesso: datetime | None
+    password: bool
+    passkey: int
+    secondo_fattore: bool
+    accessi_esterni: list[str]
+    dispositivi: int
+    bloccato: bool
+    amministratore_tecnico: bool
+
+
+class AzioneAccountIn(Schema):
+    tipo: str
+    motivo: str
+    email: str = ""
+
+
+class AzioneAccountOut(Schema):
+    creato_il: datetime
+    email: str
+    tipo: str
+    tipo_nome: str
+    motivo: str
+    dettaglio: str
+    fatta_da: str
+
+
+def _gestione(request) -> None:
+    if not policy.puo_gestire_account(request.auth):
+        raise HttpError(403, "Gli account li gestisce l'amministratore tecnico.")
+
+
+@router.get("/amministrazione/account", response=list[AccountOut])
+def elenco_account(request, cerca: str = ""):
+    from .gestione import elenco
+
+    _gestione(request)
+    return elenco(cerca)
+
+
+@router.post("/amministrazione/account/{account_id}", response=list[AccountOut])
+def azione_account(request, account_id: int, dati: AzioneAccountIn):
+    from .gestione import AzioneNonPermessa, elenco, esegui
+    from .models import AzioneAccount
+
+    _gestione(request)
+    utente = get_object_or_404(User, pk=account_id)
+    if dati.tipo not in AzioneAccount.Tipo.values:
+        raise HttpError(400, "Azione sconosciuta.")
+    try:
+        esegui(utente, dati.tipo, dati.motivo, da=request.auth, email=dati.email)
+    except AzioneNonPermessa as errore:
+        raise HttpError(400, str(errore)) from errore
+    return elenco()
+
+
+@router.get("/amministrazione/account-azioni", response=list[AzioneAccountOut])
+def azioni_account(request):
+    from .gestione import storico
+
+    _gestione(request)
+    return [
+        {
+            "creato_il": a.creato_il,
+            "email": a.email,
+            "tipo": a.tipo,
+            "tipo_nome": a.get_tipo_display(),
+            "motivo": a.motivo,
+            "dettaglio": a.dettaglio,
+            "fatta_da": a.fatta_da.email if a.fatta_da else "",
+        }
+        for a in storico()
+    ]

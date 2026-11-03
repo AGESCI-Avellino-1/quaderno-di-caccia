@@ -31,6 +31,7 @@ BLOCCATE = [
     (None, re.compile(r"^/api/v1/campo/")),  # offline downloads: nothing is saved
     (None, re.compile(r"^/api/v1/rubrica$")),  # a file saved on the device (DEC-302)
     (None, re.compile(r"^/api/v1/impersonazion(e|i)(?!/fine$)")),  # never nested
+    (None, re.compile(r"^/api/v1/amministrazione/account")),  # DEC-313
 ]
 LETTURE = {"GET", "HEAD", "OPTIONS"}
 USCITA = re.compile(r"^/_allauth/[^/]+/v1/auth/session$")

@@ -57,6 +57,16 @@ _TIPI = [
         ),
     ),
     TipoEmail(
+        "account_modificato",
+        "Account cambiato dall'amministratore",
+        "A chi ha l'account, quando l'amministratore tecnico ne cambia l'email o i modi di "
+        "entrare, o lo cancella.",
+        "[Nome sito]: il tuo account è cambiato",
+        "<p>Ciao,</p><p>l'amministratore tecnico del [Nome sito] ha cambiato il tuo account: "
+        "[Cosa]</p><p>Se non te lo aspettavi, scrivi ai capi del gruppo.</p><p>[Nome sito]</p>",
+        (Segnaposto("Cosa", "cosa è cambiato", "ha tolto le passkey.", indispensabile=True),),
+    ),
+    TipoEmail(
         "reimposta_password",
         "Nuova password",
         "A chi chiede di reimpostare la password.",

@@ -374,6 +374,12 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
             descrizione: 'Le email trattenute dalla modalità di prova',
           },
         p.amministratore_tecnico && {
+          nome: 'Account',
+          icona: 'people',
+          to: '/amministrazione/account',
+          descrizione: 'Tutti gli account: accessi, dispositivi, blocchi',
+        },
+        p.amministratore_tecnico && {
           nome: 'Pannello di amministrazione',
           icona: 'tools',
           to: '/admin/',

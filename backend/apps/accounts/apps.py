@@ -12,3 +12,4 @@ class AccountsConfig(AppConfig):
 
         auditlog.register(models.User, exclude_fields=["password", "last_login"])
         auditlog.register(models.Invito, exclude_fields=["token"])
+        auditlog.register(models.AzioneAccount)

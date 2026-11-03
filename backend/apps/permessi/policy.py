@@ -485,6 +485,11 @@ def puo_vedere_registro_accessi(user) -> bool:
 # --- Devices (DEC-23, DEC-97) -------------------------------------------------------------
 
 
+def puo_gestire_account(user) -> bool:
+    """The list of every account and what may be done to them (DEC-313)."""
+    return e_amministratore(user)
+
+
 def puo_revocare_dispositivi_altrui(user) -> bool:
     """Capigruppo (DEC-23, DEC-97) and the technical administrator, who manages
     accounts (DEC-12)."""

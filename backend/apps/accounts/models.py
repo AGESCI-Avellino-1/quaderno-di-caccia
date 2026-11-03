@@ -147,3 +147,36 @@ class Invito(ModelloTracciato):
                 raise ValidationError(
                     "Questo genitore non ha un account: indica come è stato verificato."
                 )
+
+
+class AzioneAccount(ModelloTracciato):
+    """What the technical administrator did to an account, and why (DEC-313). Kept by
+    the account's id and address: the account itself may be gone."""
+
+    class Tipo(models.TextChoices):
+        SBLOCCA = "SBLOCCA", "Tentativi di accesso sbloccati"
+        DISATTIVA = "DISATTIVA", "Account disattivato"
+        RIATTIVA = "RIATTIVA", "Account riattivato"
+        CAMBIA_EMAIL = "CAMBIA_EMAIL", "Email cambiata"
+        REVOCA_DISPOSITIVI = "REVOCA_DISPOSITIVI", "Dispositivi revocati"
+        TOGLI_PASSKEY = "TOGLI_PASSKEY", "Passkey tolte"
+        TOGLI_SECONDO_FATTORE = "TOGLI_SECONDO_FATTORE", "Secondo fattore tolto"
+        CANCELLA = "CANCELLA", "Account cancellato"
+
+    account_id = models.PositiveIntegerField()
+    email = models.EmailField()
+    tipo = models.CharField(max_length=24, choices=Tipo.choices)
+    motivo = models.CharField(max_length=500)
+    # The new address, for CAMBIA_EMAIL.
+    dettaglio = models.CharField(max_length=300, blank=True)
+    fatta_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "azione su un account"
+        verbose_name_plural = "azioni sugli account"
+        ordering = ["-creato_il"]
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()} ({self.email})"

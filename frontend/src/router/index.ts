@@ -380,6 +380,12 @@ const router = createRouter({
       component: () => import('@/views/ImpostazioniView.vue'),
     },
     {
+      // Every account, for the technical administrator (DEC-313).
+      path: '/amministrazione/account',
+      name: 'account',
+      component: () => import('@/views/AccountView.vue'),
+    },
+    {
       // The common footer of the emails (DEC-250).
       path: '/impostazioni/email-piede',
       name: 'piede-email',

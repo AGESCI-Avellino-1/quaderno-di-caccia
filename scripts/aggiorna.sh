@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Updates the app to a released version (DEC-292): maintenance on, backup, the new
+# Updates the app to a released version (DEC-292): what changes since the installed
+# version (from CHANGELOG.md), maintenance on, backup, the new
 # version built and started, a check that it answers, maintenance off. If it does not
 # answer, the previous version comes back by itself; if the database had already
 # changed, it says to restore the backup just made.
@@ -66,6 +67,25 @@ u.urlopen(u.Request('http://127.0.0.1:8000/api/v1/salute',
     headers={'Host': h, 'X-Forwarded-Proto': 'https'}), timeout=5)" >/dev/null 2>&1 \
     && $COMPOSE exec -T app true >/dev/null 2>&1
 }
+# Is version $1 later than $2 (both X.Y.Z)?
+dopo() {
+  [[ "$1" != "$2" && "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" == "$1" ]]
+}
+# The sections of the new version's CHANGELOG.md after the installed version, up to the
+# new one (both without the v). Nothing when the file is missing (versions before 1.10).
+novita() {
+  local da="$1" a="$2" elenco="" v
+  local registro
+  registro="$(git show "$VERSIONE:CHANGELOG.md" 2>/dev/null)" || return 0
+  while read -r v; do
+    if dopo "$v" "$da" && ! dopo "$v" "$a"; then elenco+=" $v "; fi
+  done < <(sed -n 's/^## \([0-9][0-9.]*\) .*/\1/p' <<<"$registro")
+  [[ -n "$elenco" ]] || return 0
+  awk -v elenco="$elenco" '
+    /^## [0-9]/ { dentro = index(elenco, " " $2 " ") > 0 }
+    dentro { print }
+  ' <<<"$registro"
+}
 aspetta() {
   for _ in $(seq 1 60); do
     risponde && return 0
@@ -101,6 +121,14 @@ if [[ "$(git rev-parse "$VERSIONE^{commit}")" == "$PRIMA" ]]; then
   exit 0
 fi
 echo "Aggiornamento da $NOME_PRIMA a $VERSIONE."
+# The installed version: its tag, or the latest one it contains.
+INSTALLATA="$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$PRIMA" 2>/dev/null || true)"
+NOVITA="$(novita "${INSTALLATA#v}" "${VERSIONE#v}")"
+if [[ -n "$NOVITA" ]]; then
+  passo "Cosa cambia dalla ${INSTALLATA:-versione installata} alla $VERSIONE"
+  echo "$NOVITA"
+fi
+echo
 echo "Le note della versione: https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/$VERSIONE"
 
 if ! git diff --quiet "$PRIMA" "$VERSIONE" -- .env.example; then

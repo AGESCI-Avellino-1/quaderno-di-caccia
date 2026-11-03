@@ -118,6 +118,49 @@ Fatto con test (DEC-297): `/io` dice `foto_id`, il menu laterale mostra la foto 
 Richiesta del maintainer (03/11): se la persona collegata all'account ha una foto nel profilo,
 l'avatar (in basso nel menu laterale, oggi le iniziali) mostra quella foto.
 
+#### N.31 — Tema 3.0.0a3: i componenti nuovi di Bootstrap 6 nella PWA ⏳
+
+Richiesta del maintainer (03/11): con il tema 3.0.0a3 (stesso Bootstrap 6.0.0-alpha.1) usare
+i componenti nuovi ovunque si può. Nuovo DEC nell'analisi prima di svilupparla (cambia DEC-97
+sul PIN). Analisi:
+
+- **Il tema**: dei tre file copiati cambia solo `_branche.scss` (colori «subtle» della branca
+  `generico`, prima bianchi): da ricopiare byte per byte. I tag del tema sono template Django:
+  nella PWA si rifà lo stesso markup in componenti Vue. Il JavaScript di Bootstrap oggi non è
+  caricato: si importano solo i moduli che servono (`otp-input`, `strength`) nei componenti,
+  creati al montaggio e distrutti allo smontaggio.
+- **Password con il pulsante per mostrarla** (`CampoPassword.vue`, markup di
+  `_password_toggle_button.html`): accesso, sblocco con password in `PasskeyAccesso`, server
+  di posta (`ServerPosta`, due campi).
+- **Password nuove con la robustezza** (`.strength`, messaggi in italiano, almeno 8 caratteri
+  come `MinimumLengthValidator`; decide sempre il server): invito, iscrizione, reimposta
+  password, cambio password.
+- **Codice OTP** (`.otp`, evento `complete.bs.otp`): codice via email all'accesso (oggi 8
+  caratteri lettere e cifre `XXXX-XXXX`, due gruppi da 4), codice dell'app di autenticazione
+  (6 cifre); entra da solo appena completo.
+- **PIN di 6 cifre esatte** (oggi «almeno 6», `LUNGHEZZA_MINIMA_PIN`): OTP mascherato in
+  protezione (scelta e conferma) e sblocco, che sblocca appena raggiunte le 6 cifre.
+- **Avatar** (`.avatar`, iniziali o foto): menu laterale, scheda della persona, elenchi.
+- **Accordion** (`.accordion`, `<details name>` come oggi): gruppi della Home, al posto dello
+  stile `qdc-gruppo-home`; gli altri `<details>` (fine anno, deroghe, banca, modelli email,
+  piede, impostazioni) come `accordion-flush accordion-sm`.
+- **Altri da valutare**: form adorn con «€» negli importi (una ventina di campi), stepper
+  (tappe del sentiero E/G, stagioni L/C, sezioni dell'iscrizione), chip (destinatari delle
+  email, filtri). Non servono: datepicker (i campi data del browser vanno bene sul telefono),
+  carousel, range.
+
+Il secondo fattore accetta anche i codici di recupero (non di 6 cifre): sotto l'OTP un link
+«Usa un codice di recupero» con il campo normale.
+
+Deciso il 03/11:
+
+1. **PIN più lunghi di 6 cifre già impostati**: sotto le caselle «Il tuo PIN è più lungo?»
+   apre il campo di oggi; dopo lo sblocco l'app chiede di scegliere un PIN nuovo di 6 cifre.
+2. **Codice via email**: resta di 8 caratteri tra lettere e cifre (OTP alfanumerico, due
+   gruppi da 4).
+3. **Altri componenti**: tutti e quattro, «€» negli importi, stepper, chip, avatar negli
+   elenchi (persone, squadriglia, staff).
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,

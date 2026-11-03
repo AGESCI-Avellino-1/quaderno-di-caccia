@@ -377,7 +377,11 @@ export interface PersonaDettaglio extends PersonaBreve {
   foto?: boolean
   puo_caricare_foto?: boolean
   /** A parent who becomes a capo: a capogruppo sends the joining link (DEC-282). */
-  puo_iscrivere_in_coca?: boolean
+  /** A parent who becomes a capo, in two steps that can be undone (DEC-307). */
+  puo_portare_in_coca?: boolean
+  puo_annullare_coca?: boolean
+  /** A ragazzo's personal link to create their account (DEC-309). */
+  puo_link_attivazione?: boolean
   vede_storico_foto?: boolean
   vede_registro_accessi?: boolean
   /** The capi's file (DEC-47, DEC-206), when the person has been a capo. */
@@ -2792,10 +2796,10 @@ export const api = {
   },
   persona: (id: number) => richiesta<PersonaDettaglio>(`/api/v1/persone/${id}`),
   statoAccount: (persona: number) => richiesta<StatoAccount>(`/api/v1/persone/${persona}/account`),
-  iscriviGenitoreInCoca: (persona: number) =>
-    richiesta<{ email: string; scadenza: string }>(`/api/v1/persone/${persona}/iscrizione-coca`, {
-      metodo: 'POST',
-    }),
+  portaInCoca: (persona: number) =>
+    richiesta<null>(`/api/v1/persone/${persona}/coca`, { metodo: 'POST' }),
+  annullaPassaggioInCoca: (persona: number) =>
+    richiesta<null>(`/api/v1/persone/${persona}/coca`, { metodo: 'DELETE' }),
   invita: (dati: NuovoInvito) =>
     richiesta<{ id: number }>('/api/v1/inviti', { metodo: 'POST', corpo: dati }),
   annullaInvito: (id: number) =>

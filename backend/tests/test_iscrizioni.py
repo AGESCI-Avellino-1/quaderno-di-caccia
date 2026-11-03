@@ -772,70 +772,53 @@ def test_un_tutore(codice_reparto, genitore_nuovo, capo):
     assert list(figlia.tutori.values_list("tipo", flat=True)) == [TipoTutela.TUTORE]
 
 
-# --- A parent who becomes a capo (DEC-282) -------------------------------------------------
+# --- A parent who becomes a capo (DEC-307) -------------------------------------------------
 
 
-def test_il_capogruppo_iscrive_un_genitore_in_coca(
-    capogruppo, capo, coca, genitore, ragazza, estraneo, django_capture_on_commit_callbacks
+def test_il_capogruppo_porta_un_genitore_in_coca(
+    capogruppo, capo, coca, genitore, ragazza, estraneo, csq
 ):
-    Persona.objects.filter(pk=genitore.pk).update(
-        codice_fiscale=CF_GENITORE, data_nascita=date(1980, 1, 1), cellulare="3330000099"
-    )
-    url = f"/api/v1/persone/{genitore.pk}/iscrizione-coca"
-    for chi in (capo, genitore, estraneo):
+    url = f"/api/v1/persone/{genitore.pk}/coca"
+    for chi in (capo, genitore, estraneo, csq, ragazza):
         assert _post(_client(chi), url).status_code == 403
-    assert not policy.puo_iscrivere_genitore_in_coca(capogruppo.utente, ragazza)  # no parent
-    mail.outbox.clear()
-    with django_capture_on_commit_callbacks(execute=True):
-        risposta = _post(_client(capogruppo), url)
-    assert risposta.status_code == 201, risposta.content
-    assert risposta.json()["email"] == "genitore@example.invalid"
-    [email] = mail.outbox
-    assert email.to == ["genitore@example.invalid"]
-    codice = CodiceIscrizione.objects.get(unita=coca)
-    assert codice.tipo == TipoCodice.PERSONALE
+    assert not policy.puo_portare_in_coca(capogruppo.utente, ragazza)  # not a parent
+    dettaglio = _client(capogruppo).get(f"/api/v1/persone/{genitore.pk}").json()
+    assert dettaglio["puo_portare_in_coca"] and not dettaglio["puo_annullare_coca"]
 
-    # The form comes filled in with what the app knows.
-    proposti = Client().get(f"/api/v1/iscrizione/{codice.codice}").json()["proposti"]
-    assert proposti["codice_fiscale"] == CF_GENITORE and proposti["da_se"] is True
-    dati = {
-        "nome": proposti["nome"],
-        "cognome": proposti["cognome"],
-        "data_nascita": proposti["data_nascita"],
-        "codice_fiscale": proposti["codice_fiscale"],
-        "email": proposti["email"],
-        "sesso": "M",
-    }
-    # For them only.
-    altro = dati | {"codice_fiscale": CF_CAPO}
-    assert _post(_client(genitore), f"/api/v1/iscrizione/{codice.codice}", altro).status_code == 400
-    fatta = _post(_client(genitore), f"/api/v1/iscrizione/{codice.codice}", dati)
-    assert fatta.status_code in (200, 201), fatta.content
-
-    # The capigruppo approve: the same card enters the Co.Ca., still a parent.
-    richiesta_id = fatta.json()["richiesta_id"]
-    approvata = _post(
-        _client(capogruppo),
-        f"/api/v1/iscrizioni/{richiesta_id}/approva",
-        {"scadenza_completamento": TRA_UN_MESE.isoformat()},
-    )
-    assert approvata.status_code == 200, approvata.content
+    assert _post(_client(capogruppo), url).status_code == 204
     genitore.refresh_from_db()
     assert e_codice_provvisorio(genitore.codice_socio)
     assert (
         Appartenenza.objects.attive()
-        .filter(persona=genitore, unita=coca, ruolo=RuoloAppartenenza.CAPO)
+        .filter(persona=genitore, unita=coca, ruolo=RuoloAppartenenza.CAPO, fonte=FonteDato.APP)
         .exists()
     )
     assert RelazioneTutela.objects.filter(tutore=genitore, minore=ragazza).exists()
-    assert Persona.objects.filter(codice_fiscale=CF_GENITORE).count() == 1
-    # Already in the Co.Ca. now.
-    assert _post(_client(capogruppo), url).status_code == 403
+    # A capo in attesa: no sensitive data of others.
+    assert policy.e_capo_in_attesa(genitore.utente)
+    assert not policy.puo_vedere_dati_sensibili(genitore.utente, capo)
+    assert _post(_client(capogruppo), url).status_code == 403  # already in the Co.Ca.
+    dettaglio = _client(capogruppo).get(f"/api/v1/persone/{genitore.pk}").json()
+    assert dettaglio["puo_annullare_coca"] and not dettaglio["puo_portare_in_coca"]
 
 
-def test_genitore_senza_email_non_si_iscrive(capogruppo, coca, genitrice_senza_account):
-    Persona.objects.filter(pk=genitrice_senza_account.pk).update(email="")
-    url = f"/api/v1/persone/{genitrice_senza_account.pk}/iscrizione-coca"
-    risposta = _post(_client(capogruppo), url)
-    assert risposta.status_code == 400
-    assert "email" in risposta.json()["detail"]
+def test_il_passaggio_si_annulla_finche_il_codice_e_provvisorio(
+    capogruppo, capo, coca, reparto, genitore
+):
+    url = f"/api/v1/persone/{genitore.pk}/coca"
+    _post(_client(capogruppo), url)
+    Incarico.objects.create(
+        persona=genitore, ruolo=RuoloIncarico.STAFF, unita=reparto, data_inizio=INIZIO_ANNO
+    )
+    assert _client(capo).delete(url).status_code == 403
+    assert _client(capogruppo).delete(url).status_code == 204
+    genitore.refresh_from_db()
+    assert genitore.codice_socio is None
+    assert not Appartenenza.objects.filter(persona=genitore, unita=coca).exists()
+    assert not Incarico.objects.attivi().filter(persona=genitore).exists()
+    assert _client(capogruppo).delete(url).status_code == 403  # nothing left to undo
+
+    # Once BuonaStrada gives the real code, it stays.
+    _post(_client(capogruppo), url)
+    Persona.objects.filter(pk=genitore.pk).update(codice_socio="1234567")
+    assert _client(capogruppo).delete(url).status_code == 403

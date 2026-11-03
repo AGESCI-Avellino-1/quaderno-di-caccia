@@ -293,7 +293,7 @@ l'assegnazione degli incarichi resta com'è. Fatto: `components/SceltaMultipla.v
 markup del combobox di Bootstrap 6 e il suo menu (il combobox di Bootstrap scrive il riepilogo in
 inglese), «Tutti» e «Nessuno» in cima; schermata del manuale rifatta.
 
-#### N.41 — Genitore che diventa capo, in due passi annullabili ⏳ (DEC-307) (sostituisce DEC-282)
+#### N.41 — Genitore che diventa capo, in due passi annullabili ✅ 03/11 (DEC-307, sostituisce DEC-282)
 
 Deciso il 03/11:
 
@@ -305,7 +305,10 @@ Deciso il 03/11:
 
 Si **annulla finché il codice è provvisorio** (cioè finché l'import di BuonaStrada non lo
 riconosce), anche dopo l'invito: torna solo genitore e gli incarichi dati nel frattempo si
-chiudono. Il **link di iscrizione in Co.Ca. di DEC-282 si toglie**.
+chiudono. Il **link di iscrizione in Co.Ca. di DEC-282 si toglie**. Fatto: `PassaggioInCoca`
+(`iscrizioni`), `porta_in_coca` e `annulla_passaggio_in_coca`, `POST`/`DELETE /persone/{id}/coca`,
+pannello «Comunità capi» nella scheda; tolti l'endpoint, il servizio e l'email `iscrizione_capo`
+(i link già mandati valgono fino alla scadenza). Manuale e schermata.
 
 #### N.42 — Inviti a più persone insieme ✅ 03/11 (DEC-308)
 

@@ -62,8 +62,11 @@ class PersonaDettaglio(Schema):
     # Profile photo (DEC-42, DEC-201): whether there is one the caller may see.
     foto: bool = False
     puo_caricare_foto: bool = False
-    # A parent who becomes a capo: a capogruppo starts the joining (DEC-282).
-    puo_iscrivere_in_coca: bool = False
+    # A parent who becomes a capo, in two steps that can be undone (DEC-307).
+    puo_portare_in_coca: bool = False
+    puo_annullare_coca: bool = False
+    # A ragazzo's personal link to create their account (DEC-309).
+    puo_link_attivazione: bool = False
     # The capi see the earlier photos (DEC-42) and who read the sensitive data (DEC-101).
     vede_storico_foto: bool = False
     vede_registro_accessi: bool = False
@@ -128,7 +131,9 @@ def dettaglio_persona(request, persona_id: int):
         dati["professione"] = persona.professione
     dati["foto"] = policy.puo_vedere_foto(request.auth, persona) and persona.foto_profilo.exists()
     dati["puo_caricare_foto"] = policy.puo_caricare_foto(request.auth, persona)
-    dati["puo_iscrivere_in_coca"] = policy.puo_iscrivere_genitore_in_coca(request.auth, persona)
+    dati["puo_portare_in_coca"] = policy.puo_portare_in_coca(request.auth, persona)
+    dati["puo_annullare_coca"] = policy.puo_annullare_passaggio_in_coca(request.auth, persona)
+    dati["puo_link_attivazione"] = policy.puo_generare_link_attivazione(request.auth, persona)
     dati["vede_storico_foto"] = policy.vede_storico_foto(request.auth, persona)
     dati["vede_registro_accessi"] = policy.puo_vedere_registro_accessi(request.auth)
     dati["fascicolo_capo"] = policy.puo_vedere_fascicolo_capo(request.auth, persona)

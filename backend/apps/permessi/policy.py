@@ -596,9 +596,9 @@ def puo_nominare(
 # --- Joining from the app (DEC-120…DEC-127) --------------------------------------------
 
 
-def puo_iscrivere_genitore_in_coca(user, persona: Persona) -> bool:
-    """A parent who becomes a capo: a capogruppo starts the joining from the parent's card
-    (DEC-282). Only for a parent not already in the Co.Ca."""
+def puo_portare_in_coca(user, persona: Persona) -> bool:
+    """A parent who becomes a capo: a capogruppo brings them into the Co.Ca. from the
+    parent's card (DEC-307). Only for a parent not already in the Co.Ca."""
     if not e_capogruppo(user) or e_capo_in_attesa(user):
         return False
     from apps.anagrafica.models import RelazioneTutela
@@ -608,6 +608,15 @@ def puo_iscrivere_genitore_in_coca(user, persona: Persona) -> bool:
     return not (
         Appartenenza.objects.attive().filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exists()
     )
+
+
+def puo_annullare_passaggio_in_coca(user, persona: Persona) -> bool:
+    """Undone by a capogruppo while the codice socio is still provisional (DEC-307)."""
+    if not e_capogruppo(user) or e_capo_in_attesa(user):
+        return False
+    from apps.iscrizioni.servizi import passaggio_annullabile
+
+    return passaggio_annullabile(persona) is not None
 
 
 def puo_creare_codici(user, unita: Unita) -> bool:

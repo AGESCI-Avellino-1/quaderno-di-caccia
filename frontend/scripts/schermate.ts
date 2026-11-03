@@ -500,6 +500,17 @@ const SCENE: Scena[] = [
     },
   },
   {
+    // The panel before the passage, with the confirmation open; nothing is changed.
+    nome: 'capo/genitore-in-coca',
+    chi: 'capogruppo',
+    percorso: '/genitori',
+    prepara: async (pagina) => {
+      await apri('Verdi Carla')(pagina)
+      await pagina.getByRole('button', { name: 'Porta in Comunità capi…' }).click()
+    },
+    mostra: 'Comunità capi',
+  },
+  {
     nome: 'capo/campo',
     chi: 'capoReparto',
     percorso: '/campo',

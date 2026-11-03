@@ -308,3 +308,26 @@ class AllegatoIscrizione(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.nome_file} ({self.richiesta})"
+
+
+class PassaggioInCoca(ModelloTracciato):
+    """A parent brought into the Co.Ca. by a capogruppo (DEC-307), with the data the app
+    already has and a provisional codice socio. Undone while the code is provisional:
+    the Co.Ca. period goes, the codice socio returns as it was."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="passaggi_in_coca")
+    appartenenza = models.OneToOneField(
+        "anagrafica.Appartenenza", null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    codice_precedente = models.CharField(max_length=20, blank=True)
+    creato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    annullato_il = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "passaggio di un genitore in Comunità capi"
+        verbose_name_plural = "passaggi di genitori in Comunità capi"
+
+    def __str__(self) -> str:
+        return f"{self.persona} in Comunità capi"

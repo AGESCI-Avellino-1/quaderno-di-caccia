@@ -15,3 +15,4 @@ class IscrizioniConfig(AppConfig):
         auditlog.register(models.RichiestaIscrizione)
         auditlog.register(models.ModuloVuoto)
         auditlog.register(models.AllegatoIscrizione)
+        auditlog.register(models.PassaggioInCoca)

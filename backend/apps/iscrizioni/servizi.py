@@ -35,7 +35,6 @@ from .models import (
     CodiceIscrizione,
     RichiestaIscrizione,
     StatoIscrizione,
-    TipoCodice,
     tipo_file,
 )
 
@@ -92,7 +91,9 @@ def _stessa_persona(codice: CodiceIscrizione, dati: DatiIscrizione) -> None:
     proposti = codice.dati_proposti
     if not proposti:
         return
-    if proposti.get("codice_fiscale"):  # a parent becoming a capo (DEC-282)
+    # A parent's link to join the Co.Ca. (DEC-282, replaced by DEC-307): the ones sent
+    # before still work until they expire.
+    if proposti.get("codice_fiscale"):
         if dati.codice_fiscale.strip().upper() == proposti["codice_fiscale"]:
             return
         raise ValidationError(
@@ -617,16 +618,37 @@ def riga_per_buonastrada(richiesta: RichiestaIscrizione) -> list[str]:
     ]
 
 
-# --- A parent who becomes a capo (DEC-282) -----------------------------------------------------
+# --- A parent who becomes a capo (DEC-307) -----------------------------------------------------
+
+
+def passaggio_annullabile(persona: Persona):
+    """The parent's passage into the Co.Ca. that may still be undone: the codice socio is
+    still the provisional one it gave and the Co.Ca. period is still open."""
+    from apps.anagrafica.servizi import e_codice_provvisorio
+
+    from .models import PassaggioInCoca
+
+    passaggio = (
+        PassaggioInCoca.objects.filter(persona=persona, annullato_il__isnull=True)
+        .select_related("appartenenza")
+        .order_by("-creato_il")
+        .first()
+    )
+    if passaggio is None or passaggio.appartenenza is None:
+        return None
+    if passaggio.appartenenza.data_fine is not None:
+        return None
+    if not e_codice_provvisorio(persona.codice_socio):
+        return None
+    return passaggio
 
 
 @transaction.atomic
-def iscrivi_genitore_in_coca(genitore: Persona, utente) -> CodiceIscrizione:
-    """A capogruppo starts the joining of a parent to the Co.Ca.: a personal code with
-    what the app already knows of them, mailed to them; the request then goes on as any
-    other from the app (DEC-120…DEC-127), and the approval finds the same card by codice
-    fiscale."""
-    from apps.attesa.servizi import VALIDITA_CODICE
+def porta_in_coca(genitore: Persona, utente):
+    """Step 1: the parent enters the Co.Ca. with the data the app has and, without a codice
+    socio, a provisional one: a capo in attesa, who sees no sensitive data, still a parent
+    of the children. Step 2 is the ordinary invitation, if they have no account yet."""
+    from .models import PassaggioInCoca
 
     if not RelazioneTutela.objects.filter(tutore=genitore).exists():
         raise ValidationError("Questa persona non è genitore di un socio.")
@@ -636,40 +658,50 @@ def iscrivi_genitore_in_coca(genitore: Persona, utente) -> CodiceIscrizione:
         .exists()
     ):
         raise ValidationError(f"{genitore} è già in Comunità capi.")
-    email = genitore.email or (genitore.utente.email if genitore.utente_id else "")
-    if not email:
-        raise ValidationError(
-            f"Di {genitore} non c'è un'email: aggiungila alla scheda, poi riprova."
-        )
     coca = Unita.objects.filter(tipo=TipoUnita.COMUNITA_CAPI, attiva=True).first()
     if coca is None:
         raise ValidationError("Il gruppo non ha una Comunità capi attiva.")
-    codice = CodiceIscrizione.objects.create(
+    precedente = genitore.codice_socio or ""
+    if not precedente:
+        genitore.codice_socio = nuovo_codice_provvisorio()
+        genitore.save(update_fields=["codice_socio", "aggiornato_il"])
+    appartenenza = Appartenenza.objects.create(
+        persona=genitore,
         unita=coca,
-        tipo=TipoCodice.PERSONALE,
-        scadenza=timezone.localdate() + VALIDITA_CODICE,
-        creato_da=utente,
-        dati_proposti={
-            "nome": genitore.nome,
-            "cognome": genitore.cognome,
-            "data_nascita": (genitore.data_nascita.isoformat() if genitore.data_nascita else ""),
-            "sesso": genitore.sesso,
-            "luogo_nascita": genitore.luogo_nascita,
-            "codice_fiscale": genitore.codice_fiscale or "",
-            "indirizzo": genitore.indirizzo,
-            "comune": genitore.comune,
-            "provincia": genitore.provincia,
-            "cap": genitore.cap,
-            "da_se": True,
-            "telefono": genitore.cellulare,
-            "email": email,
-        },
+        ruolo=RuoloAppartenenza.CAPO,
+        data_inizio=timezone.localdate(),
+        fonte=FonteDato.APP,
     )
-    valori = {
-        "Nome": genitore.nome,
-        "Unità": str(coca),
-        "Link": f"{settings.FRONTEND_URL}/iscrizione/{codice.codice}",
-        "Scadenza": codice.scadenza.strftime("%d/%m/%Y"),
-    }
-    transaction.on_commit(lambda: invia("iscrizione_capo", valori, [email]))
-    return codice
+    return PassaggioInCoca.objects.create(
+        persona=genitore,
+        appartenenza=appartenenza,
+        codice_precedente=precedente,
+        creato_da=utente,
+    )
+
+
+@transaction.atomic
+def annulla_passaggio_in_coca(genitore: Persona) -> None:
+    """Back to a parent only: the Co.Ca. period goes (the audit log keeps it), the roles
+    given meanwhile close, the codice socio returns as it was."""
+    from apps.organizzazione.models import Incarico
+
+    passaggio = passaggio_annullabile(genitore)
+    if passaggio is None:
+        raise ValidationError(
+            "Il passaggio in Comunità capi non si può più annullare: è già in BuonaStrada."
+        )
+    oggi = timezone.localdate()
+    for incarico in Incarico.objects.attivi().filter(persona=genitore):
+        if incarico.data_inizio >= oggi:
+            incarico.delete()
+        else:
+            incarico.data_fine = oggi
+            incarico.save(update_fields=["data_fine", "aggiornato_il"])
+    appartenenza = passaggio.appartenenza
+    passaggio.appartenenza = None
+    passaggio.annullato_il = timezone.now()
+    passaggio.save(update_fields=["appartenenza", "annullato_il", "aggiornato_il"])
+    appartenenza.delete()
+    genitore.codice_socio = passaggio.codice_precedente or None
+    genitore.save(update_fields=["codice_socio", "aggiornato_il"])

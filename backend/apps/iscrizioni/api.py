@@ -126,24 +126,31 @@ def _codice_gestibile(request, codice_id: int) -> CodiceIscrizione:
     return codice
 
 
-class IscrizioneCapoOut(Schema):
-    email: str
-    scadenza: date
-
-
-@router.post("/persone/{persona_id}/iscrizione-coca", response={201: IscrizioneCapoOut})
-def iscrivi_genitore_in_coca(request, persona_id: int):
-    """A parent who becomes a capo: the link with their data goes to their email
-    (DEC-282)."""
+@router.post("/persone/{persona_id}/coca", response={204: None})
+def porta_in_coca(request, persona_id: int):
+    """A parent who becomes a capo, step 1 (DEC-307); step 2 is the ordinary invitation."""
     from apps.anagrafica.models import Persona
 
     persona = get_object_or_404(Persona, pk=persona_id)
-    if not policy.puo_iscrivere_genitore_in_coca(request.auth, persona):
+    if not policy.puo_portare_in_coca(request.auth, persona):
+        raise HttpError(403, "Solo i capigruppo portano un genitore in Comunità capi.")
+    _errore(servizi.porta_in_coca, persona, request.auth)
+    return Status(204, None)
+
+
+@router.delete("/persone/{persona_id}/coca", response={204: None})
+def annulla_coca(request, persona_id: int):
+    from apps.anagrafica.models import Persona
+
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_annullare_passaggio_in_coca(request.auth, persona):
         raise HttpError(
-            403, "Solo i capigruppo avviano l'iscrizione in Comunità capi di un genitore."
+            403,
+            "Il passaggio in Comunità capi lo annulla un capogruppo, finché il codice socio "
+            "è provvisorio.",
         )
-    codice = _errore(servizi.iscrivi_genitore_in_coca, persona, request.auth)
-    return Status(201, {"email": codice.dati_proposti["email"], "scadenza": codice.scadenza})
+    _errore(servizi.annulla_passaggio_in_coca, persona)
+    return Status(204, None)
 
 
 @router.post("/codici-iscrizione/{codice_id}/disattiva", response=CodiceOut)

@@ -45,7 +45,6 @@ SEMPRE = {
     "attesa_interesse",
     "attesa_uscita",
     "attesa_iscrizione",
-    "iscrizione_capo",
     "account_modificato",
     "attivazione_account",
     "account_figlio",

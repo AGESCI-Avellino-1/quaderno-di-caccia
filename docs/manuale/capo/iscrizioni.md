@@ -54,12 +54,21 @@ Dai alla famiglia il codice, il link (**copia il link**) o il **QR code**. Con
 
 ### Un genitore che diventa capo
 
-Se sei capogruppo, apri la scheda del genitore (in **Genitori**) e, in **Iscrizione in
-Comunità capi**, tocca **Iscrivi in Comunità capi…** e **Manda il link**. Al genitore arriva
-per email un link personale, valido 30 giorni, con i dati che l'app ha già di lui (nome,
-codice fiscale, contatti, indirizzo): completa solo quello che manca. La richiesta arriva poi
-in **Richieste di iscrizione** come le altre, e accolta entra nella sua stessa scheda: resta
-genitore dei suoi figli. Serve un'email nella scheda.
+Se sei capogruppo, apri la scheda del genitore (in **Genitori**) e, in **Comunità capi**,
+tocca **Porta in Comunità capi…** e conferma. Il genitore entra subito in Comunità capi con i
+dati che l'app ha già, un codice socio provvisorio e la sua stessa scheda: resta genitore dei
+suoi figli. Finché non è in BuonaStrada è un capo «in attesa» e non vede i dati delicati degli
+altri. Poi, se non ha ancora un account, manda l'invito da **Accesso all'app**; se ce l'ha già, al
+prossimo accesso trova la parte da capo.
+
+Se è stato un errore, finché il codice socio è provvisorio tocca **Annulla il passaggio in
+Comunità capi…**: torna solo genitore, e gli incarichi che ha avuto nel frattempo si chiudono.
+Quando l'importazione da BuonaStrada gli dà il codice vero, il passaggio non si annulla più.
+
+:::{container} schermate
+![Un genitore portato in Comunità capi, sul telefono](../img/capo/genitore-in-coca-telefono.png){.telefono width="30%"}
+![Un genitore portato in Comunità capi, sul computer](../img/capo/genitore-in-coca-computer.png){.computer width="65%"}
+:::
 
 ## Accogliere una richiesta
 

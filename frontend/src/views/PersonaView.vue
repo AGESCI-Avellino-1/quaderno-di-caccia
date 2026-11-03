@@ -12,7 +12,7 @@ import QuotePersona from '@/components/QuotePersona.vue'
 import AllegatiSanitari from '@/components/AllegatiSanitari.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import FotoProfilo from '@/components/FotoProfilo.vue'
-import IscrizioneCapoGenitore from '@/components/IscrizioneCapoGenitore.vue'
+import PassaggioInCoca from '@/components/PassaggioInCoca.vue'
 import NotePersona from '@/components/NotePersona.vue'
 import PercorsoScout from '@/components/PercorsoScout.vue'
 import RegistroAccessi from '@/components/RegistroAccessi.vue'
@@ -186,11 +186,17 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
-      <LinkPersonale v-if="online" :persona="persona.id" :nome="persona.nome" />
-      <IscrizioneCapoGenitore
-        v-if="online && persona.puo_iscrivere_in_coca"
+      <LinkPersonale
+        v-if="online && persona.puo_link_attivazione"
         :persona="persona.id"
         :nome="persona.nome"
+      />
+      <PassaggioInCoca
+        v-if="online && (persona.puo_portare_in_coca || persona.puo_annullare_coca)"
+        :persona="persona.id"
+        :nome="persona.nome"
+        :annullabile="!!persona.puo_annullare_coca"
+        @cambiato="carica(persona.id)"
       />
       <RegistroAccessi v-if="online && persona.vede_registro_accessi" :id="persona.id" />
       <AvviaImpersonazione

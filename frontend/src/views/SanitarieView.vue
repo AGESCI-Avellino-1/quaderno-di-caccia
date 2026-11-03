@@ -187,7 +187,7 @@ async function salva() {
   }
   await salvaInCache(`sanitarie:${props.id}`, copia)
   if (risultato.inCoda) {
-    esito.value = 'Salvato sul telefono: verrà inviato appena c’è la rete.'
+    esito.value = 'Salvato su questo dispositivo: verrà inviato appena c’è la rete.'
     return
   }
   await router.push({ name: 'persona', params: { id: props.id } })

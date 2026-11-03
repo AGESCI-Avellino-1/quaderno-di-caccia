@@ -7,7 +7,7 @@ una passkey o Google e Apple. I passi sono in [Primo accesso](../genitore/access
 
 Sul telefono che porti al campo **attiva la protezione con il PIN**: senza, l'app non
 salva niente e senza rete non vedi i dati dei ragazzi. I passi sono in [Proteggere il
-telefono](../genitore/protezione).
+dispositivo](../genitore/protezione).
 
 :::{warning}
 Sul tuo telefono ci sono i dati di minori, anche sanitari. Non dire il PIN a nessuno e non

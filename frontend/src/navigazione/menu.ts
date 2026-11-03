@@ -383,7 +383,7 @@ export function vociProfilo(p: Profilo): Voce[] {
       nome: 'Password e sicurezza',
       icona: 'key',
       to: '/dispositivi',
-      descrizione: 'Password, passkey, dispositivi e protezione del telefono',
+      descrizione: 'Password, passkey, dispositivi e protezione del dispositivo',
     },
     membro && {
       nome: 'Le mie quote',

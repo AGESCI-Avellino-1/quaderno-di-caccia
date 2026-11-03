@@ -562,7 +562,7 @@ def scarica_campo(request, unita_id: int):
         raise HttpError(403, "Solo i capi scaricano i dati per il campo.")
     if getattr(request, "dispositivo", None) is None:
         raise HttpError(
-            403, "Per tenere questi dati sul telefono attiva prima la protezione con PIN."
+            403, "Per tenere questi dati sul dispositivo attiva prima la protezione con PIN."
         )
     unita = get_object_or_404(Unita, pk=unita_id)
     ids = Appartenenza.objects.attive().filter(unita=unita).values("persona_id")

@@ -26,7 +26,7 @@ import {
   svolgi,
   type Cifrato,
 } from './cripto'
-import { creaCredenziale, leggiSegreto } from './biometria'
+import { creaCredenziale, dimenticaCredenziale, leggiSegreto } from './biometria'
 import {
   cancellaTutto,
   db as dbPredefinito,
@@ -44,7 +44,7 @@ export const LUNGHEZZA_MINIMA_PIN = 6
 export class PinErrato extends Error {
   constructor(public readonly rimasti: number) {
     super(
-      `PIN errato: ancora ${rimasti} tentativi, poi i dati su questo telefono verranno cancellati.`,
+      `PIN errato: ancora ${rimasti} tentativi, poi i dati su questo dispositivo verranno cancellati.`,
     )
   }
 }
@@ -58,11 +58,11 @@ export class DatiCancellati extends Error {
 export const MESSAGGI_CANCELLAZIONE: Record<MotivoCancellazione, string> = {
   revocato: 'Questo dispositivo è stato scollegato: i dati salvati qui sono stati cancellati.',
   scaduto:
-    'Il telefono non si collega da troppi giorni: per sicurezza i dati salvati qui sono stati cancellati.',
-  tentativi: 'Troppi PIN errati: i dati salvati su questo telefono sono stati cancellati.',
+    'Il dispositivo non si collega da troppi giorni: per sicurezza i dati salvati qui sono stati cancellati.',
+  tentativi: 'Troppi PIN errati: i dati salvati su questo dispositivo sono stati cancellati.',
   altro_account:
     "Hai effettuato l'accesso con un altro account: i dati del precedente sono stati cancellati.",
-  uscita: 'Sei uscito: i dati salvati su questo telefono sono stati cancellati.',
+  uscita: 'Sei uscito: i dati salvati su questo dispositivo sono stati cancellati.',
 }
 
 export const EVENTO_CANCELLAZIONE = 'qdc:dati-cancellati'
@@ -116,12 +116,15 @@ async function salva() {
 
 /** Deletes every local trace and tells the app (App.vue shows the reason). */
 export async function cancella(motivo: MotivoCancellazione): Promise<void> {
+  const passkey = configurazione?.biometria?.idCredenziale
   chiaveDati = null
   configurazione = undefined
   if (motivo === 'uscita') await svuotaDatiLocali(database)
   else await cancellaTutto(database)
   aggiornaStato()
   ultimoMotivo.value = motivo
+  // The next login creates a new unlock passkey: this one would stay in the manager.
+  if (passkey) void dimenticaCredenziale(passkey)
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(EVENTO_CANCELLAZIONE, { detail: motivo }))
   }
@@ -203,16 +206,21 @@ export async function attivaBiometria(
 ): Promise<void> {
   if (!configurazione || !chiaveDati) throw new Error('Sblocca prima con il PIN.')
   const sale = casuali(32)
-  const { idCredenziale, segreto } = await crea(email, sale)
+  const nome = (await database.meta.get('dispositivo_nome'))?.valore
+  const { idCredenziale, segreto } = await crea(email, sale, nome)
   const kek = await chiaveDaSegreto(segreto, sale)
+  const prima = configurazione.biometria?.idCredenziale
   configurazione.biometria = { ...(await avvolgi(chiaveDati, kek)), sale, idCredenziale }
   await salva()
+  if (prima) void dimenticaCredenziale(prima)
 }
 
 export async function disattivaBiometria(): Promise<void> {
   if (!configurazione) return
+  const prima = configurazione.biometria?.idCredenziale
   delete configurazione.biometria
   await salva()
+  if (prima) void dimenticaCredenziale(prima)
 }
 
 export async function sbloccaConBiometria(
@@ -233,7 +241,7 @@ export function blocca(): void {
 
 export class CassaforteBloccata extends Error {
   constructor() {
-    super('Sblocca l’app per leggere i dati salvati sul telefono.')
+    super('Sblocca l’app per leggere i dati salvati su questo dispositivo.')
   }
 }
 

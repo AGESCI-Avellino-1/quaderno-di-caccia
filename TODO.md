@@ -70,7 +70,9 @@ trasferito e, per il gruppo che lo riceve, i periodi nel nostro gruppo diventano
 2. al rientro dall'archivio (DEC-215) i periodi nelle nostre unità si ignorano, perché
    sono già nell'app: tornano solo quelli in altri gruppi e quelli ricostruiti.
 
-#### N.24 — Sblocco con impronta e passkey di sblocco ⏳
+#### N.24 — Sblocco con impronta e passkey di sblocco ✅ 03/11 (da provare sul Mac)
+
+Fatto con test: richiesta con `hints: ['client-device']` e `transports: ['internal']`; la passkey che non serve più si segnala al gestore con `signalUnknownCredential` (alla cancellazione dei dati, allo spegnimento e al rifacimento dell'impronta); nome con dispositivo e data; «questo dispositivo» nei messaggi, nelle schermate e nel manuale. Da provare dal maintainer: l'app installata con Chrome sul Mac (se mostra ancora il QR, o un errore, resta il PIN) e se Password di Apple toglie davvero la passkey e cosa mostra del nome.
 
 Rif. DEC-97. Segnalazioni del maintainer del 03/11.
 

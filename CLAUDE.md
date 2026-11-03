@@ -125,6 +125,7 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
 | Revocation by the owner or a capogruppo (DEC-23): the session is deleted; at start-up the app asks `/dispositivi/{id}/stato` (no login needed) and wipes itself | `dispositivi/api.py`, `sicurezza/dispositivo.ts` |
 | Offline window: every answer carries `X-QdC-Offline-Fino-Al` (last contact + `QDC_OFFLINE_GIORNI`, default 14); past it the data is wiped at start-up | `dispositivi/middleware.py`, `sicurezza/collegamenti.ts` |
 | Another account logging in on the same device wipes the previous one's data | `stores/sessione.ts` |
+| An unlock passkey no longer used (wipe, fingerprint off) is signalled to the password manager for removal (`signalUnknownCredential`, where supported); its name carries device and day | `biometria.ts`, `cassaforte.ts` |
 
 **Threat model, stated honestly:** this protects against a lost, stolen or borrowed
 phone and against anyone opening the app or its storage without the PIN. A 6-digit PIN

@@ -117,7 +117,7 @@ async function registra() {
   if (!risultato) return
   modulo.aperto = false
   esito.value = risultato.inCoda
-    ? 'Pagamento salvato sul telefono: sarà registrato, con la sua ricevuta, appena torna la rete.'
+    ? 'Pagamento salvato su questo dispositivo: sarà registrato, con la sua ricevuta, appena torna la rete.'
     : 'Pagamento registrato: la ricevuta è partita per email.'
   if (!risultato.inCoda) await carica(props.id)
 }

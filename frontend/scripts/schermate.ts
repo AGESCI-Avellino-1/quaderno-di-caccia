@@ -466,7 +466,7 @@ const SCENE: Scena[] = [
     percorso: '/campo',
     prepara: async (pagina) => {
       await pagina.getByRole('combobox').first().selectOption({ label: 'Reparto Antares (N1)' })
-      await pagina.getByRole('button', { name: 'Scarica sul telefono' }).click()
+      await pagina.getByRole('button', { name: 'Scarica sul dispositivo' }).click()
       await pagina
         .getByText('Cerca per nome')
         .or(pagina.getByPlaceholder('Cerca per nome'))

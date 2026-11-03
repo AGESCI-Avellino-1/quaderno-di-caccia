@@ -9,7 +9,7 @@ regole sul rapporto con il minore. Funziona anche senza rete, se l'hai scaricata
 1. Con la rete, controlla che il telefono abbia la protezione con il PIN (vedi [Accesso e
    uso senza rete](accesso)).
 2. Nella Home, in **Attività**, tocca **Al campo**.
-3. In **Scegli l'unità** scegli l'unità e tocca **Scarica sul telefono**. Ripeti per ogni
+3. In **Scegli l'unità** scegli l'unità e tocca **Scarica sul dispositivo**. Ripeti per ogni
    unità che ti serve (per esempio a un campo di gruppo).
 
 Sotto vedi quando li hai scaricati e quanti ragazzi non hanno ancora compilato farmaci e

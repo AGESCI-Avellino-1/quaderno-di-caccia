@@ -64,7 +64,7 @@ async function registra() {
   if (!risultato) return
   Object.assign(modulo, { data: oggi(), importo: '', descrizione: '', giustificativo: '' })
   esito.value = risultato.inCoda
-    ? 'Spesa salvata sul telefono: arriverà al tesoriere appena torna la rete.'
+    ? 'Spesa salvata su questo dispositivo: arriverà al tesoriere appena torna la rete.'
     : 'Spesa registrata: il tesoriere la rimborserà.'
   if (!risultato.inCoda) await carica()
 }

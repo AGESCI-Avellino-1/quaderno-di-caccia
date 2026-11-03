@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { leggiDallaCache, salvaInCache } from '@/offline/cache'
 import type { DatabaseQdc } from '@/offline/db'
+import type { creaCredenziale } from '@/sicurezza/biometria'
 import * as cassaforte from '@/sicurezza/cassaforte'
 
 import { ITERAZIONI_TEST, PIN, cassaforteSbloccata, nuovoDatabase } from './aiuti'
@@ -109,6 +110,37 @@ describe('cassaforte', () => {
     ).rejects.toThrow()
     await cassaforte.sbloccaConBiometria(async () => segreto)
     expect((await leggiDallaCache('k', database))!.dati).toEqual({ v: 2 })
+  })
+
+  it('la passkey di sblocco che non serve più si toglie dal gestore delle password', async () => {
+    const segnalate: string[] = []
+    vi.stubGlobal('PublicKeyCredential', {
+      signalUnknownCredential: vi.fn(async (o: { credentialId: string }) => {
+        segnalate.push(o.credentialId)
+      }),
+    })
+    try {
+      await cassaforteSbloccata()
+      await database.meta.put({ chiave: 'dispositivo_nome', valore: 'Mac di Andrea' })
+      const segreto = crypto.getRandomValues(new Uint8Array(32)).buffer
+      const crea = vi.fn<typeof creaCredenziale>(async () => ({
+        idCredenziale: new Uint8Array([251, 255, 1]).buffer,
+        segreto,
+      }))
+      await cassaforte.attivaBiometria('capo@example.invalid', crea)
+      // The device name goes into the passkey's name.
+      expect(crea.mock.calls[0]![2]).toBe('Mac di Andrea')
+      expect(segnalate).toEqual([])
+      // Switched off: the manager is asked to remove it (base64url, no padding).
+      await cassaforte.disattivaBiometria()
+      await vi.waitFor(() => expect(segnalate).toEqual(['-_8B']))
+      // Wiped with the fingerprint on: the same.
+      await cassaforte.attivaBiometria('capo@example.invalid', crea)
+      await cassaforte.cancella('uscita')
+      await vi.waitFor(() => expect(segnalate).toEqual(['-_8B', '-_8B']))
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('oltre la scadenza offline i dati si cancellano da soli', async () => {

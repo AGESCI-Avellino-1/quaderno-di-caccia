@@ -49,5 +49,5 @@ Dopo 5 minuti senza usarla l'app si blocca: scrivi il PIN e tocca **Sblocca**.
 Non dire il PIN a nessuno, nemmeno agli amici di squadriglia. Dopo 5 PIN sbagliati la copia
 sul telefono si cancella: non perdi niente, rientri con il codice via email e scegli un PIN
 nuovo. Se perdi il telefono, dillo ai tuoi genitori o ai capi: lo scollegate da **Password
-e sicurezza** (vedi [Proteggere il telefono](../genitore/protezione)).
+e sicurezza** (vedi [Proteggere il dispositivo](../genitore/protezione)).
 :::

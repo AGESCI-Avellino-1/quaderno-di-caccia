@@ -45,7 +45,7 @@ describe('manutenzione', () => {
     expect(sito.sito.manutenzione).toBe(false)
   })
 
-  it('la copia sul telefono non blocca chi è senza rete', async () => {
+  it('la copia sul dispositivo non blocca chi è senza rete', async () => {
     await nuovoDatabase()
     await cassaforteSbloccata()
     const sito = useSitoStore()

@@ -153,7 +153,7 @@ async function salvaPresenze() {
   await salvaInCache(chiave(), copia)
   mostra(copia)
   esito.value = risultato.inCoda
-    ? 'Presenze salvate sul telefono: saranno inviate appena torna la rete.'
+    ? 'Presenze salvate su questo dispositivo: saranno inviate appena torna la rete.'
     : 'Presenze salvate.'
 }
 

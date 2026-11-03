@@ -59,7 +59,7 @@ async function esciECancella() {
 <template>
   <section class="mx-auto text-center" style="max-width: 22rem">
     <h1 class="h4 mb-5">App bloccata</h1>
-    <p class="small">Inserisci il PIN per vedere i dati salvati su questo telefono.</p>
+    <p class="small">Inserisci il PIN per vedere i dati salvati su questo dispositivo.</p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <button
       v-if="biometriaAttiva"
@@ -85,7 +85,7 @@ async function esciECancella() {
       </button>
     </form>
     <button type="button" class="btn btn-link btn-sm mt-5" @click="esciECancella">
-      Non sei tu? Esci e cancella i dati da questo telefono
+      Non sei tu? Esci e cancella i dati da questo dispositivo
     </button>
   </section>
 </template>

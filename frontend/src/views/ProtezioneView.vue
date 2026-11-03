@@ -80,20 +80,20 @@ async function soloOnline() {
 
 <template>
   <section class="mx-auto" style="max-width: 30rem">
-    <h1 class="h4 mb-5">Proteggi i dati su questo telefono</h1>
+    <h1 class="h4 mb-5">Proteggi i dati su questo dispositivo</h1>
     <p>
-      Per funzionare anche senza rete, l'app salva su questo telefono una copia dei dati che puoi
+      Per funzionare anche senza rete, l'app salva su questo dispositivo una copia dei dati che puoi
       vedere: contatti, e per i capi farmaci e allergie dei ragazzi. Sono dati di minori: la copia
       viene cifrata e si apre solo con un PIN, o con impronta o volto.
     </p>
     <ul class="small">
       <li>Dopo {{ MINUTI_BLOCCO }} minuti senza usarla l'app si blocca.</li>
-      <li>Dopo {{ TENTATIVI_MASSIMI }} PIN sbagliati la copia sul telefono viene cancellata.</li>
-      <li>Se perdi il telefono, tu o un capogruppo potete scollegarlo a distanza.</li>
-      <li>Se il telefono non si collega per molti giorni, la copia si cancella da sola.</li>
+      <li>Dopo {{ TENTATIVI_MASSIMI }} PIN sbagliati la copia sul dispositivo viene cancellata.</li>
+      <li>Se perdi il dispositivo, tu o un capogruppo potete scollegarlo a distanza.</li>
+      <li>Se il dispositivo non si collega per molti giorni, la copia si cancella da sola.</li>
     </ul>
     <div v-if="giaConfigurata" class="alert theme-warning small">
-      Impostando un nuovo PIN la copia attuale sul telefono viene cancellata e riscaricata.
+      Impostando un nuovo PIN la copia attuale sul dispositivo viene cancellata e riscaricata.
     </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="avviso" class="alert theme-warning" role="status">
@@ -140,8 +140,8 @@ async function soloOnline() {
 
     <hr />
     <p class="small mb-3">
-      Preferisci non salvare niente su questo telefono (ad esempio se non è tuo)? L'app funzionerà
-      solo con la rete.
+      Preferisci non salvare niente su questo dispositivo (ad esempio se non è tuo)? L'app
+      funzionerà solo con la rete.
       <template v-if="sessione.capo"> Al campo, senza rete, non avrai i dati dei ragazzi.</template>
     </p>
     <button type="button" class="btn btn-outline theme-secondary btn-sm" @click="soloOnline">

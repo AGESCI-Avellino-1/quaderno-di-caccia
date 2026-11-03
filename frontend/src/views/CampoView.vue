@@ -86,7 +86,7 @@ watch(scelta, async (valore) => {
     <h1 class="h4 mb-5">Al campo</h1>
     <div v-if="!puoSalvare" class="alert theme-warning">
       <div>
-        Su questo telefono non salvi dati: senza rete non li vedrai.
+        Su questo dispositivo non salvi dati: senza rete non li vedrai.
         <RouterLink :to="{ name: 'protezione', query: { prossima: '/campo' } }"
           >Attiva la protezione con PIN</RouterLink
         >
@@ -108,7 +108,7 @@ watch(scelta, async (valore) => {
           :disabled="scelta === undefined || inCorso"
           @click="aggiorna"
         >
-          {{ campo ? 'Aggiorna' : 'Scarica sul telefono' }}
+          {{ campo ? 'Aggiorna' : 'Scarica sul dispositivo' }}
         </button>
       </div>
     </div>
@@ -176,7 +176,7 @@ watch(scelta, async (valore) => {
       </div>
     </template>
     <p v-else-if="scelta !== undefined && !inCorso" class="fg-2">
-      Nessuna copia su questo telefono: scaricala finché c'è rete.
+      Nessuna copia su questo dispositivo: scaricala finché c'è rete.
     </p>
   </section>
 </template>

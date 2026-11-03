@@ -51,7 +51,9 @@ function apri(nota: Nota | null) {
 
 async function dopo(inCoda: boolean) {
   aperta.value = 0
-  esito.value = inCoda ? 'Salvata sul telefono: sarà inviata appena torna la rete.' : 'Salvata.'
+  esito.value = inCoda
+    ? 'Salvata su questo dispositivo: sarà inviata appena torna la rete.'
+    : 'Salvata.'
   if (!inCoda) await carica()
 }
 

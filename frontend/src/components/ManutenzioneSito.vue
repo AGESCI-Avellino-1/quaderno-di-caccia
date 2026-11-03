@@ -31,8 +31,9 @@ async function imposta(attiva: boolean) {
       Mentre la manutenzione è attiva entrano solo gli amministratori tecnici. Tutti gli altri
       vedono il messaggio qui sotto al posto delle pagine, anche chi è già dentro, e si fermano
       anche la richiesta di iscrizione, la lista d'attesa e il calendario. Restano aperte la pagina
-      di accesso, la privacy policy e i termini. Quello che i capi hanno salvato sul telefono non si
-      perde: le modifiche fatte senza rete partono quando la manutenzione finisce.
+      di accesso, la privacy policy e i termini. Quello che i capi hanno salvato su questo
+      dispositivo non si perde: le modifiche fatte senza rete partono quando la manutenzione
+      finisce.
     </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <div class="card card-body">

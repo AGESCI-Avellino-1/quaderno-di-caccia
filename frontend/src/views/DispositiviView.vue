@@ -71,7 +71,7 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
     <h1 class="h4 mb-5">Password e sicurezza</h1>
 
     <div class="card card-body mb-5">
-      <h2 class="h6">Questo telefono</h2>
+      <h2 class="h6">Questo dispositivo</h2>
       <p v-if="stato === 'solo_online'" class="small mb-3">
         Nessun dato salvato qui: l'app funziona solo con la rete.
       </p>

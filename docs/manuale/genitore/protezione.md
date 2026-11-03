@@ -1,6 +1,8 @@
-# Proteggere il telefono
+# Proteggere il dispositivo
 
-La prima volta che entri da un telefono, l'app ti chiede come proteggerlo.
+La prima volta che entri da un telefono, un tablet o un computer, l'app ti chiede come
+proteggerlo. Qui si parla di telefono, ma sul computer funziona allo stesso modo: l'app
+dice «questo dispositivo».
 
 ## Perché
 
@@ -57,6 +59,12 @@ perso cancella i dati da solo.
 Se non riesci a entrare, chiedi a un capogruppo di scollegarlo per te.
 
 Nella stessa pagina puoi cambiare il PIN e attivare o disattivare l'impronta o il volto.
+
+L'impronta o il volto usano una passkey di sblocco che il telefono salva nel suo gestore delle
+password (per esempio Password di Apple), con il nome del dispositivo e la data. Quando l'app
+cancella i dati (perché esci, scolleghi il dispositivo o la copia scade) o quando disattivi
+l'impronta, chiede al gestore di togliere quella passkey; se il browser non lo permette, la
+puoi cancellare tu dal gestore delle password.
 
 :::{container} schermate
 ![I dispositivi sul telefono](../img/comune/dispositivi-telefono.png){.telefono width="30%"}

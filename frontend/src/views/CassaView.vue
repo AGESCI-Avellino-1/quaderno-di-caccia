@@ -208,7 +208,7 @@ async function registra() {
   if (!risultato) return
   nuovo.aperto = false
   esito.value = risultato.inCoda
-    ? 'Movimento salvato sul telefono: sarà registrato appena torna la rete.'
+    ? 'Movimento salvato su questo dispositivo: sarà registrato appena torna la rete.'
     : 'Movimento registrato.'
   if (!risultato.inCoda) await Promise.all([caricaCasse(), caricaMovimenti()])
 }

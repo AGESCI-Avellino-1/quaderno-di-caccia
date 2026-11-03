@@ -141,7 +141,9 @@ async function online(azione: () => Promise<SchedaProgressione>, messaggio: stri
 }
 
 async function dopoScrittura(inCoda: boolean) {
-  esito.value = inCoda ? 'Salvato sul telefono: sarà inviato appena torna la rete.' : 'Salvato.'
+  esito.value = inCoda
+    ? 'Salvato su questo dispositivo: sarà inviato appena torna la rete.'
+    : 'Salvato.'
   if (!inCoda) await carica()
 }
 

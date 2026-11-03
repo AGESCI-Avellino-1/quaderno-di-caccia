@@ -9,7 +9,7 @@ TITOLO_COMPLETO = "[Nome sito] - [Gruppo]"
 TITOLO_BREVE = "[Sigla sito] - [Sigla gruppo]"
 # Shown when the technical administrator leaves the message empty (DEC-268).
 MESSAGGIO_MANUTENZIONE = (
-    "L'app è in manutenzione. Torna tra un po': i dati salvati sul telefono e le modifiche "
+    "L'app è in manutenzione. Torna tra un po': i dati salvati sul dispositivo e le modifiche "
     "in attesa non si perdono."
 )
 

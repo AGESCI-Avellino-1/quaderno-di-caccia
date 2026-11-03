@@ -32,8 +32,8 @@ onBeforeUnmount(() => clearInterval(timer))
     <h1 class="h4">L'app è in manutenzione</h1>
     <p class="my-5">{{ sito.sito.messaggio_manutenzione }}</p>
     <p class="fg-2 small">
-      Le modifiche che hai fatto senza rete restano su questo telefono e partono da sole quando la
-      manutenzione finisce. Questa pagina si aggiorna da sola ogni minuto.
+      Le modifiche che hai fatto senza rete restano su questo dispositivo e partono da sole quando
+      la manutenzione finisce. Questa pagina si aggiorna da sola ogni minuto.
     </p>
     <button
       type="button"

@@ -16,7 +16,7 @@ export const PAGINE: Record<string, Pagina> = {
   home: { titolo: 'Home' },
   accesso: { titolo: 'Accesso' },
   sblocco: { titolo: 'Sblocca' },
-  protezione: { titolo: 'Protezione del telefono' },
+  protezione: { titolo: 'Protezione del dispositivo' },
   invito: { titolo: 'Invito' },
   'verifica-email': { titolo: "Conferma dell'email" },
   'reimposta-password': { titolo: 'Nuova password' },

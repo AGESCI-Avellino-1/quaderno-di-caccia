@@ -82,7 +82,7 @@ compose.nginx-docker.yml aggiunta per la modalità "nginx in Docker"
 
 ### Requisiti
 
-- [mise](https://mise.jdx.dev/) (installa Python 3.14, Node 22 e uv nelle versioni
+- [mise](https://mise.jdx.dev/) (installa Python 3.14, Node 26 e uv nelle versioni
   giuste), oppure le tre cose a mano;
 - Docker, per il PostgreSQL di sviluppo.
 

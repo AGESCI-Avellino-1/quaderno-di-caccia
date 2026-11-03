@@ -3,7 +3,7 @@
 # so app and API share one origin (session cookie + CSRF, no CORS).
 
 # Built from the repository root (compose.prod.yml), to read the logos in resources/.
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci

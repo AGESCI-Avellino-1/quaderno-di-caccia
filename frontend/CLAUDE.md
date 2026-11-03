@@ -1,7 +1,7 @@
 # frontend/CLAUDE.md
 
 Vue 3.5 · TypeScript 6 · Vite 8 · vue-router 5 · Pinia 4 · Dexie 4 · Bootstrap 6 (alpha) ·
-vite-plugin-pwa 2 · Vitest 5. Node 22. Read the root `CLAUDE.md` first.
+vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
 
 ## Layout
 

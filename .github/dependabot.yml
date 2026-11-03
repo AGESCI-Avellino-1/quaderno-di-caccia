@@ -5,11 +5,21 @@ updates:
     schedule: { interval: weekly }
     groups:
       backend: { patterns: ["*"] }
+    # Only versions out for two weeks (a major one for a month); security updates
+    # come at once, cooldown does not apply to them.
+    cooldown:
+      default-days: 14
+      semver-major-days: 30
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
     groups:
       frontend: { patterns: ["*"] }
+    # Only versions out for two weeks (a major one for a month); security updates
+    # come at once, cooldown does not apply to them.
+    cooldown:
+      default-days: 14
+      semver-major-days: 30
     ignore:
       # typescript-eslint 8.72 accepts TypeScript < 6.1 only: TypeScript 7 waits for it.
       - dependency-name: typescript
@@ -17,6 +27,17 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
+    # Only versions out for two weeks; security updates come at once.
+    cooldown:
+      default-days: 14
   - package-ecosystem: docker
     directories: [/backend, /frontend]
     schedule: { interval: monthly }
+    # Only versions out for two weeks; security updates come at once.
+    cooldown:
+      default-days: 14
+    ignore:
+      # A new Python goes everywhere at once (.python-version, pyproject, CI, mise), when
+      # the maintainer decides: not the image alone.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

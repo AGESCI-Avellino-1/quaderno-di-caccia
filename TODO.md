@@ -246,6 +246,15 @@ Fatto: pagina «Invita nel gruppo» (`/invita`, `InvitaView.vue`) con `Condividi
 `puo_modificare_volantino_attesa`. Da provare sui telefoni veri: «Condividi» e la lettura del QR
 stampato.
 
+#### N.38 — Immagini ridimensionabili e HTML nell'editor di testo (da decidere, poi via)
+
+Segnalazione del maintainer (03/11, con il logo nel piè di pagina delle email, enorme): in tutti
+i campi con l'editor di testo (`EditorTesto.vue`: modelli e piè di pagina delle email, privacy
+policy e termini) un'immagine inserita si deve poter ridimensionare, e si vuole poter modificare
+direttamente l'HTML. Oggi il server pulisce l'HTML (`impostazioni/html.py`, nh3) e per `img`
+tiene solo `src`, `alt` e `width`; Tiptap 3.32 ha già il ridimensionamento delle immagini
+(`resize` in `@tiptap/extension-image`).
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,

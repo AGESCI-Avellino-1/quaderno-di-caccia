@@ -107,7 +107,7 @@ sacerdote, e nel menu delle nomine solo i presbiteri; nel PDF per unità prima l
 L/C, E/G, R/S per codice. Controllato su un'esportazione vera (in `ignored/`, solo conteggi): la
 professione è un elenco fisso di 25 valori con «PRESBITERO»; **non importati**: la nazionalità
 (codice numerico: serve la tabella dei codici di BuonaStrada `[da verificare]`) e gli incarichi
-associativi (colonne vuote in tutte le righe di «Ricerca Soci»). In produzione (1.7.0) il
+associativi (colonne vuote in tutte le righe di «Ricerca Soci»; l'esportazione degli incarichi di BuonaStrada è prevista ma non funziona: si ignorano, maintainer 03/11). In produzione (1.7.0) il
 maintainer ha reimportato il primo import unito in un file solo: professione arrivata, tutto
 funziona (03/11).
 

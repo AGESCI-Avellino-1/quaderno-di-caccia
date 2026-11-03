@@ -29,6 +29,7 @@ BLOCCATE = [
     (None, re.compile(r"^/api/v1/richieste-diritti")),  # DEC-102
     (None, re.compile(r"^/api/v1/persone/\d+/fascicolo$")),
     (None, re.compile(r"^/api/v1/campo/")),  # offline downloads: nothing is saved
+    (None, re.compile(r"^/api/v1/rubrica$")),  # a file saved on the device (DEC-302)
     (None, re.compile(r"^/api/v1/impersonazion(e|i)(?!/fine$)")),  # never nested
 ]
 LETTURE = {"GET", "HEAD", "OPTIONS"}

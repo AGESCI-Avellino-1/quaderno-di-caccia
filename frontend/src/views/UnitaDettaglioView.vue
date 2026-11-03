@@ -22,7 +22,9 @@ import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePagina } from '@/composables/useNomePagina'
+import { useRubrica } from '@/composables/useRubrica'
 import { leggiConCache } from '@/offline/cache'
+import { useSessioneStore } from '@/stores/sessione'
 
 // Staff, roles and patrols of a unit. Reading works offline (cached copy); changes need
 // the network. What each user may change comes from the backend (`nomina`, `puo_*`).
@@ -33,6 +35,8 @@ const dettaglio = ref<UnitaDettaglio | null>(null)
 const copiaDel = ref<string | null>(null)
 const altre = ref<Unita[]>([])
 const modifica = ref(false)
+const sessione = useSessioneStore()
+const rubrica = useRubrica()
 const nuovaSquadriglia = reactive({ aperta: false, nome: '', sesso: 'F' })
 
 async function carica(id = props.id) {
@@ -308,6 +312,27 @@ const iniziale = (u: Unita): UnitaIn => ({
         vuoto="Nessuno staff registrato."
         @cambiato="carica()"
       />
+    </section>
+
+    <!-- The unit's numbers into the phone's contacts (DEC-302): the list, ready to choose. -->
+    <section v-if="rubrica.disponibile.value && sessione.capo" class="card card-body mb-5">
+      <h2 class="h5">Numeri nella rubrica del telefono</h2>
+      <p class="small fg-2">
+        Scegli chi aggiungere alla rubrica: il telefono ti propone di salvare i contatti, con nome e
+        numeri.
+      </p>
+      <div class="d-flex flex-wrap gap-3">
+        <RouterLink
+          :to="{ name: 'persone', query: { unita: unita.id, rubrica: '1' } }"
+          class="btn btn-sm btn-outline theme-primary"
+          >Soci dell'unità</RouterLink
+        >
+        <RouterLink
+          :to="{ name: 'genitori', query: { unita: unita.id, rubrica: '1' } }"
+          class="btn btn-sm btn-outline theme-primary"
+          >Genitori</RouterLink
+        >
+      </div>
     </section>
 
     <CodiciIscrizione :unita="unita.id" />

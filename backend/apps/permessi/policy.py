@@ -429,6 +429,23 @@ def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
     return e_capogruppo(user) or _staff_della_persona(user, persona)
 
 
+def puo_usare_rubrica(user) -> bool:
+    """Phone numbers into the phone's contacts, as a vCard file (DEC-302): the capi and
+    the capo squadriglia. Only numbers they already see: `rubrica_squadriglia` for the
+    CSQ, `puo_vedere_dati_sensibili` for a capo."""
+    return e_capo(user) or squadriglie_guidate(user).exists()
+
+
+def rubrica_squadriglia(user) -> tuple[QuerySet[Persona], QuerySet[Persona]]:
+    """The members of the patrols the user leads and their parents with
+    parental responsibility: what the CSQ sees in their patrol (DEC-13, DEC-115)."""
+    membri = _membri_squadriglie(squadriglie_guidate(user))
+    genitori = Persona.objects.filter(
+        tutele__minore__in=membri, tutele__responsabilita_genitoriale=True
+    ).distinct()
+    return membri, genitori
+
+
 def puo_gestire_diritti(user) -> bool:
     """Requests from data subjects, the full export and erasure: the capigruppo
     (DEC-98, DEC-102, DEC-136)."""

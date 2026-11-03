@@ -76,7 +76,13 @@ def test_il_csq_vede_anche_i_genitori(ragazza, csq, genitore_con_cellulare):
     vista = _mia(csq)
     assert vista["sono_capo"]
     assert vista["genitori"] == [
-        {"figlio_id": ragazza.pk, "nome": "Mario", "cognome": "Genitore", "telefono": "3471234567"}
+        {
+            "figlio_id": ragazza.pk,
+            "id": genitore_con_cellulare.pk,
+            "nome": "Mario",
+            "cognome": "Genitore",
+            "telefono": "3471234567",
+        }
     ]
 
 

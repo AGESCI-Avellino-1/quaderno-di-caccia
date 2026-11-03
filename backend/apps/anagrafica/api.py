@@ -349,6 +349,8 @@ class TelefonoMembro(Schema):
 
 class TelefonoGenitore(Schema):
     figlio_id: int
+    # The parent, to choose them for the phone's contacts (DEC-302).
+    id: int
     nome: str
     cognome: str
     telefono: str
@@ -409,7 +411,13 @@ def _membri(squadriglia: Squadriglia, capo: bool) -> tuple[list[dict], list[dict
         )
         if capo:
             genitori += [
-                {"figlio_id": p.pk, "nome": g.nome, "cognome": g.cognome, "telefono": g.cellulare}
+                {
+                    "figlio_id": p.pk,
+                    "id": g.pk,
+                    "nome": g.nome,
+                    "cognome": g.cognome,
+                    "telefono": g.cellulare,
+                }
                 for g in servizi.genitori_con_telefono(p).order_by("cognome", "nome")
             ]
     return membri, genitori
@@ -568,6 +576,49 @@ def scegli_preferenze_email(request, dati: PreferenzeEmailIO):
         persona=_mia_persona(request), defaults=dati.dict()
     )
     return preferenze
+
+
+# --- Phone numbers into the phone's contacts (DEC-302) ----------------------------------
+
+
+@router.get("/rubrica")
+def rubrica(request, persone: str):
+    """A vCard file with the chosen people, for the capi and the CSQ: only numbers they
+    already see, name and numbers only. Not in the access log (DEC-302)."""
+    user = request.auth
+    if not policy.puo_usare_rubrica(user):
+        raise HttpError(403, "Solo i capi e i capi squadriglia aggiungono numeri alla rubrica.")
+    try:
+        scelte = {int(x) for x in persone.split(",") if x.strip()}
+    except ValueError:
+        raise HttpError(400, "Scelta delle persone non valida.") from None
+    contatti: dict[int, tuple[Persona, list[tuple[str, str, str]]]] = {}
+
+    def aggiungi(persona: Persona, numero: str, tipo: str = "CELL", nota: str = ""):
+        if numero and persona.pk in scelte:
+            voce = contatti.setdefault(persona.pk, (persona, []))
+            if numero not in [n for n, _, _ in voce[1]]:
+                voce[1].append((numero, tipo, nota))
+
+    if policy.e_capo(user):
+        for p in Persona.objects.filter(pk__in=scelte).order_by("cognome", "nome"):
+            if policy.puo_vedere_dati_sensibili(user, p):
+                aggiungi(p, p.cellulare)
+                aggiungi(p, p.telefono_fisso, "VOICE")
+    membri, genitori = policy.rubrica_squadriglia(user)
+    for p in membri.order_by("cognome", "nome"):
+        numero, genitore = servizi.telefono_in_squadriglia(p)
+        aggiungi(p, numero, nota=f"numero di {genitore.nome} (genitore)" if genitore else "")
+    for g in genitori.exclude(cellulare="").order_by("cognome", "nome"):
+        aggiungi(g, g.cellulare)
+    if not contatti:
+        raise HttpError(404, "Nessun numero di telefono tra le persone scelte.")
+    risposta = HttpResponse(
+        servizi.vcard(list(contatti.values())), content_type="text/vcard; charset=utf-8"
+    )
+    risposta["Content-Disposition"] = 'attachment; filename="contatti.vcf"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
 
 
 # --- Profile photo (DEC-42, DEC-201) --------------------------------------------------------

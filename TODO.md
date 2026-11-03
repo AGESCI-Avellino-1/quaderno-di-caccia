@@ -192,7 +192,7 @@ scrivere. Deciso il 03/11:
   lista d'attesa, reperibilità degli eventi, contatti sanitari… (dove oggi c'è un link `tel:`
   o il numero scritto).
 
-#### N.35 — Numeri di telefono nella rubrica, per capi e capi squadriglia 🚧 (DEC-302)
+#### N.35 — Numeri di telefono nella rubrica, per capi e capi squadriglia ✅ 03/11 (DEC-302, file vCard da provare sui telefoni veri)
 
 Richiesta del maintainer (03/11): solo capi e CSQ scelgono uno o più numeri e li aggiungono
 alla rubrica del telefono. Un sito non può scrivere nella rubrica: l'app fa scaricare un file

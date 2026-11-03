@@ -4,9 +4,11 @@ import { RouterLink, useRoute } from 'vue-router'
 
 import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
+import BarraRubrica from '@/components/BarraRubrica.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import SceltaChip from '@/components/SceltaChip.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useRubrica } from '@/composables/useRubrica'
 import { leggiConCache } from '@/offline/cache'
 import { useNavigazioneStore } from '@/stores/navigazione'
 import { useSessioneStore } from '@/stores/sessione'
@@ -24,6 +26,9 @@ const unitaScelta = ref<number | undefined>(
   route.query.unita ? Number(route.query.unita) : undefined,
 )
 const filtro = ref('')
+// From the unit page, «Aggiungi alla rubrica» opens this list ready to choose (DEC-302).
+const rubrica = useRubrica()
+rubrica.attiva.value = route.query.rubrica === '1'
 const copiaDel = ref<string | null>(null)
 
 const visibili = computed(() => {
@@ -86,18 +91,34 @@ watch(
         <input v-model="filtro" class="form-control" type="search" placeholder="Cerca per nome" />
       </div>
     </div>
+    <BarraRubrica :rubrica="rubrica" :tutti="visibili.map((p) => p.id)" />
     <p v-if="inCorso" class="fg-2">Caricamento…</p>
     <div v-else class="list-group">
-      <RouterLink
-        v-for="p in visibili"
-        :key="p.id"
-        :to="{ name: 'persona', params: { id: p.id } }"
-        class="list-group-item list-group-item-action d-flex align-items-center gap-3"
-      >
-        <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="sm" tenue aria-hidden="true" />
-        <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
-        <span v-if="p.codice_socio" class="fg-2 small">{{ p.codice_socio }}</span>
-      </RouterLink>
+      <template v-for="p in visibili" :key="p.id">
+        <!-- Choosing whom to put in the phone's contacts (DEC-302). -->
+        <label
+          v-if="rubrica.attiva.value"
+          class="list-group-item list-group-item-action d-flex align-items-center gap-3"
+        >
+          <input
+            type="checkbox"
+            class="check"
+            :checked="rubrica.scelti.value.has(p.id)"
+            @change="rubrica.alterna(p.id)"
+          />
+          <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="sm" tenue aria-hidden="true" />
+          <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
+        </label>
+        <RouterLink
+          v-else
+          :to="{ name: 'persona', params: { id: p.id } }"
+          class="list-group-item list-group-item-action d-flex align-items-center gap-3"
+        >
+          <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="sm" tenue aria-hidden="true" />
+          <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
+          <span v-if="p.codice_socio" class="fg-2 small">{{ p.codice_socio }}</span>
+        </RouterLink>
+      </template>
       <p v-if="!visibili.length" class="fg-2">
         {{ tipo === 'soci' ? 'Nessun socio.' : 'Nessun genitore.' }}
       </p>

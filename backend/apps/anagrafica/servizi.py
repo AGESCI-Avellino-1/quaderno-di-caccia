@@ -227,3 +227,40 @@ def imposta_telefono_squadriglia(
     persona.save(
         update_fields=["telefono_squadriglia_da", "telefono_squadriglia_nascosto", "aggiornato_il"]
     )
+
+
+# --- Phone numbers into the phone's contacts (DEC-302) ----------------------------------
+
+
+def internazionale(numero: str) -> str:
+    """+39 for a number with no international prefix, as the buttons of the PWA do."""
+    cifre = "".join(c for c in numero if c.isdigit() or c == "+")
+    if cifre.startswith("+"):
+        return "+" + cifre[1:].replace("+", "")
+    if cifre.startswith("00"):
+        return "+" + cifre[2:]
+    return "+39" + cifre
+
+
+def _testo_vcard(valore: str) -> str:
+    return valore.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", " ")
+
+
+def vcard(contatti: list[tuple[Persona, list[tuple[str, str, str]]]]) -> str:
+    """A vCard 3.0 file: name and numbers only (DEC-302). `contatti` pairs each person
+    with (number, kind, note) for each number: kind CELL or VOICE (a landline), the
+    note saying whose it is when it is a parent's."""
+    righe = []
+    for persona, numeri in contatti:
+        righe += [
+            "BEGIN:VCARD",
+            "VERSION:3.0",
+            f"N:{_testo_vcard(persona.cognome)};{_testo_vcard(persona.nome)};;;",
+            f"FN:{_testo_vcard(f'{persona.nome} {persona.cognome}')}",
+        ]
+        righe += [f"TEL;TYPE={tipo}:{internazionale(numero)}" for numero, tipo, _ in numeri]
+        note = [nota for _, _, nota in numeri if nota]
+        if note:
+            righe.append(f"NOTE:{_testo_vcard(' · '.join(note))}")
+        righe.append("END:VCARD")
+    return "\r\n".join(righe) + "\r\n"

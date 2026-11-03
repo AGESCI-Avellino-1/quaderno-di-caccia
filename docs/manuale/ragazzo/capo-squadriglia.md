@@ -15,6 +15,11 @@ vedono. Usali solo per la squadriglia. La pagina funziona anche senza rete.
 
 Gli altri squadriglieri vedono solo i numeri gli uni degli altri.
 
+Per salvare i numeri nella rubrica del telefono, con la rete, tocca **Aggiungi alla rubrica
+del telefono**, spunta squadriglieri e genitori (o tocca **Tutti**) e poi **Scarica i
+contatti**: il telefono ti propone di salvarli. Nel file ci sono solo nome e numeri; quando
+li hai salvati, cancellalo dai download.
+
 In fondo, in **Riunioni di squadriglia**, puoi delegare uno squadrigliere a inserire anche
 lui le riunioni (per esempio quando sei assente): scegli chi in **Delega a** e tocca
 **Delega**. Le presenze invece le segni tu.

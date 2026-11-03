@@ -14,6 +14,20 @@ scheda sanitaria, le note, le quote, il telefono in squadriglia e l'accesso all'
 ![La scheda di Luca vista dal capo reparto, sul computer](../img/capo/persona-computer.png){.computer width="65%"}
 :::
 
+## Numeri nella rubrica del telefono
+
+Per avere i numeri dei ragazzi o dei genitori nella rubrica del telefono, con la rete:
+
+1. In **Soci** o **Genitori** scegli l'unità e tocca **Aggiungi alla rubrica del telefono**.
+   Dalla pagina dell'unità arrivi qui già pronto, con **Soci dell'unità** o **Genitori** in
+   **Numeri nella rubrica del telefono**.
+2. Spunta le persone, o tocca **Tutti**.
+3. Tocca **Scarica i contatti**: il telefono apre il file e ti propone di salvarli in
+   rubrica.
+
+Nel file ci sono solo nome e numeri. Resta sul telefono, fuori dalla protezione con il PIN:
+quando hai salvato i contatti, cancellalo dai download.
+
 ## Correggere un dato di BuonaStrada
 
 Se un dato è sbagliato, correggilo come fa un genitore (vedi [Correggere un

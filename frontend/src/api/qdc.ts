@@ -580,7 +580,7 @@ export interface MiaSquadriglia {
   sono_capo: boolean
   membri: TelefonoMembro[]
   /** Parents' phones: for the capo squadriglia only. */
-  genitori: { figlio_id: number; nome: string; cognome: string; telefono: string }[]
+  genitori: { figlio_id: number; id: number; nome: string; cognome: string; telefono: string }[]
 }
 
 export interface ImpostazioneTelefono {
@@ -3008,6 +3008,11 @@ export const api = {
   togliAllegatoAvviso: (id: number) => richiesta<Avviso>(allegatoAvviso(id), { metodo: 'DELETE' }),
   scegliPreferenzeEmail: (dati: PreferenzeEmail) =>
     richiesta<PreferenzeEmail>('/api/v1/io/email', { metodo: 'PUT', corpo: dati }),
+  /** A vCard file of the chosen people, as text (DEC-302). */
+  rubrica: (persone: number[]) =>
+    richiesta<string>(`/api/v1/rubrica?persone=${persone.join(',')}`, {
+      intestazioni: { Accept: 'text/vcard' },
+    }),
   scegliPulsantiTelefono: (dati: Record<PulsanteTelefono, boolean>) =>
     richiesta<Record<PulsanteTelefono, boolean>>('/api/v1/io/telefono', {
       metodo: 'PUT',

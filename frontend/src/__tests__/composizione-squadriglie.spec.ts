@@ -1,9 +1,12 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import UnitaDettaglioView from '@/views/UnitaDettaglioView.vue'
 
 import { nuovoDatabase, risposta } from './aiuti'
+
+beforeEach(() => setActivePinia(createPinia())) // the page reads the profile
 
 const persona = (id: number, nome: string) => ({ id, nome, cognome: 'Prova' })
 const squadriglia = (id: number, nome: string, membri: object[]) => ({

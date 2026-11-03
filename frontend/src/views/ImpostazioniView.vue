@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { api, type Impostazioni, type ModelloEmailBreve, type Sito } from '@/api/qdc'
+import { api, type Impostazioni, type Sito } from '@/api/qdc'
 import BlocchiAccesso from '@/components/BlocchiAccesso.vue'
 import DestinatariEmail from '@/components/DestinatariEmail.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
@@ -22,11 +22,8 @@ const sito = useSitoStore()
 const dati = ref<Impostazioni | null>(null)
 const esito = ref('')
 
-const modelli = ref<ModelloEmailBreve[]>([])
-
 onMounted(async () => {
   dati.value = (await esegui(() => api.impostazioni())) ?? null
-  if (dati.value?.puo_modificare) modelli.value = (await esegui(() => api.modelliEmail())) ?? []
 })
 
 // The titles as they will look, with the values being typed.
@@ -170,30 +167,14 @@ async function salva() {
           </div>
         </form>
       </section>
-      <section v-if="modelli.length" class="mb-7">
+      <section v-if="dati.puo_modificare" class="mb-7">
         <h2 class="h5">Modelli delle email</h2>
         <p class="small fg-2">
-          Il testo di ogni email che l'app manda. Puoi cambiarlo e tornare quando vuoi al testo di
-          base; quello che serve davvero (link, codici, le informazioni da mandare) deve restare.
+          Il testo di ogni email che l'app manda e il piè di pagina comune, in una pagina a parte.
         </p>
-        <p class="small">
-          <RouterLink to="/impostazioni/email-piede">Piè di pagina comune delle email</RouterLink>
-        </p>
-        <div class="list-group">
-          <RouterLink
-            v-for="m in modelli"
-            :key="m.chiave"
-            :to="{ name: 'modello-email', params: { chiave: m.chiave } }"
-            class="list-group-item list-group-item-action"
-          >
-            <div class="d-flex flex-wrap align-items-center gap-3">
-              <strong>{{ m.nome }}</strong>
-              <span v-if="m.da_correggere" class="badge theme-warning">Da correggere</span>
-              <span v-else-if="m.personalizzato" class="badge theme-success">Personalizzato</span>
-            </div>
-            <div class="small fg-2">{{ m.descrizione }}</div>
-          </RouterLink>
-        </div>
+        <RouterLink :to="{ name: 'modelli-email' }" class="btn btn-sm btn-outline theme-primary"
+          >Modelli delle email</RouterLink
+        >
       </section>
       <section v-if="dati.puo_modificare" class="mb-7">
         <h2 class="h5">Privacy policy e termini</h2>

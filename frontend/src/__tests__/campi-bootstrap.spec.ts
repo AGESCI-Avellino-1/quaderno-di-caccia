@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { mount, RouterLinkStub } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
@@ -8,6 +8,7 @@ import CampoOtp from '@/components/CampoOtp.vue'
 import CampoPassword from '@/components/CampoPassword.vue'
 import Passi from '@/components/Passi.vue'
 import SceltaChip from '@/components/SceltaChip.vue'
+import VociHome from '@/components/VociHome.vue'
 
 /** What the phone does when it fills in a code it suggested: one input event. */
 async function riempi(input: HTMLInputElement, valore: string) {
@@ -183,5 +184,38 @@ describe('SceltaChip', () => {
     expect(chip[0]!.attributes('aria-checked')).toBe('true')
     await chip[1]!.trigger('click')
     expect(scelta.emitted('update:modelValue')).toEqual([['GENITORI']])
+  })
+})
+
+describe('VociHome', () => {
+  it('puts the entries of one unit in one card titled with the unit', () => {
+    const voci = mount(VociHome, {
+      props: {
+        voci: [
+          { nome: 'Imprese', icona: 'flag', to: '/unita/9/imprese' },
+          ...[1, 2].flatMap((n) => [
+            {
+              nome: `Reparto Millenium (${n === 1 ? 'M1' : 'N1'})`,
+              nomeInSezione: 'Progressione',
+              icona: 'compass' as const,
+              to: `/unita/${n}/sentiero`,
+              sezione: `Reparto Millenium (${n === 1 ? 'M1' : 'N1'})`,
+            },
+            {
+              nome: 'Passaggi',
+              icona: 'signpost-split' as const,
+              to: `/unita/${n}/passaggi`,
+              sezione: `Reparto Millenium (${n === 1 ? 'M1' : 'N1'})`,
+            },
+          ]),
+        ],
+      },
+      global: { stubs: { RouterLink: RouterLinkStub } },
+    })
+    const schede = voci.findAll('.card')
+    expect(schede).toHaveLength(3)
+    expect(schede[1]!.find('strong').text()).toBe('Reparto Millenium (M1)')
+    expect(schede[1]!.findAll('nav a').map((a) => a.text())).toEqual(['Progressione', 'Passaggi'])
+    expect(schede[2]!.find('strong').text()).toBe('Reparto Millenium (N1)')
   })
 })

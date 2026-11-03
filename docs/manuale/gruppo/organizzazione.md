@@ -48,13 +48,13 @@ Assistente ecclesiastico, di unità o di gruppo, può essere solo un presbitero:
 compaiono solo i capi che in BuonaStrada hanno la professione «Presbitero». Se manca qualcuno,
 correggi prima la professione nella sua scheda.
 
-## Gli incarichi di gruppo
+## L'organigramma
 
-In **Il mio gruppo**, tocca **Incarichi di gruppo**.
+In **Il mio gruppo**, tocca **Organigramma**.
 
 :::{container} schermate
-![Gli incarichi di gruppo sul telefono](../img/gruppo/incarichi-telefono.png){.telefono width="30%"}
-![Gli incarichi di gruppo sul computer](../img/gruppo/incarichi-computer.png){.computer width="65%"}
+![L'organigramma sul telefono](../img/gruppo/incarichi-telefono.png){.telefono width="30%"}
+![L'organigramma sul computer](../img/gruppo/incarichi-computer.png){.computer width="65%"}
 :::
 
 - **Capigruppo, tesorieri e amministratori**: capogruppo e tesoriere di gruppo (al massimo

@@ -19,7 +19,7 @@ capigruppo possono anche pubblicare avvisi per tutto il gruppo (vedi
 [Usare l'app al posto di…](../capo/impersona)).
 
 Nel menu trovi in più i gruppi **BuonaStrada**, **Gestione economica** e
-**Amministrazione**, e in **Il mio gruppo** le voci **Incarichi di gruppo**, **Modulistica**
+**Amministrazione**, e in **Il mio gruppo** le voci **Organigramma**, **Modulistica**
 e **Richieste privacy**.
 
 :::{container} schermate

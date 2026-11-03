@@ -163,21 +163,21 @@ Deciso il 03/11:
 3. **Altri componenti**: tutti e quattro, «€» negli importi, stepper, chip, avatar negli
    elenchi (persone, squadriglia, staff).
 
-#### N.32 — «Incarichi di gruppo» diventa «Organigramma» ⏳
+#### N.32 — «Incarichi di gruppo» diventa «Organigramma» ✅ 03/11 (DEC-299)
 
 Richiesta del maintainer (03/11). Voce del menu (`navigazione/menu.ts`), titolo della pagina
 (`GruppoView.vue`, `router/pagine.ts`), link nella pagina delle unità (`UnitaView.vue`), test del
 menu e manuale (`gruppo/amministratore.md`, `fine-anno.md`, `index.md`, `organizzazione.md`).
 Solo il nome: la pagina e l'indirizzo restano gli stessi.
 
-#### N.33 — Modelli delle email in una pagina a parte ⏳
+#### N.33 — Modelli delle email in una pagina a parte ✅ 03/11 (DEC-300)
 
 Richiesta del maintainer (03/11): nelle Impostazioni i modelli sono troppi. Deciso il 03/11:
 **pagina a parte** «Modelli delle email»; nelle Impostazioni resta un link. Ogni modello si apre
 come oggi (`ModelloEmailView`), e il breadcrumb porta alla nuova pagina invece che alle
 Impostazioni. Manuale e schermate da aggiornare.
 
-#### N.34 — Chiamare e scrivere dai numeri di telefono ⏳
+#### N.34 — Chiamare e scrivere dai numeri di telefono 🚧 (DEC-301)
 
 Richiesta del maintainer (03/11): ovunque compare un numero, pulsanti accanto per chiamare o
 scrivere. Deciso il 03/11:
@@ -186,13 +186,13 @@ scrivere. Deciso il 03/11:
   +39 aggiunto quando il numero non ne ha uno) e **SMS** (`sms:`).
 - **Ognuno sceglie quali vedere**, nelle impostazioni della propria persona (non del sito): di
   base Chiama e WhatsApp. La scelta sta sul server, con l'account, e vale su tutti i suoi
-  dispositivi [da verificare: in quale pagina del profilo, per esempio accanto alle scelte
-  sulle email].
+  dispositivi: nella pagina delle scelte sulle email, che diventa «Le mie preferenze» (deciso
+  il 03/11).
 - Un solo componente per ogni numero mostrato: scheda della persona, squadriglia, al campo,
   lista d'attesa, reperibilità degli eventi, contatti sanitari… (dove oggi c'è un link `tel:`
   o il numero scritto).
 
-#### N.35 — Numeri di telefono nella rubrica, per capi e capi squadriglia ⏳
+#### N.35 — Numeri di telefono nella rubrica, per capi e capi squadriglia 🚧 (DEC-302)
 
 Richiesta del maintainer (03/11): solo capi e CSQ scelgono uno o più numeri e li aggiungono
 alla rubrica del telefono. Un sito non può scrivere nella rubrica: l'app fa scaricare un file
@@ -202,12 +202,12 @@ di contatti (vCard, `.vcf`) che il telefono propone di salvare. Deciso il 03/11:
   il pulsante non c'è. Il file resta sul telefono fuori dalla protezione col PIN: dentro solo
   nome e numero.
 - Solo i numeri che la persona già vede: i capi quelli delle loro unità (ragazzi e genitori),
-  il CSQ quelli della sua squadriglia (`/mia-squadriglia`, DEC-13) [da verificare: da quali
-  pagine si scelgono, per esempio l'unità e «La mia squadriglia»]. Va deciso dalla policy, con
-  un endpoint che prepara il file e i test per ogni ruolo; il download nel registro degli
-  accessi se servisse [da verificare].
+  il CSQ quelli della sua squadriglia (`/mia-squadriglia`, DEC-13). Si scelgono dall'elenco dei
+  soci e dei genitori, dalla pagina dell'unità e da «La mia squadriglia» (deciso il 03/11).
+  Decide la policy, con un endpoint che prepara il file e i test per ogni ruolo. Il download
+  non va nel registro degli accessi (deciso il 03/11).
 
-#### N.36 — Progressione personale raggruppata per unità ⏳
+#### N.36 — Progressione personale raggruppata per unità ✅ 03/11 (DEC-303)
 
 Segnalazione del maintainer (03/11, con due reparti in parallelo, «Reparto Millenium (M1)» e
 «(N1)»): nella Home le voci Imprese e Passaggi sono schede sciolte e non si capisce di quale
@@ -217,7 +217,7 @@ dell'unità, e dentro i link Progressione, Imprese (reparto), Carta di clan (cla
 nel menu laterale l'unità diventa un titoletto con le sue voci sotto. Le «Imprese» del CSQ e
 la Progressione del ragazzo restano come oggi.
 
-Per tutte e cinque: nuovo DEC nell'analisi prima di svilupparle (N.32 e N.36 cambiano DEC-241 sul menu).
+DEC-299…DEC-303 nell'analisi (03/11). Via del maintainer il 03/11, con la release dopo.
 
 ### Fatto nel giro del 03/11
 

@@ -228,6 +228,15 @@ body {
   padding-left: 3rem;
 }
 
+// The name of a unit served over its entries in the side menu (DEC-303).
+.qdc-titoletto-menu {
+  display: block;
+  padding: 0.5rem 1rem 0.125rem 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.82;
+}
+
 .ag-sidebar--collapsed .ag-sidebar__nav-link.qdc-nel-gruppo {
   padding-left: 1rem;
 }
@@ -330,4 +339,8 @@ body {
 }
 .otp-slot {
   min-width: 0;
+}
+
+.ag-sidebar--collapsed .qdc-titoletto-menu {
+  display: none;
 }

@@ -41,7 +41,9 @@ async function salva() {
 
 <template>
   <section>
-    <RouterLink to="/impostazioni" class="small">Torna alle impostazioni</RouterLink>
+    <RouterLink :to="{ name: 'modelli-email' }" class="small"
+      >Torna ai modelli delle email</RouterLink
+    >
     <h1 class="h4 mb-1 mt-3">Piè di pagina delle email</h1>
     <p class="small fg-2">
       Si aggiunge in fondo a tutte le email, tranne quelle in cui lo togli dal loro modello. Le

@@ -1,7 +1,7 @@
 # Amministratore tecnico
 
 L'amministratore tecnico cura la parte tecnica dell'app. Il primo lo crea chi installa l'app;
-gli altri li nominano i capigruppo in **Incarichi di gruppo**, e devono essere capi.
+gli altri li nominano i capigruppo nell'**Organigramma**, e devono essere capi.
 L'incarico non dà accesso ai dati educativi dei ragazzi.
 
 Può:
@@ -9,7 +9,7 @@ Può:
 - cambiare le **Impostazioni** del sito, i modelli delle email e le pagine legali (vedi
   [Impostazioni](impostazioni));
 - importare da BuonaStrada e gestire le correzioni (vedi [BuonaStrada](buonastrada));
-- nominare il **primo capogruppo**, quando il gruppo non ne ha (in **Incarichi di gruppo**);
+- nominare il **primo capogruppo**, quando il gruppo non ne ha (nell'**Organigramma**);
 - impostare il **server di posta** e aprire il **Pannello di amministrazione** e la
   **modalità di prova delle email**;
 - mettere l'app in **manutenzione** e **sbloccare gli accessi** di chi ha sbagliato la

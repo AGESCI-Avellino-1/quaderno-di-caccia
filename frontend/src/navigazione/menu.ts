@@ -22,6 +22,13 @@ export interface Voce {
   contatore?: number
   /** Indented under the entry before it (a section of that page). */
   sottovoce?: boolean
+  /**
+   * The block it belongs to, a unit served (DEC-303): the Home puts the block in one card
+   * titled with it, the side menu under a small heading with it.
+   */
+  sezione?: string
+  /** The name shown inside its block, when it differs (the unit's own entry). */
+  nomeInSezione?: string
 }
 
 export interface Gruppo {
@@ -91,12 +98,17 @@ function progressione(p: Profilo): Voce[] {
       descrizione: "Posti d'azione e verifiche delle imprese che guidi",
     })
   }
+  // One block per unit served (DEC-303): with two parallel reparti it is clear whose
+  // Imprese and Passaggi are which.
   for (const u of p.unita_servizio ?? []) {
+    const sezione = u.nome
     voci.push({
       nome: u.nome,
+      nomeInSezione: 'Progressione',
       icona: 'compass',
       to: { name: 'sentiero-unita', params: { id: u.id } },
       descrizione: "La progressione dell'unità",
+      sezione,
     })
     if (u.tipo === 'REPARTO') {
       voci.push({
@@ -104,6 +116,7 @@ function progressione(p: Profilo): Voce[] {
         icona: 'flag',
         to: { name: 'imprese', params: { id: u.id } },
         sottovoce: true,
+        sezione,
       })
     }
     if (u.tipo === 'CLAN_FUOCO') {
@@ -112,6 +125,7 @@ function progressione(p: Profilo): Voce[] {
         icona: 'file-earmark-text',
         to: { name: 'carta-clan', params: { id: u.id } },
         sottovoce: true,
+        sezione,
       })
     }
     voci.push({
@@ -119,6 +133,7 @@ function progressione(p: Profilo): Voce[] {
       icona: 'signpost-split',
       to: { name: 'passaggi', params: { id: u.id } },
       sottovoce: true,
+      sezione,
     })
   }
   return voci
@@ -178,7 +193,8 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           descrizione: 'Branchi, cerchi, reparti, clan e Comunità capi',
         },
         (p.capo || p.amministratore_tecnico) && {
-          nome: 'Incarichi di gruppo',
+          // Organigramma since DEC-299 (was «Incarichi di gruppo»).
+          nome: 'Organigramma',
           icona: 'person-badge',
           to: '/gruppo',
           descrizione: p.capo

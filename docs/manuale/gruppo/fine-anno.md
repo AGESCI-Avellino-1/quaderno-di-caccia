@@ -1,6 +1,6 @@
 # Fine anno e archivio
 
-In fondo alla pagina **Incarichi di gruppo** i capigruppo trovano tre riquadri per la fine
+In fondo alla pagina **Organigramma** i capigruppo trovano tre riquadri per la fine
 dell'anno.
 
 ## Chiudere l'anno

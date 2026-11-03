@@ -380,6 +380,12 @@ const router = createRouter({
       component: () => import('@/views/PiedeEmailView.vue'),
     },
     {
+      // The list of the email templates, a page of its own (DEC-300).
+      path: '/impostazioni/email',
+      name: 'modelli-email',
+      component: () => import('@/views/ModelliEmailView.vue'),
+    },
+    {
       // One email template (DEC-250): capigruppo and the technical administrator.
       path: '/impostazioni/email/:chiave',
       name: 'modello-email',

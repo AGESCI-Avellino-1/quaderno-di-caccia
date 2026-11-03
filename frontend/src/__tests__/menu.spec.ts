@@ -105,11 +105,22 @@ describe('menu', () => {
       'Carta di clan',
       'Passaggi',
     ])
+    // Each unit is one block: with two parallel reparti, whose Passaggi are which is clear.
+    const progressione = gruppiMenu(capo).find((g) => g.chiave === 'progressione')!.voci
+    expect(progressione.map((v) => v.sezione)).toEqual([
+      'Reparto Antares (N1)',
+      'Reparto Antares (N1)',
+      'Reparto Antares (N1)',
+      'Clan/Fuoco Hirpinia (T1)',
+      'Clan/Fuoco Hirpinia (T1)',
+      'Clan/Fuoco Hirpinia (T1)',
+    ])
+    expect(progressione[0]!.nomeInSezione).toBe('Progressione')
     expect(voci(capo, 'gruppo')).toEqual([
       'Soci',
       'Genitori',
       'Unità',
-      'Incarichi di gruppo',
+      'Organigramma',
       'Richieste di iscrizione',
     ])
     expect(titoli(capo)).not.toContain('BuonaStrada')

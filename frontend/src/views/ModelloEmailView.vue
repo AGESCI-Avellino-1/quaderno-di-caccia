@@ -75,7 +75,9 @@ async function vedi() {
 
 <template>
   <section>
-    <RouterLink to="/impostazioni" class="small">Torna alle impostazioni</RouterLink>
+    <RouterLink :to="{ name: 'modelli-email' }" class="small"
+      >Torna ai modelli delle email</RouterLink
+    >
     <div v-if="errore" class="alert theme-danger small mt-3" role="alert">{{ errore }}</div>
     <template v-if="modello">
       <h1 class="h4 mb-1 mt-3">{{ modello.nome }}</h1>

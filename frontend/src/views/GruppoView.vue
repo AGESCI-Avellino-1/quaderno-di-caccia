@@ -37,7 +37,7 @@ const sessione = useSessioneStore()
 
 <template>
   <section>
-    <h1 class="h4 mb-5">Incarichi di gruppo</h1>
+    <h1 class="h4 mb-5">Organigramma</h1>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
     <template v-if="dati">

@@ -34,6 +34,12 @@ const gruppi = computed<Gruppo[]>(() =>
 const profilo = computed<Voce[]>(() => (sessione.profilo ? vociProfilo(sessione.profilo) : []))
 const inImpersonazione = computed(() => !!sessione.profilo?.impersonazione)
 
+/** The first entry of a unit's block: the unit's name goes above it (DEC-303). */
+function primaDellaSezione(g: Gruppo, v: Voce) {
+  const i = g.voci.indexOf(v)
+  return i === 0 || g.voci[i - 1]!.sezione !== v.sezione
+}
+
 /** A group with one entry of the same name (Bacheca, a child's own path) is one link. */
 const singola = (g: Gruppo) => g.voci.length === 1 && g.voci[0]!.nome === g.titolo
 
@@ -185,6 +191,12 @@ defineExpose({ apri })
           v-for="v in aperto(g) || singola(g) ? g.voci : []"
           :key="`${g.chiave}-${v.nome}-${JSON.stringify(v.to)}`"
         >
+          <!-- A unit served: its name over its entries (DEC-303). -->
+          <span
+            v-if="v.sezione && primaDellaSezione(g, v)"
+            class="ag-sidebar__label qdc-titoletto-menu text-truncate"
+            >{{ v.sezione }}</span
+          >
           <a
             v-if="v.esterna"
             :href="String(v.to)"
@@ -199,13 +211,13 @@ defineExpose({ apri })
             v-else
             :to="v.to"
             class="ag-sidebar__nav-link"
-            :class="{ 'qdc-nel-gruppo': !singola(g), 'qdc-sottovoce': v.sottovoce }"
+            :class="{ 'qdc-nel-gruppo': !singola(g), 'qdc-sottovoce': v.sottovoce || v.sezione }"
             active-class=""
             exact-active-class="active"
             :title="v.nome"
           >
             <Icona :nome="v.icona" />
-            <span class="ag-sidebar__label">{{ v.nome }}</span>
+            <span class="ag-sidebar__label">{{ v.nomeInSezione ?? v.nome }}</span>
             <span v-if="v.contatore" class="badge theme-warning ms-auto">{{ v.contatore }}</span>
           </RouterLink>
         </li>

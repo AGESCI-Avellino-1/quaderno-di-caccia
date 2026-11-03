@@ -388,8 +388,8 @@ passkey o secondo fattore, cancellare l'account. **Cancellare toglie solo l'acce
 passkey, dispositivi, sessioni): la persona e i suoi dati restano (per quelli c'è la richiesta
 dell'interessato, DEC-102). Ogni azione chiede un **motivo**, resta nel registro delle modifiche,
 e l'interessato riceve un'**email** quando cambiano l'email o i metodi di accesso o l'account è
-cancellato. [da verificare con il maintainer allo sviluppo: bloccate durante l'impersonazione,
-DEC-167]
+cancellato. Pagina e azioni sono **bloccate mentre si usa l'app al posto di un altro**
+(DEC-167, `middleware.BLOCCATE`), confermato il 03/11.
 
 #### N.48 — Dall'avatar alla scheda della persona ⏳
 

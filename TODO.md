@@ -285,12 +285,13 @@ negli aggiornamenti che partono dalla 1.10.
 Richieste del maintainer del 03/11, solo annotate: si sviluppano quando il maintainer dice di
 partire. Risposte alle domande date il 03/11; il maintainer ha detto di partire il 03/11, DEC-306…DEC-315 nell'analisi. Ordine: N.49, N.40, N.48, N.46, N.47, N.42, N.43, N.41, N.44, N.45.
 
-#### N.40 — Organigramma: tipi di incarico scelti da un menu a selezione multipla ⏳ (DEC-306)
+#### N.40 — Organigramma: tipi di incarico scelti da un menu a selezione multipla ✅ 03/11 (DEC-306)
 
 Nel PDF dell'organigramma i tipi di incarico da includere si scelgono oggi con caselle di
 spunta: al loro posto un menu a tendina con più scelte (combobox). **Solo lì** (deciso il 03/11):
-l'assegnazione degli incarichi resta com'è. Da verificare cosa offre Bootstrap 6 alpha (forse un
-componente nostro).
+l'assegnazione degli incarichi resta com'è. Fatto: `components/SceltaMultipla.vue`, con il
+markup del combobox di Bootstrap 6 e il suo menu (il combobox di Bootstrap scrive il riepilogo in
+inglese), «Tutti» e «Nessuno» in cima; schermata del manuale rifatta.
 
 #### N.41 — Genitore che diventa capo, in due passi annullabili ⏳ (DEC-307) (sostituisce DEC-282)
 

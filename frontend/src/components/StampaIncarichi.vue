@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { api, elencoIncarichiPdf, type OpzioniElencoIncarichi } from '@/api/qdc'
+import SceltaMultipla from '@/components/SceltaMultipla.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The PDF list of the group's roles, for the capigruppo (DEC-284): the kinds of role,
@@ -36,21 +37,14 @@ const indirizzo = computed(() =>
   </p>
   <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
   <div v-if="opzioni" class="card card-body">
-    <fieldset class="mb-5">
-      <legend class="small fw-bold">Incarichi da includere</legend>
-      <div class="row">
-        <div v-for="r in opzioni.ruoli" :key="r.valore" class="col-12 md:col-6 form-field">
-          <input
-            :id="`elenco-${r.valore}`"
-            v-model="scelti"
-            type="checkbox"
-            class="check"
-            :value="r.valore"
-          />
-          <label :for="`elenco-${r.valore}`">{{ r.nome }}</label>
-        </div>
-      </div>
-    </fieldset>
+    <div class="mb-5">
+      <label for="elenco-ruoli" class="form-label small fw-bold">Incarichi da includere</label>
+      <SceltaMultipla
+        id="elenco-ruoli"
+        v-model="scelti"
+        :scelte="opzioni.ruoli.map((r) => ({ valore: r.valore, nome: r.nome }))"
+      />
+    </div>
     <fieldset class="mb-5">
       <legend class="small fw-bold">Raggruppa i capi</legend>
       <div class="form-field">

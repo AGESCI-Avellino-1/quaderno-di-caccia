@@ -16,6 +16,7 @@ import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
 import cashCoin from 'bootstrap-icons/icons/cash-coin.svg?raw'
 import cash from 'bootstrap-icons/icons/cash.svg?raw'
 import chatText from 'bootstrap-icons/icons/chat-text.svg?raw'
+import check2 from 'bootstrap-icons/icons/check2.svg?raw'
 import check2Square from 'bootstrap-icons/icons/check2-square.svg?raw'
 import chevronDown from 'bootstrap-icons/icons/chevron-down.svg?raw'
 import chevronLeft from 'bootstrap-icons/icons/chevron-left.svg?raw'
@@ -99,6 +100,7 @@ export const ICONE = {
   cash: cash,
   'cash-coin': cashCoin,
   'chat-text': chatText,
+  check2: check2,
   'check2-square': check2Square,
   'chevron-down': chevronDown,
   'chevron-left': chevronLeft,

@@ -687,10 +687,16 @@ const SCENE: Scena[] = [
   },
   { nome: 'gruppo/incarichi', chi: 'capogruppo', percorso: '/gruppo', intera: true },
   {
+    // The menu of the kinds of role open, one of them unticked.
     nome: 'gruppo/elenco-incarichi',
     chi: 'capogruppo',
     percorso: '/gruppo',
     mostra: 'Elenco degli incarichi',
+    prepara: async (pagina) => {
+      await pagina.locator('#elenco-ruoli').click()
+      await pagina.locator('#elenco-ruoli + .menu [role=option]').last().click()
+      await pagina.locator('#elenco-ruoli + .menu').evaluate((m) => (m.scrollTop = 0))
+    },
   },
   { nome: 'gruppo/impostazioni', chi: 'capogruppo', percorso: '/impostazioni', intera: true },
   {

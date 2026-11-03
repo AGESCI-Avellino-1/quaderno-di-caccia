@@ -76,7 +76,9 @@ In fondo alla pagina, in **Elenco degli incarichi**, un capogruppo stampa un PDF
 intestata del gruppo con codice socio, cognome, nome e livello di formazione capi di ogni
 capo.
 
-1. Spunta gli **Incarichi da includere** (di base ci sono tutti).
+1. Apri il menu **Incarichi da includere** e tocca gli incarichi da togliere o da
+   rimettere (di base ci sono tutti; **Tutti** e **Nessuno** in cima li scelgono in un colpo).
+   Tocca fuori dal menu per chiuderlo.
 2. Scegli come raggruppare i capi: **Per unità** o **Per incarico**. Per unità, ogni
    incarico sta nella sua sezione: quelli di un'unità nell'unità, quelli di gruppo
    (capogruppo, assistente ecclesiastico di gruppo, tesoriere di gruppo, amministratore,

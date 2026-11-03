@@ -71,9 +71,9 @@ Deciso il 03/11 (cambia DEC-97: nuovo DEC nell'analisi):
    decisione 1 il maintainer aveva scelto di toglierla).
 3. Manuale (protezione del dispositivo, accesso con passkey) e schermate da aggiornare.
 
-Intanto, per il maintainer: in Password di Apple si possono cancellare le passkey di
-qdc.avellino1.it senza «sblocco» nel nome che non sono passkey di accesso (quelle di accesso
-sono elencate in Dispositivi, nella sezione delle passkey).
+Intanto, per il maintainer: sbloccare con il PIN; in Password di Apple cancellare tutte le
+passkey di qdc.avellino1.it e, se serve entrare con la passkey, crearne una sola di accesso
+da Dispositivi (non fa sbloccare l'app finché N.27 non è sviluppata).
 
 ### Fatto nel giro del 03/11
 

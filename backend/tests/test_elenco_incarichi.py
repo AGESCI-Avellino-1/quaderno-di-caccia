@@ -60,12 +60,12 @@ def test_per_unita_ogni_capo_in_ogni_sezione_dei_suoi_incarichi(
     capi, capo, capogruppo, reparto, coca
 ):
     sezioni = elenco.sezioni(TUTTI, "unita", date.today())
-    assert [s.titolo for s in sezioni] == [str(reparto), str(coca)]
+    assert [s.titolo for s in sezioni] == [str(coca), str(reparto)]
     # The capogruppo serving the reparto is in both, with that section's roles only
     # (maintainer, 03/11).
-    assert _nomi(sezioni[0]) == [("Capo", ["Capo unità"]), ("Doppia", ["Staff di unità"])]
+    assert _nomi(sezioni[1]) == [("Capo", ["Capo unità"]), ("Doppia", ["Staff di unità"])]
     # The treasurer with no service shows the support service, in the PDF only.
-    assert _nomi(sezioni[1]) == [
+    assert _nomi(sezioni[0]) == [
         ("Disponibile", ["Servizio di supporto al gruppo"]),
         ("Doppia", ["Capogruppo", "Tesoriere di gruppo"]),
         ("Gruppo", ["Capogruppo"]),
@@ -107,8 +107,8 @@ def test_per_unita_capigruppo_in_coca_solo_se_scelti(capi, reparto, coca):
     sezioni = elenco.sezioni({R.STAFF}, "unita", date.today())
     assert [s.titolo for s in sezioni] == [str(reparto)]
     sezioni = elenco.sezioni({R.STAFF, R.CAPOGRUPPO}, "unita", date.today())
-    assert [s.titolo for s in sezioni] == [str(reparto), str(coca)]
-    assert _nomi(sezioni[1]) == [("Doppia", ["Capogruppo"]), ("Gruppo", ["Capogruppo"])]
+    assert [s.titolo for s in sezioni] == [str(coca), str(reparto)]
+    assert _nomi(sezioni[0]) == [("Doppia", ["Capogruppo"]), ("Gruppo", ["Capogruppo"])]
 
 
 def test_per_unita_solo_gli_incarichi_scelti(capi, reparto):
@@ -181,3 +181,30 @@ def test_pdf_richieste_sbagliate(capogruppo):
     assert client.get(f"{base}?ruoli=STAFF&raggruppa=altro").status_code == 400
     futuro = AnnoAssociativo.corrente().anno_fine + 1
     assert client.get(f"{base}?ruoli=STAFF&anno={futuro}").status_code == 400
+
+
+def test_per_unita_coca_poi_lc_eg_rs_per_codice(gruppo, coca):
+    """The Co.Ca. first, then L/C, E/G and R/S, each by code (maintainer, 03/11)."""
+    from apps.organizzazione.models import Composizione, TipoUnita, Unita
+
+    def unita(tipo, codice, progressivo):
+        nuova = Unita.objects.create(
+            gruppo=gruppo,
+            nome=f"Unità {codice}{progressivo}",
+            tipo=tipo,
+            composizione=Composizione.MISTA,
+            codice_unita=codice,
+            progressivo=progressivo,
+        )
+        capo = crea_capo("Capo", f"{codice}{progressivo}", f"{codice}{progressivo}@example.invalid")
+        _incarico(capo, R.STAFF, unita=nuova)
+        return nuova
+
+    clan = unita(TipoUnita.CLAN_FUOCO, "T", 1)
+    reparto2 = unita(TipoUnita.REPARTO, "E", 2)
+    branco = unita(TipoUnita.BRANCO_CERCHIO, "L", 1)
+    reparto1 = unita(TipoUnita.REPARTO, "E", 1)
+    capogruppo = crea_capo("Lia", "Capogruppo", "lia@example.invalid")
+    _incarico(capogruppo, R.CAPOGRUPPO, gruppo=gruppo)
+    titoli = [s.titolo for s in elenco.sezioni(TUTTI, "unita", date.today())]
+    assert titoli == [str(coca), str(branco), str(reparto1), str(reparto2), str(clan)]

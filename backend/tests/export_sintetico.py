@@ -131,6 +131,7 @@ def righe_standard() -> list[dict[str, str]]:
                 "BRANCA": "Adulti", "TIPO UNITA": "COMUNITA` CAPI", "CUN": "G",
                 "LIVELLO FOCA": "5", "INGRESSO COCA": "2010", "NUM.NOMINA": "80001",
                 "DATA NOMINA": "12/03/2012", "EMAIL": "laura.bianchi@example.invalid",
+                "PROFESSIONE": "INSEGNANTE",
             }
         ),
         riga(  # ex member: never imported

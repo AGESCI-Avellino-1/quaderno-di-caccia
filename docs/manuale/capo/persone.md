@@ -22,6 +22,9 @@ capigruppo lo mandano alla segreteria. Per i ragazzi della tua unità puoi corre
 tutto, anche il sesso e il luogo di nascita; nome, cognome, data di nascita e codice fiscale
 li correggono solo i capigruppo.
 
+La **professione**, che arriva da BuonaStrada, la vedono solo la persona stessa e i capi; si
+corregge scegliendola dall'elenco di BuonaStrada.
+
 ## Il percorso scout
 
 Il riquadro **Percorso scout** elenca tutti i periodi della persona, da ragazzo e da capo,

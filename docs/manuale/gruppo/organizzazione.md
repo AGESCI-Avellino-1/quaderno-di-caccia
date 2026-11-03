@@ -44,6 +44,10 @@ massimo due nelle unità miste e in Comunità capi, uno nelle altre. Per chiuder
 L'**Assistente ecclesiastico di unità** si assegna allo stesso modo, dai capigruppo o dal
 capo unità: nell'app conta come lo staff dell'unità.
 
+Assistente ecclesiastico, di unità o di gruppo, può essere solo un presbitero: nell'elenco
+compaiono solo i capi che in BuonaStrada hanno la professione «Presbitero». Se manca qualcuno,
+correggi prima la professione nella sua scheda.
+
 ## Gli incarichi di gruppo
 
 In **Il mio gruppo**, tocca **Incarichi di gruppo**.

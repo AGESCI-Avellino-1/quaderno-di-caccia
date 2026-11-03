@@ -579,12 +579,18 @@ def elenco_incarichi_pdf(
 
 
 @router.get("/capi", response=list[PersonaBreve])
-def elenco_capi(request):
-    """Active capi: who can be appointed to staff and group roles."""
+def elenco_capi(request, presbiteri: bool = False):
+    """Active capi: who can be appointed to staff and group roles. `presbiteri`: only who
+    may be assistente ecclesiastico (DEC-296)."""
     if not policy.puo_vedere_incarichi_di_gruppo(request.auth):
         raise HttpError(403, "Riservato ai capi.")
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
-    return Persona.objects.filter(pk__in=capi.values("persona_id")).order_by("cognome", "nome")
+    persone = Persona.objects.filter(pk__in=capi.values("persona_id"))
+    if presbiteri:
+        persone = persone.filter(
+            Q(professione__icontains="presbitero") | Q(professione__icontains="sacerdote")
+        )
+    return persone.order_by("cognome", "nome")
 
 
 class NuovoIncarico(Schema):

@@ -495,6 +495,7 @@ def _persona(
         "cap": riga.cap,
         "email": riga.email,
         "cellulare": riga.cellulare,
+        "professione": riga.professione,
         # I is a renewal with a transfer: in the app, a member like R (DEC-272).
         "stato_socio": stato or ("R" if riga.stato == "I" else riga.stato),
         "consenso_iscrizione": riga.consenso_iscrizione,

@@ -94,6 +94,7 @@ class RigaSocio:
     cap: str
     email: str
     cellulare: str
+    professione: str
     livello_formazione: int | None
     anno_ingresso_coca: int | None
     numero_nomina: str
@@ -411,6 +412,7 @@ def _costruisci_riga(
         cap=v.get("CAP", ""),
         email=v.get("EMAIL", ""),
         cellulare=v.get("CELLULARE", ""),
+        professione=v.get("PROFESSIONE", "").strip(),
         livello_formazione=_intero(v.get("LIVELLO FOCA", "")),
         anno_ingresso_coca=ingresso_coca,
         numero_nomina=v.get("NUM.NOMINA", ""),
@@ -462,6 +464,7 @@ _LUNGHEZZE = {
     "comune": ("Comune di residenza", 120),
     "cap": ("CAP", 5),
     "numero_nomina": ("Numero di nomina", 20),
+    "professione": ("Professione", 100),
 }
 
 

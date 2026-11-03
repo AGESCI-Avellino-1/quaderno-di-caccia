@@ -40,6 +40,8 @@ class Persona(ModelloTracciato):
     cap = models.CharField(max_length=5, blank=True)
     email = models.EmailField(blank=True)
     cellulare = models.CharField(max_length=30, blank=True)
+    # From BuonaStrada, one of PROFESSIONI; seen by the person and the Co.Ca. (DEC-296).
+    professione = models.CharField(max_length=100, blank=True)
     # A landline or work number, entered in the app (not in BuonaStrada): on the medical
     # form of every child (DEC-289).
     telefono_fisso = models.CharField(max_length=30, blank=True)
@@ -118,6 +120,7 @@ CAMPI_BUONASTRADA = (
     "cap",
     "email",
     "cellulare",
+    "professione",
     "stato_socio",
     "consenso_iscrizione",
     "consenso_foto",
@@ -133,6 +136,43 @@ CAMPI_BUONASTRADA = (
 # policy.campi_correggibili: contacts, address and consents also by the adult member
 # themself; sex and place of birth by the unit staff too, not by the parents; the rest
 # of identity only by the capigruppo.
+# The values of BuonaStrada's PROFESSIONE (export of 2026): the choices of a correction. Not a
+# constraint on the field: a new value from BuonaStrada is still imported (DEC-296).
+PROFESSIONI = (
+    "ALTRA ATTIVITA",
+    "ALTRA LIBERA PROFESSIONE",
+    "ARTIGIANO",
+    "AVVOCATO",
+    "COMMERCIANTE",
+    "DIRIGENTE SETTORE PRIVATO",
+    "DIRIGENTE SETTORE PUBBLICO",
+    "DISOCCUPATO",
+    "DOCENTE UNIVERSITARIO",
+    "IMPIEGATO SETTORE PRIVATO CON ALTRE FORME CONTRATTUALI",
+    "IMPIEGATO SETTORE PRIVATO TEMPO DETERMINATO",
+    "IMPIEGATO SETTORE PRIVATO TEMPO INDETERMINATO",
+    "IMPIEGATO SETTORE PUBBLICO CON ALTRE FORME CONTRATTUALI",
+    "IMPIEGATO SETTORE PUBBLICO TEMPO DETERMINATO",
+    "IMPIEGATO SETTORE PUBBLICO TEMPO INDETERMINATO",
+    "INFERMIERE",
+    "INSEGNANTE",
+    "MEDICO",
+    "OPERAIO",
+    "PENSIONATO/A",
+    "PRESBITERO",
+    "PSICOLOGO",
+    "RELIGIOSO/A",
+    "STUDENTE SCUOLA SUPERIORE",
+    "STUDENTE UNIVERSITARIO",
+)
+
+
+def e_presbitero(professione: str) -> bool:
+    """Only a presbitero may be assistente ecclesiastico (DEC-296)."""
+    testo = professione.casefold()
+    return "presbitero" in testo or "sacerdote" in testo
+
+
 CAMPI_CONTATTO = ("indirizzo", "civico", "comune", "provincia", "cap", "email", "cellulare")
 CAMPI_CONSENSO = (
     "consenso_iscrizione",
@@ -157,6 +197,7 @@ ETICHETTE_CAMPI = {
     "cap": "CAP",
     "email": "Email",
     "cellulare": "Cellulare",
+    "professione": "Professione",
     "stato_socio": "Stato del socio",
     "consenso_iscrizione": "Consenso per l'iscrizione (2A)",
     "consenso_foto": "Consenso per le foto (2B)",

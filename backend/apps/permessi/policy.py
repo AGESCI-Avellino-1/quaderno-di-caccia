@@ -366,6 +366,15 @@ def _staff_della_persona(user, persona: Persona) -> bool:
     return bool(set(unita) & _unita_servite(user))
 
 
+def vede_professione(user, persona: Persona) -> bool:
+    """The profession (DEC-296): the person and the Co.Ca. (any capo not waiting for the
+    BuonaStrada code)."""
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return True
+    return e_capo(user) and not e_capo_in_attesa(user)
+
+
 def campi_correggibili(user, persona: Persona) -> set[str]:
     """BuonaStrada fields the user may correct in the app (DEC-31; who corrects what:
     DEC-129).
@@ -377,7 +386,10 @@ def campi_correggibili(user, persona: Persona) -> set[str]:
     an adult no longer write (DEC-26).
     """
     if e_amministratore(user) or e_capogruppo(user):
-        return set(CAMPI_BUONASTRADA)
+        campi = set(CAMPI_BUONASTRADA)
+        if not vede_professione(user, persona):
+            campi.discard("professione")
+        return campi
     campi: set[str] = set()
     propria = persona_di(user)
     if propria is not None and propria.pk == persona.pk and not persona.e_minorenne():
@@ -386,6 +398,9 @@ def campi_correggibili(user, persona: Persona) -> set[str]:
         campi |= set(CAMPI_BUONASTRADA) - set(CAMPI_IDENTITA)
     if _staff_della_persona(user, persona):
         campi |= set(CAMPI_BUONASTRADA) - set(CAMPI_IDENTITA) | set(CAMPI_IDENTITA_STAFF)
+    # Nobody corrects what they may not see (DEC-296).
+    if not vede_professione(user, persona):
+        campi.discard("professione")
     return campi
 
 

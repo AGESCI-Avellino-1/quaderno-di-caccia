@@ -98,6 +98,22 @@ Deciso il 03/11:
    e anche in Co.Ca. con «Servizio di supporto al gruppo» (N.22);
 5. sviluppo subito e release 1.6.1.
 
+#### N.29 — Professione da BuonaStrada, regola degli AE, ordine del PDF degli incarichi ✅ 03/11
+
+Richiesta del maintainer (03/11). Fatto con test (DEC-296): professione importata per tutti i
+soci che l'hanno, vista dalla persona e dalla Co.Ca. nella scheda, corretta scegliendo tra i
+valori di BuonaStrada; nomina di un AE rifiutata se la professione non dice presbitero o
+sacerdote, e nel menu delle nomine solo i presbiteri; nel PDF per unità prima la Co.Ca., poi
+L/C, E/G, R/S per codice. Controllato su un'esportazione vera (in `ignored/`, solo conteggi): la
+professione è un elenco fisso di 25 valori con «PRESBITERO»; **non importati**: la nazionalità
+(codice numerico: serve la tabella dei codici di BuonaStrada `[da verificare]`) e gli incarichi
+associativi (colonne vuote in tutte le righe di «Ricerca Soci»).
+
+#### N.30 — Foto del profilo nell'avatar ⏳ (domande al maintainer)
+
+Richiesta del maintainer (03/11): se la persona collegata all'account ha una foto nel profilo,
+l'avatar (in basso nel menu laterale, oggi le iniziali) mostra quella foto.
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,

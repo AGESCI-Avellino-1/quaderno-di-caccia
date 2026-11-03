@@ -56,7 +56,8 @@ const ragazziDi = async (unitaId: number) => (await api.persone(unitaId)).map(br
 // the Consiglio degli Anziani is made of the lupetti and coccinelle (DEC-182).
 async function candidatiUnita(ruolo: string) {
   if (ruolo === 'CONSIGLIO_ANZIANI') return ragazziDi(props.id)
-  const capi = await api.capi()
+  // Only a presbitero may be assistente ecclesiastico (DEC-296).
+  const capi = await api.capi(ruolo === 'AE_UNITA')
   if (ruolo !== 'TESORIERE_UNITA' || !rs.value) return capi
   return [...capi, ...(await ragazziDi(props.id))]
 }

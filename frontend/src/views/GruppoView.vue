@@ -27,7 +27,8 @@ async function carica() {
 }
 onMounted(carica)
 
-const capi = () => api.capi()
+// Only a presbitero may be assistente ecclesiastico (DEC-296): the list shows only them.
+const capi = (ruolo: string) => api.capi(ruolo === 'AE_GRUPPO')
 const ancoraADisposizione = computed(
   () => dati.value?.supporto.filter((i) => i.ruolo === 'A_DISPOSIZIONE') ?? [],
 )

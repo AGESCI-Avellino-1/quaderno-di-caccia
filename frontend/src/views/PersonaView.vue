@@ -24,6 +24,8 @@ import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
 
+// BuonaStrada writes it in capitals: «INSEGNANTE» → «Insegnante».
+const professione = (testo: string) => testo.charAt(0) + testo.slice(1).toLowerCase()
 const props = defineProps<{ id: number }>()
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
@@ -141,6 +143,10 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <dd class="col-7 md:col-9">
             <a :href="`tel:${persona.cellulare}`">{{ persona.cellulare }}</a>
           </dd>
+        </template>
+        <template v-if="persona.professione">
+          <dt class="col-5 md:col-3">Professione</dt>
+          <dd class="col-7 md:col-9">{{ professione(persona.professione) }}</dd>
         </template>
         <template v-if="persona.indirizzo">
           <dt class="col-5 md:col-3">Indirizzo</dt>

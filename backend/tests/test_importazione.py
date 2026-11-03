@@ -84,6 +84,7 @@ def test_capo_entra_in_comunita_capi_con_ruolo_capo():
     assert appartenenza.ruolo == RuoloAppartenenza.CAPO
     assert laura.livello_formazione == 5
     assert laura.data_nomina == date(2012, 3, 12)
+    assert laura.professione == "INSEGNANTE"  # DEC-296
 
 
 def test_censimento_in_corso_non_disattiva_nessuno():

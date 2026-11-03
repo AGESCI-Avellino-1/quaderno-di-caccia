@@ -76,10 +76,12 @@ def test_chi_corregge_i_dati_di_una_ragazza(
 ):
     campi = policy.campi_correggibili
     assert campi(capogruppo.utente, ragazza) == TUTTI
-    assert campi(amministratore, ragazza) == TUTTI
+    # The profession only for who sees it, the Co.Ca. (DEC-296): not a technical
+    # administrator who is no capo, not the parents.
+    assert campi(amministratore, ragazza) == TUTTI - {"professione"}
     assert campi(capo.utente, ragazza) == STAFF  # capo unità of her reparto
     assert campi(staff.utente, ragazza) == STAFF
-    assert campi(genitore.utente, ragazza) == SENZA_IDENTITA
+    assert campi(genitore.utente, ragazza) == SENZA_IDENTITA - {"professione"}
     assert campi(ragazza.utente, ragazza) == set()  # a minor: her parents do it
     assert campi(csq.utente, ragazza) == set()
     assert campi(capo_semplice.utente, ragazza) == set()  # not her unit's staff
@@ -183,7 +185,7 @@ def test_scheda_mostra_solo_i_campi_correggibili(ragazza, genitore, csq):
     risposta = _client(genitore).get(f"/api/v1/persone/{ragazza.pk}/correzioni")
     assert risposta.status_code == 200
     campi = {c["campo"]: c for c in risposta.json()["campi"]}
-    assert set(campi) == SENZA_IDENTITA
+    assert set(campi) == SENZA_IDENTITA - {"professione"}  # DEC-296
     assert campi["cellulare"]["valore"] == "3330000000"
     assert campi["consenso_foto"]["tipo"] == "si_no"
     assert campi["stato_socio"]["tipo"] == "scelta"
@@ -254,3 +256,31 @@ def test_riepilogo_ai_capigruppo_una_volta_sola(ragazza, genitore, capogruppo):
 
     call_command("segnala_correzioni")
     assert len(mail.outbox) == 1  # already mentioned
+
+
+def test_professione_la_vedono_la_persona_e_la_coca(client, capo, capogruppo, genitore, ragazza):
+    """DEC-296: in the card for the person and the capi, never for the parents."""
+    from apps.anagrafica.models import PROFESSIONI
+
+    capo.professione = "INSEGNANTE"
+    capo.save()
+
+    def vista(chi, persona):
+        client.force_login(chi.utente)
+        return client.get(f"/api/v1/persone/{persona.pk}").json().get("professione")
+
+    assert vista(capo, capo) == "INSEGNANTE"
+    assert vista(capogruppo, capo) == "INSEGNANTE"
+    assert vista(genitore, ragazza) is None
+    assert policy.vede_professione(capogruppo.utente, ragazza)
+    assert not policy.vede_professione(genitore.utente, ragazza)
+    # Corrected like the other data, choosing among BuonaStrada's values.
+    client.force_login(capogruppo.utente)
+    scheda = client.get(f"/api/v1/persone/{capo.pk}/correzioni").json()
+    campo = next(c for c in scheda["campi"] if c["campo"] == "professione")
+    assert campo["tipo"] == "scelta" and len(campo["scelte"]) == len(PROFESSIONI)
+    url = f"/api/v1/persone/{capo.pk}/correzioni"
+    sbagliata = {"campo": "professione", "valore": "ASTRONAUTA"}
+    assert client.post(url, sbagliata, content_type="application/json").status_code == 400
+    giusta = {"campo": "professione", "valore": "PRESBITERO"}
+    assert client.post(url, giusta, content_type="application/json").status_code == 200

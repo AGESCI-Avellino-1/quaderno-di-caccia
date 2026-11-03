@@ -797,6 +797,16 @@ def test_assistente_ecclesiastico_di_gruppo_come_un_capogruppo(
     capogruppo, capo, capo_semplice, gruppo
 ):
     assert _nomina(capo, capo_semplice, "AE_GRUPPO").status_code == 403
+    # Only a presbitero (DEC-296): the profession from BuonaStrada says it.
+    risposta = _nomina(capogruppo, capo_semplice, "AE_GRUPPO")
+    assert risposta.status_code == 400
+    assert "Solo un presbitero" in risposta.json()["detail"]
+    capi = _client(capogruppo).get("/api/v1/capi?presbiteri=true").json()
+    assert capo_semplice.pk not in {p["id"] for p in capi}
+    capo_semplice.professione = "PRESBITERO"
+    capo_semplice.save()
+    capi = _client(capogruppo).get("/api/v1/capi?presbiteri=true").json()
+    assert [p["id"] for p in capi] == [capo_semplice.pk]
     assert _nomina(capogruppo, capo_semplice, "AE_GRUPPO").status_code == 201
     ae = capo_semplice.utente
     assert policy.e_capogruppo(ae)
@@ -813,6 +823,9 @@ def test_assistente_ecclesiastico_di_unita_come_lo_staff(
     capogruppo, capo, capo_semplice, reparto, ragazza, estraneo
 ):
     assert _nomina(estraneo, capo_semplice, "AE_UNITA", unita_id=reparto.pk).status_code == 403
+    assert _nomina(capo, capo_semplice, "AE_UNITA", unita_id=reparto.pk).status_code == 400
+    capo_semplice.professione = "Sacerdote"  # matched without minding the case (DEC-296)
+    capo_semplice.save()
     # The capo unità appoints it, like the capigruppo.
     assert _nomina(capo, capo_semplice, "AE_UNITA", unita_id=reparto.pk).status_code == 201
     ae = capo_semplice.utente

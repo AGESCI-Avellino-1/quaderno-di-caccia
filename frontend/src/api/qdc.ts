@@ -297,6 +297,8 @@ export interface PersonaDettaglio extends PersonaBreve {
   iscrizione_sospesa?: boolean
   email: string | null
   cellulare: string | null
+  /** From BuonaStrada; the person and the Co.Ca. only (DEC-296). */
+  professione?: string | null
   indirizzo: string | null
   comune: string | null
   consenso_foto: boolean | null
@@ -2528,7 +2530,9 @@ export const api = {
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
   opzioniElencoIncarichi: () =>
     richiesta<OpzioniElencoIncarichi>('/api/v1/gruppo/incarichi/elenco'),
-  capi: () => richiesta<PersonaBreve[]>('/api/v1/capi'),
+  /** `presbiteri`: only who may be assistente ecclesiastico (DEC-296). */
+  capi: (presbiteri = false) =>
+    richiesta<PersonaBreve[]>(`/api/v1/capi${presbiteri ? '?presbiteri=true' : ''}`),
   aggiungiMembro: (squadriglia: number, persona: number) =>
     richiesta<Membro>(`/api/v1/squadriglie/${squadriglia}/membri`, {
       metodo: 'POST',

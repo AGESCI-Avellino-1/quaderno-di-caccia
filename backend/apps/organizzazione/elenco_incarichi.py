@@ -23,6 +23,7 @@ from apps.core.stampa import decora_pagina, intestazione
 
 from .models import (
     INCARICHI_DI_SERVIZIO,
+    Branca,
     Gruppo,
     Incarico,
     RuoloIncarico,
@@ -48,7 +49,9 @@ RUOLI_ELENCO = (
 # A capo with additional roles only (a treasurer serving no unit) shows this next to the
 # name, in the PDF only: nothing is recorded (maintainer, 03/11).
 SENZA_SERVIZIO = RuoloIncarico.SUPPORTO_GRUPPO.label
-ORDINE_TIPI = list(TipoUnita.values)
+# The sections by unit: the Co.Ca. first, then L/C, E/G, R/S, each by code (maintainer,
+# 03/11).
+ORDINE_BRANCHE = [Branca.LC, Branca.EG, Branca.RS]
 
 
 @dataclass
@@ -72,7 +75,10 @@ def giorno_di_riferimento(anno: int | None, oggi: date | None = None) -> date:
 
 
 def _ordine_unita(unita: Unita) -> tuple:
-    return (ORDINE_TIPI.index(unita.tipo), unita.codice_unita, unita.progressivo or 0, unita.nome)
+    branca = unita.branca
+    posto = ORDINE_BRANCHE.index(branca) if branca in ORDINE_BRANCHE else len(ORDINE_BRANCHE)
+    # A unit with no BuonaStrada code yet goes after the coded ones of its branch.
+    return (posto, not unita.codice_unita, unita.codice_unita, unita.progressivo or 0, unita.nome)
 
 
 def _ordine_persona(persona: Persona) -> tuple:
@@ -151,11 +157,12 @@ def _per_unita(scelti: set[str], incarichi: list[Incarico]) -> list[Sezione]:
     ]
     if coca in righe_di:
         coca_unita = Unita.objects.filter(tipo=TipoUnita.COMUNITA_CAPI).first()
-        risultato.append(
+        risultato.insert(
+            0,
             Sezione(
                 str(coca_unita) if coca_unita else "Comunità Capi",
                 sorted(righe_di[coca], key=lambda r: _ordine_persona(r.persona)),
-            )
+            ),
         )
     return risultato
 

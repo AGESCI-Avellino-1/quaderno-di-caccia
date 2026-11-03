@@ -475,6 +475,15 @@ class Incarico(ModelloTracciato):
                 f"{self.persona} non risulta capo: l'incarico di "
                 f"{self.get_ruolo_display().lower()} spetta a un capo."
             )
+        if ruolo in {RuoloIncarico.AE_GRUPPO, RuoloIncarico.AE_UNITA}:
+            from apps.anagrafica.models import e_presbitero
+
+            # Only a presbitero, by the profession from BuonaStrada (DEC-296).
+            if not e_presbitero(self.persona.professione):
+                raise ValidationError(
+                    f"Solo un presbitero può essere assistente ecclesiastico: nella scheda di "
+                    f"{self.persona} la professione non è «Presbitero». Se serve, correggila prima."
+                )
 
 
 class AnnoChiuso(ModelloTracciato):

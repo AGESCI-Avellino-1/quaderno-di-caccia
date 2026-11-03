@@ -16,6 +16,7 @@ from .models import (
     CAMPI_BUONASTRADA,
     CAMPI_CONSENSO,
     ETICHETTE_CAMPI,
+    PROFESSIONI,
     STATI_APERTI,
     Appartenenza,
     AppartenenzaSquadriglia,
@@ -52,6 +53,8 @@ class PersonaDettaglio(Schema):
     iscrizione_sospesa: bool = False
     email: str | None = None
     cellulare: str | None = None
+    # The person and the Co.Ca. only (DEC-296).
+    professione: str | None = None
     indirizzo: str | None = None
     comune: str | None = None
     consenso_foto: bool | None = None
@@ -121,6 +124,8 @@ def dettaglio_persona(request, persona_id: int):
             "indirizzo": f"{persona.indirizzo} {persona.civico}".strip(),
             "comune": persona.comune,
         }
+    if policy.vede_professione(request.auth, persona):
+        dati["professione"] = persona.professione
     dati["foto"] = policy.puo_vedere_foto(request.auth, persona) and persona.foto_profilo.exists()
     dati["puo_caricare_foto"] = policy.puo_caricare_foto(request.auth, persona)
     dati["puo_iscrivere_in_coca"] = policy.puo_iscrivere_genitore_in_coca(request.auth, persona)
@@ -211,7 +216,11 @@ def _correzione_out(c: CorrezioneAnagrafica) -> dict:
     }
 
 
-def _tipo(campo: str) -> tuple[str, list[dict]]:
+def _tipo(campo: str, valore: str = "") -> tuple[str, list[dict]]:
+    if campo == "professione":
+        # BuonaStrada's list, plus the value it has now if BuonaStrada added one.
+        professioni = [*PROFESSIONI, *([valore] if valore and valore not in PROFESSIONI else [])]
+        return "scelta", [{"valore": p, "etichetta": p.capitalize()} for p in professioni]
     field = Persona._meta.get_field(campo)
     if field.choices:
         return "scelta", [{"valore": str(v), "etichetta": str(e)} for v, e in field.choices]
@@ -239,7 +248,7 @@ def _scheda(user, persona: Persona) -> dict:
     for campo in CAMPI_BUONASTRADA:  # model order: identity, contacts, the rest
         if campo not in ammessi:
             continue
-        tipo, scelte = _tipo(campo)
+        tipo, scelte = _tipo(campo, servizi.come_testo(getattr(persona, campo)))
         aperta = aperte.get(campo)
         campi.append(
             {
@@ -271,6 +280,9 @@ def correggi(request, persona_id: int, dati: NuovaCorrezione):
         raise HttpError(403, "Questo dato lo possono correggere solo i capigruppo.")
     if dati.campo in CAMPI_CONSENSO and getattr(request, "impersonatore", None):
         raise HttpError(403, "I consensi li dà solo la persona, non chi usa l'app al suo posto.")
+    nuova = dati.valore.strip()
+    if dati.campo == "professione" and nuova not in (*PROFESSIONI, "", persona.professione):
+        raise HttpError(400, "Scegli la professione tra quelle di BuonaStrada.")
     try:
         servizi.correggi_campo(persona, dati.campo, dati.valore, richiesta_da=request.auth)
     except ValidationError as errore:

@@ -41,6 +41,40 @@ svilupparla. Deciso il 03/11:
    logo AGESCI e deve tornare a quello del gruppo (il file in `resources/` e `QDC_LOGO` in
    `.env`), anche nelle note della versione.
 
+#### N.27 — Una sola passkey per dispositivo, per entrare e per sbloccare ⏳ (in attesa del via)
+
+Segnalazione del maintainer (03/11, con la 1.5.0 su qdc.avellino1.it):
+
+- **iPhone, PWA installata**: «Accedi con passkey» propone anche le passkey di sblocco
+  (sincronizzate dal portachiavi di iCloud, stesso sito); scegliendone una il server non la
+  conosce e allauth risponde «Codice errato» (`mfa/webauthn/internal/auth.py`: lo user handle
+  della passkey di sblocco è casuale, `biometria.creaCredenziale`).
+- **Mac, app installata con Chrome**: attivando l'impronta compare «Impronta o volto non
+  disponibili»: Chrome crea la passkey ma non dà il segreto PRF (nella scheda normale sì).
+  Ogni tentativo lascia una passkey inutile in Password di Apple.
+
+Deciso il 03/11 (cambia DEC-97: nuovo DEC nell'analisi):
+
+1. **Una sola passkey per dispositivo**: la passkey di accesso (allauth, registrata sul server)
+   serve anche a sbloccare senza rete, con il segreto PRF; niente più passkey di sblocco
+   separate. Da verificare nello sviluppo: aggiungere l'estensione `prf` alla creazione
+   della passkey di allauth (`passkey.crea`, opzioni JSON di simplewebauthn); sbloccare con
+   `get()` sulle passkey di accesso dell'account (anche una sincronizzata da un altro
+   dispositivo), con un sale per dispositivo; attivare l'impronta crea la passkey di accesso
+   se il dispositivo non ne ha (allauth chiede un accesso recente); cosa succede se la passkey
+   viene cancellata in Dispositivi (lo sblocco con impronta va riattivato, resta il PIN);
+   passaggio delle installazioni con la vecchia passkey di sblocco (segnalarla al gestore
+   perché la tolga) [da verificare].
+2. **Senza segreto PRF** (l'app di Chrome sul Mac): l'app propone il solo PIN e, sul Mac,
+   suggerisce Safari con «Aggiungi al Dock». Con il punto 1 la passkey creata è comunque una
+   passkey di accesso valida: si tiene per entrare, non si usa per sbloccare (prima della
+   decisione 1 il maintainer aveva scelto di toglierla).
+3. Manuale (protezione del dispositivo, accesso con passkey) e schermate da aggiornare.
+
+Intanto, per il maintainer: in Password di Apple si possono cancellare le passkey di
+qdc.avellino1.it senza «sblocco» nel nome che non sono passkey di accesso (quelle di accesso
+sono elencate in Dispositivi, nella sezione delle passkey).
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,

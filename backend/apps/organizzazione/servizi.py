@@ -47,6 +47,16 @@ def esci_dal_reparto(persona: Persona, unita: Unita, giorno: date) -> list[str]:
     ):
         _chiudi(incarico, giorno)
         chiusi.append(f"{persona} — {incarico.get_ruolo_display()}")
+    # And the sestiglia (DEC-312).
+    from apps.eventi.models import MembroSestiglia
+
+    for membro in (
+        MembroSestiglia.objects.filter(persona=persona, sestiglia__unita=unita)
+        .filter(models.Q(data_fine__isnull=True) | models.Q(data_fine__gt=giorno))
+        .select_related("sestiglia")
+    ):
+        _chiudi(membro, giorno)
+        chiusi.append(f"{persona} — {membro.sestiglia}")
     if unita.tipo != TipoUnita.REPARTO:
         return chiusi
     for membro in (

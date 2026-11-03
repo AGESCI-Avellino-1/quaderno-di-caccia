@@ -1582,6 +1582,10 @@ export interface Evento {
   localita?: Localita | null
   uniforme?: boolean | null
   informazioni?: string
+  /** The turns of the meeting (DEC-312): all for the capi, one's own for the others. */
+  turni?: TurnoRiunione[]
+  /** The groups a turn may be given to, for who manages the turns. */
+  gruppi_turni?: GruppoTurni[]
   annullato: boolean
   motivo_annullamento: string
   mie: MiaPartecipazione[]
@@ -1658,6 +1662,43 @@ export interface DettaglioEvento extends Evento {
   puo_non_invitare: boolean
   /** The participants' medical forms (DEC-195). */
   puo_stampare_schede?: boolean
+}
+
+/** One turn of a meeting and the patrol or sestiglia that has it (DEC-312). */
+export interface TurnoRiunione {
+  turno: string
+  gruppo: string
+  mio: boolean
+  cambiato: boolean
+  squadriglia_id: number | null
+  sestiglia_id: number | null
+}
+
+export interface GruppoTurni {
+  nome: string
+  squadriglia_id: number | null
+  sestiglia_id: number | null
+}
+
+export type Rotazione = 'SETTIMANALE' | 'MENSILE'
+
+export interface TurniUnita {
+  nomi: string[]
+  rotazione: Rotazione
+  dal: string | null
+  con_collegata: boolean
+  collegata: string | null
+  gruppi: string[]
+  prossime: { id: number; inizio: string; turni: { turno: string; gruppo: string }[] }[]
+}
+
+export interface Sestiglie {
+  sestiglie: {
+    id: number
+    nome: string
+    membri: { id: number; persona: { id: number; nome: string; cognome: string } }[]
+  }[]
+  senza_sestiglia: { id: number; nome: string; cognome: string }[]
 }
 
 /** A place of the group for meetings and events (DEC-310). */
@@ -3133,6 +3174,27 @@ export const api = {
     richiesta<SerieRiunioni>(`/api/v1/riunioni/serie/${id}`, { metodo: 'DELETE' }),
   modificaRiunione: (id: number, dati: ModificaRiunione) =>
     richiesta<Evento>(`/api/v1/riunioni/${id}`, { metodo: 'PUT', corpo: dati }),
+  turniUnita: (unita: number) => richiesta<TurniUnita>(`/api/v1/unita/${unita}/turni`),
+  impostaTurni: (
+    unita: number,
+    dati: { nomi: string[]; rotazione: Rotazione; dal: string; con_collegata: boolean },
+  ) => richiesta<TurniUnita>(`/api/v1/unita/${unita}/turni`, { metodo: 'PUT', corpo: dati }),
+  cambiaTurno: (
+    riunione: number,
+    dati: { turno: string; squadriglia_id: number | null; sestiglia_id: number | null },
+  ) => richiesta<Evento>(`/api/v1/riunioni/${riunione}/turni`, { metodo: 'PUT', corpo: dati }),
+  sestiglie: (unita: number) => richiesta<Sestiglie>(`/api/v1/unita/${unita}/sestiglie`),
+  creaSestiglia: (unita: number, nome: string) =>
+    richiesta<Sestiglie>(`/api/v1/unita/${unita}/sestiglie`, { metodo: 'POST', corpo: { nome } }),
+  chiudiSestiglia: (id: number) =>
+    richiesta<Sestiglie>(`/api/v1/sestiglie/${id}`, { metodo: 'DELETE' }),
+  mettiInSestiglia: (sestiglia: number, persona: number) =>
+    richiesta<Sestiglie>(`/api/v1/sestiglie/${sestiglia}/membri`, {
+      metodo: 'POST',
+      corpo: { persona_id: persona },
+    }),
+  togliDaSestiglia: (membro: number) =>
+    richiesta<Sestiglie>(`/api/v1/sestiglie/membri/${membro}`, { metodo: 'DELETE' }),
   localita: () => richiesta<Localita[]>('/api/v1/localita'),
   creaLocalita: (dati: LocalitaIn) =>
     richiesta<Localita>('/api/v1/localita', { metodo: 'POST', corpo: dati }),

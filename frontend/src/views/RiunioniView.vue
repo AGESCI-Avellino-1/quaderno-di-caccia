@@ -454,6 +454,9 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div class="small fg-2">
           {{ perChi(r) }}<template v-if="r.luogo"> · {{ r.luogo }}</template>
         </div>
+        <div v-for="t in (r.turni ?? []).filter((x) => x.mio)" :key="t.turno" class="small">
+          Turno di {{ t.gruppo }}: <strong>{{ t.turno }}</strong>
+        </div>
       </li>
     </ul>
 

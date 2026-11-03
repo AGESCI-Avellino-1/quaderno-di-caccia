@@ -20,6 +20,8 @@ import EtaUnita from '@/components/EtaUnita.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
+import SestiglieUnita from '@/components/SestiglieUnita.vue'
+import TurniUnita from '@/components/TurniUnita.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePagina } from '@/composables/useNomePagina'
 import { useRubrica } from '@/composables/useRubrica'
@@ -493,6 +495,17 @@ const iniziale = (u: Unita): UnitaIn => ({
       v-if="unita.tipo === 'REPARTO'"
       :reparto="unita.id"
       :ragazzi="ragazziDelReparto"
+    />
+    <!-- Turns and sestiglie (DEC-312): hidden to who may not manage them. -->
+    <SestiglieUnita
+      v-if="['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO'].includes(unita.tipo)"
+      :key="`sestiglie-${unita.id}`"
+      :unita="unita.id"
+    />
+    <TurniUnita
+      v-if="['REPARTO', 'BRANCO', 'CERCHIO', 'BRANCO_CERCHIO'].includes(unita.tipo)"
+      :key="`turni-${unita.id}`"
+      :unita="unita.id"
     />
   </section>
   <div v-else-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>

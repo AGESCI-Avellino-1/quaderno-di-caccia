@@ -386,3 +386,94 @@ class CalendarioPersonale(ModelloTracciato):
     def rigenera(self) -> None:
         self.token = _token()
         self.save(update_fields=["token", "aggiornato_il"])
+
+
+# --- Turns of the patrols and of the sestiglie (DEC-312) -------------------------------------
+
+
+class Sestiglia(ModelloTracciato):
+    """A group of children of a branco or cerchio, for the turns only (DEC-312): no
+    capo sestiglia, made by the staff."""
+
+    unita = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.PROTECT, related_name="sestiglie"
+    )
+    nome = models.CharField(max_length=80)
+    attiva = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "sestiglia"
+        verbose_name_plural = "sestiglie"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return f"Sestiglia {self.nome}"
+
+
+class MembroSestiglia(ModelloTracciato):
+    """One sestiglia at a time; leaving it closes the period."""
+
+    sestiglia = models.ForeignKey(Sestiglia, on_delete=models.CASCADE, related_name="membri")
+    persona = models.ForeignKey(
+        "anagrafica.Persona", on_delete=models.CASCADE, related_name="sestiglie"
+    )
+    data_inizio = models.DateField()
+    data_fine = models.DateField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "membro di una sestiglia"
+        verbose_name_plural = "membri delle sestiglie"
+
+    def __str__(self) -> str:
+        return f"{self.persona} in {self.sestiglia}"
+
+
+class Rotazione(models.TextChoices):
+    SETTIMANALE = "SETTIMANALE", "Ogni settimana"
+    MENSILE = "MENSILE", "Ogni mese"
+
+
+class TurniUnita(ModelloTracciato):
+    """The turns of a reparto (to its patrols) or of a branco/cerchio (to its sestiglie),
+    in rotation from `dal`, also with the unit linked to it (DEC-312). Weekly: one step
+    at every meeting of the unit held (cancelled ones do not count); monthly: one step at
+    the first meeting of each month."""
+
+    unita = models.OneToOneField(
+        "organizzazione.Unita", on_delete=models.CASCADE, related_name="turni"
+    )
+    con_collegata = models.BooleanField(default=False)
+    nomi = models.JSONField(default=list)  # the turns, in order
+    rotazione = models.CharField(
+        max_length=12, choices=Rotazione.choices, default=Rotazione.SETTIMANALE
+    )
+    dal = models.DateField()
+
+    class Meta:
+        verbose_name = "turni di un'unità"
+        verbose_name_plural = "turni delle unità"
+
+    def __str__(self) -> str:
+        return f"Turni di {self.unita}"
+
+
+class TurnoCambiato(ModelloTracciato):
+    """The staff gave one turn of one meeting to another group (DEC-312); the rotation
+    goes on as planned afterwards."""
+
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name="turni_cambiati")
+    turno = models.CharField(max_length=80)
+    squadriglia = models.ForeignKey(
+        "organizzazione.Squadriglia", null=True, blank=True, on_delete=models.CASCADE
+    )
+    sestiglia = models.ForeignKey(Sestiglia, null=True, blank=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "turno cambiato"
+        verbose_name_plural = "turni cambiati"
+        constraints = [
+            models.UniqueConstraint(fields=["evento", "turno"], name="turno_cambiato_unico")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.turno} ({self.evento})"

@@ -995,6 +995,14 @@ def eventi_visibili(user):
     return Evento.objects.filter(partecipazioni__persona_id__in=persone).distinct()
 
 
+def puo_gestire_turni(user, unita: Unita) -> bool:
+    """The turns and the sestiglie of a unit: its staff, also of the linked unit, and the
+    capigruppo (DEC-312)."""
+    if e_capo_in_attesa(user):
+        return False
+    return e_capogruppo(user) or e_staff(user, unita)
+
+
 def puo_vedere_partecipanti(user, evento) -> bool:
     """The whole list: the capi; a CSQ for their patrol's events."""
     if e_capo(user):

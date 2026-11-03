@@ -40,6 +40,23 @@ const annullamento = reactive({ aperto: false, motivo: '' })
 const riunione = computed(() => evento.value?.tipo === 'RIUNIONE')
 const modificaRiunione = ref(false)
 
+// One turn of this meeting to another group (DEC-312); the rotation goes on as planned.
+const chiaveGruppo = (g: { squadriglia_id: number | null; sestiglia_id: number | null }) =>
+  g.squadriglia_id ? `sq-${g.squadriglia_id}` : `se-${g.sestiglia_id}`
+
+async function cambiaTurno(turno: string, valore: string) {
+  if (!valore) return
+  const [tipo, id] = valore.split('-')
+  const fatto = await esegui(() =>
+    api.cambiaTurno(props.id, {
+      turno,
+      squadriglia_id: tipo === 'sq' ? Number(id) : null,
+      sestiglia_id: tipo === 'se' ? Number(id) : null,
+    }),
+  )
+  if (fatto) await carica()
+}
+
 async function riunioneSalvata() {
   modificaRiunione.value = false
   esito.value = 'Riunione modificata.'
@@ -268,6 +285,35 @@ const STATI: [StatoPresenza, string][] = [
         <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
       </div>
     </div>
+
+    <section v-if="riunione && evento.turni?.length" class="card card-body mb-5">
+      <h2 class="h5">Turni</h2>
+      <ul class="list-unstyled mb-0">
+        <li
+          v-for="t in evento.turni"
+          :key="t.turno"
+          class="d-flex flex-wrap align-items-center gap-3 py-1"
+        >
+          <strong>{{ t.turno }}</strong>
+          <span>{{ t.gruppo }}</span>
+          <span v-if="t.mio" class="badge theme-primary">il tuo</span>
+          <span v-if="t.cambiato" class="small fg-2">cambiato a mano</span>
+          <select
+            v-if="evento.gruppi_turni?.length && !evento.annullato"
+            class="form-control form-control-sm w-auto ms-auto"
+            :aria-label="`Chi ha il turno ${t.turno}`"
+            :disabled="inCorso"
+            @change="cambiaTurno(t.turno, ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">Cambia…</option>
+            <option v-for="g in evento.gruppi_turni" :key="g.nome" :value="chiaveGruppo(g)">
+              {{ g.nome }}
+            </option>
+            <option v-if="t.cambiato" value="rotazione">Come da rotazione</option>
+          </select>
+        </li>
+      </ul>
+    </section>
 
     <section v-if="riunione && evento.puo_gestire && !evento.annullato" class="mb-5">
       <button

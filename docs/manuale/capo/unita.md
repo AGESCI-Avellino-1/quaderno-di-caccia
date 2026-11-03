@@ -54,6 +54,40 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
 ![La delega delle riunioni di squadriglia sul computer](../img/capo/delega-computer.png){.computer width="65%"}
 :::
 
+## I turni
+
+In fondo alla pagina di un reparto, di un branco o di un cerchio, lo staff trova **Turni**:
+
+1. Scrivi i turni, uno per riga (per esempio «Pulizia della sede», «Preghiera»).
+2. In **Cambiano** scegli **Ogni settimana** o **Ogni mese**, e da quando (**Dal**). Se l'unità
+   è collegata a un'altra, puoi spuntare **Insieme a…**: i turni girano tra i gruppi di tutte e
+   due.
+3. Tocca **Salva i turni**.
+
+I turni passano a rotazione tra le squadriglie del reparto o le sestiglie del branco o del
+cerchio. Con **Ogni settimana** il turno passa al gruppo dopo a ogni riunione dell'unità che si
+fa: una settimana senza riunione, o una riunione annullata, non conta. Con **Ogni mese** cambia
+alla prima riunione del mese. Sotto vedi le **Prossime riunioni** con i loro turni. Per
+togliere i turni, svuota l'elenco e salva.
+
+Nella pagina di una riunione, in **Turni**, puoi dare un turno di quella riunione a un altro
+gruppo con **Cambia…**; dopo, la rotazione riprende come prevista (**Come da rotazione**
+annulla il cambio). Ragazzi e genitori vedono nelle riunioni il turno della propria squadriglia
+o sestiglia.
+
+:::{container} schermate
+![I turni del reparto sul telefono](../img/capo/turni-telefono.png){.telefono width="30%"}
+![I turni del reparto sul computer](../img/capo/turni-computer.png){.computer width="65%"}
+:::
+
+### Le sestiglie
+
+In un branco o in un cerchio i turni girano tra le **sestiglie**: gruppi di bambini solo per i
+turni, senza capo sestiglia. Nella pagina dell'unità, in **Sestiglie**, scrivi il nome e tocca
+**Aggiungi**; poi, in **Senza sestiglia**, scegli **Metti in…** accanto a ogni bambino. Un
+bambino è in una sestiglia alla volta: metterlo in un'altra lo toglie dalla prima. **togli** lo
+toglie, **chiudi** chiude la sestiglia. Chi lascia l'unità esce anche dalla sestiglia.
+
 :::{note}
 Le squadriglie sono maschili o femminili. Un ragazzo può entrare in una squadriglia
 dell'altro sesso solo con un'eccezione decisa dalla Comunità capi e registrata da un

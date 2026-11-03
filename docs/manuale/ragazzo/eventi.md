@@ -3,7 +3,8 @@
 ## Eventi
 
 Nella Home, in **Attività**, tocca **Eventi**: uscite e campi della tua unità e del gruppo. Le
-riunioni sono in **Riunioni**: giorno, orari, località, se è con l'uniforme e cosa portare. Tocca un evento per vedere date, luogo e cosa portare. Nella Home, accanto alla
+riunioni sono in **Riunioni**: giorno, orari, località, se è con l'uniforme, cosa portare e il
+turno della tua squadriglia o sestiglia. Tocca un evento per vedere date, luogo e cosa portare. Nella Home, accanto alla
 **Bacheca**, il **Calendario** li mostra per mese o in elenco, e li aggiunge al calendario
 del telefono (i passi sono in [Eventi e calendario](../genitore/eventi.md#gli-eventi-nel-calendario-del-telefono)).
 

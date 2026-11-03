@@ -15,7 +15,13 @@ Tocca un evento per vedere date, luogo, cosa portare e l'eventuale quota.
 
 Le riunioni sono in **Riunioni**, sempre in **Attività**: giorno, orari, località, se è con
 l'uniforme e le informazioni dei capi (cosa portare, cosa si fa). Ricevi un'email solo se una
-riunione viene spostata o annullata.
+riunione viene spostata o annullata. Se l'unità ha i turni (pulizia, preghiera…), accanto a
+ogni riunione vedi quello della squadriglia o della sestiglia di tuo figlio.
+
+:::{container} schermate
+![Le riunioni sul telefono](../img/genitore/riunioni-telefono.png){.telefono width="30%"}
+![Le riunioni sul computer](../img/genitore/riunioni-computer.png){.computer width="65%"}
+:::
 
 ## Dire che tuo figlio non partecipa
 

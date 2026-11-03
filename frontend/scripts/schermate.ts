@@ -551,6 +551,22 @@ const SCENE: Scena[] = [
   },
   { nome: 'capo/riunioni', chi: 'capoReparto', percorso: '/riunioni', intera: true },
   {
+    nome: 'capo/turni',
+    chi: 'capoReparto',
+    percorso: '/unita',
+    prepara: apri('Antares'),
+    mostra: 'Turni',
+  },
+  {
+    // The meetings of Giulia and Luca, with their patrols' turns.
+    nome: 'genitore/riunioni',
+    chi: 'genitore',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      await pagina.getByText('Turno di').first().waitFor()
+    },
+  },
+  {
     // A weekly series of the reparto at the seat, not created.
     nome: 'capo/riunioni-nuove',
     chi: 'capoReparto',

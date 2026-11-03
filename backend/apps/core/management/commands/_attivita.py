@@ -170,6 +170,12 @@ def crea_attivita(email) -> None:
             "uniforme": True,
         },
     )
+    # The reparto's turns go round its patrols (DEC-312).
+    capo_reparto(
+        "put",
+        f"/unita/{reparto.pk}/turni",
+        {"nomi": ["Pulizia della sede", "Preghiera"], "dal": riunioni[0]["inizio"][:10]},
+    )
     prossima = next(r for r in riunioni if r["inizio"] >= _giorno(0, time(0)))
     capo_reparto(
         "put",

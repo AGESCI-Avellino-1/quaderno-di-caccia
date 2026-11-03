@@ -379,7 +379,7 @@ unità collegata, località e uniforme; `Evento.uniforme` (vuoto = come la serie
 testo), «Località» nelle Impostazioni per i capigruppo. Le riunioni già create restano com'erano
 (con uniforme sì di base). Manuale (pagina nuova «Riunioni») e schermate.
 
-#### N.45 — Turni di squadriglia e di sestiglia ⏳ (DEC-312) (dopo N.44)
+#### N.45 — Turni di squadriglia e di sestiglia ✅ 03/11 (DEC-312)
 
 Lo staff (eventualmente di unità collegate) sceglie i turni e li assegna a rotazione alle
 squadriglie o sestiglie, ogni settimana o ogni mese. Squadriglieri, genitori e ragazzi della
@@ -394,6 +394,14 @@ Deciso il 03/11:
   riunioni non contano. **Mensile**: cambia alla **prima riunione del mese**.
 - Lo staff **corregge a mano** l'assegnazione di una singola riunione; dopo, la rotazione
   riprende dall'ordine previsto.
+
+Fatto: `Sestiglia` e `MembroSestiglia`, `TurniUnita` (turni, rotazione, dal, con l'unità
+collegata), `TurnoCambiato`; `eventi/turni.py` (al passo p il turno j va al gruppo (j + p) mod il
+numero dei gruppi; settimanale: le riunioni dell'unità fatte; mensile: i mesi con riunioni),
+`api_turni.py`; turni nella riunione (tutti per i capi, i propri per ragazzi e genitori), cambio a
+mano dalla riunione; chi lascia il branco o il cerchio esce dalla sestiglia. PWA: «Sestiglie» e
+«Turni» nella pagina dell'unità, «Turni» nella riunione, il proprio turno nell'elenco delle
+riunioni. Manuale e schermate. Non nel feed del calendario (iCal): il turno si vede nell'app.
 
 #### N.46 — Invio graduale delle email in blocco ✅ 03/11 (DEC-311, servizio `posta` da provare in produzione)
 

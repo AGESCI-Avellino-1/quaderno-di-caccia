@@ -85,6 +85,22 @@ class LocalitaOut(Schema):
     mappa: str
 
 
+class TurnoOut(Schema):
+    turno: str
+    gruppo: str
+    # The user's or their children's patrol or sestiglia.
+    mio: bool
+    cambiato: bool
+    squadriglia_id: int | None
+    sestiglia_id: int | None
+
+
+class GruppoTurni(Schema):
+    nome: str
+    squadriglia_id: int | None
+    sestiglia_id: int | None
+
+
 class EventoOut(Schema):
     id: int
     titolo: str
@@ -110,6 +126,10 @@ class EventoOut(Schema):
     localita: LocalitaOut | None = None
     uniforme: bool | None = None
     informazioni: str = ""
+    # The turns of the meeting (DEC-312): all for the capi, one's own for the others.
+    turni: list[TurnoOut] = []
+    # The groups a turn may be given to, for who manages the turns.
+    gruppi_turni: list[GruppoTurni] = []
     annullato: bool
     motivo_annullamento: str
     # The user's own and their children's participation (families).
@@ -135,7 +155,7 @@ def _mie(user, evento: Evento) -> list[dict]:
     ]
 
 
-def _evento_out(user, evento: Evento) -> dict:
+def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
     unita = list(servizi.unita_coinvolte(evento))
     return {
         "id": evento.pk,
@@ -163,12 +183,78 @@ def _evento_out(user, evento: Evento) -> dict:
         "localita": evento.localita,
         "uniforme": evento.con_uniforme(),
         "informazioni": evento.informazioni,
+        "turni": _turni_out(user, evento, cache),
+        "gruppi_turni": _gruppi_turni(user, evento, cache),
         "annullato": evento.annullato_il is not None,
         "motivo_annullamento": evento.motivo_annullamento,
         "mie": _mie(user, evento),
         "puo_gestire": policy.puo_gestire_evento(user, evento),
         "quota": _quota_evento(evento),
     }
+
+
+def _turni_out(user, evento: Evento, cache: dict | None = None) -> list[dict]:
+    from apps.organizzazione.models import Squadriglia
+
+    from . import turni
+
+    if evento.tipo != TipoEvento.RIUNIONE:
+        return []
+    cache = {} if cache is None else cache
+    assegnati = turni.assegnazioni(evento, cache=cache)
+    if not assegnati:
+        return []
+
+    def persone():
+        ids = [p.pk for p in policy.tutelati(user) if policy.genitori_vedono(p, "scheda")]
+        propria = policy.persona_di(user)
+        return [*ids, propria.pk] if propria is not None else ids
+
+    giorno = timezone.localdate(evento.inizio)
+    ids = turni._in_cache(cache, "persone", persone)
+    miei = turni._in_cache(cache, ("miei", giorno), lambda: turni.gruppi_di(ids, giorno))
+    tutti = turni._in_cache(cache, "capo", lambda: policy.e_capo(user))
+    risultato = []
+    for a in assegnati:
+        gruppo = a["gruppo"]
+        mio = turni.chiave(gruppo) in miei
+        if not (tutti or mio):
+            continue
+        squadriglia = isinstance(gruppo, Squadriglia)
+        risultato.append(
+            {
+                "turno": a["turno"],
+                "gruppo": turni.nome_gruppo(gruppo),
+                "mio": mio,
+                "cambiato": a["cambiato"],
+                "squadriglia_id": gruppo.pk if squadriglia else None,
+                "sestiglia_id": None if squadriglia else gruppo.pk,
+            }
+        )
+    return risultato
+
+
+def _gruppi_turni(user, evento: Evento, cache: dict | None = None) -> list[dict]:
+    from apps.organizzazione.models import Squadriglia
+
+    from . import turni
+
+    if evento.tipo != TipoEvento.RIUNIONE:
+        return []
+    cache = {} if cache is None else cache
+    conf = turni.configurazione(evento, cache)
+    if conf is None or not turni._in_cache(
+        cache, ("gestisce", conf.pk), lambda: policy.puo_gestire_turni(user, conf.unita)
+    ):
+        return []
+    return [
+        {
+            "nome": str(g),
+            "squadriglia_id": g.pk if isinstance(g, Squadriglia) else None,
+            "sestiglia_id": None if isinstance(g, Squadriglia) else g.pk,
+        }
+        for g in turni._in_cache(cache, ("gruppi", conf.pk), lambda: turni.gruppi(conf))
+    ]
 
 
 def _quota_evento(evento: Evento) -> dict | None:
@@ -209,12 +295,13 @@ def eventi(
     if al:
         elenco = elenco.filter(inizio__date__lte=al)
     risultato = []
-    for evento in elenco.order_by("inizio"):
+    cache: dict = {}
+    for evento in elenco.order_by("inizio").prefetch_related("unita"):
         if unita is not None and unita not in servizi.unita_coinvolte(evento).values_list(
             "pk", flat=True
         ):
             continue
-        risultato.append(_evento_out(request.auth, evento))
+        risultato.append(_evento_out(request.auth, evento, cache))
     return risultato
 
 

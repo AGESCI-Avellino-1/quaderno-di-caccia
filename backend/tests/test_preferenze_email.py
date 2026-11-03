@@ -54,6 +54,23 @@ def test_api_preferenze(genitore, estraneo):
     assert PreferenzeEmail.objects.get(persona=genitore).eventi is False
 
 
+def test_pulsanti_dei_telefoni_scelti_da_ognuno(genitore, capo):
+    client = Client()
+    client.force_login(genitore.utente)
+    # Call and WhatsApp unless changed, also for an account with no person yet.
+    assert client.get("/api/v1/io").json()["pulsanti_telefono"] == ["chiama", "whatsapp"]
+    risposta = client.put(
+        "/api/v1/io/telefono",
+        {"chiama": True, "whatsapp": False, "sms": True},
+        content_type="application/json",
+    )
+    assert risposta.status_code == 200
+    assert client.get("/api/v1/io").json()["pulsanti_telefono"] == ["chiama", "sms"]
+    # One's own choice only: the capo's account is untouched.
+    capo.utente.refresh_from_db()
+    assert capo.utente.telefono_whatsapp is True and capo.utente.telefono_sms is False
+
+
 def test_niente_email_di_eventi_a_chi_non_le_vuole(
     reparto, ragazza, genitore, genitrice_senza_account
 ):

@@ -11,10 +11,11 @@ import bank2 from 'bootstrap-icons/icons/bank2.svg?raw'
 import boxArrowRight from 'bootstrap-icons/icons/box-arrow-right.svg?raw'
 import boxArrowUp from 'bootstrap-icons/icons/box-arrow-up.svg?raw'
 import calendarEvent from 'bootstrap-icons/icons/calendar-event.svg?raw'
-import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
 import calendarWeek from 'bootstrap-icons/icons/calendar-week.svg?raw'
-import cash from 'bootstrap-icons/icons/cash.svg?raw'
+import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
 import cashCoin from 'bootstrap-icons/icons/cash-coin.svg?raw'
+import cash from 'bootstrap-icons/icons/cash.svg?raw'
+import chatText from 'bootstrap-icons/icons/chat-text.svg?raw'
 import check2Square from 'bootstrap-icons/icons/check2-square.svg?raw'
 import chevronDown from 'bootstrap-icons/icons/chevron-down.svg?raw'
 import chevronLeft from 'bootstrap-icons/icons/chevron-left.svg?raw'
@@ -27,8 +28,8 @@ import creditCard from 'bootstrap-icons/icons/credit-card.svg?raw'
 import diagram3 from 'bootstrap-icons/icons/diagram-3.svg?raw'
 import envelopeOpen from 'bootstrap-icons/icons/envelope-open.svg?raw'
 import envelopePaper from 'bootstrap-icons/icons/envelope-paper.svg?raw'
-import eye from 'bootstrap-icons/icons/eye.svg?raw'
 import eyeSlash from 'bootstrap-icons/icons/eye-slash.svg?raw'
+import eye from 'bootstrap-icons/icons/eye.svg?raw'
 import fileEarmarkText from 'bootstrap-icons/icons/file-earmark-text.svg?raw'
 import flag from 'bootstrap-icons/icons/flag.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
@@ -39,9 +40,9 @@ import journalText from 'bootstrap-icons/icons/journal-text.svg?raw'
 import key from 'bootstrap-icons/icons/key.svg?raw'
 import layoutSidebarInset from 'bootstrap-icons/icons/layout-sidebar-inset.svg?raw'
 import link45deg from 'bootstrap-icons/icons/link-45deg.svg?raw'
-import list from 'bootstrap-icons/icons/list.svg?raw'
 import listOl from 'bootstrap-icons/icons/list-ol.svg?raw'
 import listUl from 'bootstrap-icons/icons/list-ul.svg?raw'
+import list from 'bootstrap-icons/icons/list.svg?raw'
 import lock from 'bootstrap-icons/icons/lock.svg?raw'
 import megaphone from 'bootstrap-icons/icons/megaphone.svg?raw'
 import paypal from 'bootstrap-icons/icons/paypal.svg?raw'
@@ -54,13 +55,14 @@ import personLinesFill from 'bootstrap-icons/icons/person-lines-fill.svg?raw'
 import personPlus from 'bootstrap-icons/icons/person-plus.svg?raw'
 import personVcard from 'bootstrap-icons/icons/person-vcard.svg?raw'
 import plusLg from 'bootstrap-icons/icons/plus-lg.svg?raw'
-import receipt from 'bootstrap-icons/icons/receipt.svg?raw'
 import receiptCutoff from 'bootstrap-icons/icons/receipt-cutoff.svg?raw'
+import receipt from 'bootstrap-icons/icons/receipt.svg?raw'
 import shieldCheck from 'bootstrap-icons/icons/shield-check.svg?raw'
 import shieldLock from 'bootstrap-icons/icons/shield-lock.svg?raw'
 import signpostSplit from 'bootstrap-icons/icons/signpost-split.svg?raw'
 import sliders from 'bootstrap-icons/icons/sliders.svg?raw'
 import table from 'bootstrap-icons/icons/table.svg?raw'
+import telephone from 'bootstrap-icons/icons/telephone.svg?raw'
 import tools from 'bootstrap-icons/icons/tools.svg?raw'
 import trash from 'bootstrap-icons/icons/trash.svg?raw'
 import trash3 from 'bootstrap-icons/icons/trash3.svg?raw'
@@ -69,6 +71,7 @@ import typeItalic from 'bootstrap-icons/icons/type-italic.svg?raw'
 import typeUnderline from 'bootstrap-icons/icons/type-underline.svg?raw'
 import upload from 'bootstrap-icons/icons/upload.svg?raw'
 import wallet2 from 'bootstrap-icons/icons/wallet2.svg?raw'
+import whatsapp from 'bootstrap-icons/icons/whatsapp.svg?raw'
 import xLg from 'bootstrap-icons/icons/x-lg.svg?raw'
 
 const tenda = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tenda" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1.25 15.2 13.5H.8zm0 7.5-2.3 4.75h4.6zM0 13.5h16v1H0z"/></svg>`
@@ -86,6 +89,7 @@ export const ICONE = {
   'calendar-week': calendarWeek,
   cash: cash,
   'cash-coin': cashCoin,
+  'chat-text': chatText,
   'check2-square': check2Square,
   'chevron-down': chevronDown,
   'chevron-left': chevronLeft,
@@ -132,6 +136,7 @@ export const ICONE = {
   'signpost-split': signpostSplit,
   sliders: sliders,
   table: table,
+  telephone: telephone,
   tools: tools,
   trash: trash,
   trash3: trash3,
@@ -140,6 +145,7 @@ export const ICONE = {
   'type-underline': typeUnderline,
   upload: upload,
   wallet2: wallet2,
+  whatsapp: whatsapp,
   'x-lg': xLg,
   tenda,
 } as const

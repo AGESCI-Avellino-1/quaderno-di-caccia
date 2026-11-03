@@ -48,7 +48,7 @@ describe('menu', () => {
     expect(voci(genitore, 'famiglia')).toEqual(['Giulia Rossi'])
     expect(vociProfilo(genitore).map((v) => v.nome)).toEqual([
       'Il mio profilo',
-      'Privacy',
+      'Privacy e preferenze',
       'Password e sicurezza',
       'Le mie quote',
     ])

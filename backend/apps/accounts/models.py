@@ -42,6 +42,11 @@ class User(AbstractUser):
     email = models.EmailField("email", unique=True)
     # Technical administrator: catalogs, imports, accounts (DEC-12).
     amministratore_tecnico = models.BooleanField(default=False)
+    # The buttons next to every phone number, chosen by the person for themself (DEC-301):
+    # on the account, so the same on every device; call and WhatsApp unless changed.
+    telefono_chiama = models.BooleanField("pulsante per chiamare", default=True)
+    telefono_whatsapp = models.BooleanField("pulsante per WhatsApp", default=True)
+    telefono_sms = models.BooleanField("pulsante per l'SMS", default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []

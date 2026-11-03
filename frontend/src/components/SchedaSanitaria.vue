@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 
 import { ANAMNESI, TIPI_ALLERGIA, type Sanitarie } from '@/api/qdc'
+import Telefono from '@/components/Telefono.vue'
 
 const props = defineProps<{ dati: Sanitarie; compatta?: boolean }>()
 
@@ -88,14 +89,27 @@ const classeGravita = {
         <h3 class="h6 mt-3">Contatti e altre informazioni</h3>
         <ul class="list-unstyled small mb-1">
           <li v-for="g in dati.genitori ?? []" :key="g.id">
-            {{ g.nome }}: {{ [g.cellulare, g.telefono_fisso].filter(Boolean).join(' · ') || '—' }}
+            {{ g.nome }}:
+            <Telefono v-if="g.cellulare" :numero="g.cellulare" :di="g.nome" />
+            <template v-if="g.cellulare && g.telefono_fisso"> · </template>
+            <Telefono v-if="g.telefono_fisso" :numero="g.telefono_fisso" :di="g.nome" />
+            <template v-if="!g.cellulare && !g.telefono_fisso">—</template>
           </li>
           <li v-if="dati.reperibilita_nome || dati.reperibilita_telefono">
             Contatto di fiducia: <strong>{{ dati.reperibilita_nome }}</strong>
-            {{ dati.reperibilita_telefono }}
+            <Telefono
+              v-if="dati.reperibilita_telefono"
+              :numero="dati.reperibilita_telefono"
+              :di="dati.reperibilita_nome"
+            />
           </li>
           <li v-if="dati.medico_curante || dati.medico_telefono">
-            Medico: {{ dati.medico_curante }} {{ dati.medico_telefono }}
+            Medico: {{ dati.medico_curante }}
+            <Telefono
+              v-if="dati.medico_telefono"
+              :numero="dati.medico_telefono"
+              :di="dati.medico_curante"
+            />
           </li>
           <li v-if="dati.tessera_sanitaria">Tessera sanitaria: {{ dati.tessera_sanitaria }}</li>
           <li v-if="dati.antitetanica_data">

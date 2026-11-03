@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { api, nomeUnita, type Campo, type SchedaCampo, type Unita } from '@/api/qdc'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
+import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache, leggiDallaCache } from '@/offline/cache'
 import { protetta } from '@/sicurezza/cassaforte'
@@ -167,7 +168,7 @@ watch(scelta, async (valore) => {
               <ul v-if="p.contatti.length" class="list-unstyled small mb-0 mt-3">
                 <li v-for="(c, i) in p.contatti" :key="i">
                   {{ c.nome }} ({{ c.relazione }}):
-                  <a :href="`tel:${c.cellulare}`">{{ c.cellulare }}</a>
+                  <Telefono :numero="c.cellulare" :di="c.nome" />
                 </li>
               </ul>
             </div>

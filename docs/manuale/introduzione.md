@@ -57,7 +57,8 @@ In fondo al menu c'è il tuo nome: toccalo per aprire il **menu del profilo** (l
 voci sono anche nella Home, nel gruppo **Profilo**):
 
 - **Il mio profilo**: la tua scheda;
-- **Privacy**: le email che vuoi ricevere;
+- **Privacy e preferenze**: le email che vuoi ricevere e i pulsanti accanto ai numeri di
+  telefono;
 - **Password e sicurezza**: passkey, dispositivi collegati e protezione del telefono;
 - **Le mie quote**: quote, pagamenti e ricevute;
 - **Blocca l'app** ed **Esci**.

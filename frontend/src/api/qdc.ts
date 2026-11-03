@@ -1,4 +1,6 @@
 /** Typed client for the QdC API (/api/v1). Mirrors the ninja schemas in the backend. */
+import type { PulsanteTelefono } from '@/navigazione/telefono'
+
 import { richiesta } from './http'
 
 export type Branca = 'generico' | 'capi' | 'lc' | 'eg' | 'rs'
@@ -66,6 +68,8 @@ export interface Profilo {
   pagamenti_da_verificare?: number
   /** The waiting list (DEC-259): every capo. */
   vede_lista_attesa?: boolean
+  /** The buttons next to phone numbers, one's own choice (DEC-301). */
+  pulsanti_telefono?: PulsanteTelefono[]
 }
 
 /** Someone on the waiting list, as the family writes it (DEC-256). */
@@ -3004,6 +3008,11 @@ export const api = {
   togliAllegatoAvviso: (id: number) => richiesta<Avviso>(allegatoAvviso(id), { metodo: 'DELETE' }),
   scegliPreferenzeEmail: (dati: PreferenzeEmail) =>
     richiesta<PreferenzeEmail>('/api/v1/io/email', { metodo: 'PUT', corpo: dati }),
+  scegliPulsantiTelefono: (dati: Record<PulsanteTelefono, boolean>) =>
+    richiesta<Record<PulsanteTelefono, boolean>>('/api/v1/io/telefono', {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
   calendario: () => richiesta<Calendario>('/api/v1/calendario'),
   eventiDelCalendario: (vista: string, dal?: string, al?: string) => {
     const parametri = new URLSearchParams()

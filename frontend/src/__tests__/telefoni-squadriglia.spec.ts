@@ -1,4 +1,5 @@
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
@@ -44,7 +45,10 @@ function stubFetch(lettura: unknown, stato = 200, chiamate: Chiamata[] = []) {
   )
 }
 
-beforeEach(() => nuovoDatabase())
+beforeEach(async () => {
+  setActivePinia(createPinia()) // the phone buttons read the profile
+  await nuovoDatabase()
+})
 afterEach(() => vi.unstubAllGlobals())
 
 describe('SquadrigliaView', () => {
@@ -53,7 +57,7 @@ describe('SquadrigliaView', () => {
     const vista = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
     await flushPromises()
     expect(vista.text()).toContain('Aquile')
-    expect(vista.find('a[href="tel:3472"]').exists()).toBe(true)
+    expect(vista.find('a[href="tel:+393472"]').exists()).toBe(true)
     expect(vista.text()).toContain('numero di Mario (genitore)')
     expect(vista.text()).toContain('nessun numero')
     expect(vista.text()).not.toContain('Genitore:')
@@ -64,7 +68,7 @@ describe('SquadrigliaView', () => {
     const vista = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
     await flushPromises()
     expect(vista.text()).toContain('Genitore: Lucia Prova')
-    expect(vista.find('a[href="tel:3489"]').exists()).toBe(true)
+    expect(vista.find('a[href="tel:+393489"]').exists()).toBe(true)
   })
 
   it('says so when the user is in no patrol', async () => {

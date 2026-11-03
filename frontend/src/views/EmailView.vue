@@ -2,8 +2,10 @@
 import { onMounted, reactive, ref } from 'vue'
 
 import { api, type PreferenzeEmail } from '@/api/qdc'
+import Telefono from '@/components/Telefono.vue'
 import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
+import { PULSANTI_PREDEFINITI, type PulsanteTelefono } from '@/navigazione/telefono'
 import { useSessioneStore } from '@/stores/sessione'
 
 // Privacy (DEC-251): what an adult's parents see (DEC-26), and which optional emails
@@ -22,6 +24,7 @@ const caricate = ref(false)
 const salvate = ref(false)
 
 onMounted(async () => {
+  if (!sessione.profilo?.persona) return
   const dati = await esegui(() => api.preferenzeEmail())
   if (!dati) return
   Object.assign(scelte, dati)
@@ -34,6 +37,29 @@ async function salva() {
   if (!dati) return
   Object.assign(scelte, dati)
   salvate.value = true
+}
+
+// The buttons next to phone numbers (DEC-301): one's own choice, saved with the account.
+const PULSANTI: { chiave: PulsanteTelefono; etichetta: string }[] = [
+  { chiave: 'chiama', etichetta: 'Chiama' },
+  { chiave: 'whatsapp', etichetta: 'Scrivi su WhatsApp' },
+  { chiave: 'sms', etichetta: 'Manda un SMS' },
+]
+const pulsanti = reactive<Record<PulsanteTelefono, boolean>>({
+  chiama: false,
+  whatsapp: false,
+  sms: false,
+})
+for (const p of sessione.profilo?.pulsanti_telefono ?? PULSANTI_PREDEFINITI) pulsanti[p] = true
+const { errore: erroreTelefono, inCorso: salvandoPulsanti, esegui: eseguiTelefono } = useErrore()
+const pulsantiSalvati = ref(false)
+
+async function salvaPulsanti() {
+  pulsantiSalvati.value = false
+  const dati = await eseguiTelefono(() => api.scegliPulsantiTelefono({ ...pulsanti }))
+  if (!dati || !sessione.profilo) return
+  sessione.profilo.pulsanti_telefono = PULSANTI.map((p) => p.chiave).filter((p) => dati[p])
+  pulsantiSalvati.value = true
 }
 
 const voci = [
@@ -49,44 +75,80 @@ const voci = [
 
 <template>
   <section>
-    <h1 class="h4 mb-5">Privacy</h1>
+    <h1 class="h4 mb-5">Privacy e preferenze</h1>
     <VisibilitaGenitori v-if="sessione.profilo?.persona" :id="sessione.profilo.persona.id" />
-    <h2 class="h5 mb-1">Le email che ricevi</h2>
+    <h2 class="h5 mb-1">Accanto ai numeri di telefono</h2>
     <p class="fg-2 small">
-      Scegli quali email ricevere. Quello che non ricevi per email lo trovi comunque nell'app.
+      Quali pulsanti vedere vicino a ogni numero, per esempio
+      <Telefono numero="333 123 4567" />. Vale su tutti i tuoi dispositivi.
     </p>
-    <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
-    <form v-if="caricate" class="card card-body mb-5" @submit.prevent="salva">
-      <div v-for="v in voci" :key="v.chiave" class="form-field">
+    <div v-if="erroreTelefono" class="alert theme-danger" role="alert">{{ erroreTelefono }}</div>
+    <form class="card card-body mb-7" @submit.prevent="salvaPulsanti">
+      <div v-for="p in PULSANTI" :key="p.chiave" class="form-field">
         <div class="switch">
           <input
-            :id="`email-${v.chiave}`"
-            v-model="scelte[v.chiave]"
+            :id="`pulsante-${p.chiave}`"
+            v-model="pulsanti[p.chiave]"
             type="checkbox"
             role="switch"
           />
         </div>
-        <label :for="`email-${v.chiave}`">{{ v.etichetta }}</label>
-      </div>
-      <div v-if="sessione.capo" class="form-field">
-        <div class="switch">
-          <input id="email-riepiloghi" v-model="scelte.riepiloghi" type="checkbox" role="switch" />
-        </div>
-        <label for="email-riepiloghi">
-          Riepiloghi per i capi: correzioni da inoltrare, richieste di iscrizione da decidere
-        </label>
+        <label :for="`pulsante-${p.chiave}`">{{ p.etichetta }}</label>
       </div>
       <div class="d-flex align-items-center gap-3 mt-3">
-        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+        <button
+          type="submit"
+          class="btn btn-sm btn-solid theme-primary"
+          :disabled="salvandoPulsanti"
+        >
           Salva
         </button>
-        <span v-if="salvate" class="small fg-success">Salvate.</span>
+        <span v-if="pulsantiSalvati" class="small fg-success">Salvati.</span>
       </div>
     </form>
-    <p class="small">
-      Arrivano sempre, perché servono a usare l'app o sono documenti: i codici per entrare, gli
-      inviti, gli avvisi di sicurezza, le email dell'iscrizione dall'app e le ricevute dei
-      pagamenti.
-    </p>
+    <template v-if="sessione.profilo?.persona">
+      <h2 class="h5 mb-1">Le email che ricevi</h2>
+      <p class="fg-2 small">
+        Scegli quali email ricevere. Quello che non ricevi per email lo trovi comunque nell'app.
+      </p>
+      <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
+      <form v-if="caricate" class="card card-body mb-5" @submit.prevent="salva">
+        <div v-for="v in voci" :key="v.chiave" class="form-field">
+          <div class="switch">
+            <input
+              :id="`email-${v.chiave}`"
+              v-model="scelte[v.chiave]"
+              type="checkbox"
+              role="switch"
+            />
+          </div>
+          <label :for="`email-${v.chiave}`">{{ v.etichetta }}</label>
+        </div>
+        <div v-if="sessione.capo" class="form-field">
+          <div class="switch">
+            <input
+              id="email-riepiloghi"
+              v-model="scelte.riepiloghi"
+              type="checkbox"
+              role="switch"
+            />
+          </div>
+          <label for="email-riepiloghi">
+            Riepiloghi per i capi: correzioni da inoltrare, richieste di iscrizione da decidere
+          </label>
+        </div>
+        <div class="d-flex align-items-center gap-3 mt-3">
+          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+            Salva
+          </button>
+          <span v-if="salvate" class="small fg-success">Salvate.</span>
+        </div>
+      </form>
+      <p class="small">
+        Arrivano sempre, perché servono a usare l'app o sono documenti: i codici per entrare, gli
+        inviti, gli avvisi di sicurezza, le email dell'iscrizione dall'app e le ricevute dei
+        pagamenti.
+      </p>
+    </template>
   </section>
 </template>

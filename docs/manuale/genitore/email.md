@@ -1,6 +1,6 @@
 # Le mie email
 
-Nella Home, in **Profilo** (o nel menu del profilo), tocca **Privacy**. In **Le email che ricevi**
+Nella Home, in **Profilo** (o nel menu del profilo), tocca **Privacy e preferenze**. In **Le email che ricevi**
 scegli quali ricevere:
 
 - eventi: nuovi eventi, cambi di date o luogo, annullamenti;
@@ -19,3 +19,10 @@ comunque nell'app.
 Alcune email arrivano sempre, perché servono a usare l'app o sono documenti: i codici per
 entrare, gli inviti, gli avvisi di sicurezza, le email dell'iscrizione dall'app e le
 ricevute dei pagamenti.
+
+## I pulsanti accanto ai numeri di telefono
+
+Vicino a ogni numero di telefono che vedi nell'app ci sono dei pulsanti: con un tocco
+**chiami** quel numero o gli **scrivi su WhatsApp**. Nella stessa pagina, in **Accanto ai
+numeri di telefono**, scegli quali vedere: chiama, WhatsApp e anche **SMS**, poi tocca
+**Salva**. La scelta vale su tutti i tuoi dispositivi.

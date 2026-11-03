@@ -6,6 +6,7 @@ import { api, type MiaSquadriglia } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
+import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 
@@ -47,7 +48,12 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
             >
             <strong v-else>{{ m.nome }} {{ m.cognome }}</strong>
             <span v-if="m.incarico" class="badge theme-primary">{{ m.incarico }}</span>
-            <a v-if="m.telefono" :href="`tel:${m.telefono}`" class="ms-auto">{{ m.telefono }}</a>
+            <Telefono
+              v-if="m.telefono"
+              :numero="m.telefono"
+              :di="`${m.nome} ${m.cognome}`"
+              class="ms-auto"
+            />
             <span v-else class="fg-2 small ms-auto">nessun numero</span>
           </div>
           <div v-if="m.del_genitore && m.telefono" class="fg-2 small">
@@ -56,7 +62,7 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
           <ul v-if="s.sono_capo && genitoriDi(s, m.id).length" class="list-unstyled small mb-0">
             <li v-for="g in genitoriDi(s, m.id)" :key="g.telefono + g.nome">
               Genitore: {{ g.nome }} {{ g.cognome }} ·
-              <a :href="`tel:${g.telefono}`">{{ g.telefono }}</a>
+              <Telefono :numero="g.telefono" :di="`${g.nome} ${g.cognome}`" />
             </li>
           </ul>
         </li>

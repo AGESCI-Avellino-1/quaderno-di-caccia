@@ -19,5 +19,5 @@ Nella Home tocca **Bacheca**: gli avvisi dei capi per la tua unità e per tutto 
 
 ## Privacy
 
-Nella Home, in **Profilo**, tocca **Privacy** e scegli quali email ricevere. Se sei
+Nella Home, in **Profilo**, tocca **Privacy e preferenze** e scegli quali email ricevere. Se sei
 maggiorenne, qui scegli anche cosa vedono i tuoi genitori.

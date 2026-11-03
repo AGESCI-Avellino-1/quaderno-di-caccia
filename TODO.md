@@ -177,7 +177,7 @@ Richiesta del maintainer (03/11): nelle Impostazioni i modelli sono troppi. Deci
 come oggi (`ModelloEmailView`), e il breadcrumb porta alla nuova pagina invece che alle
 Impostazioni. Manuale e schermate da aggiornare.
 
-#### N.34 — Chiamare e scrivere dai numeri di telefono 🚧 (DEC-301)
+#### N.34 — Chiamare e scrivere dai numeri di telefono ✅ 03/11 (DEC-301)
 
 Richiesta del maintainer (03/11): ovunque compare un numero, pulsanti accanto per chiamare o
 scrivere. Deciso il 03/11:

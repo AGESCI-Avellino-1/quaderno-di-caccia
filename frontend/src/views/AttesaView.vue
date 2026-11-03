@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 
 import { api, type DatiAttesa, type ListaAttesa, type VoceAttesa } from '@/api/qdc'
 import ModuloAttesa from '@/components/ModuloAttesa.vue'
+import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The waiting list for the capi (DEC-259…DEC-261): by age in this associative year,
@@ -162,9 +163,9 @@ async function inserisci() {
           {{
             v.da_se ? 'Si contatta lui/lei' : `Genitore: ${v.contatto_nome} ${v.contatto_cognome}`
           }}
-          · <a :href="`tel:${v.telefono}`">{{ v.telefono }}</a> ·
-          <a :href="`mailto:${v.email}`">{{ v.email }}</a> · {{ v.comune }} · in lista dal
-          {{ data(v.inserito_il) }}<template v-if="v.inserito_da_un_capo"> da un capo</template>
+          · <Telefono :numero="v.telefono" /> · <a :href="`mailto:${v.email}`">{{ v.email }}</a> ·
+          {{ v.comune }} · in lista dal {{ data(v.inserito_il)
+          }}<template v-if="v.inserito_da_un_capo"> da un capo</template>
         </div>
         <div v-if="lista?.unita.length" class="d-flex flex-wrap align-items-end gap-3 mt-3">
           <div>

@@ -97,6 +97,7 @@ def test_account_e_scelte_personali_sono_bloccati(capogruppo, genitore, ragazza)
     _inizia(client, genitore)
     bloccate = [
         client.put("/api/v1/io/email", {}, content_type="application/json"),
+        client.put("/api/v1/io/telefono", {}, content_type="application/json"),
         client.get("/api/v1/dispositivi"),
         client.get("/api/v1/calendario"),
         client.put(

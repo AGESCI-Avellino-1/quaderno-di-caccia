@@ -20,7 +20,7 @@ Da maggiorenne i tuoi dati li gestisci tu:
   (i passi sono quelli in [I tuoi figli](../genitore/figli.md#correggere-un-dato-di-buonastrada));
 - compili tu la **scheda sanitaria** e la firmi tu (vedi [Scheda sanitaria](../genitore/sanitaria): la scheda è la stessa, senza la parte dei genitori);
 - dici tu se partecipi o no a un evento;
-- nella pagina **Privacy** scegli **cosa vedono i tuoi genitori**: contatti e indirizzo,
+- nella pagina **Privacy e preferenze** scegli **cosa vedono i tuoi genitori**: contatti e indirizzo,
   farmaci e allergie, il resto della scheda, le quote. Finché non scegli, vedono tutto come
   prima.
 

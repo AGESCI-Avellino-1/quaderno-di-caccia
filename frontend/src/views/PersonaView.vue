@@ -18,6 +18,7 @@ import RegistroAccessi from '@/components/RegistroAccessi.vue'
 import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useRete } from '@/composables/useRete'
+import Telefono from '@/components/Telefono.vue'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePagina } from '@/composables/useNomePagina'
@@ -141,7 +142,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <template v-if="persona.cellulare">
           <dt class="col-5 md:col-3">Cellulare</dt>
           <dd class="col-7 md:col-9">
-            <a :href="`tel:${persona.cellulare}`">{{ persona.cellulare }}</a>
+            <Telefono :numero="persona.cellulare" :di="`${persona.nome} ${persona.cognome}`" />
           </dd>
         </template>
         <template v-if="persona.professione">

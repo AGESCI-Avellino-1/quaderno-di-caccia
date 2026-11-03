@@ -99,6 +99,8 @@ class Profilo(Schema):
     pagamenti_da_verificare: int = 0
     # The waiting list (DEC-259): every capo sees it.
     vede_lista_attesa: bool = False
+    # The buttons next to phone numbers (DEC-301): "chiama", "whatsapp", "sms".
+    pulsanti_telefono: list[str] = ["chiama", "whatsapp"]
 
 
 @router.get("/io", response=Profilo)
@@ -156,7 +158,31 @@ def profilo(request):
         "ambiente": ambiente(persona) if persona is not None else None,
         "pagamenti_da_verificare": _pagamenti_da_verificare(user),
         "vede_lista_attesa": policy.vede_lista_attesa(user),
+        "pulsanti_telefono": _pulsanti_telefono(user),
     }
+
+
+def _pulsanti_telefono(user) -> list[str]:
+    scelte = {"chiama": user.telefono_chiama, "whatsapp": user.telefono_whatsapp}
+    scelte["sms"] = user.telefono_sms
+    return [nome for nome, acceso in scelte.items() if acceso]
+
+
+class PulsantiTelefono(Schema):
+    chiama: bool
+    whatsapp: bool
+    sms: bool
+
+
+@router.put("/io/telefono", response=PulsantiTelefono)
+def scegli_pulsanti_telefono(request, dati: PulsantiTelefono):
+    """Which buttons one sees next to phone numbers (DEC-301): one's own choice."""
+    user = request.auth
+    user.telefono_chiama = dati.chiama
+    user.telefono_whatsapp = dati.whatsapp
+    user.telefono_sms = dati.sms
+    user.save(update_fields=["telefono_chiama", "telefono_whatsapp", "telefono_sms"])
+    return dati
 
 
 def _pagamenti_da_verificare(user) -> int:

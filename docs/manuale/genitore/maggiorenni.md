@@ -1,7 +1,7 @@
 # Figli maggiorenni
 
 Quando tuo figlio compie 18 anni decide lui cosa puoi continuare a vedere (lo sceglie
-nella sua pagina **Privacy**), separatamente per:
+nella sua pagina **Privacy e preferenze**), separatamente per:
 
 - contatti e indirizzo;
 - farmaci, allergie e alimentazione;

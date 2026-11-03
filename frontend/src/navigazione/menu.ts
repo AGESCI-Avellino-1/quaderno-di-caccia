@@ -389,11 +389,11 @@ export function vociProfilo(p: Profilo): Voce[] {
       to: { name: 'persona', params: { id: p.persona.id } },
       descrizione: 'La tua scheda',
     },
-    p.persona && {
-      nome: 'Privacy',
+    {
+      nome: 'Privacy e preferenze',
       icona: 'shield-check',
       to: '/email',
-      descrizione: 'Quali email ricevere e chi vede i tuoi dati',
+      descrizione: 'Chi vede i tuoi dati, quali email ricevere, i pulsanti accanto ai telefoni',
     },
     {
       nome: 'Password e sicurezza',

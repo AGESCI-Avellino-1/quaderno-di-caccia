@@ -64,7 +64,7 @@ export const PAGINE: Record<string, Pagina> = {
   impersonazioni: { titolo: 'Impersona' },
   cassa: { titolo: 'Prima nota' },
   spese: { titolo: 'Le mie spese' },
-  email: { titolo: 'Privacy' },
+  email: { titolo: 'Privacy e preferenze' },
   importazione: { titolo: 'Importa da BuonaStrada' },
   dispositivi: { titolo: 'Password e sicurezza' },
   modifiche: { titolo: 'Modifiche da inviare' },

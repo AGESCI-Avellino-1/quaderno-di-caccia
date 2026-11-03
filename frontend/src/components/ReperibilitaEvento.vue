@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue'
 
 import { api } from '@/api/qdc'
+import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The emergency contact for this camp or outing only, instead of the yearly one
@@ -42,7 +43,7 @@ async function salva(togli = false) {
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <p v-if="attuale && !aperta" class="small mb-0">
       In caso di emergenza per questo evento: <strong>{{ attuale.nome }}</strong>
-      {{ attuale.telefono }}
+      <Telefono v-if="attuale.telefono" :numero="attuale.telefono" :di="attuale.nome" />
     </p>
     <button v-if="!aperta" type="button" class="btn btn-sm btn-link px-0" @click="apri">
       Un altro recapito per le emergenze, solo per questo evento…

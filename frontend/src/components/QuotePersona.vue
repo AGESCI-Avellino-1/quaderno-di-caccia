@@ -12,6 +12,7 @@ import {
   type Quota,
   type QuotePersona,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
@@ -246,14 +247,11 @@ async function reinvia(id: number) {
                   @submit.prevent="salvaAgevolazione"
                 >
                   <div>
-                    <label class="form-label small" for="agev-importo">Importo coperto (€)</label>
-                    <input
+                    <label class="form-label small" for="agev-importo">Importo coperto</label>
+                    <CampoImporto
                       id="agev-importo"
                       v-model="agevolazione.importo"
-                      type="number"
                       min="0.01"
-                      step="0.01"
-                      class="form-control form-control-sm"
                       required
                     />
                   </div>
@@ -356,14 +354,12 @@ async function reinvia(id: number) {
               <span class="fg-2 small">(resta {{ euro(q.residuo) }})</span>
             </label>
           </div>
-          <input
+          <CampoImporto
             v-if="q.id in modulo.importi"
             v-model="modulo.importi[q.id]"
-            type="number"
             min="0.01"
             :max="q.residuo"
-            step="0.01"
-            class="form-control form-control-sm w-auto"
+            class="w-auto"
             :aria-label="`Importo per ${q.descrizione}`"
             required
           />

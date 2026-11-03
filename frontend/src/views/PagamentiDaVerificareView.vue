@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 
 import { api, euro, ricevutaSegnalazione, type Segnalazione } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import Icona from '@/components/Icona.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
@@ -105,16 +106,9 @@ async function rifiuta(s: Segnalazione) {
         </div>
         <div v-if="s.metodo === 'PAYPAL'">
           <label class="form-label small mb-0" :for="`accreditato-${s.id}`"
-            >Accreditato da PayPal € (facoltativo)</label
+            >Accreditato da PayPal (facoltativo)</label
           >
-          <input
-            :id="`accreditato-${s.id}`"
-            v-model="scelte[s.id]!.accreditato"
-            type="number"
-            min="0"
-            step="0.01"
-            class="form-control form-control-sm"
-          />
+          <CampoImporto :id="`accreditato-${s.id}`" v-model="scelte[s.id]!.accreditato" min="0" />
         </div>
         <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
           Conferma

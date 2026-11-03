@@ -11,7 +11,7 @@ gruppo.
 1. Tocca **Nuovo avviso**.
 2. Scrivi **Titolo** e **Testo**.
 3. In **Per** scegli la tua unità (o **Tutto il gruppo**, per un avviso alla Comunità capi).
-4. In **A chi** scegli: **Famiglie e ragazzi**, **Solo i genitori**, **Solo i ragazzi** o
+4. In **A chi** tocca una delle scelte: **Famiglie e ragazzi**, **Solo i genitori**, **Solo i ragazzi** o
    **Comunità capi**.
 5. In **Mostralo fino al** scegli quando scade (di base tra due settimane).
 6. Se vuoi, accendi **Manda anche un'email**: arriva a chi non ha disattivato le email degli

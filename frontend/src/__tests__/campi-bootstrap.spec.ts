@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
 import Avatar from '@/components/Avatar.vue'
+import CampoImporto from '@/components/CampoImporto.vue'
 import CampoOtp from '@/components/CampoOtp.vue'
 import CampoPassword from '@/components/CampoPassword.vue'
+import Passi from '@/components/Passi.vue'
+import SceltaChip from '@/components/SceltaChip.vue'
 
 /** What the phone does when it fills in a code it suggested: one input event. */
 async function riempi(input: HTMLInputElement, valore: string) {
@@ -120,5 +123,65 @@ describe('Avatar', () => {
     expect(avatar.find('img').exists()).toBe(false)
     expect(avatar.text()).toContain('LB')
     expect(avatar.emitted('errore')).toHaveLength(1)
+  })
+})
+
+describe('CampoImporto', () => {
+  it('puts the € inside the field and gives back a number', async () => {
+    const campo = mount(CampoImporto, {
+      props: { modelValue: 10 },
+      attrs: { id: 'importo', min: '0.01', required: true, class: 'w-auto' },
+    })
+    expect(campo.find('.form-adorn-text').text()).toBe('€')
+    expect(campo.classes()).toContain('w-auto')
+    const input = campo.find('input')
+    expect(input.attributes('id')).toBe('importo')
+    expect(input.attributes('step')).toBe('0.01')
+    expect(input.element.value).toBe('10')
+    await input.setValue('12.50')
+    expect(campo.emitted('update:modelValue')!.at(-1)).toEqual([12.5])
+  })
+})
+
+describe('Passi', () => {
+  it('colours the steps done and marks the current one', () => {
+    const passi = mount(Passi, {
+      props: {
+        orizzontale: true,
+        passi: [
+          { etichetta: 'Richiesta inviata', fatto: true },
+          { etichetta: 'Accolta dai capi', corrente: true },
+          { etichetta: 'Completata' },
+        ],
+      },
+    })
+    const voci = passi.findAll('li')
+    expect(voci.map((v) => v.text())).toEqual([
+      'Richiesta inviata',
+      'Accolta dai capi',
+      'Completata',
+    ])
+    expect(voci.map((v) => v.classes('active'))).toEqual([true, false, false])
+    expect(voci[1]!.attributes('aria-current')).toBe('step')
+    expect(passi.find('.stepper-horizontal').exists()).toBe(true)
+  })
+})
+
+describe('SceltaChip', () => {
+  it('chooses with one tap, as a group of radio buttons', async () => {
+    const scelta = mount(SceltaChip, {
+      props: {
+        modelValue: 'FAMIGLIE',
+        etichetta: 'A chi',
+        scelte: [
+          { valore: 'FAMIGLIE', nome: 'Le famiglie' },
+          { valore: 'GENITORI', nome: 'Solo i genitori' },
+        ],
+      },
+    })
+    const chip = scelta.findAll('[role="radio"]')
+    expect(chip[0]!.attributes('aria-checked')).toBe('true')
+    await chip[1]!.trigger('click')
+    expect(scelta.emitted('update:modelValue')).toEqual([['GENITORI']])
   })
 })

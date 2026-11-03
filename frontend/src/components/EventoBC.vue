@@ -13,6 +13,7 @@ import {
   type SchedaBC,
   type Unita,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import IscrizioneBCVue from '@/components/IscrizioneBC.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
@@ -258,16 +259,9 @@ const io = () => sessione.profilo?.persona?.id
           </div>
           <div class="col-12 md:col-6">
             <label class="form-label small" for="bc-importo">
-              Quota per la famiglia (€, anche in lista d'attesa)
+              Quota per la famiglia (anche in lista d'attesa)
             </label>
-            <input
-              id="bc-importo"
-              v-model="nuova.importo"
-              type="number"
-              min="0"
-              step="0.01"
-              class="form-control form-control-sm"
-            />
+            <CampoImporto id="bc-importo" v-model="nuova.importo" min="0" />
           </div>
           <div class="col-12 md:col-6">
             <label class="form-label small" for="bc-scad-q">Da pagare entro</label>
@@ -325,15 +319,12 @@ const io = () => sessione.profilo?.persona?.id
             >
               <div v-if="dettaglio.formazione_capi">
                 <label class="form-label small" :for="`versata-${a.persona_id}`"
-                  >Quota versata (€)</label
+                  >Quota versata</label
                 >
-                <input
+                <CampoImporto
                   :id="`versata-${a.persona_id}`"
                   v-model="quote[a.persona_id]"
-                  type="number"
                   min="0"
-                  step="0.01"
-                  class="form-control form-control-sm"
                 />
               </div>
               <button

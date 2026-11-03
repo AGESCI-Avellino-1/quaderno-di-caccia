@@ -19,6 +19,7 @@ import {
 import CompetenzaEG from '@/components/CompetenzaEG.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
+import Passi from '@/components/Passi.vue'
 import PercorsoEG from '@/components/PercorsoEG.vue'
 import PuntiStrada from '@/components/PuntiStrada.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -463,8 +464,19 @@ async function salvaNuova() {
           >
         </template>
       </p>
-      <ol class="mb-3">
-        <li v-for="t in periodo.tappe" :key="t.id" class="mb-1">
+      <!-- The tappe as steps (DEC-298): coloured once started, the one in progress marked. -->
+      <Passi
+        class="mb-3"
+        :passi="
+          periodo.tappe.map((t) => ({
+            etichetta: t.fase_nome,
+            fatto: true,
+            corrente: t.in_corso,
+            tappa: t,
+          }))
+        "
+      >
+        <template #default="{ passo: { tappa: t } }">
           <strong>{{ t.fase_nome }}</strong>
           <span v-if="lc && !t.completata && momento(t.fase).cammino" class="small">
             · {{ momento(t.fase).cammino }} per diventare {{ momento(t.fase).traguardo }}
@@ -499,8 +511,8 @@ async function salvaNuova() {
           >
             correggi una data…
           </button>
-        </li>
-      </ol>
+        </template>
+      </Passi>
       <form
         v-if="apertura === 'rettifica-tappa' && correzione.tappa"
         class="d-flex flex-wrap align-items-end gap-3 mb-3"

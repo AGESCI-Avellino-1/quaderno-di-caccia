@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 
 import { api, type Stagione, type StagioniUnita } from '@/api/qdc'
+import Passi from '@/components/Passi.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The stagioni di caccia o di volo of a branco or cerchio (DEC-66, DEC-183; L/C art. 38):
@@ -52,6 +53,13 @@ async function fai(id: number, azione: 'lancia' | 'chiudi' | 'annulla', il: stri
   if (!nuovi) return
   dati.value = nuovi
   passo.id = 0
+}
+
+const FASI_STAGIONE = ['PREVISTA', 'APERTA', 'CHIUSA']
+const ETICHETTE_FASI = ['Prevista', 'Lanciata', 'Chiusa']
+function fasiStagione(stato: string) {
+  const qui = FASI_STAGIONE.indexOf(stato)
+  return ETICHETTE_FASI.map((etichetta, i) => ({ etichetta, fatto: i <= qui, corrente: i === qui }))
 }
 
 const COLORI: Record<string, string> = {
@@ -125,8 +133,17 @@ const COLORI: Record<string, string> = {
       <li v-for="s in dati.stagioni" :key="s.id" class="list-group-item">
         <div class="d-flex flex-wrap justify-content-between gap-3">
           <strong>{{ s.nome }}</strong>
-          <span class="badge" :class="COLORI[s.stato]">{{ s.stato_nome }}</span>
+          <span v-if="s.stato === 'ANNULLATA'" class="badge" :class="COLORI[s.stato]">{{
+            s.stato_nome
+          }}</span>
         </div>
+        <!-- Planned, launched, closed: where the season is (DEC-298). -->
+        <Passi
+          v-if="s.stato !== 'ANNULLATA'"
+          orizzontale
+          class="small my-3"
+          :passi="fasiStagione(s.stato)"
+        />
         <p class="small mb-1">
           Prevista dal {{ data(s.inizio_previsto) }} al {{ data(s.fine_prevista) }}.
           <template v-if="s.lancio">Lancio il {{ data(s.lancio) }}.</template>

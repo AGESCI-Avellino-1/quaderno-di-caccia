@@ -19,6 +19,7 @@ import {
   type Verifica,
   type VoceModelloD,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
@@ -448,16 +449,8 @@ const nomeTipo = (tipo: string) => (tipo === 'PAYPAL' ? 'Conto PayPal' : 'Conto 
               />
             </div>
             <div class="md:col-4">
-              <label class="form-label small" for="mov-importo">Importo (€)</label>
-              <input
-                id="mov-importo"
-                v-model="nuovo.importo"
-                type="number"
-                min="0.01"
-                step="0.01"
-                class="form-control form-control-sm"
-                required
-              />
+              <label class="form-label small" for="mov-importo">Importo</label>
+              <CampoImporto id="mov-importo" v-model="nuovo.importo" min="0.01" required />
             </div>
             <div class="col-12">
               <label class="form-label small" for="mov-descrizione">Descrizione</label>
@@ -568,15 +561,8 @@ const nomeTipo = (tipo: string) => (tipo === 'PAYPAL' ? 'Conto PayPal' : 'Conto 
               />
             </div>
             <div class="md:col-4">
-              <label class="form-label small" for="ver-contato">Saldo contato (€)</label>
-              <input
-                id="ver-contato"
-                v-model="verifica.saldo_contato"
-                type="number"
-                step="0.01"
-                class="form-control form-control-sm"
-                required
-              />
+              <label class="form-label small" for="ver-contato">Saldo contato</label>
+              <CampoImporto id="ver-contato" v-model="verifica.saldo_contato" required />
             </div>
             <div class="md:col-4">
               <label class="form-label small" for="ver-motivo">Motivo di una differenza</label>
@@ -915,15 +901,8 @@ const nomeTipo = (tipo: string) => (tipo === 'PAYPAL' ? 'Conto PayPal' : 'Conto 
             </select>
           </div>
           <div class="md:col-3">
-            <label class="form-label small" for="cassa-saldo">Saldo iniziale (€)</label>
-            <input
-              id="cassa-saldo"
-              v-model="modificaCassa.saldo_iniziale"
-              type="number"
-              step="0.01"
-              class="form-control form-control-sm"
-              required
-            />
+            <label class="form-label small" for="cassa-saldo">Saldo iniziale</label>
+            <CampoImporto id="cassa-saldo" v-model="modificaCassa.saldo_iniziale" required />
           </div>
           <div class="md:col-3">
             <label class="form-label small" for="cassa-data">Alla data</label>

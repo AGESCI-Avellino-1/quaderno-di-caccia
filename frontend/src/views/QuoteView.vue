@@ -13,6 +13,7 @@ import {
   type TipoQuotaIn,
   type Unita,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -271,27 +272,12 @@ const scadenzaTipo = (t: TipoQuota) =>
               </select>
             </div>
             <div class="md:col-4">
-              <label class="form-label small" for="tipo-importo">Importo (€)</label>
-              <input
-                id="tipo-importo"
-                v-model="modulo.importo"
-                type="number"
-                min="0.01"
-                step="0.01"
-                class="form-control form-control-sm"
-                required
-              />
+              <label class="form-label small" for="tipo-importo">Importo</label>
+              <CampoImporto id="tipo-importo" v-model="modulo.importo" min="0.01" required />
             </div>
             <div v-if="modulo.categoria !== 'CENSIMENTO'" class="md:col-4">
-              <label class="form-label small" for="tipo-sconto">Sconto famiglia (€)</label>
-              <input
-                id="tipo-sconto"
-                v-model="modulo.sconto_famiglia"
-                type="number"
-                min="0"
-                step="0.01"
-                class="form-control form-control-sm"
-              />
+              <label class="form-label small" for="tipo-sconto">Sconto famiglia</label>
+              <CampoImporto id="tipo-sconto" v-model="modulo.sconto_famiglia" min="0" />
               <div class="form-text">
                 Si toglie alla quota di ognuno quando la famiglia ha almeno due soci. 0 = nessuno.
               </div>

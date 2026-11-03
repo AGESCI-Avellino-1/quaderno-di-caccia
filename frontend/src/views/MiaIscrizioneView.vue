@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { api, type RichiestaIscrizione } from '@/api/qdc'
+import { api, type RichiestaIscrizione, type StatoIscrizione } from '@/api/qdc'
 import CompletaIscrizione from '@/components/CompletaIscrizione.vue'
 import ModuliIscrizione from '@/components/ModuliIscrizione.vue'
+import Passi from '@/components/Passi.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -35,6 +36,24 @@ const tema = {
   RECEPITA: 'theme-success',
   RIFIUTATA: 'theme-secondary',
 }
+// Where the registration is, as steps (DEC-298): how many are done in each state.
+const FATTI: Record<StatoIscrizione, number> = {
+  IN_ATTESA: 1,
+  APPROVATA: 2,
+  SOSPESA: 2,
+  COMPLETATA: 3,
+  INSERITA: 3,
+  RECEPITA: 4,
+  RIFIUTATA: 0,
+}
+const PASSI = ['Richiesta inviata', 'Accolta dai capi', 'Completata', 'In BuonaStrada']
+const passi = (r: RichiestaIscrizione) =>
+  PASSI.map((etichetta, i) => ({
+    etichetta,
+    fatto: i < FATTI[r.stato],
+    corrente: i === FATTI[r.stato],
+  }))
+
 const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.stato === 'SOSPESA'
 </script>
 
@@ -49,6 +68,7 @@ const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.st
         <span class="badge" :class="tema[r.stato]">{{ r.stato_nome }}</span>
       </div>
       <p class="fg-2 small mb-3">{{ r.unita }} · richiesta del {{ data(r.creata_il) }}</p>
+      <Passi v-if="r.stato !== 'RIFIUTATA'" orizzontale class="small mb-3" :passi="passi(r)" />
       <p v-if="r.stato === 'IN_ATTESA'" class="mb-0">
         I capi dell'unità esamineranno la richiesta: riceverai un'email con la risposta.
       </p>

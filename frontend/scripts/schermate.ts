@@ -627,7 +627,7 @@ const SCENE: Scena[] = [
       await pagina
         .getByLabel('Per', { exact: true })
         .selectOption({ label: 'Reparto Antares (N1)' })
-      await pagina.getByLabel('A chi').selectOption({ label: 'Solo i genitori' })
+      await pagina.getByRole('radio', { name: 'Solo i genitori' }).click()
     },
     intera: true,
   },

@@ -9,6 +9,7 @@ import {
   type Bacheca,
   type DestinatariAvviso,
 } from '@/api/qdc'
+import SceltaChip from '@/components/SceltaChip.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The notice board (DEC-03, DEC-218…DEC-220): notices only, no replies, no read
@@ -197,16 +198,12 @@ const data = (d: string) => new Date(d).toLocaleDateString('it-IT')
             </select>
           </div>
           <div class="col-12 md:col-6">
-            <label class="form-label small" for="avv-destinatari">A chi</label>
-            <select
-              id="avv-destinatari"
+            <span class="form-label small d-block" aria-hidden="true">A chi</span>
+            <SceltaChip
               v-model="modulo.destinatari"
-              class="form-control form-control-sm"
-            >
-              <option v-for="d in destinatariPossibili" :key="d.valore" :value="d.valore">
-                {{ d.nome }}
-              </option>
-            </select>
+              :scelte="destinatariPossibili"
+              etichetta="A chi"
+            />
           </div>
           <div class="col-12 md:col-6">
             <label class="form-label small" for="avv-scade">Mostralo fino al</label>

@@ -32,7 +32,8 @@ capi, come codice, link o QR code. Non serve avere già un account.
 
 Ti arriva un'email: apri il link per confermare il tuo indirizzo. Poi i capi dell'unità
 esaminano la richiesta e ti arriva un'email con la risposta. Nella Home, in
-**Profilo**, trovi **La mia iscrizione**, con lo stato della richiesta.
+**Profilo**, trovi **La mia iscrizione**, con lo stato della richiesta: i passi colorati
+(richiesta inviata, accolta dai capi, completata, in BuonaStrada) sono quelli già fatti.
 
 Se la richiesta è accolta, completa l'iscrizione entro la data indicata:
 

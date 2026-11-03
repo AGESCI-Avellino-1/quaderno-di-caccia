@@ -13,6 +13,7 @@ import {
   type RiepilogoBC,
   type VersioneScheda,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import RisposteSchedaBC from '@/components/RisposteSchedaBC.vue'
 import { useErrore } from '@/composables/useErrore'
 
@@ -492,16 +493,8 @@ const scaduta = computed(
           @submit.prevent="salvaQuota()"
         >
           <div>
-            <label class="form-label small" :for="`importo-${i.id}`">Importo (€)</label>
-            <input
-              :id="`importo-${i.id}`"
-              v-model="modifica.importo"
-              type="number"
-              min="0.01"
-              step="0.01"
-              class="form-control form-control-sm"
-              required
-            />
+            <label class="form-label small" :for="`importo-${i.id}`">Importo</label>
+            <CampoImporto :id="`importo-${i.id}`" v-model="modifica.importo" min="0.01" required />
           </div>
           <div>
             <label class="form-label small" :for="`scad-q-${i.id}`">Da pagare entro</label>

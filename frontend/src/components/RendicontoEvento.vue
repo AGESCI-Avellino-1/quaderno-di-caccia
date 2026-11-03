@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 
 import { api, euro, type RendicontoEvento } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // Budget (DEC-91) and accounts (DEC-90) of an event, for its capi and the Co.Ca.: the
@@ -114,30 +115,15 @@ const ETICHETTE = {
         <div class="row g-3">
           <template v-for="(etichetta, chiave) in ETICHETTE" :key="chiave">
             <div v-if="modulo.calcola !== chiave" class="md:col-6">
-              <label class="form-label small" :for="`budget-${chiave}`">{{ etichetta }} (€)</label>
-              <input
-                :id="`budget-${chiave}`"
-                v-model="modulo[chiave]"
-                type="number"
-                min="0"
-                step="0.01"
-                class="form-control form-control-sm"
-                required
-              />
+              <label class="form-label small" :for="`budget-${chiave}`">{{ etichetta }}</label>
+              <CampoImporto :id="`budget-${chiave}`" v-model="modulo[chiave]" min="0" required />
             </div>
           </template>
           <div class="md:col-6">
             <label class="form-label small" for="budget-quota-staff">
-              Contributo pro capite dello staff (€, anche 0)
+              Contributo pro capite dello staff (anche 0)
             </label>
-            <input
-              id="budget-quota-staff"
-              v-model="modulo.quota_staff"
-              type="number"
-              min="0"
-              step="0.01"
-              class="form-control form-control-sm"
-            />
+            <CampoImporto id="budget-quota-staff" v-model="modulo.quota_staff" min="0" />
           </div>
         </div>
         <div class="d-flex gap-3 mt-3">

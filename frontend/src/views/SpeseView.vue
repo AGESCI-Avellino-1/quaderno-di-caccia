@@ -10,6 +10,7 @@ import {
   type SpesaAnticipata,
   type Unita,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiGiustificativo } from '@/offline/giustificativo'
 import { scrivi } from '@/offline/outbox'
@@ -96,16 +97,8 @@ async function registra() {
           />
         </div>
         <div class="md:col-4">
-          <label class="form-label small" for="spesa-importo">Importo (€)</label>
-          <input
-            id="spesa-importo"
-            v-model="modulo.importo"
-            type="number"
-            min="0.01"
-            step="0.01"
-            class="form-control form-control-sm"
-            required
-          />
+          <label class="form-label small" for="spesa-importo">Importo</label>
+          <CampoImporto id="spesa-importo" v-model="modulo.importo" min="0.01" required />
         </div>
         <div class="md:col-4">
           <label class="form-label small" for="spesa-unita">Per l'unità</label>

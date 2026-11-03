@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, euro, type QuotaEvento, type RataEvento, type SituazioneQuoteEvento } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The event's fee (DEC-77): everyone sees the instalments; the event's capi set them
@@ -121,15 +122,8 @@ const pagate = (r: SituazioneQuoteEvento) =>
             />
           </div>
           <div class="md:col-4">
-            <label class="form-label small" for="quota-sconto">Sconto famiglia sul saldo (€)</label>
-            <input
-              id="quota-sconto"
-              v-model="modulo.sconto_famiglia"
-              type="number"
-              min="0"
-              step="0.01"
-              class="form-control form-control-sm"
-            />
+            <label class="form-label small" for="quota-sconto">Sconto famiglia sul saldo</label>
+            <CampoImporto id="quota-sconto" v-model="modulo.sconto_famiglia" min="0" />
           </div>
         </div>
         <div v-for="(r, i) in modulo.rate" :key="i" class="row g-3 mb-3 align-items-end">
@@ -143,16 +137,8 @@ const pagate = (r: SituazioneQuoteEvento) =>
             />
           </div>
           <div class="md:col-3">
-            <label class="form-label small" :for="`rata-importo-${i}`">Importo (€)</label>
-            <input
-              :id="`rata-importo-${i}`"
-              v-model="r.importo"
-              type="number"
-              min="0.01"
-              step="0.01"
-              class="form-control form-control-sm"
-              required
-            />
+            <label class="form-label small" :for="`rata-importo-${i}`">Importo</label>
+            <CampoImporto :id="`rata-importo-${i}`" v-model="r.importo" min="0.01" required />
           </div>
           <div class="md:col-3">
             <label class="form-label small" :for="`rata-scadenza-${i}`">Entro il</label>
@@ -227,12 +213,10 @@ const pagate = (r: SituazioneQuoteEvento) =>
                 class="d-flex align-items-center gap-1"
                 @submit.prevent="salvaImporto"
               >
-                <input
+                <CampoImporto
                   v-model="modifica.importo"
-                  type="number"
                   min="0"
-                  step="0.01"
-                  class="form-control form-control-sm w-auto"
+                  class="w-auto"
                   :aria-label="`Importo di ${q.descrizione} per ${r.persona}`"
                   required
                 />

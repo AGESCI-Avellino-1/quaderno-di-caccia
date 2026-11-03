@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { api, euro, type FasciaPaypal, type ImpostazioniPagamenti } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import Icona from '@/components/Icona.vue'
 import { useErrore } from '@/composables/useErrore'
 
@@ -220,31 +221,13 @@ const esempio = computed(() => {
           <div v-for="(f, i) in fasce" :key="i" class="d-flex flex-wrap align-items-end gap-3 mb-1">
             <div>
               <label class="form-label small mb-0" :for="`fascia-fino-${i}`"
-                >Fino a € (incluso)</label
+                >Fino a (incluso)</label
               >
-              <input
-                :id="`fascia-fino-${i}`"
-                v-model="f.fino_a"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                class="form-control form-control-sm"
-              />
+              <CampoImporto :id="`fascia-fino-${i}`" v-model="f.fino_a" min="0" required />
             </div>
             <div>
-              <label class="form-label small mb-0" :for="`fascia-quota-${i}`"
-                >Si aggiungono €</label
-              >
-              <input
-                :id="`fascia-quota-${i}`"
-                v-model="f.quota"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                class="form-control form-control-sm"
-              />
+              <label class="form-label small mb-0" :for="`fascia-quota-${i}`">Si aggiungono</label>
+              <CampoImporto :id="`fascia-quota-${i}`" v-model="f.quota" min="0" required />
             </div>
             <button
               v-if="fasce.length > 1"
@@ -266,17 +249,9 @@ const esempio = computed(() => {
           <div class="d-flex">
             <div>
               <label class="form-label small mb-0" for="fascia-oltre"
-                >Oltre la fascia più alta si aggiungono €</label
+                >Oltre la fascia più alta si aggiungono</label
               >
-              <input
-                id="fascia-oltre"
-                v-model="oltre"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                class="form-control form-control-sm"
-              />
+              <CampoImporto id="fascia-oltre" v-model="oltre" min="0" required />
             </div>
           </div>
         </div>

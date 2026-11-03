@@ -5,6 +5,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import SceltaChip from '@/components/SceltaChip.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useNavigazioneStore } from '@/stores/navigazione'
@@ -71,13 +72,17 @@ watch(
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
     <div class="row g-3 mb-5">
-      <div v-if="unita.length" class="col-12 md:col-5">
-        <select v-model="unitaScelta" class="form-control" aria-label="Unità">
-          <option :value="undefined">Tutte le unità</option>
-          <option v-for="u in unita" :key="u.id" :value="u.id">{{ nomeUnita(u) }}</option>
-        </select>
+      <div v-if="unita.length" class="col-12">
+        <SceltaChip
+          v-model="unitaScelta"
+          :scelte="[
+            { valore: undefined, nome: 'Tutte le unità' },
+            ...unita.map((u) => ({ valore: u.id, nome: nomeUnita(u) })),
+          ]"
+          etichetta="Unità"
+        />
       </div>
-      <div class="col">
+      <div class="col-12">
         <input v-model="filtro" class="form-control" type="search" placeholder="Cerca per nome" />
       </div>
     </div>

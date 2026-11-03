@@ -14,6 +14,7 @@ import {
   type Unita,
   type VoceModelloD,
 } from '@/api/qdc'
+import CampoImporto from '@/components/CampoImporto.vue'
 import SezioneApribile from '@/components/SezioneApribile.vue'
 import { useErrore } from '@/composables/useErrore'
 
@@ -289,13 +290,10 @@ const data = (d: string) => new Date(d).toLocaleDateString('it-IT')
                   <td>{{ q.descrizione }}</td>
                   <td class="text-end">resta {{ euro(q.residuo) }}</td>
                   <td style="width: 8rem">
-                    <input
+                    <CampoImporto
                       v-model="scelte[r.id]!.importi[q.id]"
-                      type="number"
-                      step="0.01"
                       min="0"
                       :max="q.residuo"
-                      class="form-control form-control-sm"
                       :aria-label="`Importo per ${q.descrizione} di ${q.persona}`"
                     />
                   </td>

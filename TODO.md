@@ -10,7 +10,38 @@ In cima ci sono i punti aperti; sotto, le fasi e lo storico di quello che è sta
 
 ## Punti aperti
 
-### Da sviluppare (giro del 03/11)
+### Da sviluppare
+
+#### N.26 — Logo AGESCI per le installazioni generiche ⏳ (in attesa del via)
+
+Richiesta del maintainer (03/11): chi installa l'app per un altro gruppo deve trovare un
+sistema pulito, senza riferimenti all'Avellino 1. Nuovo DEC nell'analisi prima di
+svilupparla. Deciso il 03/11:
+
+1. **Logo di base: AGESCI**, da `resources/File_AGESCI.svg`. Attenzione: il file oggi nel
+   repository (aggiunto, non ancora nel commit) **non è un SVG ma la pagina HTML di Wikimedia
+   Commons**: va sostituito con il file originale prima di svilupparla.
+2. **Logo alternativo**: chi installa mette un altro file in `resources/` e ne indica il nome
+   in `.env` (per esempio `QDC_LOGO=resources/logo-gruppo.svg`; vuota = AGESCI), SVG o PNG
+   quadrato. Da quel file, alla costruzione dell'immagine dell'app, si ricavano le icone (oggi
+   PNG fissi in `frontend/public`: favicon 16 e 32, `apple-touch-icon`, icone della PWA 192,
+   512 e «maskable»), il logo della barra in alto (`App.vue`) e quello delle pagine di errore
+   (`backend/templates/errori/base.html`, `frontend/public/errori/50x.html`).
+3. **Documentazione**: la guida di installazione usa il logo AGESCI; il manuale d'uso resta con
+   quello dell'Avellino 1 (oggi entrambi usano `docs/_static/logo.png`).
+4. **Il logo dell'Avellino 1 resta nel repository** (per esempio `resources/logo-avellino1.png`,
+   ricavato dalle icone di oggi): lo usano il manuale e le schermate del manuale
+   (`schermate.ts` costruisce l'app con quel logo); un'installazione nuova non lo usa mai.
+5. **Esempi testuali generici** al posto dell'Avellino 1 («es. AGESCI Avellino 1», «AVELLINO 1»
+   nei suggerimenti della carta intestata, `https://qdc.avellino1.it` negli esempi dei
+   modelli email…): per esempio «AGESCI Nomeluogo 1» e `https://qdc.esempio.it`. Restano i
+   link al progetto su GitHub e la frase della guida che dice che l'app è nata per l'Avellino 1.
+6. **Guida di installazione**: copyright e autore Andrea Bruno, con il link a bruand81.it.
+7. **Con la release**: istruzioni per qdc.avellino1.it, che dopo l'aggiornamento avrebbe il
+   logo AGESCI e deve tornare a quello del gruppo (il file in `resources/` e `QDC_LOGO` in
+   `.env`), anche nelle note della versione.
+
+### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,
 N.24, N.23. Un commit per voce; manuale e schermate si aggiornano con ogni voce.

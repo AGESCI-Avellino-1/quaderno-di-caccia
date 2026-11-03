@@ -6,6 +6,167 @@ Dettagli dei requisiti: [analisi dei requisiti](docs/analisi/analisi-requisiti.m
 (sezione "Fasi di sviluppo"). Note tecniche: [CLAUDE.md](CLAUDE.md),
 [backend/CLAUDE.md](backend/CLAUDE.md), [frontend/CLAUDE.md](frontend/CLAUDE.md).
 
+In cima ci sono i punti aperti; sotto, le fasi e lo storico di quello che è stato fatto.
+
+## Punti aperti
+
+### Da sviluppare (giro del 03/11)
+
+Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,
+N.24, N.23. Un commit per voce; manuale e schermate si aggiornano con ogni voce.
+
+#### N.25 — «A disposizione» diviso in due incarichi ⏳
+
+Rif. DEC-165, DEC-284; nuovo DEC nell'analisi (modifica DEC-165).
+
+Richiesta del maintainer (03/11): «Servizio di supporto al gruppo» e «Servizio di
+supporto all'azione educativa», veri incarichi di Comunità capi; nell'app non danno
+poteri diversi da quelli degli altri capi. Deciso il 03/11:
+
+1. sostituiscono «a disposizione», che non si nomina più;
+2. gli incarichi «a disposizione» già registrati, in corso e chiusi, e gli anni di
+   servizio ricostruiti restano per lo storico; i capigruppo vedono chi lo ha ancora in
+   corso e scelgono uno dei due nuovi;
+3. stesse regole di oggi: escludono il servizio in un'unità, finiscono da sé quando il
+   capo viene assegnato a un'unità, li nominano i capigruppo; un capo ne ha uno solo.
+
+Da toccare: `organizzazione/models.RuoloIncarico` e `Incarico._controlla_servizio`,
+`organizzazione/api` (capi senza servizio, nomina, fine automatica), `policy.py`,
+`fascicolo` (anni di servizio ricostruiti), `elenco_incarichi`, `GruppoView.vue`,
+`StampaIncarichi.vue`, menu, manuale (`gruppo/organizzazione.md`) e schermate.
+
+#### N.22 — Elenco degli incarichi: capo con un solo incarico aggiuntivo ⏳
+
+Rif. DEC-284. Un capo con solo un incarico aggiuntivo (per esempio tesoriere, nessun
+incarico di servizio), nel raggruppamento per unità, resta in Co.Ca. (maintainer, 03/11).
+Deciso il 03/11, con N.25: accanto al nome compare «Servizio di supporto al gruppo»,
+sempre, anche se quel tipo non è tra quelli scelti per la stampa; solo nel PDF, senza
+registrare l'incarico [da verificare: vedi «Da decidere»].
+`organizzazione/elenco_incarichi._per_unita`, test in `tests/test_elenco_incarichi.py`.
+
+#### N.21 — Lista d'attesa di un maggiorenne ⏳
+
+Rif. DEC-256…DEC-258, DEC-261. Se chi viene messo in lista è maggiorenne, il modulo non
+chiede i dati del genitore (maintainer, 03/11). Oggi `components/ModuloAttesa.vue` mostra
+a un maggiorenne la casella «Sono io: sono maggiorenne e mi iscrivo da solo» e, se non la
+si spunta, chiede nome e cognome del genitore; come per il modulo di iscrizione (L.4c),
+deve deciderlo l'età e non una scelta. Server: `attesa/servizi._applica`.
+Deciso il 03/11: le voci già in lista di maggiorenni con il genitore come contatto
+restano come sono.
+
+#### N.20 — Percorso scout nel trasferimento del fascicolo ⏳
+
+Rif. DEC-213, DEC-287. Oggi `fascicolo.trasferimento` non porta con sé i periodi del
+percorso scout (`PeriodoPercorso` e i periodi nelle unità del gruppo): vanno nel file
+trasferito e, per il gruppo che lo riceve, i periodi nel nostro gruppo diventano periodi
+«in un altro gruppo». Deciso il 03/11:
+
+1. chi riceve salta i periodi del fascicolo che ha già (stesso gruppo, anni e ruolo,
+   per esempio venuti da BuonaStrada) e aggiunge gli altri;
+2. al rientro dall'archivio (DEC-215) i periodi nelle nostre unità si ignorano, perché
+   sono già nell'app: tornano solo quelli in altri gruppi e quelli ricostruiti.
+
+#### N.24 — Sblocco con impronta e passkey di sblocco ⏳
+
+Rif. DEC-97. Segnalazioni del maintainer del 03/11.
+
+- **App installata con Chrome su Mac**: nella scheda di Chrome «Sblocca con impronta o
+  volto» chiede Touch ID; nella stessa app installata come app di Chrome (stesso
+  profilo, stessi dati) Chrome mostra solo il QR per usare il telefono, che funziona
+  perché la passkey di sblocco del Mac è sincronizzata sull'iPhone dal portachiavi di
+  iCloud. In Password di Apple le passkey sono due (una del Mac, una dell'iPhone),
+  nessuna nel gestore delle password di Chrome; nel riquadro di Chrome non ci sono altre
+  scelte. La richiesta (`sicurezza/biometria.leggiSegreto`) è identica nei due casi:
+  sembra un limite di Chrome nella finestra dell'app [da verificare]. Da provare:
+  `hints: ['client-device']` e `transports: ['internal']` nella richiesta; se non basta,
+  nell'app installata su Mac lasciare il PIN in primo piano.
+- **Passkey di sblocco orfane**: ogni volta che i dati del dispositivo vengono cancellati
+  (uscita, scadenza, revoca, altro account: `cassaforte.cancella`) il nuovo accesso crea
+  PIN e passkey nuovi, come vuole DEC-97, ma la passkey vecchia resta nel gestore delle
+  password (Password di Apple, Google…); lo stesso quando si spegne l'impronta in
+  Dispositivi (`disattivaBiometria`). Da fare: (1) prima di dimenticare l'id della
+  credenziale, chiedere al gestore di toglierla con
+  `PublicKeyCredential.signalUnknownCredential({ rpId, credentialId })`, dove c'è
+  (supporto di Chrome e Safari [da verificare]; dove manca resta com'è); (2) nome della
+  passkey riconoscibile in Password di Apple (oggi mostra solo l'email, anche se
+  `displayName` è «Sblocco QdC — email»): verificare cosa mostra Apple e aggiungere
+  dispositivo e data.
+- **«Questo telefono»**: la schermata «App bloccata» lo dice anche su un computer.
+  Deciso il 03/11: «questo dispositivo» in tutti i messaggi della protezione dei dati e
+  nel manuale dove li cita.
+
+#### N.23 — Avvio con systemd e aggiornamento ⏳
+
+Rif. nuovo DEC-292 nell'analisi. Richiesta del maintainer (03/11): uno script che
+installa un servizio per avviare l'app con `systemctl` (start, stop, restart, status,
+avvio al boot), e un modo per aggiornarla quando gira come servizio. Oggi i container
+ripartono con `restart: unless-stopped` e, con Podman, con `podman-restart.service`;
+l'aggiornamento è a mano (`docs/installazione/aggiornamenti.md`: backup, `git checkout`
+del tag, `docker compose up -d --build`). Deciso il 03/11:
+
+1. vale per Docker e per Podman, lo script capisce quale c'è;
+2. servizio di sistema (`/etc/systemd/system`, con `User=` l'utente che gestisce l'app,
+   parte al boot), installato con sudo;
+3. aggiornamento con un comando manuale, `scripts/aggiorna.sh` con la versione (senza,
+   l'ultimo tag vX.Y.Z dopo `git fetch --tags`, senza chiamate a GitHub): manutenzione
+   messa dallo script (serve un comando di gestione), backup, avviso se cambia
+   `.env.example`, checkout del tag, build, restart del servizio, controllo di
+   `/api/v1/salute`, manutenzione tolta quando l'app risponde;
+4. se dopo l'aggiornamento l'app non risponde, lo script rimette da solo la versione di
+   prima e, se le migrazioni hanno già cambiato il database, dice di ripristinarlo dal
+   backup appena fatto;
+5. documentazione: nella guida di installazione le pagine del servizio systemd
+   (installazione, comandi `systemctl`, controlli) e dell'aggiornamento con lo script
+   (`aggiornamenti.md`, `installazione.md`, `controlli.md`); nel manuale d'uso, capitolo
+   dell'amministratore tecnico (`docs/manuale/gruppo/amministratore.md`), come si
+   aggiorna l'app: dove leggere le note della versione, la manutenzione,
+   `scripts/aggiorna.sh`, cosa fare se torna alla versione di prima.
+
+### Da decidere
+
+| Punto | Rif. |
+| --- | --- |
+| N.22: «Servizio di supporto al gruppo» accanto al capo con solo un incarico aggiuntivo resta una scritta solo nel PDF (si sviluppa così), oppure il capo deve avere davvero l'incarico e, se non ce l'ha, compare fra i «Capi senza servizio»? | DEC-284 |
+| Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |
+
+### Da provare
+
+Sviluppato e coperto dai test, manca la prova vera.
+
+| Cosa | Chi | Rif. |
+| --- | --- | --- |
+| Passkey e impronta, accesso con Google e Apple, su telefoni e account veri | maintainer | DEC-21, DEC-22 |
+| Banner per installare l'app su un iPhone e un Android veri | maintainer | N.15 |
+| Eventi e presenze (fase 3) nel browser | sviluppo | fase 3 |
+| Cancellare o archiviare un'unità nel browser | sviluppo | I.2 |
+| Interruttori delle email e server SMTP dalle Impostazioni nel browser | sviluppo | E.1, E.2 |
+| Caricamento e verifica degli allegati della scheda sanitaria nel browser | sviluppo | N.11 |
+
+### All'installazione
+
+| Attività | Chi | Rif. |
+| --- | --- | --- |
+| In produzione, programmare i comandi giornalieri: esempio pronto in [deploy/cron/qdc.crontab](deploy/cron/qdc.crontab) | chi installa | fase 1 |
+| Collegare il Drive condiviso del gruppo per l'archivio (account di servizio, cartella, chiave `QDC_IMPRONTA_CHIAVE` da conservare: vedi README) e provare un'archiviazione vera e il caricamento degli allegati sanitari | chi installa | N.11, N.13 |
+| Collegare la casella Gmail con l'accesso Google | chi installa | E.4 |
+
+### Rimandati
+
+| Cosa | Rif. |
+| --- | --- |
+| App negli store (Capacitor, fase 7): in standby, prima un prototipo per la regola Apple 4.2 | DEC-105 |
+| Microsoft 365 con OAuth (Graph): si sente prima AGESCI per il tenant istituzionale | E.3, DEC-277 |
+
+### Appunti per il manuale
+
+Argomenti da spiegare bene ai capi, perché non sono chiari a tutti:
+
+- **Regole sul rapporto con il minore** (DEC-43, DEC-199): cosa sono (le indicazioni
+  che i genitori scrivono sul modulo sanitario per i minorenni, per esempio dopo una
+  separazione: chi può riprendere il ragazzo all'uscita, a chi non dare informazioni,
+  provvedimenti del giudice), perché le leggono solo i capi, che valgono finché i
+  genitori non danno nuove indicazioni scritte, dove si trovano al campo anche senza rete.
+
 ## Fasi
 
 La precedenza va alla PWA: ogni fase si completa sulla PWA. L'app per gli store è in
@@ -13,7 +174,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 
 | # | Fase | Stato | Note |
 | --- | --- | --- | --- |
-| 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le attività del maintainer in "Prossimi passi" |
+| 1 | Fondamenta | ✅ | vedi dettaglio sotto; provata nel browser il 29/10/2026; restano le prove in "Da provare" e "All'installazione" |
 | 2 | Quote e cassa | ✅ | quote, pagamenti, ricevute, prima nota e rendiconto; restano per la fase 3 autofinanziamento, budget dei campi e quote BuonaCaccia |
 | 3 | Eventi e presenze | ✅ | eventi, presenze, quote a rate, calendario, email, autofinanziamento e budget dei campi, eventi su BuonaCaccia (DEC-158…DEC-164, fatti il 30/10; da provare nel browser) |
 | 4 | Progressione Personale | ✅ | a blocchi (dettaglio sotto): E/G, passaggi, R/S, L/C, più le scelte confermate il 30/10 (DEC-186…DEC-190). Riferimento: [specifica PP v1.0](docs/analisi/specifica-pp.md) |
@@ -22,7 +183,9 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
 | 8 | Realizzazione documentazione di uso | ✅ | manuale d'uso ✅ 31/10 per tutti i profili (genitore, ragazzo E/G, R/S e L/C, capo, capigruppo, tesorieri, amministratore tecnico), su https://avellino1-qdc.readthedocs.io e in PDF nelle release (v1.0.0 il 31/10, v1.1.0 il 01/11 con manutenzione, sblocchi, pagine di errore, Apache con un pannello e le correzioni su IP del client, nginx dopo una modifica di `.env` e log di axes; v1.2.0 il 02/11 con lo storico da BuonaStrada, l'archiviazione delle unità, le email un gruppo alla volta e il server di posta dalle Impostazioni, anche Gmail con un accesso Google; v1.2.1 il 02/11 con la guida di installazione che chiarisce quale progetto Google Cloud usare per Gmail e per il Drive; v1.3.0 il 02/11 con le note dell'installazione: unità collegate, assistenti ecclesiastici, Soci e Genitori, genitore che diventa capo, squadriglie dei reparti monosessuali, import che non si ferma su un dato sbagliato, controlli dell'installazione e del Drive; v1.4.0 il 03/11 con il banner per installare l'app, i gruppi della Home richiudibili, il calendario, il percorso scout, l'elenco degli incarichi in PDF, la cassa comune delle unità collegate e la scheda sanitaria del gruppo con i suoi allegati); guida di installazione (https://qdc-installazione.readthedocs.io) riletta con il maintainer il 01/11; ripristino da un backup scritto e provato il 01/11 (8.7). Dettaglio dei blocchi sotto; analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239) |
 
-## Prossimi passi
+## Storico dei lavori
+
+Tutto quello che è stato fatto, per blocchi; i punti ancora aperti sono in cima.
 
 ### 1. Chiudere la fase 1
 
@@ -30,11 +193,8 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | --- | --- | --- |
 | Confermare le scelte segnate `[da verificare]` (29/10): dati obbligatori per BuonaStrada, promemoria, sospensione, chi corregge cosa (ora DEC-124, DEC-125, DEC-129, DEC-130) | maintainer | ✅ applicate |
 | Riportare nell'analisi le decisioni del 28 e 29/10 (DEC-110…DEC-136) | sviluppo | ✅ 29/10 |
-| In produzione, programmare i comandi giornalieri: esempio pronto in [deploy/cron/qdc.crontab](deploy/cron/qdc.crontab) | chi installa | ⏳ |
-| Collegare il Drive condiviso del gruppo per l'archivio (account di servizio, cartella, chiave `QDC_IMPRONTA_CHIAVE` da conservare: vedi README) e provare un'archiviazione vera | chi installa | ⏳ |
 | Avviso nella pagina dell'unità finché non ha un nome (le unità importate nascono senza); unità mostrate come "Tipo Nome (Codice)" | sviluppo | ✅ |
 | Prove nel browser: scarto di una correzione, cancellazione per un diritto GDPR, avvisi dei 18 anni, eccezioni sulla squadriglia, sospensione di un'iscrizione, uso senza server (copia cifrata) | sviluppo | ✅ 29/10 |
-| Prove che servono un telefono o account esterni veri: passkey e impronta, accesso con Google e Apple | maintainer | ⏳ |
 
 ### 2. Fase 2 — Quote e cassa
 
@@ -215,11 +375,10 @@ ragazzi; decisioni nell'analisi come DEC-276…DEC-278.
 | E.1 | Interruttori Capi, Genitori, Ragazzi: email scartate per i gruppi spenti, con il conteggio; sempre consegnati accesso, inviti, iscrizione e lista d'attesa | DEC-276 | ✅ 02/11 (test; non ancora provato nel browser) |
 | E.2 | Server SMTP dalle Impostazioni (amministratore tecnico), password cifrata, email di prova | DEC-277 | ✅ 02/11 (test; non ancora provato nel browser) |
 | E.4 | Gmail con accesso Google una tantum (OAuth, API di Gmail); guida: client OAuth in Google Cloud e relay SMTP di Google | DEC-278 | ✅ 02/11 (test con Google simulato; il collegamento vero si prova all'installazione) |
-| E.3 | Microsoft 365 con OAuth (Graph) | DEC-277 | 💤 (si sente prima AGESCI per il tenant istituzionale) |
 
 ### Note dall'installazione dell'Avellino 1 (02/11)
 
-Annotate dal maintainer durante l'installazione; installazione finita il 02/11, si sviluppano ora, un commit per nota.
+Annotate dal maintainer durante l'installazione; installazione finita il 02/11, si sviluppano ora, un commit per nota. Le note N.20…N.25 sono in cima, fra i punti aperti.
 
 | # | Attività | Rif. | Stato |
 | --- | --- | --- | --- |
@@ -241,12 +400,6 @@ Annotate dal maintainer durante l'installazione; installazione finita il 02/11, 
 | N.17 | **Avviso «Capi senza servizio»** in Incarichi di gruppo: un capogruppo senza incarichi in un'unità non va segnalato (maintainer, 02/11). Oggi `organizzazione/api.capi_senza_servizio` esclude solo chi ha un incarico di servizio (unità, AE di gruppo, a disposizione), non i capigruppo | DEC-165 | ✅ 02/11 |
 | N.18 | **Home con i gruppi di funzioni richiudibili** (`views/HomeView.vue`, gruppi da `navigazione/menu.gruppiMenu`): ogni gruppo si apre e si chiude toccando il suo titolo e la Bacheca resta sempre visibile (maintainer, 02/11). Deciso dal maintainer il 02/11: (1) al più un gruppo aperto alla volta: aprirne uno chiude gli altri; (2) l'app ricorda quale era aperto l'ultima volta e lo riapre (nel browser, come la chiusura dei banner: solo la chiave del gruppo, nessun dato personale); la prima volta sono tutti chiusi; (3) su un gruppo chiuso il titolo mostra il numero delle cose da fare delle sue voci (i contatori di oggi, sommati). Nuovo DEC nell'analisi e nota in `frontend/CLAUDE.md` fra le eccezioni a `localStorage`; manuale e schermate della Home da aggiornare | DEC-241, DEC-285 | ✅ 02/11, visto nel browser con le schermate del manuale (le scene aprono le voci dai gruppi chiusi) |
 | N.19 | **Calendario**, una funzione nuova (maintainer, 02/11): mostra un calendario (mese) e/o, a scelta, l'elenco dei prossimi eventi che riguardano chi è collegato o i suoi figli, e permette di scaricare o abbonarsi al calendario. Oggi c'è già il link personale segreto per abbonarsi (DEC-79, DEC-143: `GET /calendario`, `/calendario/{token}.ics`, rigenerabile; per i capi tre viste: la sua unità, Co.Ca. e unità, tutto il gruppo), in fondo alla pagina **Eventi** (`components/MioCalendario.vue`); non c'è una vista a calendario né lo scaricamento di un file `.ics`. Deciso dal maintainer il 02/11: (1) voce nella Home accanto alla Bacheca, sempre visibile come lei (vedi N.18), e nel menu dentro il gruppo degli eventi; (2) si scarica il file `.ics` di tutti gli eventi e quello del singolo evento (anche dalla sua pagina); il link per abbonarsi passa in questa pagina; (3) un capo sceglie fra le tre viste di DEC-143; (4) la scelta calendario o elenco (e la vista del capo) si ricorda nel browser, come per i gruppi della Home; (5) per ora solo online, l'offline si valuterà poi. Nuovo DEC nell'analisi; manuale e schermate da aggiornare | DEC-79, DEC-143, DEC-286 | ✅ 02/11 (`CalendarioView.vue`, `eventi/calendario.ts`, file `.ics` di tutti gli eventi e del singolo evento, con test); visto nel browser con le schermate |
-| N.20 | **Percorso scout nel trasferimento del fascicolo** a un altro gruppo (maintainer, 03/11: nel prossimo giro di sviluppo). Oggi `fascicolo.trasferimento` non porta con sé i periodi del percorso scout (`PeriodoPercorso` e i periodi nelle unità del gruppo, DEC-287): vanno nel file trasferito e, per il gruppo che lo riceve, i periodi nel nostro gruppo diventano periodi «in un altro gruppo». Deciso dal maintainer il 03/11: (1) chi riceve salta i periodi del fascicolo che ha già (stesso gruppo, anni e ruolo, per esempio venuti da BuonaStrada) e aggiunge gli altri; (2) al rientro dall'archivio (DEC-215) i periodi nelle nostre unità si ignorano, perché sono già nell'app: tornano solo quelli in altri gruppi e quelli ricostruiti | DEC-213, DEC-287 | ⏳ |
-| N.21 | **Lista d'attesa di un maggiorenne**: se chi viene messo in lista è maggiorenne, il modulo non chiede i dati del genitore (maintainer, 03/11: nel prossimo giro di sviluppo). Oggi `components/ModuloAttesa.vue` mostra a un maggiorenne la casella «Sono io: sono maggiorenne e mi iscrivo da solo» e, se non la si spunta, chiede nome e cognome del genitore; come per il modulo di iscrizione (L.4c), deve deciderlo l'età e non una scelta. Server: `attesa/servizi._applica`. Deciso dal maintainer il 03/11: le voci già in lista di maggiorenni con il genitore come contatto restano come sono | DEC-256…DEC-258, DEC-261 | ⏳ |
-| N.22 | **Elenco degli incarichi, capo con un solo incarico aggiuntivo** (per esempio tesoriere, nessun incarico di servizio): nel raggruppamento per unità resta in Co.Ca. e accanto al nome compare anche «A disposizione», solo nel PDF, senza registrare l'incarico (maintainer, 03/11). `organizzazione/elenco_incarichi._per_unita`, test in `tests/test_elenco_incarichi.py`. Deciso dal maintainer il 03/11, con N.25: accanto al nome compare «Servizio di supporto al gruppo», sempre, anche se quel tipo non è tra quelli scelti per la stampa; solo nel PDF, senza registrare l'incarico [da verificare: solo nel PDF] | DEC-284 | ⏳ |
-| N.23 | **Avvio con systemd e aggiornamento**: uno script che installa un servizio per avviare l'app con `systemctl` (start, stop, restart, status, avvio al boot), e un modo per aggiornarla quando gira come servizio (maintainer, 03/11). Oggi i container ripartono con `restart: unless-stopped` e, con Podman, con `podman-restart.service`; l'aggiornamento è a mano (`docs/installazione/aggiornamenti.md`: backup, `git checkout` del tag, `docker compose up -d --build`). Guida di installazione da aggiornare. Deciso dal maintainer il 03/11: (1) vale per Docker e per Podman, lo script capisce quale c'è; (2) servizio di sistema (`/etc/systemd/system`, con `User=` l'utente che gestisce l'app, parte al boot), installato con sudo; (3) aggiornamento con un comando manuale, `scripts/aggiorna.sh` con la versione (o l'ultima release): backup, avviso se cambia `.env.example`, checkout del tag, build, restart del servizio, controllo di `/api/v1/salute`; (4) se dopo l'aggiornamento l'app non risponde, lo script rimette da solo la versione di prima e, se le migrazioni hanno già cambiato il database, dice di ripristinarlo dal backup appena fatto; (5) documentazione (maintainer, 03/11): nella guida di installazione le pagine del servizio systemd (installazione, comandi `systemctl`, controlli) e dell'aggiornamento con lo script (`aggiornamenti.md`, `installazione.md`, `controlli.md`); nel manuale d'uso, capitolo dell'amministratore tecnico (`docs/manuale/gruppo/amministratore.md`), come si aggiorna l'app: dove leggere le note della versione, manutenzione prima, `scripts/aggiorna.sh`, cosa fare se torna alla versione di prima; (6) deciso dal maintainer il 03/11: nuovo DEC-292 nell'analisi; lo script mette da sé la manutenzione prima del backup e la toglie quando l'app risponde (serve un comando di gestione); senza versione prende l'ultimo tag vX.Y.Z dopo `git fetch --tags`, senza chiamate a GitHub | DEC-292 | ⏳ |
-| N.24 | **Sblocco con impronta nell'app installata con Chrome su Mac** (segnalazione del maintainer, 03/11). Nella scheda di Chrome «Sblocca con impronta o volto» chiede Touch ID; nella stessa app installata come app di Chrome (stesso profilo, stessi dati) Chrome mostra solo il QR per usare il telefono, che funziona perché la passkey di sblocco del Mac è sincronizzata sull'iPhone dal portachiavi di iCloud. Le passkey in Password di Apple sono due (una del Mac, una dell'iPhone), nessuna nel gestore delle password di Chrome; nel riquadro di Chrome non ci sono altre scelte. La richiesta (`sicurezza/biometria.leggiSegreto`) è identica nei due casi: sembra un limite di Chrome nella finestra dell'app [da verificare]. Da provare: `hints: ['client-device']` e `transports: ['internal']` nella richiesta; se non basta, nell'app installata su Mac lasciare il PIN in primo piano. A margine: la schermata «App bloccata» dice «questo telefono» anche su un computer; deciso dal maintainer il 03/11: «questo dispositivo» in tutti i messaggi della protezione dei dati e nel manuale dove li cita. **Passkey di sblocco orfane** (maintainer, 03/11): ogni volta che i dati del dispositivo vengono cancellati (uscita, scadenza, revoca, altro account: `cassaforte.cancella`) il nuovo accesso crea PIN e passkey nuovi, come vuole DEC-97, ma la passkey vecchia resta nel gestore delle password (Password di Apple, Google…); lo stesso quando si spegne l'impronta in Dispositivi (`disattivaBiometria`). Da fare: (1) prima di dimenticare l'id della credenziale, chiedere al gestore di toglierla con `PublicKeyCredential.signalUnknownCredential({ rpId, credentialId })`, dove c'è (supporto di Chrome e Safari [da verificare]; dove manca resta com'è); (2) nome della passkey riconoscibile in Password di Apple (oggi mostra solo l'email, anche se `displayName` è «Sblocco QdC — email»): verificare cosa mostra Apple e aggiungere dispositivo e data | DEC-97 | ⏳ |
-| N.25 | **«A disposizione» diviso in due incarichi**: «Servizio di supporto al gruppo» e «Servizio di supporto all'azione educativa», veri incarichi di Comunità capi; nell'app non danno poteri diversi da quelli degli altri capi (maintainer, 03/11). Deciso dal maintainer il 03/11: (1) sostituiscono «a disposizione», che non si nomina più; (2) gli incarichi «a disposizione» già registrati, in corso e chiusi, e gli anni di servizio ricostruiti restano per lo storico; i capigruppo vedono chi lo ha ancora in corso e scelgono uno dei due nuovi; (3) stesse regole di oggi: escludono il servizio in un'unità, finiscono da sé quando il capo viene assegnato a un'unità, li nominano i capigruppo; un capo ne ha uno solo. Da toccare: `organizzazione/models.RuoloIncarico` e `Incarico._controlla_servizio`, `organizzazione/api` (capi senza servizio, nomina, fine automatica), `policy.py`, `fascicolo` (anni di servizio ricostruiti), `elenco_incarichi`, `GruppoView.vue`, `StampaIncarichi.vue`, menu, manuale (`gruppo/organizzazione.md`) e schermate. Nuovo DEC nell'analisi (modifica DEC-165) | DEC-165, DEC-284 | ⏳ |
 | N.9 | Separare **Persone** in **Soci** (tutti i censiti: capi e ragazzi) e **Genitori** (`views/PersoneView.vue` e menu): due voci di menu e due pagine, ciascuna con la sua ricerca (maintainer, 02/11) | — |✅ 02/11 |
 
 ### Mancanze trovate scrivendo il manuale (31/10)
@@ -262,16 +415,6 @@ Richiesta del maintainer del 31/10: correggerle. Un commit per blocco; il manual
 | M.5 | Lo staff del reparto delega le riunioni di squadriglia dalla pagina dell'unità (deciso dal maintainer il 31/10) | DEC-267 | ✅ 31/10 (provato nel browser: delega e revoca dallo staff) |
 | M.7 | Estratto conto: il nome nella causale pesa di più nella proposta delle quote, così il bonifico per Luca propone le quote di Luca (maintainer, 31/10) | DEC-222 | ✅ 31/10 (provato nel browser con l'estratto di prova) |
 | M.6 | Nei dati di prova un estratto conto della banca inventato, per le schermate | DEC-235 | ✅ 31/10 |
-
-Appunti per quando ci si arriva:
-
-Argomenti da spiegare bene ai capi, perché non sono chiari a tutti:
-
-- **Regole sul rapporto con il minore** (DEC-43, DEC-199): cosa sono (le indicazioni
-  che i genitori scrivono sul modulo sanitario per i minorenni, per esempio dopo una
-  separazione: chi può riprendere il ragazzo all'uscita, a chi non dare informazioni,
-  provvedimenti del giudice), perché le leggono solo i capi, che valgono finché i
-  genitori non danno nuove indicazioni scritte, dove si trovano al campo anche senza rete.
 
 ## Fase 1 — Fondamenta
 
@@ -310,9 +453,3 @@ diritti GDPR DEC-136.
 
 Le decisioni prese con il maintainer il 29/10/2026 sono nell'analisi: eventi e presenze
 DEC-137…DEC-144, quote e cassa DEC-145…DEC-156, email facoltative DEC-157.
-
-## Punti aperti da confermare
-
-| Punto | Riferimento |
-| --- | --- |
-| Revoca dispositivi e idempotenza solo con sessione browser (servirà per l'app negli store) | DEC-105 |

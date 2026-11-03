@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { leggiDallaCache, salvaInCache } from '@/offline/cache'
 import type { DatabaseQdc } from '@/offline/db'
-import type { creaCredenziale } from '@/sicurezza/biometria'
+import type { creaPasskeyDiSblocco } from '@/sicurezza/biometria'
 import * as cassaforte from '@/sicurezza/cassaforte'
 
 import { ITERAZIONI_TEST, PIN, cassaforteSbloccata, nuovoDatabase } from './aiuti'
@@ -101,7 +101,7 @@ describe('cassaforte', () => {
     await salvaInCache('k', { v: 2 }, database)
     const segreto = crypto.getRandomValues(new Uint8Array(32)).buffer
     const crea = vi.fn(async () => ({ idCredenziale: new ArrayBuffer(8), segreto }))
-    await cassaforte.attivaBiometria('capo@example.invalid', crea)
+    await cassaforte.attivaBiometria(crea)
     expect(cassaforte.biometriaAttiva.value).toBe(true)
 
     cassaforte.blocca()
@@ -112,7 +112,7 @@ describe('cassaforte', () => {
     expect((await leggiDallaCache('k', database))!.dati).toEqual({ v: 2 })
   })
 
-  it('la passkey di sblocco che non serve più si toglie dal gestore delle password', async () => {
+  it('la passkey di accesso resta; la vecchia passkey di sblocco si toglie dal gestore', async () => {
     const segnalate: string[] = []
     vi.stubGlobal('PublicKeyCredential', {
       signalUnknownCredential: vi.fn(async (o: { credentialId: string }) => {
@@ -123,21 +123,56 @@ describe('cassaforte', () => {
       await cassaforteSbloccata()
       await database.meta.put({ chiave: 'dispositivo_nome', valore: 'Mac di Andrea' })
       const segreto = crypto.getRandomValues(new Uint8Array(32)).buffer
-      const crea = vi.fn<typeof creaCredenziale>(async () => ({
+      const crea = vi.fn<typeof creaPasskeyDiSblocco>(async () => ({
         idCredenziale: new Uint8Array([251, 255, 1]).buffer,
         segreto,
       }))
-      await cassaforte.attivaBiometria('capo@example.invalid', crea)
-      // The device name goes into the passkey's name.
-      expect(crea.mock.calls[0]![2]).toBe('Mac di Andrea')
-      expect(segnalate).toEqual([])
-      // Switched off: the manager is asked to remove it (base64url, no padding).
+      // The login passkey of this device, named after it (DEC-295).
+      await cassaforte.attivaBiometria(crea)
+      expect(crea.mock.calls[0]![0]).toBe('Mac di Andrea')
+      expect(cassaforte.conVecchiaPasskey()).toBe(false)
+      // Switched off or wiped: it still lets you in, so it stays in the manager.
       await cassaforte.disattivaBiometria()
+      await cassaforte.attivaBiometria(crea, 'Mac nuovo')
+      expect(crea.mock.calls[1]![0]).toBe('Mac nuovo')
+      // An old local unlock passkey (before DEC-295)…
+      const config = (await database.protezione.get('config'))!
+      delete config.biometria!.accesso
+      await database.protezione.put(config)
+      await cassaforte.inizializza()
+      expect(cassaforte.conVecchiaPasskey()).toBe(true)
+      expect(segnalate).toEqual([])
+      // …goes when a login passkey replaces it (base64url, no padding)…
+      await cassaforte.attivaBiometria(crea)
       await vi.waitFor(() => expect(segnalate).toEqual(['-_8B']))
-      // Wiped with the fingerprint on: the same.
-      await cassaforte.attivaBiometria('capo@example.invalid', crea)
       await cassaforte.cancella('uscita')
-      await vi.waitFor(() => expect(segnalate).toEqual(['-_8B', '-_8B']))
+      await new Promise((fatto) => setTimeout(fatto, 10))
+      expect(segnalate).toEqual(['-_8B'])
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('una vecchia passkey di sblocco si toglie anche quando i dati si cancellano', async () => {
+    const segnalate: string[] = []
+    vi.stubGlobal('PublicKeyCredential', {
+      signalUnknownCredential: vi.fn(async (o: { credentialId: string }) => {
+        segnalate.push(o.credentialId)
+      }),
+    })
+    try {
+      await cassaforteSbloccata()
+      const segreto = crypto.getRandomValues(new Uint8Array(32)).buffer
+      await cassaforte.attivaBiometria(async () => ({
+        idCredenziale: new Uint8Array([1, 2, 3]).buffer,
+        segreto,
+      }))
+      const config = (await database.protezione.get('config'))!
+      delete config.biometria!.accesso
+      await database.protezione.put(config)
+      await cassaforte.inizializza()
+      await cassaforte.cancella('uscita')
+      await vi.waitFor(() => expect(segnalate).toEqual(['AQID']))
     } finally {
       vi.unstubAllGlobals()
     }

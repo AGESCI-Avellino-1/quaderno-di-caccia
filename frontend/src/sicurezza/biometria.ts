@@ -1,19 +1,37 @@
 /**
- * Unlock with fingerprint/face through a passkey and the WebAuthn PRF extension
- * (DEC-97). The passkey lives in the phone's authenticator (iCloud Keychain, Google
- * Password Manager…) and returns the same 32-byte secret for the same salt: that
- * secret wraps the vault key. It works offline: no server is involved.
+ * Unlock with fingerprint/face (DEC-97, DEC-295). The login passkey of this device (allauth,
+ * created on the Dispositivi page or when the protection is set up) also gives, through
+ * the WebAuthn PRF extension, a 32-byte secret for a salt kept on the device: that secret
+ * wraps the vault key. Unlocking works offline, no server is involved, and the secret
+ * never leaves the device. One passkey per device, to log in and to unlock.
  *
- * This passkey is local and separate from the login passkey managed by allauth.
+ * Before DEC-295 a separate local passkey did it (`accesso` missing in the configuration):
+ * it keeps working until a login passkey replaces it. It also showed up, and failed, among
+ * the login passkeys: that is why it went.
+ *
  * Support (Aug 2026): iOS/iPadOS 18.4+, macOS Safari 18+, Android with Google Password
- * Manager, Windows Hello with Chrome/Edge 147+. Some password managers return no PRF
- * value: the PIN always remains available.
+ * Manager, Windows Hello with Chrome/Edge 147+. Chrome installed as an app on macOS gives
+ * no PRF value (maintainer, 03/11); some password managers neither: the PIN always remains.
  */
+import { passkey, type PasskeyCreata } from '@/api/allauth'
+
 import { casuali } from './cripto'
 
 export class BiometriaNonDisponibile extends Error {
   constructor() {
     super('Impronta o volto non disponibili su questo dispositivo: usa il PIN.')
+  }
+}
+
+/** The passkey was created and lets you log in, but here it gives no secret to unlock. */
+export class SbloccoNonDisponibile extends Error {
+  constructor(agente = typeof navigator === 'undefined' ? '' : navigator.userAgent) {
+    const macChrome = /Macintosh/.test(agente) && /Chrome\//.test(agente)
+    super(
+      'Passkey creata: ti serve per entrare. Su questo dispositivo, però, non può sbloccare ' +
+        'i dati salvati: usa il PIN.' +
+        (macChrome ? ' Sul Mac puoi usare Safari: File → Aggiungi al Dock.' : ''),
+    )
   }
 }
 
@@ -34,8 +52,7 @@ export async function biometriaForseDisponibile(): Promise<boolean> {
   return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
 }
 
-function segretoDa(credenziale: PublicKeyCredential): ArrayBuffer | null {
-  const risultati = credenziale.getClientExtensionResults() as RisultatiPrf
+function segretoDa(risultati: RisultatiPrf): ArrayBuffer | null {
   const primo = risultati.prf?.results?.first
   if (!primo) return null
   return primo instanceof ArrayBuffer ? primo : (primo.buffer as ArrayBuffer)
@@ -48,8 +65,7 @@ export async function leggiSegreto(
   // `hints` (WebAuthn level 3) is typed only in the JSON variants of the options.
   const opzioni: PublicKeyCredentialRequestOptions & { hints: string[] } = {
     challenge: casuali(32),
-    // The passkey is on this device (created as `platform`): no QR code for a phone.
-    // Chrome as an installed app on macOS offered only the phone [da verificare].
+    // The passkey is on this device: no QR code for a phone.
     allowCredentials: [{ type: 'public-key', id: idCredenziale, transports: ['internal'] }],
     hints: ['client-device'],
     userVerification: 'required',
@@ -58,75 +74,63 @@ export async function leggiSegreto(
   const credenziale = (await navigator.credentials.get({
     publicKey: opzioni,
   })) as PublicKeyCredential | null
-  const segreto = credenziale && segretoDa(credenziale)
+  const segreto = credenziale && segretoDa(credenziale.getClientExtensionResults() as RisultatiPrf)
   if (!segreto) throw new BiometriaNonDisponibile()
   return segreto
 }
 
 /**
- * `dispositivo` and the day go in the name, so that in the password manager (where a new
- * one appears after every wipe) the one in use can be told apart. What each manager
- * shows, `name` or `displayName`, varies [da verificare]: both carry them.
+ * Creates the login passkey of this device, named after it (the name shown on the
+ * Dispositivi page), and reads its unlock secret. Throws `SbloccoNonDisponibile` when the
+ * passkey exists but gives no secret, and allauth's `RiautenticazioneRichiesta` when the
+ * user must first confirm who they are.
  */
-export async function creaCredenziale(
-  email: string,
+export async function creaPasskeyDiSblocco(
+  nome: string,
   sale: Uint8Array<ArrayBuffer>,
-  dispositivo = 'questo dispositivo',
-  oggi = new Date(),
+  crea: (nome: string, sale: Uint8Array<ArrayBuffer>) => Promise<PasskeyCreata> = passkey.crea,
 ): Promise<{ idCredenziale: ArrayBuffer; segreto: ArrayBuffer }> {
-  const quando = oggi.toLocaleDateString('it-IT', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-  const credenziale = (await navigator.credentials.create({
-    publicKey: {
-      rp: { name: 'Quaderno di Caccia' },
-      user: {
-        id: casuali(16),
-        name: `${email} (sblocco ${dispositivo}, ${quando})`,
-        displayName: `Sblocco QdC — ${dispositivo}, ${quando}`,
-      },
-      challenge: casuali(32),
-      pubKeyCredParams: [
-        { type: 'public-key', alg: -7 },
-        { type: 'public-key', alg: -257 },
-      ],
-      authenticatorSelection: {
-        authenticatorAttachment: 'platform',
-        residentKey: 'preferred',
-        userVerification: 'required',
-      },
-      extensions: { prf: { eval: { first: sale } } },
-    },
-  })) as PublicKeyCredential | null
-  if (!credenziale) throw new BiometriaNonDisponibile()
-  const risultati = credenziale.getClientExtensionResults() as RisultatiPrf
-  if (risultati.prf?.enabled === false) throw new BiometriaNonDisponibile()
+  const creata = await crea(nome, sale)
+  const idCredenziale = daBase64url(creata.idCredenziale)
+  if (creata.prf?.enabled === false) throw new SbloccoNonDisponibile()
   // Some authenticators return the secret only on get(), not on create().
-  const segreto = segretoDa(credenziale) ?? (await leggiSegreto(credenziale.rawId, sale))
-  return { idCredenziale: credenziale.rawId, segreto }
+  let segreto = segretoDa({ prf: creata.prf })
+  if (!segreto) {
+    try {
+      segreto = await leggiSegreto(idCredenziale, sale)
+    } catch {
+      throw new SbloccoNonDisponibile()
+    }
+  }
+  return { idCredenziale, segreto }
 }
 
-function base64url(dati: ArrayBuffer): string {
+export function base64url(dati: ArrayBuffer): string {
   let binario = ''
   for (const byte of new Uint8Array(dati)) binario += String.fromCharCode(byte)
   return btoa(binario).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+export function daBase64url(testo: string): ArrayBuffer {
+  const base64 = testo.replace(/-/g, '+').replace(/_/g, '/')
+  const binario = atob(base64 + '='.repeat((4 - (base64.length % 4)) % 4))
+  return Uint8Array.from(binario, (c) => c.charCodeAt(0)).buffer
+}
+
 /**
- * Asks the password manager to remove an unlock passkey the app no longer uses (WebAuthn
- * Signal API): after a wipe or when the fingerprint is switched off. Where the browser
- * lacks it nothing happens, and the user may delete it by hand. Never throws.
+ * Asks the password manager to remove a passkey that no longer works here (WebAuthn Signal
+ * API): an old local unlock passkey, or a login passkey just removed from the account.
+ * Where the browser lacks it nothing happens, and the user may delete it by hand. Never
+ * throws.
  */
-export async function dimenticaCredenziale(idCredenziale: ArrayBuffer): Promise<void> {
+export async function dimenticaCredenziale(idCredenziale: ArrayBuffer | string): Promise<void> {
   if (typeof PublicKeyCredential === 'undefined') return
   if (typeof PublicKeyCredential.signalUnknownCredential !== 'function') return
   try {
-    // No `rp.id` at creation: the passkey belongs to this host.
+    // Login passkeys and the old unlock ones both belong to this host.
     await PublicKeyCredential.signalUnknownCredential({
       rpId: location.hostname,
-      credentialId: base64url(idCredenziale),
+      credentialId: typeof idCredenziale === 'string' ? idCredenziale : base64url(idCredenziale),
     })
   } catch {
     // Best effort: the passkey stays in the manager, as before.

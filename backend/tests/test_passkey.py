@@ -38,3 +38,21 @@ def test_an_authenticator_app_still_asks_for_its_code(client, utente):
     assert risposta.status_code == 401
     in_sospeso = [f["id"] for f in risposta.json()["data"]["flows"] if f.get("is_pending")]
     assert in_sospeso == ["mfa_authenticate"]
+
+
+def test_the_pwa_reads_the_credential_ids_of_its_own_passkeys_only(client, utente):
+    """DEC-295: the unlock uses a login passkey; the PWA needs its credential id."""
+    Authenticator.objects.create(
+        user=utente,
+        type=Authenticator.Type.WEBAUTHN,
+        data={"name": "Mac", "credential": {"rawId": "AQID"}},
+    )
+    altro = User.objects.create_user(email="altro@example.invalid", password="una-password")
+    Authenticator.objects.create(
+        user=altro,
+        type=Authenticator.Type.WEBAUTHN,
+        data={"name": "iPhone", "credential": {"rawId": "BAUG"}},
+    )
+    assert client.get("/api/v1/io/passkey").status_code == 401
+    client.force_login(utente)
+    assert [p["id_credenziale"] for p in client.get("/api/v1/io/passkey").json()] == ["AQID"]

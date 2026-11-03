@@ -4,9 +4,19 @@ import { onMounted, ref, watch } from 'vue'
 
 import { passkey, RiautenticazioneRichiesta, type Passkey } from '@/api/allauth'
 import { testoErrore } from '@/composables/useErrore'
+import { base64url, dimenticaCredenziale, SbloccoNonDisponibile } from '@/sicurezza/biometria'
+import {
+  attivaBiometria,
+  biometriaAttiva,
+  credenzialeDiSblocco,
+  disattivaBiometria,
+  protetta,
+  sbloccata,
+} from '@/sicurezza/cassaforte'
 
-// Login passkeys (DEC-22, DEC-240): created here, used with "Accedi con passkey". Separate from
-// the local passkey that unlocks the data on this phone (biometria.ts).
+// Login passkeys (DEC-22, DEC-240): created here, used with "Accedi con passkey". The one
+// created on this device, when its data are protected and unlocked, also unlocks them with
+// fingerprint or face (DEC-295): one passkey per device.
 const props = defineProps<{ nomePredefinito: string }>()
 
 const disponibile = typeof window !== 'undefined' && 'PublicKeyCredential' in window
@@ -73,16 +83,43 @@ watch(
   },
 )
 
-const crea = () =>
-  esegui(
-    () => passkey.crea(nome.value.trim() || props.nomePredefinito),
-    'Passkey creata: la prossima volta tocca «Accedi con passkey».',
-  )
+/** base64url of the passkey that unlocks this device, if any. */
+const sblocca = () => {
+  if (!biometriaAttiva.value) return null
+  const id = credenzialeDiSblocco()
+  return id ? base64url(id) : null
+}
+
+async function crea() {
+  const nomePasskey = nome.value.trim() || props.nomePredefinito
+  if (!(protetta() && sbloccata())) {
+    await esegui(
+      async () => void (await passkey.crea(nomePasskey)),
+      'Passkey creata: la prossima volta tocca «Accedi con passkey».',
+    )
+    return
+  }
+  let senzaSblocco: string | null = null
+  await esegui(async () => {
+    try {
+      await attivaBiometria(undefined, nomePasskey)
+    } catch (e) {
+      // Created, but it cannot unlock here: it still lets you in.
+      if (!(e instanceof SbloccoNonDisponibile)) throw e
+      senzaSblocco = e.message
+    }
+  }, 'Passkey creata: ti fa entrare con «Accedi con passkey» e sblocca l’app su questo dispositivo.')
+  if (senzaSblocco) fatto.value = senzaSblocco
+}
 
 const rimuovi = (p: Passkey) =>
   esegui(async () => {
+    const eraSblocco = p.id_credenziale !== undefined && p.id_credenziale === sblocca()
     await passkey.rimuovi(p.id)
-  }, 'Passkey rimossa.')
+    if (eraSblocco) await disattivaBiometria()
+    // No longer valid to log in: the password manager would keep offering it.
+    if (p.id_credenziale) void dimenticaCredenziale(p.id_credenziale)
+  }, 'Passkey rimossa. Se sbloccava questo dispositivo, ora si sblocca con il PIN.')
 
 async function confermaCon(modo: 'password' | 'passkey') {
   errore.value = null
@@ -117,7 +154,8 @@ const data = (secondi: number) => new Date(secondi * 1000).toLocaleDateString('i
     <h2 class="h6">Passkey per entrare</h2>
     <p class="small mb-3">
       Con una passkey entri con l'impronta, il volto o il blocco schermo del dispositivo, senza
-      password. Il codice via email resta sempre una via d'accesso.
+      password, e, se i dati di questo dispositivo sono protetti, li sblocchi allo stesso modo. Il
+      codice via email resta sempre una via d'accesso.
     </p>
     <p v-if="!disponibile" class="small fg-2 mb-0">Questo browser non gestisce le passkey.</p>
     <template v-else>
@@ -168,6 +206,11 @@ const data = (secondi: number) => new Date(secondi * 1000).toLocaleDateString('i
           <li v-for="p in elenco" :key="p.id" class="list-group-item">
             <div class="d-flex flex-wrap align-items-center gap-3">
               <strong>{{ p.name }}</strong>
+              <span
+                v-if="p.id_credenziale && p.id_credenziale === sblocca()"
+                class="badge theme-primary"
+                >sblocca questo dispositivo</span
+              >
               <span class="small fg-2 ms-auto">
                 creata il {{ data(p.created_at) }}
                 <template v-if="p.last_used_at"> · usata il {{ data(p.last_used_at) }}</template>
@@ -175,7 +218,9 @@ const data = (secondi: number) => new Date(secondi * 1000).toLocaleDateString('i
             </div>
             <div class="mt-3">
               <template v-if="daRimuovere === p.id">
-                <span class="small me-3">Non potrai più entrare con questa passkey.</span>
+                <span class="small me-3">
+                  Non potrai più entrare con questa passkey, né sbloccare con lei l'app.
+                </span>
                 <button
                   type="button"
                   class="btn btn-sm btn-solid theme-danger me-1"

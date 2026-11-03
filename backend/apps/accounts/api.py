@@ -179,6 +179,27 @@ class InvitoCreato(Schema):
     scadenza: str
 
 
+class PasskeyOut(Schema):
+    id: int
+    # base64url, as the browser gives it: the PWA matches it to the passkey that unlocks
+    # the data on this device and asks the password manager to drop a removed one.
+    id_credenziale: str
+
+
+@router.get("/io/passkey", response=list[PasskeyOut])
+def mie_passkey(request):
+    """The credential ids of one's own login passkeys (DEC-295), which allauth does not
+    list. Not secret, and only one's own."""
+    from allauth.mfa.models import Authenticator
+
+    return [
+        {"id": a.pk, "id_credenziale": a.data.get("credential", {}).get("rawId", "")}
+        for a in Authenticator.objects.filter(
+            user=request.auth, type=Authenticator.Type.WEBAUTHN
+        ).order_by("pk")
+    ]
+
+
 @router.post("/inviti", response={201: InvitoCreato})
 def crea_invito(request, dati: NuovoInvito):
     persona = get_object_or_404(Persona, pk=dati.persona_id)

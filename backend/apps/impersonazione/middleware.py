@@ -24,6 +24,7 @@ BLOCCATE = [
     (None, re.compile(r"^/api/v1/calendario(/rigenera)?$")),  # the secret feed address
     ("scrittura", re.compile(r"^/api/v1/persone/\d+/visibilita-genitori$")),  # DEC-26
     ("scrittura", re.compile(r"^/api/v1/io/email$")),  # DEC-157
+    (None, re.compile(r"^/api/v1/io/passkey$")),  # someone else's passkeys (DEC-295)
     (None, re.compile(r"^/api/v1/richieste-diritti")),  # DEC-102
     (None, re.compile(r"^/api/v1/persone/\d+/fascicolo$")),
     (None, re.compile(r"^/api/v1/campo/")),  # offline downloads: nothing is saved

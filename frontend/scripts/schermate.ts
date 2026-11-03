@@ -941,6 +941,8 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
           hasUserVerification: true,
           isUserVerified: true,
           automaticPresenceSimulation: true,
+          // The secret that unlocks the data with the login passkey (DEC-295).
+          hasPrf: true,
         },
       })
       if (scena.chi) await entra(contesto.pages()[0]!, scena.chi, !scena.senzaProtezione)

@@ -93,7 +93,9 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
   (DEC-23). django-axes limits login attempts. Login passkeys are created on the
   Dispositivi page (`components/PasskeyAccesso.vue`, after allauth's reauthentication)
   and are a way in, not a second factor (DEC-240): only TOTP asks for one
-  (`accounts/stages.py`), so the emailed code stays the fallback.
+  (`accounts/stages.py`), so the emailed code stays the fallback. On a device whose data
+  are protected, the passkey created there also unlocks them (DEC-295); allauth 65.20 asks
+  who has a password to confirm it before adding one, even right after logging in.
 - **API:** `/api/v1/` (django-ninja, `backend/config/api.py`). OpenAPI docs at
   `/api/v1/docs` in dev.
 - **BuonaStrada is the source of truth for the registry** (DEC-02, DEC-27…DEC-35).
@@ -118,14 +120,14 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
 | Piece | Where |
 | --- | --- |
 | AES-GCM 256 data key; JSON payloads encrypted with the record key as authenticated data | `frontend/src/sicurezza/cripto.ts` |
-| Key wrapped by the PIN (PBKDF2-SHA256, 600,000 iterations, ≥ 6 digits) and optionally by a passkey PRF secret (fingerprint/face, works offline) | `cassaforte.ts`, `biometria.ts` |
+| Key wrapped by the PIN (PBKDF2-SHA256, 600,000 iterations, ≥ 6 digits) and optionally by the PRF secret of the device's login passkey (fingerprint/face, works offline; one passkey per device, DEC-295) | `cassaforte.ts`, `biometria.ts` |
 | States `da_configurare` / `solo_online` / `bloccata` / `sbloccata`; key only in memory | `cassaforte.ts` |
 | 5 wrong PINs → everything wiped; lock after 5 minutes of inactivity | `cassaforte.ts`, `composables/useBloccoAutomatico.ts` |
 | Device registered on the server, its id in the server-side session | `backend/apps/dispositivi` |
 | Revocation by the owner or a capogruppo (DEC-23): the session is deleted; at start-up the app asks `/dispositivi/{id}/stato` (no login needed) and wipes itself | `dispositivi/api.py`, `sicurezza/dispositivo.ts` |
 | Offline window: every answer carries `X-QdC-Offline-Fino-Al` (last contact + `QDC_OFFLINE_GIORNI`, default 14); past it the data is wiped at start-up | `dispositivi/middleware.py`, `sicurezza/collegamenti.ts` |
 | Another account logging in on the same device wipes the previous one's data | `stores/sessione.ts` |
-| An unlock passkey no longer used (wipe, fingerprint off) is signalled to the password manager for removal (`signalUnknownCredential`, where supported); its name carries device and day | `biometria.ts`, `cassaforte.ts` |
+| The PRF output is stripped from the registration response before allauth stores it: the secret never reaches the server. A login passkey removed from the account, and an old local unlock passkey (before DEC-295) once replaced or wiped, are signalled to the password manager for removal (`signalUnknownCredential`, where supported); the credential ids come from `/api/v1/io/passkey` | `api/allauth.ts`, `biometria.ts`, `cassaforte.ts`, `accounts/api.py` |
 
 **Threat model, stated honestly:** this protects against a lost, stolen or borrowed
 phone and against anyone opening the app or its storage without the PIN. A 6-digit PIN

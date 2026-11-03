@@ -71,7 +71,9 @@ scrivere niente. Prima devi crearla, una volta per ogni dispositivo:
 4. Il telefono ti chiede l'impronta, il volto o il blocco schermo. Alla fine compare
    «Passkey creata».
 
-Da quel momento, nella pagina di accesso tocca **Accedi con passkey**.
+Da quel momento, nella pagina di accesso tocca **Accedi con passkey**. Se hai protetto i dati
+con il PIN, la stessa passkey sblocca anche l'app su questo dispositivo, con l'impronta o il
+volto.
 
 :::{container} schermate
 ![La passkey creata sul telefono](../img/comune/passkey-telefono.png){.telefono width="30%"}
@@ -81,6 +83,10 @@ Da quel momento, nella pagina di accesso tocca **Accedi con passkey**.
 Nello stesso riquadro vedi le tue passkey. Se cambi telefono, tocca **Rimuovi…** accanto a
 quella vecchia e poi **Rimuovi**. Il codice via email funziona sempre, anche se hai una
 passkey.
+
+Se toccando **Accedi con passkey** l'app dice che la passkey non ti fa entrare, hai scelto una
+vecchia passkey per sbloccare l'app, delle versioni precedenti: entra con il codice via email e
+crea la passkey di questo dispositivo.
 
 ### Con Google o Apple
 

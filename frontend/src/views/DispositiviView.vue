@@ -4,11 +4,11 @@ import { useRouter } from 'vue-router'
 
 import { api, type Dispositivo } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
-import { BiometriaNonDisponibile, biometriaForseDisponibile } from '@/sicurezza/biometria'
+import { biometriaForseDisponibile } from '@/sicurezza/biometria'
 import {
-  attivaBiometria,
   biometriaAttiva,
   cancella,
+  conVecchiaPasskey,
   disattivaBiometria,
   stato,
 } from '@/sicurezza/cassaforte'
@@ -26,7 +26,8 @@ const dispositivi = ref<Dispositivo[]>([])
 const tutti = ref(false)
 const daConfermare = ref<string | null>(null)
 const biometriaPossibile = ref(false)
-const avviso = ref<string | null>(null)
+// Read again after every change of the fingerprint unlock (biometriaAttiva).
+const vecchiaPasskey = computed(() => biometriaAttiva.value && conVecchiaPasskey())
 const nomeQuesto = computed(
   () => dispositivi.value.find((d) => d.corrente)?.nome ?? 'Questo dispositivo',
 )
@@ -52,17 +53,6 @@ async function scollega(d: Dispositivo) {
   await carica()
 }
 
-async function biometria(attiva: boolean) {
-  avviso.value = null
-  try {
-    if (attiva) await attivaBiometria(sessione.profilo!.email)
-    else await disattivaBiometria()
-  } catch (e) {
-    avviso.value =
-      e instanceof BiometriaNonDisponibile ? e.message : 'Operazione annullata o non riuscita.'
-  }
-}
-
 const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
 </script>
 
@@ -75,21 +65,29 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
       <p v-if="stato === 'solo_online'" class="small mb-3">
         Nessun dato salvato qui: l'app funziona solo con la rete.
       </p>
-      <p v-else class="small mb-3">Dati salvati qui cifrati, sbloccabili con il PIN.</p>
-      <div class="d-flex flex-wrap gap-3">
-        <button
+      <template v-else>
+        <p class="small mb-3">
+          Dati salvati qui cifrati, sbloccabili con il PIN{{
+            biometriaAttiva ? ' o con impronta o volto' : ''
+          }}.
+        </p>
+        <p
           v-if="stato === 'sbloccata' && biometriaPossibile && !biometriaAttiva"
-          type="button"
-          class="btn btn-sm btn-outline theme-primary"
-          @click="biometria(true)"
+          class="small fg-2 mb-3"
         >
-          Attiva impronta o volto
-        </button>
+          Per sbloccare con impronta o volto crea una passkey su questo dispositivo, qui sotto.
+        </p>
+        <p v-if="vecchiaPasskey" class="small fg-2 mb-3">
+          L'impronta usa ancora la vecchia passkey di sblocco: crea una passkey su questo
+          dispositivo, qui sotto, e ne avrai una sola, per entrare e per sbloccare.
+        </p>
+      </template>
+      <div class="d-flex flex-wrap gap-3">
         <button
           v-if="biometriaAttiva"
           type="button"
           class="btn btn-sm btn-outline theme-secondary"
-          @click="biometria(false)"
+          @click="disattivaBiometria()"
         >
           Disattiva impronta o volto
         </button>
@@ -101,7 +99,6 @@ const data = (iso: string) => new Date(iso).toLocaleString('it-IT')
           {{ stato === 'solo_online' ? 'Attiva la protezione con PIN' : 'Cambia PIN' }}
         </button>
       </div>
-      <p v-if="avviso" class="small fg-danger mt-3 mb-0">{{ avviso }}</p>
     </div>
 
     <PasskeyAccesso v-if="!inImpersonazione()" :nome-predefinito="nomeQuesto" />

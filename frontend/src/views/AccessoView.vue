@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { allauth, flussoInSospeso, type SessioneAllauth } from '@/api/allauth'
+import { ErroreApi } from '@/api/http'
 import { useErrore } from '@/composables/useErrore'
 import { MESSAGGI_CANCELLAZIONE, protetta, type MotivoCancellazione } from '@/sicurezza/cassaforte'
 import { ricollegaDispositivo } from '@/sicurezza/dispositivo'
@@ -54,7 +55,24 @@ const confermaCodice = () =>
   esegui(() => allauth.confermaCodice(codice.value.trim())).then(dopoRisposta)
 const confermaTotp = () =>
   esegui(() => allauth.confermaSecondoFattore(codice.value.trim())).then(dopoRisposta)
-const passkey = () => esegui(() => allauth.accediConPasskey()).then(dopoRisposta)
+// allauth answers "Codice errato" for a passkey it does not know: often an old local unlock
+// passkey of this site, offered by the password manager too (DEC-295).
+const PASSKEY_SCONOSCIUTA =
+  'Questa passkey non ti fa entrare: forse è una vecchia passkey per sbloccare l’app. ' +
+  'Entra con il codice via email, poi in «Password e sicurezza» crea la passkey di questo dispositivo.'
+const passkey = () =>
+  esegui(() =>
+    allauth.accediConPasskey().catch((e: unknown) => {
+      const dati = e instanceof ErroreApi ? (e.dati as { errors?: { code?: string }[] }) : null
+      const codici = dati?.errors?.map((x) => x.code)
+      if (codici?.includes('incorrect_code')) {
+        throw new ErroreApi(400, { errors: [{ message: PASSKEY_SCONOSCIUTA }] })
+      }
+      // Cancelled by the user: nothing to say.
+      if (e instanceof Error && ['NotAllowedError', 'AbortError'].includes(e.name)) return undefined
+      throw e
+    }),
+  ).then(dopoRisposta)
 const provider = (nome: 'google' | 'apple') =>
   allauth.accediConProvider(nome, `${window.location.origin}/`)
 </script>

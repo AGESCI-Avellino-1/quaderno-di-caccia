@@ -26,7 +26,7 @@ import {
   svolgi,
   type Cifrato,
 } from './cripto'
-import { creaCredenziale, dimenticaCredenziale, leggiSegreto } from './biometria'
+import { creaPasskeyDiSblocco, dimenticaCredenziale, leggiSegreto } from './biometria'
 import {
   cancellaTutto,
   db as dbPredefinito,
@@ -116,14 +116,14 @@ async function salva() {
 
 /** Deletes every local trace and tells the app (App.vue shows the reason). */
 export async function cancella(motivo: MotivoCancellazione): Promise<void> {
-  const passkey = configurazione?.biometria?.idCredenziale
+  const passkey = vecchiaPasskey()
   chiaveDati = null
   configurazione = undefined
   if (motivo === 'uscita') await svuotaDatiLocali(database)
   else await cancellaTutto(database)
   aggiornaStato()
   ultimoMotivo.value = motivo
-  // The next login creates a new unlock passkey: this one would stay in the manager.
+  // An old unlock passkey would stay in the manager; a login passkey still lets you in.
   if (passkey) void dimenticaCredenziale(passkey)
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(EVENTO_CANCELLAZIONE, { detail: motivo }))
@@ -199,28 +199,55 @@ export async function sbloccaConPin(pin: string): Promise<void> {
   await salva()
 }
 
-/** The secret source is injectable for tests; in the app it is the passkey PRF. */
+/** The old local unlock passkey, if the fingerprint still uses one (before DEC-295). */
+function vecchiaPasskey(): ArrayBuffer | undefined {
+  const bio = configurazione?.biometria
+  return bio && !bio.accesso ? bio.idCredenziale : undefined
+}
+
+/** The credential that unlocks this device, to match it against the login passkeys. */
+export function credenzialeDiSblocco(): ArrayBuffer | undefined {
+  return configurazione?.biometria?.idCredenziale
+}
+
+/** True while the fingerprint still uses an old local unlock passkey. */
+export function conVecchiaPasskey(): boolean {
+  return vecchiaPasskey() !== undefined
+}
+
+/**
+ * Creates the login passkey of this device, named after it, and lets it unlock the data
+ * too (DEC-295). The secret source is injectable for tests; in the app it is the PRF of
+ * the new passkey.
+ */
 export async function attivaBiometria(
-  email: string,
-  crea: typeof creaCredenziale = creaCredenziale,
+  crea: typeof creaPasskeyDiSblocco = creaPasskeyDiSblocco,
+  nomePasskey?: string,
 ): Promise<void> {
   if (!configurazione || !chiaveDati) throw new Error('Sblocca prima con il PIN.')
   const sale = casuali(32)
-  const nome = (await database.meta.get('dispositivo_nome'))?.valore
-  const { idCredenziale, segreto } = await crea(email, sale, nome)
+  const nome =
+    nomePasskey ?? (await database.meta.get('dispositivo_nome'))?.valore ?? 'Questo dispositivo'
+  const { idCredenziale, segreto } = await crea(nome, sale)
   const kek = await chiaveDaSegreto(segreto, sale)
-  const prima = configurazione.biometria?.idCredenziale
-  configurazione.biometria = { ...(await avvolgi(chiaveDati, kek)), sale, idCredenziale }
+  const vecchia = vecchiaPasskey()
+  configurazione.biometria = {
+    ...(await avvolgi(chiaveDati, kek)),
+    sale,
+    idCredenziale,
+    accesso: true,
+  }
   await salva()
-  if (prima) void dimenticaCredenziale(prima)
+  if (vecchia) void dimenticaCredenziale(vecchia)
 }
 
+/** The login passkey stays (it still lets you in); an old unlock passkey goes. */
 export async function disattivaBiometria(): Promise<void> {
   if (!configurazione) return
-  const prima = configurazione.biometria?.idCredenziale
+  const vecchia = vecchiaPasskey()
   delete configurazione.biometria
   await salva()
-  if (prima) void dimenticaCredenziale(prima)
+  if (vecchia) void dimenticaCredenziale(vecchia)
 }
 
 export async function sbloccaConBiometria(

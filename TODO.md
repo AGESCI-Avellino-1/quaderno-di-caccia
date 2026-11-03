@@ -43,7 +43,9 @@ svilupparla. Deciso il 03/11:
    logo AGESCI e deve tornare a quello del gruppo (il file in `resources/` e `QDC_LOGO` in
    `.env`), anche nelle note della versione.
 
-#### N.27 — Una sola passkey per dispositivo, per entrare e per sbloccare ⏳ (in attesa del via)
+#### N.27 — Una sola passkey per dispositivo, per entrare e per sbloccare ✅ 03/11 (da provare sul Mac e sull'iPhone)
+
+Fatto (DEC-295): la passkey di accesso creata con il PRF sblocca anche i dati; il segreto è tolto dalla risposta prima che allauth la salvi (test, e controllato nel database); `GET /api/v1/io/passkey` per gli id delle credenziali (bloccato in impersonazione); rimuovere la passkey spegne l'impronta e la segnala al gestore; senza PRF resta il PIN con il suggerimento di Safari sul Mac; messaggio chiaro all'accesso per una passkey sconosciuta. Provato in Chromium con un autenticatore virtuale con PRF: protezione, conferma della password, passkey unica (stesso id sul server), sblocco con l'impronta, accesso con la passkey, rimozione, passkey sconosciuta all'accesso. Scoperto provando: allauth 65.20 chiede di confermare la password prima di aggiungere una passkey anche subito dopo l'accesso; la pagina della protezione allora porta a «Password e sicurezza». Da provare dal maintainer sui dispositivi veri.
 
 Segnalazione del maintainer (03/11, con la 1.5.0 su qdc.avellino1.it):
 

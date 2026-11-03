@@ -16,8 +16,14 @@ si apre solo con un PIN che scegli tu (o con l'impronta o il volto).
    servirà per riconoscerlo nell'elenco dei dispositivi.
 2. Scegli un **PIN** di almeno 6 cifre e ripetilo.
 3. Se il telefono lo permette, lascia la spunta su **Sblocca anche con impronta o
-   volto**.
+   volto**: l'app crea la passkey di questo dispositivo, che ti fa anche entrare senza
+   codice.
 4. Tocca **Attiva la protezione**.
+
+Se sei entrato con la password, per sicurezza l'app ti chiede di confermarla prima di creare la
+passkey: il PIN è già attivo, tocca **Crea la passkey** e segui i passi di [Con una
+passkey](accesso.md#con-una-passkey). Puoi anche farlo dopo, o toccare **Continua con il solo
+PIN**.
 
 Se il telefono non è tuo, tocca invece **Usa solo online**: l'app non salva niente e
 funziona solo con la rete.
@@ -58,13 +64,22 @@ perso cancella i dati da solo.
 
 Se non riesci a entrare, chiedi a un capogruppo di scollegarlo per te.
 
-Nella stessa pagina puoi cambiare il PIN e attivare o disattivare l'impronta o il volto.
+Nella stessa pagina puoi cambiare il PIN e disattivare l'impronta o il volto.
 
-L'impronta o il volto usano una passkey di sblocco che il telefono salva nel suo gestore delle
-password (per esempio Password di Apple), con il nome del dispositivo e la data. Quando l'app
-cancella i dati (perché esci, scolleghi il dispositivo o la copia scade) o quando disattivi
-l'impronta, chiede al gestore di togliere quella passkey; se il browser non lo permette, la
-puoi cancellare tu dal gestore delle password.
+L'impronta o il volto usano la **passkey di questo dispositivo**, la stessa che ti fa entrare
+con **Accedi con passkey**: nell'elenco delle passkey è segnata «sblocca questo dispositivo».
+Per attivarli crea la passkey in **Passkey per entrare** (vedi [Con una
+passkey](accesso.md#con-una-passkey)). Se rimuovi quella passkey, l'app si sblocca con il PIN e
+il telefono, se il browser lo permette, la toglie anche dal suo gestore delle password.
+
+Alcuni browser creano la passkey ma non le permettono di sbloccare i dati salvati (per esempio
+Chrome sul Mac, con l'app installata): l'app te lo dice, la passkey ti serve comunque per
+entrare e i dati si sbloccano con il PIN. Sul Mac puoi usare Safari, con **File** → **Aggiungi
+al Dock**.
+
+Le versioni precedenti usavano una passkey di sblocco a parte, che compariva anche in **Accedi
+con passkey** senza farti entrare. Se l'app te lo segnala, crea la passkey di questo
+dispositivo: quella vecchia viene tolta.
 
 :::{container} schermate
 ![I dispositivi sul telefono](../img/comune/dispositivi-telefono.png){.telefono width="30%"}

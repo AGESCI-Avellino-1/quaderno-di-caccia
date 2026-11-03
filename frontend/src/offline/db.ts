@@ -45,7 +45,12 @@ export interface ConfigurazioneProtezione {
   /** Email of the account the data belongs to: another login wipes it. */
   proprietario: string
   pin?: ChiaveAvvolta & { sale: Uint8Array<ArrayBuffer>; iterazioni: number }
-  biometria?: ChiaveAvvolta & { sale: Uint8Array<ArrayBuffer>; idCredenziale: ArrayBuffer }
+  biometria?: ChiaveAvvolta & {
+    sale: Uint8Array<ArrayBuffer>
+    idCredenziale: ArrayBuffer
+    /** The login passkey of this device (DEC-295); missing: an old local unlock passkey. */
+    accesso?: boolean
+  }
   tentativiFalliti: number
   /** ISO date sent by the server (X-QdC-Offline-Fino-Al); past it, data is wiped. */
   offlineFinoAl?: string

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { creaCredenziale, leggiSegreto } from '@/sicurezza/biometria'
+import type { PasskeyCreata } from '@/api/allauth'
+import { creaPasskeyDiSblocco, leggiSegreto, SbloccoNonDisponibile } from '@/sicurezza/biometria'
 
 const segreto = new Uint8Array(32).fill(7).buffer
 const credenziale = {
@@ -9,30 +10,52 @@ const credenziale = {
 }
 
 function finte() {
-  const crea = vi.fn<(o: CredentialCreationOptions) => Promise<typeof credenziale>>(
-    async () => credenziale,
-  )
   const leggi = vi.fn<(o: CredentialRequestOptions) => Promise<typeof credenziale>>(
     async () => credenziale,
   )
-  vi.stubGlobal('navigator', { credentials: { create: crea, get: leggi } })
-  return { crea, leggi }
+  vi.stubGlobal('navigator', { credentials: { get: leggi } })
+  return { leggi }
 }
+
+const creata = (prf: PasskeyCreata['prf']) =>
+  vi.fn<(nome: string, sale: Uint8Array<ArrayBuffer>) => Promise<PasskeyCreata>>(async () => ({
+    idCredenziale: 'AQID',
+    prf,
+  }))
 
 afterEach(() => vi.unstubAllGlobals())
 
 describe('biometria', () => {
-  it('names the unlock passkey with the device and the day', async () => {
-    const { crea } = finte()
-    await creaCredenziale(
-      'capo@example.invalid',
+  it('unlocks with the login passkey of this device, named after the device', async () => {
+    const crea = creata({ enabled: true, results: { first: segreto } })
+    const sale = new Uint8Array(32)
+    const esito = await creaPasskeyDiSblocco('Mac di Andrea', sale, crea)
+    expect(crea).toHaveBeenCalledWith('Mac di Andrea', sale)
+    expect(new Uint8Array(esito.idCredenziale)).toEqual(new Uint8Array([1, 2, 3]))
+    expect(esito.segreto).toBe(segreto)
+  })
+
+  it('reads the secret with get() when create() does not give it', async () => {
+    const { leggi } = finte()
+    const esito = await creaPasskeyDiSblocco('Mac', new Uint8Array(32), creata({ enabled: true }))
+    expect(esito.segreto).toBe(segreto)
+    expect(leggi).toHaveBeenCalledOnce()
+  })
+
+  it('without PRF the passkey stays to log in, and the PIN unlocks', async () => {
+    const errore = await creaPasskeyDiSblocco(
+      'Mac',
       new Uint8Array(32),
-      'Mac di Andrea',
-      new Date(2026, 10, 3),
-    )
-    const utente = crea.mock.calls[0]![0].publicKey!.user
-    expect(utente.name).toBe('capo@example.invalid (sblocco Mac di Andrea, 03/11/2026)')
-    expect(utente.displayName).toBe('Sblocco QdC — Mac di Andrea, 03/11/2026')
+      creata({ enabled: false }),
+    ).catch((e: unknown) => e)
+    expect(errore).toBeInstanceOf(SbloccoNonDisponibile)
+    expect(String((errore as Error).message)).toContain('ti serve per entrare')
+  })
+
+  it('suggests Safari to Chrome on a Mac', () => {
+    const mac = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/142.0 Safari/537.36'
+    expect(new SbloccoNonDisponibile(mac).message).toContain('Aggiungi al Dock')
+    expect(new SbloccoNonDisponibile('iPhone').message).not.toContain('Dock')
   })
 
   it('asks for the passkey on this device, not a phone', async () => {

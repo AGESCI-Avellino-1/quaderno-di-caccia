@@ -5,7 +5,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { MINUTI_BLOCCO } from '@/composables/useBloccoAutomatico'
 import { useErrore } from '@/composables/useErrore'
 import { salvaInCache } from '@/offline/cache'
-import { BiometriaNonDisponibile, biometriaForseDisponibile } from '@/sicurezza/biometria'
+import { RiautenticazioneRichiesta } from '@/api/allauth'
+import {
+  BiometriaNonDisponibile,
+  SbloccoNonDisponibile,
+  biometriaForseDisponibile,
+} from '@/sicurezza/biometria'
 import {
   LUNGHEZZA_MINIMA_PIN,
   TENTATIVI_MASSIMI,
@@ -29,6 +34,9 @@ const conferma = ref('')
 const conBiometria = ref(false)
 const biometriaPossibile = ref(false)
 const avviso = ref<string | null>(null)
+// allauth wants who has a password to confirm it before adding a passkey (65.20): that
+// form is on the Dispositivi page.
+const daConfermare = ref(false)
 const giaConfigurata = stato.value === 'sbloccata' || stato.value === 'solo_online'
 
 onMounted(async () => {
@@ -61,12 +69,16 @@ async function attiva() {
   if (!fatto) return
   if (conBiometria.value) {
     try {
-      await attivaBiometria(email)
+      // Creates the login passkey of this device, which also unlocks it (DEC-295).
+      await attivaBiometria()
     } catch (e) {
       avviso.value =
-        e instanceof BiometriaNonDisponibile
+        e instanceof BiometriaNonDisponibile || e instanceof SbloccoNonDisponibile
           ? e.message
-          : 'Impronta o volto non attivati: potrai riprovare da «Dispositivi».'
+          : e instanceof RiautenticazioneRichiesta
+            ? 'Il PIN è attivo. Per sbloccare anche con impronta o volto crea la passkey di questo dispositivo: per sicurezza ti chiediamo di confermare chi sei.'
+            : 'Impronta o volto non attivati: potrai riprovare da «Password e sicurezza».'
+      daConfermare.value = e instanceof RiautenticazioneRichiesta
     }
   }
   if (!avviso.value) await router.replace(prossima())
@@ -99,6 +111,9 @@ async function soloOnline() {
     <div v-if="avviso" class="alert theme-warning" role="status">
       <div>
         {{ avviso }}
+        <RouterLink v-if="daConfermare" to="/dispositivi" class="d-block mt-1">
+          Crea la passkey
+        </RouterLink>
         <RouterLink :to="prossima()" class="d-block mt-1">Continua con il solo PIN</RouterLink>
       </div>
     </div>
@@ -133,6 +148,9 @@ async function soloOnline() {
         <input id="biometria" v-model="conBiometria" class="check" type="checkbox" />
         <label for="biometria">Sblocca anche con impronta o volto</label>
       </div>
+      <p v-if="biometriaPossibile && conBiometria" class="small fg-2 mb-0">
+        Crea una passkey su questo dispositivo: oltre a sbloccare l'app, ti fa entrare senza codice.
+      </p>
       <button class="btn btn-solid theme-primary mt-3" :disabled="inCorso">
         Attiva la protezione
       </button>

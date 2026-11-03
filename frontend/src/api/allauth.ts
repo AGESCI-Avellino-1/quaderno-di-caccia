@@ -26,6 +26,14 @@ export interface Passkey {
   name: string
   created_at: number
   last_used_at: number | null
+  /** base64url, from /api/v1/io/passkey: allauth does not list it (DEC-295). */
+  id_credenziale?: string
+}
+
+/** A passkey just created: its credential id (base64url) and, if asked, the PRF output. */
+export interface PasskeyCreata {
+  idCredenziale: string
+  prf?: { enabled?: boolean; results?: { first?: BufferSource } }
 }
 
 /**
@@ -126,30 +134,55 @@ export const allauth = {
 /** Login passkeys of the account (DEC-22): created here, used on the login page. */
 export const passkey = {
   async elenco(): Promise<Passkey[]> {
-    const risposta = await richiesta<{ data: (Passkey & { type: string })[] }>(
-      `${BASE}/account/authenticators`,
-    )
-    return risposta.data.filter((a) => a.type === 'webauthn')
+    const [risposta, credenziali] = await Promise.all([
+      richiesta<{ data: (Passkey & { type: string })[] }>(`${BASE}/account/authenticators`),
+      richiesta<{ id: number; id_credenziale: string }[]>('/api/v1/io/passkey'),
+    ])
+    const ids = new Map(credenziali.map((c) => [c.id, c.id_credenziale]))
+    return risposta.data
+      .filter((a) => a.type === 'webauthn')
+      .map((a) => ({ ...a, id_credenziale: ids.get(a.id) }))
   },
 
   /**
    * Creates a passkey on this device. Passwordless (a discoverable credential): the
-   * login page asks for no email first.
+   * login page asks for no email first. With `sale`, it also asks for the PRF secret that
+   * unlocks the data on this device (DEC-295): returned here, never sent to the server.
    */
-  async crea(nome: string): Promise<void> {
+  async crea(nome: string, sale?: Uint8Array<ArrayBuffer>): Promise<PasskeyCreata> {
     const percorso = `${BASE}/account/authenticators/webauthn`
     const opzioni = await oRiautentica(() =>
-      richiesta<{ data: { creation_options: { publicKey: unknown } } }>(`${percorso}?passwordless`),
+      richiesta<{ data: { creation_options: { publicKey: Record<string, unknown> } } }>(
+        `${percorso}?passwordless`,
+      ),
     )
-    const credenziale = await startRegistration({
-      optionsJSON: opzioni.data.creation_options.publicKey as never,
-    })
+    const publicKey = opzioni.data.creation_options.publicKey
+    // simplewebauthn hands the extensions to the browser as they are: the salt stays bytes.
+    const conPrf = sale
+      ? {
+          ...publicKey,
+          extensions: {
+            ...(publicKey.extensions as object | undefined),
+            prf: { eval: { first: sale } },
+          },
+        }
+      : publicKey
+    const credenziale = await startRegistration({ optionsJSON: conPrf as never })
+    // allauth keeps the whole response: the secret must not go with it.
+    const { prf, ...altre } = credenziale.clientExtensionResults as Record<string, unknown> & {
+      prf?: PasskeyCreata['prf']
+    }
     await oRiautentica(() =>
       richiesta(percorso, {
         metodo: 'POST',
-        corpo: { name: nome, credential: credenziale, passwordless: true },
+        corpo: {
+          name: nome,
+          credential: { ...credenziale, clientExtensionResults: altre },
+          passwordless: true,
+        },
       }),
     )
+    return { idCredenziale: credenziale.rawId, prf }
   },
 
   rimuovi: (id: number) =>

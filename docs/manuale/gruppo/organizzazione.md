@@ -73,11 +73,13 @@ intestata del gruppo con codice socio, cognome, nome e livello di formazione cap
 capo.
 
 1. Spunta gli **Incarichi da includere** (di base ci sono tutti).
-2. Scegli come raggruppare i capi: **Per unità** (chi fa un servizio di supporto, e i
-   capigruppo e l'assistente ecclesiastico di gruppo senza un'unità, vanno in Comunità capi;
-   accanto al nome gli altri incarichi spuntati, per esempio tesoriere; un capo che ha solo
-   un incarico come tesoriere, senza servizio, compare con «Servizio di supporto al
-   gruppo») o **Per incarico**.
+2. Scegli come raggruppare i capi: **Per unità** o **Per incarico**. Per unità, ogni
+   incarico sta nella sua sezione: quelli di un'unità nell'unità, quelli di gruppo
+   (capogruppo, assistente ecclesiastico di gruppo, tesoriere di gruppo, amministratore,
+   servizi di supporto) in Comunità capi. Un capo compare in ogni sezione in cui ha un
+   incarico spuntato, anche più volte, e accanto al nome ha gli incarichi di quella sezione.
+   Un capo senza servizio, per esempio un tesoriere, compare anche in Comunità capi con
+   «Servizio di supporto al gruppo».
 3. Scegli l'**Anno associativo**: quello in corso dà gli incarichi di oggi; un anno passato
    quelli che erano in corso alla sua fine, il 30 settembre.
 4. Tocca **Scarica il PDF**.

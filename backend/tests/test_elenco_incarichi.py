@@ -56,30 +56,59 @@ def _nomi(sezione):
     return [(r.persona.cognome, r.incarichi) for r in sezione.righe]
 
 
-def test_per_unita_la_coca_ha_capigruppo_senza_unita_e_capi_di_supporto(
+def test_per_unita_ogni_capo_in_ogni_sezione_dei_suoi_incarichi(
     capi, capo, capogruppo, reparto, coca
 ):
     sezioni = elenco.sezioni(TUTTI, "unita", date.today())
     assert [s.titolo for s in sezioni] == [str(reparto), str(coca)]
-    # The capogruppo serving the reparto is in the reparto, with the additional roles.
-    assert _nomi(sezioni[0]) == [
-        ("Capo", ["Capo unità"]),
-        ("Doppia", ["Staff di unità", "Capogruppo", "Tesoriere di gruppo"]),
-    ]
+    # The capogruppo serving the reparto is in both, with that section's roles only
+    # (maintainer, 03/11).
+    assert _nomi(sezioni[0]) == [("Capo", ["Capo unità"]), ("Doppia", ["Staff di unità"])]
     # The treasurer with no service shows the support service, in the PDF only.
     assert _nomi(sezioni[1]) == [
         ("Disponibile", ["Servizio di supporto al gruppo"]),
+        ("Doppia", ["Capogruppo", "Tesoriere di gruppo"]),
         ("Gruppo", ["Capogruppo"]),
         ("Tesoriera", ["Servizio di supporto al gruppo", "Tesoriere di gruppo"]),
     ]
 
 
 def test_per_unita_servizio_di_supporto_anche_se_non_scelto(capi, coca):
-    # Only the treasurers chosen: the treasurer with no service still shows it.
+    # Only the group treasurers chosen: who has no service still shows the support one.
     sezioni = elenco.sezioni({R.TESORIERE_GRUPPO}, "unita", date.today())
     assert _nomi(sezioni[-1]) == [
-        ("Tesoriera", ["Servizio di supporto al gruppo", "Tesoriere di gruppo"])
+        ("Doppia", ["Tesoriere di gruppo"]),
+        ("Tesoriera", ["Servizio di supporto al gruppo", "Tesoriere di gruppo"]),
     ]
+
+
+def test_per_unita_piu_unita_e_tesoriere_di_unita(gruppo, reparto, coca):
+    from apps.organizzazione.models import TipoUnita, Unita
+
+    branco = Unita.objects.create(
+        gruppo=gruppo, nome="Branco", tipo=TipoUnita.BRANCO, composizione=reparto.composizione
+    )
+    in_due = crea_capo("Ugo", "Doppiaunita", "ugo@example.invalid")
+    _incarico(in_due, R.STAFF, unita=reparto)
+    _incarico(in_due, R.CAPO_UNITA, unita=branco)
+    cassiere = crea_capo("Ivo", "Cassiere", "ivo@example.invalid")
+    _incarico(cassiere, R.TESORIERE_UNITA, unita=branco)
+    sezioni = {s.titolo: _nomi(s) for s in elenco.sezioni(TUTTI, "unita", date.today())}
+    # In both units; the unit treasurer with no service in the unit and in the Co.Ca.
+    assert sezioni[str(reparto)] == [("Doppiaunita", ["Staff di unità"])]
+    assert sezioni[str(branco)] == [
+        ("Cassiere", ["Tesoriere di unità"]),
+        ("Doppiaunita", ["Capo unità"]),
+    ]
+    assert sezioni[str(coca)] == [("Cassiere", ["Servizio di supporto al gruppo"])]
+
+
+def test_per_unita_capigruppo_in_coca_solo_se_scelti(capi, reparto, coca):
+    sezioni = elenco.sezioni({R.STAFF}, "unita", date.today())
+    assert [s.titolo for s in sezioni] == [str(reparto)]
+    sezioni = elenco.sezioni({R.STAFF, R.CAPOGRUPPO}, "unita", date.today())
+    assert [s.titolo for s in sezioni] == [str(reparto), str(coca)]
+    assert _nomi(sezioni[1]) == [("Doppia", ["Capogruppo"]), ("Gruppo", ["Capogruppo"])]
 
 
 def test_per_unita_solo_gli_incarichi_scelti(capi, reparto):

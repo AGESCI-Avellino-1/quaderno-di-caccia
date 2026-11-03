@@ -79,6 +79,25 @@ Intanto, per il maintainer: sbloccare con il PIN; in Password di Apple cancellar
 passkey di qdc.avellino1.it e, se serve entrare con la passkey, crearne una sola di accesso
 da Dispositivi (non fa sbloccare l'app finché N.27 non è sviluppata).
 
+#### N.28 — Elenco degli incarichi per unità: ogni capo in ogni sezione dei suoi incarichi ✅ 03/11
+
+Fatto con test (`elenco_incarichi._per_unita`); DEC-284 precisato nell'analisi; manuale e schermate aggiornati.
+
+Rif. DEC-284, DEC-293. Chiarimento del maintainer (03/11, sul PDF della 1.6.0): nel raggruppamento
+per unità la Co.Ca. deve esserci con i capigruppo e l'AE di gruppo anche se fanno servizio in
+un'unità; chi ha incarichi in più unità compare in più unità, anche se così compare più volte.
+Deciso il 03/11:
+
+1. ogni incarico ha la sua sezione: quelli di unità nella loro unità (capo unità, staff, AE di
+   unità, tesoriere di unità), quelli di gruppo in Co.Ca. (capogruppo, AE di gruppo, tesoriere
+   di gruppo, amministratore, servizi di supporto); un capo compare in ogni sezione in cui ha un
+   incarico tra i tipi scelti;
+2. accanto al nome, in ogni sezione, solo gli incarichi di quella sezione;
+3. capigruppo e AE di gruppo in Co.Ca. solo se il loro tipo è scelto per la stampa;
+4. chi non ha incarichi di servizio (per esempio un tesoriere di unità) compare nella sua unità
+   e anche in Co.Ca. con «Servizio di supporto al gruppo» (N.22);
+5. sviluppo subito e release 1.6.1.
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,

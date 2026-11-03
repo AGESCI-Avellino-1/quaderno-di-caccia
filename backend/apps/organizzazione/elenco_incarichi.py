@@ -1,8 +1,8 @@
 """The list of the group's roles as PDF, for the capigruppo (DEC-284): never stored.
 
-The capigruppo choose the kinds of role and how to group the capi: by unit (the capi with
-a support service go to the Co.Ca., with the capigruppo and the group's assistente
-ecclesiastico who serve no unit) or by role. Each capo: codice socio, name, surname, training level
+The capigruppo choose the kinds of role and how to group the capi: by unit (each role in
+its unit, the group's roles in the Co.Ca.; a capo in every section of their roles) or by
+role. Each capo: codice socio, name, surname, training level
 (today's: the app keeps no history of it). Roles in force today, or at the end of a past
 associative year.
 """
@@ -23,7 +23,6 @@ from apps.core.stampa import decora_pagina, intestazione
 
 from .models import (
     INCARICHI_DI_SERVIZIO,
-    SERVIZIO_IN_UNITA,
     Gruppo,
     Incarico,
     RuoloIncarico,
@@ -116,6 +115,9 @@ def _per_incarico(scelti: list[str], incarichi: list[Incarico]) -> list[Sezione]
 
 
 def _per_unita(scelti: set[str], incarichi: list[Incarico]) -> list[Sezione]:
+    """Every role in its section: a unit's roles in that unit, the group's in the Co.Ca. A
+    capo shows in every section where they hold a chosen role, with that section's roles
+    only next to the name, even if that lists them more than once (maintainer, 03/11)."""
     per_persona: dict[int, list[Incarico]] = {}
     for incarico in sorted(incarichi, key=lambda i: RUOLI_ELENCO.index(i.ruolo)):
         per_persona.setdefault(incarico.persona_id, []).append(incarico)
@@ -124,30 +126,22 @@ def _per_unita(scelti: set[str], incarichi: list[Incarico]) -> list[Sezione]:
     coca = "coca"
     unita_di: dict[int, Unita] = {}
     for propri in per_persona.values():
-        # Shown only with at least one chosen role; next to the name only chosen roles.
-        if not any(i.ruolo in scelti for i in propri):
+        scelti_propri = [i for i in propri if i.ruolo in scelti]
+        if not scelti_propri:
             continue
-        servizi = [i for i in propri if i.ruolo in SERVIZIO_IN_UNITA]
-        aggiuntivi = [i for i in propri if i.ruolo not in SERVIZIO_IN_UNITA]
-        if servizi:
-            for unita_id in dict.fromkeys(i.unita_id for i in servizi):
-                del_servizio = [i for i in servizi if i.unita_id == unita_id]
-                unita = del_servizio[0].unita
-                unita_di[unita_id] = unita
-                etichette = [
-                    _etichetta(i, unita) for i in del_servizio + aggiuntivi if i.ruolo in scelti
-                ]
-                righe_di.setdefault(unita_id, []).append(Riga(propri[0].persona, etichette))
-        else:
-            # Capigruppo and the group's assistente ecclesiastico serving no unit, the
-            # capi with a support service (and anyone with only an additional role): the
-            # Co.Ca.
-            etichette = [_etichetta(i) for i in aggiuntivi if i.ruolo in scelti]
-            if not any(
-                i.ruolo in INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO} for i in propri
-            ):
-                etichette.insert(0, SENZA_SERVIZIO)
-            righe_di.setdefault(coca, []).append(Riga(propri[0].persona, etichette))
+        persona = propri[0].persona
+        per_sezione: dict[object, list[str]] = {}
+        for i in scelti_propri:
+            if i.unita_id:
+                unita_di[i.unita_id] = i.unita
+                per_sezione.setdefault(i.unita_id, []).append(_etichetta(i, i.unita))
+            else:
+                per_sezione.setdefault(coca, []).append(_etichetta(i))
+        # No service at all (e.g. a unit treasurer only): in the Co.Ca. too (DEC-284).
+        if not any(i.ruolo in INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO} for i in propri):
+            per_sezione.setdefault(coca, []).insert(0, SENZA_SERVIZIO)
+        for sezione, etichette in per_sezione.items():
+            righe_di.setdefault(sezione, []).append(Riga(persona, etichette))
 
     risultato = [
         Sezione(str(unita_di[u]), sorted(righe_di[u], key=lambda r: _ordine_persona(r.persona)))

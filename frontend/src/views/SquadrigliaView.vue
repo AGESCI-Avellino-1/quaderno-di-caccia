@@ -56,7 +56,13 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
               :checked="rubrica.scelti.value.has(m.id)"
               @change="rubrica.alterna(m.id)"
             />
-            <Avatar :nome="`${m.nome} ${m.cognome}`" dimensione="sm" tenue aria-hidden="true" />
+            <Avatar
+              :nome="`${m.nome} ${m.cognome}`"
+              :scheda="m.scheda ? m.id : null"
+              dimensione="sm"
+              tenue
+              aria-hidden="true"
+            />
             <RouterLink
               v-if="s.sono_capo"
               :to="{ name: 'persona', params: { id: m.id } }"

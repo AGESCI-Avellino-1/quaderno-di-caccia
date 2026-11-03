@@ -5,6 +5,10 @@ Nella Home, in **Il mio gruppo**, tocca **Soci** per i capi e i ragazzi censiti,
 un'unità (in **Genitori**: i genitori dei ragazzi di quell'unità) o cerca per nome, poi
 tocca una persona per aprire la sua scheda. Un capo che è anche genitore è in tutte e due.
 
+Anche altrove (organigramma, staff e squadriglie nella pagina dell'unità, «La mia
+squadriglia») il cerchietto con le iniziali accanto a un nome apre la sua scheda: tocca il
+cerchietto, non il nome. Se non puoi vedere quella scheda, il cerchietto non si tocca.
+
 Nella scheda trovi, nell'ordine: i collegamenti alla Progressione e al fascicolo dell'anno,
 la foto, i dati di BuonaStrada, il percorso scout, le regole sul rapporto con il minore, la
 scheda sanitaria, le note, le quote, il telefono in squadriglia e l'accesso all'app.

@@ -392,12 +392,15 @@ e l'interessato riceve un'**email** quando cambiano l'email o i metodi di access
 cancellato. Pagina e azioni sono **bloccate mentre si usa l'app al posto di un altro**
 (DEC-167, `middleware.BLOCCATE`), confermato il 03/11.
 
-#### N.48 — Dall'avatar alla scheda della persona ⏳ (DEC-314)
+#### N.48 — Dall'avatar alla scheda della persona ✅ 03/11 (DEC-314)
 
 Cliccando sull'avatar accanto a un nome (solo sull'avatar) si apre la scheda della persona o del
 genitore. Deciso il 03/11: **lo dice il server**: ogni elenco di persone porta, per ognuna, se
 chi guarda può aprirne la scheda (dalla policy); solo allora l'avatar (`components/Avatar.vue`) è
-cliccabile. Il server ricontrolla comunque all'apertura.
+cliccabile. Il server ricontrolla comunque all'apertura. Fatto: `policy.scheda_apribile` (le
+stesse persone di `persone_visibili`, una volta per richiesta), campo `scheda` in `PersonaBreve`
+e nei membri di «La mia squadriglia»; avatar come link in organigramma, pagina dell'unità,
+squadriglia e scelta per la rubrica.
 
 #### N.49 — PDF degli incarichi: «NUOVO CENSITO» al posto del codice provvisorio ✅ 03/11 (DEC-315)
 

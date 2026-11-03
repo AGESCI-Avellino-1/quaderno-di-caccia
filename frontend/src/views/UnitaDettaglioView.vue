@@ -411,6 +411,7 @@ const iniziale = (u: Unita): UnitaIn => ({
           >
             <Avatar
               :nome="`${m.persona.nome} ${m.persona.cognome}`"
+              :scheda="m.persona.scheda ? m.persona.id : null"
               dimensione="xs"
               tenue
               aria-hidden="true"
@@ -462,7 +463,13 @@ const iniziale = (u: Unita): UnitaIn => ({
             :key="p.id"
             class="d-flex align-items-center flex-wrap gap-3 py-1"
           >
-            <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="xs" tenue aria-hidden="true" />
+            <Avatar
+              :nome="`${p.nome} ${p.cognome}`"
+              :scheda="p.scheda ? p.id : null"
+              dimensione="xs"
+              tenue
+              aria-hidden="true"
+            />
             <RouterLink :to="{ name: 'persona', params: { id: p.id } }">
               {{ p.nome }} {{ p.cognome }}
             </RouterLink>

@@ -345,6 +345,12 @@ class TelefonoMembro(Schema):
     telefono: str | None
     # Name of the parent whose number it is, when the child has none of their own.
     del_genitore: str | None
+    # The caller may open their file: the avatar is a link (DEC-314).
+    scheda: bool = False
+
+    @staticmethod
+    def resolve_scheda(obj, context) -> bool:
+        return policy.scheda_apribile(context["request"], obj["id"])
 
 
 class TelefonoGenitore(Schema):

@@ -16,6 +16,8 @@ export interface PersonaBreve {
   id: number
   nome: string
   cognome: string
+  /** The user may open the person's file: the avatar is a link (DEC-314). */
+  scheda?: boolean
 }
 
 export interface Profilo {

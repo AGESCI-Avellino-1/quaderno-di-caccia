@@ -106,7 +106,14 @@ watch(
             :checked="rubrica.scelti.value.has(p.id)"
             @change="rubrica.alterna(p.id)"
           />
-          <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="sm" tenue aria-hidden="true" />
+          <!-- The row ticks the person; the avatar still opens the file (DEC-314). -->
+          <Avatar
+            :nome="`${p.nome} ${p.cognome}`"
+            :scheda="p.id"
+            dimensione="sm"
+            tenue
+            aria-hidden="true"
+          />
           <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
         </label>
         <RouterLink

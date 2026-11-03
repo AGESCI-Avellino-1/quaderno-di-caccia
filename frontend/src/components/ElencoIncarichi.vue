@@ -57,6 +57,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <span class="fg-2 small">{{ i.ruolo_nome }}</span>
         <Avatar
           :nome="`${i.persona.nome} ${i.persona.cognome}`"
+          :scheda="i.persona.scheda ? i.persona.id : null"
           dimensione="xs"
           tenue
           aria-hidden="true"

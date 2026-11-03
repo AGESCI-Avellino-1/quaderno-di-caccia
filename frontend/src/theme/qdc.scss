@@ -372,3 +372,17 @@ body {
 .ag-sidebar--collapsed .qdc-titoletto-menu {
   display: none;
 }
+
+// An avatar that opens the person's file (DEC-314): only the circle is the link.
+.qdc-avatar-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 50%;
+  text-decoration: none;
+
+  &:hover .avatar,
+  &:focus-visible .avatar {
+    outline: 2px solid var(--ag-primary);
+    outline-offset: 1px;
+  }
+}

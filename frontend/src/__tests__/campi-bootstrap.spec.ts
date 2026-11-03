@@ -125,6 +125,26 @@ describe('Avatar', () => {
     expect(avatar.text()).toContain('LB')
     expect(avatar.emitted('errore')).toHaveLength(1)
   })
+
+  it('opens the file only when given the person, and only from the avatar', () => {
+    const conLink = mount(Avatar, {
+      props: { nome: 'Luca Bianchi', scheda: 7 },
+      attrs: { 'aria-hidden': 'true' },
+      global: { stubs: { RouterLink: RouterLinkStub } },
+    })
+    const link = conLink.getComponent(RouterLinkStub)
+    expect(link.props('to')).toEqual({ name: 'persona', params: { id: 7 } })
+    expect(link.attributes('aria-label')).toBe('Apri la scheda di Luca Bianchi')
+    expect(link.attributes('aria-hidden')).toBeUndefined()
+
+    const senza = mount(Avatar, {
+      props: { nome: 'Luca Bianchi', scheda: null },
+      attrs: { 'aria-hidden': 'true' },
+      global: { stubs: { RouterLink: RouterLinkStub } },
+    })
+    expect(senza.findComponent(RouterLinkStub).exists()).toBe(false)
+    expect(senza.attributes('aria-hidden')).toBe('true')
+  })
 })
 
 describe('CampoImporto', () => {

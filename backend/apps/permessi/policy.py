@@ -221,6 +221,20 @@ def persone_visibili(user) -> QuerySet[Persona]:
     return Persona.objects.filter(pk__in=ids)
 
 
+def scheda_apribile(request, persona_id: int) -> bool:
+    """Whether the caller may open the personal file of `persona_id` (DEC-314): the same
+    people as `persone_visibili`, the rule of GET /persone/{id}. Lists mark each person
+    with it, so the avatar becomes a link only then; computed once per request."""
+    visibili = getattr(request, "_qdc_schede_apribili", False)
+    if visibili is False:
+        utente = request.auth
+        visibili = (
+            None if e_capo(utente) else set(persone_visibili(utente).values_list("pk", flat=True))
+        )
+        request._qdc_schede_apribili = visibili
+    return visibili is None or persona_id in visibili
+
+
 def genitori_vedono(persona: Persona, categoria: str) -> bool:
     """Whether the parents of `persona` still see a category: always for a minor; for an
     adult, what they chose, everything until they choose (DEC-26). `categoria` is a

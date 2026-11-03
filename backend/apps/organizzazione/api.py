@@ -188,6 +188,13 @@ class PersonaBreve(Schema):
     id: int
     nome: str
     cognome: str
+    # The caller may open their file: the avatar is a link (DEC-314).
+    scheda: bool = False
+
+    @staticmethod
+    def resolve_scheda(obj, context) -> bool:
+        persona_id = obj["id"] if isinstance(obj, dict) else obj.pk
+        return policy.scheda_apribile(context["request"], persona_id)
 
 
 class IncaricoOut(Schema):

@@ -38,6 +38,14 @@ const router = createRouter({
       component: () => import('@/views/ProtezioneView.vue'),
     },
     {
+      // A ragazzo's personal link (DEC-309).
+      path: '/attiva/:codice/:segreto',
+      name: 'attiva',
+      component: () => import('@/views/AttivaView.vue'),
+      meta: { pubblica: true },
+      props: true,
+    },
+    {
       path: '/invito/:token',
       name: 'invito',
       component: () => import('@/views/InvitoView.vue'),

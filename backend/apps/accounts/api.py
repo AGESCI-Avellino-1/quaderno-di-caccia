@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
@@ -530,3 +530,80 @@ def crea_inviti(request, dati: NuoviInviti):
             {"id": p.pk, "nome": p.nome, "cognome": p.cognome, "motivo": m} for p, m in saltati
         ],
     }
+
+
+# --- A ragazzo's personal link (DEC-309) ---------------------------------------------------
+
+
+class StatoLinkAttivazione(Schema):
+    attivo_fino_al: datetime | None
+
+
+class LinkGenerato(Schema):
+    link: str
+    scadenza: datetime
+
+
+class LinkAperto(Schema):
+    nome: str
+
+
+class UsoLink(Schema):
+    codice_socio: str
+    segreto: str
+    data_nascita: date
+    email: str
+
+
+class LinkUsato(Schema):
+    email: str
+
+
+def _persona_per_link(request, persona_id: int) -> Persona:
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_generare_link_attivazione(request.auth, persona):
+        raise HttpError(404, "Persona non trovata.")
+    return persona
+
+
+@router.get("/persone/{persona_id}/link-attivazione", response=StatoLinkAttivazione)
+def stato_link_attivazione(request, persona_id: int):
+    from . import attivazione
+
+    voce = attivazione.attivo(_persona_per_link(request, persona_id))
+    return {"attivo_fino_al": voce.scadenza if voce else None}
+
+
+@router.post("/persone/{persona_id}/link-attivazione", response=LinkGenerato)
+def genera_link_attivazione(request, persona_id: int):
+    from . import attivazione
+
+    persona = _persona_per_link(request, persona_id)
+    try:
+        link, voce = attivazione.genera(persona, da=request.auth)
+    except attivazione.LinkNonValido as errore:
+        raise HttpError(400, str(errore)) from errore
+    return {"link": link, "scadenza": voce.scadenza}
+
+
+@router.get("/attivazione/{codice_socio}/{segreto}", response=LinkAperto, auth=None)
+def apri_link_attivazione(request, codice_socio: str, segreto: str):
+    """Who opened the link sees only the first name it is for."""
+    from . import attivazione
+
+    try:
+        voce = attivazione.controlla(codice_socio, segreto)
+    except attivazione.LinkNonValido as errore:
+        raise HttpError(400, str(errore)) from errore
+    return {"nome": voce.persona.nome}
+
+
+@router.post("/attivazione", response=LinkUsato, auth=None)
+def usa_link_attivazione(request, dati: UsoLink):
+    from . import attivazione
+
+    try:
+        invito = attivazione.usa(dati.codice_socio, dati.segreto, dati.data_nascita, dati.email)
+    except attivazione.LinkNonValido as errore:
+        raise HttpError(400, str(errore)) from errore
+    return {"email": invito.email}

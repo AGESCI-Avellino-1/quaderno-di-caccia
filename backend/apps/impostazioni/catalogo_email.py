@@ -67,6 +67,30 @@ _TIPI = [
         (Segnaposto("Cosa", "cosa è cambiato", "ha tolto le passkey.", indispensabile=True),),
     ),
     TipoEmail(
+        "attivazione_account",
+        "Attivazione dal link personale",
+        "Al ragazzo che ha aperto il suo link personale e ha scritto la sua email.",
+        "[Nome sito]: crea il tuo account",
+        "<p>Ciao [Nome],</p><p>per creare il tuo account del [Nome sito] apri questo link:<br>"
+        "[Link]</p><p>Il link vale fino al [Scadenza] e si può usare una sola volta.<br>Se non "
+        "sei stato tu a chiederlo, ignora questa email.</p>",
+        (
+            NOME,
+            _link("il link per creare l'account"),
+            _scadenza("fino a quando vale il link"),
+        ),
+    ),
+    TipoEmail(
+        "account_figlio",
+        "Account del figlio creato",
+        "Ai genitori, quando il figlio crea il suo account dal link personale.",
+        "[Nome sito]: [Ragazzo] ha creato il suo account",
+        "<p>Ciao,</p><p>[Ragazzo] ha creato il suo account del [Nome sito] con il link "
+        "personale ricevuto dai capi.</p><p>Se hai domande, scrivi ai capi "
+        "dell'unità.</p><p>[Nome sito]</p>",
+        (Segnaposto("Ragazzo", "nome e cognome del ragazzo", "Giulia Rossi", True),),
+    ),
+    TipoEmail(
         "reimposta_password",
         "Nuova password",
         "A chi chiede di reimpostare la password.",

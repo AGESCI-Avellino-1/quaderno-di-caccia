@@ -5,6 +5,17 @@
 Ti arriva un'email con l'invito dei capi. L'invito vale 14 giorni ed è legato alla tua
 email: usa la tua, non quella dei tuoi genitori.
 
+Se invece i capi o il tuo capo squadriglia ti mandano un **link personale** (per esempio su
+WhatsApp), aprilo, scrivi la tua data di nascita e la tua email e tocca **Continua**: ti arriva
+l'email con l'invito, e da lì vai avanti come sotto. Il link vale 30 giorni; se hai sbagliato a
+scrivere l'email, riapri il link e scrivi quella giusta. I tuoi genitori ricevono un'email
+quando hai creato l'account.
+
+:::{container} schermate
+![Il link personale sul telefono](../img/ragazzo/attiva-telefono.png){.telefono width="30%"}
+![Il link personale sul computer](../img/ragazzo/attiva-computer.png){.computer width="65%"}
+:::
+
 1. Apri il link dell'email.
 2. Scegli una password (almeno 8 caratteri) e tocca **Crea l'account**, oppure tocca
    **Continua con Google** o **Continua con Apple** se hai un account con la stessa email.

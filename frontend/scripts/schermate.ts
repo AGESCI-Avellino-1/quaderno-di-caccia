@@ -51,6 +51,9 @@ export const PERSONE = {
   genitoreMaggiorenne: 'antonio.russo',
 } as const
 
+/** The personal link generated in «capo/link-personale», opened by «ragazzo/attiva». */
+let linkPersonale = ''
+
 /** Opens a card of the home page, e.g. a child's page. */
 const apri = (testo: string) => async (pagina: Page) => {
   // On the Home the entry may be in a closed group (DEC-285): open it first.
@@ -472,6 +475,28 @@ const SCENE: Scena[] = [
       const prima = pagina.locator('.card .list-group-item input.check').first()
       await prima.waitFor()
       await prima.check()
+    },
+  },
+  {
+    // A novice of 16 without an account: the capogruppo generates his personal link.
+    nome: 'capo/link-personale',
+    chi: 'capogruppo',
+    percorso: '/soci',
+    prepara: async (pagina) => {
+      await apri('Verdi Paolo')(pagina)
+      await pagina.getByRole('button', { name: /^Genera (il|un) link/ }).click()
+      linkPersonale = (await pagina.locator('.text-break strong').first().textContent()) ?? ''
+    },
+    mostra: "Link personale per l'app",
+  },
+  {
+    // The same link opened by the ragazzo, birth date and email written.
+    nome: 'ragazzo/attiva',
+    percorso: '/accesso',
+    prepara: async (pagina) => {
+      await pagina.goto(linkPersonale)
+      await pagina.getByLabel('La tua data di nascita').fill('2010-09-20')
+      await pagina.getByLabel('La tua email').fill(`paolo.verdi@${DOMINIO}`)
     },
   },
   {

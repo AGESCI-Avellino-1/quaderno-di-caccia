@@ -7,6 +7,7 @@ import Avatar from '@/components/Avatar.vue'
 import BarraRubrica from '@/components/BarraRubrica.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
+import LinkPersonale from '@/components/LinkPersonale.vue'
 import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useRubrica } from '@/composables/useRubrica'
@@ -18,6 +19,8 @@ const { errore, inCorso, esegui } = useErrore()
 const squadriglie = ref<MiaSquadriglia[]>([])
 const copiaDel = ref<string | null>(null)
 const rubrica = useRubrica()
+// The member whose personal link the CSQ is generating (DEC-309).
+const linkPer = ref<number | null>(null)
 
 onMounted(async () => {
   const letto = await esegui(() => leggiConCache('mia-squadriglia', () => api.miaSquadriglia()))
@@ -82,6 +85,21 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
           <div v-if="m.del_genitore && m.telefono" class="fg-2 small">
             numero di {{ m.del_genitore }} (genitore)
           </div>
+          <button
+            v-if="m.link_attivazione && linkPer !== m.id"
+            type="button"
+            class="btn btn-link btn-sm p-0"
+            @click="linkPer = m.id"
+          >
+            Link per creare il suo account
+          </button>
+          <LinkPersonale
+            v-if="m.link_attivazione && linkPer === m.id"
+            :persona="m.id"
+            :nome="m.nome"
+            sempre
+            class="mt-3"
+          />
           <ul v-if="s.sono_capo && genitoriDi(s, m.id).length" class="list-unstyled small mb-0">
             <li v-for="g in genitoriDi(s, m.id)" :key="g.telefono + g.nome">
               <input

@@ -35,6 +35,13 @@ def collega_invito(request, user) -> None:
     invito.usato_il = timezone.now()
     invito.save(update_fields=["usato_il", "aggiornato_il"])
     request.session.pop(CHIAVE_SESSIONE_INVITO, None)
+    if invito.da_link_id:
+        # Asked through the ragazzo's personal link (DEC-309): spent, parents told.
+        from .attivazione import avvisa_genitori
+
+        invito.da_link.usato_il = invito.usato_il
+        invito.da_link.save(update_fields=["usato_il", "aggiornato_il"])
+        avvisa_genitori(persona)
     # The invitation reached this address: allauth then marks it verified (it asks
     # after save_user, when the invitation is already consumed), so no second
     # confirmation email and the new account is logged in at once.

@@ -18,6 +18,7 @@ export const PAGINE: Record<string, Pagina> = {
   sblocco: { titolo: 'Sblocca' },
   protezione: { titolo: 'Protezione del dispositivo' },
   invito: { titolo: 'Invito' },
+  attiva: { titolo: 'Crea il tuo account' },
   'verifica-email': { titolo: "Conferma dell'email" },
   'reimposta-password': { titolo: 'Nuova password' },
   persone: { titolo: 'Soci', soloCapi: true },

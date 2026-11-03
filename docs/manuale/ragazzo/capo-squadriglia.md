@@ -15,6 +15,11 @@ vedono. Usali solo per la squadriglia. La pagina funziona anche senza rete.
 
 Gli altri squadriglieri vedono solo i numeri gli uni degli altri.
 
+A uno squadrigliere dai 14 anni che non ha ancora l'account puoi dare il suo link personale:
+tocca **Link per creare il suo account** sotto il suo nome, poi **Genera il link**, e mandaglielo
+(per esempio su WhatsApp). Il link si vede solo in quel momento e vale 30 giorni; se lo generi di
+nuovo, quello di prima non vale più.
+
 Per salvare i numeri nella rubrica del telefono, con la rete, tocca **Aggiungi alla rubrica
 del telefono**, spunta squadriglieri e genitori (o tocca **Tutti**) e poi **Scarica i
 contatti**: il telefono ti propone di salvarli. Nel file ci sono solo nome e numeri; quando

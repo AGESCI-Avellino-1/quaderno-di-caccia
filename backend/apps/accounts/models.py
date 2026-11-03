@@ -106,6 +106,15 @@ class Invito(ModelloTracciato):
     consenso_genitore_metodo = models.CharField(
         max_length=20, choices=MetodoVerificaGenitore.choices, blank=True
     )
+    # Asked by the ragazzo through their personal link (DEC-309): the parents are told
+    # when the account is created.
+    da_link = models.ForeignKey(
+        "accounts.LinkAttivazione",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="inviti",
+    )
 
     class Meta:
         verbose_name = "invito"
@@ -180,3 +189,34 @@ class AzioneAccount(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.get_tipo_display()} ({self.email})"
+
+
+class LinkAttivazione(ModelloTracciato):
+    """A ragazzo's personal link to create their account (DEC-309): the codice socio and a
+    random secret, of which only the fingerprint is kept. 30 days, once; a new one voids
+    the old. Who opens it confirms the birth date: after a few wrong ones it is void."""
+
+    persona = models.ForeignKey(
+        "anagrafica.Persona", on_delete=models.CASCADE, related_name="link_attivazione"
+    )
+    impronta = models.CharField(max_length=64, unique=True, editable=False)
+    scadenza = models.DateTimeField()
+    creato_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    usato_il = models.DateTimeField(null=True, blank=True)
+    annullato_il = models.DateTimeField(null=True, blank=True)
+    date_sbagliate = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "link personale"
+        verbose_name_plural = "link personali"
+
+    def __str__(self) -> str:
+        return f"Link personale di {self.persona}"
+
+    @property
+    def valido(self) -> bool:
+        return (
+            self.usato_il is None and self.annullato_il is None and self.scadenza > timezone.now()
+        )

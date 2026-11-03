@@ -94,6 +94,22 @@ Gli inviti li mandano il capo unità e i capigruppo.
 
 L'invito vale 14 giorni; finché non viene usato lo puoi **annullare**.
 
+### Il link personale di un ragazzo
+
+Un ragazzo dai 14 ai 18 anni senza account può entrare anche senza che tu conosca la sua
+email: nella sua scheda, in **Link personale per l'app**, tocca **Genera il link** e mandaglielo
+come vuoi (**Condividi** sul telefono, o **Copia il link**). Lo può fare lo staff della sua
+unità, un capogruppo e il suo capo squadriglia. Il ragazzo conferma la data di nascita, scrive
+la sua email e riceve lì l'invito; i genitori ricevono un'email quando l'account è creato.
+
+Il link vale 30 giorni e una volta sola, e lo vedi solo appena generato: se lo perdi, generane
+uno nuovo (quello di prima smette di valere). Dopo 5 date di nascita sbagliate non vale più.
+
+:::{container} schermate
+![Il link personale sul telefono](../img/capo/link-personale-telefono.png){.telefono width="30%"}
+![Il link personale sul computer](../img/capo/link-personale-computer.png){.computer width="65%"}
+:::
+
 ### Più persone insieme
 
 In **Soci** o **Genitori** (scegli prima l'unità, se vuoi) tocca **Invita chi non ha un

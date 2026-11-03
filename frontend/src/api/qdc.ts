@@ -635,6 +635,8 @@ export interface TelefonoMembro extends PersonaBreve {
   telefono: string | null
   /** First name of the parent whose phone it is, when the child has none. */
   del_genitore: string | null
+  /** The CSQ may give them the personal link to create their account (DEC-309). */
+  link_attivazione?: boolean
 }
 
 export interface MiaSquadriglia {
@@ -2798,6 +2800,22 @@ export const api = {
     richiesta<{ id: number }>('/api/v1/inviti', { metodo: 'POST', corpo: dati }),
   annullaInvito: (id: number) =>
     richiesta<Invito>(`/api/v1/inviti/${id}/annulla`, { metodo: 'POST' }),
+  statoLinkAttivazione: (persona: number) =>
+    richiesta<{ attivo_fino_al: string | null }>(`/api/v1/persone/${persona}/link-attivazione`),
+  generaLinkAttivazione: (persona: number) =>
+    richiesta<{ link: string; scadenza: string }>(`/api/v1/persone/${persona}/link-attivazione`, {
+      metodo: 'POST',
+    }),
+  apriLinkAttivazione: (codice: string, segreto: string) =>
+    richiesta<{ nome: string }>(
+      `/api/v1/attivazione/${encodeURIComponent(codice)}/${encodeURIComponent(segreto)}`,
+    ),
+  usaLinkAttivazione: (dati: {
+    codice_socio: string
+    segreto: string
+    data_nascita: string
+    email: string
+  }) => richiesta<{ email: string }>('/api/v1/attivazione', { metodo: 'POST', corpo: dati }),
   accettaInvito: (token: string) =>
     richiesta<{ email: string; persona: string }>('/api/v1/inviti/accetta', {
       metodo: 'POST',

@@ -318,7 +318,7 @@ invito ancora valido. Le email passano dall'invio graduale (N.46). Fatto:
 (`InvitiMultipli.vue`); senza data di nascita un non genitore non si invita in blocco. Manuale e
 schermata.
 
-#### N.43 — Minorenni invitati con un link personale ⏳ (DEC-309) (cambia DEC-116)
+#### N.43 — Minorenni invitati con un link personale ✅ 03/11 (DEC-309)
 
 Deciso il 03/11:
 
@@ -329,6 +329,14 @@ Deciso il 03/11:
 - Lo generano lo **staff dell'unità**, i **capigruppo** e il **capo squadriglia** per i suoi
   squadriglieri; dai **14 anni** (DEC-117); solo per chi non ha ancora un account.
 - Quando il ragazzo attiva l'account, i **genitori ricevono un'email** di avviso.
+
+Fatto: `accounts/attivazione.py`, `LinkAttivazione` (del segreto resta solo l'impronta), link
+`/attiva/<codice socio>/<segreto>`; chi lo apre scrive data di nascita ed email e riceve lì un
+invito normale (email `attivazione_account`, subito), così l'indirizzo è confermato; il link si
+consuma alla creazione dell'account (un'email sbagliata si corregge riaprendolo), poi email
+`account_figlio` ai genitori; 5 date sbagliate e il link non vale più. Pannello «Link personale
+per l'app» nella scheda, pulsante in «La mia squadriglia» per il capo squadriglia. Manuale e
+schermate.
 
 #### N.44 — Riunioni separate dagli eventi, con serie, località e uniforme ⏳ (DEC-310)
 

@@ -302,6 +302,24 @@ def puo_invitare(user, persona: Persona) -> bool:
     return bool(unita & _unita_servite(user, {RuoloIncarico.CAPO_UNITA}))
 
 
+def puo_generare_link_attivazione(user, persona: Persona) -> bool:
+    """A ragazzo from 14 to 18 without an account (DEC-309, DEC-117): the staff of their
+    unit, the capigruppo, their capo squadriglia."""
+    if persona.utente_id is not None or e_capo_in_attesa(user):
+        return False
+    eta = persona.eta()
+    if eta is None or not 14 <= eta < 18:
+        return False
+    if e_capogruppo(user):
+        return True
+    unita = set(
+        Appartenenza.objects.attive().filter(persona=persona).values_list("unita_id", flat=True)
+    )
+    if unita & _unita_servite(user):
+        return True
+    return _membri_squadriglie(squadriglie_guidate(user)).filter(pk=persona.pk).exists()
+
+
 def tema_branca(user) -> str:
     """Theme key for the PWA (django-agesci-campania-theme): capi, lc, eg, rs, generico.
 

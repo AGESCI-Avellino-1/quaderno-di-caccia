@@ -347,6 +347,8 @@ class TelefonoMembro(Schema):
     del_genitore: str | None
     # The caller may open their file: the avatar is a link (DEC-314).
     scheda: bool = False
+    # The CSQ may give them the personal link to create their account (DEC-309).
+    link_attivazione: bool = False
 
     @staticmethod
     def resolve_scheda(obj, context) -> bool:
@@ -386,7 +388,7 @@ class NuovaImpostazioneTelefono(Schema):
     nascosto: bool = False
 
 
-def _membri(squadriglia: Squadriglia, capo: bool) -> tuple[list[dict], list[dict]]:
+def _membri(squadriglia: Squadriglia, capo: bool, utente) -> tuple[list[dict], list[dict]]:
     oggi = date.today()
     persone = [
         a.persona
@@ -413,6 +415,7 @@ def _membri(squadriglia: Squadriglia, capo: bool) -> tuple[list[dict], list[dict
                 "incarico": RuoloIncarico(ruolo).label if ruolo else None,
                 "telefono": (numero or None) if visibile else None,
                 "del_genitore": genitore.nome if genitore and visibile and numero else None,
+                "link_attivazione": capo and policy.puo_generare_link_attivazione(utente, p),
             }
         )
         if capo:
@@ -437,7 +440,7 @@ def mie_squadriglie(request):
     risultato = []
     for sq in policy.squadriglie_di(request.auth).select_related("unita").order_by("nome"):
         capo = sq.pk in guidate
-        membri, genitori = _membri(sq, capo)
+        membri, genitori = _membri(sq, capo, request.auth)
         risultato.append(
             {
                 "id": sq.pk,

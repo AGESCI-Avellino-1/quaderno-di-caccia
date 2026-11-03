@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 import { api, trasferimentoJson, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
 import AccountPersona from '@/components/AccountPersona.vue'
+import LinkPersonale from '@/components/LinkPersonale.vue'
 import AvviaImpersonazione from '@/components/AvviaImpersonazione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import CorrezioniPersona from '@/components/CorrezioniPersona.vue'
@@ -185,6 +186,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <TelefonoSquadriglia :id="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
+      <LinkPersonale v-if="online" :persona="persona.id" :nome="persona.nome" />
       <IscrizioneCapoGenitore
         v-if="online && persona.puo_iscrivere_in_coca"
         :persona="persona.id"

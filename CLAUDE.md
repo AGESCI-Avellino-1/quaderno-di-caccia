@@ -421,6 +421,23 @@ implements them:
   once with a Google login (`impostazioni.gmail`, DEC-278: the group's OAuth client, scope
   `gmail.send`, refresh token encrypted, sent through the Gmail API upload endpoint). A new email type that must
   always go is added to `SEMPRE`. Tests use locmem directly; `MAILERS_VERI` in
-  `tests/test_impostazioni.py` exercises the real path.
+  `tests/test_impostazioni.py` exercises the real path. Emails to many wait in a queue
+  (`impostazioni.coda`, DEC-311): blocks with a pause and a daily cap from the settings,
+  sent by the `posta` service of `compose.prod.yml` (`manage.py invia_email_in_coda
+  --continua`); what the person asks for (`posta.SUBITO`) goes at once. `QDC_EMAIL_IN_CODA`
+  is off in development and in the tests.
+- Meetings (DEC-310): not events for who uses the app (own page, never a fee), but each one
+  is still an `Evento` of type RIUNIONE, so attendance, calendar and the offline copy are
+  shared; `/eventi` leaves them out (`?riunioni=true` lists them), `/eventi` refuses to create
+  or change one (`api_riunioni.py` does). A series (`RiunioneRicorrente`) has its circle
+  (also the Consiglio degli Anziani), the linked unit, its `Localita` and the uniform, which a
+  meeting may override (`Evento.uniforme`, None = as the series). Turns of patrols and
+  sestiglie go round the unit's meetings (`eventi/turni.py`, DEC-312).
+- Accounts (DEC-308, DEC-309, DEC-313): several invitations at once
+  (`accounts.servizi.invita_molti`), a minor's personal link (`accounts/attivazione.py`: only
+  the secret's fingerprint is kept; it ends in an ordinary invitation), every account for the
+  technical administrator (`accounts/gestione.py`, actions with a reason in `AzioneAccount`,
+  blocked while impersonating). A parent enters the Co.Ca. in two steps that can be undone
+  (`iscrizioni.PassaggioInCoca`, DEC-307).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

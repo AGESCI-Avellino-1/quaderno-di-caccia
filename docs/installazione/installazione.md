@@ -134,17 +134,38 @@ sole all'avvio del container `web`. Quando `docker compose ps` mostra `web` in s
 l'indirizzo del sito: vedi la pagina di accesso. Se non la vedi, segui i
 [controlli](controlli) passo per passo.
 
-Quando il server si riavvia, con Docker i container ripartono da soli. Con Podman serve il
-servizio che li riavvia, da attivare una volta per l'utente che li ha avviati:
+## Il servizio di sistema
+
+Perché l'app parta da sola quando il server si riavvia, e per gestirla con `systemctl`,
+installa il servizio di sistema. Una volta, con l'utente che gestisce l'app (quello che ha
+dato `docker compose up`):
 
 ```bash
-systemctl --user enable --now podman-restart.service
-loginctl enable-linger "$USER"   # i container partono anche senza che l'utente entri
+cd /srv/qdc
+sudo scripts/installa-servizio.sh
 ```
 
-Poi riavvia il server una volta e controlla con `podman ps` che i container siano ripartiti:
-le versioni più vecchie di Podman riavviano solo i container con la regola `always`, non
-quelli con `unless-stopped` usata dall'app.
+Lo script capisce se c'è Docker o Podman, scrive `/etc/systemd/system/qdc.service` (i
+container girano con il tuo utente) e lo attiva. Con Podman senza root fa anche in modo che
+i container partano senza che nessuno entri nel server (`loginctl enable-linger`): il vecchio
+`podman-restart.service` non serve più.
+
+Da allora:
+
+```bash
+sudo systemctl status qdc     # com'è: «active (exited)» vuol dire avviata
+sudo systemctl restart qdc    # riavvia l'app
+sudo systemctl stop qdc       # ferma l'app
+sudo systemctl start qdc      # la avvia
+```
+
+`status` dice se il servizio ha avviato i container; com'è ciascun container lo dice
+`docker compose ps` (vedi i [controlli](controlli)). Riavvia il server una volta e
+controlla che l'app risponda.
+
+Con più installazioni sullo stesso server (per esempio un [server di prova](prova)) dai a
+ciascuna il suo nome: `sudo scripts/installa-servizio.sh --nome qdc-prova`. Per togliere il
+servizio senza fermare l'app: `sudo scripts/installa-servizio.sh --rimuovi`.
 
 ## Altre impostazioni in `.env`
 

@@ -13,7 +13,8 @@ Può:
 - impostare il **server di posta** e aprire il **Pannello di amministrazione** e la
   **modalità di prova delle email**;
 - mettere l'app in **manutenzione** e **sbloccare gli accessi** di chi ha sbagliato la
-  password troppe volte.
+  password troppe volte;
+- **aggiornare l'app** a una versione nuova, se cura anche il server.
 
 ## Il pannello di amministrazione
 
@@ -90,6 +91,34 @@ La pagina si aggiorna da sola ogni minuto.
 
 Per cambiare il messaggio tocca **Aggiorna il messaggio**; quando hai finito, **Termina la
 manutenzione**.
+
+## Aggiornare l'app
+
+Le versioni nuove escono su
+[GitHub](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases), ognuna con le sue
+note (cosa cambia, se c'è qualcosa da fare sul server) e il PDF del manuale. Leggi le note
+prima di aggiornare, e scegli un momento in cui l'app si usa poco: durante l'aggiornamento
+resta in manutenzione per qualche minuto.
+
+Sul server, con l'utente che gestisce l'app:
+
+```bash
+cd /srv/qdc
+scripts/aggiorna.sh
+```
+
+Lo script mette da solo l'app in manutenzione, fa il backup, installa la versione nuova,
+controlla che risponda e toglie la manutenzione. I passi, uno per uno, sono nella guida di
+installazione, in «Aggiornamenti».
+
+Se la versione nuova non risponde, lo script **torna da solo alla versione di prima**:
+
+- se dice che l'app è di nuovo alla versione di prima e risponde, non è cambiato niente:
+  segnala il problema con le righe che lo script ha mostrato;
+- se dice che il database era già cambiato, l'app resta in manutenzione: ripristina il backup
+  che lo script ti indica, come spiega la guida di installazione in «Backup e ripristino»,
+  poi togli la manutenzione da **Impostazioni**. Quello che era stato fatto dopo il backup si
+  perde: avvisa i capi.
 
 ## Gli accessi bloccati
 

@@ -46,6 +46,15 @@ quell'utente: di solito basta `chmod o+x` sulla cartella che lo blocca.
 
 ## 4. I container sono in salute
 
+Se hai installato il [servizio di sistema](installazione), prima guarda lui:
+
+```bash
+sudo systemctl status qdc
+```
+
+Deve dire `active (exited)`: ha avviato i container. Con `failed` il motivo è nelle righe
+sotto, o in `sudo journalctl -u qdc`. Poi i container:
+
 ```bash
 docker compose ps
 ```

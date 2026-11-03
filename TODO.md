@@ -101,7 +101,9 @@ Rif. DEC-97. Segnalazioni del maintainer del 03/11.
   Deciso il 03/11: «questo dispositivo» in tutti i messaggi della protezione dei dati e
   nel manuale dove li cita.
 
-#### N.23 — Avvio con systemd e aggiornamento ⏳
+#### N.23 — Avvio con systemd e aggiornamento ✅ 03/11 (servizio da provare su Linux)
+
+Fatto: `scripts/installa-servizio.sh`, `scripts/aggiorna.sh`, comando `manage.py manutenzione` (con test), guida di installazione (installazione, aggiornamenti, controlli) e capitolo dell'amministratore tecnico; DEC-292 nell'analisi. `aggiorna.sh` provato davvero con Podman su una copia di prova: da v1.4.0, aggiornamento riuscito, versione che non si costruisce, versione che non parte (torna indietro e toglie la manutenzione) e versione che cambia il database e non parte (lascia la manutenzione e indica il backup; ripristino della guida eseguito, l'app riparte). Il servizio systemd non si può provare su un Mac: file del servizio generato e controllato a vista; da provare su un server Linux (Docker e Podman), anche `systemctl restart` dentro `aggiorna.sh`.
 
 Rif. nuovo DEC-292 nell'analisi. Richiesta del maintainer (03/11): uno script che
 installa un servizio per avviare l'app con `systemctl` (start, stop, restart, status,
@@ -143,6 +145,8 @@ Sviluppato e coperto dai test, manca la prova vera.
 | --- | --- | --- |
 | Passkey e impronta, accesso con Google e Apple, su telefoni e account veri | maintainer | DEC-21, DEC-22 |
 | Banner per installare l'app su un iPhone e un Android veri | maintainer | N.15 |
+| Servizio systemd su un server Linux (Docker e Podman) e `scripts/aggiorna.sh` con il servizio | chi installa | N.23 |
+| Sblocco con impronta nell'app installata con Chrome sul Mac; passkey tolta da Password di Apple e nome mostrato | maintainer | N.24 |
 | Eventi e presenze (fase 3) nel browser | sviluppo | fase 3 |
 | Cancellare o archiviare un'unità nel browser | sviluppo | I.2 |
 | Interruttori delle email e server SMTP dalle Impostazioni nel browser | sviluppo | E.1, E.2 |

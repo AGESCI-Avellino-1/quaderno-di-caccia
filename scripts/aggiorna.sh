@@ -123,7 +123,7 @@ if [[ "$(gestione manutenzione 2>/dev/null || true)" == "attiva" ]]; then
   GIA_IN_MANUTENZIONE=true
   echo "L'app era già in manutenzione: resterà così alla fine."
 elif ! gestione manutenzione attiva 2>/dev/null; then
-  echo "Non riesco a mettere la manutenzione da qui (versione precedente alla 1.5?):"
+  echo "Non riesco a mettere la manutenzione da qui (la versione in uso è la 1.4 o precedente?):"
   echo "se puoi, mettila dall'app, in Impostazioni, prima di proseguire."
   chiedi "Proseguire senza?" || exit 1
 fi

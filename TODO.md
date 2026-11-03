@@ -43,7 +43,7 @@ svilupparla. Deciso il 03/11:
    logo AGESCI e deve tornare a quello del gruppo (il file in `resources/` e `QDC_LOGO` in
    `.env`), anche nelle note della versione.
 
-#### N.27 — Una sola passkey per dispositivo, per entrare e per sbloccare ✅ 03/11 (da provare sul Mac e sull'iPhone)
+#### N.27 — Una sola passkey per dispositivo, per entrare e per sbloccare ✅ 03/11 (provata dal maintainer in produzione)
 
 Fatto (DEC-295): la passkey di accesso creata con il PRF sblocca anche i dati; il segreto è tolto dalla risposta prima che allauth la salvi (test, e controllato nel database); `GET /api/v1/io/passkey` per gli id delle credenziali (bloccato in impersonazione); rimuovere la passkey spegne l'impronta e la segnala al gestore; senza PRF resta il PIN con il suggerimento di Safari sul Mac; messaggio chiaro all'accesso per una passkey sconosciuta. Provato in Chromium con un autenticatore virtuale con PRF: protezione, conferma della password, passkey unica (stesso id sul server), sblocco con l'impronta, accesso con la passkey, rimozione, passkey sconosciuta all'accesso. Scoperto provando: allauth 65.20 chiede di confermare la password prima di aggiungere una passkey anche subito dopo l'accesso; la pagina della protezione allora porta a «Password e sicurezza». Da provare dal maintainer sui dispositivi veri.
 
@@ -107,7 +107,9 @@ sacerdote, e nel menu delle nomine solo i presbiteri; nel PDF per unità prima l
 L/C, E/G, R/S per codice. Controllato su un'esportazione vera (in `ignored/`, solo conteggi): la
 professione è un elenco fisso di 25 valori con «PRESBITERO»; **non importati**: la nazionalità
 (codice numerico: serve la tabella dei codici di BuonaStrada `[da verificare]`) e gli incarichi
-associativi (colonne vuote in tutte le righe di «Ricerca Soci»).
+associativi (colonne vuote in tutte le righe di «Ricerca Soci»). In produzione (1.7.0) il
+maintainer ha reimportato il primo import unito in un file solo: professione arrivata, tutto
+funziona (03/11).
 
 #### N.30 — Foto del profilo nell'avatar ✅ 03/11
 
@@ -248,10 +250,9 @@ Sviluppato e coperto dai test, manca la prova vera.
 
 | Cosa | Chi | Rif. |
 | --- | --- | --- |
-| Passkey e impronta, accesso con Google e Apple, su telefoni e account veri | maintainer | DEC-21, DEC-22 |
+| Accesso con Google e Apple su account veri (passkey e impronta provate dal maintainer con la 1.6.0, 03/11) | maintainer | DEC-21, DEC-22 |
 | Banner per installare l'app su un iPhone e un Android veri | maintainer | N.15 |
 | Servizio systemd su un server Linux (Docker e Podman) e `scripts/aggiorna.sh` con il servizio | chi installa | N.23 |
-| Sblocco con impronta nell'app installata con Chrome sul Mac; passkey tolta da Password di Apple e nome mostrato | maintainer | N.24 |
 | Eventi e presenze (fase 3) nel browser | sviluppo | fase 3 |
 | Cancellare o archiviare un'unità nel browser | sviluppo | I.2 |
 | Interruttori delle email e server SMTP dalle Impostazioni nel browser | sviluppo | E.1, E.2 |

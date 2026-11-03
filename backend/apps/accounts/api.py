@@ -13,7 +13,7 @@ from apps.progressione.api import ambiente
 
 from .adapters import CHIAVE_SESSIONE_INVITO
 from .models import Invito, MetodoVerificaGenitore, User
-from .servizi import invia_invito
+from .servizi import invia_invito, invita_molti, perche_non_invitabile
 
 router = Router(tags=["account"])
 
@@ -476,3 +476,57 @@ def azioni_account(request):
         }
         for a in storico()
     ]
+
+
+# --- Several invitations at once (DEC-308) ---------------------------------------------------
+
+
+class CandidatoInvito(Schema):
+    id: int
+    nome: str
+    cognome: str
+    email: str
+
+
+class NuoviInviti(Schema):
+    persone: list[int]
+
+
+class Saltato(Schema):
+    id: int
+    nome: str
+    cognome: str
+    motivo: str
+
+
+class EsitoInviti(Schema):
+    invitati: int
+    saltati: list[Saltato]
+
+
+@router.get("/inviti/candidati", response=list[CandidatoInvito])
+def candidati_invito(request, unita: int | None = None, tipo: str | None = None):
+    """Who of the list (the same as GET /persone) may get an invitation now."""
+    from apps.anagrafica.api import elenco_persone
+
+    persone = elenco_persone(request, unita=unita, tipo=tipo).filter(utente__isnull=True)
+    return [
+        p
+        for p in persone.exclude(email__isnull=True).exclude(email="").prefetch_related("inviti")
+        if perche_non_invitabile(request.auth, p) is None
+    ]
+
+
+@router.post("/inviti/molti", response=EsitoInviti)
+def crea_inviti(request, dati: NuoviInviti):
+    if len(dati.persone) > 500:
+        raise HttpError(400, "Al massimo 500 persone alla volta.")
+    persone = Persona.objects.filter(pk__in=dati.persone).prefetch_related("inviti")
+    persone = persone.order_by("cognome", "nome")
+    invitati, saltati = invita_molti(request.auth, persone)
+    return {
+        "invitati": len(invitati),
+        "saltati": [
+            {"id": p.pk, "nome": p.nome, "cognome": p.cognome, "motivo": m} for p, m in saltati
+        ],
+    }

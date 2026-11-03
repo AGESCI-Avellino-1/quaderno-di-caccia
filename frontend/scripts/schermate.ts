@@ -463,6 +463,18 @@ const SCENE: Scena[] = [
     mostra: "Accesso all'app",
   },
   {
+    // The parents of the reparto who may get an invitation, one ticked; none sent.
+    nome: 'capo/inviti-multipli',
+    chi: 'capoReparto',
+    percorso: '/genitori',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Invita chi non ha un account' }).click()
+      const prima = pagina.locator('.card .list-group-item input.check').first()
+      await prima.waitFor()
+      await prima.check()
+    },
+  },
+  {
     nome: 'capo/campo',
     chi: 'capoReparto',
     percorso: '/campo',

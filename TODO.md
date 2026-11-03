@@ -307,12 +307,16 @@ Si **annulla finché il codice è provvisorio** (cioè finché l'import di Buona
 riconosce), anche dopo l'invito: torna solo genitore e gli incarichi dati nel frattempo si
 chiudono. Il **link di iscrizione in Co.Ca. di DEC-282 si toglie**.
 
-#### N.42 — Inviti a più persone insieme ⏳ (DEC-308)
+#### N.42 — Inviti a più persone insieme ✅ 03/11 (DEC-308)
 
 Deciso il 03/11: nell'**elenco delle persone** un filtro «senza account», caselle di selezione e
 «Invita i selezionati». Lo usa chi oggi può invitare quelle persone (la policy si controlla per
 ognuna). Solo genitori e maggiorenni (capi e ragazzi) con un'email, senza account e senza un
-invito ancora valido. Le email passano dall'invio graduale (N.46).
+invito ancora valido. Le email passano dall'invio graduale (N.46). Fatto:
+`accounts.servizi.perche_non_invitabile` e `invita_molti`, `/inviti/candidati` e `/inviti/molti`
+(chi viene saltato torna con il motivo), «Invita chi non ha un account» in Soci e Genitori
+(`InvitiMultipli.vue`); senza data di nascita un non genitore non si invita in blocco. Manuale e
+schermata.
 
 #### N.43 — Minorenni invitati con un link personale ⏳ (DEC-309) (cambia DEC-116)
 

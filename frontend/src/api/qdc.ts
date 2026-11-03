@@ -49,6 +49,19 @@ export interface AzioneAccountFatta {
   fatta_da: string
 }
 
+/** Who may get an invitation now, in a bulk sending (DEC-308). */
+export interface CandidatoInvito {
+  id: number
+  nome: string
+  cognome: string
+  email: string
+}
+
+export interface EsitoInviti {
+  invitati: number
+  saltati: { id: number; nome: string; cognome: string; motivo: string }[]
+}
+
 export interface PersonaBreve {
   id: number
   nome: string
@@ -2759,6 +2772,15 @@ export const api = {
       corpo: {},
     }),
   /** `tipo`: members (capi and ragazzi) or parents; `unita`: of that unit. */
+  candidatiInvito: (unita?: number, tipo?: 'soci' | 'genitori') => {
+    const query = new URLSearchParams()
+    if (unita) query.set('unita', String(unita))
+    if (tipo) query.set('tipo', tipo)
+    const testo = query.toString()
+    return richiesta<CandidatoInvito[]>(`/api/v1/inviti/candidati${testo ? `?${testo}` : ''}`)
+  },
+  invitaMolti: (persone: number[]) =>
+    richiesta<EsitoInviti>('/api/v1/inviti/molti', { metodo: 'POST', corpo: { persone } }),
   persone: (unita?: number, tipo?: 'soci' | 'genitori') => {
     const query = new URLSearchParams()
     if (unita) query.set('unita', String(unita))

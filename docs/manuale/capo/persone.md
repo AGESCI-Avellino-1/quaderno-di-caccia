@@ -94,6 +94,20 @@ Gli inviti li mandano il capo unità e i capigruppo.
 
 L'invito vale 14 giorni; finché non viene usato lo puoi **annullare**.
 
+### Più persone insieme
+
+In **Soci** o **Genitori** (scegli prima l'unità, se vuoi) tocca **Invita chi non ha un
+account**: compaiono i genitori e i maggiorenni, capi e ragazzi, che hanno un'email e non hanno
+ancora un account né un invito valido. Spunta chi invitare (o tocca **Tutti**) e poi **Manda gli
+inviti**. Le email partono un po' alla volta; se qualcuno nel frattempo non si poteva più
+invitare, l'app ti dice chi e perché. I ragazzi minorenni non sono nell'elenco: per loro c'è il
+link personale.
+
+:::{container} schermate
+![Gli inviti a più genitori sul telefono](../img/capo/inviti-multipli-telefono.png){.telefono width="30%"}
+![Gli inviti a più genitori sul computer](../img/capo/inviti-multipli-computer.png){.computer width="65%"}
+:::
+
 ## Chi ha visto i dati delicati
 
 In fondo alla scheda, **Chi ha visto i dati delicati** è il registro di ogni lettura, stampa

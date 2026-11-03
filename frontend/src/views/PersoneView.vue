@@ -6,6 +6,7 @@ import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
 import BarraRubrica from '@/components/BarraRubrica.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import InvitiMultipli from '@/components/InvitiMultipli.vue'
 import SceltaChip from '@/components/SceltaChip.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useRubrica } from '@/composables/useRubrica'
@@ -30,6 +31,8 @@ const filtro = ref('')
 const rubrica = useRubrica()
 rubrica.attiva.value = route.query.rubrica === '1'
 const copiaDel = ref<string | null>(null)
+// Several invitations at once (DEC-308): the list gives way to the candidates.
+const invitando = ref(false)
 
 const visibili = computed(() => {
   const testo = filtro.value.trim().toLowerCase()
@@ -91,9 +94,15 @@ watch(
         <input v-model="filtro" class="form-control" type="search" placeholder="Cerca per nome" />
       </div>
     </div>
-    <BarraRubrica :rubrica="rubrica" :tutti="visibili.map((p) => p.id)" />
+    <BarraRubrica v-if="!invitando" :rubrica="rubrica" :tutti="visibili.map((p) => p.id)" />
+    <InvitiMultipli
+      v-if="sessione.capo && !rubrica.attiva.value"
+      v-model:attivo="invitando"
+      :unita="unitaScelta"
+      :tipo="tipo"
+    />
     <p v-if="inCorso" class="fg-2">Caricamento…</p>
-    <div v-else class="list-group">
+    <div v-else-if="!invitando" class="list-group">
       <template v-for="p in visibili" :key="p.id">
         <!-- Choosing whom to put in the phone's contacts (DEC-302). -->
         <label

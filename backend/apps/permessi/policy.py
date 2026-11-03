@@ -503,11 +503,13 @@ def puo_nominare(
     if ruolo in {RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}:
         return e_capogruppo(user)  # DEC-10
     if ruolo in {
+        RuoloIncarico.SUPPORTO_GRUPPO,
+        RuoloIncarico.SUPPORTO_EDUCATIVO,
         RuoloIncarico.A_DISPOSIZIONE,
         RuoloIncarico.AMMINISTRATORE,
         RuoloIncarico.AE_GRUPPO,
     }:
-        return e_capogruppo(user)  # DEC-165, DEC-166, DEC-281
+        return e_capogruppo(user)  # DEC-165, DEC-166, DEC-281, DEC-293
     if ruolo in {RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.AE_UNITA}:
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:

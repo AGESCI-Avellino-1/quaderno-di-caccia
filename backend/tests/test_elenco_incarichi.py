@@ -36,24 +36,27 @@ def _incarico(persona, ruolo, gruppo=None, unita=None, **date_):
 
 @pytest.fixture
 def capi(gruppo, reparto, capo, capogruppo):
-    """capo: capo unità of the reparto; capogruppo: no unit. Plus a capo at disposal, a
-    capogruppo who serves the reparto too (and is group treasurer)."""
+    """capo: capo unità of the reparto; capogruppo: no unit. Plus a capo serving the
+    group, a capogruppo who serves the reparto too (and is group treasurer), and a group
+    treasurer with no service."""
     disponibile = crea_capo("Dario", "Disponibile", "disp@example.invalid")
-    _incarico(disponibile, R.A_DISPOSIZIONE, gruppo=gruppo)
+    _incarico(disponibile, R.SUPPORTO_GRUPPO, gruppo=gruppo)
+    tesoriere = crea_capo("Tea", "Tesoriera", "tesoriera@example.invalid")
+    _incarico(tesoriere, R.TESORIERE_GRUPPO, gruppo=gruppo)
     doppio = crea_capo("Elsa", "Doppia", "doppia@example.invalid")
     _incarico(doppio, R.CAPOGRUPPO, gruppo=gruppo)
     _incarico(doppio, R.STAFF, unita=reparto)
     _incarico(doppio, R.TESORIERE_GRUPPO, gruppo=gruppo)
     capo.livello_formazione = 3
     capo.save()
-    return {"disponibile": disponibile, "doppio": doppio}
+    return {"disponibile": disponibile, "doppio": doppio, "tesoriere": tesoriere}
 
 
 def _nomi(sezione):
     return [(r.persona.cognome, r.incarichi) for r in sezione.righe]
 
 
-def test_per_unita_la_coca_ha_capigruppo_senza_unita_e_capi_a_disposizione(
+def test_per_unita_la_coca_ha_capigruppo_senza_unita_e_capi_di_supporto(
     capi, capo, capogruppo, reparto, coca
 ):
     sezioni = elenco.sezioni(TUTTI, "unita", date.today())
@@ -63,7 +66,20 @@ def test_per_unita_la_coca_ha_capigruppo_senza_unita_e_capi_a_disposizione(
         ("Capo", ["Capo unità"]),
         ("Doppia", ["Staff di unità", "Capogruppo", "Tesoriere di gruppo"]),
     ]
-    assert _nomi(sezioni[1]) == [("Disponibile", ["A disposizione"]), ("Gruppo", ["Capogruppo"])]
+    # The treasurer with no service shows the support service, in the PDF only.
+    assert _nomi(sezioni[1]) == [
+        ("Disponibile", ["Servizio di supporto al gruppo"]),
+        ("Gruppo", ["Capogruppo"]),
+        ("Tesoriera", ["Servizio di supporto al gruppo", "Tesoriere di gruppo"]),
+    ]
+
+
+def test_per_unita_servizio_di_supporto_anche_se_non_scelto(capi, coca):
+    # Only the treasurers chosen: the treasurer with no service still shows it.
+    sezioni = elenco.sezioni({R.TESORIERE_GRUPPO}, "unita", date.today())
+    assert _nomi(sezioni[-1]) == [
+        ("Tesoriera", ["Servizio di supporto al gruppo", "Tesoriere di gruppo"])
+    ]
 
 
 def test_per_unita_solo_gli_incarichi_scelti(capi, reparto):
@@ -96,7 +112,9 @@ def test_anno_passato_solo_gli_incarichi_attivi_alla_fine(gruppo, reparto, coca)
     assert elenco.giorno_di_riferimento(None, oggi=oggi) == oggi
 
 
-def test_pdf_solo_per_i_capigruppo(capi, capo, capogruppo, ragazza, csq, genitore, estraneo):
+def test_pdf_solo_per_i_capigruppo(
+    capi, capo, capogruppo, gruppo, ragazza, csq, genitore, estraneo
+):
     assert policy.puo_esportare_incarichi(capogruppo.utente)
     for chi in (capo, ragazza, csq, genitore, estraneo):
         assert not policy.puo_esportare_incarichi(chi.utente)
@@ -104,6 +122,17 @@ def test_pdf_solo_per_i_capigruppo(capi, capo, capogruppo, ragazza, csq, genitor
         url = "/api/v1/gruppo/incarichi/elenco.pdf?ruoli=CAPOGRUPPO"
         assert _client(chi).get(url).status_code == 403
 
+    opzioni = _client(capogruppo).get("/api/v1/gruppo/incarichi/elenco").json()
+    # "A disposizione" only once someone held it (DEC-293).
+    senza = [r.value for r in elenco.RUOLI_ELENCO if r != R.A_DISPOSIZIONE]
+    assert [r["valore"] for r in opzioni["ruoli"]] == senza
+    _incarico(
+        capi["tesoriere"],
+        R.A_DISPOSIZIONE,
+        gruppo=gruppo,
+        dal=date(2024, 1, 1),
+        al=date(2025, 1, 1),
+    )
     opzioni = _client(capogruppo).get("/api/v1/gruppo/incarichi/elenco").json()
     assert [r["valore"] for r in opzioni["ruoli"]] == [r.value for r in elenco.RUOLI_ELENCO]
     assert opzioni["anni"][0]["valore"] == str(AnnoAssociativo.corrente().anno_fine)

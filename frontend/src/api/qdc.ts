@@ -503,9 +503,9 @@ export interface IncarichiGruppo {
   /** Additional group roles: capigruppo, group treasurers, technical administrators. */
   incarichi: Incarico[]
   nomina: Scelta[]
-  /** Capi of the Co.Ca. serving in no unit for now. */
-  a_disposizione: Incarico[]
-  nomina_a_disposizione: Scelta[]
+  /** Capi of the Co.Ca. serving outside the units; "a disposizione" until replaced. */
+  supporto: Incarico[]
+  nomina_supporto: Scelta[]
   /** For the capigruppo: capi with no service at all. */
   senza_servizio: PersonaBreve[]
 }

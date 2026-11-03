@@ -74,6 +74,16 @@ def test_anni_di_servizio_dall_app_e_ricostruiti(capo, capogruppo, reparto):
     assert not ServizioPassato.objects.exists()
 
 
+def test_anni_ricostruiti_con_i_servizi_di_supporto(capo):
+    # DEC-293: the two support services need no unit; "a disposizione" is no longer offered.
+    url = f"/api/v1/persone/{capo.pk}/fascicolo-capo/servizi"
+    dati = _post(capo, url, {"anno": 2016, "ruolo": "SUPPORTO_EDUCATIVO"}).json()
+    vecchio = next(a for a in dati["anni"] if a["anno"] == 2016)
+    assert vecchio["ricostruiti"][0]["testo"] == "Servizio di supporto all'azione educativa"
+    assert "A_DISPOSIZIONE" not in {r["valore"] for r in dati["ruoli_passati"]}
+    assert _post(capo, url, {"anno": 2017, "ruolo": "A_DISPOSIZIONE"}).status_code == 400
+
+
 def test_i_campi_buonacaccia_compaiono_da_soli(capo, capogruppo):
     from apps.buonacaccia import servizi as bc
     from apps.buonacaccia.models import EventoBuonaCaccia

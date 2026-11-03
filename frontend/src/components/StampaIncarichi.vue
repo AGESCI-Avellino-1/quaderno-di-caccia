@@ -56,7 +56,7 @@ const indirizzo = computed(() =>
       <div class="form-field">
         <input id="elenco-unita" v-model="raggruppa" type="radio" class="radio" value="unita" />
         <label for="elenco-unita">
-          Per unità (chi è a disposizione, e i capigruppo senza un'unità, in Co.Ca.)
+          Per unità (chi fa un servizio di supporto, e i capigruppo senza un'unità, in Co.Ca.)
         </label>
       </div>
       <div class="form-field">

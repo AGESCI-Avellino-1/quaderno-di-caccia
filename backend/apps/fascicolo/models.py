@@ -19,6 +19,9 @@ class RuoloPassato(models.TextChoices):
     STAFF = "STAFF", "Staff di unità"
     CAPOGRUPPO = "CAPOGRUPPO", "Capogruppo"
     TESORIERE = "TESORIERE", "Tesoriere"
+    SUPPORTO_GRUPPO = "SUPPORTO_GRUPPO", "Servizio di supporto al gruppo"
+    SUPPORTO_EDUCATIVO = "SUPPORTO_EDUCATIVO", "Servizio di supporto all'azione educativa"
+    # Replaced by the two above (DEC-293): kept for the years already rebuilt.
     A_DISPOSIZIONE = "A_DISPOSIZIONE", "A disposizione"
     ALTRO = "ALTRO", "Altro"
 
@@ -36,7 +39,7 @@ class ServizioPassato(ModelloTracciato):
     unita_testo = models.CharField(max_length=120, blank=True)
     # The group of the year of service; empty: this group (DEC-287).
     gruppo = models.CharField(max_length=160, blank=True)
-    ruolo = models.CharField(max_length=16, choices=RuoloPassato.choices)
+    ruolo = models.CharField(max_length=20, choices=RuoloPassato.choices)
     note = models.CharField(max_length=300, blank=True)
     registrato_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"

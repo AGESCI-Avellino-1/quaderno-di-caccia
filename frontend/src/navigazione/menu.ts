@@ -182,7 +182,7 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           icona: 'person-badge',
           to: '/gruppo',
           descrizione: p.capo
-            ? 'Capigruppo, tesorieri, amministratori e capi a disposizione'
+            ? 'Capigruppo, tesorieri, amministratori e servizi di supporto'
             : 'Nomina il primo capogruppo del gruppo',
         },
         (decide > 0 || p.capogruppo || (p.unita_servizio?.length ?? 0) > 0) && {

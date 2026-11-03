@@ -57,11 +57,14 @@ In **Il mio gruppo**, tocca **Incarichi di gruppo**.
   due ciascuno), amministratore tecnico. Si aggiungono al servizio: lo stesso capo può
   essere capo unità e tesoriere. Qui si nomina anche l'**Assistente ecclesiastico di
   gruppo**, che nell'app ha gli stessi poteri di un capogruppo.
-- **A disposizione**: i capi della Comunità capi che oggi non fanno servizio in un'unità.
-  Quando un capo viene assegnato a un'unità, «a disposizione» finisce da solo.
+- **Servizi di supporto**: i capi della Comunità capi che fanno servizio fuori dalle unità,
+  nel **servizio di supporto al gruppo** o nel **servizio di supporto all'azione
+  educativa**; uno solo per capo. Quando un capo viene assegnato a un'unità, il servizio
+  di supporto finisce da solo. Prima c'era «a disposizione»: chi lo ha ancora compare in
+  un avviso; scegli per lui uno dei due servizi e «a disposizione» si chiude da solo.
 
-In alto un avviso elenca i **capi senza servizio**: assegnali a un'unità o mettili a
-disposizione. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è il gruppo.
+In alto un avviso elenca i **capi senza servizio**: assegnali a un'unità o a un servizio di
+supporto. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è il gruppo.
 
 ### L'elenco degli incarichi
 
@@ -70,9 +73,11 @@ intestata del gruppo con codice socio, cognome, nome e livello di formazione cap
 capo.
 
 1. Spunta gli **Incarichi da includere** (di base ci sono tutti).
-2. Scegli come raggruppare i capi: **Per unità** (chi è a disposizione, e i capigruppo e
-   l'assistente ecclesiastico di gruppo senza un'unità, vanno in Comunità capi; accanto al
-   nome gli altri incarichi spuntati, per esempio tesoriere) o **Per incarico**.
+2. Scegli come raggruppare i capi: **Per unità** (chi fa un servizio di supporto, e i
+   capigruppo e l'assistente ecclesiastico di gruppo senza un'unità, vanno in Comunità capi;
+   accanto al nome gli altri incarichi spuntati, per esempio tesoriere; un capo che ha solo
+   un incarico come tesoriere, senza servizio, compare con «Servizio di supporto al
+   gruppo») o **Per incarico**.
 3. Scegli l'**Anno associativo**: quello in corso dà gli incarichi di oggi; un anno passato
    quelli che erano in corso alla sua fine, il 30 settembre.
 4. Tocca **Scarica il PDF**.

@@ -26,6 +26,7 @@ from .models import (
     RUOLI_DI_GRUPPO,
     RUOLI_DI_SQUADRIGLIA,
     RUOLI_DI_UNITA,
+    SERVIZI_DI_SUPPORTO,
     SERVIZIO_IN_UNITA,
     Ambiente,
     Composizione,
@@ -466,12 +467,15 @@ class IncarichiGruppo(Schema):
     # Additional group roles: capigruppo, group treasurers, technical administrators.
     incarichi: list[IncaricoOut]
     nomina: list[Scelta]
-    # Capi of the Co.Ca. serving in no unit for now.
-    a_disposizione: list[IncaricoOut]
-    nomina_a_disposizione: list[Scelta]
+    # Capi of the Co.Ca. serving outside the units; "a disposizione" until replaced.
+    supporto: list[IncaricoOut]
+    nomina_supporto: list[Scelta]
     # For the capigruppo: capi with no service at all, to sort out.
     senza_servizio: list[PersonaBreve]
 
+
+# "A disposizione" is no longer assigned (DEC-293).
+NUOVI_SERVIZI_DI_SUPPORTO = (RuoloIncarico.SUPPORTO_GRUPPO, RuoloIncarico.SUPPORTO_EDUCATIVO)
 
 RUOLI_AGGIUNTIVI_DI_GRUPPO = (
     RuoloIncarico.CAPOGRUPPO,
@@ -482,7 +486,7 @@ RUOLI_AGGIUNTIVI_DI_GRUPPO = (
 
 
 def capi_senza_servizio():
-    """Active capi with neither a unit nor "a disposizione" (DEC-165). A capogruppo
+    """Active capi with neither a unit nor a support service (DEC-165, DEC-293). A capogruppo
     serves the group: not one to sort out (maintainer, 02/11)."""
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
     in_servizio = Incarico.objects.attivi().filter(
@@ -502,8 +506,8 @@ def incarichi_di_gruppo(request):
     return {
         "incarichi": list(_incarichi(ruolo__in=RUOLI_AGGIUNTIVI_DI_GRUPPO)),
         "nomina": _nomina(request.auth, RUOLI_AGGIUNTIVI_DI_GRUPPO),
-        "a_disposizione": list(_incarichi(ruolo=RuoloIncarico.A_DISPOSIZIONE)),
-        "nomina_a_disposizione": _nomina(request.auth, (RuoloIncarico.A_DISPOSIZIONE,)),
+        "supporto": list(_incarichi(ruolo__in=SERVIZI_DI_SUPPORTO)),
+        "nomina_supporto": _nomina(request.auth, NUOVI_SERVIZI_DI_SUPPORTO),
         "senza_servizio": (
             list(capi_senza_servizio()) if policy.e_capogruppo(request.auth) else []
         ),
@@ -533,8 +537,13 @@ def opzioni_elenco_incarichi(request):
     corrente = AnnoAssociativo.corrente().anno_fine
     primo = Incarico.objects.filter(ruolo__in=RUOLI_ELENCO).order_by("data_inizio").first()
     dal = AnnoAssociativo.da_data(primo.data_inizio).anno_fine if primo else corrente
+    usati = set(Incarico.objects.values_list("ruolo", flat=True).distinct())
     return {
-        "ruoli": [{"valore": r.value, "nome": r.label} for r in RUOLI_ELENCO],
+        "ruoli": [
+            {"valore": r.value, "nome": r.label}
+            for r in RUOLI_ELENCO
+            if r != RuoloIncarico.A_DISPOSIZIONE or r in usati
+        ],
         "anni": [
             {"valore": str(a), "nome": AnnoAssociativo(a).etichetta}
             for a in range(corrente, dal - 1, -1)
@@ -588,6 +597,10 @@ class NuovoIncarico(Schema):
 
 @router.post("/incarichi", response={201: IncaricoOut})
 def crea_incarico(request, dati: NuovoIncarico):
+    if dati.ruolo == RuoloIncarico.A_DISPOSIZIONE:
+        raise HttpError(
+            400, "«A disposizione» non si assegna più: scegli uno dei due servizi di supporto."
+        )
     incarico = Incarico(
         persona=get_object_or_404(Persona, pk=dati.persona_id),
         ruolo=dati.ruolo,
@@ -607,15 +620,18 @@ def crea_incarico(request, dati: NuovoIncarico):
         raise HttpError(403, "Non puoi assegnare questo incarico.")
     with transaction.atomic():
         if dati.ruolo in SERVIZIO_IN_UNITA:
-            # Back in a unit: "a disposizione" ends by itself.
-            _chiudi_a_disposizione(incarico.persona, incarico.data_inizio)
+            # Back in a unit: the support service ends by itself (DEC-165, DEC-293).
+            _chiudi(incarico.persona, incarico.data_inizio, SERVIZI_DI_SUPPORTO)
+        elif dati.ruolo in SERVIZI_DI_SUPPORTO:
+            # One of the two new services replaces "a disposizione" (DEC-293).
+            _chiudi(incarico.persona, incarico.data_inizio, {RuoloIncarico.A_DISPOSIZIONE})
         _salva(incarico)
     return Status(201, incarico)
 
 
-def _chiudi_a_disposizione(persona: Persona, giorno: date) -> None:
+def _chiudi(persona: Persona, giorno: date, ruoli: set[RuoloIncarico]) -> None:
     for incarico in Incarico.objects.filter(
-        persona=persona, ruolo=RuoloIncarico.A_DISPOSIZIONE, data_inizio__lte=giorno
+        persona=persona, ruolo__in=ruoli, data_inizio__lte=giorno
     ).filter(Q(data_fine__isnull=True) | Q(data_fine__gt=giorno)):
         if incarico.data_inizio == giorno:
             incarico.delete()  # started the same day: never really in effect

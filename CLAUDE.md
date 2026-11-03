@@ -377,11 +377,13 @@ implements them:
   `Partecipazione`, plus `QuotaFormazione` for capi training (types of camp: DEC-170).
 - Service and additional roles (DEC-165, DEC-166;
   `organizzazione.models`): service roles (`INCARICHI_DI_SERVIZIO`: capo unità, staff,
-  `A_DISPOSIZIONE` for a capo of the Co.Ca. serving in no unit) and additional roles
+  and, outside the units, one of the `SERVIZI_DI_SUPPORTO`: `SUPPORTO_GRUPPO`,
+  `SUPPORTO_EDUCATIVO`, which replaced `A_DISPOSIZIONE`, kept only for the history and
+  replaced by itself when one of the two is assigned, DEC-293) and additional roles
   (`RUOLI_AGGIUNTIVI`: capogruppo, group and unit treasurers, `AMMINISTRATORE`) add up
-  freely. A capo may serve several units; "a disposizione" excludes any unit service
-  (`Incarico._controlla_servizio`), and ends by itself when the capo is appointed to a
-  unit (`organizzazione.api.crea_incarico`). The capigruppo appoint both new roles and
+  freely. A capo may serve several units; a support service excludes any unit service
+  and the other support service (`Incarico._controlla_servizio`), and ends by itself when
+  the capo is appointed to a unit (`organizzazione.api.crea_incarico`). The capigruppo appoint both new roles and
   see the capi with no service (`/gruppo/incarichi`, `senza_servizio`). The technical
   administrator: the first from the command line (`User.amministratore_tecnico`), then
   an `AMMINISTRATORE` role, always a capo; `policy.e_amministratore` reads both. Both

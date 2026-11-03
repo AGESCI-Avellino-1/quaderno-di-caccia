@@ -1,8 +1,8 @@
 """The list of the group's roles as PDF, for the capigruppo (DEC-284): never stored.
 
-The capigruppo choose the kinds of role and how to group the capi: by unit (the capi at
-disposal go to the Co.Ca., with the capigruppo and the group's assistente ecclesiastico
-who serve no unit) or by role. Each capo: codice socio, name, surname, training level
+The capigruppo choose the kinds of role and how to group the capi: by unit (the capi with
+a support service go to the Co.Ca., with the capigruppo and the group's assistente
+ecclesiastico who serve no unit) or by role. Each capo: codice socio, name, surname, training level
 (today's: the app keeps no history of it). Roles in force today, or at the end of a past
 associative year.
 """
@@ -22,6 +22,7 @@ from apps.core.anno import AnnoAssociativo
 from apps.core.stampa import decora_pagina, intestazione
 
 from .models import (
+    INCARICHI_DI_SERVIZIO,
     SERVIZIO_IN_UNITA,
     Gruppo,
     Incarico,
@@ -37,13 +38,17 @@ RUOLI_ELENCO = (
     RuoloIncarico.CAPO_UNITA,
     RuoloIncarico.STAFF,
     RuoloIncarico.AE_UNITA,
+    RuoloIncarico.SUPPORTO_GRUPPO,
+    RuoloIncarico.SUPPORTO_EDUCATIVO,
+    # Only in a year when someone held it (DEC-293).
     RuoloIncarico.A_DISPOSIZIONE,
     RuoloIncarico.TESORIERE_GRUPPO,
     RuoloIncarico.TESORIERE_UNITA,
     RuoloIncarico.AMMINISTRATORE,
 )
-# Who goes to the Co.Ca. when grouping by unit, if serving no unit.
-IN_COCA = {RuoloIncarico.CAPOGRUPPO, RuoloIncarico.AE_GRUPPO, RuoloIncarico.A_DISPOSIZIONE}
+# A capo with additional roles only (a treasurer serving no unit) shows this next to the
+# name, in the PDF only: nothing is recorded (maintainer, 03/11).
+SENZA_SERVIZIO = RuoloIncarico.SUPPORTO_GRUPPO.label
 ORDINE_TIPI = list(TipoUnita.values)
 
 
@@ -135,8 +140,13 @@ def _per_unita(scelti: set[str], incarichi: list[Incarico]) -> list[Sezione]:
                 righe_di.setdefault(unita_id, []).append(Riga(propri[0].persona, etichette))
         else:
             # Capigruppo and the group's assistente ecclesiastico serving no unit, the
-            # capi at disposal (and anyone with only an additional role): the Co.Ca.
+            # capi with a support service (and anyone with only an additional role): the
+            # Co.Ca.
             etichette = [_etichetta(i) for i in aggiuntivi if i.ruolo in scelti]
+            if not any(
+                i.ruolo in INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO} for i in propri
+            ):
+                etichette.insert(0, SENZA_SERVIZIO)
             righe_di.setdefault(coca, []).append(Riga(propri[0].persona, etichette))
 
     risultato = [

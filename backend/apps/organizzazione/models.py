@@ -257,7 +257,11 @@ class RuoloIncarico(models.TextChoices):
     # A unit's assistente ecclesiastico: counts as its staff, appointed by the capo unità
     # and the capigruppo (DEC-281).
     AE_UNITA = "AE_UNITA", "Assistente ecclesiastico di unità"
-    # A capo of the Co.Ca. serving in no unit for now; excludes any unit service (DEC-165).
+    # The service of a capo of the Co.Ca. outside the units, one of the two; excludes any
+    # unit service (DEC-165, DEC-293).
+    SUPPORTO_GRUPPO = "SUPPORTO_GRUPPO", "Servizio di supporto al gruppo"
+    SUPPORTO_EDUCATIVO = "SUPPORTO_EDUCATIVO", "Servizio di supporto all'azione educativa"
+    # Replaced by the two above (DEC-293): no longer assigned, kept for the history.
     A_DISPOSIZIONE = "A_DISPOSIZIONE", "A disposizione"
     # Appointed by the capigruppo; the first one is created from the command line
     # (User.amministratore_tecnico). Always a capo (DEC-12, DEC-114, DEC-166).
@@ -284,6 +288,8 @@ RUOLI_DI_GRUPPO = {
     RuoloIncarico.CAPOGRUPPO,
     RuoloIncarico.AE_GRUPPO,
     RuoloIncarico.TESORIERE_GRUPPO,
+    RuoloIncarico.SUPPORTO_GRUPPO,
+    RuoloIncarico.SUPPORTO_EDUCATIVO,
     RuoloIncarico.A_DISPOSIZIONE,
     RuoloIncarico.AMMINISTRATORE,
 }
@@ -295,17 +301,16 @@ RUOLI_DI_UNITA = {
     RuoloIncarico.CONSIGLIO_ANZIANI,
 }
 RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
-# Every capo of the Co.Ca. has a service: one or more units, or at disposal (not both,
-# DEC-165).
-# DEC-165; the assistenti ecclesiastici serve the group or a unit (DEC-281).
-INCARICHI_DI_SERVIZIO = {
-    RuoloIncarico.CAPO_UNITA,
-    RuoloIncarico.STAFF,
-    RuoloIncarico.AE_UNITA,
-    RuoloIncarico.AE_GRUPPO,
+# Outside the units: one at a time, never with a unit service (DEC-165, DEC-293).
+SERVIZI_DI_SUPPORTO = {
+    RuoloIncarico.SUPPORTO_GRUPPO,
+    RuoloIncarico.SUPPORTO_EDUCATIVO,
     RuoloIncarico.A_DISPOSIZIONE,
 }
+# Every capo of the Co.Ca. has a service: one or more units, or a support service (not
+# both, DEC-165, DEC-293); the assistenti ecclesiastici serve the group or a unit (DEC-281).
 SERVIZIO_IN_UNITA = {RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF, RuoloIncarico.AE_UNITA}
+INCARICHI_DI_SERVIZIO = SERVIZIO_IN_UNITA | SERVIZI_DI_SUPPORTO | {RuoloIncarico.AE_GRUPPO}
 RUOLI_AGGIUNTIVI = {
     RuoloIncarico.CAPOGRUPPO,
     RuoloIncarico.AE_GRUPPO,
@@ -387,24 +392,32 @@ class Incarico(ModelloTracciato):
             )
 
     def _controlla_servizio(self, ruolo: RuoloIncarico) -> None:
-        """At disposal and service in a unit exclude each other."""
-        if ruolo == RuoloIncarico.A_DISPOSIZIONE:
+        """A support service excludes service in a unit and the other support services."""
+        if ruolo in SERVIZI_DI_SUPPORTO:
             altri = SERVIZIO_IN_UNITA
             messaggio = "fa servizio in un'unità: chiudi prima quell'incarico."
+            if self._sovrapposti(SERVIZI_DI_SUPPORTO - {ruolo}).exists():
+                raise ValidationError(
+                    f"{self.persona} ha già un servizio di supporto: chiudi prima quello."
+                )
         elif ruolo in SERVIZIO_IN_UNITA:
-            altri = {RuoloIncarico.A_DISPOSIZIONE}
-            messaggio = "è a disposizione: chiudi prima quell'incarico."
+            altri = SERVIZI_DI_SUPPORTO
+            messaggio = "ha un servizio di supporto: chiudi prima quell'incarico."
         else:
             return
+        if self._sovrapposti(altri).exists():
+            raise ValidationError(f"{self.persona} {messaggio}")
+
+    def _sovrapposti(self, ruoli: set[RuoloIncarico]):
+        """The person's roles among `ruoli` overlapping this one's period."""
         sovrapposti = (
-            Incarico.objects.filter(persona=self.persona_id, ruolo__in=altri)
+            Incarico.objects.filter(persona=self.persona_id, ruolo__in=ruoli)
             .filter(Q(data_fine__isnull=True) | Q(data_fine__gt=self.data_inizio))
             .exclude(pk=self.pk)
         )
         if self.data_fine:
             sovrapposti = sovrapposti.filter(data_inizio__lt=self.data_fine)
-        if sovrapposti.exists():
-            raise ValidationError(f"{self.persona} {messaggio}")
+        return sovrapposti
 
     def titolari_massimi(self) -> int | None:
         """Holders allowed at the same time; None = no limit (staff)."""

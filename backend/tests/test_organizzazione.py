@@ -566,17 +566,22 @@ def test_solo_i_capigruppo_nominano_l_amministratore(capogruppo, capo, capo_semp
     assert policy.e_amministratore(capo_semplice.utente)
 
 
-def test_a_disposizione_esclude_il_servizio_in_unita(capogruppo, capo, capo_semplice, reparto):
-    # capo serves the reparto: not at disposal at the same time.
-    risposta = _nomina(capogruppo, capo, "A_DISPOSIZIONE")
+def test_servizio_di_supporto_esclude_il_servizio_in_unita(
+    capogruppo, capo, capo_semplice, reparto
+):
+    # capo serves the reparto: no support service at the same time (DEC-165, DEC-293).
+    risposta = _nomina(capogruppo, capo, "SUPPORTO_GRUPPO")
     assert risposta.status_code == 400
     assert "fa servizio in un'unità" in risposta.json()["detail"]
-    # At disposal from yesterday, then appointed to a unit: it ends by itself.
+    # A support service from yesterday, then appointed to a unit: it ends by itself.
     ieri = (timezone.localdate() - timedelta(days=1)).isoformat()
-    assert _nomina(capogruppo, capo_semplice, "A_DISPOSIZIONE", data_inizio=ieri).status_code == 201
+    assert (
+        _nomina(capogruppo, capo_semplice, "SUPPORTO_EDUCATIVO", data_inizio=ieri).status_code
+        == 201
+    )
     assert _nomina(capogruppo, capo_semplice, "STAFF", unita_id=reparto.pk).status_code == 201
-    disposizione = Incarico.objects.get(persona=capo_semplice, ruolo=R.A_DISPOSIZIONE)
-    assert disposizione.data_fine == timezone.localdate()
+    supporto = Incarico.objects.get(persona=capo_semplice, ruolo=R.SUPPORTO_EDUCATIVO)
+    assert supporto.data_fine == timezone.localdate()
     # Several units are fine.
     branco = Unita.objects.create(
         gruppo=reparto.gruppo,
@@ -587,16 +592,50 @@ def test_a_disposizione_esclude_il_servizio_in_unita(capogruppo, capo, capo_semp
     assert _nomina(capogruppo, capo, "STAFF", unita_id=branco.pk).status_code == 201
 
 
+def test_un_solo_servizio_di_supporto(capogruppo, capo, capo_semplice):
+    assert _nomina(capogruppo, capo_semplice, "SUPPORTO_GRUPPO").status_code == 201
+    risposta = _nomina(capogruppo, capo_semplice, "SUPPORTO_EDUCATIVO")
+    assert risposta.status_code == 400
+    assert "ha già un servizio di supporto" in risposta.json()["detail"]
+    # Only the capigruppo appoint them.
+    assert _nomina(capo, capogruppo, "SUPPORTO_EDUCATIVO").status_code == 403
+
+
+def test_a_disposizione_non_si_assegna_piu_e_lo_sostituisce_un_servizio(
+    capogruppo, capo_semplice, gruppo
+):
+    risposta = _nomina(capogruppo, capo_semplice, "A_DISPOSIZIONE")
+    assert risposta.status_code == 400
+    assert "non si assegna più" in risposta.json()["detail"]
+    # One recorded before DEC-293 stays, and shows among the support services...
+    vecchio = Incarico.objects.create(
+        persona=capo_semplice,
+        ruolo=R.A_DISPOSIZIONE,
+        gruppo=gruppo,
+        data_inizio=timezone.localdate() - timedelta(days=30),
+    )
+    dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
+    assert [i["ruolo"] for i in dati["supporto"]] == ["A_DISPOSIZIONE"]
+    assert {n["valore"] for n in dati["nomina_supporto"]} == {
+        "SUPPORTO_GRUPPO",
+        "SUPPORTO_EDUCATIVO",
+    }
+    # ...until a capogruppo chooses one of the two new ones: it ends by itself.
+    assert _nomina(capogruppo, capo_semplice, "SUPPORTO_GRUPPO").status_code == 201
+    vecchio.refresh_from_db()
+    assert vecchio.data_fine == timezone.localdate()
+
+
 def test_capi_senza_servizio_per_i_capigruppo(capogruppo, capo, capo_semplice):
     dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
     senza = {p["id"] for p in dati["senza_servizio"]}
     assert capo_semplice.pk in senza and capo.pk not in senza
     # A capogruppo with no unit is not flagged.
     assert capogruppo.pk not in senza
-    _nomina(capogruppo, capo_semplice, "A_DISPOSIZIONE")
+    _nomina(capogruppo, capo_semplice, "SUPPORTO_GRUPPO")
     dati = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
     assert capo_semplice.pk not in {p["id"] for p in dati["senza_servizio"]}
-    assert [i["persona"]["id"] for i in dati["a_disposizione"]] == [capo_semplice.pk]
+    assert [i["persona"]["id"] for i in dati["supporto"]] == [capo_semplice.pk]
     # Other capi see the roles, not the list to sort out.
     assert _client(capo).get("/api/v1/gruppo/incarichi").json()["senza_servizio"] == []
 

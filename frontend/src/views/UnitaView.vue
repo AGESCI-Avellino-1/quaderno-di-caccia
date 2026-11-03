@@ -83,7 +83,7 @@ async function crea(dati: UnitaIn) {
         <label for="anche-chiuse">Mostra anche le unità chiuse</label>
       </div>
       <RouterLink :to="{ name: 'gruppo' }"
-        >Incarichi di gruppo: capigruppo, tesorieri, amministratori, a disposizione</RouterLink
+        >Incarichi di gruppo: capigruppo, tesorieri, amministratori, servizi di supporto</RouterLink
       >
     </div>
   </section>

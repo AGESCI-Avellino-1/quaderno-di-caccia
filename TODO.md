@@ -15,9 +15,9 @@ In cima ci sono i punti aperti; sotto, le fasi e lo storico di quello che è sta
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,
 N.24, N.23. Un commit per voce; manuale e schermate si aggiornano con ogni voce.
 
-#### N.25 — «A disposizione» diviso in due incarichi ⏳
+#### N.25 — «A disposizione» diviso in due incarichi ✅ 03/11
 
-Rif. DEC-165, DEC-284; nuovo DEC nell'analisi (modifica DEC-165).
+Rif. DEC-165, DEC-284, DEC-293 (nell'analisi dal 03/11). Fatto il 03/11 con test; pagina e PDF visti con le schermate del manuale. Nominare uno dei due servizi chiude da sé un «a disposizione» ancora in corso.
 
 Richiesta del maintainer (03/11): «Servizio di supporto al gruppo» e «Servizio di
 supporto all'azione educativa», veri incarichi di Comunità capi; nell'app non danno
@@ -35,7 +35,7 @@ Da toccare: `organizzazione/models.RuoloIncarico` e `Incarico._controlla_servizi
 `fascicolo` (anni di servizio ricostruiti), `elenco_incarichi`, `GruppoView.vue`,
 `StampaIncarichi.vue`, menu, manuale (`gruppo/organizzazione.md`) e schermate.
 
-#### N.22 — Elenco degli incarichi: capo con un solo incarico aggiuntivo ⏳
+#### N.22 — Elenco degli incarichi: capo con un solo incarico aggiuntivo ✅ 03/11
 
 Rif. DEC-284. Un capo con solo un incarico aggiuntivo (per esempio tesoriere, nessun
 incarico di servizio), nel raggruppamento per unità, resta in Co.Ca. (maintainer, 03/11).

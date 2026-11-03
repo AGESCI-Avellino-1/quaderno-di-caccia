@@ -175,7 +175,11 @@ def _fascicolo_capo(request, persona: Persona) -> dict:
     return capi.fascicolo(persona) | {
         "puo_modificare": policy.puo_modificare_fascicolo_capo(request.auth, persona),
         "tipi_formazione": [{"valore": v, "etichetta": e} for v, e in TipoCampoFormazione.choices],
-        "ruoli_passati": [{"valore": v, "etichetta": e} for v, e in RuoloPassato.choices],
+        "ruoli_passati": [
+            {"valore": v, "etichetta": e}
+            for v, e in RuoloPassato.choices
+            if v != RuoloPassato.A_DISPOSIZIONE
+        ],
     }
 
 
@@ -212,18 +216,21 @@ class ServizioIn(Schema):
 @router.post("/persone/{persona_id}/fascicolo-capo/servizi", response={201: FascicoloCapo})
 def nuovo_servizio(request, persona_id: int, dati: ServizioIn):
     """A year before the app, rebuilt by hand (DEC-207)."""
-    from .models import ServizioPassato
+    from .models import RuoloPassato, ServizioPassato
 
     persona = _modificabile(request, persona_id)
     if not 1950 < dati.anno <= AnnoAssociativo.corrente().anno_fine:
         raise HttpError(400, "Anno non valido.")
+    if dati.ruolo == RuoloPassato.A_DISPOSIZIONE:
+        raise HttpError(400, "Scegli uno dei due servizi di supporto.")  # DEC-293
     if (
         not dati.unita_id
         and not dati.unita_testo.strip()
         and dati.ruolo
         not in (
-            "CAPOGRUPPO",
-            "A_DISPOSIZIONE",
+            RuoloPassato.CAPOGRUPPO,
+            RuoloPassato.SUPPORTO_GRUPPO,
+            RuoloPassato.SUPPORTO_EDUCATIVO,
         )
     ):
         raise HttpError(400, "Indica l'unità.")

@@ -370,14 +370,19 @@ Deciso il 03/11:
 - Lo staff **corregge a mano** l'assegnazione di una singola riunione; dopo, la rotazione
   riprende dall'ordine previsto.
 
-#### N.46 — Invio graduale delle email in blocco ⏳ (DEC-311)
+#### N.46 — Invio graduale delle email in blocco ✅ 03/11 (DEC-311, servizio `posta` da provare in produzione)
 
 Deciso il 03/11: una **coda di invio** sul server, smaltita ogni minuto da un comando (cron);
 **blocchi di 20 email, poi 2 minuti di pausa**; **tetto di 400 al giorno**, oltre il quale le
 email aspettano il giorno dopo; valori modificabili dall'amministratore tecnico nelle
 Impostazioni, dove si vede quante sono in attesa. Partono **subito, fuori coda**, le email
 singole chieste dalla persona: codice di accesso, nuova password, conferma dell'indirizzo, avvisi
-sull'account. Gli inviti in blocco (N.42) e gli avvisi a molti passano dalla coda.
+sull'account. Gli inviti in blocco (N.42) e gli avvisi a molti passano dalla coda. Fatto:
+`impostazioni/coda.py` (`EmailInCoda`, fuori dal registro delle modifiche; dopo l'invio messaggio
+e indirizzi si svuotano, la riga resta due giorni per contare), `posta.SUBITO`, comando
+`invia_email_in_coda --continua` nel servizio nuovo `posta` di `compose.prod.yml`, sezione
+«Invio un po' alla volta» nelle Impostazioni (con «Riprova» dopo 5 tentativi falliti),
+`QDC_EMAIL_IN_CODA` (spenta in sviluppo e nei test); guida di installazione e manuale.
 
 #### N.47 — Account della piattaforma per l'amministratore tecnico ⏳ (DEC-313)
 

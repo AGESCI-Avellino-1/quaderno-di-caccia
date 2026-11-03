@@ -740,6 +740,12 @@ const SCENE: Scena[] = [
     dopo: () => django(MANUTENZIONE(false)),
   },
   {
+    nome: 'gruppo/coda-email',
+    chi: 'amministratore',
+    percorso: '/impostazioni',
+    mostra: "Invio un po' alla volta",
+  },
+  {
     nome: 'gruppo/accessi-bloccati',
     chi: 'amministratore',
     percorso: '/impostazioni',
@@ -877,6 +883,8 @@ const ENV_DJANGO = {
   DJANGO_CONN_MAX_AGE: '0',
   DJANGO_CSRF_TRUSTED_ORIGINS: APP,
   QDC_FRONTEND_URL: APP,
+  // As in production (DEC-311): the emails to many wait; nobody sends them here.
+  QDC_EMAIL_IN_CODA: 'true',
 }
 
 async function avviaServer(): Promise<void> {

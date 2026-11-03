@@ -19,3 +19,5 @@ HEADLESS_SERVE_SPECIFICATION = True
 # The email test mode is always possible in development (DEC-249): Mailpit runs with the
 # database (compose.dev.yml).
 QDC_MAILPIT_CONSENTITO = True
+# No queue worker in development: emails go at once (DEC-311), unless .env says otherwise.
+QDC_EMAIL_IN_CODA = env.bool("QDC_EMAIL_IN_CODA", default=False)

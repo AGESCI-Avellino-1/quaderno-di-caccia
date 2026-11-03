@@ -122,6 +122,14 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     gmail_secret_salvato: bool = False
     gmail_indirizzo: str = ""
     gmail_redirect_uri: str = ""
+    # Emails a few at a time (DEC-311): the three values and the queue now.
+    coda_attiva: bool = False
+    coda_blocco: int = 20
+    coda_pausa_minuti: int = 2
+    coda_massimo_giorno: int = 400
+    coda_in_attesa: int = 0
+    coda_inviate_oggi: int = 0
+    coda_abbandonate: int = 0
     # The texts of the medical form (DEC-289): the group's, and the base ones.
     scheda_dichiarazione: str = ""
     scheda_consenso: str = ""
@@ -262,6 +270,22 @@ def _smtp(request, imp: Impostazioni) -> dict:
         "gmail_secret_salvato": bool(imp.gmail_client_secret),
         "gmail_indirizzo": imp.gmail_indirizzo if imp.gmail_refresh_token else "",
         "gmail_redirect_uri": gmail.indirizzo_di_ritorno(),
+        **_coda(imp),
+    }
+
+
+def _coda(imp: Impostazioni) -> dict:
+    from . import coda
+
+    stato = coda.stato()
+    return {
+        "coda_attiva": settings.QDC_EMAIL_IN_CODA,
+        "coda_blocco": imp.coda_blocco,
+        "coda_pausa_minuti": imp.coda_pausa_minuti,
+        "coda_massimo_giorno": imp.coda_massimo_giorno,
+        "coda_in_attesa": stato["in_attesa"],
+        "coda_inviate_oggi": stato["inviate_oggi"],
+        "coda_abbandonate": stato["abbandonate"],
     }
 
 
@@ -939,3 +963,37 @@ def pagina_di_base(request, chiave: str):
     pagina = _pagina(chiave)
     _salva_pagina(pagina, "")
     return _pagina_modifica(pagina)
+
+
+class CodaIn(Schema):
+    blocco: int
+    pausa_minuti: int
+    massimo_giorno: int
+
+
+@router.put("/impostazioni/coda-email", response=ImpostazioniOut)
+def salva_coda(request, dati: CodaIn):
+    """How the emails to many go out (DEC-311): for the technical administrator."""
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "L'invio delle email lo imposta l'amministratore tecnico.")
+    if not (1 <= dati.blocco <= 500 and 0 <= dati.pausa_minuti <= 120):
+        raise HttpError(400, "Il blocco va da 1 a 500 email, la pausa da 0 a 120 minuti.")
+    if dati.blocco > dati.massimo_giorno:
+        raise HttpError(400, "Un blocco non può essere più grande del massimo al giorno.")
+    imp = Impostazioni.carica()
+    imp.coda_blocco = dati.blocco
+    imp.coda_pausa_minuti = dati.pausa_minuti
+    imp.coda_massimo_giorno = dati.massimo_giorno
+    imp.save(update_fields=["coda_blocco", "coda_pausa_minuti", "coda_massimo_giorno"])
+    return _impostazioni(request)
+
+
+@router.post("/impostazioni/coda-email/riprova", response=ImpostazioniOut)
+def riprova_coda(request):
+    """The emails given up after too many failures go back in the queue."""
+    from . import coda
+
+    if not policy.puo_configurare_smtp(request.auth):
+        raise HttpError(403, "L'invio delle email lo imposta l'amministratore tecnico.")
+    coda.riprova_abbandonate()
+    return _impostazioni(request)

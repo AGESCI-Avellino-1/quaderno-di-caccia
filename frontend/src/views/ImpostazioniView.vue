@@ -8,6 +8,7 @@ import DestinatariEmail from '@/components/DestinatariEmail.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
 import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
+import CodaEmail from '@/components/CodaEmail.vue'
 import ServerPosta from '@/components/ServerPosta.vue'
 import SezioneApribile from '@/components/SezioneApribile.vue'
 import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
@@ -218,6 +219,7 @@ async function salva() {
         @aggiornate="dati = $event"
       />
       <ServerPosta v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
+      <CodaEmail v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
       <BlocchiAccesso v-if="dati.puo_sbloccare_accessi" />
       <section v-if="dati.puo_email_di_prova" class="mb-7">
         <h2 class="h5">Email di prova</h2>

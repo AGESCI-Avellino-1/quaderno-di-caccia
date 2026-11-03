@@ -50,6 +50,25 @@ dice cosa controllare.
 Password e segreti restano cifrati sul server: dopo averli salvati non li rivedi più, puoi
 solo sostituirli.
 
+## Le email un po' alla volta
+
+Le email a molte persone (inviti, avvisi, promemoria) non partono tutte insieme: aspettano in
+coda e partono a blocchi, perché la casella del gruppo non finisca tra gli spammer. In
+**Impostazioni**, **Invio un po' alla volta**, scegli quante email per blocco (di base 20),
+quanti minuti di pausa tra un blocco e l'altro (2) e quante al massimo in un giorno (400:
+quelle in più partono il giorno dopo), poi tocca **Salva**. Un indirizzo Gmail ne manda
+circa 500 al giorno, un account Google Workspace 2000.
+
+Sotto vedi quante email sono in attesa e quante sono partite oggi. Se il server di posta non
+risponde, l'app riprova; dopo 5 tentativi falliti un'email resta ferma e compare **Riprova
+quelle non partite**: tocca quando hai sistemato il server. I codici per entrare, il cambio
+della password e la conferma dell'indirizzo partono sempre subito.
+
+:::{container} schermate
+![L'invio un po' alla volta sul telefono](../img/gruppo/coda-email-telefono.png){.telefono width="30%"}
+![L'invio un po' alla volta sul computer](../img/gruppo/coda-email-computer.png){.computer width="65%"}
+:::
+
 ## La modalità di prova delle email
 
 Per provare l'app senza disturbare nessuno: in **Impostazioni**, **Email di prova**, accendi

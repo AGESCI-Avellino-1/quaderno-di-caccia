@@ -244,6 +244,14 @@ export interface Impostazioni extends ImpostazioniSito {
   gmail_secret_salvato?: boolean
   gmail_indirizzo?: string
   gmail_redirect_uri?: string
+  /** Emails to many a few at a time (DEC-311): the three values and the queue now. */
+  coda_attiva?: boolean
+  coda_blocco?: number
+  coda_pausa_minuti?: number
+  coda_massimo_giorno?: number
+  coda_in_attesa?: number
+  coda_inviate_oggi?: number
+  coda_abbandonate?: number
   /** The texts of the medical form (DEC-289): the group's, and the base ones. */
   scheda_dichiarazione?: string
   scheda_consenso?: string
@@ -2525,6 +2533,10 @@ export const api = {
     richiesta<{ url: string }>('/api/v1/impostazioni/gmail/collega', { metodo: 'POST' }),
   scollegaGmail: () =>
     richiesta<Impostazioni>('/api/v1/impostazioni/gmail/scollega', { metodo: 'POST' }),
+  salvaCodaEmail: (dati: { blocco: number; pausa_minuti: number; massimo_giorno: number }) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/coda-email', { metodo: 'PUT', corpo: dati }),
+  riprovaCodaEmail: () =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/coda-email/riprova', { metodo: 'POST' }),
   provaSmtp: () =>
     richiesta<{ inviata_a: string }>('/api/v1/impostazioni/smtp/prova', { metodo: 'POST' }),
   emailDiProva: (attiva: boolean) =>

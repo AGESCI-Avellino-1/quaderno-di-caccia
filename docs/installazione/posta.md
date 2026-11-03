@@ -9,6 +9,20 @@ configurazione genera da solo: conservala con i backup (se cambia, vanno inserit
 Finché nell'app non imposti niente, valgono le voci `DJANGO_EMAIL_*` di `.env` (vedi
 [Installazione](installazione)).
 
+## Un po' alla volta
+
+Per non far finire la casella del gruppo tra gli spammer, le email a molte persone (inviti,
+avvisi, promemoria) aspettano in una coda e partono a blocchi: di base 20, poi 2 minuti di
+pausa, al massimo 400 al giorno (oltre, il giorno dopo). Partono subito solo quelle che una
+persona chiede per sé: codice di accesso, nuova password, conferma dell'indirizzo. La coda la
+manda il servizio `posta` di `compose.prod.yml`, che si avvia con gli altri.
+
+I tre valori si cambiano in **Impostazioni › Invio un po' alla volta**, dove si vedono anche
+le email in attesa, quelle partite oggi e quelle lasciate perdere dopo 5 tentativi falliti
+(con **Riprova** tornano in coda). I limiti del fornitore: un indirizzo @gmail.com ne manda
+circa 500 al giorno, un account Google Workspace 2000. Con `QDC_EMAIL_IN_CODA=false` in
+`.env` la coda si spegne e tutto parte subito.
+
 Le strade possibili:
 
 | Strada | Per chi | Serve |

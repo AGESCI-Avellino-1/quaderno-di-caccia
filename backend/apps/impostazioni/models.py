@@ -95,6 +95,10 @@ class Impostazioni(ModelloTracciato):
     gmail_client_secret = models.TextField(blank=True)
     gmail_refresh_token = models.TextField(blank=True)
     gmail_indirizzo = models.EmailField(blank=True)
+    # The emails to many go out a few at a time (DEC-311): a block, a pause, a daily cap.
+    coda_blocco = models.PositiveSmallIntegerField(default=20)
+    coda_pausa_minuti = models.PositiveSmallIntegerField(default=2)
+    coda_massimo_giorno = models.PositiveIntegerField(default=400)
 
     class Meta:
         verbose_name = "impostazioni"
@@ -181,3 +185,28 @@ class ImmagineEmail(ModelloTracciato):
     @property
     def nome(self) -> str:
         return self.file.name.rsplit("/", 1)[-1]
+
+
+class EmailInCoda(models.Model):
+    """An email waiting for its turn (DEC-311), as the bytes the server will send. Not in
+    the audit log (it holds the whole message); once sent, the message and the addresses
+    are blanked and the row is kept two days only to count the day's emails."""
+
+    creata_il = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(max_length=60, blank=True)
+    mittente = models.CharField(max_length=300)
+    destinatari = models.JSONField(default=list)
+    messaggio = models.BinaryField()
+    inviata_il = models.DateTimeField(null=True, blank=True, db_index=True)
+    tentativi = models.PositiveSmallIntegerField(default=0)
+    # The kind of error only (e.g. SMTPServerDisconnected), never the server's text.
+    ultimo_errore = models.CharField(max_length=200, blank=True)
+    abbandonata = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "email in coda"
+        verbose_name_plural = "email in coda"
+        ordering = ["creata_il", "pk"]
+
+    def __str__(self) -> str:
+        return f"Email {self.pk} ({self.tipo or 'senza tipo'})"

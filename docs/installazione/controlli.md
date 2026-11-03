@@ -59,7 +59,9 @@ sotto, o in `sudo journalctl -u qdc`. Poi i container:
 docker compose ps
 ```
 
-`db` e `web` devono essere `healthy` (in salute), `app` avviato. Se `web` non parte, il
+`db` e `web` devono essere `healthy` (in salute), `app` e `posta` avviati (`posta` manda un
+po' alla volta le email a molte persone; se resta ferma, le email aspettano: i suoi messaggi
+sono in `docker compose logs posta`). Se `web` non parte, il
 motivo è in `docker compose logs web` (di solito una voce sbagliata in `.env` o il database
 non raggiungibile).
 

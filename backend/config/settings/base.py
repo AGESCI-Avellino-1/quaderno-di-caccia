@@ -245,6 +245,9 @@ DEFAULT_FROM_EMAIL = env(
 # Email test mode with Mailpit (DEC-249): login codes and invitations end up there, so on
 # a server it must be allowed explicitly by whoever installs it (always in development).
 QDC_MAILPIT_CONSENTITO = env.bool("QDC_MAILPIT_CONSENTITO", default=False)
+# Emails to many wait in a queue sent a few at a time by the "posta" service (DEC-311,
+# `manage.py invia_email_in_coda --continua`); off, everything goes at once.
+QDC_EMAIL_IN_CODA = env.bool("QDC_EMAIL_IN_CODA", default=True)
 # Mailpit's web interface, reached by Django only (proxy at /mailpit/, MP_WEBROOT=/mailpit).
 QDC_MAILPIT_URL = env("QDC_MAILPIT_URL", default="http://localhost:8025")
 # Invitation links expire after this many days (DEC-21).

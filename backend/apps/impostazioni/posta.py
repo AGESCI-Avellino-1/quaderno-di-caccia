@@ -7,6 +7,8 @@ Every email goes through here, the ones sent by the cron commands too:
     capi, parents, ragazzi; an email to a group switched off is dropped and only
     counted (DEC-276). What a person asks for, invitations, the joining from the app and
     the waiting list always go;
+  * what a person asks for themself goes at once; the rest waits in the queue, sent a
+    few at a time (DEC-311, `coda.py`), unless QDC_EMAIL_IN_CODA is off;
   * through the SMTP server set in the settings, or the server's configuration (DEC-277).
 
 The email type travels in a header set by `email.messaggio()`, removed before sending.
@@ -44,6 +46,16 @@ SEMPRE = {
     "attesa_uscita",
     "attesa_iscrizione",
     "iscrizione_capo",
+}
+# What the person asks for themself: never waits in the queue (DEC-311).
+SUBITO = {
+    TIPO_ACCOUNT,
+    "codice_accesso",
+    "reimposta_password",
+    "verifica_email_registrazione",
+    "verifica_email",
+    "account_esistente",
+    "account_sconosciuto",
 }
 
 
@@ -140,21 +152,31 @@ class PostaQdC(BaseEmailBackend):
             for email in email_messages:
                 email.extra_headers.pop(INTESTAZIONE_TIPO, None)
             return mailers["mailpit"].send_messages(email_messages)
+        from django.conf import settings
+
         accesi = imp.email_accese()
         scartate: dict[str, int] = {}
-        da_inviare = [e for e in (_filtra(e, accesi, scartate) for e in email_messages) if e]
+        da_inviare = []
+        for email in email_messages:
+            tipo = email.extra_headers.get(INTESTAZIONE_TIPO, "")
+            if tenuta := _filtra(email, accesi, scartate):
+                da_inviare.append((tenuta, tipo))
         if scartate:
             _conta(scartate)
         mittente = mittente_di(imp)
         if mittente:
-            from django.conf import settings
-
-            for email in da_inviare:
+            for email, _tipo in da_inviare:
                 if email.from_email in (None, settings.DEFAULT_FROM_EMAIL):
                     email.from_email = mittente
-        if not da_inviare:
-            return 0
-        return connessione(imp).send_messages(da_inviare)
+        subito = [e for e, t in da_inviare if t in SUBITO or not settings.QDC_EMAIL_IN_CODA]
+        accodate = 0
+        if settings.QDC_EMAIL_IN_CODA:
+            from . import coda
+
+            accodate = coda.accoda([(e, t) for e, t in da_inviare if t not in SUBITO])
+        if not subito:
+            return accodate
+        return connessione(imp).send_messages(subito) + accodate
 
 
 def _conta(scartate: dict[str, int]) -> None:

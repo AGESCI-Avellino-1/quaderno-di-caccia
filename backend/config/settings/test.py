@@ -15,4 +15,5 @@ STORAGES = {
 }
 MIDDLEWARE = [m for m in MIDDLEWARE if m != "whitenoise.middleware.WhiteNoiseMiddleware"]
 AXES_ENABLED = False
+QDC_EMAIL_IN_CODA = False  # the queue's tests switch it on
 LOGGING = {"version": 1, "disable_existing_loggers": False}

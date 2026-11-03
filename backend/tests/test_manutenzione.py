@@ -199,3 +199,24 @@ def test_sbloccare_toglie_solo_quel_blocco(gruppo, amministratore):
     assert rimasti == []
     assert sblocca("nessuno", "x").status_code == 400
     assert sblocca("account", " ").status_code == 400
+
+
+def test_comando_per_lo_script_di_aggiornamento(db):
+    """scripts/aggiorna.sh puts the app in maintenance and back (DEC-292)."""
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    def comando(*argomenti):
+        uscita = StringIO()
+        call_command("manutenzione", *argomenti, stdout=uscita)
+        return uscita.getvalue().strip()
+
+    assert comando() == "non attiva"
+    comando("attiva", "--messaggio", "Aggiornamento in corso.")
+    assert comando() == "attiva"
+    assert Impostazioni.carica().avviso_manutenzione() == "Aggiornamento in corso."
+    comando("disattiva")
+    assert comando() == "non attiva"
+    # The message stays for the next time.
+    assert Impostazioni.carica().messaggio_manutenzione == "Aggiornamento in corso."

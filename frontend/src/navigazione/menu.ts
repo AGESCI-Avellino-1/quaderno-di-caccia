@@ -214,6 +214,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/attesa',
           descrizione: 'Chi vuole entrare nel gruppo, per età e unità consigliata',
         },
+        // Anyone with an account, parents and ragazzi too (DEC-304).
+        {
+          nome: 'Invita nel gruppo',
+          icona: 'qr-code',
+          to: '/invita',
+          descrizione: "Link, QR code e volantino della lista d'attesa",
+        },
         p.capogruppo && {
           nome: 'Modulistica',
           icona: 'file-earmark-text',

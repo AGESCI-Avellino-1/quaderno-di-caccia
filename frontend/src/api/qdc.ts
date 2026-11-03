@@ -248,6 +248,10 @@ export interface Impostazioni extends ImpostazioniSito {
   scheda_dichiarazione_base?: string
   scheda_consenso_base?: string
   puo_modificare_scheda?: boolean
+  /** The waiting list flyer (DEC-304): the group's text and the base one. */
+  volantino_attesa?: string
+  volantino_attesa_base?: string
+  puo_modificare_volantino?: boolean
 }
 
 export interface SmtpIn {
@@ -2449,6 +2453,8 @@ export function elencoIncarichiPdf(
   return `/api/v1/gruppo/incarichi/elenco.pdf?${parametri}`
 }
 
+/** The waiting list flyer to print (DEC-304): anyone with an account, online. */
+export const volantinoListaAttesa = '/api/v1/volantino-lista-attesa.pdf'
 export const ricevutaPdf = (pagamento: number) => `/api/v1/pagamenti/${pagamento}/ricevuta.pdf`
 export const moduloSanitarioPdf = (persona: number) =>
   `/api/v1/persone/${persona}/sanitarie/modulo.pdf`
@@ -2472,6 +2478,11 @@ export const api = {
     richiesta<Impostazioni>('/api/v1/impostazioni/scheda-sanitaria', {
       metodo: 'PUT',
       corpo: dati,
+    }),
+  salvaTestoVolantino: (testo: string) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/volantino-attesa', {
+      metodo: 'PUT',
+      corpo: { testo },
     }),
   modelliEmail: () => richiesta<ModelloEmailBreve[]>('/api/v1/impostazioni/email'),
   modelloEmail: (chiave: string) =>

@@ -145,6 +145,12 @@ const router = createRouter({
       props: true,
     },
     {
+      // «Invita nel gruppo» (DEC-304): anyone with an account, also offline.
+      path: '/invita',
+      name: 'invita',
+      component: () => import('@/views/InvitaView.vue'),
+    },
+    {
       // The waiting list for the capi (DEC-259): the API decides.
       path: '/attesa',
       name: 'attesa',

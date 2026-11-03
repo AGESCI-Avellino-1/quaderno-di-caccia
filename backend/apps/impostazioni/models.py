@@ -64,6 +64,9 @@ class Impostazioni(ModelloTracciato):
     # base texts in sanitaria.testi.
     scheda_dichiarazione = models.TextField(blank=True)
     scheda_consenso = models.TextField(blank=True)
+    # The text of the waiting list flyer (DEC-304), with placeholders; empty: the base
+    # text in attesa.volantino.
+    volantino_attesa = models.TextField(blank=True)
     # Maintenance (DEC-268): only the technical administrators get in
     # (`manutenzione.ManutenzioneMiddleware`); the message is shown to everybody else.
     manutenzione = models.BooleanField(default=False)

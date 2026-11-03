@@ -53,3 +53,26 @@ Dopo due anni (contati da quando tuo figlio ha l'età per entrare in un'unità) 
 un'email che chiede se volete restare in lista. Apri il link e tocca **Sì, restiamo in
 lista**. Se non rispondi entro 30 giorni, tuo figlio esce dalla lista e i dati si
 cancellano.
+
+## Invitare altre famiglie
+
+Conosci una famiglia che vorrebbe entrare nel gruppo? Mandale il link della lista d'attesa.
+
+1. Nella Home, in **Il mio gruppo**, tocca **Invita nel gruppo**.
+2. Tocca **Condividi** e scegli come mandarlo (WhatsApp, email…), oppure **Copia il link** e
+   incollalo dove vuoi. Sul computer, dove non c'è **Condividi**, usa **Copia il link**.
+3. Se la persona è con te, falle inquadrare il **QR code** con la fotocamera del telefono: si
+   apre la pagina della lista d'attesa.
+
+:::{container} schermate
+![Invita nel gruppo sul telefono](../img/genitore/invita-telefono.png){.telefono width="30%"}
+![Invita nel gruppo sul computer](../img/genitore/invita-computer.png){.computer width="65%"}
+:::
+
+Per un volantino o un post, tocca **Scarica il QR** (un'immagine) oppure **Volantino da
+stampare**: un foglio A4 con l'intestazione del gruppo, due righe di spiegazione, il QR code e
+il link, da appendere in parrocchia o a scuola. Link e QR funzionano anche senza rete; il
+volantino si scarica solo con la rete.
+
+Il link è lo stesso per tutti: non dice chi l'ha mandato. Anche chi riceve il link può girarlo:
+in fondo alla pagina della lista d'attesa c'è **Condividi**.

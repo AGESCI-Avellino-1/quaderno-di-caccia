@@ -38,6 +38,7 @@ export const PAGINE: Record<string, Pagina> = {
   gruppo: { titolo: 'Organigramma' },
   iscrizione: { titolo: 'Iscrizione' },
   'lista-attesa': { titolo: "Lista d'attesa" },
+  invita: { titolo: 'Invita nel gruppo' },
   privacy: { titolo: 'Privacy policy' },
   termini: { titolo: 'Termini e condizioni' },
   'pagina-legale-modifica': { titolo: 'Privacy policy e termini', sopra: 'impostazioni' },

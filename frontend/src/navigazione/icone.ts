@@ -73,6 +73,11 @@ import upload from 'bootstrap-icons/icons/upload.svg?raw'
 import wallet2 from 'bootstrap-icons/icons/wallet2.svg?raw'
 import whatsapp from 'bootstrap-icons/icons/whatsapp.svg?raw'
 import xLg from 'bootstrap-icons/icons/x-lg.svg?raw'
+import clipboard from 'bootstrap-icons/icons/clipboard.svg?raw'
+import download from 'bootstrap-icons/icons/download.svg?raw'
+import printer from 'bootstrap-icons/icons/printer.svg?raw'
+import qrCode from 'bootstrap-icons/icons/qr-code.svg?raw'
+import share from 'bootstrap-icons/icons/share.svg?raw'
 
 const tenda = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tenda" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1.25 15.2 13.5H.8zm0 7.5-2.3 4.75h4.6zM0 13.5h16v1H0z"/></svg>`
 
@@ -85,8 +90,8 @@ export const ICONE = {
   'box-arrow-right': boxArrowRight,
   'box-arrow-up': boxArrowUp,
   'calendar-event': calendarEvent,
-  calendar3: calendar3,
   'calendar-week': calendarWeek,
+  calendar3: calendar3,
   cash: cash,
   'cash-coin': cashCoin,
   'chat-text': chatText,
@@ -95,11 +100,13 @@ export const ICONE = {
   'chevron-left': chevronLeft,
   'chevron-right': chevronRight,
   'chevron-up': chevronUp,
+  clipboard: clipboard,
   'cloud-upload': cloudUpload,
   collection: collection,
   compass: compass,
   'credit-card': creditCard,
   'diagram-3': diagram3,
+  download: download,
   'envelope-open': envelopeOpen,
   'envelope-paper': envelopePaper,
   eye: eye,
@@ -129,8 +136,11 @@ export const ICONE = {
   'person-plus': personPlus,
   'person-vcard': personVcard,
   'plus-lg': plusLg,
+  printer: printer,
+  'qr-code': qrCode,
   receipt: receipt,
   'receipt-cutoff': receiptCutoff,
+  share: share,
   'shield-check': shieldCheck,
   'shield-lock': shieldLock,
   'signpost-split': signpostSplit,

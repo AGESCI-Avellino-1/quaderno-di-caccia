@@ -7,6 +7,11 @@ famiglia riceve un link per l'**iscrizione**, che lo staff dell'unità accoglie.
 
 Nella Home, in **Il mio gruppo**, tocca **Lista d'attesa**. La vedono tutti i capi.
 
+Per far conoscere la lista d'attesa (a una riunione con le famiglie, in parrocchia), in **Il mio
+gruppo** tocca **Invita nel gruppo**: il link da mandare, il QR code e un volantino da stampare
+(vedi [Invitare altre famiglie](../genitore/lista-attesa.md#invitare-altre-famiglie)). Lo
+trovano anche i genitori e i ragazzi.
+
 I ragazzi sono divisi per età nell'anno scout in corso (tra parentesi l'età dell'anno
 prossimo). Per ognuno vedi l'unità **Consigliata**, scelta dalle età e dalla composizione
 delle unità, chi contattare e da quando è in lista. **Possibile doppione** segnala due

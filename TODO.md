@@ -219,6 +219,33 @@ la Progressione del ragazzo restano come oggi.
 
 DEC-299…DEC-303 nell'analisi (03/11). Via del maintainer il 03/11, con la release dopo.
 
+#### N.37 — Link e QR code per condividere la lista d'attesa ✅ 03/11 (DEC-304)
+
+Richiesta del maintainer (03/11): chiunque usi l'app, anche un genitore o un ragazzo, genera
+un link da condividere e un QR code per la lista d'attesa. La lista è già pubblica
+(`/lista-attesa`, DEC-256): il link è quello. Il QR si disegna sul telefono, così funziona anche
+senza rete. Deciso il 03/11:
+
+- **Dove**: una voce «Invita nel gruppo» nel menu laterale e una scheda nella Home, uguali per
+  tutti; in più un pulsante «Condividi» in fondo alla pagina pubblica della lista d'attesa, così
+  chi la riceve può girarla.
+- **Cosa si fa**: il pulsante «Condividi» del telefono (WhatsApp, email…) e «Copia il link»; il
+  QR grande sullo schermo da far inquadrare; il QR da scaricare come immagine PNG; un volantino
+  A4 in PDF con logo e nome del gruppo, QR e poche righe di testo.
+- **Nessuna traccia**: il link è uguale per tutti, non dice chi l'ha condiviso.
+- **Testo del volantino**: c'è un testo di base con il nome del gruppo («Vuoi entrare nel
+  gruppo scout …? Inquadra il codice e mettiti in lista d'attesa»), che i capigruppo modificano
+  dalle Impostazioni e possono riportare al testo di base (deciso il 03/11).
+- **Senza rete**: il QR si disegna sul telefono con una libreria MIT, quindi funziona anche
+  offline (confermato il 03/11).
+
+Fatto: pagina «Invita nel gruppo» (`/invita`, `InvitaView.vue`) con `CondividiLink.vue` e
+`QrCode.vue` (libreria `uqr`, MIT, in `navigazione/condividi.ts`); il volantino è
+`attesa/volantino.py` (QR di reportlab), `GET /volantino-lista-attesa.pdf`; il testo in
+`Impostazioni.volantino_attesa` (`TestoVolantino.vue`). Policy `puo_condividere_lista_attesa` e
+`puo_modificare_volantino_attesa`. Da provare sui telefoni veri: «Condividi» e la lettura del QR
+stampato.
+
 ### Fatto nel giro del 03/11
 
 Il maintainer ha dato il via il 03/11. Ordine: N.25 con N.22 (stesso codice), N.21, N.20,
@@ -398,7 +425,7 @@ standby: si valuterà più avanti se realizzarla (maintainer, 29/10/2026).
 | 5 | Fascicolo completo | ✅ | a blocchi (dettaglio sotto): scheda medica con stampa, note e regole, fascicolo del ragazzo e dei capi, fine anno e archivio |
 | 6 | Dopo | ✅ | a blocchi: 6.1 bacheca ✅ (DEC-218…DEC-220, provata nel browser il 30/10), 6.2 estratto conto ✅ (DEC-221…DEC-224, provato nel browser il 30/10 con un estratto sintetico; il file vero della banca si legge), 6.3 Carta di clan ✅ (DEC-227…DEC-229, provata nel browser il 30/10). Note: estratto conto (importazione dei movimenti della banca e abbinamento a quote e versamenti: note sul formato in [docs/analisi/estratto-conto-banca.md](docs/analisi/estratto-conto-banca.md)), Carta di clan |
 | 7 | App negli store (Capacitor) | 💤 | in standby: si valuterà se realizzarla; DEC-105; prima un prototipo per la regola Apple 4.2 |
-| 8 | Realizzazione documentazione di uso | ✅ | manuale d'uso ✅ 31/10 per tutti i profili (genitore, ragazzo E/G, R/S e L/C, capo, capigruppo, tesorieri, amministratore tecnico), su https://avellino1-qdc.readthedocs.io e in PDF nelle release (v1.0.0 il 31/10, v1.1.0 il 01/11 con manutenzione, sblocchi, pagine di errore, Apache con un pannello e le correzioni su IP del client, nginx dopo una modifica di `.env` e log di axes; v1.2.0 il 02/11 con lo storico da BuonaStrada, l'archiviazione delle unità, le email un gruppo alla volta e il server di posta dalle Impostazioni, anche Gmail con un accesso Google; v1.2.1 il 02/11 con la guida di installazione che chiarisce quale progetto Google Cloud usare per Gmail e per il Drive; v1.3.0 il 02/11 con le note dell'installazione: unità collegate, assistenti ecclesiastici, Soci e Genitori, genitore che diventa capo, squadriglie dei reparti monosessuali, import che non si ferma su un dato sbagliato, controlli dell'installazione e del Drive; v1.4.0 il 03/11 con il banner per installare l'app, i gruppi della Home richiudibili, il calendario, il percorso scout, l'elenco degli incarichi in PDF, la cassa comune delle unità collegate e la scheda sanitaria del gruppo con i suoi allegati; v1.5.0 il 03/11 con i servizi di supporto al posto di «a disposizione», la lista d'attesa di un maggiorenne, il percorso scout nel trasferimento del fascicolo, la passkey di sblocco e il servizio systemd con lo script di aggiornamento; v1.6.0 il 03/11 con il logo AGESCI di base e quello del gruppo scelto all'installazione, e una sola passkey per entrare e sbloccare; v1.6.1 il 03/11 con l'elenco degli incarichi per unità che mostra ogni capo in ogni sezione dei suoi incarichi; v1.7.0 il 03/11 con la professione da BuonaStrada, la regola degli assistenti ecclesiastici, l'ordine delle unità nel PDF degli incarichi e la foto nell'avatar; v1.8.0 il 03/11 con i componenti di Bootstrap 6 del tema 3.0.0a3, il PIN di 6 cifre, l'Organigramma, i modelli delle email in una pagina, la Progressione per unità, i pulsanti accanto ai telefoni e i numeri nella rubrica); guida di installazione (https://qdc-installazione.readthedocs.io) riletta con il maintainer il 01/11; ripristino da un backup scritto e provato il 01/11 (8.7). Dettaglio dei blocchi sotto; analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239) |
+| 8 | Realizzazione documentazione di uso | ✅ | manuale d'uso ✅ 31/10 per tutti i profili (genitore, ragazzo E/G, R/S e L/C, capo, capigruppo, tesorieri, amministratore tecnico), su https://avellino1-qdc.readthedocs.io e in PDF nelle release (v1.0.0 il 31/10, v1.1.0 il 01/11 con manutenzione, sblocchi, pagine di errore, Apache con un pannello e le correzioni su IP del client, nginx dopo una modifica di `.env` e log di axes; v1.2.0 il 02/11 con lo storico da BuonaStrada, l'archiviazione delle unità, le email un gruppo alla volta e il server di posta dalle Impostazioni, anche Gmail con un accesso Google; v1.2.1 il 02/11 con la guida di installazione che chiarisce quale progetto Google Cloud usare per Gmail e per il Drive; v1.3.0 il 02/11 con le note dell'installazione: unità collegate, assistenti ecclesiastici, Soci e Genitori, genitore che diventa capo, squadriglie dei reparti monosessuali, import che non si ferma su un dato sbagliato, controlli dell'installazione e del Drive; v1.4.0 il 03/11 con il banner per installare l'app, i gruppi della Home richiudibili, il calendario, il percorso scout, l'elenco degli incarichi in PDF, la cassa comune delle unità collegate e la scheda sanitaria del gruppo con i suoi allegati; v1.5.0 il 03/11 con i servizi di supporto al posto di «a disposizione», la lista d'attesa di un maggiorenne, il percorso scout nel trasferimento del fascicolo, la passkey di sblocco e il servizio systemd con lo script di aggiornamento; v1.6.0 il 03/11 con il logo AGESCI di base e quello del gruppo scelto all'installazione, e una sola passkey per entrare e sbloccare; v1.6.1 il 03/11 con l'elenco degli incarichi per unità che mostra ogni capo in ogni sezione dei suoi incarichi; v1.7.0 il 03/11 con la professione da BuonaStrada, la regola degli assistenti ecclesiastici, l'ordine delle unità nel PDF degli incarichi e la foto nell'avatar; v1.8.0 il 03/11 con i componenti di Bootstrap 6 del tema 3.0.0a3, il PIN di 6 cifre, l'Organigramma, i modelli delle email in una pagina, la Progressione per unità, i pulsanti accanto ai telefoni e i numeri nella rubrica; v1.9.0 il 03/11 con «Invita nel gruppo»: link, QR code e volantino della lista d'attesa); guida di installazione (https://qdc-installazione.readthedocs.io) riletta con il maintainer il 01/11; ripristino da un backup scritto e provato il 01/11 (8.7). Dettaglio dei blocchi sotto; analisi: [docs/analisi/manuali.md](docs/analisi/manuali.md) (DEC-230…DEC-239) |
 
 ## Storico dei lavori
 

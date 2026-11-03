@@ -4,6 +4,7 @@ capi. The family never sees its place in the list (DEC-257)."""
 from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router, Schema, Status
 from ninja.errors import HttpError
@@ -13,7 +14,7 @@ from apps.core.anno import AnnoAssociativo
 from apps.organizzazione.models import Unita
 from apps.permessi import policy
 
-from . import servizi
+from . import servizi, volantino
 from .models import InAttesa, StatoAttesa
 
 router = Router(tags=["attesa"])
@@ -73,6 +74,17 @@ def _per_la_famiglia(voce: InAttesa) -> dict:
         "conferma_chiesta": voce.conferma_chiesta_il is not None,
         "contattabile_dal": anno.etichetta if anno else "",
     }
+
+
+@router.get("/volantino-lista-attesa.pdf")
+def volantino_lista_attesa(request):
+    """The flyer to print (DEC-304): anyone with an account. Never stored."""
+    if not policy.puo_condividere_lista_attesa(request.auth):
+        raise HttpError(403, "Il volantino lo scarica chi usa l'app.")
+    risposta = HttpResponse(volantino.pdf(), content_type="application/pdf")
+    risposta["Content-Disposition"] = 'attachment; filename="lista-d-attesa.pdf"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
 
 
 # --- Public: the family ------------------------------------------------------------------------

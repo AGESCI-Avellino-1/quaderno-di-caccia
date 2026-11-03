@@ -38,14 +38,15 @@ const voci = (p: Profilo, chiave: string) =>
     ?.voci.map((v) => v.nome) ?? []
 
 describe('menu', () => {
-  it('a parent sees the family, the notices and the events, not the group', () => {
+  it('a parent sees the family, the notices, the events and «Invita nel gruppo»', () => {
     const genitore = {
       ...BASE,
       persona: io,
       tutelati: [{ id: 2, nome: 'Giulia', cognome: 'Rossi' }],
     }
-    expect(titoli(genitore)).toEqual(['Bacheca', 'La mia famiglia', 'Attività'])
+    expect(titoli(genitore)).toEqual(['Bacheca', 'La mia famiglia', 'Il mio gruppo', 'Attività'])
     expect(voci(genitore, 'famiglia')).toEqual(['Giulia Rossi'])
+    expect(voci(genitore, 'gruppo')).toEqual(['Invita nel gruppo'])
     expect(vociProfilo(genitore).map((v) => v.nome)).toEqual([
       'Il mio profilo',
       'Privacy e preferenze',
@@ -54,8 +55,9 @@ describe('menu', () => {
     ])
   })
 
-  it('someone with nothing to do sees no groups', () => {
-    expect(gruppiMenu(BASE)).toEqual([])
+  it('someone with nothing to do sees only «Invita nel gruppo»', () => {
+    expect(titoli(BASE)).toEqual(['Il mio gruppo'])
+    expect(voci(BASE, 'gruppo')).toEqual(['Invita nel gruppo'])
   })
 
   it('names the Progressione personale after the branch and the setting', () => {
@@ -122,6 +124,7 @@ describe('menu', () => {
       'Unità',
       'Organigramma',
       'Richieste di iscrizione',
+      'Invita nel gruppo',
     ])
     expect(titoli(capo)).not.toContain('BuonaStrada')
   })

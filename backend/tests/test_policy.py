@@ -188,3 +188,14 @@ def test_staff_delle_unita_collegate_congiunto(capo, ragazza, reparto, gruppo, e
     assert not policy.e_staff(estraneo.utente, reparto)
     collega(parallelo, None)
     assert not any(p(altro.utente) for p in permessi)
+
+
+def test_invita_nel_gruppo(capo, capogruppo, csq, ragazza, genitore, estraneo):
+    """DEC-304: anyone with an account shares the waiting list; the capigruppo write the
+    flyer's text."""
+    for chi in (capo, capogruppo, csq, ragazza, genitore, estraneo):
+        assert policy.puo_condividere_lista_attesa(chi.utente)
+    assert not policy.puo_condividere_lista_attesa(None)
+    assert policy.puo_modificare_volantino_attesa(capogruppo.utente)
+    for chi in (capo, csq, ragazza, genitore, estraneo):
+        assert not policy.puo_modificare_volantino_attesa(chi.utente)

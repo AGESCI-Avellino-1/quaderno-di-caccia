@@ -3,14 +3,18 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, type DatiAttesa } from '@/api/qdc'
+import CondividiLink from '@/components/CondividiLink.vue'
 import ModuloAttesa from '@/components/ModuloAttesa.vue'
 import { useErrore } from '@/composables/useErrore'
+import { indirizzoListaAttesa } from '@/navigazione/condividi'
 import { useSitoStore } from '@/stores/sito'
 
 // The public waiting list form (DEC-256): no account. The family never sees its place
 // in the list, only that it is on it (DEC-257).
 const { errore, inCorso, esegui } = useErrore()
 const sito = useSitoStore()
+// Who got the link can pass it on (DEC-304).
+const url = indirizzoListaAttesa()
 
 const vuoti = (): DatiAttesa => ({
   nome: '',
@@ -115,6 +119,16 @@ async function chiediLink() {
       <p v-if="linkChiesto" class="small mt-3 mb-0" role="status">
         Se l'indirizzo è in lista, tra poco arriva l'email con il link.
       </p>
+    </section>
+
+    <section class="card card-body mt-5">
+      <h2 class="h6">Conosci qualcuno che vorrebbe entrare?</h2>
+      <p class="small fg-2">Mandagli il link di questa pagina.</p>
+      <CondividiLink
+        :url="url"
+        titolo="Lista d'attesa"
+        :testo="`Per entrare in ${sito.sito.gruppo || 'gruppo'}: mettiti in lista d'attesa.`"
+      />
     </section>
   </section>
 </template>

@@ -13,7 +13,9 @@ leggono solo i capi.
 :::
 
 Quando entri, la Home ti mostra quello che puoi fare: la **Bacheca**, un riquadro per
-ogni figlio in **La mia famiglia**, gli **Eventi** in **Attività** e, in **Profilo**, le
+ogni figlio in **La mia famiglia**, **Invita nel gruppo** in **Il mio gruppo** (vedi
+[Invitare altre famiglie](lista-attesa.md#invitare-altre-famiglie)), gli **Eventi** in
+**Attività** e, in **Profilo**, le
 tue quote, le email e la protezione del telefono. Le stesse voci sono nel menu (vedi
 [Come ci si muove](../introduzione.md#come-ci-si-muove)).
 

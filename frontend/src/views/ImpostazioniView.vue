@@ -11,6 +11,7 @@ import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
 import ServerPosta from '@/components/ServerPosta.vue'
 import SezioneApribile from '@/components/SezioneApribile.vue'
 import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
+import TestoVolantino from '@/components/TestoVolantino.vue'
 import { useErrore } from '@/composables/useErrore'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
 import { useSitoStore } from '@/stores/sito'
@@ -196,6 +197,11 @@ async function salva() {
       </section>
       <TestiSchedaSanitaria
         v-if="dati.puo_modificare_scheda"
+        :impostazioni="dati"
+        @aggiornate="dati = $event"
+      />
+      <TestoVolantino
+        v-if="dati.puo_modificare_volantino"
         :impostazioni="dati"
         @aggiornate="dati = $event"
       />

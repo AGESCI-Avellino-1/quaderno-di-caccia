@@ -1661,3 +1661,14 @@ def puo_gestire_lista_attesa(user, unita: Unita | None = None) -> bool:
 def puo_modificare_eta_unita(user, unita: Unita) -> bool:
     """The ages of a unit for the waiting list (DEC-260): its staff and the capigruppo."""
     return e_capogruppo(user) or e_staff(user, unita)
+
+
+def puo_condividere_lista_attesa(user) -> bool:
+    """«Invita nel gruppo» (DEC-304): anyone with an account, parents and ragazzi too.
+    The link and the flyer carry nothing about who shares them."""
+    return bool(user and user.is_authenticated and user.is_active)
+
+
+def puo_modificare_volantino_attesa(user) -> bool:
+    """The text of the waiting list flyer (DEC-304): the capigruppo."""
+    return e_capogruppo(user)

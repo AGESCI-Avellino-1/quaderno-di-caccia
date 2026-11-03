@@ -128,6 +128,10 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     scheda_dichiarazione_base: str = ""
     scheda_consenso_base: str = ""
     puo_modificare_scheda: bool = False
+    # The waiting list flyer (DEC-304): the group's text and the base one.
+    volantino_attesa: str = ""
+    volantino_attesa_base: str = ""
+    puo_modificare_volantino: bool = False
 
 
 CAMPI_SITO = list(ImpostazioniSitoIO.model_fields)
@@ -157,6 +161,7 @@ def _impostazioni(request) -> dict:
         "puo_destinatari_email": policy.puo_scegliere_destinatari_email(request.auth),
         **_smtp(request, imp),
         **_testi_scheda(request, imp),
+        **_volantino(request, imp),
     }
 
 
@@ -194,6 +199,48 @@ def salva_testi_scheda(request, dati: TestiSchedaIn):
     imp.scheda_dichiarazione = "" if dichiarazione == DICHIARAZIONE else dichiarazione
     imp.scheda_consenso = "" if consenso == CONSENSO else consenso
     imp.save(update_fields=["scheda_dichiarazione", "scheda_consenso"])
+    return _impostazioni(request)
+
+
+def _volantino(request, imp: Impostazioni) -> dict:
+    from apps.attesa import volantino
+
+    return {
+        "volantino_attesa": volantino.testo(imp),
+        "volantino_attesa_base": volantino.TESTO_BASE,
+        "puo_modificare_volantino": policy.puo_modificare_volantino_attesa(request.auth),
+    }
+
+
+class VolantinoIn(Schema):
+    # Empty: back to the base text.
+    testo: str = ""
+
+
+@router.put("/impostazioni/volantino-attesa", response=ImpostazioniOut)
+def salva_volantino(request, dati: VolantinoIn):
+    """The text of the waiting list flyer (DEC-304): capigruppo."""
+    from apps.attesa import volantino
+
+    from . import segnaposto as sp
+
+    if not policy.puo_modificare_volantino_attesa(request.auth):
+        raise HttpError(403, "Il testo del volantino lo cambiano i capigruppo.")
+    testo = "\n\n".join(
+        " ".join(c.split()) for c in dati.testo.replace("\r\n", "\n").split("\n\n") if c.strip()
+    )
+    if len(testo) > volantino.LUNGHEZZA_MASSIMA:
+        raise HttpError(400, "Il testo va scritto in breve: al massimo 1000 caratteri.")
+    ignoti = sp.sconosciuti(testo, volantino.SEGNAPOSTO)
+    if ignoti:
+        elenco = ", ".join(f"[{n}]" for n in ignoti)
+        raise HttpError(
+            400, f"Segnaposto sconosciuto: {elenco}. Puoi usare [Gruppo] e [Sigla gruppo]."
+        )
+    imp = Impostazioni.carica()
+    # The base text saved as it is stays "the base": it follows future versions.
+    imp.volantino_attesa = "" if testo == volantino.TESTO_BASE else testo
+    imp.save(update_fields=["volantino_attesa"])
     return _impostazioni(request)
 
 

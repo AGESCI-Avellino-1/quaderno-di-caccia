@@ -32,6 +32,21 @@ una dichiarazione e un consenso al trattamento dei dati. In **Testi della scheda
 un capogruppo li cambia e tocca **Salva**; **Torna al testo di base** rimette quelli del
 modello del gruppo.
 
+## Volantino della lista d'attesa
+
+**Invita nel gruppo** (vedi
+[Invitare altre famiglie](../genitore/lista-attesa.md#invitare-altre-famiglie)) offre a tutti
+un volantino da stampare con il QR code della lista d'attesa. In **Volantino della lista
+d'attesa** un capogruppo ne cambia il testo e tocca **Salva**; **Torna al testo di base**
+rimette quello proposto dall'app. Nel testo puoi scrivere **[Gruppo]** e **[Sigla gruppo]**,
+che sul volantino diventano il nome e la sigla del gruppo; una riga vuota separa i paragrafi.
+**Scarica il volantino** mostra com'è venuto.
+
+:::{container} schermate
+![Il testo del volantino nelle impostazioni, sul telefono](../img/gruppo/volantino-telefono.png){.telefono width="30%"}
+![Il testo del volantino nelle impostazioni, sul computer](../img/gruppo/volantino-computer.png){.computer width="65%"}
+:::
+
 ## Pagamenti
 
 Come le famiglie possono pagare: accendi i modi che il gruppo accetta.

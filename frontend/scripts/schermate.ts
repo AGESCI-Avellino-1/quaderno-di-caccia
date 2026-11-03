@@ -288,6 +288,8 @@ const SCENE: Scena[] = [
   { nome: 'genitore/lista-attesa', percorso: '/lista-attesa', intera: true },
   // The link of the confirmation email (fixed in dati_di_prova).
   { nome: 'genitore/mia-attesa', percorso: '/lista-attesa/attesa-di-prova', intera: true },
+  // «Invita nel gruppo»: link, QR code and flyer of the waiting list.
+  { nome: 'genitore/invita', chi: 'genitore', percorso: '/invita', intera: true },
   {
     nome: 'genitore/maggiorenne',
     chi: 'genitoreMaggiorenne',
@@ -691,6 +693,12 @@ const SCENE: Scena[] = [
     mostra: 'Elenco degli incarichi',
   },
   { nome: 'gruppo/impostazioni', chi: 'capogruppo', percorso: '/impostazioni', intera: true },
+  {
+    nome: 'gruppo/volantino',
+    chi: 'capogruppo',
+    percorso: '/impostazioni',
+    mostra: "Volantino della lista d'attesa",
+  },
   {
     // Switched on from the page itself; the bar says only administrators get in.
     nome: 'gruppo/manutenzione',

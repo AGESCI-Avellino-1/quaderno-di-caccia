@@ -337,3 +337,13 @@ body {
 .qdc-editor-testo .selectedCell {
   background-color: var(--ag-primary-subtle);
 }
+
+// One's own profile photo in the avatar of the side menu (DEC-297), in the theme's circle.
+.ag-sidebar__user-avatar {
+  overflow: hidden;
+}
+.qdc-avatar-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

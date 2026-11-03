@@ -26,6 +26,10 @@ su BuonaCaccia. Non viene pubblicata e gli altri ragazzi non la vedono.
    figlio: il resto della foto non viene caricato.
 3. Tocca **Salva la foto**.
 
+Se tuo figlio ha un suo account, la foto compare anche nel suo menu, al posto delle iniziali
+accanto al nome; lo stesso vale per la tua foto, se un capo l'ha caricata nella tua scheda.
+Senza rete compaiono le iniziali.
+
 ## Il fascicolo dell'anno
 
 Tocca **Fascicolo dell'anno**: in una sola pagina trovi anagrafica e famiglia, scheda

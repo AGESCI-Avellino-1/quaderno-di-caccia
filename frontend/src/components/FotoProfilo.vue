@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
 import { api, fotoProfilo, type FotoStorica, type PersonaDettaglio } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
+import { useSessioneStore } from '@/stores/sessione'
 
 // The profile photo, to recognise the ragazzi (DEC-42, DEC-201). The photo is cropped
 // on the device to a square around the person (DEC-205): only that square leaves the
@@ -11,6 +12,7 @@ import { useErrore } from '@/composables/useErrore'
 // open them on request (online only, like the current one).
 const props = defineProps<{ persona: PersonaDettaglio }>()
 const emit = defineEmits<{ cambiata: [persona: PersonaDettaglio] }>()
+const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 
 const LATO = 280 // the square on screen
@@ -136,6 +138,8 @@ async function salva() {
   annulla()
   versione.value = Date.now()
   emit('cambiata', nuova)
+  // One's own photo: the avatar of the side menu changes too (DEC-297).
+  if (props.persona.id === sessione.profilo?.persona?.id) await sessione.carica()
 }
 
 onBeforeUnmount(annulla)

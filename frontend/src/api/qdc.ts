@@ -19,6 +19,8 @@ export interface PersonaBreve {
 export interface Profilo {
   email: string
   persona: PersonaBreve | null
+  /** One's own current profile photo, for the avatar (DEC-297). */
+  foto_id?: number | null
   branca: Branca
   capo: boolean
   capogruppo: boolean

@@ -109,7 +109,9 @@ professione è un elenco fisso di 25 valori con «PRESBITERO»; **non importati*
 (codice numerico: serve la tabella dei codici di BuonaStrada `[da verificare]`) e gli incarichi
 associativi (colonne vuote in tutte le righe di «Ricerca Soci»).
 
-#### N.30 — Foto del profilo nell'avatar ⏳ (domande al maintainer)
+#### N.30 — Foto del profilo nell'avatar ✅ 03/11
+
+Fatto con test (DEC-297): `/io` dice `foto_id`, il menu laterale mostra la foto (iniziali senza rete o se non si carica), aggiornata quando si carica una foto nuova della propria scheda; vista nella schermata di Giulia con la sua foto di prova.
 
 Richiesta del maintainer (03/11): se la persona collegata all'account ha una foto nel profilo,
 l'avatar (in basso nel menu laterale, oggi le iniziali) mostra quella foto.

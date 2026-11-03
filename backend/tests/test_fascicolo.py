@@ -212,3 +212,18 @@ def test_foto_al_campo_e_cancellazione(capo, capogruppo, ragazza, genitore, repa
         content_type="application/json",
     )
     assert not FotoProfilo.objects.exists()
+
+
+def test_la_propria_foto_nell_avatar(capo, ragazza, genitore):
+    """DEC-297: the profile tells the PWA one's own current photo, for the avatar."""
+    assert _client(ragazza).get("/api/v1/io").json()["foto_id"] is None
+    _client(genitore).post(f"/api/v1/persone/{ragazza.pk}/foto", {"file": _jpeg()})
+    prima = _client(ragazza).get("/api/v1/io").json()["foto_id"]
+    assert prima == FotoProfilo.objects.get(persona=ragazza).pk
+    # Hers to see: the avatar loads it.
+    assert _client(ragazza).get(f"/api/v1/persone/{ragazza.pk}/foto").status_code == 200
+    # A new photo, a new id: the avatar changes.
+    _client(genitore).post(f"/api/v1/persone/{ragazza.pk}/foto", {"file": _jpeg()})
+    assert _client(ragazza).get("/api/v1/io").json()["foto_id"] != prima
+    # Someone else's photo never: the capo's profile has none.
+    assert _client(capo).get("/api/v1/io").json()["foto_id"] is None

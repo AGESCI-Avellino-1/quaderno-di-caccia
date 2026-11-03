@@ -53,6 +53,9 @@ def _impersonazione(request) -> dict | None:
 class Profilo(Schema):
     email: str
     persona: PersonaBreve | None
+    # The current profile photo of one's own person (DEC-201), for the avatar of the side
+    # menu (DEC-297): its id changes with every new photo.
+    foto_id: int | None = None
     # Theme key for <html data-branca> (django-agesci-campania-theme names).
     branca: str
     capo: bool
@@ -103,9 +106,11 @@ def profilo(request):
     """Who am I and which roles do I hold: drives the PWA navigation."""
     user = request.auth
     persona = policy.persona_di(user)
+    foto = persona.foto_profilo.first() if persona is not None else None
     return {
         "email": user.email,
         "persona": persona,
+        "foto_id": foto.pk if foto else None,
         "branca": policy.tema_branca(user),
         "capo": policy.e_capo(user),
         "capogruppo": policy.e_capogruppo(user),

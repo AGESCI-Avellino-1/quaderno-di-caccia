@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
+import { fotoProfilo } from '@/api/qdc'
 import Icona from '@/components/Icona.vue'
 import { useRete } from '@/composables/useRete'
 import { gruppiMenu, vociProfilo, type Gruppo, type Voce } from '@/navigazione/menu'
@@ -39,6 +40,14 @@ const nome = computed(() => {
   const p = sessione.profilo
   if (!p) return ''
   return p.persona ? `${p.persona.nome} ${p.persona.cognome}` : p.email
+})
+// The avatar shows one's own profile photo (DEC-297); offline, or if it does not load, the
+// initials. Never kept on the device: the server sends it with no-store.
+const fotoMancante = ref<number | null>(null)
+const fotoAvatar = computed(() => {
+  const p = sessione.profilo
+  if (!p?.persona || !p.foto_id || fotoMancante.value === p.foto_id) return null
+  return `${fotoProfilo(p.persona.id)}?v=${p.foto_id}`
 })
 const iniziali = computed(() => {
   const p = sessione.profilo?.persona
@@ -241,7 +250,16 @@ defineExpose({ apri })
         :title="nome"
         @click="profiloAperto = !profiloAperto"
       >
-        <span class="ag-sidebar__user-avatar" aria-hidden="true">{{ iniziali }}</span>
+        <span class="ag-sidebar__user-avatar" aria-hidden="true">
+          <img
+            v-if="fotoAvatar"
+            :src="fotoAvatar"
+            alt=""
+            class="qdc-avatar-foto"
+            @error="fotoMancante = sessione.profilo?.foto_id ?? null"
+          />
+          <template v-else>{{ iniziali }}</template>
+        </span>
         <span class="ag-sidebar__label text-truncate">{{ nome }}</span>
         <Icona :nome="profiloAperto ? 'chevron-down' : 'chevron-up'" class="ms-auto" />
       </button>

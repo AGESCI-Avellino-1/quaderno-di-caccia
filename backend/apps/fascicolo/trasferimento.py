@@ -1,6 +1,6 @@
 """Moving a file to another group that uses QdC (DEC-46, DEC-213): the Progressione
 Personale, the notes that are not reserved (shared with the ragazzo or the parents),
-for a capo the years of service and the training. Never attendance, health data,
+the scout path (DEC-287), for a capo the years of service and the training. Never attendance, health data,
 rules on the relationship with the minor, photos or private mete and Punto della Strada
 parts. The registry travels with BuonaStrada: the person is matched by codice fiscale.
 
@@ -19,7 +19,9 @@ from apps.anagrafica.models import Persona
 from apps.organizzazione.models import Gruppo
 
 FORMATO = "qdc-fascicolo"
-VERSIONE = 1
+# 2 adds the scout path; files of version 1 are still read.
+VERSIONE = 2
+VERSIONI_LETTE = {1, 2}
 # Inside the archive ZIP (DEC-215).
 FILE_ARCHIVIO = "reimportazione.json"
 
@@ -68,6 +70,7 @@ def _d(valore) -> str | None:
 
 
 def esporta(persona: Persona) -> dict:
+    from apps.anagrafica import percorso as percorso_scout
     from apps.fascicolo import capi
     from apps.note.models import Nota
     from apps.permessi import policy
@@ -190,6 +193,21 @@ def esporta(persona: Persona) -> dict:
             "data_nascita": _d(persona.data_nascita),
         },
         "progressione": periodi,
+        # Every period, in this group's units and outside them (DEC-287). `gruppo` empty:
+        # this group; `nelle_unita`: from the app's memberships, which an archived person
+        # keeps here (DEC-215).
+        "percorso": [
+            {
+                "gruppo": x["gruppo"],
+                "unita": x["unita"],
+                "ruolo": x["ruolo"],
+                "anno_inizio": x["anno_inizio"],
+                "anno_fine": x["anno_fine"],
+                "fonte": x["fonte"],
+                "nelle_unita": x["id"] is None,
+            }
+            for x in percorso_scout.periodi(persona)
+        ],
         "note": note,
         "capo": capo,
     }
@@ -206,6 +224,67 @@ def _percorso(o) -> dict:
         "interrotto_il": _d(o.interrotto_il),
         "motivo_interruzione": o.motivo_interruzione,
     }
+
+
+def _nome_gruppo(nome: str) -> str:
+    """For comparing group names: "AGESCI Avellino 1" and "AVELLINO 1" are the same."""
+    nome = " ".join(nome.split()).casefold()
+    return nome.removeprefix("agesci ").strip()
+
+
+def _importa_percorso(persona: Persona, dati: dict, esportato: date, utente) -> int:
+    """The scout path of the file (DEC-213, DEC-287). From another group, its years
+    become years "in another group" with its name; back from the archive, the years in
+    this group's units are already here with the record (DEC-215). A period already
+    here (same group, years and role, for instance from BuonaStrada) is skipped, as is
+    one in the group receiving the file (maintainer, 03/11)."""
+    from apps.anagrafica.models import PeriodoPercorso
+    from apps.core.anno import AnnoAssociativo
+    from apps.core.models import FonteDato
+    from apps.impostazioni.models import Impostazioni
+
+    archivio = bool(dati.get("archivio"))
+    loro = (dati.get("gruppo") or "").strip() or "Altro gruppo"
+    nostri = {_nome_gruppo(Impostazioni.carica().nome_del_gruppo())}
+    if gruppo := Gruppo.objects.first():
+        nostri.add(_nome_gruppo(gruppo.denominazione))
+    ultimo = AnnoAssociativo.da_data(esportato).anno_fine
+    presenti = {
+        (_nome_gruppo(p.gruppo), p.anno_inizio, p.anno_fine, p.ruolo)
+        for p in PeriodoPercorso.objects.filter(persona=persona)
+    }
+    aggiunti = 0
+    for x in dati.get("percorso", []):
+        if archivio and x.get("nelle_unita"):
+            continue
+        gruppo = (x.get("gruppo") or "").strip()
+        if not archivio and not gruppo:
+            gruppo = loro
+        if gruppo and _nome_gruppo(gruppo) in nostri:
+            continue  # years in this group: its own units have them
+        periodo = PeriodoPercorso(
+            persona=persona,
+            gruppo=gruppo[:160],
+            unita=x["unita"][:160],
+            ruolo=x["ruolo"],
+            anno_inizio=x["anno_inizio"],
+            anno_fine=x["anno_fine"] or ultimo,
+            fonte=x.get("fonte") or FonteDato.BUONASTRADA,
+            registrato_da=utente,
+        )
+        chiave = (
+            _nome_gruppo(periodo.gruppo),
+            periodo.anno_inizio,
+            periodo.anno_fine,
+            periodo.ruolo,
+        )
+        if chiave in presenti:
+            continue
+        periodo.full_clean()
+        periodo.save()
+        presenti.add(chiave)
+        aggiunti += 1
+    return aggiunti
 
 
 def _g(valore: str | None) -> date | None:
@@ -233,7 +312,7 @@ def importa(dati: dict, utente) -> dict:
         Tappa,
     )
 
-    if dati.get("formato") != FORMATO or dati.get("versione") != VERSIONE:
+    if dati.get("formato") != FORMATO or dati.get("versione") not in VERSIONI_LETTE:
         raise ValidationError("Non è un fascicolo esportato dal Quaderno di Caccia.")
     cf = (dati.get("persona") or {}).get("codice_fiscale") or ""
     persona = Persona.objects.filter(codice_fiscale=cf).first() if cf else None
@@ -250,7 +329,7 @@ def importa(dati: dict, utente) -> dict:
         raise ValidationError("Questo fascicolo è già stato importato.")
     riunito = _riunisci(persona, dati) if dati.get("archivio") else False
     aperto_qui = PeriodoBranca.objects.filter(persona=persona, data_fine__isnull=True).exists()
-    conteggio = {"periodi": 0, "note": 0, "anni_di_servizio": 0, "formazione": 0}
+    conteggio = {"periodi": 0, "note": 0, "anni_di_servizio": 0, "formazione": 0, "percorso": 0}
     try:
         for p in dati.get("progressione", []):
             fine = _g(p.get("data_fine"))
@@ -367,6 +446,7 @@ def importa(dati: dict, utente) -> dict:
                 provenienza=provenienza,
             )
             conteggio["note"] += 1
+        conteggio["percorso"] = _importa_percorso(persona, dati, esportato, utente)
         capo = dati.get("capo") or {}
         # Back from the archive here: the roles of those years came back with the
         # record, they are not rebuilt again.

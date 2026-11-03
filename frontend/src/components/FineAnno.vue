@@ -275,8 +275,10 @@ async function importa(evento: Event) {
         Chi arriva da un altro gruppo che usa il Quaderno di Caccia: carica il file che ti ha
         mandato il suo capogruppo. Chi rientra nel gruppo dopo l'archiviazione, anche come capo:
         carica lo ZIP dell'archivio preso dal Drive. La persona deve essere già nell'anagrafica, da
-        BuonaStrada. Tornano la Progressione, le note non riservate e, per un capo, servizio e
-        formazione; per chi rientra, anche gli anni già passati nel gruppo.
+        BuonaStrada. Tornano la Progressione, le note non riservate, il percorso scout (gli anni nel
+        gruppo di provenienza diventano anni in un altro gruppo; quelli che ci sono già si saltano)
+        e, per un capo, servizio e formazione; per chi rientra, anche gli anni già passati nel
+        gruppo.
       </p>
       <label class="btn btn-sm btn-outline theme-primary" for="importa-fascicolo">
         Carica il file
@@ -292,7 +294,8 @@ async function importa(evento: Event) {
         <div>
           Importato per {{ importato.persona }}: {{ importato.periodi }} periodi di Progressione,
           {{ importato.note }} note, {{ importato.anni_di_servizio }} anni di servizio,
-          {{ importato.formazione }} voci di formazione.
+          {{ importato.formazione }} voci di formazione, {{ importato.percorso }} periodi del
+          percorso scout.
         </div>
       </div>
     </template>

@@ -353,6 +353,7 @@ class EsitoImportazione(Schema):
     note: int
     anni_di_servizio: int
     formazione: int
+    percorso: int
 
 
 @router.post("/trasferimenti", response=EsitoImportazione)

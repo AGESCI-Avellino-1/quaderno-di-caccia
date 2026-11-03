@@ -255,6 +255,87 @@ def test_esportazione_e_importazione(capo, capogruppo, ragazza):
     assert _client(capogruppo).post("/api/v1/trasferimenti", {"file": file}).status_code == 400
 
 
+def test_il_percorso_scout_va_con_il_fascicolo(capogruppo, ragazza, gruppo):
+    """DEC-213, DEC-287: the years here become years in another group for who receives
+    the file; what it already has, or what is its own, is skipped (maintainer, 03/11)."""
+    from apps.anagrafica.models import PeriodoPercorso, RuoloAppartenenza
+    from apps.impostazioni.models import Impostazioni
+
+    ragazza.codice_fiscale = "ESPGLI13A41Z000X"  # fictional
+    ragazza.save()
+    PeriodoPercorso.objects.create(
+        persona=ragazza,
+        gruppo="AGESCI Salerno 2",
+        unita="Branco (L1)",
+        ruolo=RuoloAppartenenza.RAGAZZO,
+        anno_inizio=2021,
+        anno_fine=2022,
+        fonte="BUONASTRADA",
+    )
+    url = f"/api/v1/persone/{ragazza.pk}/trasferimento.json"
+    dati = json.loads(_client(capogruppo).get(url).content)
+    assert dati["versione"] == 2
+    qui = [x for x in dati["percorso"] if x["nelle_unita"]]
+    assert len(qui) == 1 and qui[0]["gruppo"] == ""
+    # The other group, Napoli 5: it already has the years here from BuonaStrada.
+    PeriodoPercorso.objects.all().delete()
+    gruppo.denominazione = "NAPOLI 5"
+    gruppo.save()
+    Impostazioni.objects.update(nome_gruppo="")
+    dati["gruppo"] = "AVELLINO 1"
+    anno_fine = qui[0]["anno_fine"] or AnnoAssociativo.corrente().anno_fine
+    PeriodoPercorso.objects.create(
+        persona=ragazza,
+        gruppo="AGESCI Avellino 1",
+        unita=qui[0]["unita"],
+        ruolo=qui[0]["ruolo"],
+        anno_inizio=qui[0]["anno_inizio"],
+        anno_fine=anno_fine,
+        fonte="BUONASTRADA",
+    )
+    # A year once spent in Napoli 5 itself: its own units have it.
+    dati["percorso"].append(
+        {
+            "gruppo": "AGESCI Napoli 5",
+            "unita": "Reparto (E1)",
+            "ruolo": "RAGAZZO",
+            "anno_inizio": 2020,
+            "anno_fine": 2020,
+            "fonte": "BUONASTRADA",
+            "nelle_unita": False,
+        }
+    )
+    PeriodoBranca.objects.all().delete()
+    file = SimpleUploadedFile("f.json", json.dumps(dati).encode())
+    esito = _client(capogruppo).post("/api/v1/trasferimenti", {"file": file}).json()
+    # Only Salerno 2 is added: the year here is already there, Napoli 5's own is skipped.
+    assert esito["percorso"] == 1
+    assert sorted(PeriodoPercorso.objects.values_list("gruppo", flat=True)) == [
+        "AGESCI Avellino 1",
+        "AGESCI Salerno 2",
+    ]
+    # Without the one from BuonaStrada, the year here comes as a year in Avellino 1.
+    PeriodoPercorso.objects.all().delete()
+    PeriodoBranca.objects.all().delete()
+    file = SimpleUploadedFile("f.json", json.dumps(dati).encode())
+    assert _client(capogruppo).post("/api/v1/trasferimenti", {"file": file}).json()["percorso"] == 2
+    arrivato = PeriodoPercorso.objects.get(gruppo="AVELLINO 1")
+    assert (arrivato.unita, arrivato.anno_fine) == (qui[0]["unita"], anno_fine)
+
+
+def test_un_fascicolo_della_prima_versione_si_legge_ancora(capogruppo, ragazza):
+    ragazza.codice_fiscale = "ESPGLI13A41Z000X"  # fictional
+    ragazza.save()
+    url = f"/api/v1/persone/{ragazza.pk}/trasferimento.json"
+    dati = json.loads(_client(capogruppo).get(url).content)
+    dati["versione"] = 1
+    del dati["percorso"]
+    dati["gruppo"] = "Gruppo di provenienza"
+    file = SimpleUploadedFile("f.json", json.dumps(dati).encode())
+    risposta = _client(capogruppo).post("/api/v1/trasferimenti", {"file": file})
+    assert risposta.status_code == 200 and risposta.json()["percorso"] == 0
+
+
 def test_il_capo_porta_servizio_e_formazione(capo, capogruppo):
     from apps.fascicolo.models import Formazione
 
@@ -325,6 +406,17 @@ def test_rientro_dopo_l_archiviazione(uscito, capo, capogruppo, settings, tmp_pa
         data_fine=OGGI - timedelta(days=3 * 365),
     )
     pp.Tappa.objects.create(periodo=periodo, fase="SCOPERTA", data_inizio=periodo.data_inizio)
+    from apps.anagrafica.models import PeriodoPercorso
+
+    PeriodoPercorso.objects.create(
+        persona=uscito,
+        gruppo="AGESCI Salerno 2",
+        unita="Branco (L1)",
+        ruolo="RAGAZZO",
+        anno_inizio=2015,
+        anno_fine=2016,
+        fonte="BUONASTRADA",
+    )
     zip_archivio = _archivia(capogruppo, uscito)
     assert not PeriodoBranca.objects.exists()
     # BuonaStrada brings her back as a new record, with her codice fiscale.
@@ -337,6 +429,10 @@ def test_rientro_dopo_l_archiviazione(uscito, capo, capogruppo, settings, tmp_pa
     assert Appartenenza.objects.filter(persona=tornata).exists()
     assert not Persona.objects.filter(pk=uscito.pk).exists()
     assert Archiviazione.objects.get().persona == tornata
+    # The years in another group come back; those in our units are not doubled (DEC-287).
+    assert list(PeriodoPercorso.objects.values_list("persona", "gruppo")) == [
+        (tornata.pk, "AGESCI Salerno 2")
+    ]
 
 
 def test_rientro_da_capo(capo, capogruppo, settings, tmp_path):

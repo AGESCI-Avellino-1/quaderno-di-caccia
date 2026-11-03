@@ -2063,6 +2063,8 @@ export interface EsitoImportazione {
   note: number
   anni_di_servizio: number
   formazione: number
+  /** Periods of the scout path added (DEC-287). */
+  percorso: number
 }
 
 export const trasferimentoJson = (persona: number) =>

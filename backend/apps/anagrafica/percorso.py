@@ -71,11 +71,10 @@ def _periodi_nelle_unita(persona: Persona) -> list[dict]:
     return risultato
 
 
-def percorso(persona: Persona) -> dict:
-    from apps.impostazioni.models import Impostazioni
-
-    nostro = Impostazioni.carica().nome_del_gruppo()
-    periodi = _periodi_nelle_unita(persona) + [
+def periodi(persona: Persona) -> list[dict]:
+    """Every period, by year: `id` None for those in the app's units, `gruppo` empty for
+    this group."""
+    risultato = _periodi_nelle_unita(persona) + [
         {
             "id": p.pk,
             "gruppo": p.gruppo,
@@ -87,8 +86,16 @@ def percorso(persona: Persona) -> dict:
         }
         for p in PeriodoPercorso.objects.filter(persona=persona)
     ]
-    periodi.sort(key=lambda p: (p["anno_inizio"], p["anno_fine"] or 9999))
-    nel_gruppo = [p["anno_inizio"] for p in periodi if not p["gruppo"]]
+    risultato.sort(key=lambda p: (p["anno_inizio"], p["anno_fine"] or 9999))
+    return risultato
+
+
+def percorso(persona: Persona) -> dict:
+    from apps.impostazioni.models import Impostazioni
+
+    nostro = Impostazioni.carica().nome_del_gruppo()
+    tutti = periodi(persona)
+    nel_gruppo = [p["anno_inizio"] for p in tutti if not p["gruppo"]]
     return {
         "anno_ingresso": _etichetta(min(nel_gruppo)) if nel_gruppo else "",
         "periodi": [
@@ -109,7 +116,7 @@ def percorso(persona: Persona) -> dict:
                 # Only what was rebuilt by hand can be removed here.
                 "rimovibile": p["id"] is not None and p["fonte"] == FonteDato.RICOSTRUITO,
             }
-            for p in periodi
+            for p in tutti
         ],
     }
 

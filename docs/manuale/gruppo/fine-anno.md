@@ -37,9 +37,13 @@ l'unità torna da sola tra quelle chiuse; puoi anche riportarla tu da **Unità a
 ## Chi arriva da un altro gruppo, chi rientra
 
 - **Esporta per un altro gruppo**: dalla scheda di chi va in un altro gruppo che usa il
-  Quaderno di Caccia, scarichi un file con la sua Progressione, le note non riservate e, per
-  un capo, servizio e formazione (mai presenze, dati sanitari, foto). Mandalo al suo nuovo
-  capogruppo.
+  Quaderno di Caccia, scarichi un file con la sua Progressione, le note non riservate, il
+  percorso scout e, per un capo, servizio e formazione (mai presenze, dati sanitari, foto).
+  Mandalo al suo nuovo capogruppo.
 - **Fascicolo da un altro gruppo o dall'archivio**: tocca **Carica il file** e scegli il file
   ricevuto da un altro gruppo, oppure lo ZIP dell'archivio preso dal Drive per chi rientra. La
-  persona deve essere già nell'anagrafica, dall'importazione da BuonaStrada.
+  persona deve essere già nell'anagrafica, dall'importazione da BuonaStrada. Nel percorso
+  scout gli anni passati nel gruppo da cui arriva diventano anni «in un altro gruppo»; i
+  periodi che ci sono già (stesso gruppo, stessi anni, stesso ruolo, per esempio portati da
+  BuonaStrada) non si raddoppiano. Per chi rientra dall'archivio tornano gli anni in altri
+  gruppi e quelli ricostruiti: gli anni nelle nostre unità sono già nell'app.

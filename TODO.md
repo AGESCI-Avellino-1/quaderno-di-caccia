@@ -56,7 +56,9 @@ deve deciderlo l'età e non una scelta. Server: `attesa/servizi._applica`.
 Deciso il 03/11: le voci già in lista di maggiorenni con il genitore come contatto
 restano come sono.
 
-#### N.20 — Percorso scout nel trasferimento del fascicolo ⏳
+#### N.20 — Percorso scout nel trasferimento del fascicolo ✅ 03/11
+
+Fatto con test: formato del fascicolo versione 2 (la 1 si legge ancora), conteggio nell'esito dell'importazione, manuale e analisi (DEC-287) aggiornati.
 
 Rif. DEC-213, DEC-287. Oggi `fascicolo.trasferimento` non porta con sé i periodi del
 percorso scout (`PeriodoPercorso` e i periodi nelle unità del gruppo): vanno nel file

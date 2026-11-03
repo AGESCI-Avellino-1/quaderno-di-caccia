@@ -93,7 +93,9 @@ capo.
 ![L'elenco degli incarichi sul computer](../img/gruppo/elenco-incarichi-computer.png){.computer width="65%"}
 :::
 
-Il livello di formazione è sempre quello di oggi, anche per un anno passato.
+Il livello di formazione è sempre quello di oggi, anche per un anno passato. Un capo appena
+entrato dall'app, che ha ancora il codice socio provvisorio, compare con «NUOVO CENSITO» al
+posto del codice.
 
 ## Le eccezioni sulle squadriglie
 

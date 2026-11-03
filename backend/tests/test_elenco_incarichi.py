@@ -208,3 +208,9 @@ def test_per_unita_coca_poi_lc_eg_rs_per_codice(gruppo, coca):
     _incarico(capogruppo, R.CAPOGRUPPO, gruppo=gruppo)
     titoli = [s.titolo for s in elenco.sezioni(TUTTI, "unita", date.today())]
     assert titoli == [str(coca), str(branco), str(reparto1), str(reparto2), str(clan)]
+
+
+def test_codice_provvisorio_stampato_come_nuovo_censito():
+    assert elenco.codice_da_stampare("9000000012") == "NUOVO CENSITO"
+    assert elenco.codice_da_stampare("123456") == "123456"
+    assert elenco.codice_da_stampare(None) == ""

@@ -18,6 +18,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from apps.anagrafica.models import Persona
+from apps.anagrafica.servizi import e_codice_provvisorio
 from apps.core.anno import AnnoAssociativo
 from apps.core.stampa import decora_pagina, intestazione
 
@@ -52,6 +53,11 @@ SENZA_SERVIZIO = RuoloIncarico.SUPPORTO_GRUPPO.label
 # The sections by unit: the Co.Ca. first, then L/C, E/G, R/S, each by code (maintainer,
 # 03/11).
 ORDINE_BRANCHE = [Branca.LC, Branca.EG, Branca.RS]
+
+
+def codice_da_stampare(codice: str | None) -> str:
+    """A provisional code (a capo who joined from the app) is not printed (DEC-315)."""
+    return "NUOVO CENSITO" if e_codice_provvisorio(codice) else codice or ""
 
 
 @dataclass
@@ -215,7 +221,7 @@ def pdf(sezioni_: list[Sezione], giorno: date, raggruppa: str) -> bytes:
             livello = "" if p.livello_formazione is None else str(p.livello_formazione)
             righe.append(
                 [
-                    Paragraph(escape(p.codice_socio or ""), TESTO),
+                    Paragraph(escape(codice_da_stampare(p.codice_socio)), TESTO),
                     Paragraph(escape(p.cognome), TESTO),
                     Paragraph(escape(p.nome), TESTO),
                     Paragraph(escape(livello), TESTO),

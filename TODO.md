@@ -283,16 +283,16 @@ negli aggiornamenti che partono dalla 1.10.
 ### Richieste del 03/11 (sera), da raccogliere
 
 Richieste del maintainer del 03/11, solo annotate: si sviluppano quando il maintainer dice di
-partire. Risposte alle domande date il 03/11; prima dello sviluppo, i DEC nuovi nell'analisi.
+partire. Risposte alle domande date il 03/11; il maintainer ha detto di partire il 03/11, DEC-306…DEC-315 nell'analisi. Ordine: N.49, N.40, N.48, N.46, N.47, N.42, N.43, N.41, N.44, N.45.
 
-#### N.40 — Organigramma: tipi di incarico scelti da un menu a selezione multipla ⏳
+#### N.40 — Organigramma: tipi di incarico scelti da un menu a selezione multipla ⏳ (DEC-306)
 
 Nel PDF dell'organigramma i tipi di incarico da includere si scelgono oggi con caselle di
 spunta: al loro posto un menu a tendina con più scelte (combobox). **Solo lì** (deciso il 03/11):
 l'assegnazione degli incarichi resta com'è. Da verificare cosa offre Bootstrap 6 alpha (forse un
 componente nostro).
 
-#### N.41 — Genitore che diventa capo, in due passi annullabili ⏳ (sostituisce DEC-282)
+#### N.41 — Genitore che diventa capo, in due passi annullabili ⏳ (DEC-307) (sostituisce DEC-282)
 
 Deciso il 03/11:
 
@@ -306,14 +306,14 @@ Si **annulla finché il codice è provvisorio** (cioè finché l'import di Buona
 riconosce), anche dopo l'invito: torna solo genitore e gli incarichi dati nel frattempo si
 chiudono. Il **link di iscrizione in Co.Ca. di DEC-282 si toglie**.
 
-#### N.42 — Inviti a più persone insieme ⏳
+#### N.42 — Inviti a più persone insieme ⏳ (DEC-308)
 
 Deciso il 03/11: nell'**elenco delle persone** un filtro «senza account», caselle di selezione e
 «Invita i selezionati». Lo usa chi oggi può invitare quelle persone (la policy si controlla per
 ognuna). Solo genitori e maggiorenni (capi e ragazzi) con un'email, senza account e senza un
 invito ancora valido. Le email passano dall'invio graduale (N.46).
 
-#### N.43 — Minorenni invitati con un link personale ⏳ (cambia DEC-116)
+#### N.43 — Minorenni invitati con un link personale ⏳ (DEC-309) (cambia DEC-116)
 
 Deciso il 03/11:
 
@@ -325,7 +325,7 @@ Deciso il 03/11:
   squadriglieri; dai **14 anni** (DEC-117); solo per chi non ha ancora un account.
 - Quando il ragazzo attiva l'account, i **genitori ricevono un'email** di avviso.
 
-#### N.44 — Riunioni separate dagli eventi, con serie, località e uniforme ⏳
+#### N.44 — Riunioni separate dagli eventi, con serie, località e uniforme ⏳ (DEC-310)
 
 Le riunioni **non sono eventi** (mai quote). Oggi `eventi.RiunioneRicorrente` genera un `Evento`
 di tipo `RIUNIONE` per data.
@@ -353,7 +353,7 @@ Deciso il 03/11:
 - **Email** solo quando una singola riunione è annullata o spostata (tipo facoltativo,
   DEC-157); niente per la creazione della serie né per le informazioni.
 
-#### N.45 — Turni di squadriglia e di sestiglia ⏳ (dopo N.44)
+#### N.45 — Turni di squadriglia e di sestiglia ⏳ (DEC-312) (dopo N.44)
 
 Lo staff (eventualmente di unità collegate) sceglie i turni e li assegna a rotazione alle
 squadriglie o sestiglie, ogni settimana o ogni mese. Squadriglieri, genitori e ragazzi della
@@ -369,7 +369,7 @@ Deciso il 03/11:
 - Lo staff **corregge a mano** l'assegnazione di una singola riunione; dopo, la rotazione
   riprende dall'ordine previsto.
 
-#### N.46 — Invio graduale delle email in blocco ⏳
+#### N.46 — Invio graduale delle email in blocco ⏳ (DEC-311)
 
 Deciso il 03/11: una **coda di invio** sul server, smaltita ogni minuto da un comando (cron);
 **blocchi di 20 email, poi 2 minuti di pausa**; **tetto di 400 al giorno**, oltre il quale le
@@ -378,7 +378,7 @@ Impostazioni, dove si vede quante sono in attesa. Partono **subito, fuori coda**
 singole chieste dalla persona: codice di accesso, nuova password, conferma dell'indirizzo, avvisi
 sull'account. Gli inviti in blocco (N.42) e gli avvisi a molti passano dalla coda.
 
-#### N.47 — Account della piattaforma per l'amministratore tecnico ⏳
+#### N.47 — Account della piattaforma per l'amministratore tecnico ⏳ (DEC-313)
 
 Deciso il 03/11: pagina con tutti gli account: email, persona collegata (o nessuna), creazione
 e ultimo accesso, metodi di accesso (password, passkey, Google, Apple, secondo fattore),
@@ -391,14 +391,14 @@ e l'interessato riceve un'**email** quando cambiano l'email o i metodi di access
 cancellato. Pagina e azioni sono **bloccate mentre si usa l'app al posto di un altro**
 (DEC-167, `middleware.BLOCCATE`), confermato il 03/11.
 
-#### N.48 — Dall'avatar alla scheda della persona ⏳
+#### N.48 — Dall'avatar alla scheda della persona ⏳ (DEC-314)
 
 Cliccando sull'avatar accanto a un nome (solo sull'avatar) si apre la scheda della persona o del
 genitore. Deciso il 03/11: **lo dice il server**: ogni elenco di persone porta, per ognuna, se
 chi guarda può aprirne la scheda (dalla policy); solo allora l'avatar (`components/Avatar.vue`) è
 cliccabile. Il server ricontrolla comunque all'apertura.
 
-#### N.49 — PDF degli incarichi: «NUOVO CENSITO» al posto del codice provvisorio ⏳
+#### N.49 — PDF degli incarichi: «NUOVO CENSITO» al posto del codice provvisorio ✅ 03/11 (DEC-315)
 
 Nell'elenco degli incarichi in PDF (`organizzazione/elenco_incarichi.py`, DEC-284), per i capi con
 codice socio provvisorio (`9…`, nuovi iscritti, DEC-120) al posto del codice si scrive «NUOVO

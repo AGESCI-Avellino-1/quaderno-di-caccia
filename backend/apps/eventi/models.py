@@ -16,7 +16,11 @@
   see) and other activities of one patrol (DEC-139);
 - the staff creates events for the Consiglio Capi (CSQ), the Con.Ca.Vi. (CSQ and
   VCSQ) and the Alta Squadriglia (chosen by the staff each year), of one or more
-  reparti of the group (DEC-140).
+  reparti of the group (DEC-140);
+- meetings are not events for who uses the app (DEC-310): their own page, never a fee.
+  Each one is still an `Evento` of type RIUNIONE, so attendance, the calendar and the
+  offline copy are the same; a series (`RiunioneRicorrente`) has its kind, its place and
+  whether the uniform is worn, which a single meeting may change.
 """
 
 from django.conf import settings
@@ -54,6 +58,37 @@ class Cerchia(models.TextChoices):
     CONSIGLIO_CAPI = "CONCA", "Consiglio Capi"
     CONSIGLIO_CAPI_VICE = "CONCAVI", "Consiglio Capi e Vice"
     ALTA_SQUADRIGLIA = "ALTA_SQ", "Alta Squadriglia"
+    # Of a branco or cerchio (DEC-310): its Consiglio degli Anziani.
+    CONSIGLIO_ANZIANI = "CDA", "Consiglio degli Anziani"
+
+
+# Who of a reparto is invited, and who of a branco or cerchio.
+CERCHIE_DI_REPARTO = {
+    Cerchia.CONSIGLIO_CAPI,
+    Cerchia.CONSIGLIO_CAPI_VICE,
+    Cerchia.ALTA_SQUADRIGLIA,
+}
+
+
+class Localita(ModelloTracciato):
+    """A place of the group for meetings and events (DEC-310): the seats, a base. The
+    capigruppo keep the list; who creates a meeting may add a new one."""
+
+    nome = models.CharField(max_length=120)
+    indirizzo = models.CharField(max_length=250, blank=True)
+    mappa = models.URLField(blank=True)
+    attiva = models.BooleanField(default=True)
+    creata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "località"
+        verbose_name_plural = "località"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
 
 
 class RiunioneRicorrente(ModelloTracciato):
@@ -72,6 +107,24 @@ class RiunioneRicorrente(ModelloTracciato):
     creata_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    # DEC-310: the kind of meeting (the unit's, a patrol's, a council of the unit and the
+    # unit linked to it), its place and the uniform.
+    titolo = models.CharField(max_length=160, blank=True)
+    cerchia = models.CharField(max_length=8, choices=Cerchia.choices, default=Cerchia.TUTTI)
+    unita_insieme = models.ManyToManyField(
+        "organizzazione.Unita", blank=True, related_name="riunioni_insieme"
+    )
+    squadriglia = models.ForeignKey(
+        "organizzazione.Squadriglia",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="riunioni_ricorrenti",
+    )
+    localita = models.ForeignKey(
+        Localita, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    uniforme = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "riunione ricorrente"
@@ -126,6 +179,13 @@ class Evento(ModelloTracciato):
     riunione = models.ForeignKey(
         RiunioneRicorrente, null=True, blank=True, on_delete=models.CASCADE, related_name="eventi"
     )
+    localita = models.ForeignKey(
+        Localita, null=True, blank=True, on_delete=models.SET_NULL, related_name="eventi"
+    )
+    # A meeting (DEC-310): with the uniform or not (None: as its series) and what the
+    # staff writes about it, as cleaned HTML.
+    uniforme = models.BooleanField(null=True, blank=True)
+    informazioni = models.TextField(blank=True)
     annullato_il = models.DateTimeField(null=True, blank=True)
     motivo_annullamento = models.CharField(max_length=300, blank=True)
     creato_da = models.ForeignKey(
@@ -140,6 +200,14 @@ class Evento(ModelloTracciato):
     def __str__(self) -> str:
         return f"{self.titolo} ({self.inizio:%d/%m/%Y})"
 
+    def con_uniforme(self) -> bool | None:
+        """A meeting's uniform: its own choice, or its series' (DEC-310)."""
+        if self.tipo != TipoEvento.RIUNIONE:
+            return None
+        if self.uniforme is not None:
+            return self.uniforme
+        return self.riunione.uniforme if self.riunione_id else None
+
     def clean(self) -> None:
         errori = []
         if self.fine and self.inizio and self.fine < self.inizio:
@@ -153,7 +221,10 @@ class Evento(ModelloTracciato):
         if self.tipo == TipoEvento.RIUNIONE and self.livello == Livello.ESTERNO:
             errori.append("Un evento su BuonaCaccia non è una riunione.")
         if self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
-            errori.append("Consiglio Capi, Con.Ca.Vi. e Alta Squadriglia sono eventi di reparto.")
+            errori.append(
+                "Consiglio Capi, Con.Ca.Vi., Alta Squadriglia e Consiglio degli Anziani "
+                "sono riunioni di un'unità."
+            )
         if errori:
             raise ValidationError(errori)
 

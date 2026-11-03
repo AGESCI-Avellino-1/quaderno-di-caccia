@@ -1,7 +1,8 @@
 """Emails about events (DEC-79): a new event, a change of dates or place, a
 cancellation. To the families of the participants (to the adult member, and to their
 parents while they still see their activities, DEC-26). One message per address, so
-nobody sees the others'. Weekly meetings are not announced one by one.
+nobody sees the others'. Meetings are not announced (DEC-310): only a single meeting
+moved or cancelled.
 """
 
 from django.conf import settings
@@ -12,7 +13,7 @@ from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia
 from apps.permessi.policy import genitori_vedono
 
-from .models import Evento, StatoPartecipazione
+from .models import Evento, StatoPartecipazione, TipoEvento
 
 
 def indirizzi_famiglia(persone, categoria: str) -> list[str]:
@@ -55,7 +56,8 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
         modello,
         {
             "Evento": evento.titolo,
-            "Link": f"{settings.FRONTEND_URL}/eventi/{evento.pk}",
+            "Link": f"{settings.FRONTEND_URL}/{'riunioni' if _riunione(evento) else 'eventi'}"
+            f"/{evento.pk}",
             **valori,
         },
         indirizzi,
@@ -63,11 +65,15 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
 
 
 def _da_annunciare(evento: Evento) -> bool:
-    return evento.riunione_id is None and evento.fine >= timezone.now()
+    return evento.fine >= timezone.now()
+
+
+def _riunione(evento: Evento) -> bool:
+    return evento.tipo == TipoEvento.RIUNIONE
 
 
 def nuovo(evento: Evento) -> int:
-    if not _da_annunciare(evento):
+    if not _da_annunciare(evento) or _riunione(evento):
         return 0
     dettagli = []
     if evento.luogo:
@@ -84,14 +90,15 @@ def modificato(evento: Evento) -> int:
     if not _da_annunciare(evento):
         return 0
     quando = _quando(evento) + (f", a {evento.luogo}" if evento.luogo else "")
-    return _invia(evento, "evento_modificato", {"Quando": quando})
+    modello = "riunione_spostata" if _riunione(evento) else "evento_modificato"
+    return _invia(evento, modello, {"Quando": quando})
 
 
 def annullato(evento: Evento) -> int:
-    if evento.riunione_id is not None or evento.fine < timezone.now():
+    if not _da_annunciare(evento):
         return 0
     return _invia(
         evento,
-        "evento_annullato",
+        "riunione_annullata" if _riunione(evento) else "evento_annullato",
         {"Quando": _quando(evento), "Motivo": evento.motivo_annullamento},
     )

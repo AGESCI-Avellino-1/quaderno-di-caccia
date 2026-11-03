@@ -244,9 +244,15 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           nome: 'Eventi',
           icona: 'calendar3',
           to: '/eventi',
-          descrizione: 'Riunioni, uscite e campi; partecipazione e presenze',
+          descrizione: 'Uscite e campi; partecipazione e presenze',
         },
         // On the Home next to the Bacheca (DEC-286, HomeView).
+        membro && {
+          nome: 'Riunioni',
+          icona: 'calendar-event',
+          to: '/riunioni',
+          descrizione: 'Le riunioni di unità e di squadriglia',
+        },
         membro && {
           nome: 'Calendario',
           icona: 'calendar-week',

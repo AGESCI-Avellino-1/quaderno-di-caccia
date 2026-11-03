@@ -42,8 +42,10 @@ def test_every_profile_can_log_in(tmp_path):
     # The group's activity, created through the API.
     giulia = Persona.objects.get(nome="Giulia", cognome="Rossi")
     assert giulia.informazioni_sanitarie.allergie.count() == 2
-    # A meeting, an outing, a group party and a BuonaCaccia camp.
-    assert Evento.objects.count() == 4
+    # The reparto's weekly meetings (16 Saturdays), an outing, a group party and a
+    # BuonaCaccia camp.
+    assert Evento.objects.filter(tipo="RIUNIONE").count() == 16
+    assert Evento.objects.exclude(tipo="RIUNIONE").count() == 3
     iscrizione = IscrizioneBuonaCaccia.objects.get()
     assert iscrizione.partecipazione.persona == giulia
     assert iscrizione.liberatoria_da_firmare

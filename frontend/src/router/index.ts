@@ -388,6 +388,18 @@ const router = createRouter({
       component: () => import('@/views/ImpostazioniView.vue'),
     },
     {
+      // Meetings, apart from the events (DEC-310); one meeting shows in the event page.
+      path: '/riunioni',
+      name: 'riunioni',
+      component: () => import('@/views/RiunioniView.vue'),
+    },
+    {
+      path: '/riunioni/:id(\\d+)',
+      name: 'riunione',
+      component: () => import('@/views/EventoView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // Every account, for the technical administrator (DEC-313).
       path: '/amministrazione/account',
       name: 'account',

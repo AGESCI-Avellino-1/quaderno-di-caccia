@@ -135,3 +135,36 @@ describe('EventoView', () => {
     expect(pagina.text()).toContain('Presenze salvate.')
   })
 })
+
+describe('EventoView for a meeting', () => {
+  it('shows place, uniform and notes, and no fee', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        risposta(
+          200,
+          evento({
+            tipo: 'RIUNIONE',
+            tipo_nome: 'Riunione',
+            titolo: 'Riunione di reparto',
+            luogo: 'Sede',
+            localita: { id: 1, nome: 'Sede', indirizzo: 'Via dei Pini 1', mappa: '' },
+            uniforme: false,
+            serie_id: 3,
+            informazioni: '<p>Porta la <strong>borraccia</strong></p>',
+            puo_gestire: true,
+          }),
+        ),
+      ),
+    )
+    const vista = mount(EventoView, { props: { id: 5 } })
+    await flushPromises()
+    expect(vista.text()).toContain('Via dei Pini 1')
+    expect(vista.text()).toContain('Uniforme no')
+    expect(vista.find('strong').exists()).toBe(true)
+    expect(vista.html()).toContain('<strong>borraccia</strong>')
+    expect(vista.text()).not.toContain('Quota')
+    expect(vista.text()).toContain('Modifica la riunione')
+    expect(vista.text()).toContain('Annulla la riunione')
+  })
+})

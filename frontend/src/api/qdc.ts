@@ -1526,7 +1526,7 @@ export interface ModelloD {
 export type TipoEvento =
   'RIUNIONE' | 'USCITA' | 'CAMPO' | 'AUTOFINANZIAMENTO' | 'MISSIONE' | 'ALTRO'
 /** Who of the reparti involved is invited: all, CSQ, CSQ and VCSQ, Alta Squadriglia. */
-export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ'
+export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ' | 'CDA'
 export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA' | 'ESTERNO'
 export type StatoPartecipazione = 'INVITATO' | 'NON_PARTECIPA' | 'NON_INVITATO'
 export type StatoPresenza = 'PRESENTE' | 'ASSENTE' | 'GIUSTIFICATO'
@@ -1577,6 +1577,11 @@ export interface Evento {
   cerchia: Cerchia
   cerchia_nome: string
   riunione: boolean
+  /** A meeting (DEC-310): its series, place, uniform and the staff's notes (HTML). */
+  serie_id?: number | null
+  localita?: Localita | null
+  uniforme?: boolean | null
+  informazioni?: string
   annullato: boolean
   motivo_annullamento: string
   mie: MiaPartecipazione[]
@@ -1655,15 +1660,65 @@ export interface DettaglioEvento extends Evento {
   puo_stampare_schede?: boolean
 }
 
-export interface RiunioneRicorrente {
+/** A place of the group for meetings and events (DEC-310). */
+export interface Localita {
   id: number
+  nome: string
+  indirizzo: string
+  mappa: string
+}
+
+export interface LocalitaIn {
+  nome: string
+  indirizzo?: string
+  mappa?: string
+}
+
+/** A series of meetings or a single one (DEC-310): `giorno` for a single meeting. */
+export interface RiunioneIn {
+  titolo?: string
+  cerchia: Cerchia
+  unita: number[]
+  squadriglia_id: number | null
+  ora_inizio: string
+  ora_fine: string
+  giorno?: string | null
+  giorno_settimana?: number | null
+  dal?: string | null
+  al?: string | null
+  localita_id: number | null
+  nuova_localita: LocalitaIn | null
+  uniforme: boolean
+}
+
+export interface SerieRiunioni {
+  id: number
+  titolo: string
+  cerchia: Cerchia
+  cerchia_nome: string
+  unita: string[]
+  squadriglia: string | null
   giorno_settimana: number
   ora_inizio: string
   ora_fine: string
-  luogo: string
   dal: string
   al: string
+  localita: Localita | null
+  luogo: string
+  uniforme: boolean
   riunioni: number
+  puo_gestire: boolean
+}
+
+export interface ModificaRiunione {
+  inizio: string
+  fine: string
+  localita_id: number | null
+  nuova_localita: LocalitaIn | null
+  luogo?: string
+  /** null: as its series. */
+  uniforme: boolean | null
+  informazioni: string
 }
 
 /** Optional emails; access codes, invitations, security warnings, registration and
@@ -3061,14 +3116,29 @@ export const api = {
     richiesta<DettaglioEvento>(`/api/v1/eventi/${evento}/partecipanti/${persona}/reinvita`, {
       metodo: 'POST',
     }),
-  riunioni: (unita: number) => richiesta<RiunioneRicorrente[]>(`/api/v1/unita/${unita}/riunioni`),
-  creaRiunioni: (unita: number, dati: Omit<RiunioneRicorrente, 'id' | 'riunioni'>) =>
-    richiesta<RiunioneRicorrente>(`/api/v1/unita/${unita}/riunioni`, {
-      metodo: 'POST',
-      corpo: dati,
-    }),
-  togliRiunioni: (id: number) =>
-    richiesta<RiunioneRicorrente>(`/api/v1/riunioni/${id}`, { metodo: 'DELETE' }),
+  riunioni: (filtri: { dal?: string; al?: string } = {}) => {
+    const parametri = new URLSearchParams({ riunioni: 'true' })
+    if (filtri.dal) parametri.set('dal', filtri.dal)
+    if (filtri.al) parametri.set('al', filtri.al)
+    return richiesta<Evento[]>(`/api/v1/eventi?${parametri}`)
+  },
+  creaRiunioni: (dati: RiunioneIn) =>
+    richiesta<Evento[]>('/api/v1/riunioni', { metodo: 'POST', corpo: dati }),
+  serieRiunioni: () => richiesta<SerieRiunioni[]>('/api/v1/riunioni/serie'),
+  modificaSerie: (
+    id: number,
+    dati: { uniforme: boolean; localita_id: number | null; nuova_localita: LocalitaIn | null },
+  ) => richiesta<SerieRiunioni>(`/api/v1/riunioni/serie/${id}`, { metodo: 'PUT', corpo: dati }),
+  togliSerie: (id: number) =>
+    richiesta<SerieRiunioni>(`/api/v1/riunioni/serie/${id}`, { metodo: 'DELETE' }),
+  modificaRiunione: (id: number, dati: ModificaRiunione) =>
+    richiesta<Evento>(`/api/v1/riunioni/${id}`, { metodo: 'PUT', corpo: dati }),
+  localita: () => richiesta<Localita[]>('/api/v1/localita'),
+  creaLocalita: (dati: LocalitaIn) =>
+    richiesta<Localita>('/api/v1/localita', { metodo: 'POST', corpo: dati }),
+  modificaLocalita: (id: number, dati: LocalitaIn) =>
+    richiesta<Localita>(`/api/v1/localita/${id}`, { metodo: 'PUT', corpo: dati }),
+  togliLocalita: (id: number) => richiesta<null>(`/api/v1/localita/${id}`, { metodo: 'DELETE' }),
   fissaQuotaEvento: (
     evento: number,
     dati: { nome: string; rate: RataEvento[]; sconto_famiglia: string },

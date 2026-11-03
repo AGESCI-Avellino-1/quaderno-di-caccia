@@ -15,6 +15,7 @@ import {
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
 import EventoBC from '@/components/EventoBC.vue'
+import ModificaRiunione from '@/components/ModificaRiunione.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -25,7 +26,8 @@ import { scrivi } from '@/offline/outbox'
 // One event: the family says whether their child takes part; the staff sees everyone,
 // may not invite someone (with a reason the family reads) and marks attendance, also
 // offline (DEC-75, DEC-78). Cached for offline use. An event on BuonaCaccia shows its
-// registrations instead (DEC-158…DEC-164), online only.
+// registrations instead (DEC-158…DEC-164), online only. A meeting (DEC-310) shows here
+// too: its place, the uniform, the staff's notes; no fee.
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const evento = ref<DettaglioEvento | null>(null)
@@ -35,6 +37,14 @@ const esito = ref('')
 const presenze = reactive<Record<number, StatoPresenza | null>>({})
 const esclusione = reactive({ persona: 0, motivo: '' })
 const annullamento = reactive({ aperto: false, motivo: '' })
+const riunione = computed(() => evento.value?.tipo === 'RIUNIONE')
+const modificaRiunione = ref(false)
+
+async function riunioneSalvata() {
+  modificaRiunione.value = false
+  esito.value = 'Riunione modificata.'
+  await carica()
+}
 
 // Changing an event (DEC-75): what it is, when and where. Who is invited does not change
 // (the API refuses it): for that, a new event. Families get an email if the dates or the
@@ -231,11 +241,27 @@ const STATI: [StatoPresenza, string][] = [
         <strong>Inizio</strong> {{ dataOra(evento.inizio) }}<br />
         <strong>Fine</strong> {{ dataOra(evento.fine) }}
       </div>
-      <div v-if="evento.luogo"><strong>Luogo</strong> {{ evento.luogo }}</div>
+      <div v-if="evento.luogo">
+        <strong>Luogo</strong> {{ evento.luogo }}
+        <template v-if="evento.localita?.indirizzo"> · {{ evento.localita.indirizzo }}</template>
+        <a
+          v-if="evento.localita?.mappa"
+          :href="evento.localita.mappa"
+          target="_blank"
+          rel="noopener"
+          class="small ms-1"
+          >mappa</a
+        >
+      </div>
+      <div v-if="riunione && evento.uniforme !== null && evento.uniforme !== undefined">
+        <strong>Uniforme</strong> {{ evento.uniforme ? 'sì' : 'no' }}
+      </div>
       <div v-if="!evento.annullato" class="mt-1">
         <a :href="eventoIcs(evento.id)" class="small" download>Aggiungi al calendario</a>
       </div>
       <p v-if="evento.descrizione" class="mb-0 mt-3 testo-a-capo">{{ evento.descrizione }}</p>
+      <!-- eslint-disable-next-line vue/no-v-html -- HTML cleaned by the server (DEC-310) -->
+      <div v-if="evento.informazioni" class="mt-3" v-html="evento.informazioni"></div>
       <div v-if="evento.note_genitori" class="mt-3">
         <strong>Note per i genitori</strong>
         <span class="small fg-2">(non le vedono i ragazzi)</span>
@@ -243,8 +269,24 @@ const STATI: [StatoPresenza, string][] = [
       </div>
     </div>
 
+    <section v-if="riunione && evento.puo_gestire && !evento.annullato" class="mb-5">
+      <button
+        v-if="!modificaRiunione"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary"
+        @click="modificaRiunione = true"
+      >
+        Modifica la riunione
+      </button>
+      <ModificaRiunione
+        v-else
+        :riunione="evento"
+        @salvata="riunioneSalvata"
+        @chiusa="modificaRiunione = false"
+      />
+    </section>
     <section
-      v-if="evento.puo_gestire && !evento.annullato && evento.livello !== 'ESTERNO'"
+      v-else-if="evento.puo_gestire && !evento.annullato && evento.livello !== 'ESTERNO'"
       class="mb-5"
     >
       <button
@@ -348,6 +390,7 @@ const STATI: [StatoPresenza, string][] = [
 
     <template v-else>
       <QuotaEvento
+        v-if="!riunione"
         :evento="evento.id"
         :quota="evento.quota"
         :puo-gestire="evento.puo_gestire && !evento.annullato"
@@ -356,7 +399,7 @@ const STATI: [StatoPresenza, string][] = [
       />
 
       <RendicontoEvento
-        v-if="evento.puo_gestire || evento.partecipanti.length"
+        v-if="!riunione && (evento.puo_gestire || evento.partecipanti.length)"
         :evento="evento.id"
         :campo="evento.tipo === 'CAMPO'"
       />
@@ -525,7 +568,7 @@ const STATI: [StatoPresenza, string][] = [
         class="btn btn-sm btn-outline theme-danger"
         @click="annullamento.aperto = true"
       >
-        Annulla l'evento
+        {{ riunione ? 'Annulla la riunione' : "Annulla l'evento" }}
       </button>
       <form v-else class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="annulla">
         <div class="flex-grow-1">
@@ -538,7 +581,7 @@ const STATI: [StatoPresenza, string][] = [
           />
         </div>
         <button type="submit" class="btn btn-sm btn-solid theme-danger" :disabled="inCorso">
-          Annulla l'evento
+          {{ riunione ? 'Annulla la riunione' : "Annulla l'evento" }}
         </button>
         <button type="button" class="btn btn-sm btn-link" @click="annullamento.aperto = false">
           Lascia stare

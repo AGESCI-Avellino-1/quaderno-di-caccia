@@ -1,16 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import {
-  api,
-  nomeUnita,
-  type Evento,
-  type EventoIn,
-  type RiunioneRicorrente,
-  type Squadriglia,
-  type Unita,
-} from '@/api/qdc'
+import { api, nomeUnita, type Evento, type EventoIn, type Squadriglia, type Unita } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
@@ -18,7 +10,7 @@ import { useSessioneStore } from '@/stores/sessione'
 
 // Events of the user and their children, all of them for the capi (DEC-75). The list is
 // cached for offline use. Who may create what is decided by the API: the form offers
-// what the profile suggests.
+// what the profile suggests. Meetings have their own page (DEC-310).
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const eventi = ref<Evento[]>([])
@@ -29,10 +21,7 @@ const squadriglie = ref<(Squadriglia & { reparto: string })[]>([])
 const oggi = () => new Date().toLocaleDateString('sv')
 
 const csq = computed(() => (sessione.profilo?.squadriglie_guidate.length ?? 0) > 0)
-// A member the CSQ delegated creates the patrol's meetings only.
-const delegato = computed(() => (sessione.profilo?.squadriglie_delegate.length ?? 0) > 0)
-const soloRiunioni = computed(() => !sessione.capo && !csq.value && delegato.value)
-const creaEventi = computed(() => sessione.capo || csq.value || delegato.value)
+const creaEventi = computed(() => sessione.capo || csq.value)
 
 async function carica() {
   const filtri = passati.value ? { al: oggi() } : { dal: oggi() }
@@ -66,11 +55,10 @@ onMounted(async () => {
       }
     }
   } else {
-    const delegate = sessione.profilo?.squadriglie_delegate ?? []
     try {
       const mie = await api.miaSquadriglia()
       squadriglie.value = mie
-        .filter((s) => s.sono_capo || delegate.includes(s.id))
+        .filter((s) => s.sono_capo)
         .map(
           (s) =>
             ({ id: s.id, nome: s.nome, reparto: s.reparto }) as Squadriglia & {
@@ -87,7 +75,7 @@ onMounted(async () => {
 
 const vuoto = (): EventoIn => ({
   titolo: '',
-  tipo: soloRiunioni.value ? 'RIUNIONE' : 'USCITA',
+  tipo: 'USCITA',
   livello: sessione.capo ? 'UNITA' : 'SQUADRIGLIA',
   branca: null,
   unita: [],
@@ -114,48 +102,6 @@ async function salva() {
   if (!fatto) return
   modulo.value = null
   passati.value = false
-  await carica()
-}
-
-// --- Recurring meetings ----------------------------------------------------------------
-
-const GIORNI = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica']
-const unitaRiunioni = ref<number | null>(null)
-const riunioni = ref<RiunioneRicorrente[]>([])
-const nuoveRiunioni = reactive({
-  aperto: false,
-  giorno_settimana: 5,
-  ora_inizio: '16:00',
-  ora_fine: '18:00',
-  luogo: '',
-  dal: oggi(),
-  al: '',
-})
-
-watch(unitaRiunioni, async (id) => {
-  riunioni.value = id === null ? [] : ((await esegui(() => api.riunioni(id))) ?? [])
-})
-
-async function creaRiunioni() {
-  if (unitaRiunioni.value === null) return
-  const dati = {
-    giorno_settimana: nuoveRiunioni.giorno_settimana,
-    ora_inizio: nuoveRiunioni.ora_inizio,
-    ora_fine: nuoveRiunioni.ora_fine,
-    luogo: nuoveRiunioni.luogo,
-    dal: nuoveRiunioni.dal,
-    al: nuoveRiunioni.al,
-  }
-  const fatte = await esegui(() => api.creaRiunioni(unitaRiunioni.value!, dati))
-  if (!fatte) return
-  nuoveRiunioni.aperto = false
-  riunioni.value = (await esegui(() => api.riunioni(unitaRiunioni.value!))) ?? []
-  await carica()
-}
-
-async function togliRiunioni(id: number) {
-  if (!(await esegui(() => api.togliRiunioni(id)))) return
-  riunioni.value = (await esegui(() => api.riunioni(unitaRiunioni.value!))) ?? []
   await carica()
 }
 
@@ -213,22 +159,14 @@ const statoMio = {
         </div>
         <div class="md:col-4">
           <label class="form-label small" for="ev-tipo">Tipo</label>
-          <select
-            id="ev-tipo"
-            v-model="modulo.tipo"
-            class="form-control form-control-sm"
-            :disabled="soloRiunioni"
-          >
-            <option value="RIUNIONE">Riunione</option>
-            <template v-if="!soloRiunioni">
-              <option value="USCITA">Uscita</option>
-              <option value="CAMPO">Campo</option>
-              <option v-if="sessione.capo && modulo.livello === 'SQUADRIGLIA'" value="MISSIONE">
-                Missione di squadriglia
-              </option>
-              <option value="AUTOFINANZIAMENTO">Autofinanziamento</option>
-              <option value="ALTRO">Altro evento</option>
-            </template>
+          <select id="ev-tipo" v-model="modulo.tipo" class="form-control form-control-sm">
+            <option value="USCITA">Uscita</option>
+            <option value="CAMPO">Campo</option>
+            <option v-if="sessione.capo && modulo.livello === 'SQUADRIGLIA'" value="MISSIONE">
+              Missione di squadriglia
+            </option>
+            <option value="AUTOFINANZIAMENTO">Autofinanziamento</option>
+            <option value="ALTRO">Altro evento</option>
           </select>
         </div>
         <div class="md:col-4">
@@ -276,6 +214,7 @@ const statoMio = {
             <option value="CONCA">Consiglio Capi (reparti)</option>
             <option value="CONCAVI">Con.Ca.Vi., capi e vice (reparti)</option>
             <option value="ALTA_SQ">Alta Squadriglia (reparti)</option>
+            <option value="CDA">Consiglio degli Anziani (branchi e cerchi)</option>
           </select>
         </div>
         <div v-if="modulo.livello === 'SQUADRIGLIA'" class="md:col-8">
@@ -384,129 +323,13 @@ const statoMio = {
       </li>
     </ul>
 
-    <p v-if="!passati" class="small mb-5">
+    <p v-if="!passati" class="small mb-3">
       Vuoi gli eventi nel calendario del telefono? Vai al
       <RouterLink to="/calendario">Calendario</RouterLink>.
     </p>
 
-    <section v-if="sessione.capo && !passati">
-      <h2 class="h5">Riunioni ricorrenti</h2>
-      <p class="form-text">
-        Lo staff stabilisce le riunioni di ogni settimana: l'app crea una riunione per ogni data,
-        con le sue presenze. Una singola data si annulla dalla riunione stessa.
-      </p>
-      <div class="mb-3">
-        <label class="form-label small" for="riunioni-unita">Unità</label>
-        <select
-          id="riunioni-unita"
-          v-model="unitaRiunioni"
-          class="form-control form-control-sm w-auto"
-        >
-          <option :value="null" disabled>Scegli…</option>
-          <option v-for="u in unita" :key="u.id" :value="u.id">{{ nomeUnita(u) }}</option>
-        </select>
-      </div>
-      <template v-if="unitaRiunioni !== null">
-        <ul v-if="riunioni.length" class="list-group mb-3">
-          <li
-            v-for="r in riunioni"
-            :key="r.id"
-            class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-3"
-          >
-            <span>
-              Ogni {{ GIORNI[r.giorno_settimana] }}, {{ r.ora_inizio.slice(0, 5) }}–{{
-                r.ora_fine.slice(0, 5)
-              }}<template v-if="r.luogo"> · {{ r.luogo }}</template>
-              <span class="small fg-2">
-                · dal {{ new Date(r.dal).toLocaleDateString('it-IT') }} al
-                {{ new Date(r.al).toLocaleDateString('it-IT') }} · {{ r.riunioni }} riunioni
-              </span>
-            </span>
-            <button type="button" class="btn btn-sm btn-link" @click="togliRiunioni(r.id)">
-              Togli le prossime
-            </button>
-          </li>
-        </ul>
-        <button
-          v-if="!nuoveRiunioni.aperto"
-          type="button"
-          class="btn btn-sm btn-outline theme-primary"
-          @click="nuoveRiunioni.aperto = true"
-        >
-          Aggiungi riunioni ricorrenti
-        </button>
-        <form v-else class="border rounded p-5" @submit.prevent="creaRiunioni">
-          <div class="row g-3">
-            <div class="md:col-4">
-              <label class="form-label small" for="riu-giorno">Ogni</label>
-              <select
-                id="riu-giorno"
-                v-model.number="nuoveRiunioni.giorno_settimana"
-                class="form-control form-control-sm"
-              >
-                <option v-for="(g, i) in GIORNI" :key="g" :value="i">{{ g }}</option>
-              </select>
-            </div>
-            <div class="md:col-4">
-              <label class="form-label small" for="riu-inizio">Dalle</label>
-              <input
-                id="riu-inizio"
-                v-model="nuoveRiunioni.ora_inizio"
-                type="time"
-                class="form-control form-control-sm"
-                required
-              />
-            </div>
-            <div class="md:col-4">
-              <label class="form-label small" for="riu-fine">Alle</label>
-              <input
-                id="riu-fine"
-                v-model="nuoveRiunioni.ora_fine"
-                type="time"
-                class="form-control form-control-sm"
-                required
-              />
-            </div>
-            <div class="md:col-4">
-              <label class="form-label small" for="riu-dal">Dal</label>
-              <input
-                id="riu-dal"
-                v-model="nuoveRiunioni.dal"
-                type="date"
-                class="form-control form-control-sm"
-                required
-              />
-            </div>
-            <div class="md:col-4">
-              <label class="form-label small" for="riu-al">Al</label>
-              <input
-                id="riu-al"
-                v-model="nuoveRiunioni.al"
-                type="date"
-                :min="nuoveRiunioni.dal"
-                class="form-control form-control-sm"
-                required
-              />
-            </div>
-            <div class="md:col-4">
-              <label class="form-label small" for="riu-luogo">Luogo</label>
-              <input
-                id="riu-luogo"
-                v-model="nuoveRiunioni.luogo"
-                class="form-control form-control-sm"
-              />
-            </div>
-          </div>
-          <div class="d-flex gap-3 mt-3">
-            <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-              Crea le riunioni
-            </button>
-            <button type="button" class="btn btn-sm btn-link" @click="nuoveRiunioni.aperto = false">
-              Annulla
-            </button>
-          </div>
-        </form>
-      </template>
-    </section>
+    <p v-if="!passati" class="small mb-5">
+      Le riunioni sono nella pagina <RouterLink to="/riunioni">Riunioni</RouterLink>.
+    </p>
   </section>
 </template>

@@ -1,11 +1,12 @@
 # Eventi e presenze
 
-Nella Home, in **Attività**, tocca **Eventi**. I capi vedono tutti gli eventi del gruppo.
+Nella Home, in **Attività**, tocca **Eventi**. I capi vedono tutti gli eventi del gruppo. Le
+riunioni hanno una pagina loro: vedi [Riunioni](riunioni).
 
 ## Creare un evento
 
 1. Tocca **Nuovo evento**.
-2. Scrivi il **Titolo** e scegli il **Tipo** (riunione, uscita, campo, autofinanziamento…).
+2. Scrivi il **Titolo** e scegli il **Tipo** (uscita, campo, autofinanziamento…).
 3. In **Per chi** scegli:
    - **Una o più unità**: spunta le unità e, in **Chi è invitato**, tutti i soci oppure, per i
      reparti, Consiglio Capi, Con.Ca.Vi. o Alta Squadriglia;
@@ -25,7 +26,7 @@ aggiunto da solo.
 :::
 
 Alle famiglie degli invitati arriva un'email quando crei l'evento, quando cambiano date,
-orari o luogo e se lo annulli (non per le singole riunioni ricorrenti).
+orari o luogo e se lo annulli.
 
 ## Modificare un evento
 
@@ -38,19 +39,6 @@ un'altra squadriglia, annulla l'evento e creane uno nuovo.
 ![La modifica di un evento sul telefono](../img/capo/evento-modifica-telefono.png){.telefono width="30%"}
 ![La modifica di un evento sul computer](../img/capo/evento-modifica-computer.png){.computer width="65%"}
 :::
-
-## Le riunioni di ogni settimana
-
-In fondo alla pagina **Eventi**, in **Riunioni ricorrenti**:
-
-1. Scegli l'**Unità** e tocca **Aggiungi riunioni ricorrenti**.
-2. Scegli il giorno (**Ogni**), l'orario (**Dalle**, **Alle**), il periodo (**Dal**, **Al**)
-   e il **Luogo**.
-3. Tocca **Crea le riunioni**: l'app crea una riunione per ogni settimana, ognuna con le sue
-   presenze.
-
-Una singola riunione si annulla dalla sua pagina; **Togli le prossime** toglie tutte le
-riunioni future di una serie.
 
 ## Annullare un evento
 

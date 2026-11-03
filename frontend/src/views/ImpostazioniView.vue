@@ -6,6 +6,7 @@ import { api, type Impostazioni, type Sito } from '@/api/qdc'
 import BlocchiAccesso from '@/components/BlocchiAccesso.vue'
 import DestinatariEmail from '@/components/DestinatariEmail.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
+import LocalitaGruppo from '@/components/LocalitaGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
 import PagamentiGruppo from '@/components/PagamentiGruppo.vue'
 import CodaEmail from '@/components/CodaEmail.vue'
@@ -207,6 +208,7 @@ async function salva() {
         @aggiornate="dati = $event"
       />
       <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
+      <LocalitaGruppo v-if="dati.puo_modificare_intestazione" />
       <PagamentiGruppo v-if="dati.puo_modificare_pagamenti" />
       <ManutenzioneSito
         v-if="dati.puo_manutenzione"

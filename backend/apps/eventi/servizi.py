@@ -13,6 +13,7 @@ from apps.core.chiusura import controlla_anno_aperto
 from apps.organizzazione.models import BRANCA_DEL_TIPO, Incarico, RuoloIncarico, TipoUnita, Unita
 
 from .models import (
+    CERCHIE_DI_REPARTO,
     Cerchia,
     DelegaSquadriglia,
     Evento,
@@ -72,6 +73,12 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
             .filter(ruolo__in=ruoli, squadriglia__unita__in=unita_coinvolte(evento))
             .values("persona_id")
         )
+    elif evento.cerchia == Cerchia.CONSIGLIO_ANZIANI:
+        ids = (
+            Incarico.objects.attivi(giorno)
+            .filter(ruolo=RuoloIncarico.CONSIGLIO_ANZIANI, unita__in=unita_coinvolte(evento))
+            .values("persona_id")
+        )
     elif evento.cerchia == Cerchia.ALTA_SQUADRIGLIA:
         ids = MembroAltaSquadriglia.objects.filter(
             reparto__in=unita_coinvolte(evento), anno=AnnoAssociativo.da_data(giorno).anno_fine
@@ -110,15 +117,22 @@ def crea(evento: Evento, unita: list[Unita], utente) -> Evento:
     if evento.livello == Livello.UNITA:
         if not unita:
             raise ValidationError("Scegli almeno un'unità.")
-        if evento.cerchia != Cerchia.TUTTI and any(u.tipo != TipoUnita.REPARTO for u in unita):
-            raise ValidationError(
-                "Consiglio Capi, Con.Ca.Vi. e Alta Squadriglia sono eventi di reparto."
-            )
+        controlla_cerchia(evento.cerchia, unita)
     evento.save()
     if evento.livello == Livello.UNITA:
         evento.unita.set(unita)
     allinea_partecipanti(evento)
     return evento
+
+
+LC = {TipoUnita.BRANCO, TipoUnita.CERCHIO, TipoUnita.BRANCO_CERCHIO}
+
+
+def controlla_cerchia(cerchia: str, unita: list[Unita]) -> None:
+    if cerchia in CERCHIE_DI_REPARTO and any(u.tipo != TipoUnita.REPARTO for u in unita):
+        raise ValidationError("Consiglio Capi, Con.Ca.Vi. e Alta Squadriglia sono di reparto.")
+    if cerchia == Cerchia.CONSIGLIO_ANZIANI and any(u.tipo not in LC for u in unita):
+        raise ValidationError("Il Consiglio degli Anziani è di un branco o di un cerchio.")
 
 
 def annulla(evento: Evento, motivo: str) -> None:
@@ -134,28 +148,59 @@ def annulla(evento: Evento, motivo: str) -> None:
 # --- Recurring meetings (DEC-78) -------------------------------------------------------------
 
 
+def titolo_riunione(serie: RiunioneRicorrente) -> str:
+    if serie.titolo:
+        return serie.titolo
+    if serie.squadriglia_id:
+        return f"Riunione di squadriglia {serie.squadriglia.nome}"
+    if serie.cerchia != Cerchia.TUTTI:
+        return serie.get_cerchia_display()
+    return f"Riunione di {serie.unita.nome or serie.unita.get_tipo_display()}"
+
+
+def unita_della_serie(serie: RiunioneRicorrente) -> list[Unita]:
+    return [serie.unita, *serie.unita_insieme.exclude(pk=serie.unita_id)]
+
+
 @transaction.atomic
 def genera_riunioni(riunione: RiunioneRicorrente, utente) -> list[Evento]:
-    """One event per date, from `dal` to `al`, on the chosen weekday. Run again after a
+    """One meeting per date, from `dal` to `al`, on the chosen weekday. Run again after a
     change: dates already there are kept (with their attendance)."""
     giorno = riunione.dal + timedelta(days=(riunione.giorno_settimana - riunione.dal.weekday()) % 7)
     esistenti = {giorno_evento(e) for e in riunione.eventi.all()}
     nuovi = []
     zona = timezone.get_current_timezone()
+    unita = unita_della_serie(riunione)
     while giorno <= riunione.al:
         if giorno not in esistenti:
             evento = Evento(
-                titolo=f"Riunione di {riunione.unita.nome or riunione.unita.get_tipo_display()}",
+                titolo=titolo_riunione(riunione),
                 tipo=TipoEvento.RIUNIONE,
-                livello=Livello.UNITA,
+                livello=Livello.SQUADRIGLIA if riunione.squadriglia_id else Livello.UNITA,
+                squadriglia=riunione.squadriglia,
+                cerchia=riunione.cerchia,
                 inizio=datetime.combine(giorno, riunione.ora_inizio, zona),
                 fine=datetime.combine(giorno, riunione.ora_fine, zona),
-                luogo=riunione.luogo,
+                luogo=riunione.localita.nome if riunione.localita_id else riunione.luogo,
+                localita=riunione.localita,
                 riunione=riunione,
             )
-            nuovi.append(crea(evento, [riunione.unita], utente))
+            nuovi.append(crea(evento, [] if riunione.squadriglia_id else unita, utente))
         giorno += timedelta(days=7)
     return nuovi
+
+
+def cambia_serie(serie: RiunioneRicorrente, *, uniforme: bool, localita) -> None:
+    """The uniform follows by itself on the meetings that did not choose their own; the
+    place changes on the future meetings that still had the series' one."""
+    prima = serie.localita_id
+    serie.uniforme = uniforme
+    serie.localita = localita
+    serie.save()
+    if prima != serie.localita_id:
+        serie.eventi.filter(
+            inizio__gte=timezone.now(), annullato_il__isnull=True, localita_id=prima
+        ).update(localita=localita, luogo=localita.nome if localita else serie.luogo)
 
 
 # --- Participants ------------------------------------------------------------------------------

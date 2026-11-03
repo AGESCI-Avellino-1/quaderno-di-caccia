@@ -17,6 +17,7 @@ from apps.core.api import router as core_router
 from apps.diritti.api import router as diritti_router
 from apps.dispositivi.api import router as dispositivi_router
 from apps.eventi.api import router as eventi_router
+from apps.eventi.api_riunioni import router as riunioni_router
 from apps.fascicolo.api import router as fascicolo_router
 from apps.impersonazione.api import router as impersonazione_router
 from apps.importazione.api import router as importazione_router
@@ -51,6 +52,7 @@ api.add_router("/", iscrizioni_router)
 api.add_router("/", quote_router)
 api.add_router("/", cassa_router)
 api.add_router("/", eventi_router)
+api.add_router("/", riunioni_router)
 api.add_router("/", buonacaccia_router)
 api.add_router("/", impersonazione_router)
 api.add_router("/", progressione_router)

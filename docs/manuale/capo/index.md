@@ -41,6 +41,7 @@ iscrizioni
 campo
 sanitaria
 note
+riunioni
 eventi
 buonacaccia
 progressione

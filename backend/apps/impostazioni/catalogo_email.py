@@ -296,6 +296,40 @@ _TIPI = [
         facoltativa=True,
     ),
     TipoEmail(
+        "riunione_spostata",
+        "Riunione spostata",
+        "Agli invitati, quando cambiano data, orari o luogo di una singola riunione.",
+        "Spostata: [Evento]",
+        "<p>Ciao,</p><p>la riunione [Evento] è spostata: ora è [Quando].</p><p>I dettagli "
+        "nell'app:<br>[Link]</p>",
+        (
+            EVENTO,
+            Segnaposto(
+                "Quando",
+                "data, orari e luogo",
+                "07/11/2026, dalle 16:30 alle 18:30, in sede",
+                True,
+            ),
+            _link("la pagina della riunione"),
+        ),
+        facoltativa=True,
+    ),
+    TipoEmail(
+        "riunione_annullata",
+        "Riunione annullata",
+        "Agli invitati, quando una singola riunione è annullata.",
+        "Annullata: [Evento]",
+        "<p>Ciao,</p><p>la riunione [Evento] ([Quando]) è annullata: [Motivo]</p><p>I "
+        "dettagli nell'app:<br>[Link]</p>",
+        (
+            EVENTO,
+            Segnaposto("Quando", "data e orari", "07/11/2026, dalle 16:30 alle 18:30"),
+            MOTIVO,
+            _link("la pagina della riunione"),
+        ),
+        facoltativa=True,
+    ),
+    TipoEmail(
         "evento_annullato",
         "Evento annullato",
         "Agli invitati, quando un evento è annullato.",

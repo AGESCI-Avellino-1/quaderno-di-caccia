@@ -283,23 +283,6 @@ def test_api_presenze(uscita, staff, ragazza, csq, rover):
     assert foglio.status_code == 200 and foglio.content.startswith(b"%PDF")
 
 
-def test_api_riunioni_ricorrenti(reparto, staff, csq):
-    corpo = {
-        "giorno_settimana": 5,
-        "ora_inizio": "16:00",
-        "ora_fine": "18:00",
-        "luogo": "Sede",
-        "dal": "2025-10-01",
-        "al": "2025-12-31",
-    }
-    url = f"/api/v1/unita/{reparto.pk}/riunioni"
-    assert _post(csq, url, corpo).status_code == 403
-    risposta = _post(staff, url, corpo)
-    assert risposta.status_code == 201, risposta.content
-    assert risposta.json()["riunioni"] == 13
-    assert _post(staff, url, {**corpo, "ora_fine": "15:00"}).status_code == 400
-
-
 def test_api_annulla(uscita, staff, genitore):
     url = f"/api/v1/eventi/{uscita.pk}/annulla"
     assert _post(genitore, url, {"motivo": "Pioggia"}).status_code == 403
@@ -446,7 +429,7 @@ def test_consiglio_capi_e_alta_squadriglia(reparto, squadriglia, csq, ragazza, s
 
 
 def test_consiglio_solo_tra_reparti(clan, reparto, staff, capogruppo):
-    with pytest.raises(Exception, match="eventi di reparto"):
+    with pytest.raises(Exception, match="sono di reparto"):
         servizi.crea(
             Evento(
                 titolo="Consiglio",
@@ -617,8 +600,8 @@ def test_sconto_famiglia_sul_saldo(uscita, staff, ragazza, genitore, reparto):
 def test_ora_senza_fuso_e_quella_del_gruppo(reparto, staff):
     """A time without an offset is local time, not a server error."""
     corpo = {
-        "titolo": "Riunione",
-        "tipo": "RIUNIONE",
+        "titolo": "Uscita",
+        "tipo": "USCITA",
         "livello": "UNITA",
         "unita": [reparto.pk],
         "inizio": "2026-04-11T15:30:00",

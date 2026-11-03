@@ -12,6 +12,7 @@ class EventiConfig(AppConfig):
 
         auditlog.register(models.Evento)
         auditlog.register(models.RiunioneRicorrente)
+        auditlog.register(models.Localita)
         auditlog.register(models.Partecipazione)
         auditlog.register(models.Presenza)
         auditlog.register(models.DelegaSquadriglia)

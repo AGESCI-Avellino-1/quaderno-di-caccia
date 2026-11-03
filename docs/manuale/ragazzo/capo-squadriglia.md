@@ -25,7 +25,9 @@ del telefono**, spunta squadriglieri e genitori (o tocca **Tutti**) e poi **Scar
 contatti**: il telefono ti propone di salvarli. Nel file ci sono solo nome e numeri; quando
 li hai salvati, cancellalo dai download.
 
-In fondo, in **Riunioni di squadriglia**, puoi delegare uno squadrigliere a inserire anche
+Le riunioni della squadriglia le crei dalla pagina **Riunioni** (in **Attività**), una volta o
+ogni settimana, come spiegato per i capi in [Riunioni](../capo/riunioni). In fondo a **La mia
+squadriglia**, in **Riunioni di squadriglia**, puoi delegare uno squadrigliere a inserire anche
 lui le riunioni (per esempio quando sei assente): scegli chi in **Delega a** e tocca
 **Delega**. Le presenze invece le segni tu.
 

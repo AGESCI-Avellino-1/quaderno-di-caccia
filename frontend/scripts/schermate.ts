@@ -549,12 +549,39 @@ const SCENE: Scena[] = [
     },
     mostra: 'Titolo',
   },
+  { nome: 'capo/riunioni', chi: 'capoReparto', percorso: '/riunioni', intera: true },
+  {
+    // A weekly series of the reparto at the seat, not created.
+    nome: 'capo/riunioni-nuove',
+    chi: 'capoReparto',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Nuove riunioni' }).click()
+      await pagina.getByLabel('Unità').selectOption({ label: 'Reparto Antares (N1)' })
+      await pagina.getByLabel('Chi è invitato').selectOption('ALTA_SQ')
+      await pagina.getByLabel('Al', { exact: true }).fill(`${new Date().getFullYear() + 1}-05-31`)
+      await pagina.getByLabel('Località').selectOption({ label: 'Sede del gruppo' })
+    },
+    intera: true,
+  },
+  {
+    // The next meeting being changed: its notes in the editor.
+    nome: 'capo/riunione-modifica',
+    chi: 'capoReparto',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      await apri('Riunione di Antares')(pagina)
+      await pagina.getByRole('button', { name: 'Modifica la riunione' }).click()
+      await pagina.locator('.ProseMirror').first().waitFor()
+    },
+    mostra: 'Giorno',
+  },
   {
     nome: 'capo/presenze',
     chi: 'capoReparto',
-    percorso: '/eventi',
+    percorso: '/riunioni',
     prepara: async (pagina) => {
-      await apri('Riunione di reparto')(pagina)
+      await apri('Riunione di Antares')(pagina)
       await pagina.getByRole('button', { name: 'Presente', exact: true }).first().click()
     },
     mostra: 'Partecipanti',

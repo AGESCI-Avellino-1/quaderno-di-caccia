@@ -341,7 +341,7 @@ consuma alla creazione dell'account (un'email sbagliata si corregge riaprendolo)
 per l'app» nella scheda, pulsante in «La mia squadriglia» per il capo squadriglia. Manuale e
 schermate.
 
-#### N.44 — Riunioni separate dagli eventi, con serie, località e uniforme ⏳ (DEC-310)
+#### N.44 — Riunioni separate dagli eventi, con serie, località e uniforme ✅ 03/11 (DEC-310)
 
 Le riunioni **non sono eventi** (mai quote). Oggi `eventi.RiunioneRicorrente` genera un `Evento`
 di tipo `RIUNIONE` per data.
@@ -368,6 +368,16 @@ Deciso il 03/11:
   invitati.
 - **Email** solo quando una singola riunione è annullata o spostata (tipo facoltativo,
   DEC-157); niente per la creazione della serie né per le informazioni.
+
+Fatto: ogni riunione resta un `Evento` di tipo RIUNIONE (presenze, calendario e copia offline
+sono quelle degli eventi), ma fuori dalla pagina Eventi (`/eventi?riunioni=true`), senza quote né
+budget; `RiunioneRicorrente` con cerchia (anche Consiglio degli Anziani, nuovo), squadriglia,
+unità collegata, località e uniforme; `Evento.uniforme` (vuoto = come la serie) e
+`informazioni` (HTML pulito); `Localita` del gruppo; `api_riunioni.py` (`/riunioni`,
+`/riunioni/serie`, `/localita`); email `riunione_spostata` e `riunione_annullata`. PWA: pagina
+«Riunioni» (menu Attività), dettaglio in `/riunioni/<id>` con «Modifica la riunione» (editor di
+testo), «Località» nelle Impostazioni per i capigruppo. Le riunioni già create restano com'erano
+(con uniforme sì di base). Manuale (pagina nuova «Riunioni») e schermate.
 
 #### N.45 — Turni di squadriglia e di sestiglia ⏳ (DEC-312) (dopo N.44)
 

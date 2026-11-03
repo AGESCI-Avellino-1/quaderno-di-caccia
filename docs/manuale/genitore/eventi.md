@@ -2,8 +2,8 @@
 
 ## Gli eventi
 
-Nella Home (o nel menu, nel gruppo **Attività**) tocca **Eventi**. Vedi riunioni, uscite e campi dei tuoi figli e gli
-eventi di tutto il gruppo, dal più vicino. Con **Eventi passati** vedi anche quelli già
+Nella Home (o nel menu, nel gruppo **Attività**) tocca **Eventi**. Vedi uscite e campi dei
+tuoi figli e gli eventi di tutto il gruppo, dal più vicino. Con **Eventi passati** vedi anche quelli già
 fatti.
 
 :::{container} schermate
@@ -12,6 +12,10 @@ fatti.
 :::
 
 Tocca un evento per vedere date, luogo, cosa portare e l'eventuale quota.
+
+Le riunioni sono in **Riunioni**, sempre in **Attività**: giorno, orari, località, se è con
+l'uniforme e le informazioni dei capi (cosa portare, cosa si fa). Ricevi un'email solo se una
+riunione viene spostata o annullata.
 
 ## Dire che tuo figlio non partecipa
 

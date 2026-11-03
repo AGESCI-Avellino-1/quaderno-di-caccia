@@ -1,6 +1,6 @@
 """Events, recurring meetings, participants and attendance (see models)."""
 
-from datetime import date, datetime, time
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -24,7 +24,6 @@ from .models import (
     Evento,
     Livello,
     Partecipazione,
-    RiunioneRicorrente,
     StatoPartecipazione,
     StatoPresenza,
     TipoEvento,
@@ -79,6 +78,13 @@ class QuotaEvento(Schema):
     sconto_famiglia: Decimal
 
 
+class LocalitaOut(Schema):
+    id: int
+    nome: str
+    indirizzo: str
+    mappa: str
+
+
 class EventoOut(Schema):
     id: int
     titolo: str
@@ -99,6 +105,11 @@ class EventoOut(Schema):
     cerchia: Cerchia
     cerchia_nome: str
     riunione: bool
+    # A meeting (DEC-310): its series, place, uniform and the staff's notes (HTML).
+    serie_id: int | None = None
+    localita: LocalitaOut | None = None
+    uniforme: bool | None = None
+    informazioni: str = ""
     annullato: bool
     motivo_annullamento: str
     # The user's own and their children's participation (families).
@@ -148,6 +159,10 @@ def _evento_out(user, evento: Evento) -> dict:
         "cerchia": evento.cerchia,
         "cerchia_nome": evento.get_cerchia_display(),
         "riunione": evento.riunione_id is not None,
+        "serie_id": evento.riunione_id,
+        "localita": evento.localita,
+        "uniforme": evento.con_uniforme(),
+        "informazioni": evento.informazioni,
         "annullato": evento.annullato_il is not None,
         "motivo_annullamento": evento.motivo_annullamento,
         "mie": _mie(user, evento),
@@ -173,8 +188,22 @@ def _evento(request, evento_id: int) -> Evento:
 
 
 @router.get("/eventi", response=list[EventoOut])
-def eventi(request, dal: date | None = None, al: date | None = None, unita: int | None = None):
-    elenco = policy.eventi_visibili(request.auth).select_related("squadriglia")
+def eventi(
+    request,
+    dal: date | None = None,
+    al: date | None = None,
+    unita: int | None = None,
+    riunioni: bool = False,
+):
+    """The events; with `riunioni` the meetings instead, which are not events for who uses
+    the app (DEC-310)."""
+    elenco = policy.eventi_visibili(request.auth).select_related(
+        "squadriglia", "localita", "riunione"
+    )
+    if riunioni:
+        elenco = elenco.filter(tipo=TipoEvento.RIUNIONE)
+    else:
+        elenco = elenco.exclude(tipo=TipoEvento.RIUNIONE)
     if dal:
         elenco = elenco.filter(fine__date__gte=dal)
     if al:
@@ -204,6 +233,8 @@ def _dati(request, evento: Evento, dati: EventoIn) -> list[Unita]:
         cerchia=dati.cerchia,
     ):
         raise HttpError(403, "Non puoi creare questo evento.")
+    if TipoEvento.RIUNIONE in (dati.tipo, evento.tipo):
+        raise HttpError(400, "Le riunioni si creano e si cambiano dalla pagina Riunioni.")
     evento.titolo = dati.titolo.strip()
     evento.tipo = dati.tipo
     evento.livello = dati.livello
@@ -411,73 +442,6 @@ def foglio_presenze(request, evento_id: int):
     return risposta
 
 
-# --- Recurring meetings -------------------------------------------------------------------
-
-
-class RiunioneIn(Schema):
-    giorno_settimana: int
-    ora_inizio: time
-    ora_fine: time
-    luogo: str = ""
-    dal: date
-    al: date
-
-
-class RiunioneOut(RiunioneIn):
-    id: int
-    riunioni: int
-
-
-def _riunione_out(r: RiunioneRicorrente) -> dict:
-    return {
-        "id": r.pk,
-        "giorno_settimana": r.giorno_settimana,
-        "ora_inizio": r.ora_inizio,
-        "ora_fine": r.ora_fine,
-        "luogo": r.luogo,
-        "dal": r.dal,
-        "al": r.al,
-        "riunioni": r.eventi.filter(annullato_il__isnull=True).count(),
-    }
-
-
-@router.get("/unita/{unita_id}/riunioni", response=list[RiunioneOut])
-def riunioni(request, unita_id: int):
-    if not policy.e_capo(request.auth):
-        raise HttpError(403, "Le riunioni le vedono i capi.")
-    unita = get_object_or_404(Unita, pk=unita_id)
-    return [_riunione_out(r) for r in unita.riunioni_ricorrenti.all()]
-
-
-@router.post("/unita/{unita_id}/riunioni", response={201: RiunioneOut})
-def crea_riunioni(request, unita_id: int, dati: RiunioneIn):
-    unita = get_object_or_404(Unita, pk=unita_id)
-    if not policy.puo_creare_evento(request.auth, Livello.UNITA, unita_ids=[unita.pk]):
-        raise HttpError(403, "Le riunioni le stabilisce lo staff dell'unità.")
-    riunione = RiunioneRicorrente(unita=unita, creata_da=request.auth, **dati.dict())
-    riunione.luogo = riunione.luogo.strip()
-    try:
-        riunione.full_clean()
-        riunione.save()
-        servizi.genera_riunioni(riunione, request.auth)
-    except ValidationError as errore:
-        raise _errore(errore) from errore
-    return Status(201, _riunione_out(riunione))
-
-
-@router.delete("/riunioni/{riunione_id}", response=RiunioneOut)
-def togli_riunioni(request, riunione_id: int):
-    """Cancels the future dates; past ones (with their attendance) stay."""
-    riunione = get_object_or_404(RiunioneRicorrente, pk=riunione_id)
-    if not policy.puo_creare_evento(request.auth, Livello.UNITA, unita_ids=[riunione.unita_id]):
-        raise HttpError(403, "Le riunioni le stabilisce lo staff dell'unità.")
-    for evento in riunione.eventi.filter(inizio__gte=timezone.now(), annullato_il__isnull=True):
-        servizi.annulla(evento, "Riunioni ricorrenti tolte")
-    riunione.al = min(riunione.al, timezone.localdate())
-    riunione.save()
-    return _riunione_out(riunione)
-
-
 # --- Patrol delegate and Alta Squadriglia ------------------------------------------------
 
 
@@ -590,6 +554,8 @@ class QuotaEventoIn(Schema):
 def _gestore_quote(request, evento: Evento) -> None:
     if policy.e_capo_in_attesa(request.auth) or not policy.puo_gestire_evento(request.auth, evento):
         raise HttpError(403, "La quota la fissano i capi dell'evento.")
+    if evento.tipo == TipoEvento.RIUNIONE:
+        raise HttpError(400, "Le riunioni non hanno quote né budget.")
 
 
 @router.put("/eventi/{evento_id}/quota", response=EventoOut)

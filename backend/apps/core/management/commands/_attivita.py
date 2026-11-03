@@ -153,18 +153,33 @@ def crea_attivita(email) -> None:
         {"nessuna_allergia": True, "nessun_farmaco": True},
     )
 
-    # Events: a meeting, an outing with its fee, a group party.
-    capo_reparto(
+    # Meetings (DEC-310): every Saturday at the group's seat, a new place written while
+    # creating them; notes on the next one. Then an outing with its fee, a group party.
+    oggi = date.today()
+    riunioni = capo_reparto(
         "post",
-        "/eventi",
+        "/riunioni",
         {
-            "titolo": "Riunione di reparto",
-            "tipo": "RIUNIONE",
-            "livello": "UNITA",
             "unita": [reparto.pk],
-            "inizio": _giorno(_sabato(0), time(15, 30)),
-            "fine": _giorno(_sabato(0), time(18, 0)),
-            "luogo": "Sede del gruppo",
+            "giorno_settimana": 5,
+            "ora_inizio": "15:30",
+            "ora_fine": "18:00",
+            "dal": (oggi + timedelta(days=_sabato(-3))).isoformat(),
+            "al": (oggi + timedelta(days=_sabato(12))).isoformat(),
+            "nuova_localita": {"nome": "Sede del gruppo", "indirizzo": "Via dei Pini 1"},
+            "uniforme": True,
+        },
+    )
+    prossima = next(r for r in riunioni if r["inizio"] >= _giorno(0, time(0)))
+    capo_reparto(
+        "put",
+        f"/riunioni/{prossima['id']}",
+        {
+            "inizio": prossima["inizio"],
+            "fine": prossima["fine"],
+            "localita_id": prossima["localita"]["id"],
+            "uniforme": None,
+            "informazioni": "<p>Portate il <strong>quaderno di caccia</strong> e la borraccia.</p>",
         },
     )
     uscita = capo_reparto(

@@ -20,13 +20,14 @@ from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia
 from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.iscrizioni.servizi import mancanti
+from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 
 # How many days before the deadline the family is reminded (DEC-125).
 PREAVVISO = timedelta(days=7)
 
 
-def _approvatori(unita) -> set[str]:
+def _persone_approvatori(unita) -> list:
     ruoli = {RuoloIncarico.CAPOGRUPPO}
     filtro = Incarico.objects.attivi().filter(persona__utente__isnull=False)
     capigruppo = filtro.filter(ruolo__in=ruoli)
@@ -35,11 +36,11 @@ def _approvatori(unita) -> set[str]:
         if unita.tipo != TipoUnita.COMUNITA_CAPI
         else filtro.none()
     )
-    return {
-        i.persona.utente.email
-        for i in (capigruppo | staff).select_related("persona__utente")
-        if accetta(i.persona, "riepiloghi")
-    }
+    return [i.persona for i in (capigruppo | staff).select_related("persona__utente")]
+
+
+def _approvatori(unita) -> set[str]:
+    return {p.utente.email for p in _persone_approvatori(unita) if accetta(p, "riepiloghi")}
 
 
 class Command(BaseCommand):
@@ -60,6 +61,12 @@ class Command(BaseCommand):
                 "nuova_richiesta_iscrizione",
                 {"Unità": str(richiesta.unita), "Link": f"{link}/iscrizioni"},
                 _approvatori(richiesta.unita),
+            )
+            notifica(
+                "riepiloghi",
+                _persone_approvatori(richiesta.unita),
+                "Nuova richiesta di iscrizione",
+                "/iscrizioni",
             )
             richiesta.segnalata_il = timezone.now()
             richiesta.save(update_fields=["segnalata_il", "aggiornato_il"])

@@ -55,10 +55,7 @@ function paginaDiAvvio(costruzione: boolean): Plugin {
             '<!-- qdc-gruppo-avvio -->',
             nome ? `<div class="avvio-gruppo">${escapeHtml(nome)}</div>` : '',
           )
-          .replace(
-            'data-durata="2"',
-            `data-durata="${durataAvvio(process.env.QDC_DURATA_AVVIO)}"`,
-          ),
+          .replace('data-durata="2"', `data-durata="${durataAvvio(process.env.QDC_DURATA_AVVIO)}"`),
         tags: costruzione
           ? immaginiAvvio().map((i) => ({
               tag: 'link',
@@ -101,6 +98,8 @@ export default defineConfig(async ({ command }) => ({
         ],
       },
       workbox: {
+        // Push notifications (DEC-345): the file is in public/, not hashed.
+        importScripts: ['/push-sw.js'],
         // The service worker caches the app shell only. Data for offline use lives in
         // IndexedDB (src/offline), never in the HTTP cache.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],

@@ -700,6 +700,21 @@ export interface PegPubblico {
   ha_pdf: boolean
 }
 
+/** What a person wants as notifications, on all their devices (DEC-345). */
+export interface PreferenzePush {
+  eventi: boolean
+  promemoria_quote: boolean
+  riepiloghi: boolean
+  avvisi: boolean
+}
+
+export interface StatoPush {
+  disponibili: boolean
+  chiave_pubblica: string
+  questo_browser: boolean
+  preferenze: PreferenzePush
+}
+
 /** The capo's project (DEC-335). */
 export interface ProgettoCapo {
   versioni: {
@@ -3034,6 +3049,16 @@ export const api = {
       metodo: 'POST',
       corpo: { nome, dimensione },
     }),
+  statoPush: (endpoint = '') =>
+    richiesta<StatoPush>(
+      `/api/v1/push${endpoint ? `?endpoint=${encodeURIComponent(endpoint)}` : ''}`,
+    ),
+  scegliPreferenzePush: (corpo: PreferenzePush) =>
+    richiesta<PreferenzePush>('/api/v1/push/preferenze', { metodo: 'PUT', corpo }),
+  iscriviPush: (corpo: { endpoint: string; p256dh: string; auth: string }) =>
+    richiesta<null>('/api/v1/push/iscrizioni', { metodo: 'POST', corpo }),
+  togliPush: (endpoint: string) =>
+    richiesta<null>('/api/v1/push/iscrizioni/togli', { metodo: 'POST', corpo: { endpoint } }),
   progettoCapo: (persona: number) =>
     richiesta<ProgettoCapo>(`/api/v1/persone/${persona}/progetto-capo`),
   nuovoProgettoCapo: (persona: number, corpo: FormData) =>

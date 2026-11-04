@@ -13,6 +13,7 @@ from apps.anagrafica.preferenze import accetta
 from apps.archivio import servizi
 from apps.core.anno import AnnoAssociativo
 from apps.impostazioni.email import invia
+from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 
@@ -48,6 +49,17 @@ class Command(BaseCommand):
         )
         if not destinatari:
             return
+        notifica(
+            "riepiloghi",
+            [
+                i.persona
+                for i in Incarico.objects.attivi()
+                .filter(ruolo=RuoloIncarico.CAPOGRUPPO, persona__utente__isnull=False)
+                .select_related("persona__utente")
+            ],
+            "Fine anno: cose da fare",
+            "/gruppo",
+        )
         # One message per capogruppo: nobody sees the others' addresses.
         invia(
             "promemoria_fine_anno",

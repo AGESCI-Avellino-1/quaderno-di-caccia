@@ -11,8 +11,9 @@ from django.core.mail import mailers
 from django.core.management.base import BaseCommand
 
 from apps.core.euro import euro
-from apps.eventi.avvisi import indirizzi_famiglia
+from apps.eventi.avvisi import famiglia, indirizzi_famiglia
 from apps.impostazioni.email import messaggio
+from apps.notifiche.servizi import notifica
 from apps.quote.models import CategoriaQuota, Quota
 
 # How many days before the due date (DEC-142).
@@ -32,10 +33,12 @@ class Command(BaseCommand):
         )
         per_indirizzo: dict[str, list[Quota]] = defaultdict(list)
         ricordate = []
+        da_notificare = {}
         for quota in quote:
             if quota.residuo <= 0:
                 continue
             ricordate.append(quota)
+            da_notificare |= {p.pk: p for p in famiglia([quota.persona])}
             for indirizzo in indirizzi_famiglia([quota.persona], "promemoria_quote"):
                 per_indirizzo[indirizzo].append(quota)
         messaggi = []
@@ -51,5 +54,9 @@ class Command(BaseCommand):
             )
         if messaggi:
             mailers.default.send_messages(messaggi)
+        # No name and no amount: it shows on a locked phone (DEC-345).
+        notifica(
+            "promemoria_quote", da_notificare.values(), "Hai una quota in scadenza", "/mie-quote"
+        )
         Quota.objects.filter(pk__in=[q.pk for q in ricordate]).update(promemoria_il=oggi)
         self.stdout.write(f"Promemoria inviati: {len(messaggi)}")

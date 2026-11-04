@@ -11,31 +11,46 @@ from django.utils import timezone
 from apps.anagrafica.models import Persona
 from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia
+from apps.notifiche.servizi import notifica
 from apps.permessi.policy import genitori_vedono
 
 from .models import CERCHIE_CONVOCATE, Evento, StatoPartecipazione, TipoEvento
 
+TITOLI_PUSH = {
+    "evento_nuovo": "Nuovo evento",
+    "evento_modificato": "Evento cambiato",
+    "evento_annullato": "Evento annullato",
+    "riunione_spostata": "Riunione spostata",
+    "riunione_annullata": "Riunione annullata",
+}
 
-def indirizzi_famiglia(persone, categoria: str) -> list[str]:
+
+def famiglia(persone) -> list[Persona]:
     """The adult member themself, the parents with parental responsibility of a minor
-    (of an adult while they still see their activities); not who chose not to receive
-    this kind of email."""
-    indirizzi: list[str] = []
+    (of an adult while they still see their activities)."""
+    chi: list[Persona] = []
     for persona in persone:
-        destinatari = [] if persona.e_minorenne() else [persona]
+        if not persona.e_minorenne():
+            chi.append(persona)
         if persona.e_minorenne() or genitori_vedono(persona, "scheda"):
-            destinatari += [
+            chi += [
                 t.tutore
                 for t in persona.tutori.select_related("tutore__utente").filter(
                     responsabilita_genitoriale=True
                 )
             ]
-        for chi in destinatari:
-            if not accetta(chi, categoria):
-                continue
-            email = chi.email or (chi.utente.email if chi.utente else "")
-            if email and email not in indirizzi:
-                indirizzi.append(email)
+    return chi
+
+
+def indirizzi_famiglia(persone, categoria: str) -> list[str]:
+    """The family's addresses; not who chose not to receive this kind of email."""
+    indirizzi: list[str] = []
+    for chi in famiglia(persone):
+        if not accetta(chi, categoria):
+            continue
+        email = chi.email or (chi.utente.email if chi.utente else "")
+        if email and email not in indirizzi:
+            indirizzi.append(email)
     return indirizzi
 
 
@@ -68,21 +83,25 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
     partecipanti = Persona.objects.filter(
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
+    diretti = evento.cerchia in CERCHIE_CONVOCATE
     indirizzi = (
         indirizzi_diretti(partecipanti, "eventi")
-        if evento.cerchia in CERCHIE_CONVOCATE
+        if diretti
         else indirizzi_famiglia(partecipanti, "eventi")
     )
-    return invia(
+    percorso = f"/{'riunioni' if _riunione(evento) else 'eventi'}/{evento.pk}"
+    inviate = invia(
         modello,
-        {
-            "Evento": evento.titolo,
-            "Link": f"{settings.FRONTEND_URL}/{'riunioni' if _riunione(evento) else 'eventi'}"
-            f"/{evento.pk}",
-            **valori,
-        },
+        {"Evento": evento.titolo, "Link": f"{settings.FRONTEND_URL}{percorso}", **valori},
         indirizzi,
     )
+    notifica(
+        "eventi",
+        list(partecipanti) if diretti else famiglia(partecipanti),
+        f"{TITOLI_PUSH[modello]}: {evento.titolo}",
+        percorso,
+    )
+    return inviate
 
 
 def _da_annunciare(evento: Evento) -> bool:

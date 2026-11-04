@@ -13,6 +13,7 @@ import { api, type Profilo } from '@/api/qdc'
 import { leggiConCache } from '@/offline/cache'
 import * as cassaforte from '@/sicurezza/cassaforte'
 import { impostaImpersonazione } from '@/sicurezza/impersonazione'
+import { dimenticaIscrizione } from '@/pwa/notifiche'
 
 export const useSessioneStore = defineStore('sessione', () => {
   const profilo = ref<Profilo | null>(null)
@@ -84,6 +85,7 @@ export const useSessioneStore = defineStore('sessione', () => {
 
   async function esci() {
     try {
+      await dimenticaIscrizione()
       await allauth.esci()
     } finally {
       dimentica()

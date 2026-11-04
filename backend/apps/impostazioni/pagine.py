@@ -32,6 +32,7 @@ PRIVACY_BASE = """<h2>Chi tratta i dati</h2>
 <p>I dati restano in server nell'Unione Europea. Chi lascia il gruppo viene archiviato dopo due anni e i suoi dati vengono tolti dall'app. Sul telefono l'app conserva una copia cifrata, protetta dal PIN, per usarla anche senza rete; si cancella da sola se il telefono non si collega per troppo tempo o se il dispositivo viene revocato.</p>
 <h2>Cookie</h2>
 <p>L'app usa solo cookie tecnici, necessari per funzionare (l'accesso e la protezione dei moduli): nessun cookie di statistica o pubblicità, nessun dato ceduto a terzi.</p>
+<p>Se attivi le notifiche, l'indirizzo del tuo browser resta nell'app finché non esci o non le disattivi; le notifiche passano, cifrate, dal servizio del produttore del browser o del telefono (per esempio Apple o Google), che non può leggerle.</p>
 <h2>I tuoi diritti</h2>
 <p>Puoi chiedere di vedere, correggere, ricevere in copia o cancellare i tuoi dati e quelli dei tuoi figli minorenni, e opporti alle email che non sono necessarie (le scegli nella pagina Privacy). Rivolgiti ai capigruppo ([Email gruppo]). Le richieste vengono gestite con l'ufficio privacy nazionale dell'AGESCI.</p>
 <p><small>Anno scout [Anno].</small></p>"""

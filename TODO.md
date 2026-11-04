@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------- | ---------- | ------ |
-| [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata                                | Funzione | Medio   | Media      | WIP    |
+| [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata                                | Funzione | Medio   | Media      | VER    |
 | [#20](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/20) | Modelli di convocazione e verbali del gruppo su carta intestata   | Funzione | Medio   | Alta       | VER    |
 | [#19](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/19) | Download: documenti del gruppo scaricabili in app                 | Funzione | Basso   | Media      | VER    |
 | [#18](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/18) | Progetto Educativo di Gruppo (PEG): caricamento e storico         | Funzione | Medio   | Media      | VER    |
@@ -34,27 +34,15 @@ sviluppo consigliato: #16, poi #19 e #18 insieme (il PEG si consulta da Download
 
 ### #21 Notifiche push
 
-**Decisioni:** DEC-345. **Fattibile.** Il testo passa cifrato dai servizi di Apple e Google. Su iPhone
-funziona solo con l'app sulla schermata Home e dopo il permesso, quindi le email restano.
+**Decisioni:** DEC-345. **Fatto:** Web Push con `pywebpush`, le chiavi le genera da sola ogni installazione e
+le cifra con `QDC_CHIAVE_SEGRETI`, quindi non c'è nulla da configurare. Le preferenze riusano i gruppi delle
+email (eventi, quote e BuonaCaccia, bacheca e documenti, avvisi per i capi), così la pagina resta corta. In
+produzione partono dal servizio `posta`, che deve poter raggiungere i servizi di Apple, Google, Mozilla e
+Microsoft. L'informativa privacy predefinita è aggiornata; un testo già personalizzato dal gruppo va ritoccato a
+mano.
 
-**Cose da fare.**
-
-1. Chiavi del server in `.env` e nella guida di installazione; una libreria Python da scegliere,
-   controllando la versione installata.
-2. Service worker: oggi lo genera `vite-plugin-pwa` (`generateSW`), va esteso per ricevere le push e
-   aprire la pagina giusta al tocco.
-3. Registrazione per utente e browser, legata alla sessione e non a `Dispositivo` (che esiste solo con la
-   protezione attiva), cancellata all'uscita, alla revoca, se entra un altro account o se il servizio
-   risponde che non vale più.
-4. Invio accanto a `impostazioni.email.invia`, tipo per tipo, in coda come le email (DEC-311), bloccato
-   durante l'impersonazione. Un testo breve per ogni tipo, senza dati personali.
-5. Preferenze: da `PreferenzeEmail` (cinque gruppi di email facoltative) a una scelta email, push o
-   entrambe per tipo di avviso, con migrazione delle scelte attuali. Le email sempre inviate restano.
-6. Invito nell'app installata e pulsante nelle preferenze; su iPhone senza app installata, spiegazione.
-7. Da provare su iPhone e Android veri. Manuale e informativa privacy da aggiornare.
-
-**Rischio.** La scelta per persona tocca il filtro di tutte le email facoltative, che finora ha solo
-cinque gruppi: da controllare in sviluppo quanti tipi mostrare, per non fare una pagina di 40 righe.
+**Provato:** cifratura e firma con la libreria vera, senza la rete. **Non provato:** l'arrivo di una notifica vera:
+serve un server in https e un iPhone e un Android veri. Da provare prima del via.
 
 ### #20 Modelli di convocazione e verbali
 

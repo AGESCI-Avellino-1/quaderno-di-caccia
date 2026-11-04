@@ -28,6 +28,7 @@ from apps.core.file_caricati import (
 from apps.eventi.models import Cerchia, Evento, Livello, StatoPresenza, TipoEvento
 from apps.eventi.servizi import qualita_in_assemblea
 from apps.impostazioni.html import pulisci
+from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 from apps.permessi.policy import STAFF_DI_UNITA
 
@@ -549,7 +550,7 @@ def _email(persona: Persona | None) -> str:
     return persona.email or (persona.utente.email if persona.utente_id else "")
 
 
-def destinatari_promemoria(verbale: Verbale) -> list[str]:
+def persone_promemoria(verbale: Verbale) -> list[Persona]:
     """Who was chosen, and who may choose: the capigruppo, and the staff of a parents'
     meeting of one unit (DEC-331)."""
     evento = verbale.evento
@@ -559,8 +560,12 @@ def destinatari_promemoria(verbale: Verbale) -> list[str]:
         if len(unita) == 1:
             chi |= Q(ruolo__in=STAFF_DI_UNITA, unita=unita[0])
     incarichi = Incarico.objects.attivi().filter(chi).select_related("persona__utente")
-    indirizzi = [_email(verbale.redattore), *(_email(i.persona) for i in incarichi)]
-    return sorted({i for i in indirizzi if i})
+    persone = [i.persona for i in incarichi]
+    return [verbale.redattore, *persone] if verbale.redattore else persone
+
+
+def destinatari_promemoria(verbale: Verbale) -> list[str]:
+    return sorted({i for i in (_email(p) for p in persone_promemoria(verbale)) if i})
 
 
 def _riunioni_con_promemoria(oggi: date):
@@ -605,6 +610,12 @@ def promemoria(oggi: date) -> int:
                 "Link": f"{settings.FRONTEND_URL}/eventi/{evento.pk}",
             },
             destinatari_promemoria(verbale),
+        )
+        notifica(
+            "riepiloghi",
+            persone_promemoria(verbale),
+            f"Verbale da completare: {evento.titolo}",
+            f"/eventi/{evento.pk}",
         )
         verbale.promemoria_inviati += 1
         verbale.ultimo_promemoria = oggi

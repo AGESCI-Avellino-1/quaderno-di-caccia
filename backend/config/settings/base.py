@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "apps.archivio",
     "apps.bacheca",
     "apps.documenti",
+    "apps.notifiche",
     "apps.verbali",
     "apps.banca",
     "apps.impostazioni",

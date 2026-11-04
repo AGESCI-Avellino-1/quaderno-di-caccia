@@ -20,6 +20,7 @@ from apps.core.file_caricati import (
 )
 from apps.impostazioni.email import invia as invia_email
 from apps.impostazioni.html import pulisci
+from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, Unita
 from apps.permessi.policy import STAFF_DI_UNITA, _con_collegate, genitori_vedono
 
@@ -166,6 +167,7 @@ def _invia(persone: list[Persona], titolo: str, descrizione: str) -> int:
         email = _email(persona)
         if email and email not in indirizzi and accetta(persona, "avvisi"):
             indirizzi.append(email)
+    notifica("avvisi", persone, f"Nuovo documento: {titolo}", "/download")
     return invia_email(
         "documento_nuovo",
         {

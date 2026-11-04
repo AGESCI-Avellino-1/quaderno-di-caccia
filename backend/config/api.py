@@ -26,6 +26,7 @@ from apps.importazione.api import router as importazione_router
 from apps.impostazioni.api import router as impostazioni_router
 from apps.iscrizioni.api import router as iscrizioni_router
 from apps.note.api import router as note_router
+from apps.notifiche.api import router as notifiche_router
 from apps.organizzazione.api import router as organizzazione_router
 from apps.progressione.api import router as progressione_router
 from apps.quote.api import router as quote_router
@@ -65,6 +66,7 @@ api.add_router("/", fascicolo_router)
 api.add_router("/", archivio_router)
 api.add_router("/", bacheca_router)
 api.add_router("/", documenti_router)
+api.add_router("/", notifiche_router)
 api.add_router("/", verbali_router)
 api.add_router("/", banca_router)
 api.add_router("/", impostazioni_router)

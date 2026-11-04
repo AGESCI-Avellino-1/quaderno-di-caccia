@@ -9,6 +9,7 @@ from django.utils import timezone
 from apps.anagrafica.models import Persona
 from apps.eventi.avvisi import indirizzi_diretti, quando
 from apps.eventi.models import CERCHIE_CONVOCATE, Cerchia, Evento, StatoPartecipazione
+from apps.notifiche.servizi import notifica
 
 from .models import AllegatoVerbale
 
@@ -80,6 +81,11 @@ def _invia(evento: Evento, modello: str, allegati, primo=()) -> int:
 
     dentro, fuori = _da_allegare(allegati)
     dentro = [*primo, *dentro]
+    invitati = Persona.objects.filter(
+        partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
+    ).select_related("utente")
+    titolo = "Convocazione" if modello == "convocazione_riunione" else "Nuovo documento"
+    notifica("eventi", list(invitati), f"{titolo}: {evento.titolo}", f"/eventi/{evento.pk}")
     return invia_email(
         modello,
         {

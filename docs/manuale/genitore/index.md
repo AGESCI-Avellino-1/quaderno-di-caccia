@@ -40,6 +40,7 @@ progressione
 squadriglia
 bacheca
 download
+notifiche
 maggiorenni
 email
 diritti

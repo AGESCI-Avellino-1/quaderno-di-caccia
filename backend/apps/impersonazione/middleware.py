@@ -28,6 +28,7 @@ BLOCCATE = [
     (None, re.compile(r"^/api/v1/io/passkey$")),  # someone else's passkeys (DEC-295)
     ("scrittura", re.compile(r"^/api/v1/persone/\d+/progetto-capo$")),  # DEC-335
     ("scrittura", re.compile(r"^/api/v1/progetti-capo/")),
+    ("scrittura", re.compile(r"^/api/v1/push")),  # one's own phone (DEC-345)
     (None, re.compile(r"^/api/v1/richieste-diritti")),  # DEC-102
     (None, re.compile(r"^/api/v1/persone/\d+/fascicolo$")),
     (None, re.compile(r"^/api/v1/campo/")),  # offline downloads: nothing is saved

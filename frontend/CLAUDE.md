@@ -5,27 +5,27 @@ vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
 
 ## Layout
 
-| Path | What |
-| --- | --- |
-| `src/api/http.ts` | `richiesta<T>()`: fetch, same-origin cookie, `X-CSRFToken` on writes, `ErroreApi` for non-2xx (body parsed as JSON only when the server says so) |
-| `src/api/allauth.ts` | allauth headless *browser* client (session, login, code, passkey, providers, signup, email verify, password reset, TOTP) |
-| `src/api/qdc.ts` | Typed QdC API (mirror of the ninja schemas) + `temaDellaBranca` |
-| `src/offline/db.ts` | Dexie DB (schema v2): `coda`, `cache` (encrypted payloads), `protezione` (vault), `meta` (device id); `svuotaDatiLocali()` / `cancellaTutto()` |
-| `src/offline/outbox.ts` | `scrivi()` (entry point), `accoda()` + `inviaCoda()` with `Idempotency-Key` (DEC-96) |
-| `src/offline/cache.ts` | `leggiConCache()`: network first, encrypted device copy when offline; `salvaInCache()`, `leggiDallaCache()` |
-| `src/sicurezza/` | Device protection (DEC-97): `cripto.ts` (Web Crypto), `cassaforte.ts` (vault states, PIN, wrong-PIN wipe, expiry), `biometria.ts` (passkey PRF), `dispositivo.ts` (registration, revocation check at start-up), `collegamenti.ts` (server headers → vault) |
-| `src/stores/sessione.ts` | Profile (`/api/v1/io`), role flags for menus, branch theme |
-| `src/composables/` | `useRete` (online state, queue counters, auto-send), `useErrore` (readable errors), `useBloccoAutomatico` (lock after inactivity) |
-| `src/router/index.ts` | Routes; `meta.pubblica`, `meta.richiede` (menu guard only) |
-| `src/navigazione/` | The menu (DEC-241…DEC-243): `menu.ts` (groups and entries from the profile, shared by `MenuLaterale.vue`, the Home and `Briciole.vue`), `icone.ts` (the icons used). Bootstrap's JavaScript is not loaded: the drawer is a `<dialog>` opened by the component |
-| `src/router/pagine.ts` | Name of every page and the page above it: `[Pagina corrente]` in the title, the breadcrumb (DEC-244, DEC-246) |
-| `src/components/CampoCodiceFiscale.vue` | Every codice fiscale input: "Calcola" proposes it from the person's data (server `/codice-fiscale`, municipalities from ISTAT, DEC-265); use it for any new CF field |
-| `src/components/EditorTesto.vue` | TipTap editor for the email templates (DEC-250), loaded only by `ModelloEmailView`; the server cleans the HTML again |
-| `src/components/LettorePdf.vue` | A PDF drawn inside the page with pdf.js (`pdfjs-dist`, pinned), loaded only when opened (DEC-335); its worker is `.mjs`, typed by a location of its own in `docker/qdc-locations.conf` |
-| `src/stores/navigazione.ts`, `src/composables/useNomePagina.ts` | Names of pages with one of their own (a person, a unit, an event) for title and breadcrumb; menu counters |
-| `src/stores/sito.ts`, `src/sito/segnaposto.ts` | Title and footer from `/api/v1/sito` (also before login), placeholders filled in by `riempi()` (DEC-246, DEC-247) |
-| `src/theme/` | AGESCI palette (copied from the Django theme, do not edit) + `qdc.scss` |
-| `docker/` | nginx config for the production `app` container; `public/errori/50x.html` is the self-contained page nginx and the reverse proxy on the host show when the server does not answer (DEC-270; Django's own error pages are `backend/templates/{400,403,403_csrf,404,500}.html`) |
+| Path                                                            | What                                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/api/http.ts`                                               | `richiesta<T>()`: fetch, same-origin cookie, `X-CSRFToken` on writes, `ErroreApi` for non-2xx (body parsed as JSON only when the server says so)                                                                                                                              |
+| `src/api/allauth.ts`                                            | allauth headless _browser_ client (session, login, code, passkey, providers, signup, email verify, password reset, TOTP)                                                                                                                                                      |
+| `src/api/qdc.ts`                                                | Typed QdC API (mirror of the ninja schemas) + `temaDellaBranca`                                                                                                                                                                                                               |
+| `src/offline/db.ts`                                             | Dexie DB (schema v2): `coda`, `cache` (encrypted payloads), `protezione` (vault), `meta` (device id); `svuotaDatiLocali()` / `cancellaTutto()`                                                                                                                                |
+| `src/offline/outbox.ts`                                         | `scrivi()` (entry point), `accoda()` + `inviaCoda()` with `Idempotency-Key` (DEC-96)                                                                                                                                                                                          |
+| `src/offline/cache.ts`                                          | `leggiConCache()`: network first, encrypted device copy when offline; `salvaInCache()`, `leggiDallaCache()`                                                                                                                                                                   |
+| `src/sicurezza/`                                                | Device protection (DEC-97): `cripto.ts` (Web Crypto), `cassaforte.ts` (vault states, PIN, wrong-PIN wipe, expiry), `biometria.ts` (passkey PRF), `dispositivo.ts` (registration, revocation check at start-up), `collegamenti.ts` (server headers → vault)                    |
+| `src/stores/sessione.ts`                                        | Profile (`/api/v1/io`), role flags for menus, branch theme                                                                                                                                                                                                                    |
+| `src/composables/`                                              | `useRete` (online state, queue counters, auto-send), `useErrore` (readable errors), `useBloccoAutomatico` (lock after inactivity)                                                                                                                                             |
+| `src/router/index.ts`                                           | Routes; `meta.pubblica`, `meta.richiede` (menu guard only)                                                                                                                                                                                                                    |
+| `src/navigazione/`                                              | The menu (DEC-241…DEC-243): `menu.ts` (groups and entries from the profile, shared by `MenuLaterale.vue`, the Home and `Briciole.vue`), `icone.ts` (the icons used). Bootstrap's JavaScript is not loaded: the drawer is a `<dialog>` opened by the component                 |
+| `src/router/pagine.ts`                                          | Name of every page and the page above it: `[Pagina corrente]` in the title, the breadcrumb (DEC-244, DEC-246)                                                                                                                                                                 |
+| `src/components/CampoCodiceFiscale.vue`                         | Every codice fiscale input: "Calcola" proposes it from the person's data (server `/codice-fiscale`, municipalities from ISTAT, DEC-265); use it for any new CF field                                                                                                          |
+| `src/components/EditorTesto.vue`                                | TipTap editor for the email templates (DEC-250), loaded only by `ModelloEmailView`; the server cleans the HTML again                                                                                                                                                          |
+| `src/components/LettorePdf.vue`                                 | A PDF drawn inside the page with pdf.js (`pdfjs-dist`, pinned), loaded only when opened (DEC-335); its worker is `.mjs`, typed by a location of its own in `docker/qdc-locations.conf`                                                                                        |
+| `src/stores/navigazione.ts`, `src/composables/useNomePagina.ts` | Names of pages with one of their own (a person, a unit, an event) for title and breadcrumb; menu counters                                                                                                                                                                     |
+| `src/stores/sito.ts`, `src/sito/segnaposto.ts`                  | Title and footer from `/api/v1/sito` (also before login), placeholders filled in by `riempi()` (DEC-246, DEC-247)                                                                                                                                                             |
+| `src/theme/`                                                    | AGESCI palette (copied from the Django theme, do not edit) + `qdc.scss`                                                                                                                                                                                                       |
+| `docker/`                                                       | nginx config for the production `app` container; `public/errori/50x.html` is the self-contained page nginx and the reverse proxy on the host show when the server does not answer (DEC-270; Django's own error pages are `backend/templates/{400,403,403_csrf,404,500}.html`) |
 
 ## Rules
 
@@ -35,12 +35,13 @@ vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
   cookie notice's "Ho capito" (`BannerCookie.vue`, DEC-266) and the closing of the install
   banner (`pwa/installazione.ts`, DEC-283), the Home group open last
   (`navigazione/gruppoAperto.ts`, DEC-285) and the calendar's month/list and view
-  (`eventi/calendario.ts`, DEC-286): a date or a key each, no personal data. Reads for offline use go
+  (`eventi/calendario.ts`, DEC-286), the closing of the notifications' invitation
+  (`pwa/notifiche.ts`, DEC-345): a date or a key each, no personal data. Reads for offline use go
   through `leggiConCache` / `salvaInCache` (encrypted, nothing saved in "solo online"
   mode); the service worker caches only the app shell, never API responses.
 - **Writes** go through `scrivi({metodo, percorso, corpo, descrizione})`: queued and
   encrypted when the vault is active, sent directly otherwise. `descrizione` is stored
-  in clear and shown in *Modifiche in sospeso*: no names, no health data. A 4xx stays
+  in clear and shown in _Modifiche in sospeso_: no names, no health data. A 4xx stays
   in the queue as `errore` for the user to fix or discard: never drop it silently.
 - The router guard order is deliberate: vault initialisation and revocation check →
   unlock → session → protection setup on first login. Do not load data before the

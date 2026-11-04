@@ -5,6 +5,7 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import AggiornamentoApp from '@/components/AggiornamentoApp.vue'
 import BannerCookie from '@/components/BannerCookie.vue'
 import BannerInstallazione from '@/components/BannerInstallazione.vue'
+import InvitoNotifiche from '@/components/InvitoNotifiche.vue'
 import BarraEmailDiProva from '@/components/BarraEmailDiProva.vue'
 import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
 import BarraManutenzione from '@/components/BarraManutenzione.vue'
@@ -110,6 +111,7 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
       <BarraImpersonazione />
       <BarraOffline />
       <BannerInstallazione />
+      <InvitoNotifiche v-if="sessione.profilo" />
       <Briciole v-if="conMenu" />
       <div ref="scorrevole" class="qdc-scorrevole">
         <main class="container py-5">

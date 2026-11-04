@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 
 import { api, type PreferenzeEmail } from '@/api/qdc'
+import NotifichePush from '@/components/NotifichePush.vue'
 import Telefono from '@/components/Telefono.vue'
 import VisibilitaGenitori from '@/components/VisibilitaGenitori.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -77,6 +78,7 @@ const voci = [
   <section>
     <h1 class="h4 mb-5">Privacy e preferenze</h1>
     <VisibilitaGenitori v-if="sessione.profilo?.persona" :id="sessione.profilo.persona.id" />
+    <NotifichePush v-if="sessione.profilo?.persona" />
     <h2 class="h5 mb-1">Accanto ai numeri di telefono</h2>
     <p class="fg-2 small">
       Quali pulsanti vedere vicino a ogni numero, per esempio

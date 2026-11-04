@@ -18,6 +18,7 @@ from django.db.models import Q
 
 from apps.anagrafica.models import Appartenenza, Persona
 from apps.impostazioni.email import invia
+from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 from . import servizi
@@ -30,7 +31,7 @@ def _email(persona: Persona) -> str:
     return persona.email or (persona.utente.email if persona.utente_id else "")
 
 
-def indirizzi_famiglia(persona: Persona) -> list[str]:
+def famiglia(persona: Persona) -> list[Persona]:
     """The parents with parental responsibility, and the member when they have an
     account of their own (they answer the event form, DEC-161)."""
     chi = [
@@ -41,15 +42,19 @@ def indirizzi_famiglia(persona: Persona) -> list[str]:
     ]
     if persona.utente_id:
         chi.append(persona)
+    return chi
+
+
+def indirizzi_famiglia(persona: Persona) -> list[str]:
     indirizzi: list[str] = []
-    for p in chi:
+    for p in famiglia(persona):
         email = _email(p)
         if email and email not in indirizzi:
             indirizzi.append(email)
     return indirizzi
 
 
-def indirizzi_staff(persona: Persona) -> list[str]:
+def persone_staff(persona: Persona) -> list[Persona]:
     """The staff of the member's unit; the capigruppo when the unit has none."""
     unita = Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
     incarichi = Incarico.objects.attivi().filter(
@@ -57,9 +62,13 @@ def indirizzi_staff(persona: Persona) -> list[str]:
     )
     if not incarichi.exists():
         incarichi = Incarico.objects.attivi().filter(ruolo=RuoloIncarico.CAPOGRUPPO)
+    return [i.persona for i in incarichi.select_related("persona__utente")]
+
+
+def indirizzi_staff(persona: Persona) -> list[str]:
     indirizzi: list[str] = []
-    for incarico in incarichi.select_related("persona__utente"):
-        email = _email(incarico.persona)
+    for chi in persone_staff(persona):
+        email = _email(chi)
         if email and email not in indirizzi:
             indirizzi.append(email)
     return indirizzi
@@ -177,6 +186,8 @@ def promemoria(oggi: date) -> int:
     allo_staff: dict[str, list[str]] = defaultdict(list)
     alla_famiglia: dict[str, list[str]] = defaultdict(list)
     inviati: list[tuple[IscrizioneBuonaCaccia, list[str]]] = []
+    staff_da_notificare: dict[int, Persona] = {}
+    famiglie_da_notificare: dict[int, Persona] = {}
     iscrizioni = IscrizioneBuonaCaccia.objects.filter(
         Q(stato__in=ATTIVE),
         partecipazione__evento__annullato_il__isnull=True,
@@ -191,6 +202,7 @@ def promemoria(oggi: date) -> int:
         manca = _manca_allo_staff(iscrizione)
         if passo and manca and f"staff-scadenza-{passo}" not in iscrizione.promemoria:
             chiavi.append(f"staff-scadenza-{passo}")
+            staff_da_notificare |= {p.pk: p for p in persone_staff(persona)}
             for indirizzo in indirizzi_staff(persona):
                 allo_staff[indirizzo].append(
                     f"- {chi}: entro il {iscrizione.scadenza:%d/%m/%Y} su BuonaCaccia "
@@ -199,6 +211,7 @@ def promemoria(oggi: date) -> int:
         passo = _passo(iscrizione.limite_cancellazione, oggi)
         if passo and f"staff-cancella-{passo}" not in iscrizione.promemoria:
             chiavi.append(f"staff-cancella-{passo}")
+            staff_da_notificare |= {p.pk: p for p in persone_staff(persona)}
             for indirizzo in indirizzi_staff(persona):
                 allo_staff[indirizzo].append(
                     f"- {chi}: il {iscrizione.limite_cancellazione:%d/%m/%Y} è l'ultimo "
@@ -212,6 +225,7 @@ def promemoria(oggi: date) -> int:
             and f"famiglia-{passo}" not in iscrizione.promemoria
         ):
             chiavi.append(f"famiglia-{passo}")
+            famiglie_da_notificare |= {p.pk: p for p in famiglia(persona)}
             for indirizzo in indirizzi_famiglia(persona):
                 alla_famiglia[indirizzo].append(
                     f"Per {persona.nome} ({evento.titolo}, {_link(iscrizione)}) ci serve:\n"
@@ -219,6 +233,19 @@ def promemoria(oggi: date) -> int:
                 )
         if chiavi:
             inviati.append((iscrizione, chiavi))
+    # No names: they show on a locked phone (DEC-345).
+    notifica(
+        "promemoria_quote",
+        staff_da_notificare.values(),
+        "Scadenze su BuonaCaccia",
+        "/buonacaccia",
+    )
+    notifica(
+        "promemoria_quote",
+        famiglie_da_notificare.values(),
+        "Iscrizione BuonaCaccia: manca qualcosa",
+        "/",
+    )
     quanti = 0
     for indirizzo, righe in allo_staff.items():
         quanti += _invia(

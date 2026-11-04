@@ -7,6 +7,7 @@ from django.utils import timezone
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
 from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia as invia_email
+from apps.notifiche.servizi import notifica
 from apps.permessi.policy import genitori_vedono
 
 from .models import Avviso, Destinatari
@@ -57,6 +58,7 @@ def invia(avviso: Avviso) -> int:
         },
         indirizzi,
     )
+    notifica("avvisi", lettori(avviso), f"Nuovo avviso: {avviso.titolo}", "/bacheca")
     avviso.email_inviata_il = timezone.now()
     avviso.save(update_fields=["email_inviata_il"])
     return inviati

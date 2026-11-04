@@ -16,6 +16,7 @@ from django.utils import timezone
 from apps.anagrafica.models import CorrezioneAnagrafica, StatoCorrezione
 from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia
+from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico
 
 
@@ -43,6 +44,17 @@ class Command(BaseCommand):
             self.stderr.write("Nessun capogruppo da avvisare: nessuna email inviata.")
             return
         da_inoltrare = CorrezioneAnagrafica.objects.filter(stato=StatoCorrezione.IN_ATTESA).count()
+        notifica(
+            "riepiloghi",
+            [
+                i.persona
+                for i in Incarico.objects.attivi()
+                .filter(ruolo=RuoloIncarico.CAPOGRUPPO, persona__utente__isnull=False)
+                .select_related("persona__utente")
+            ],
+            "Correzioni da inoltrare",
+            "/correzioni",
+        )
         # One message per capogruppo: nobody sees the others' addresses.
         invia(
             "correzioni_da_inoltrare",

@@ -280,6 +280,32 @@ release; lo script ne mostra le sezioni tra la versione installata e la nuova **
 chiedere se aggiornare. Lo script che gira è quello della versione installata: l'elenco compare
 negli aggiornamenti che partono dalla 1.10.
 
+### Richieste del 04/11, da raccogliere
+
+Richieste del maintainer del 04/11, solo annotate: si sviluppano quando il maintainer dice di
+partire.
+
+#### N.50 — Organigramma: anche gli staff delle unità ⏳
+
+Nella pagina Organigramma (`GruppoView.vue`) oggi ci sono solo gli incarichi di Comunità capi:
+mostrare anche gli staff di unità (capo unità, staff, assistente ecclesiastico), un po' come nel
+PDF esportato raggruppato per unità. Deciso il 04/11: **sola lettura**, una sezione per unità
+(L/C, E/G, R/S, come nel PDF) con capo unità, staff e assistente ecclesiastico e il link alla
+pagina dell'unità; si nomina ancora dalla pagina dell'unità.
+
+#### N.51 — PDF degli incarichi: nomi in maiuscolo ⏳
+
+Nel PDF (`organizzazione/elenco_incarichi.py`) cognome e nome tutti in maiuscolo, come fa
+BuonaStrada; nel database restano come sono. Deciso il 04/11: solo le colonne Cognome e Nome;
+unità e incarichi restano come sono.
+
+#### N.52 — Incarichi da includere: «Educativi» e «Non educativi» ⏳
+
+Nel menu a scelta multipla del PDF (N.40), oltre a «Tutti» e «Nessuno»: **Non educativi** =
+servizio di supporto al gruppo, servizio di supporto all'azione educativa, tesoriere di gruppo,
+tesoriere di unità, amministratore tecnico; **Educativi** = tutti gli altri, «A disposizione»
+compreso (deciso il 04/11).
+
 ### Richieste del 03/11 (sera), da raccogliere
 
 Richieste del maintainer del 03/11, solo annotate: si sviluppano quando il maintainer dice di

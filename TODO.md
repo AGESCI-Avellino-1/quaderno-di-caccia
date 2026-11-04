@@ -41,6 +41,8 @@ mano si resta bloccati. Il comportamento di iOS 27 non è ancora stato riprodott
 **Stato.** Sviluppata (`pwa/file.ts`, `FileDaSalvare.vue`), con test automatici e prova in Chromium con
 viewport da telefono. Manca la prova su iPhone.
 
+**Decisione.** DEC-320 nell'[analisi](docs/analisi/analisi-requisiti.md).
+
 **Rischi e verifiche.** Da provare su un iPhone vero con la PWA installata: PDF, immagini, Excel e il
 file del calendario (che deve ancora aggiungersi al calendario). Android e computer restano come
 sono, salvo problemi segnalati. Non servono nuove decisioni nell'analisi.
@@ -76,71 +78,10 @@ delle modifiche.
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 
-**Deciso dal maintainer il 04/11/2026:**
-
-- **Incarichi di squadriglia:** cassiere, cicala, cronista, guardiano dell'angolo, guardiano dello
-  stile, guardiano del tempo, infermiere, liturgista, magazziniere, aiuto magazziniere, mercurio
-  (elenco in `ignored/Incarichi di Squadriglia.pdf`). Un incarico può avere più persone e una persona
-  può averne più di uno; non danno permessi, nemmeno l'infermiere. Li assegnano il capo squadriglia e
-  lo staff del reparto (un capogruppo solo se è in quello staff); il vice no, salvo abilitazione. Li
-  vedono la squadriglia, i suoi genitori e i capi.
-- **Chi legge il verbale:** Co.Ca. solo i capi; squadriglia i membri, i loro genitori e i capi; Alta
-  Squadriglia, Consiglio Capi e Con.Ca.Vi. gli invitati e i capi; riunioni dei genitori e assemblea
-  gli invitati e i capi.
-- **Chi scrive:** riunione per riunione chi ne ha il potere indica una persona tra gli invitati o un
-  capo, e può sempre scrivere e correggere: capo squadriglia e staff per la squadriglia; lo staff per
-  Alta Squadriglia, Consiglio Capi e Con.Ca.Vi.; i capigruppo per Co.Ca. e assemblea; per le riunioni
-  dei genitori i capigruppo e, se di una sola unità, anche il suo staff. Il cronista è proposto per
-  primo, ma serve sempre la scelta del capo squadriglia.
-- **Stati:** bozza (la vedono chi scrive, chi l'ha indicato e i capi) e definitivo (lo leggono gli
-  aventi diritto, con il PDF). Lo rende definitivo e lo riapre, con un motivo, chi può indicare chi
-  scrive; l'anno chiuso lo blocca. Niente approvazione alla riunione successiva.
-- **Firme nel PDF:** presidente e segretari per l'assemblea, chi ha scritto per Co.Ca. e riunioni dei
-  genitori; nessuna per le riunioni con i ragazzi, che sono informali.
-- **Riunioni dei genitori:** di gruppo o di una o più unità, create dallo staff o dai capigruppo. Sono
-  invitati i genitori e i tutori, e i capi dello staff (per il gruppo tutta la Co.Ca.). Un figlio
-  maggiorenne non partecipa, ma può scegliere di partecipare al posto dei genitori. Presenze segnate
-  dallo staff (per il gruppo da qualunque capo), senza effetto su quelle dei figli; nessuna assenza da
-  comunicare.
-- **Assemblea dei soci:** convocata dai capigruppo. Invitati: capi e R/S maggiorenni e genitori e tutori
-  dei minorenni, con diritto di voto; genitori di maggiorenni senza figli minorenni, senza voto, che
-  leggono comunque il verbale. Il voto si conta per socio: ogni minorenne vale un voto, espresso da uno
-  solo dei genitori; un genitore socio vota anche per sé. Le votazioni, le deleghe e il numero legale
-  restano fuori dall'app: al massimo si scrivono nel verbale. Presidente uno, socio maggiorenne o
-  genitore; segretari uno o più; si scelgono tra i presenti. Presenze segnate dai capigruppo o da una
-  persona indicata. Il PDF elenca i presenti con il diritto di voto, copiati nel verbale definitivo.
-- **Email:** per riunioni dei genitori e assemblea anche alla convocazione e all'aggiunta di allegati,
-  con i file allegati fino a una certa dimensione (sopra, titolo e link); gli allegati restano
-  disponibili nell'app.
-- **Conservazione:** i verbali restano senza scadenza. Per assemblea e Co.Ca. (Terzo Settore) nomi e
-  presenti restano per 5 anni anche se una persona viene cancellata o archiviata; dopo, e subito per gli
-  altri tipi, il nome scelto dall'elenco si toglie. Il testo libero non cambia da solo: la cancellazione
-  segnala i verbali col nome e decide il capogruppo.
-- **Riservatezza:** il testo non entra mai nel registro delle modifiche; le letture e i PDF scaricati si
-  registrano solo per la Co.Ca.
-- **Limiti:** solo online, nessuna lettura o scrittura offline; niente immagini nel testo; nessun verbale
-  per Consiglio degli Anziani e riunioni ordinarie di unità.
-- **Allegati al verbale:** PDF, immagini, Word, Excel, PowerPoint, audio e video, con le regole di lettura
-  del verbale, fuori dal PDF, caricati sul Drive del gruppo; se possibile, ZIP con verbale e allegati su
-  richiesta.
-- **Obbligo e promemoria:** l'assemblea deve avere il verbale; Co.Ca. e riunioni dei genitori mandano un
-  promemoria, salvo che si indichi, anche dopo la riunione, che non c'è verbale; gli altri tipi sono
-  facoltativi e senza promemoria.
-- **Ordine:** incarichi, verbali per le riunioni esistenti, riunioni dei genitori, assemblea; una sola
-  versione alla fine di tutti i blocchi.
-
-- **Promemoria:** 7 giorni dopo la riunione, poi ogni 7 giorni, alla persona indicata e a chi può indicarla
-  (per l'assemblea, ai capigruppo). Per Co.Ca. e riunioni dei genitori al massimo 3 volte, e si ferma col
-  verbale definitivo o indicando che non c'è. Per l'assemblea continua fino al definitivo, l'indicazione
-  «non c'è verbale» non esiste e ai capigruppo resta segnalato «verbale mancante». Nessun promemoria per
-  una riunione annullata. Sono email sempre inviate.
-- **Drive:** massimo 2 GB per file, senza limite per verbale; tipo di file controllato al caricamento;
-  lettura sempre attraverso l'app, mai link diretti; cartella «Verbali» separata dagli archivi, con
-  sottocartelle per anno associativo, accessibile all'account di servizio dell'app (la guida di
-  installazione avvisa che chi gestisce il Drive può vedere i file). Un allegato tolto sparisce da Drive; da
-  definitivo bisogna riaprire il verbale. ZIP su richiesta; oltre 2 GB l'app avvisa e si scarica un file
-  per volta. Senza Drive configurato, allegati sul server fino a 20 MB.
-- **Versioni:** una per la #12, sviluppata per prima, e una per la #13.
+**Decisioni.** Sono nell'[analisi](docs/analisi/analisi-requisiti.md), sezione «Verbali delle riunioni»
+(DEC-321…DEC-331). L'elenco degli incarichi viene da `ignored/Incarichi di Squadriglia.pdf`, sul computer
+del maintainer. Una versione per la #12 (uscita con la 1.12.1) e una per la #13, alla fine dei quattro
+blocchi.
 
 **Da verificare in sviluppo: allegati su Drive.** Oggi l'app carica su Drive solo gli archivi, tenendoli in
 memoria, e il server accetta file fino a 20 MB. Per audio e video servono caricamento a pezzi (forse diretto
@@ -174,6 +115,7 @@ GitHub diventa prima una issue.
 | CLSD   | Chiusa con la soluzione: passa alla tabella «Chiuse», con la release                 |
 | NO     | Non fattibile o si decide di non procedere: passa alla tabella «Non fatte»           |
 
+- **Analisi:** ogni decisione presa su una issue va nei documenti di analisi, con il suo codice.
 - **Chiusura con soluzione:** dopo lo sviluppo la issue passa a VER. Quando il maintainer dà l'ok e
   la release è pubblicata, si chiude su GitHub indicando la release nel commento di chiusura.
 - **Non si procede:** la issue passa a NO e si chiude su GitHub.

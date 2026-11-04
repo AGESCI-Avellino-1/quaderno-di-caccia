@@ -5,6 +5,48 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.13.0 — 4 novembre 2026
+
+### Novità
+
+**Verbali delle riunioni**: le riunioni di Comunità capi, dei genitori, di squadriglia, di Alta Squadriglia, di Consiglio Capi e di Con.Ca.Vi. e l'assemblea dei soci hanno un verbale, nella pagina della riunione.
+
+- Si scrive con l'editor di testo, in bozza; chi ha la responsabilità della riunione può affidarlo a un'altra persona, poi lo rende definitivo o lo riapre indicando il motivo.
+- Da definitivo si scarica in PDF su carta intestata, con lo spazio per le firme dove serve, e in uno ZIP con gli allegati.
+- Gli allegati (PDF, immagini, Word, Excel, PowerPoint, audio e video) stanno sul Drive del gruppo, fino a 2 GB per file; senza Drive sul server, fino a 20 MB.
+- Si scrive e si legge solo con la rete: il verbale non resta sul telefono.
+- Per Comunità capi, riunioni dei genitori e assemblea arriva un promemoria se il verbale non è definitivo una settimana dopo.
+
+**Riunioni dei genitori**: di una o più unità o di tutto il gruppo. Si aggiungono i documenti, poi si invia la convocazione con un'email agli invitati. Le presenze le segna lo staff. Un rover o una scolta maggiorenne può scegliere di partecipare al posto dei genitori.
+
+**Assemblea dei soci**: la convocano i capigruppo per tutto il gruppo. Nel verbale ci sono presidente, segretari e l'elenco dei presenti con il diritto di voto; le votazioni si fanno fuori dall'app.
+
+**Incarichi di squadriglia**: cassiere, cicala, cronista, guardiano dell'angolo, dello stile e del tempo, infermiere, liturgista, magazziniere e aiuto, mercurio. Li assegnano il capo squadriglia e lo staff del reparto; non danno permessi nell'app.
+
+**Schermata di avvio**: all'apertura l'app mostra una pagina di quaderno con l'etichetta, il logo e il nome del gruppo.
+
+### Aggiornare
+
+Prima di aggiornare, in `.env` scrivi il nome del gruppo per la schermata di avvio (vuoto: solo il nome dell'app):
+
+```bash
+QDC_NOME_AVVIO=AGESCI Gruppo Avellino 1
+```
+
+Poi:
+
+```bash
+scripts/aggiorna.sh v1.13.0
+```
+
+Otto migrazioni del database, applicate da sole all'avvio. Dopo l'aggiornamento:
+
+- aggiungi al crontab il lavoro `promemoria_verbali` (la riga è in `deploy/cron/qdc.crontab`);
+- la convocazione delle riunioni dei genitori e dell'assemblea, e i nuovi documenti, partono **sempre**, anche con le email ai genitori spente nelle impostazioni;
+- il server web ora lavora a thread (`--threads 4`), per poter scaricare file grandi;
+- se usi il Drive, nella cartella dell'archivio l'app crea da sola `Verbali`: chi gestisce il Drive condiviso può vedere quei file;
+- su un iPhone dove l'app era già installata, la nuova schermata di avvio può comparire solo reinstallandola sulla schermata Home.
+
 ## 1.12.1 — 4 novembre 2026
 
 ### Correzioni

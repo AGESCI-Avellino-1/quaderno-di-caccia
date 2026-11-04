@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 04/11/2026 (ultima versione: v1.12.1). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 04/11/2026 (ultima versione: v1.13.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -49,16 +49,13 @@ delle modifiche.
 | 3      | Riunioni dei genitori, con invitati, presenze e convocazione (**sviluppato**) | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari (**sviluppato**) | Alto    | Alta       |
 
-**Prima della versione.** Rifare le schermate del manuale (`mise run docs:schermate`): i dati di prova hanno
-ora gli incarichi di squadriglia.
-
 **Decisioni.** Sono nell'[analisi](docs/analisi/analisi-requisiti.md), sezione «Verbali delle riunioni»
 (DEC-321…DEC-331). L'elenco degli incarichi viene da `ignored/Incarichi di Squadriglia.pdf`, sul computer
 del maintainer. La versione esce alla fine dei quattro blocchi.
 
-**Da provare prima della versione.** Gli allegati su un vero Drive condiviso: finora il Drive è solo
+**Da provare sulla versione pubblicata.** Gli allegati su un vero Drive condiviso: finora il Drive è solo
 simulato nei test. Una convocazione vera con il server di posta, allegati e coda compresi, con indirizzi di
-prova: queste email partono anche con le email ai genitori spente. Il funzionamento di gunicorn con i thread. Nelle note di versione: chi aggiorna deve aggiungere `promemoria_verbali` al crontab.
+prova: queste email partono anche con le email ai genitori spente. Il funzionamento di gunicorn con i thread. 
 
 ## Chiuse
 

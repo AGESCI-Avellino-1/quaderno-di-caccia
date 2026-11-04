@@ -2,50 +2,20 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 04/11/2026 (ultima versione: v1.12.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 04/11/2026 (ultima versione: v1.12.1). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
 | Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
-| [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | VAL    |
-| [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | Errore   | Basso   | Media      | VER    |
+| [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 
 ## Valutazioni
 
 Valutazioni fatte leggendo le issue e il codice: nulla è ancora stato sviluppato.
-
-### #12 Errore in pdf PWA
-
-**Causa probabile.** Con la PWA installata su iPhone, un link a un file apre il PDF a tutto schermo
-dentro l'app, senza comandi per tornare indietro, condividere o salvare (nello screenshot, il PDF
-degli incarichi: un link con `download`, servito come `attachment`). Finché non si chiude l'app a
-mano si resta bloccati. Il comportamento di iOS 27 non è ancora stato riprodotto.
-
-**Fattibile**, con un intervento solo nel frontend, senza toccare dati e permessi:
-
-1. Un unico gestore dei clic a livello di app, attivo solo con la PWA installata su iOS
-   (`pwa/installazione.ts`), per i link a file serviti da `/api/v1/`: non si toccano una per una le
-   circa 30 pagine e i link futuri sono già coperti.
-2. Il file si scarica con la sessione dell'utente e resta solo in memoria: nulla finisce sul
-   dispositivo senza una scelta della persona, e il registro degli accessi lato server non cambia.
-3. Compare una finestra dell'app con «Condividi o salva» (foglio di condivisione di iOS, da cui si
-   salva su File) e «Chiudi». Serve il secondo tocco perché Safari può rifiutare la condivisione se
-   arriva dopo l'attesa dello scaricamento.
-4. Stesso trattamento per i tre scaricamenti creati dalla pagina (QR, rubrica, fascicolo JSON).
-5. Messaggi in italiano per file negato o assenza di rete; test automatici del gestore.
-
-**Stato.** Sviluppata (`pwa/file.ts`, `FileDaSalvare.vue`), con test automatici e prova in Chromium con
-viewport da telefono. Manca la prova su iPhone.
-
-**Decisione.** DEC-320 nell'[analisi](docs/analisi/analisi-requisiti.md).
-
-**Rischi e verifiche.** Da provare su un iPhone vero con la PWA installata: PDF, immagini, Excel e il
-file del calendario (che deve ancora aggiungersi al calendario). Android e computer restano come
-sono, salvo problemi segnalati. Non servono nuove decisioni nell'analisi.
 
 ### #13 Verbali
 
@@ -73,15 +43,14 @@ delle modifiche.
 
 | Blocco | Contenuto                                                        | Impatto | Difficoltà |
 | ------ | ---------------------------------------------------------------- | ------- | ---------- |
-| 1      | Incarichi di squadriglia, assegnati dal capo squadriglia         | Basso   | Bassa      |
+| 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (in corso) | Basso   | Bassa      |
 | 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già | Medio   | Alta       |
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 
 **Decisioni.** Sono nell'[analisi](docs/analisi/analisi-requisiti.md), sezione «Verbali delle riunioni»
 (DEC-321…DEC-331). L'elenco degli incarichi viene da `ignored/Incarichi di Squadriglia.pdf`, sul computer
-del maintainer. Una versione per la #12 (uscita con la 1.12.1) e una per la #13, alla fine dei quattro
-blocchi.
+del maintainer. La versione esce alla fine dei quattro blocchi.
 
 **Da verificare in sviluppo: allegati su Drive.** Oggi l'app carica su Drive solo gli archivi, tenendoli in
 memoria, e il server accetta file fino a 20 MB. Per audio e video servono caricamento a pezzi (forse diretto
@@ -92,6 +61,7 @@ memoria.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | [v1.12.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.12.1) |
 
 ## Non fatte
 

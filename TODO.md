@@ -7,9 +7,10 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                    | Tipo     | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | --------------------------------------------------------- | -------- | ------- | ---------- | ------ |
-| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333) | Modifica | Basso   | Bassa      | VER    |
+| Issue                                                                    | Titolo                                                            | Tipo     | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------- | ---------- | ------ |
+| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333)         | Modifica | Basso   | Bassa      | VER    |
+| [#16](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/16) | Calendario: voce «Tutti i miei eventi» come selezione predefinita | Modifica | Medio   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

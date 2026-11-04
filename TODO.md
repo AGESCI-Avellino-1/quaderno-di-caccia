@@ -34,9 +34,8 @@ sviluppo consigliato: #16, poi #19 e #18 insieme (il PEG si consulta da Download
 
 ### #21 Notifiche push
 
-**Fattibile con Web Push standard**, senza servizi esterni (scelta del maintainer). Il testo passa
-cifrato dai servizi di Apple e Google. Su iPhone funziona solo con l'app sulla schermata Home e dopo il
-permesso, quindi le email restano.
+**Decisioni:** DEC-345. **Fattibile.** Il testo passa cifrato dai servizi di Apple e Google. Su iPhone
+funziona solo con l'app sulla schermata Home e dopo il permesso, quindi le email restano.
 
 **Cose da fare.**
 
@@ -44,25 +43,18 @@ permesso, quindi le email restano.
    controllando la versione installata.
 2. Service worker: oggi lo genera `vite-plugin-pwa` (`generateSW`), va esteso per ricevere le push e
    aprire la pagina giusta al tocco.
-3. Registrazione per utente e browser, cancellata se il servizio risponde che non vale più, se il
-   dispositivo viene revocato, se entra un altro account. `Dispositivo` esiste solo con la protezione
-   locale attivata: va deciso il legame.
+3. Registrazione per utente e browser, legata alla sessione e non a `Dispositivo` (che esiste solo con la
+   protezione attiva), cancellata all'uscita, alla revoca, se entra un altro account o se il servizio
+   risponde che non vale più.
 4. Invio accanto a `impostazioni.email.invia`, tipo per tipo, in coda come le email (DEC-311), bloccato
-   durante l'impersonazione. Preferenze accanto a `PreferenzeEmail`.
-5. Da provare su iPhone e Android veri. Manuale e informativa privacy da aggiornare.
+   durante l'impersonazione. Un testo breve per ogni tipo, senza dati personali.
+5. Preferenze: da `PreferenzeEmail` (cinque gruppi di email facoltative) a una scelta email, push o
+   entrambe per tipo di avviso, con migrazione delle scelte attuali. Le email sempre inviate restano.
+6. Invito nell'app installata e pulsante nelle preferenze; su iPhone senza app installata, spiegazione.
+7. Da provare su iPhone e Android veri. Manuale e informativa privacy da aggiornare.
 
-**Da decidere** (tra parentesi la risposta consigliata).
-
-1. Quali avvisi hanno la push? (Riunioni ed eventi annullati o spostati, scadenze quote, Bacheca e
-   Download a scelta di chi pubblica.)
-2. Si aggiunge all'email o la sostituisce? (Si aggiunge; poi ognuno può spegnere l'una o l'altra negli
-   avvisi facoltativi. Le email sempre inviate restano.)
-3. Preferenze: per persona o per dispositivo? (Per persona; il permesso del browser vale per dispositivo.)
-4. Quando si chiede il permesso? (Da un pulsante nelle preferenze, mai all'apertura.)
-5. Serve la protezione locale attiva per ricevere le push? (No, ma la registrazione finisce con la
-   sessione.)
-6. Testo a telefono bloccato? (Titolo generico e nome dell'evento o dell'avviso, mai nomi di persone,
-   importi o dati sanitari.)
+**Rischio.** La scelta per persona tocca il filtro di tutte le email facoltative, che finora ha solo
+cinque gruppi: da controllare in sviluppo quanti tipi mostrare, per non fare una pagina di 40 righe.
 
 ### #20 Modelli di convocazione e verbali
 

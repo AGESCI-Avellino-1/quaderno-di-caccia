@@ -1,9 +1,8 @@
 # Quaderno di Caccia (QdC) — Analisi dei requisiti
 
-> **Copia nel repository** del documento di analisi (revisione 39, 30 ottobre 2026, con le decisioni successive), da
-> cui provengono i codici `DEC-nn` citati nel codice. L'originale condiviso, con commenti,
-> è su claude.ai: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>. Una decisione nuova o
-> cambiata si aggiorna in entrambi i posti, nello stesso commit/giorno.
+> **Unica fonte** dell'analisi e dei codici `DEC-nn` citati nel codice: una decisione nuova o
+> cambiata si scrive qui. L'originale su claude.ai, con le prime discussioni, è fermo a circa il
+> 30 ottobre 2026 e non si aggiorna più: <https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>.
 
 Oct 21, 2026 · @Andrea Bruno
 

@@ -12,9 +12,10 @@ attendance, fees and cash book. Capi use it heavily, also offline; ragazzi and p
 see only their own part.
 
 **The requirements are in [`docs/analisi/analisi-requisiti.md`](docs/analisi/analisi-requisiti.md).**
-Every decision has a code `DEC-nn`; code and comments cite them (`# DEC-31`). The
-original document, with discussion, is
-<https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>.
+Every decision has a code `DEC-nn`; code and comments cite them (`# DEC-31`). This copy in
+the repository is the only source and every decision on an issue goes here; the original
+on claude.ai (<https://claude.ai/artifact/Y8hDa3xkQ1cXVSToLTa7H7>, with the first
+discussions) stopped around 30/10/2026.
 
 ## Rules that are not negotiable
 

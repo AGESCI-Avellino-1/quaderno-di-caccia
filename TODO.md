@@ -27,8 +27,10 @@ Stime fatte leggendo la issue e il codice, senza riprodurre nulla né decidere l
   incarichi di squadriglia è sul computer del maintainer (`ignored/Incarichi di Squadriglia.pdf`) ed
   elenca: cassiere, cicala, cronista, guardiano dell'angolo, guardiano dello stile, guardiano del
   tempo, infermiere, liturgista, magazziniere (con eventuale aiuto), mercurio. Oggi l'app ha solo
-  capo e vice capo squadriglia, uno per squadriglia; secondo il file, invece, un incarico può avere
-  più persone o girare a rotazione, e una persona può unirne due.
+  capo e vice capo squadriglia, uno per squadriglia. Deciso dal maintainer il 04/11/2026: un incarico
+  può avere più persone e una persona può averne più di uno; chi scrive il verbale di squadriglia,
+  anche se il cronista gira a rotazione, lo decide il capo squadriglia; l'infermiere è solo un ruolo
+  e non vede nessun dato in più di prima.
 - **#12 Errore in pdf PWA.** Impatto basso: riguarda solo come il frontend apre i file, non i dati
   né i permessi, anche se i punti da cambiare sono molti (i PDF e gli allegati si aprono con link
   diretti, sparsi in più pagine). Difficoltà media: il comportamento si può verificare solo su un

@@ -33,7 +33,7 @@ def _chiudi(periodo, giorno: date) -> None:
 
 
 def esci_dal_reparto(persona: Persona, unita: Unita, giorno: date) -> list[str]:
-    """Close patrol membership, CSQ/VCSQ roles and patrol exceptions tied to `unita`,
+    """Close patrol membership, patrol roles and patrol exceptions tied to `unita`,
     and the Consiglio degli Anziani of a branco or cerchio.
 
     Returns what was closed, for the import summary. Exceptions are not listed there:

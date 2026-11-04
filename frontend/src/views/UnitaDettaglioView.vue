@@ -68,7 +68,7 @@ async function candidatiUnita(ruolo: string) {
   if (ruolo !== 'TESORIERE_UNITA' || !rs.value) return capi
   return [...capi, ...(await ragazziDi(props.id))]
 }
-// CSQ and VCSQ: members of their own patrol (DEC-13, DEC-14).
+// Patrol roles: members of their own patrol (DEC-13, DEC-14, DEC-321).
 const candidatiDi = (s: Squadriglia) => async () => s.membri.map((m) => m.persona)
 // The ragazzi of a reparto: patrol members and who is in no patrol yet.
 const ragazziDelReparto = computed(() => [
@@ -447,7 +447,7 @@ const iniziale = (u: Unita): UnitaIn => ({
           :nomina="s.nomina"
           :dove="{ squadriglia_id: s.id }"
           :candidati="candidatiDi(s)"
-          vuoto="Nessun capo squadriglia."
+          vuoto="Nessun incarico."
           @cambiato="carica()"
         />
         <!-- The reparto staff may delegate too (DEC-267); hidden to who may not. -->

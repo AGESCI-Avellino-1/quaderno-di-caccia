@@ -43,10 +43,13 @@ delle modifiche.
 
 | Blocco | Contenuto                                                        | Impatto | Difficoltà |
 | ------ | ---------------------------------------------------------------- | ------- | ---------- |
-| 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (in corso) | Basso   | Bassa      |
+| 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (**fatto**) | Basso   | Bassa      |
 | 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già | Medio   | Alta       |
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
+
+**Prima della versione.** Rifare le schermate del manuale (`mise run docs:schermate`): i dati di prova hanno
+ora gli incarichi di squadriglia.
 
 **Decisioni.** Sono nell'[analisi](docs/analisi/analisi-requisiti.md), sezione «Verbali delle riunioni»
 (DEC-321…DEC-331). L'elenco degli incarichi viene da `ignored/Incarichi di Squadriglia.pdf`, sul computer

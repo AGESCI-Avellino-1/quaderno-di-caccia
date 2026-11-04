@@ -11,7 +11,7 @@ const props = defineProps<{
   incarichi: Incarico[]
   nomina: Scelta[]
   dove: DoveIncarico
-  /** Who can hold a role: capi, or the ragazzi of the unit for CSQ/VCSQ. */
+  /** Who can hold a role: capi, or the members of the patrol for its roles. */
   candidati: (ruolo: string) => Promise<PersonaBreve[]>
   vuoto?: string
 }>()

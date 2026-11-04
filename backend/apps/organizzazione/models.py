@@ -240,8 +240,8 @@ class Squadriglia(ModelloTracciato):
 class RuoloIncarico(models.TextChoices):
     """Service roles (in a unit, or at the disposal of the Co.Ca.) and additional roles
     (capogruppo, treasurers, technical administrator), which add up freely: one capo may
-    be capogruppo, capo unità, treasurer and administrator at once (DEC-165). CSQ and
-    VCSQ are the ragazzi's."""
+    be capogruppo, capo unità, treasurer and administrator at once (DEC-165). CSQ, VCSQ
+    and the other patrol roles are the ragazzi's."""
 
     CAPOGRUPPO = "CAPOGRUPPO", "Capogruppo"
     # The group's assistente ecclesiastico: the powers of a capogruppo everywhere,
@@ -268,6 +268,18 @@ class RuoloIncarico(models.TextChoices):
     AMMINISTRATORE = "AMMINISTRATORE", "Amministratore tecnico"
     CSQ = "CSQ", "Capo squadriglia"
     VCSQ = "VCSQ", "Vice capo squadriglia"
+    # The other patrol roles (DEC-321): several holders, no permissions at all.
+    CASSIERE = "CASSIERE", "Cassiere"
+    CICALA = "CICALA", "Cicala"
+    CRONISTA = "CRONISTA", "Cronista"
+    GUARDIANO_ANGOLO = "GUARDIANO_ANGOLO", "Guardiano dell'angolo"
+    GUARDIANO_STILE = "GUARDIANO_STILE", "Guardiano dello stile"
+    GUARDIANO_TEMPO = "GUARDIANO_TEMPO", "Guardiano del tempo"
+    INFERMIERE = "INFERMIERE", "Infermiere"
+    LITURGISTA = "LITURGISTA", "Liturgista"
+    MAGAZZINIERE = "MAGAZZINIERE", "Magazziniere"
+    AIUTO_MAGAZZINIERE = "AIUTO_MAGAZZINIERE", "Aiuto magazziniere"
+    MERCURIO = "MERCURIO", "Mercurio"
     # A lupetto or coccinella of a branco or cerchio, appointed by its staff (DEC-66,
     # DEC-182).
     CONSIGLIO_ANZIANI = "CONSIGLIO_ANZIANI", "Consiglio degli Anziani"
@@ -300,7 +312,21 @@ RUOLI_DI_UNITA = {
     RuoloIncarico.STAFF,
     RuoloIncarico.CONSIGLIO_ANZIANI,
 }
-RUOLI_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
+GUIDE_DI_SQUADRIGLIA = {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}
+INCARICHI_DI_SQUADRIGLIA = {
+    RuoloIncarico.CASSIERE,
+    RuoloIncarico.CICALA,
+    RuoloIncarico.CRONISTA,
+    RuoloIncarico.GUARDIANO_ANGOLO,
+    RuoloIncarico.GUARDIANO_STILE,
+    RuoloIncarico.GUARDIANO_TEMPO,
+    RuoloIncarico.INFERMIERE,
+    RuoloIncarico.LITURGISTA,
+    RuoloIncarico.MAGAZZINIERE,
+    RuoloIncarico.AIUTO_MAGAZZINIERE,
+    RuoloIncarico.MERCURIO,
+}
+RUOLI_DI_SQUADRIGLIA = GUIDE_DI_SQUADRIGLIA | INCARICHI_DI_SQUADRIGLIA
 # Outside the units: one at a time, never with a unit service (DEC-165, DEC-293).
 SERVIZI_DI_SUPPORTO = {
     RuoloIncarico.SUPPORTO_GRUPPO,
@@ -432,7 +458,7 @@ class Incarico(ModelloTracciato):
     def _controlla_titolare(self, ruolo: RuoloIncarico) -> None:
         """Who may hold the role on its start date: roles of capi go to capi (DEC-09,
         DEC-10, DEC-11); a R/S unit treasurer may be a rover or scolta of that unit
-        (DEC-11); CSQ and VCSQ are members of their patrol (DEC-13, DEC-14); the
+        (DEC-11); patrol roles go to members of the patrol (DEC-13, DEC-14, DEC-321); the
         Consiglio degli Anziani is made of the unit's lupetti and coccinelle (DEC-182)."""
         from apps.anagrafica.models import (
             Appartenenza,

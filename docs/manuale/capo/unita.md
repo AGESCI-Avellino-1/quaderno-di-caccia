@@ -43,6 +43,10 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   **Nessuna squadriglia**): vale da oggi. Chi non è in nessuna squadriglia è in **Senza
   squadriglia**, con **Metti in…**.
 - Prima di spostare un capo o vice capo squadriglia, chiudi il suo incarico.
+- **Incarichi di squadriglia** (cassiere, cicala, cronista e gli altri): li assegnano lo staff del
+  reparto, dalla squadriglia in questa pagina, e il capo squadriglia, dalla sua pagina. Un
+  capogruppo lo fa solo se è nello staff di quel reparto. Non danno permessi e si chiudono da soli
+  quando il ragazzo lascia la squadriglia.
 - Per chiudere una squadriglia tocca **chiudi** (e **riapri** per riaprirla).
 - **Riunioni di squadriglia**: le inseriscono, dalla pagina **Riunioni**, il capo squadriglia e
   lo staff. Puoi delegare un membro della squadriglia a inserirle anche lui (solo a inserirle, non a segnare le

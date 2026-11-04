@@ -167,7 +167,7 @@ def test_dettaglio_unita(capo, capogruppo, staff, csq, reparto):
     }
     [aquile] = dati["squadriglie"]
     assert aquile["incarichi"][0]["persona"]["nome"] == "Sara"
-    assert _valori(aquile["nomina"]) == ["CSQ", "VCSQ"]
+    assert _valori(aquile["nomina"])[:3] == ["CSQ", "VCSQ", "CASSIERE"]
     assert dati["nomina"] == []
     assert dati["puo_modificare"] is False
     assert dati["puo_gestire_squadriglie"] is True

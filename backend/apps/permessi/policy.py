@@ -16,11 +16,13 @@ from apps.anagrafica.models import (
     CAMPI_IDENTITA,
     CAMPI_IDENTITA_STAFF,
     Appartenenza,
+    AppartenenzaSquadriglia,
     Persona,
     RuoloAppartenenza,
     VisibilitaGenitori,
 )
 from apps.organizzazione.models import (
+    INCARICHI_DI_SQUADRIGLIA,
     Branca,
     Incarico,
     RuoloIncarico,
@@ -449,6 +451,17 @@ def squadriglie_di(user) -> QuerySet[Squadriglia]:
     ).distinct()
 
 
+def puo_vedere_incarichi_squadriglia(user, squadriglia: Squadriglia) -> bool:
+    """The roles of a patrol: its members, their parents and the capi (DEC-321)."""
+    if e_capo(user) and not e_capo_in_attesa(user):
+        return True
+    if squadriglie_di(user).filter(pk=squadriglia.pk).exists():
+        return True
+    membri = AppartenenzaSquadriglia.objects.attive().filter(squadriglia=squadriglia)
+    figli = tutelati(user).filter(pk__in=membri.values("persona_id"))
+    return any(genitori_vedono(figlio, "scheda") for figlio in figli)
+
+
 def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
     """Which phone the patrol sees and whether to hide it (DEC-13, DEC-115):
     the parents of a minor, the adult member, the staff of the unit and the
@@ -583,6 +596,12 @@ def puo_nominare(
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
         return squadriglia is not None and e_staff(user, squadriglia.unita)  # DEC-14
+    if ruolo in INCARICHI_DI_SQUADRIGLIA:
+        # The CSQ and the reparto staff; a capogruppo only as part of that staff (DEC-321).
+        return squadriglia is not None and (
+            e_staff(user, squadriglia.unita)
+            or squadriglie_guidate(user).filter(pk=squadriglia.pk).exists()
+        )
     if ruolo == RuoloIncarico.CONSIGLIO_ANZIANI:
         return (
             unita is not None

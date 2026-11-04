@@ -509,6 +509,14 @@ export interface Incarico {
   data_fine: string | null
 }
 
+/** The roles of a patrol (DEC-321). */
+export interface IncarichiDiSquadriglia {
+  id: number
+  nome: string
+  incarichi: Incarico[]
+  nomina: Scelta[]
+}
+
 /** An active patrol membership (DEC-65). */
 export interface Membro {
   id: number
@@ -2748,6 +2756,10 @@ export const api = {
   revocaDeroga: (id: number) =>
     richiesta<Deroga>(`/api/v1/deroghe-squadriglia/${id}/revoca`, { metodo: 'POST' }),
   miaSquadriglia: () => richiesta<MiaSquadriglia[]>('/api/v1/mia-squadriglia'),
+  incarichiSquadriglia: (squadriglia: number) =>
+    richiesta<IncarichiDiSquadriglia>(`/api/v1/squadriglie/${squadriglia}/incarichi`),
+  incarichiSquadrigliaDi: (persona: number) =>
+    richiesta<IncarichiDiSquadriglia>(`/api/v1/persone/${persona}/incarichi-squadriglia`),
   telefonoSquadriglia: (persona: number) =>
     richiesta<ImpostazioneTelefono>(`/api/v1/persone/${persona}/telefono-squadriglia`),
   impostaTelefonoSquadriglia: (

@@ -302,7 +302,9 @@ implements them:
   recorded by a capogruppo, visible to capi only, valid while the person stays in the
   reparto; leaving the reparto ends patrol, CSQ role and exceptions
   (`organizzazione/servizi.esci_dal_reparto`, called by the import). Created and
-  closed by the same people (`policy.puo_gestire_squadriglie`).
+  closed by the same people (`policy.puo_gestire_squadriglie`). The other patrol roles
+  (`INCARICHI_DI_SQUADRIGLIA`, DEC-321) give no permissions: appointed by the CSQ and the
+  reparto staff, they end by themselves with the membership.
 - Health data is written by the staff of the person's unit and by the capigruppo for
   every unit (DEC-113, `policy.puo_modificare_sanitarie`).
 - django-auditlog's `LogEntry` is in the Django admin and stores changed values, health

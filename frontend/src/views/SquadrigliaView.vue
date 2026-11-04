@@ -7,6 +7,7 @@ import Avatar from '@/components/Avatar.vue'
 import BarraRubrica from '@/components/BarraRubrica.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
+import IncarichiSquadriglia from '@/components/IncarichiSquadriglia.vue'
 import LinkPersonale from '@/components/LinkPersonale.vue'
 import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -120,6 +121,7 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
         Come capo squadriglia vedi anche i numeri dei genitori e quelli che gli altri non vedono.
         Usali solo per la squadriglia.
       </p>
+      <IncarichiSquadriglia :squadriglia="s.id" :membri="s.membri" class="mt-5" />
       <DelegaSquadriglia :squadriglia="s.id" :membri="s.membri" />
     </section>
   </section>

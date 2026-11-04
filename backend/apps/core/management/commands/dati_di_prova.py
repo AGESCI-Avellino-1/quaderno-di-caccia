@@ -221,6 +221,9 @@ class Command(BaseCommand):
             )
         incarico("Giulia Rossi", RuoloIncarico.CSQ, squadriglia=pantere)
         incarico("Matteo Greco", RuoloIncarico.CSQ, squadriglia=volpi)
+        incarico("Giulia Rossi", RuoloIncarico.CRONISTA, squadriglia=pantere)
+        incarico("Luca Rossi", RuoloIncarico.MAGAZZINIERE, squadriglia=volpi)
+        incarico("Luca Rossi", RuoloIncarico.MERCURIO, squadriglia=volpi)
 
         # Chiara is of age: BuonaStrada no longer lists her parents, the app keeps the
         # link from when she was a minor (DEC-26).

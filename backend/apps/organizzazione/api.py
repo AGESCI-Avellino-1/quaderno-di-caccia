@@ -22,7 +22,9 @@ from apps.permessi.models import Azione, Categoria, registra_accessi
 
 from . import servizi
 from .models import (
+    GUIDE_DI_SQUADRIGLIA,
     INCARICHI_DI_SERVIZIO,
+    INCARICHI_DI_SQUADRIGLIA,
     RUOLI_DI_GRUPPO,
     RUOLI_DI_SQUADRIGLIA,
     RUOLI_DI_UNITA,
@@ -385,12 +387,24 @@ def _avvisi_sesso_squadriglie(unita: Unita) -> list[str]:
     ]
 
 
+# As in the list of the roles (DEC-321): the guides first.
+RUOLI_DI_SQUADRIGLIA_IN_ORDINE = [r for r in RuoloIncarico if r in RUOLI_DI_SQUADRIGLIA]
+
+
 def _incarichi(**filtri):
     return (
         Incarico.objects.attivi()
         .filter(**filtri)
         .select_related("persona")
         .order_by("ruolo", "persona__cognome", "persona__nome")
+    )
+
+
+def _incarichi_della_squadriglia(squadriglia: Squadriglia) -> list[Incarico]:
+    """The guides first, then the other roles as listed (DEC-321)."""
+    return sorted(
+        _incarichi(squadriglia=squadriglia),
+        key=lambda i: RUOLI_DI_SQUADRIGLIA_IN_ORDINE.index(RuoloIncarico(i.ruolo)),
     )
 
 
@@ -413,8 +427,8 @@ def dettaglio_unita(request, unita_id: int):
                 .select_related("persona")
                 .order_by("persona__cognome", "persona__nome")
             ),
-            "incarichi": list(_incarichi(squadriglia=s)),
-            "nomina": _nomina(utente, (RuoloIncarico.CSQ, RuoloIncarico.VCSQ), squadriglia=s),
+            "incarichi": _incarichi_della_squadriglia(s),
+            "nomina": _nomina(utente, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=s),
         }
         for s in unita.squadriglie.order_by("-attiva", "nome")
     ]
@@ -804,7 +818,11 @@ def _chiudi_periodo(oggetto, fine: date) -> bool:
 def _controlla_incarichi_di_squadriglia(appartenenza: AppartenenzaSquadriglia) -> None:
     if (
         Incarico.objects.attivi()
-        .filter(persona=appartenenza.persona_id, squadriglia=appartenenza.squadriglia_id)
+        .filter(
+            persona=appartenenza.persona_id,
+            squadriglia=appartenenza.squadriglia_id,
+            ruolo__in=GUIDE_DI_SQUADRIGLIA,
+        )
         .exists()
     ):
         raise HttpError(
@@ -832,6 +850,8 @@ def aggiungi_membro(request, squadriglia_id: int, dati: NuovoMembro):
         if precedente.squadriglia_id == squadriglia.pk:
             raise HttpError(400, f"{persona} è già in {squadriglia}.")
         _controlla_incarichi_di_squadriglia(precedente)
+        # A patrol role belongs to the patrol: it ends with the membership (DEC-321).
+        _chiudi(persona, oggi, INCARICHI_DI_SQUADRIGLIA)
         _chiudi_periodo(precedente, oggi)
     membro = AppartenenzaSquadriglia(persona=persona, squadriglia=squadriglia, data_inizio=oggi)
     _salva(membro)
@@ -857,7 +877,47 @@ def togli_membro(request, appartenenza_id: int):
     if appartenenza.data_fine is not None and appartenenza.data_fine <= oggi:
         raise HttpError(409, "Non fa già più parte della squadriglia.")
     _controlla_incarichi_di_squadriglia(appartenenza)
+    _chiudi(appartenenza.persona, oggi, INCARICHI_DI_SQUADRIGLIA)  # DEC-321
     return {"id": appartenenza_id, "rimosso": _chiudi_periodo(appartenenza, oggi)}
+
+
+class IncarichiDiSquadriglia(Schema):
+    id: int
+    nome: str
+    incarichi: list[IncaricoOut]
+    nomina: list[Scelta]
+
+
+def _incarichi_di_squadriglia(request, squadriglia: Squadriglia) -> dict:
+    """404, not 403: who may not read them does not learn which patrol it is (DEC-321)."""
+    if not policy.puo_vedere_incarichi_squadriglia(request.auth, squadriglia):
+        raise HttpError(404, "Non trovato.")
+    return {
+        "id": squadriglia.pk,
+        "nome": squadriglia.nome,
+        "incarichi": _incarichi_della_squadriglia(squadriglia),
+        "nomina": _nomina(request.auth, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=squadriglia),
+    }
+
+
+@router.get("/squadriglie/{squadriglia_id}/incarichi", response=IncarichiDiSquadriglia)
+def incarichi_della_squadriglia(request, squadriglia_id: int):
+    squadriglia = get_object_or_404(Squadriglia.objects.select_related("unita"), pk=squadriglia_id)
+    return _incarichi_di_squadriglia(request, squadriglia)
+
+
+@router.get("/persone/{persona_id}/incarichi-squadriglia", response=IncarichiDiSquadriglia)
+def incarichi_della_squadriglia_di(request, persona_id: int):
+    """The patrol of a person, seen from their file (by the parents, above all)."""
+    membro = (
+        AppartenenzaSquadriglia.objects.attive()
+        .filter(persona=persona_id)
+        .select_related("squadriglia__unita")
+        .first()
+    )
+    if membro is None:
+        raise HttpError(404, "Non trovato.")
+    return _incarichi_di_squadriglia(request, membro.squadriglia)
 
 
 # --- Exceptions to single-sex patrols ------------------------------------------------------

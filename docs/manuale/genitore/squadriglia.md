@@ -1,4 +1,12 @@
-# Telefono in squadriglia
+# La squadriglia
+
+## Gli incarichi
+
+Nella scheda di tuo figlio, il riquadro **Incarichi nella squadriglia** mostra chi fa cosa nella
+sua squadriglia: cronista, magazziniere, cassiere e così via. Li assegnano il capo squadriglia e lo
+staff del reparto.
+
+## Il telefono in squadriglia
 
 Gli esploratori e le guide di una squadriglia vedono i telefoni degli altri; il capo
 squadriglia vede anche quelli dei genitori. Niente email.

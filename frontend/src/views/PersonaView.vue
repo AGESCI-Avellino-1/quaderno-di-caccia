@@ -12,6 +12,7 @@ import QuotePersona from '@/components/QuotePersona.vue'
 import AllegatiSanitari from '@/components/AllegatiSanitari.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import FotoProfilo from '@/components/FotoProfilo.vue'
+import IncarichiSquadriglia from '@/components/IncarichiSquadriglia.vue'
 import PassaggioInCoca from '@/components/PassaggioInCoca.vue'
 import NotePersona from '@/components/NotePersona.vue'
 import PercorsoScout from '@/components/PercorsoScout.vue'
@@ -184,6 +185,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
       <QuotePersona :id="persona.id" />
       <TelefonoSquadriglia :id="persona.id" />
+      <IncarichiSquadriglia :persona="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
       <LinkPersonale

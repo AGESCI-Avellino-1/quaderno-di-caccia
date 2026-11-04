@@ -31,6 +31,19 @@ squadriglia**, in **Riunioni di squadriglia**, puoi delegare uno squadrigliere a
 lui le riunioni (per esempio quando sei assente): scegli chi in **Delega a** e tocca
 **Delega**. Le presenze invece le segni tu.
 
+## Gli incarichi
+
+Nella stessa pagina, in **Incarichi**, assegni gli incarichi di squadriglia: cassiere, cicala,
+cronista, guardiano dell'angolo, guardiano dello stile, guardiano del tempo, infermiere,
+liturgista, magazziniere, aiuto magazziniere e mercurio.
+
+1. In **Assegna un incarico…** scegli l'incarico.
+2. In **Chi** scegli lo squadrigliere e tocca **Assegna**.
+
+Un incarico può avere più persone e una persona può averne più di uno. Per toglierlo tocca
+**chiudi** accanto al nome. Gli incarichi li vedono la squadriglia, i genitori e i capi. Non danno
+permessi nell'app: l'infermiere, per esempio, non vede nessun dato in più. Serve la rete.
+
 ## Il cammino degli squadriglieri
 
 Tocca il nome di uno squadrigliere: vedi il suo Sentiero (mete, impegni, specialità e

@@ -9,58 +9,15 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
-| [#14](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/14) | Schermata di avvio | Funzione | Basso   | Media      | VER    |
-| [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | VER    |
 
-Nessuna segnalazione di sicurezza aperta.
-
-## Valutazioni
-
-Valutazioni fatte leggendo le issue e il codice: nulla è ancora stato sviluppato.
-
-### #13 Verbali
-
-**Cosa c'è già.** Le riunioni di Co.Ca., squadriglia, Alta Squadriglia, Consiglio Capi e Con.Ca.Vi.
-(`Evento` di tipo riunione); editor (`EditorTesto.vue`); pulizia dell'HTML
-(`impostazioni/html.py`); carta intestata e PDF (`core/stampa.py`); chiusura dell'anno; registro
-delle modifiche.
-
-**Cosa manca.**
-
-- Il verbale: testo, chi lo scrive, stato, pagina nell'app, PDF. Serve un convertitore dal testo
-  dell'editor al PDF.
-- Gli incarichi di squadriglia: si possono aggiungere come ruoli senza limite di persone, senza
-  permessi e chiusi da soli quando si lascia il reparto. Oggi sono elencati nei `RUOLI_DI_SQUADRIGLIA`
-  solo capo e vice, quindi va verificata ogni pagina che li mostra.
-- Le riunioni dei genitori **non esistono** come tipo: oggi gli invitati sono solo i soci
-  (`eventi/servizi.previsti`), e nei dati di prova l'«Assemblea dei genitori» è un avviso in bacheca.
-  Vanno aggiunti invitati, visibilità, calendario e presenze dei genitori: è la parte più delicata.
-- L'assemblea dei soci: soci maggiorenni più genitori in rappresentanza dei minorenni; presidente e
-  segretari nel verbale.
-- Permessi in `policy.py` con i test per ogni ruolo; esportazione e cancellazione dei dati
-  (`diritti/servizi.py`); manuale.
-
-**Fattibile a blocchi:**
-
-| Blocco | Contenuto                                                        | Impatto | Difficoltà |
-| ------ | ---------------------------------------------------------------- | ------- | ---------- |
-| 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (**fatto**) | Basso   | Bassa      |
-| 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già (**sviluppato**) | Medio   | Alta       |
-| 3      | Riunioni dei genitori, con invitati, presenze e convocazione (**sviluppato**) | Alto    | Media      |
-| 4      | Assemblea dei soci, con rappresentanza, presidente e segretari (**sviluppato**) | Alto    | Alta       |
-
-**Decisioni.** Sono nell'[analisi](docs/analisi/analisi-requisiti.md), sezione «Verbali delle riunioni»
-(DEC-321…DEC-331). L'elenco degli incarichi viene da `ignored/Incarichi di Squadriglia.pdf`, sul computer
-del maintainer. La versione esce alla fine dei quattro blocchi.
-
-**Da provare sulla versione pubblicata.** Gli allegati su un vero Drive condiviso: finora il Drive è solo
-simulato nei test. Una convocazione vera con il server di posta, allegati e coda compresi, con indirizzi di
-prova: queste email partono anche con le email ai genitori spente. Il funzionamento di gunicorn con i thread. 
+Nessuna issue e nessuna segnalazione di sicurezza aperta.
 
 ## Chiuse
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#14](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/14) | Schermata di avvio | [v1.13.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.13.0) |
+| [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali | [v1.13.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.13.0) |
 | [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | [v1.12.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.12.1) |
 
 ## Non fatte

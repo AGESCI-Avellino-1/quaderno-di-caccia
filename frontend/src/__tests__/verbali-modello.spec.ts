@@ -32,7 +32,8 @@ describe('convocazione dal modello', () => {
     mancanti: ['luogo: via'],
     testo: '<p>Con la presente</p>',
     puo_modificare: true,
-    prima_il: '2026-11-14T00:00:00+01:00',
+    // Midnight where the test runs: the field shows local time.
+    prima_il: new Date(2026, 10, 14, 0, 0).toISOString(),
   }
 
   it('propone la mezzanotte, dice cosa manca e chiede gli anni solo se servono', async () => {

@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
-| [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | WIP    |
+| [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -46,7 +46,7 @@ delle modifiche.
 | 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (**fatto**) | Basso   | Bassa      |
 | 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già (**sviluppato**) | Medio   | Alta       |
 | 3      | Riunioni dei genitori, con invitati, presenze e convocazione (**sviluppato**) | Alto    | Media      |
-| 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
+| 4      | Assemblea dei soci, con rappresentanza, presidente e segretari (**sviluppato**) | Alto    | Alta       |
 
 **Prima della versione.** Rifare le schermate del manuale (`mise run docs:schermate`): i dati di prova hanno
 ora gli incarichi di squadriglia.
@@ -56,7 +56,8 @@ ora gli incarichi di squadriglia.
 del maintainer. La versione esce alla fine dei quattro blocchi.
 
 **Da provare prima della versione.** Gli allegati su un vero Drive condiviso: finora il Drive è solo
-simulato nei test. Nelle note di versione: chi aggiorna deve aggiungere `promemoria_verbali` al crontab.
+simulato nei test. Una convocazione vera con il server di posta, allegati e coda compresi, con indirizzi di
+prova: queste email partono anche con le email ai genitori spente. Il funzionamento di gunicorn con i thread. Nelle note di versione: chi aggiorna deve aggiungere `promemoria_verbali` al crontab.
 
 ## Chiuse
 

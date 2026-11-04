@@ -28,6 +28,8 @@ const confermaDefinitivo = ref(false)
 const riapertura = ref<string | null>(null)
 const caricamento = ref<{ nome: string; percentuale: number } | null>(null)
 const daTogliere = ref<number | null>(null)
+const presidente = ref<number | null>(null)
+const segretari = ref<number[]>([])
 
 const definitivo = computed(() => verbale.value?.stato === 'DEFINITIVO')
 const dimensioneAllegati = computed(() =>
@@ -37,6 +39,15 @@ const dimensioneAllegati = computed(() =>
 function mostra(dati: Verbale) {
   verbale.value = dati
   redattore.value = dati.redattore?.id ?? null
+  presidente.value = dati.presidente_id
+  segretari.value = [...dati.segretari_ids]
+}
+
+async function salvaCariche() {
+  const dati = await esegui(() =>
+    api.caricheVerbale(props.evento, presidente.value, segretari.value),
+  )
+  if (dati) mostra({ ...dati, testo: testo.value })
 }
 
 onMounted(async () => {
@@ -189,6 +200,61 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
       <div v-else-if="verbale.testo" class="mb-3" v-html="verbale.testo"></div>
       <p v-else class="fg-2 small mb-3">Il verbale è ancora vuoto.</p>
     </template>
+
+    <template v-if="aperto && verbale.tipo === 'SOCI'">
+      <p v-if="verbale.presidente && !verbale.puo_cariche" class="mb-1">
+        <strong>Presidente</strong> {{ verbale.presidente }}
+      </p>
+      <p v-if="verbale.segretari.length && !verbale.puo_cariche" class="mb-3">
+        <strong>Segretari</strong> {{ verbale.segretari.join(', ') }}
+      </p>
+      <form v-if="verbale.puo_cariche" class="mb-3" @submit.prevent="salvaCariche">
+        <p v-if="!verbale.candidati_cariche.length" class="small fg-2 mb-1">
+          Presidente e segretari si scelgono tra i presenti: segna prima le presenze.
+        </p>
+        <template v-else>
+          <label class="form-label small" :for="`presidente-${evento}`">Presidente</label>
+          <select
+            :id="`presidente-${evento}`"
+            v-model="presidente"
+            class="form-control form-control-sm mb-3"
+          >
+            <option :value="null">Scegli…</option>
+            <option v-for="p in verbale.candidati_cariche" :key="p.id" :value="p.id">
+              {{ nomeDi(p) }}
+            </option>
+          </select>
+          <fieldset class="mb-3">
+            <legend class="form-label small">Segretari</legend>
+            <div v-for="p in verbale.candidati_cariche" :key="p.id" class="form-field mb-1">
+              <input
+                :id="`segretario-${evento}-${p.id}`"
+                v-model="segretari"
+                type="checkbox"
+                class="check"
+                :value="p.id"
+              />
+              <label :for="`segretario-${evento}-${p.id}`">{{ nomeDi(p) }}</label>
+            </div>
+          </fieldset>
+          <button type="submit" class="btn btn-sm btn-outline theme-primary" :disabled="inCorso">
+            Salva presidente e segretari
+          </button>
+        </template>
+      </form>
+    </template>
+
+    <details v-if="aperto && verbale.presenti.length" class="mb-3">
+      <summary>Presenti ({{ verbale.presenti.length }})</summary>
+      <ul class="list-unstyled small mb-0 mt-1">
+        <li v-for="(p, i) in verbale.presenti" :key="i">
+          {{ p.nome }}
+          <span v-if="verbale.tipo === 'SOCI'" class="fg-2">
+            · {{ p.qualita }} · {{ p.voto ? 'con diritto di voto' : 'senza diritto di voto' }}
+          </span>
+        </li>
+      </ul>
+    </details>
 
     <form v-if="verbale.puo_indicare" class="row g-3 align-items-end mb-3" @submit.prevent="indica">
       <div class="col-12 sm:col-8">

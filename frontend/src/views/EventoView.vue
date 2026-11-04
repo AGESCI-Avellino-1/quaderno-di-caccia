@@ -41,6 +41,8 @@ const esclusione = reactive({ persona: 0, motivo: '' })
 const annullamento = reactive({ aperto: false, motivo: '' })
 const riunione = computed(() => evento.value?.tipo === 'RIUNIONE')
 const modificaRiunione = ref(false)
+// The parents' meetings and the assembly: a convocation, no uniform (DEC-327).
+const convocata = computed(() => ['GENITORI', 'SOCI'].includes(evento.value?.cerchia ?? ''))
 
 // One turn of this meeting to another group (DEC-312); the rotation goes on as planned.
 const chiaveGruppo = (g: { squadriglia_id: number | null; sestiglia_id: number | null }) =>
@@ -273,12 +275,7 @@ const STATI: [StatoPresenza, string][] = [
         >
       </div>
       <div
-        v-if="
-          riunione &&
-          evento.cerchia !== 'GENITORI' &&
-          evento.uniforme !== null &&
-          evento.uniforme !== undefined
-        "
+        v-if="riunione && !convocata && evento.uniforme !== null && evento.uniforme !== undefined"
       >
         <strong>Uniforme</strong> {{ evento.uniforme ? 'sì' : 'no' }}
       </div>
@@ -296,7 +293,7 @@ const STATI: [StatoPresenza, string][] = [
     </div>
 
     <ConvocazioneRiunione
-      v-if="riunione && evento.cerchia === 'GENITORI'"
+      v-if="riunione && convocata"
       :key="`convocazione-${evento.id}`"
       :evento="evento.id"
     />

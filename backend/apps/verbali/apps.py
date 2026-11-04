@@ -12,5 +12,7 @@ class VerbaliConfig(AppConfig):
 
         # The text stays out of the audit log, which the technical administrator reads
         # (DEC-329); so does the upload session, a secret address on Google's side.
-        auditlog.register(models.Verbale, exclude_fields=["testo"])
+        auditlog.register(
+            models.Verbale, exclude_fields=["testo", "presenti", "cariche", "nomi_da_togliere"]
+        )
         auditlog.register(models.AllegatoVerbale, exclude_fields=["sessione"])

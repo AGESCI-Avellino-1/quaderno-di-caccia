@@ -44,8 +44,8 @@ def test_every_profile_can_log_in(tmp_path):
     giulia = Persona.objects.get(nome="Giulia", cognome="Rossi")
     assert giulia.informazioni_sanitarie.allergie.count() == 2
     # The reparto's weekly meetings (16 Saturdays), one of the Co.Ca. with its minutes, one
-    # of the parents, an outing, a group party and a BuonaCaccia camp.
-    assert Evento.objects.filter(tipo="RIUNIONE").count() == 18
+    # of the parents, the assembly, an outing, a group party and a BuonaCaccia camp.
+    assert Evento.objects.filter(tipo="RIUNIONE").count() == 19
     assert Verbale.objects.filter(stato="DEFINITIVO").count() == 1
     assert Evento.objects.exclude(tipo="RIUNIONE").count() == 3
     iscrizione = IscrizioneBuonaCaccia.objects.get()

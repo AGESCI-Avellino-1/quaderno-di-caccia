@@ -15,6 +15,7 @@ class TipoVerbale(models.TextChoices):
     CONSIGLIO_CAPI = "CONCA", "Consiglio Capi"
     CONSIGLIO_CAPI_VICE = "CONCAVI", "Consiglio Capi e Vice"
     GENITORI = "GENITORI", "Riunione dei genitori"
+    ASSEMBLEA = "SOCI", "Assemblea dei soci"
 
 
 class StatoVerbale(models.TextChoices):
@@ -44,6 +45,18 @@ class Verbale(ModelloTracciato):
     autore_nome = models.CharField(max_length=200, blank=True)
     # The name kept only for the five years (DEC-328): to be removed when they are over.
     nome_a_scadenza = models.BooleanField(default=False)
+    # The assembly's president and secretaries, among who is marked present (DEC-326).
+    presidente = models.ForeignKey(
+        "anagrafica.Persona", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    segretari = models.ManyToManyField("anagrafica.Persona", blank=True, related_name="+")
+    # Copied when it becomes definitive, because attendance becomes yearly totals after two
+    # years (DEC-328): {persona_id, nome, qualita, voto}; {"presidente": {id, nome}, "segretari":
+    # [...]}. Out of the audit log: names only, already known by the snapshot's readers.
+    presenti = models.JSONField(default=list, blank=True)
+    cariche = models.JSONField(default=dict, blank=True)
+    # Who was erased during the five years: their names go when these are over.
+    nomi_da_togliere = models.JSONField(default=list, blank=True)
     definitivo_il = models.DateTimeField(null=True, blank=True)
     definitivo_da = models.ForeignKey(
         settings.AUTH_USER_MODEL,

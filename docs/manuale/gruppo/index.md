@@ -36,6 +36,7 @@ organizzazione
 privacy
 fine-anno
 impostazioni
+assemblea
 ```
 
 ```{toctree}

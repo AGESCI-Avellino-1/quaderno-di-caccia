@@ -197,6 +197,18 @@ def crea_attivita(email) -> None:
     )
     capo_reparto.carica(f"/allegati-verbale/{documento['id']}/pezzo", programma, inizio="0")
 
+    # The assembly of the members, in a few weeks (DEC-326).
+    capogruppo(
+        "post",
+        "/riunioni",
+        {
+            "cerchia": "SOCI",
+            "giorno": (date.today() + timedelta(days=_sabato(4) + 1)).isoformat(),
+            "ora_inizio": "18:00",
+            "ora_fine": "20:00",
+        },
+    )
+
     # Meetings (DEC-310): every Saturday at the group's seat, a new place written while
     # creating them; notes on the next one. Then an outing with its fee, a group party.
     oggi = date.today()

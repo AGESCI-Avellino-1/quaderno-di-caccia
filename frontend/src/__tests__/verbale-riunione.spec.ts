@@ -25,6 +25,13 @@ const base: Verbale = {
   pezzo: 8,
   zip_possibile: false,
   accessi: null,
+  presenti: [],
+  puo_cariche: false,
+  candidati_cariche: [],
+  presidente: '',
+  segretari: [],
+  presidente_id: null,
+  segretari_ids: [],
 }
 
 type Chiamata = { url: string; metodo: string; corpo: BodyInit | null | undefined }
@@ -147,6 +154,41 @@ describe('VerbaleRiunione', () => {
     await campo.trigger('change')
     await flushPromises()
     expect(pagina.text()).toContain('troppo grande')
+  })
+
+  it('all assemblea sceglie presidente e segretari tra i presenti', async () => {
+    const chiamate = stub(() =>
+      risposta(200, {
+        ...base,
+        tipo: 'SOCI',
+        puo_scrivere: true,
+        puo_cariche: true,
+        candidati_cariche: [
+          { id: 2, nome: 'Alice', cognome: 'Marino' },
+          { id: 3, nome: 'Ada', cognome: 'Prova' },
+        ],
+        presenti: [{ nome: 'Alice Marino', qualita: 'Socio', voto: true }],
+      }),
+    )
+    const pagina = await monta()
+    await pagina.find('button').trigger('click')
+    await flushPromises()
+    expect(pagina.text()).toContain('con diritto di voto')
+    await pagina.find('select').setValue(2)
+    await pagina.find('input[value="3"]').setValue(true)
+    const moduli = pagina.findAll('form')
+    await moduli.find((m) => m.text().includes('Salva presidente'))!.trigger('submit')
+    await flushPromises()
+    const inviata = chiamate.find((c) => c.url.endsWith('/cariche'))!
+    expect(JSON.parse(inviata.corpo as string)).toEqual({ presidente_id: 2, segretari_ids: [3] })
+  })
+
+  it('senza presenti chiede di segnarle prima', async () => {
+    stub(() => risposta(200, { ...base, tipo: 'SOCI', puo_scrivere: true, puo_cariche: true }))
+    const pagina = await monta()
+    await pagina.find('button').trigger('click')
+    await flushPromises()
+    expect(pagina.text()).toContain('segna prima le presenze')
   })
 
   it('riapre chiedendo il motivo', async () => {

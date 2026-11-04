@@ -57,6 +57,13 @@ async function caricaSerie() {
 }
 
 onMounted(async () => {
+  if (sessione.capogruppo) {
+    try {
+      mancanti.value = await api.verbaliMancanti()
+    } catch {
+      mancanti.value = []
+    }
+  }
   if (!creaRiunioni.value) return
   await caricaSerie()
   try {
@@ -99,8 +106,11 @@ onMounted(async () => {
 const GIORNI = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica']
 const LC = ['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO']
 
+// An assembly held whose minutes are not definitive: they must exist (DEC-331).
+const mancanti = ref<{ id: number; titolo: string; inizio: string }[]>([])
 const vuoto = () => ({
-  perChi: (sessione.capo ? 'unita' : 'squadriglia') as 'unita' | 'squadriglia' | 'genitori',
+  perChi: (sessione.capo ? 'unita' : 'squadriglia') as
+    'unita' | 'squadriglia' | 'genitori' | 'assemblea',
   // A meeting of the parents (DEC-325): of the whole group, or of one or more units.
   diGruppo: false,
   unitaGenitori: [] as number[],
@@ -126,6 +136,8 @@ const modulo = ref<ReturnType<typeof vuoto> | null>(null)
 
 // The Co.Ca. has no parents to convene.
 const unitaConGenitori = computed(() => unita.value.filter((u) => u.tipo !== 'COMUNITA_CAPI'))
+// The parents' meetings and the assembly: one at a time, no uniform.
+const unaAllaVolta = computed(() => ['genitori', 'assemblea'].includes(modulo.value?.perChi ?? ''))
 const unitaScelta = computed(() => unita.value.find((u) => u.id === modulo.value?.unita))
 const collegata = computed(() => unita.value.find((u) => u.id === unitaScelta.value?.collegata_a))
 // Who of the unit is invited: a reparto has its councils, a branco or cerchio its
@@ -156,14 +168,15 @@ async function salva() {
   const m = modulo.value
   if (!m) return
   const perSquadriglia = m.perChi === 'squadriglia'
-  const genitori = m.perChi === 'genitori'
+  const assemblea = m.perChi === 'assemblea'
+  const genitori = m.perChi === 'genitori' || assemblea
   const fatte = await esegui(() =>
     api.creaRiunioni({
       titolo: m.titolo,
-      cerchia: genitori ? 'GENITORI' : perSquadriglia ? 'TUTTI' : m.cerchia,
-      di_gruppo: genitori && m.diGruppo,
+      cerchia: assemblea ? 'SOCI' : genitori ? 'GENITORI' : perSquadriglia ? 'TUTTI' : m.cerchia,
+      di_gruppo: assemblea || (genitori && m.diGruppo),
       unita: genitori
-        ? m.diGruppo
+        ? m.diGruppo || assemblea
           ? []
           : m.unitaGenitori
         : perSquadriglia
@@ -256,6 +269,14 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         Nuove riunioni
       </button>
     </div>
+    <div v-for="m in mancanti" :key="m.id" class="alert theme-warning small" role="status">
+      <div>
+        Verbale mancante:
+        <RouterLink :to="{ name: 'riunione', params: { id: m.id } }">
+          {{ m.titolo }} del {{ new Date(m.inizio).toLocaleDateString('it-IT') }}
+        </RouterLink>
+      </div>
+    </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="esito" class="alert theme-success small" role="status">
       <div>{{ esito }}</div>
@@ -269,6 +290,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             <option v-if="sessione.capo" value="unita">Di un'unità</option>
             <option v-if="squadriglie.length" value="squadriglia">Di una squadriglia</option>
             <option v-if="sessione.capo" value="genitori">Dei genitori</option>
+            <option v-if="sessione.capogruppo" value="assemblea">Assemblea dei soci</option>
           </select>
         </div>
         <template v-if="modulo.perChi === 'unita'">
@@ -318,6 +340,10 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             convocazione dalla pagina della riunione, dopo aver aggiunto i documenti.
           </p>
         </fieldset>
+        <p v-else-if="modulo.perChi === 'assemblea'" class="form-text md:col-8 mb-0">
+          Sono invitati i capi, i rover e le scolte maggiorenni e i genitori. Gli invitati ricevono
+          l'email quando invii la convocazione dalla pagina dell'assemblea.
+        </p>
         <div v-else class="md:col-8">
           <label class="form-label small" for="riu-squadriglia">Squadriglia</label>
           <select
@@ -332,7 +358,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             </option>
           </select>
         </div>
-        <fieldset v-if="modulo.perChi !== 'genitori'" class="col-12">
+        <fieldset v-if="!unaAllaVolta" class="col-12">
           <legend class="form-label small">Quando</legend>
           <div class="d-flex flex-wrap gap-5">
             <div class="form-field mb-0">
@@ -357,7 +383,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             </div>
           </div>
         </fieldset>
-        <template v-if="modulo.ripeti && modulo.perChi !== 'genitori'">
+        <template v-if="modulo.ripeti && !unaAllaVolta">
           <div class="md:col-4">
             <label class="form-label small" for="riu-giorno">Ogni</label>
             <select
@@ -423,7 +449,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div class="col-12">
           <SceltaLocalita v-model="modulo.localita" id-campo="riu-localita" :localita="localita" />
         </div>
-        <fieldset v-if="modulo.perChi !== 'genitori'" class="col-12">
+        <fieldset v-if="!unaAllaVolta" class="col-12">
           <legend class="form-label small">Uniforme</legend>
           <div class="d-flex flex-wrap gap-5">
             <div class="form-field mb-0">

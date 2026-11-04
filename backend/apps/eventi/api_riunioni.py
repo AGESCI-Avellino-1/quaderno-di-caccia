@@ -18,7 +18,15 @@ from apps.permessi import policy
 
 from . import avvisi, servizi
 from .api import EventoOut, LocalitaOut, _errore, _evento_out
-from .models import Cerchia, Evento, Livello, Localita, RiunioneRicorrente, TipoEvento
+from .models import (
+    CERCHIE_CONVOCATE,
+    Cerchia,
+    Evento,
+    Livello,
+    Localita,
+    RiunioneRicorrente,
+    TipoEvento,
+)
 
 router = Router(tags=["riunioni"])
 
@@ -114,7 +122,7 @@ class RiunioneIn(Schema):
     titolo: str = ""
     cerchia: Cerchia = Cerchia.TUTTI
     unita: list[int] = []  # the first is the unit's; a second one meets with it
-    # A meeting of the parents of the whole group, with no unit (DEC-325).
+    # A meeting of the parents of the whole group, with no unit (DEC-325); the assembly always.
     di_gruppo: bool = False
     squadriglia_id: int | None = None
     ora_inizio: time
@@ -211,8 +219,8 @@ def _unita_e_squadriglia(dati: RiunioneIn) -> tuple[list[Unita], Squadriglia | N
 
 @router.post("/riunioni", response={201: list[EventoOut]})
 def crea_riunioni(request, dati: RiunioneIn):
-    if dati.cerchia == Cerchia.GENITORI:
-        return _crea_riunione_genitori(request, dati)
+    if dati.cerchia in CERCHIE_CONVOCATE:
+        return _crea_riunione_convocata(request, dati)
     if dati.di_gruppo:
         raise HttpError(400, "Solo una riunione dei genitori è di tutto il gruppo.")
     unita, squadriglia = _unita_e_squadriglia(dati)
@@ -272,23 +280,27 @@ def crea_riunioni(request, dati: RiunioneIn):
     return Status(201, [_evento_out(request.auth, e) for e in creati])
 
 
-def _crea_riunione_genitori(request, dati: RiunioneIn):
-    """One at a time: each has its own convocation (DEC-325, DEC-327). Nobody is told until
-    who manages it sends the convocation, once the attachments are there."""
+def _crea_riunione_convocata(request, dati: RiunioneIn):
+    """The parents' meetings and the assembly, one at a time: each has its own convocation
+    (DEC-325, DEC-326, DEC-327). Nobody is told until who manages it sends the convocation,
+    once the attachments are there."""
     if dati.giorno is None:
-        raise HttpError(400, "Una riunione dei genitori è una sola: scegli il giorno.")
-    unita, _ = ([], None) if dati.di_gruppo else _unita_e_squadriglia(dati)
-    livello = Livello.GRUPPO if dati.di_gruppo else Livello.UNITA
-    if not _puo_creare(request.auth, unita, None, Cerchia.GENITORI, livello):
+        raise HttpError(400, "Questa riunione è una sola: scegli il giorno.")
+    assemblea = dati.cerchia == Cerchia.SOCI
+    di_gruppo = dati.di_gruppo or assemblea
+    unita, _ = ([], None) if di_gruppo else _unita_e_squadriglia(dati)
+    livello = Livello.GRUPPO if di_gruppo else Livello.UNITA
+    if not _puo_creare(request.auth, unita, None, dati.cerchia, livello):
         raise HttpError(403, "Non puoi creare questa riunione.")
+    titolo = "Assemblea dei soci" if assemblea else servizi.titolo_riunione_genitori(unita)
     zona = timezone.get_current_timezone()
     with transaction.atomic():
         localita = _localita(request, dati)
         evento = Evento(
-            titolo=dati.titolo.strip() or servizi.titolo_riunione_genitori(unita),
+            titolo=dati.titolo.strip() or titolo,
             tipo=TipoEvento.RIUNIONE,
             livello=livello,
-            cerchia=Cerchia.GENITORI,
+            cerchia=dati.cerchia,
             inizio=datetime.combine(dati.giorno, dati.ora_inizio, zona),
             fine=datetime.combine(dati.giorno, dati.ora_fine, zona),
             luogo=localita.nome if localita else "",

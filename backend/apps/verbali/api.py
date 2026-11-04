@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from ninja import File, Form, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
@@ -41,6 +42,12 @@ class AccessoOut(Schema):
     quando: datetime
 
 
+class PresenteOut(Schema):
+    nome: str
+    qualita: str
+    voto: bool
+
+
 class VerbaleOut(Schema):
     tipo: str
     stato: str
@@ -62,6 +69,14 @@ class VerbaleOut(Schema):
     pezzo: int
     zip_possibile: bool
     accessi: list[AccessoOut] | None
+    # Who was there: live in draft, copied when definitive. The assembly's offices.
+    presenti: list[PresenteOut]
+    puo_cariche: bool
+    candidati_cariche: list[PersonaVerbale]
+    presidente: str
+    segretari: list[str]
+    presidente_id: int | None
+    segretari_ids: list[int]
 
 
 def _azione(funzione, *argomenti):
@@ -130,7 +145,29 @@ def _out(request, verbale: Verbale) -> dict:
             }
             for a in verbale.accessi.select_related("utente")[:50]
         ]
+    conservato = tipo in servizi.CONSERVATI_CINQUE_ANNI
+    assemblea = tipo == TipoVerbale.ASSEMBLEA
+    presenti = []
+    if conservato:
+        presenti = verbale.presenti if verbale.definitivo else servizi.presenti_ora(evento, tipo)
+    segretari_ora = list(verbale.segretari.all()) if verbale.pk and assemblea else []
+    if verbale.definitivo and assemblea:
+        presidente = verbale.cariche.get("presidente", {}).get("nome", "")
+        segretari = [s["nome"] for s in verbale.cariche.get("segretari", [])]
+    else:
+        presidente = (
+            f"{verbale.presidente.nome} {verbale.presidente.cognome}" if verbale.presidente else ""
+        )
+        segretari = [f"{s.nome} {s.cognome}" for s in segretari_ora]
+    puo_cariche = assemblea and policy.puo_scrivere_verbale(utente, verbale)
     return {
+        "presenti": presenti,
+        "puo_cariche": puo_cariche,
+        "candidati_cariche": list(servizi.presenti_segnati(evento)) if puo_cariche else [],
+        "presidente": presidente,
+        "segretari": segretari,
+        "presidente_id": verbale.presidente_id,
+        "segretari_ids": [s.pk for s in segretari_ora],
         "tipo": tipo,
         "stato": verbale.stato,
         "testo": verbale.testo,
@@ -166,7 +203,7 @@ def leggi(request, evento_id: int, testo: bool = False):
     only reading goes to the access log (DEC-329)."""
     verbale = _leggibile(request, evento_id)
     if not testo:
-        return {**_out(request, verbale), "testo": ""}
+        return {**_out(request, verbale), "testo": "", "presenti": []}
     _registra(request, verbale, Azione.LETTURA)
     return _out(request, verbale)
 
@@ -195,6 +232,33 @@ def indica(request, evento_id: int, dati: RedattoreIn):
         if persona not in _candidati(verbale.evento):
             raise HttpError(400, "Puoi scegliere una persona invitata alla riunione o un capo.")
     return _out(request, _azione(servizi.indica_redattore, verbale, persona))
+
+
+class CaricheIn(Schema):
+    presidente_id: int | None = None
+    segretari_ids: list[int] = []
+
+
+@router.put("/eventi/{evento_id}/verbale/cariche", response=VerbaleOut)
+def cariche(request, evento_id: int, dati: CaricheIn):
+    verbale = _scrivibile(request, evento_id)
+    return _out(
+        request, _azione(servizi.salva_cariche, verbale, dati.presidente_id, dati.segretari_ids)
+    )
+
+
+class VerbaleMancante(Schema):
+    id: int
+    titolo: str
+    inizio: datetime
+
+
+@router.get("/verbali-mancanti", response=list[VerbaleMancante])
+def mancanti(request):
+    """Shown to the capigruppo until the minutes of an assembly are definitive (DEC-331)."""
+    if not policy.e_capogruppo(request.auth):
+        return []
+    return list(servizi.verbali_mancanti(timezone.localdate()))
 
 
 class NonPrevistoIn(Schema):
@@ -341,6 +405,10 @@ def scarica(request, allegato_id: int):
 
 class ConvocazioneOut(Schema):
     convocata_il: datetime | None
+    # At the assembly: who marks the attendance besides the capigruppo (DEC-326).
+    puo_indicare_presenze: bool
+    presenze_da: PersonaVerbale | None
+    candidati_presenze: list[PersonaVerbale]
     allegati: list[AllegatoOut]
     puo_gestire: bool
     puo_inviare: bool
@@ -357,7 +425,12 @@ def _con_convocazione(evento_id: int) -> Evento:
 
 def _convocazione_out(request, evento: Evento) -> dict:
     gestisce = policy.puo_gestire_convocazione(request.auth, evento)
+    indica = policy.puo_indicare_presenze(request.auth, evento)
+    invitati = Persona.objects.filter(partecipazioni__evento=evento).order_by("cognome", "nome")
     return {
+        "puo_indicare_presenze": indica,
+        "presenze_da": evento.presenze_da,
+        "candidati_presenze": list(invitati) if indica else [],
         "convocata_il": evento.convocata_il,
         "allegati": convocazione.allegati_di(evento),
         "puo_gestire": gestisce,
@@ -381,6 +454,25 @@ def invia_convocazione(request, evento_id: int):
     if not policy.puo_gestire_convocazione(request.auth, evento):
         raise HttpError(403, "Non puoi convocare questa riunione.")
     _azione(convocazione.invia, evento)
+    return _convocazione_out(request, evento)
+
+
+class PresenzeDaIn(Schema):
+    persona_id: int | None = None
+
+
+@router.put("/eventi/{evento_id}/convocazione/presenze", response=ConvocazioneOut)
+def indica_presenze(request, evento_id: int, dati: PresenzeDaIn):
+    evento = _con_convocazione(evento_id)
+    if not policy.puo_indicare_presenze(request.auth, evento):
+        raise HttpError(403, "Lo indicano i capigruppo.")
+    persona = None
+    if dati.persona_id is not None:
+        persona = get_object_or_404(Persona, pk=dati.persona_id)
+        if not evento.partecipazioni.filter(persona=persona).exists():
+            raise HttpError(400, "Scegli una persona invitata all'assemblea.")
+    evento.presenze_da = persona
+    evento.save(update_fields=["presenze_da", "aggiornato_il"])
     return _convocazione_out(request, evento)
 
 

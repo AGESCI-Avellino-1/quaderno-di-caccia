@@ -81,6 +81,8 @@ lo staff, per ogni genitore, e non contano su quelle dei figli.
 ![La convocazione di una riunione sul computer](../img/capo/convocazione-computer.png){.computer width="65%"}
 :::
 
+L'[assemblea dei soci](../gruppo/assemblea) la convocano i capigruppo.
+
 ## Il verbale
 
 Alcune riunioni hanno un verbale: Comunità capi, riunioni dei genitori, squadriglia, Alta Squadriglia,

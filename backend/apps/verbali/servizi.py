@@ -19,7 +19,8 @@ from apps.anagrafica.models import Persona
 from apps.archivio import drive
 from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
-from apps.eventi.models import Cerchia, Evento, Livello, TipoEvento
+from apps.eventi.models import Cerchia, Evento, Livello, StatoPresenza, TipoEvento
+from apps.eventi.servizi import qualita_in_assemblea
 from apps.impostazioni.html import pulisci
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 from apps.permessi.policy import STAFF_DI_UNITA
@@ -34,13 +35,20 @@ CERCHIE = {
 }
 # Names and who was there stay five years for the third sector, whatever happens to the
 # person (DEC-328).
-CONSERVATI_CINQUE_ANNI = {TipoVerbale.COCA}
+CONSERVATI_CINQUE_ANNI = {TipoVerbale.COCA, TipoVerbale.ASSEMBLEA}
 # Who has reminders until it is definitive or said there is none (DEC-322, DEC-331).
 CON_PROMEMORIA = {TipoVerbale.COCA, TipoVerbale.GENITORI}
 GIORNI_TRA_I_PROMEMORIA = 7  # DEC-331
 MASSIMO_PROMEMORIA = 3
 # Meetings from before the minutes existed are not reminded of.
 GIORNI_MASSIMI_PROMEMORIA = 30
+
+NOTA_NON_PREVISTO = (
+    "Se per questa riunione il verbale non c'è, puoi indicarlo nella stessa pagina: il "
+    "promemoria non arriverà più."
+)
+
+NOME_TOLTO = "Persona cancellata"
 
 GB = 1024**3
 MB = 1024**2
@@ -99,6 +107,8 @@ def tipo_di(evento: Evento) -> str | None:
         return None
     if evento.cerchia == Cerchia.GENITORI:
         return TipoVerbale.GENITORI
+    if evento.cerchia == Cerchia.SOCI:
+        return TipoVerbale.ASSEMBLEA
     if evento.livello == Livello.SQUADRIGLIA:
         return TipoVerbale.SQUADRIGLIA
     if evento.livello != Livello.UNITA:
@@ -159,10 +169,65 @@ def segna_non_previsto(verbale: Verbale, non_previsto: bool) -> Verbale:
     return verbale
 
 
+def presenti_segnati(evento: Evento):
+    return Persona.objects.filter(
+        presenze__evento=evento, presenze__stato=StatoPresenza.PRESENTE
+    ).order_by("cognome", "nome")
+
+
+def presenti_ora(evento: Evento, tipo: str) -> list[dict]:
+    """The list of who is there, with who may vote at the assembly."""
+    giorno = timezone.localdate(evento.inizio)
+    elenco = []
+    for persona in presenti_segnati(evento):
+        voce = {"persona_id": persona.pk, "nome": _nome(persona), "qualita": "", "voto": False}
+        if tipo == TipoVerbale.ASSEMBLEA:
+            voce |= qualita_in_assemblea(persona, giorno)
+        elenco.append(voce)
+    return elenco
+
+
+@transaction.atomic
+def salva_cariche(verbale: Verbale, presidente_id: int | None, segretari_ids: list[int]) -> Verbale:
+    """President and secretaries of the assembly: only among who is marked present (DEC-326)."""
+    _in_bozza(verbale)
+    if tipo_di(verbale.evento) != TipoVerbale.ASSEMBLEA:
+        raise ValidationError("Presidente e segretari sono dell'assemblea dei soci.")
+    presenti = set(presenti_segnati(verbale.evento).values_list("pk", flat=True))
+    scelti = set(segretari_ids) | ({presidente_id} if presidente_id else set())
+    if not scelti <= presenti:
+        raise ValidationError("Presidente e segretari si scelgono tra i presenti segnati.")
+    verbale.presidente_id = presidente_id
+    verbale.save()
+    verbale.segretari.set(segretari_ids)
+    return verbale
+
+
+def _fotografa_cariche(verbale: Verbale) -> None:
+    presenti = set(presenti_segnati(verbale.evento).values_list("pk", flat=True))
+    segretari = list(verbale.segretari.order_by("cognome", "nome"))
+    if not verbale.presidente_id or not segretari:
+        raise ValidationError("Scegli il presidente e almeno un segretario dell'assemblea.")
+    if not {verbale.presidente_id, *(s.pk for s in segretari)} <= presenti:
+        raise ValidationError("Presidente e segretari devono essere segnati tra i presenti.")
+    verbale.cariche = {
+        "presidente": {"id": verbale.presidente_id, "nome": _nome(verbale.presidente)},
+        "segretari": [{"id": s.pk, "nome": _nome(s)} for s in segretari],
+    }
+
+
 def rendi_definitivo(verbale: Verbale, utente) -> Verbale:
     _in_bozza(verbale)
     if not verbale.testo.strip():
         raise ValidationError("Il verbale è vuoto: scrivilo prima di renderlo definitivo.")
+    tipo = tipo_di(verbale.evento)
+    if tipo == TipoVerbale.ASSEMBLEA:
+        _fotografa_cariche(verbale)
+    if tipo in CONSERVATI_CINQUE_ANNI:
+        # Reopened after attendance became yearly totals: the copy made then stays.
+        ora = presenti_ora(verbale.evento, tipo)
+        if ora or not verbale.presenti:
+            verbale.presenti = ora
     verbale.stato = StatoVerbale.DEFINITIVO
     verbale.definitivo_il = timezone.now()
     verbale.definitivo_da = utente
@@ -388,11 +453,14 @@ def _riunioni_con_promemoria(oggi: date):
     return (
         Evento.objects.filter(
             Q(livello=Livello.UNITA, cerchia=Cerchia.TUTTI, unita__tipo=TipoUnita.COMUNITA_CAPI)
-            | Q(cerchia=Cerchia.GENITORI),
+            | Q(cerchia__in=(Cerchia.GENITORI, Cerchia.SOCI)),
             tipo=TipoEvento.RIUNIONE,
             annullato_il__isnull=True,
             fine__date__lte=oggi - timedelta(days=GIORNI_TRA_I_PROMEMORIA),
-            fine__date__gte=oggi - timedelta(days=GIORNI_MASSIMI_PROMEMORIA),
+        )
+        .filter(
+            Q(cerchia=Cerchia.SOCI)
+            | Q(fine__date__gte=oggi - timedelta(days=GIORNI_MASSIMI_PROMEMORIA))
         )
         .exclude(verbale__stato=StatoVerbale.DEFINITIVO)
         .exclude(verbale__non_previsto=True)
@@ -406,7 +474,8 @@ def promemoria(oggi: date) -> int:
     inviati = 0
     for evento in _riunioni_con_promemoria(oggi):
         verbale = verbale_di(evento)
-        if verbale.promemoria_inviati >= MASSIMO_PROMEMORIA:
+        obbligatorio = tipo_di(evento) == TipoVerbale.ASSEMBLEA
+        if not obbligatorio and verbale.promemoria_inviati >= MASSIMO_PROMEMORIA:
             continue
         if (
             verbale.ultimo_promemoria
@@ -418,6 +487,7 @@ def promemoria(oggi: date) -> int:
             {
                 "Riunione": evento.titolo,
                 "Data": f"{timezone.localtime(evento.inizio):%d/%m/%Y}",
+                "Nota": "" if obbligatorio else NOTA_NON_PREVISTO,
                 "Link": f"{settings.FRONTEND_URL}/eventi/{evento.pk}",
             },
             destinatari_promemoria(verbale),
@@ -426,6 +496,15 @@ def promemoria(oggi: date) -> int:
         verbale.ultimo_promemoria = oggi
         verbale.save()
     return inviati
+
+
+def verbali_mancanti(oggi: date):
+    """The assemblies held whose minutes are not definitive: they must exist (DEC-322, DEC-331)."""
+    return (
+        Evento.objects.filter(cerchia=Cerchia.SOCI, annullato_il__isnull=True, fine__date__lt=oggi)
+        .exclude(verbale__stato=StatoVerbale.DEFINITIVO)
+        .order_by("inizio")
+    )
 
 
 def pulisci_caricamenti_interrotti(oggi: date) -> int:
@@ -461,14 +540,36 @@ def verbali_col_nome(persona: Persona) -> list[Verbale]:
     )
 
 
+def _nomina(verbale: Verbale, persona_id: int) -> bool:
+    cariche = [verbale.cariche.get("presidente", {}), *verbale.cariche.get("segretari", [])]
+    return any(p.get("persona_id") == persona_id for p in verbale.presenti) or any(
+        c.get("id") == persona_id for c in cariche
+    )
+
+
+def _togli_nome(verbale: Verbale, persona_id: int) -> None:
+    """The list and the offices stay, without the name of who was erased."""
+    for presente in verbale.presenti:
+        if presente.get("persona_id") == persona_id:
+            presente["nome"] = NOME_TOLTO
+            presente["persona_id"] = None
+    for carica in [verbale.cariche.get("presidente", {}), *verbale.cariche.get("segretari", [])]:
+        if carica.get("id") == persona_id:
+            carica["nome"] = NOME_TOLTO
+            carica["id"] = None
+
+
 def alla_cancellazione(persona: Persona) -> None:
-    """Who wrote or was chosen for a minutes: the name stays only where the five years
-    apply, and only while they last."""
+    """Who wrote, was chosen or was there: the name stays only where the five years apply,
+    and only while they last."""
     oggi = timezone.localdate()
-    for verbale in Verbale.objects.filter(Q(autore=persona) | Q(redattore=persona)).select_related(
-        "evento"
-    ):
+    Verbale.segretari.through.objects.filter(persona=persona).delete()
+    for verbale in Verbale.objects.filter(
+        Q(autore=persona) | Q(redattore=persona) | Q(presidente=persona)
+    ).select_related("evento"):
         verbale.redattore = None
+        if verbale.presidente_id == persona.pk:
+            verbale.presidente = None
         if verbale.autore_id == persona.pk:
             verbale.autore = None
             if tipo_di(verbale.evento) in CONSERVATI_CINQUE_ANNI and _scade_il(verbale) > oggi:
@@ -476,15 +577,30 @@ def alla_cancellazione(persona: Persona) -> None:
             else:
                 verbale.autore_nome = ""
         verbale.save()
+    for verbale in Verbale.objects.exclude(presenti=[], cariche={}).select_related("evento"):
+        if not _nomina(verbale, persona.pk):
+            continue
+        if _scade_il(verbale) > oggi:
+            verbale.nomi_da_togliere = [*verbale.nomi_da_togliere, persona.pk]
+        else:
+            _togli_nome(verbale, persona.pk)
+        verbale.save()
 
 
 def togli_nomi_scaduti(oggi: date) -> int:
-    """The five years are over: the name of who was erased in the meantime goes too."""
+    """The five years are over: the names of who was erased in the meantime go too."""
     tolti = 0
-    for verbale in Verbale.objects.filter(nome_a_scadenza=True).select_related("evento"):
-        if _scade_il(verbale) <= oggi:
+    for verbale in Verbale.objects.exclude(
+        nome_a_scadenza=False, nomi_da_togliere=[]
+    ).select_related("evento"):
+        if _scade_il(verbale) > oggi:
+            continue
+        if verbale.nome_a_scadenza:
             verbale.autore_nome = ""
             verbale.nome_a_scadenza = False
-            verbale.save()
-            tolti += 1
+        for persona_id in verbale.nomi_da_togliere:
+            _togli_nome(verbale, persona_id)
+        verbale.nomi_da_togliere = []
+        verbale.save()
+        tolti += 1
     return tolti

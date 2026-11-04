@@ -551,6 +551,19 @@ const SCENE: Scena[] = [
   },
   { nome: 'capo/riunioni', chi: 'capoReparto', percorso: '/riunioni', intera: true },
   {
+    nome: 'gruppo/assemblea',
+    chi: 'capogruppo',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      await pagina
+        .getByRole('link', { name: /Assemblea dei soci/ })
+        .first()
+        .click()
+      await pagina.getByRole('heading', { name: 'Convocazione' }).waitFor()
+    },
+    mostra: 'Convocazione',
+  },
+  {
     nome: 'capo/convocazione',
     chi: 'capoReparto',
     percorso: '/riunioni',

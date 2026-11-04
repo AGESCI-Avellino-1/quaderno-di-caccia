@@ -474,7 +474,7 @@ def puo_indicare_redattore(user, evento) -> bool:
     tipo = tipo_di(evento)
     if tipo is None or e_capo_in_attesa(user):
         return False
-    if tipo == TipoVerbale.COCA:
+    if tipo in (TipoVerbale.COCA, TipoVerbale.ASSEMBLEA):
         return e_capogruppo(user)
     if tipo == TipoVerbale.GENITORI:
         # The capigruppo, and the staff when the meeting is of one unit only.
@@ -1061,7 +1061,10 @@ def puo_gestire_evento(user, evento) -> bool:
 
 def puo_segnare_presenze(user, evento) -> bool:
     """Capi only: the staff of the units involved; any capo at a group event. The CSQ
-    marks the patrol's meetings (DEC-138)."""
+    marks the patrol's meetings (DEC-138). At the assembly the capigruppo or who they
+    chose, whoever that is (DEC-326)."""
+    if evento.cerchia == "SOCI":
+        return e_capogruppo(user) or _segna_le_presenze(user, evento)
     if (
         evento.livello == "SQUADRIGLIA"
         and evento.tipo == "RIUNIONE"
@@ -1111,9 +1114,19 @@ def puo_gestire_turni(user, unita: Unita) -> bool:
     return e_capogruppo(user) or e_staff(user, unita)
 
 
+def _segna_le_presenze(user, evento) -> bool:
+    persona = persona_di(user)
+    return persona is not None and evento.presenze_da_id == persona.pk
+
+
+def puo_indicare_presenze(user, evento) -> bool:
+    return evento.cerchia == "SOCI" and e_capogruppo(user)
+
+
 def puo_vedere_partecipanti(user, evento) -> bool:
-    """The whole list: the capi; a CSQ for their patrol's events."""
-    if e_capo(user):
+    """The whole list: the capi; a CSQ for their patrol's events; who marks the attendance
+    of the assembly."""
+    if e_capo(user) or _segna_le_presenze(user, evento):
         return True
     return (
         evento.squadriglia_id is not None
@@ -1127,7 +1140,7 @@ def puo_segnalare_assenza(user, persona: Persona, evento) -> bool:
     a minor's registration is cancelled by the staff (DEC-144)."""
     if evento.livello == "ESTERNO":
         return puo_segnare_partecipazione_esterna(user, persona) and not persona.e_minorenne()
-    if evento.cerchia == "GENITORI":
+    if evento.cerchia in ("GENITORI", "SOCI"):
         return False  # nobody says whether they come: attendance is marked (DEC-325)
     livello = _livello_personale(user, persona)
     if livello == LivelloAccesso.PROPRIO:

@@ -8,6 +8,9 @@ import { risposta } from './aiuti'
 
 const base: Convocazione = {
   convocata_il: null,
+  puo_indicare_presenze: false,
+  presenze_da: null,
+  candidati_presenze: [],
   allegati: [{ id: 3, nome_file: 'programma.pdf', dimensione: 2048, di_convocazione: true }],
   puo_gestire: false,
   puo_inviare: false,
@@ -77,6 +80,25 @@ describe('ConvocazioneRiunione', () => {
     })
     expect(pagina.text()).toContain('Inviata il')
     expect(pagina.text()).not.toContain('Invia la convocazione')
+  })
+
+  it('il capogruppo indica chi segna le presenze', async () => {
+    const chiamate = stub(() =>
+      risposta(200, {
+        ...base,
+        puo_gestire: true,
+        puo_indicare_presenze: true,
+        candidati_presenze: [{ id: 4, nome: 'Rino', cognome: 'Rover' }],
+      }),
+    )
+    const pagina = await monta()
+    await pagina.find('select').setValue(4)
+    await pagina.find('form').trigger('submit')
+    await flushPromises()
+    expect(chiamate.at(-1)).toEqual({
+      url: '/api/v1/eventi/5/convocazione/presenze',
+      metodo: 'PUT',
+    })
   })
 
   it('aggiunge un documento a pezzi', async () => {

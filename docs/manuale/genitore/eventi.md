@@ -81,3 +81,11 @@ Quando lo staff o i capigruppo ti convocano a una riunione dei genitori ricevi u
 il luogo e i documenti. Sono invitati entrambi i genitori. La riunione è anche nel tuo calendario; nella
 sua pagina trovi i documenti, nel riquadro **Convocazione**, e dopo la riunione il verbale, quando è
 definitivo: tocca **Leggi il verbale**. Non devi comunicare se vieni: le presenze le segnano i capi.
+
+## L'assemblea dei soci
+
+Sei invitato anche all'assemblea dei soci, convocata dai capigruppo: l'email e la pagina funzionano come
+per le riunioni dei genitori. Hai diritto di voto per i tuoi figli minorenni; ogni minorenne vale un voto,
+espresso da uno solo dei genitori, e scegliete voi chi. Se i tuoi figli nel gruppo sono tutti maggiorenni
+partecipi per informazione, senza voto, e leggi comunque il verbale. Le votazioni si fanno in assemblea,
+non nell'app.

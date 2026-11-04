@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Persona
 from apps.eventi.avvisi import indirizzi_diretti, quando
-from apps.eventi.models import Cerchia, Evento, StatoPartecipazione
+from apps.eventi.models import CERCHIE_CONVOCATE, Evento, StatoPartecipazione
 
 from .models import AllegatoVerbale
 
@@ -18,7 +18,7 @@ MASSIMO_NELL_EMAIL = 5 * 1024 * 1024
 
 
 def ha_convocazione(evento: Evento) -> bool:
-    return evento.cerchia == Cerchia.GENITORI
+    return evento.cerchia in CERCHIE_CONVOCATE
 
 
 def allegati_di(evento: Evento):

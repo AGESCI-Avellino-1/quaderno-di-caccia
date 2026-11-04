@@ -519,6 +519,10 @@ export interface AllegatoVerbale {
 /** The convocation of a meeting, with its attachments (DEC-327). */
 export interface Convocazione {
   convocata_il: string | null
+  /** At the assembly: who marks the attendance besides the capigruppo. */
+  puo_indicare_presenze: boolean
+  presenze_da: PersonaBreve | null
+  candidati_presenze: PersonaBreve[]
   allegati: AllegatoVerbale[]
   puo_gestire: boolean
   puo_inviare: boolean
@@ -549,6 +553,14 @@ export interface Verbale {
   zip_possibile: boolean
   /** Who read it: for the capigruppo, on the Co.Ca.'s only. */
   accessi: { chi: string; azione: string; quando: string }[] | null
+  /** Who was there: Co.Ca. and assembly, with the right to vote at the assembly. */
+  presenti: { nome: string; qualita: string; voto: boolean }[]
+  puo_cariche: boolean
+  candidati_cariche: PersonaBreve[]
+  presidente: string
+  segretari: string[]
+  presidente_id: number | null
+  segretari_ids: number[]
 }
 
 export const verbalePdf = (evento: number) => `/api/v1/eventi/${evento}/verbale.pdf`
@@ -1586,7 +1598,7 @@ export interface ModelloD {
 export type TipoEvento =
   'RIUNIONE' | 'USCITA' | 'CAMPO' | 'AUTOFINANZIAMENTO' | 'MISSIONE' | 'ALTRO'
 /** Who of the reparti involved is invited: all, CSQ, CSQ and VCSQ, Alta Squadriglia. */
-export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ' | 'CDA' | 'GENITORI'
+export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ' | 'CDA' | 'GENITORI' | 'SOCI'
 export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA' | 'ESTERNO'
 export type StatoPartecipazione = 'INVITATO' | 'NON_PARTECIPA' | 'NON_INVITATO'
 export type StatoPresenza = 'PRESENTE' | 'ASSENTE' | 'GIUSTIFICATO'
@@ -2843,6 +2855,18 @@ export const api = {
       { metodo: 'POST', corpo },
     )
   },
+  caricheVerbale: (evento: number, presidente_id: number | null, segretari_ids: number[]) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale/cariche`, {
+      metodo: 'PUT',
+      corpo: { presidente_id, segretari_ids },
+    }),
+  verbaliMancanti: () =>
+    richiesta<{ id: number; titolo: string; inizio: string }[]>('/api/v1/verbali-mancanti'),
+  indicaPresenze: (evento: number, persona_id: number | null) =>
+    richiesta<Convocazione>(`/api/v1/eventi/${evento}/convocazione/presenze`, {
+      metodo: 'PUT',
+      corpo: { persona_id },
+    }),
   convocazione: (evento: number) =>
     richiesta<Convocazione>(`/api/v1/eventi/${evento}/convocazione`),
   inviaConvocazione: (evento: number) =>

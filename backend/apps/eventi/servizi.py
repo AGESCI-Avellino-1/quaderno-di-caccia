@@ -66,6 +66,8 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
         return Persona.objects.none()  # who registered on BuonaCaccia, one by one
     if evento.cerchia == Cerchia.GENITORI:
         return _invitati_genitori(evento, giorno)
+    if evento.cerchia == Cerchia.SOCI:
+        return _invitati_assemblea(giorno)
     if evento.livello == Livello.SQUADRIGLIA:
         ids = (
             AppartenenzaSquadriglia.objects.filter(
@@ -132,6 +134,47 @@ def _invitati_genitori(evento: Evento, giorno: date) -> QuerySet[Persona]:
         | Q(pk__in=al_posto)
         | Q(pk__in=capi.values("persona_id"))
     )
+
+
+def _invitati_assemblea(giorno: date) -> QuerySet[Persona]:
+    """The capi, the members of age and the parents and guardians of every member; the
+    parents of an adult only come to be informed (DEC-326)."""
+    attive = Appartenenza.objects.attive(giorno)
+    ragazzi = attive.filter(ruolo=RuoloAppartenenza.RAGAZZO).select_related("persona")
+    adulti = [a.persona_id for a in ragazzi if not a.persona.e_minorenne(giorno)]
+    genitori = RelazioneTutela.objects.filter(
+        minore__in=ragazzi.values("persona_id"), responsabilita_genitoriale=True
+    )
+    capi = attive.filter(ruolo=RuoloAppartenenza.CAPO)
+    return Persona.objects.filter(
+        Q(pk__in=capi.values("persona_id"))
+        | Q(pk__in=adulti)
+        | Q(pk__in=genitori.values("tutore_id"))
+    )
+
+
+def qualita_in_assemblea(persona: Persona, giorno: date) -> dict:
+    """What the list of who is there says of a person, no child named: the votes themselves
+    are cast outside the app (DEC-326). A member of age votes for themself, the parents of a
+    minor for that minor."""
+    attive = Appartenenza.objects.attive(giorno)
+    socio = attive.filter(persona=persona).exists() and not persona.e_minorenne(giorno)
+    figli_minori = [
+        t.minore
+        for t in RelazioneTutela.objects.filter(
+            tutore=persona,
+            responsabilita_genitoriale=True,
+            minore__in=attive.filter(ruolo=RuoloAppartenenza.RAGAZZO).values("persona_id"),
+        ).select_related("minore")
+        if t.minore.e_minorenne(giorno)
+    ]
+    if socio and figli_minori:
+        return {"qualita": "Socio e genitore", "voto": True}
+    if socio:
+        return {"qualita": "Socio", "voto": True}
+    if figli_minori:
+        return {"qualita": "Genitore", "voto": True}
+    return {"qualita": "Genitore di un socio maggiorenne", "voto": False}
 
 
 def _collegate(unita) -> list[int]:

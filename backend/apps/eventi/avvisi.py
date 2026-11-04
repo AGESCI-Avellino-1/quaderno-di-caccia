@@ -13,7 +13,7 @@ from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia
 from apps.permessi.policy import genitori_vedono
 
-from .models import Cerchia, Evento, StatoPartecipazione, TipoEvento
+from .models import CERCHIE_CONVOCATE, Evento, StatoPartecipazione, TipoEvento
 
 
 def indirizzi_famiglia(persone, categoria: str) -> list[str]:
@@ -70,7 +70,7 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
     )
     indirizzi = (
         indirizzi_diretti(partecipanti, "eventi")
-        if evento.cerchia == Cerchia.GENITORI
+        if evento.cerchia in CERCHIE_CONVOCATE
         else indirizzi_famiglia(partecipanti, "eventi")
     )
     return invia(

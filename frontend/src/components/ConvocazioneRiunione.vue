@@ -13,9 +13,20 @@ const convocazione = ref<Convocazione | null>(null)
 const caricamento = ref<{ nome: string; percentuale: number } | null>(null)
 const conferma = ref(false)
 const daTogliere = ref<number | null>(null)
+const presenzeDa = ref<number | null>(null)
+
+function mostra(dati: Convocazione) {
+  convocazione.value = dati
+  presenzeDa.value = dati.presenze_da?.id ?? null
+}
 
 async function leggi() {
-  convocazione.value = await api.convocazione(props.evento)
+  mostra(await api.convocazione(props.evento))
+}
+
+async function indicaPresenze() {
+  const dati = await esegui(() => api.indicaPresenze(props.evento, presenzeDa.value))
+  if (dati) mostra(dati)
 }
 
 onMounted(async () => {
@@ -29,7 +40,7 @@ onMounted(async () => {
 async function invia() {
   const dati = await esegui(() => api.inviaConvocazione(props.evento))
   conferma.value = false
-  if (dati) convocazione.value = dati
+  if (dati) mostra(dati)
 }
 
 async function carica(evento: Event) {
@@ -126,6 +137,37 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
         Carico {{ caricamento.nome }}: {{ caricamento.percentuale }}%. Non chiudere la pagina.
       </p>
     </div>
+
+    <form
+      v-if="convocazione.puo_indicare_presenze"
+      class="row g-3 align-items-end mb-3"
+      @submit.prevent="indicaPresenze"
+    >
+      <div class="col-12 sm:col-8">
+        <label class="form-label small" :for="`presenze-da-${evento}`">
+          Chi segna le presenze, oltre ai capigruppo
+        </label>
+        <select
+          :id="`presenze-da-${evento}`"
+          v-model="presenzeDa"
+          class="form-control form-control-sm"
+        >
+          <option :value="null">Nessun altro</option>
+          <option v-for="p in convocazione.candidati_presenze" :key="p.id" :value="p.id">
+            {{ p.cognome }} {{ p.nome }}
+          </option>
+        </select>
+      </div>
+      <div class="col-12 sm:col-4">
+        <button
+          type="submit"
+          class="btn btn-sm btn-outline theme-primary w-100"
+          :disabled="inCorso"
+        >
+          Indica
+        </button>
+      </div>
+    </form>
 
     <template v-if="convocazione.puo_inviare">
       <button

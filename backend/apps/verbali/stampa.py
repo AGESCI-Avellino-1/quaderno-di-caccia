@@ -176,17 +176,66 @@ def flowable_del_testo(html: str) -> list:
 def _firme(verbale: Verbale, tipo: str) -> list:
     """The space to sign: never for the meetings with the ragazzi, which are informal
     (DEC-324)."""
-    if tipo not in (TipoVerbale.COCA, TipoVerbale.GENITORI):
+    if tipo == TipoVerbale.ASSEMBLEA:
+        presidente = verbale.cariche.get("presidente", {}).get("nome", "")
+        righe = [f"Il presidente: {presidente}"] + [
+            f"Il segretario: {s['nome']}" for s in verbale.cariche.get("segretari", [])
+        ]
+    elif tipo in (TipoVerbale.COCA, TipoVerbale.GENITORI):
+        righe = [f"Chi ha scritto il verbale: {verbale.autore_nome}"]
+    else:
         return []
-    nome = escape(verbale.autore_nome)
-    tabella = Table(
-        [[Paragraph(f"Chi ha scritto il verbale: {nome}", CELLA)], [""], [""]],
-        colWidths=[LARGHEZZA * 0.6],
-        rowHeights=[6 * mm, 10 * mm, 2 * mm],
-        hAlign="LEFT",
+    elementi: list = [Spacer(1, 4 * mm)]
+    for riga in righe:
+        tabella = Table(
+            [[Paragraph(escape(riga), CELLA)], [""], [""]],
+            colWidths=[LARGHEZZA * 0.6],
+            rowHeights=[6 * mm, 10 * mm, 2 * mm],
+            hAlign="LEFT",
+        )
+        tabella.setStyle(TableStyle([("LINEBELOW", (0, 1), (0, 1), 0.5, "#000000")]))
+        elementi += [Spacer(1, 4 * mm), tabella]
+    return elementi
+
+
+def _intestazione_assemblea(verbale: Verbale, tipo: str) -> list:
+    if tipo != TipoVerbale.ASSEMBLEA:
+        return []
+    presidente = verbale.cariche.get("presidente", {}).get("nome", "")
+    segretari = ", ".join(s["nome"] for s in verbale.cariche.get("segretari", []))
+    return [
+        Paragraph(f"<b>Presidente:</b> {escape(presidente)}", TESTO),
+        Paragraph(f"<b>Segretari:</b> {escape(segretari)}", TESTO),
+    ]
+
+
+def _presenti(verbale: Verbale, tipo: str) -> list:
+    """Who was there; at the assembly with who may vote, no child named (DEC-326, DEC-328)."""
+    if not verbale.presenti:
+        return []
+    assemblea = tipo == TipoVerbale.ASSEMBLEA
+    testata = ["Presente", "Qualità", "Diritto di voto"] if assemblea else ["Presente"]
+    righe = [[Paragraph(f"<b>{t}</b>", CELLA) for t in testata]]
+    for p in verbale.presenti:
+        riga = [Paragraph(escape(p["nome"]), CELLA)]
+        if assemblea:
+            riga += [
+                Paragraph(escape(p.get("qualita", "")), CELLA),
+                Paragraph("Sì" if p.get("voto") else "No", CELLA),
+            ]
+        righe.append(riga)
+    larghezze = [LARGHEZZA * 0.45, LARGHEZZA * 0.35, LARGHEZZA * 0.2] if assemblea else [LARGHEZZA]
+    tabella = Table(righe, colWidths=larghezze, repeatRows=1)
+    tabella.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LINEBELOW", (0, 0), (-1, -1), 0.25, "#cccccc"),
+                ("LINEBELOW", (0, 0), (-1, 0), 0.75, "#462d7b"),
+            ]
+        )
     )
-    tabella.setStyle(TableStyle([("LINEBELOW", (0, 1), (0, 1), 0.5, "#000000")]))
-    return [Spacer(1, 8 * mm), tabella]
+    return [Spacer(1, 5 * mm), tabella]
 
 
 def pdf(verbale: Verbale, tipo: str) -> bytes:
@@ -208,7 +257,9 @@ def pdf(verbale: Verbale, tipo: str) -> bytes:
         Paragraph("Verbale della riunione", TITOLO),
         Paragraph(escape(f"{evento.titolo} – {_giorno(verbale)}"), SOTTOTITOLO),
         Spacer(1, 5 * mm),
+        *_intestazione_assemblea(verbale, tipo),
         *flowable_del_testo(verbale.testo),
+        *_presenti(verbale, tipo),
         *_firme(verbale, tipo),
     ]
     pagina = decora_pagina(gruppo, MARGINE)

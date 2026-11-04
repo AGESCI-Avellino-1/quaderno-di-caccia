@@ -62,7 +62,12 @@ class Cerchia(models.TextChoices):
     CONSIGLIO_ANZIANI = "CDA", "Consiglio degli Anziani"
     # The parents of the unit's members, or of the whole group (DEC-325).
     GENITORI = "GENITORI", "Riunione dei genitori"
+    # The members of age and the parents of the minors, for the whole group (DEC-326).
+    SOCI = "SOCI", "Assemblea dei soci"
 
+
+# Convened one at a time with an email and documents; nobody says whether they come (DEC-327).
+CERCHIE_CONVOCATE = {Cerchia.GENITORI, Cerchia.SOCI}
 
 # Who of a reparto is invited, and who of a branco or cerchio.
 CERCHIE_DI_REPARTO = {
@@ -192,6 +197,10 @@ class Evento(ModelloTracciato):
     motivo_annullamento = models.CharField(max_length=300, blank=True)
     # When the convocation went out, with its attachments (DEC-327).
     convocata_il = models.DateTimeField(null=True, blank=True)
+    # At the assembly attendance is marked by the capigruppo or who they choose (DEC-326).
+    presenze_da = models.ForeignKey(
+        "anagrafica.Persona", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     creato_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
@@ -227,6 +236,9 @@ class Evento(ModelloTracciato):
         if self.cerchia == Cerchia.GENITORI:
             if self.livello not in (Livello.UNITA, Livello.GRUPPO):
                 errori.append("Una riunione dei genitori è di una o più unità o del gruppo.")
+        elif self.cerchia == Cerchia.SOCI:
+            if self.livello != Livello.GRUPPO:
+                errori.append("L'assemblea dei soci è di tutto il gruppo.")
         elif self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
             errori.append(
                 "Consiglio Capi, Con.Ca.Vi., Alta Squadriglia e Consiglio degli Anziani "

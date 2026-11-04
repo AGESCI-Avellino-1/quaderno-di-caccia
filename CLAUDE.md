@@ -445,6 +445,9 @@ implements them:
 - Minutes (DEC-322…DEC-331, `apps/verbali`): online only, never cached. Attachments go to the
   Drive in 8 MB pieces through the app (the proxies stop at 20 MB, the session address stays on
   the server) and come back as a stream: this is why gunicorn runs with threads (a sync worker
-  is killed after 30 s of download) and answers carry `X-Accel-Buffering: no`.
+  is killed after 30 s of download) and answers carry `X-Accel-Buffering: no`. The parents'
+  meetings and the assembly (DEC-325…DEC-327, `Cerchia.GENITORI`/`SOCI`) are one at a time, with
+  a convocation (`verbali/convocazione.py`) that always goes; who is there is copied into the
+  definitive minutes of the assembly and the Co.Ca. (five years, DEC-328).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

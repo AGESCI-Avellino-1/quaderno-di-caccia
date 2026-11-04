@@ -580,11 +580,15 @@ _TIPI = [
         "riunione, finché non è definitivo o si indica che non c'è. Arriva sempre.",
         "Verbale da scrivere: [Riunione] del [Data]",
         "<p>Ciao,</p><p>il verbale della riunione <strong>[Riunione]</strong> del [Data] non è "
-        "ancora definitivo.</p><p>Lo trovi qui:<br>[Link]</p><p>Se per questa riunione il "
-        "verbale non c'è, puoi indicarlo nella stessa pagina: il promemoria non arriverà più.</p>",
+        "ancora definitivo.</p><p>Lo trovi qui:<br>[Link]</p><p>[Nota]</p>",
         (
             Segnaposto("Riunione", "il titolo della riunione", "Comunità capi", True),
             Segnaposto("Data", "il giorno della riunione", "07/11/2026", True),
+            Segnaposto(
+                "Nota",
+                "come fermare i promemoria, se per quella riunione si può",
+                "Se per questa riunione il verbale non c'è, puoi indicarlo nella stessa pagina.",
+            ),
             _link("la pagina della riunione"),
         ),
     ),

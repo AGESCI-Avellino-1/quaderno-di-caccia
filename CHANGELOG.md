@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.12.0 — 4 novembre 2026
+
+### Novità
+
+**Organigramma**: dopo gli incarichi di Comunità capi ci sono gli staff delle unità, una sezione per unità (L/C, E/G, R/S) con capo unità, staff e assistente ecclesiastico. Si guardano soltanto: si nominano sempre dalla pagina dell'unità, che si apre toccando il suo nome.
+
+**Elenco degli incarichi in PDF**:
+
+- cognome e nome in maiuscolo, come negli elenchi di BuonaStrada;
+- in ogni unità prima i capi unità e in Comunità capi prima i capigruppo, la capo prima del capo; poi gli altri per cognome;
+- nel menu «Incarichi da includere», oltre a «Tutti» e «Nessuno», «Educativi» (tutti tranne tesorieri e amministratore tecnico) e «Non educativi» (tesoriere di gruppo, tesoriere di unità, amministratore tecnico).
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.12.0
+```
+
+Nessuna migrazione del database. `.env`, `compose.prod.yml` e virtual host non cambiano.
+
 ## 1.11.0 — 4 novembre 2026
 
 ### Novità

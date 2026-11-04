@@ -14,7 +14,7 @@ const giorno = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 </script>
 
 <template>
-  <main class="container py-5">
+  <section>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <template v-if="peg">
       <h1 class="h4 mb-1">Progetto Educativo di Gruppo</h1>
@@ -35,5 +35,5 @@ const giorno = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div v-if="peg.testo" v-html="peg.testo"></div>
       </template>
     </template>
-  </main>
+  </section>
 </template>

@@ -26,6 +26,8 @@ BLOCCATE = [
     ("scrittura", re.compile(r"^/api/v1/io/email$")),  # DEC-157
     ("scrittura", re.compile(r"^/api/v1/io/telefono$")),  # one's own choice (DEC-301)
     (None, re.compile(r"^/api/v1/io/passkey$")),  # someone else's passkeys (DEC-295)
+    ("scrittura", re.compile(r"^/api/v1/persone/\d+/progetto-capo$")),  # DEC-335
+    ("scrittura", re.compile(r"^/api/v1/progetti-capo/")),
     (None, re.compile(r"^/api/v1/richieste-diritti")),  # DEC-102
     (None, re.compile(r"^/api/v1/persone/\d+/fascicolo$")),
     (None, re.compile(r"^/api/v1/campo/")),  # offline downloads: nothing is saved

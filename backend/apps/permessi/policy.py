@@ -1616,6 +1616,12 @@ def puo_vedere_fascicolo_capo(user, persona: Persona) -> bool:
     return _capo_pieno(user)
 
 
+def puo_scrivere_progetto_capo(user, persona: Persona) -> bool:
+    """Only the capo: the capigruppo read it like the rest of the Co.Ca. (DEC-335)."""
+    propria = persona_di(user)
+    return propria is not None and propria.pk == persona.pk and e_capo_persona(persona)
+
+
 def puo_modificare_fascicolo_capo(user, persona: Persona) -> bool:
     """Rebuilt years and training: the capo or a capogruppo (DEC-134, DEC-207)."""
     if not e_capo_persona(persona):

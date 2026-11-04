@@ -16,7 +16,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from apps.core.anno import AnnoAssociativo
-from apps.core.file_caricati import disposizione
+from apps.core.file_caricati import MASSIMO_SUL_SERVER, disposizione
 from apps.core.stampa import decora_pagina, intestazione
 from apps.core.testo_pdf import LARGHEZZA, MARGINE, TITOLO, flowable_del_testo
 from apps.organizzazione.models import Gruppo, TipoUnita, Unita
@@ -159,7 +159,7 @@ def pagina_download(request):
         "puo_caricare": carica,
         "unita": unita,
         "anni": _anni_scelta() if carica else [],
-        "massimo": servizi.MASSIMO_SUL_SERVER,
+        "massimo": MASSIMO_SUL_SERVER,
     }
 
 

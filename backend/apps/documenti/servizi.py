@@ -14,10 +14,9 @@ from apps.anagrafica.preferenze import accetta
 from apps.core.anno import AnnoAssociativo
 from apps.core.file_caricati import (
     DOCUMENTI,
-    MASSIMO_SUL_SERVER,
+    controlla_file,
     estensione,
-    nome_pulito,
-    prime_giuste,
+    togli_file_dopo,
 )
 from apps.impostazioni.email import invia as invia_email
 from apps.impostazioni.html import pulisci
@@ -30,33 +29,10 @@ ERRORE_TIPO = "Puoi caricare PDF, Word, Excel o PowerPoint."
 ERRORE_TIPO_PEG = "Il Progetto Educativo di Gruppo si carica come PDF."
 
 
-def _controlla_file(file, tipi: dict, errore: str) -> tuple[str, str]:
-    """The cleaned name and the type served, or a refusal with a sentence for the person."""
-    nome = nome_pulito(file.name or "", "documento")
-    ext = estensione(nome)
-    if ext not in tipi:
-        raise ValidationError(errore)
-    if file.size > MASSIMO_SUL_SERVER:
-        raise ValidationError("Il file è troppo grande: il massimo è 20 MB.")
-    inizio = file.read(16)
-    file.seek(0)
-    if not inizio or not prime_giuste(tipi, ext, inizio):
-        raise ValidationError(errore)
-    return nome, tipi[ext][0]
-
-
 def _metti_file(documento, file, nome: str) -> None:
     documento.file.save(f"{uuid.uuid4().hex}{estensione(nome)}", file, save=False)
     documento.nome_file = nome
     documento.dimensione = file.size
-
-
-def _togli_file_dopo(file_field) -> None:
-    """Only once saved: a failed change must not lose the file."""
-    if not file_field:
-        return
-    storage, nome = file_field.storage, file_field.name
-    transaction.on_commit(lambda: storage.delete(nome))
 
 
 # --- Documents ---------------------------------------------------------------------------
@@ -85,7 +61,7 @@ def crea_documento(documento: Documento, unita: list[Unita], file) -> Documento:
     _controlla_campi(documento, unita)
     if file is None:
         raise ValidationError("Scegli il file da caricare.")
-    nome, tipo = _controlla_file(file, DOCUMENTI, ERRORE_TIPO)
+    nome, tipo = controlla_file(file, DOCUMENTI, ERRORE_TIPO)
     _metti_file(documento, file, nome)
     documento.tipo_file = tipo
     documento.save()
@@ -99,8 +75,8 @@ def modifica_documento(documento: Documento, unita: list[Unita], file) -> Docume
     else changes no label (DEC-342)."""
     _controlla_campi(documento, unita)
     if file is not None:
-        nome, tipo = _controlla_file(file, DOCUMENTI, ERRORE_TIPO)
-        _togli_file_dopo(documento.file)
+        nome, tipo = controlla_file(file, DOCUMENTI, ERRORE_TIPO)
+        togli_file_dopo(documento.file)
         _metti_file(documento, file, nome)
         documento.tipo_file = tipo
         documento.file_cambiato_il = timezone.now()
@@ -111,7 +87,7 @@ def modifica_documento(documento: Documento, unita: list[Unita], file) -> Docume
 
 @transaction.atomic
 def elimina_documento(documento: Documento) -> None:
-    _togli_file_dopo(documento.file)
+    togli_file_dopo(documento.file)
     documento.delete()
 
 
@@ -227,7 +203,7 @@ def nuova_versione_peg(versione: VersionePeg, file, testo: str) -> VersionePeg:
     if bool(file) == bool(pulito):
         raise ValidationError("Carica il PDF oppure scrivi il testo.")
     if file:
-        nome, _ = _controlla_file(file, {".pdf": DOCUMENTI[".pdf"]}, ERRORE_TIPO_PEG)
+        nome, _ = controlla_file(file, {".pdf": DOCUMENTI[".pdf"]}, ERRORE_TIPO_PEG)
         _metti_file(versione, file, nome)
     versione.testo = pulito
     versione.save()
@@ -237,5 +213,5 @@ def nuova_versione_peg(versione: VersionePeg, file, testo: str) -> VersionePeg:
 @transaction.atomic
 def elimina_versione_peg(versione: VersionePeg) -> None:
     """A mistake: the previous version is in force again by itself (DEC-343)."""
-    _togli_file_dopo(versione.file)
+    togli_file_dopo(versione.file)
     versione.delete()

@@ -700,6 +700,21 @@ export interface PegPubblico {
   ha_pdf: boolean
 }
 
+/** The capo's project (DEC-335). */
+export interface ProgettoCapo {
+  versioni: {
+    id: number
+    data: string
+    ha_testo: boolean
+    nome_file: string
+    dimensione: number
+    in_vigore: boolean
+  }[]
+  puo_modificare: boolean
+  massimo: number
+}
+
+export const fileProgettoCapo = (id: number) => `/api/v1/progetti-capo/${id}/file`
 export const fileDocumento = (id: number) => `/api/v1/documenti/${id}/file`
 export const fileVersionePeg = (id: number) => `/api/v1/peg/versioni/${id}/file`
 export const PEG_PUBBLICO_PDF = '/api/v1/peg/pubblico.pdf'
@@ -3019,6 +3034,14 @@ export const api = {
       metodo: 'POST',
       corpo: { nome, dimensione },
     }),
+  progettoCapo: (persona: number) =>
+    richiesta<ProgettoCapo>(`/api/v1/persone/${persona}/progetto-capo`),
+  nuovoProgettoCapo: (persona: number, corpo: FormData) =>
+    richiesta<ProgettoCapo>(`/api/v1/persone/${persona}/progetto-capo`, { metodo: 'POST', corpo }),
+  testoProgettoCapo: (id: number) =>
+    richiesta<{ testo: string }>(`/api/v1/progetti-capo/${id}/testo`),
+  togliProgettoCapo: (id: number) =>
+    richiesta<ProgettoCapo>(`/api/v1/progetti-capo/${id}`, { metodo: 'DELETE' }),
   download: () => richiesta<Download>('/api/v1/download'),
   caricaDocumento: (corpo: FormData) =>
     richiesta<DocumentoDownload>('/api/v1/documenti', { metodo: 'POST', corpo }),

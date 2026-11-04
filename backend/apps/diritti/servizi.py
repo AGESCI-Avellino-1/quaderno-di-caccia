@@ -30,7 +30,7 @@ from apps.anagrafica.servizi import come_testo, telefono_in_squadriglia
 from apps.buonacaccia.models import IscrizioneBuonaCaccia, QuotaFormazione
 from apps.core.anno import AnnoAssociativo
 from apps.dispositivi.models import Dispositivo
-from apps.fascicolo.models import Formazione, ServizioPassato
+from apps.fascicolo.models import Formazione, ProgettoCapo, ServizioPassato
 from apps.iscrizioni.models import RichiestaIscrizione
 from apps.note.models import Nota, RegoleRapporto
 from apps.organizzazione.models import Incarico
@@ -252,6 +252,10 @@ def fascicolo(persona: Persona) -> dict:
                 "Luogo": f.luogo,
             }
             for f in Formazione.objects.filter(persona=persona)
+        ],
+        "progetto_del_capo": [
+            {"Data": _giorno(p.creato_il), "File": p.nome_file, "Testo": p.testo}
+            for p in ProgettoCapo.objects.filter(persona=persona)
         ],
         "foto_profilo": [_giorno(f.creato_il) for f in FotoProfilo.objects.filter(persona=persona)],
         "reperibilita_per_evento": [
@@ -567,6 +571,7 @@ def anteprima_cancellazione(persona: Persona) -> dict:
         "Note di staff e del capo squadriglia, regole sul rapporto con il minore",
         "Foto profilo, anche quelle precedenti, e allegati alla Progressione",
         "Anni di servizio ricostruiti e formazione inseriti a mano",
+        "Progetto del capo, con tutte le versioni",
         "Account, dispositivi e inviti",
         "Iscrizioni dall'app e moduli firmati caricati",
         "Iscrizioni agli eventi su BuonaCaccia: liberatorie, risposte, foto e presentazione "
@@ -625,6 +630,11 @@ def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
         for f in foto:
             f.file.delete(save=False)
             f.delete()
+        progetti = list(ProgettoCapo.objects.filter(persona=persona))
+        _cancella_storico(progetti)
+        for p in progetti:
+            p.file.delete(save=False)
+            p.delete()
         for modello in (Nota, RegoleRapporto, ServizioPassato, Formazione, PeriodoPercorso):
             oggetti = list(modello.objects.filter(persona=persona))
             _cancella_storico(oggetti)

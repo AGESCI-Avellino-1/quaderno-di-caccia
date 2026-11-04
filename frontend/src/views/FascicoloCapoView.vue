@@ -10,6 +10,7 @@ import {
   type FormazioneIn,
 } from '@/api/qdc'
 import InputDataParziale from '@/components/InputDataParziale.vue'
+import ProgettoDelCapo from '@/components/ProgettoDelCapo.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePersona } from '@/composables/useNomePagina'
 
@@ -141,6 +142,8 @@ const serveSpecifica = () => formazione.tipo === 'MODULO' || formazione.tipo ===
           </dd>
         </template>
       </dl>
+
+      <ProgettoDelCapo :persona="id" />
 
       <section class="mb-5">
         <div class="d-flex flex-wrap align-items-center gap-3 mb-3">

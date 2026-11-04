@@ -173,6 +173,13 @@ def prepara(request, persona: Persona) -> bytes:
                 "servizio-e-formazione.json",
                 json.dumps(capi.fascicolo(persona), ensure_ascii=False, indent=2, default=str),
             )
+        for p in persona.progetti_capo.all():
+            giorno = f"{p.creato_il:%Y-%m-%d}-{p.pk}"
+            if p.file:
+                with p.file.open("rb") as f:
+                    archivio.writestr(f"progetto-del-capo/{giorno}.pdf", f.read())
+            else:
+                archivio.writestr(f"progetto-del-capo/{giorno}.html", p.testo)
         for anno in _anni_nel_gruppo(persona):
             dati = servizi.fascicolo_anno(request, persona, AnnoAssociativo(anno))
             archivio.writestr(f"fascicolo-{anno - 1}-{anno}.pdf", stampa.pdf(dati))

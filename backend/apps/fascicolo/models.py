@@ -58,6 +58,26 @@ class ServizioPassato(ModelloTracciato):
             raise ValidationError("Scrivi quale ruolo nelle note.")
 
 
+class ProgettoCapo(ModelloTracciato):
+    """A version of the capo's project (DEC-335): text or PDF, never in the audit log. The
+    latest is in force; not tied to a scout year."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="progetti_capo")
+    testo = models.TextField(blank=True)
+    # A random name on disk; served only by the API.
+    file = models.FileField(upload_to="progetti-capo/", blank=True)
+    nome_file = models.CharField(max_length=200, blank=True)
+    dimensione = models.BigIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "progetto del capo"
+        verbose_name_plural = "progetti del capo"
+        ordering = ["-creato_il", "-pk"]
+
+    def __str__(self) -> str:
+        return f"Progetto del capo di {self.persona}"
+
+
 class Formazione(ModelloTracciato):
     """A training camp or module, entered by hand (DEC-134, DEC-208)."""
 

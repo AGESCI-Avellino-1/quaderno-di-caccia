@@ -1,21 +1,23 @@
 """The file of a year (DEC-38, DEC-203), the passage report (DEC-41, DEC-204) and the
 capi's file (DEC-47, DEC-206…DEC-208)."""
 
-from datetime import date
+from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import File, Router, Schema, Status, UploadedFile
+from ninja import File, Form, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
 from apps.core.anno import AnnoAssociativo
 from apps.core.date_parziali import PrecisioneData
+from apps.core.file_caricati import MASSIMO_SUL_SERVER, disposizione
 from apps.permessi import policy
 
-from . import capi, servizi, stampa, trasferimento
+from . import capi, progetto, servizi, stampa, trasferimento
+from .models import ProgettoCapo
 
 router = Router(tags=["fascicolo"])
 
@@ -110,6 +112,101 @@ def report_passaggio(request, passaggio_id: int, persona_id: int):
     )
     dati = servizi.report_passaggio(request, riga)
     return _pdf(dati, riga.persona, False, f"passaggio-{passaggio_id}-{persona_id}.pdf")
+
+
+# --- The capo's project (DEC-335) -------------------------------------------------------------
+
+
+class VersioneProgetto(Schema):
+    id: int
+    data: datetime
+    ha_testo: bool
+    nome_file: str
+    dimensione: int
+    in_vigore: bool
+
+
+class ProgettoOut(Schema):
+    versioni: list[VersioneProgetto]
+    puo_modificare: bool
+    massimo: int
+
+
+def _versione_progetto(versione, vigente_id: int | None) -> dict:
+    return {
+        "id": versione.pk,
+        "data": versione.creato_il,
+        "ha_testo": bool(versione.testo),
+        "nome_file": versione.nome_file,
+        "dimensione": versione.dimensione,
+        "in_vigore": versione.pk == vigente_id,
+    }
+
+
+def _progetto_out(request, persona: Persona) -> dict:
+    versioni = list(persona.progetti_capo.all())
+    vigente = versioni[0].pk if versioni else None
+    return {
+        "versioni": [_versione_progetto(v, vigente) for v in versioni],
+        "puo_modificare": policy.puo_scrivere_progetto_capo(request.auth, persona),
+        "massimo": MASSIMO_SUL_SERVER,
+    }
+
+
+@router.get("/persone/{persona_id}/progetto-capo", response=ProgettoOut)
+def progetto_capo(request, persona_id: int):
+    return _progetto_out(request, _capo(request, persona_id))
+
+
+@router.post("/persone/{persona_id}/progetto-capo", response={201: ProgettoOut})
+def nuovo_progetto(
+    request, persona_id: int, testo: Form[str] = "", file: File[UploadedFile] = None
+):
+    persona = _capo(request, persona_id)
+    if not policy.puo_scrivere_progetto_capo(request.auth, persona):
+        raise HttpError(403, "Il progetto lo scrive solo il capo.")
+    try:
+        progetto.nuova_versione(persona, file, testo)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    return Status(201, _progetto_out(request, persona))
+
+
+def _versione_leggibile(request, versione_id: int):
+    versione = get_object_or_404(ProgettoCapo.objects.select_related("persona"), pk=versione_id)
+    if not policy.puo_vedere_fascicolo_capo(request.auth, versione.persona):
+        raise HttpError(404, "Non trovato.")
+    return versione
+
+
+@router.get("/progetti-capo/{versione_id}/testo")
+def testo_progetto(request, versione_id: int) -> dict:
+    return {"testo": _versione_leggibile(request, versione_id).testo}
+
+
+@router.get("/progetti-capo/{versione_id}/file")
+def file_progetto(request, versione_id: int):
+    """The PDF loaded, or the one made from the text."""
+    versione = _versione_leggibile(request, versione_id)
+    if versione.file:
+        risposta = FileResponse(versione.file.open("rb"), content_type="application/pdf")
+        risposta["Content-Disposition"] = disposizione(versione.nome_file)
+    else:
+        risposta = HttpResponse(progetto.pdf_del_testo(versione), content_type="application/pdf")
+        risposta["Content-Disposition"] = disposizione("progetto-del-capo.pdf")
+    risposta["Cache-Control"] = "private, no-store"
+    risposta["X-Content-Type-Options"] = "nosniff"
+    return risposta
+
+
+@router.delete("/progetti-capo/{versione_id}", response=ProgettoOut)
+def togli_progetto(request, versione_id: int):
+    versione = _versione_leggibile(request, versione_id)
+    persona = versione.persona
+    if not policy.puo_scrivere_progetto_capo(request.auth, persona):
+        raise HttpError(403, "Il progetto lo scrive solo il capo.")
+    progetto.elimina(versione)
+    return _progetto_out(request, persona)
 
 
 # --- The capi's file (DEC-47, DEC-134, DEC-206…DEC-208) --------------------------------------

@@ -9,11 +9,11 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------- | ---------- | ------ |
-| [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata                                | Funzione | Medio   | Media      | VAL    |
+| [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata                                | Funzione | Medio   | Media      | WIP    |
 | [#20](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/20) | Modelli di convocazione e verbali del gruppo su carta intestata   | Funzione | Medio   | Alta       | VER    |
 | [#19](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/19) | Download: documenti del gruppo scaricabili in app                 | Funzione | Basso   | Media      | VER    |
 | [#18](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/18) | Progetto Educativo di Gruppo (PEG): caricamento e storico         | Funzione | Medio   | Media      | VER    |
-| [#17](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/17) | Progetto del capo: inserimento e consultazione da parte della Co.Ca. | Funzione | Basso   | Media      | WIP    |
+| [#17](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/17) | Progetto del capo: inserimento e consultazione da parte della Co.Ca. | Funzione | Basso   | Media      | VER    |
 | [#16](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/16) | Calendario: voce «Tutti i miei eventi» come selezione predefinita | Modifica | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
@@ -108,6 +108,11 @@ destinazione «Co.Ca.» vuol dire in pratica «nessuna famiglia».
 3. pdf.js caricato solo quando serve: dipendenza nuova, da provare sui telefoni. nginx risponde
    `X-Frame-Options: DENY`, ma pdf.js disegna nella pagina e non lo richiede.
 4. Esportazione e cancellazione (`diritti`), archivio e trasferimento del fascicolo.
+
+**Scelta fatta in sviluppo.** Il trasferimento a un altro gruppo porta solo i testi: un PDF non starebbe nel
+file, che deve restare sotto i 20 MB dei proxy. I PDF restano nello ZIP dell'archivio.
+
+**Provato in Chromium** (il PDF si disegna nella pagina). Da provare su iPhone e Android.
 
 ### #16 Calendario
 

@@ -4,6 +4,8 @@ from what the browser says; names cleaned before they reach a header or a ZIP.""
 import re
 from pathlib import PurePosixPath
 
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils.encoding import escape_uri_path
 
 # Word, Excel and PowerPoint are ZIP files, or OLE the old ones.
@@ -45,3 +47,26 @@ def prime_giuste(tipi: dict, ext: str, inizio: bytes) -> bool:
 def disposizione(nome: str) -> str:
     semplice = nome.encode("ascii", "replace").decode().replace("?", "_")
     return f"attachment; filename=\"{semplice}\"; filename*=UTF-8''{escape_uri_path(nome)}"
+
+
+def controlla_file(file, tipi: dict, errore: str) -> tuple[str, str]:
+    """The cleaned name and the type served, or a refusal with a sentence for the person."""
+    nome = nome_pulito(file.name or "", "documento")
+    ext = estensione(nome)
+    if ext not in tipi:
+        raise ValidationError(errore)
+    if file.size > MASSIMO_SUL_SERVER:
+        raise ValidationError("Il file è troppo grande: il massimo è 20 MB.")
+    inizio = file.read(16)
+    file.seek(0)
+    if not inizio or not prime_giuste(tipi, ext, inizio):
+        raise ValidationError(errore)
+    return nome, tipi[ext][0]
+
+
+def togli_file_dopo(file_field) -> None:
+    """Only once saved: a failed change must not lose the file."""
+    if not file_field:
+        return
+    storage, nome = file_field.storage, file_field.name
+    transaction.on_commit(lambda: storage.delete(nome))

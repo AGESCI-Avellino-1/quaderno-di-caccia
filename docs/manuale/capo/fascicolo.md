@@ -47,3 +47,16 @@ formazione, la nomina a capo.
 ![Servizio e formazione sul telefono](../img/capo/fascicolo-capo-telefono.png){.telefono width="30%"}
 ![Servizio e formazione sul computer](../img/capo/fascicolo-capo-computer.png){.computer width="65%"}
 :::
+
+## Il progetto del capo
+
+Nel tuo fascicolo di capo, alla voce **Progetto del capo**, inserisci il tuo progetto. Lo vedi tu e lo vede
+tutta la Comunità capi; lo scrivi solo tu, nemmeno i capigruppo possono cambiarlo. Serve la rete.
+
+1. Tocca **Inserisci il progetto** e scegli **Scrivo il testo** (è il modo preferito) oppure **Carico un PDF**,
+   al massimo 20 MB.
+2. Tocca **Salva**.
+
+Quando lo aggiorni, tocca **Nuova versione**: quella di prima resta consultabile e l'ultima è **In vigore**.
+Con **Leggi** lo apri nella pagina, con **Scarica il PDF** ne hai una copia: dal testo l'app fa un PDF su foglio
+semplice, senza carta intestata, perché è un documento personale.

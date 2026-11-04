@@ -15,3 +15,4 @@ class FascicoloConfig(AppConfig):
 
         auditlog.register(models.ServizioPassato)
         auditlog.register(models.Formazione)
+        auditlog.register(models.ProgettoCapo, exclude_fields=["testo"])

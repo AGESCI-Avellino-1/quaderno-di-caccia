@@ -180,6 +180,12 @@ def esporta(persona: Persona) -> dict:
                 {k: (_d(v) if isinstance(v, date) else v) for k, v in f.items() if k != "id"}
                 for f in dati["formazione"]
             ],
+            # Only the texts: a PDF would not fit in a file that must stay under the proxies'
+            # 20 MB. The archive's ZIP has the PDFs too.
+            "progetti": [
+                {"data": _d(p.creato_il.date()), "testo": p.testo}
+                for p in persona.progetti_capo.exclude(testo="")
+            ],
         }
     return {
         "formato": FORMATO,
@@ -297,7 +303,8 @@ def importa(dati: dict, utente) -> dict:
     registry (BuonaStrada moves the membership). The periods keep where they come from;
     an open period stays open only if the person has none here (DEC-213)."""
     from apps.buonacaccia.models import TipoCampoFormazione
-    from apps.fascicolo.models import Formazione, RuoloPassato, ServizioPassato
+    from apps.fascicolo.models import Formazione, ProgettoCapo, RuoloPassato, ServizioPassato
+    from apps.impostazioni.html import pulisci
     from apps.note.models import Nota
     from apps.progressione.models import (
         Conclusione,
@@ -474,6 +481,10 @@ def importa(dati: dict, utente) -> dict:
                 registrata_da=utente,
             )
             conteggio["formazione"] += 1
+        for p in capo.get("progetti", []):
+            testo = pulisci(p.get("testo") or "", immagini=False)
+            if testo:
+                ProgettoCapo.objects.create(persona=persona, testo=testo)
     except (KeyError, TypeError, ValueError) as errore:
         raise ValidationError(
             "Il file è incompleto o danneggiato: niente è stato importato."

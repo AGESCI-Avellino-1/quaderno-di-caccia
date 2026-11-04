@@ -64,52 +64,75 @@ delle modifiche.
 - Permessi in `policy.py` con i test per ogni ruolo; esportazione e cancellazione dei dati
   (`diritti/servizi.py`); manuale.
 
-**Fattibile a blocchi**, ognuno rilasciabile da solo:
+**Fattibile a blocchi:**
 
 | Blocco | Contenuto                                                        | Impatto | Difficoltà |
 | ------ | ---------------------------------------------------------------- | ------- | ---------- |
 | 1      | Incarichi di squadriglia, assegnati dal capo squadriglia         | Basso   | Bassa      |
-| 2      | Verbale e PDF per le riunioni che esistono già                   | Medio   | Media      |
+| 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già | Medio   | Alta       |
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 
-**Già deciso dal maintainer (04/11/2026).** Un incarico può avere più persone e una persona può
-averne più di uno. Chi scrive il verbale di squadriglia lo decide il capo squadriglia, anche se il
-cronista gira a rotazione. L'infermiere è solo un ruolo e non vede nessun dato in più di prima. Il
-file degli incarichi è sul computer del maintainer (`ignored/Incarichi di Squadriglia.pdf`): cassiere,
-cicala, cronista, guardiano dell'angolo, guardiano dello stile, guardiano del tempo, infermiere,
-liturgista, magazziniere, aiuto magazziniere, mercurio.
+**Deciso dal maintainer il 04/11/2026** (da riportare nell'analisi prima dello sviluppo):
 
-**Da decidere prima di sviluppare**, con una proposta dove c'è:
+- **Incarichi di squadriglia:** cassiere, cicala, cronista, guardiano dell'angolo, guardiano dello
+  stile, guardiano del tempo, infermiere, liturgista, magazziniere, aiuto magazziniere, mercurio
+  (elenco in `ignored/Incarichi di Squadriglia.pdf`). Un incarico può avere più persone e una persona
+  può averne più di uno; non danno permessi, nemmeno l'infermiere. Li assegnano il capo squadriglia e
+  lo staff del reparto (un capogruppo solo se è in quello staff); il vice no, salvo abilitazione. Li
+  vedono la squadriglia, i suoi genitori e i capi.
+- **Chi legge il verbale:** Co.Ca. solo i capi; squadriglia i membri, i loro genitori e i capi; Alta
+  Squadriglia, Consiglio Capi e Con.Ca.Vi. gli invitati e i capi; riunioni dei genitori e assemblea
+  gli invitati e i capi.
+- **Chi scrive:** riunione per riunione chi ne ha il potere indica una persona tra gli invitati o un
+  capo, e può sempre scrivere e correggere: capo squadriglia e staff per la squadriglia; lo staff per
+  Alta Squadriglia, Consiglio Capi e Con.Ca.Vi.; i capigruppo per Co.Ca. e assemblea; per le riunioni
+  dei genitori i capigruppo e, se di una sola unità, anche il suo staff. Il cronista è proposto per
+  primo, ma serve sempre la scelta del capo squadriglia.
+- **Stati:** bozza (la vedono chi scrive, chi l'ha indicato e i capi) e definitivo (lo leggono gli
+  aventi diritto, con il PDF). Lo rende definitivo e lo riapre, con un motivo, chi può indicare chi
+  scrive; l'anno chiuso lo blocca. Niente approvazione alla riunione successiva.
+- **Firme nel PDF:** presidente e segretari per l'assemblea, chi ha scritto per Co.Ca. e riunioni dei
+  genitori; nessuna per le riunioni con i ragazzi, che sono informali.
+- **Riunioni dei genitori:** di gruppo o di una o più unità, create dallo staff o dai capigruppo. Sono
+  invitati i genitori e i tutori, e i capi dello staff (per il gruppo tutta la Co.Ca.). Un figlio
+  maggiorenne non partecipa, ma può scegliere di partecipare al posto dei genitori. Presenze segnate
+  dallo staff (per il gruppo da qualunque capo), senza effetto su quelle dei figli; nessuna assenza da
+  comunicare.
+- **Assemblea dei soci:** convocata dai capigruppo. Invitati: capi e R/S maggiorenni e genitori e tutori
+  dei minorenni, con diritto di voto; genitori di maggiorenni senza figli minorenni, senza voto, che
+  leggono comunque il verbale. Il voto si conta per socio: ogni minorenne vale un voto, espresso da uno
+  solo dei genitori; un genitore socio vota anche per sé. Le votazioni, le deleghe e il numero legale
+  restano fuori dall'app: al massimo si scrivono nel verbale. Presidente uno, socio maggiorenne o
+  genitore; segretari uno o più; si scelgono tra i presenti. Presenze segnate dai capigruppo o da una
+  persona indicata. Il PDF elenca i presenti con il diritto di voto, copiati nel verbale definitivo.
+- **Email:** per riunioni dei genitori e assemblea anche alla convocazione e all'aggiunta di allegati,
+  con i file allegati fino a una certa dimensione (sopra, titolo e link); gli allegati restano
+  disponibili nell'app.
+- **Conservazione:** i verbali restano senza scadenza. Per assemblea e Co.Ca. (Terzo Settore) nomi e
+  presenti restano per 5 anni anche se una persona viene cancellata o archiviata; dopo, e subito per gli
+  altri tipi, il nome scelto dall'elenco si toglie. Il testo libero non cambia da solo: la cancellazione
+  segnala i verbali col nome e decide il capogruppo.
+- **Riservatezza:** il testo non entra mai nel registro delle modifiche; le letture e i PDF scaricati si
+  registrano solo per la Co.Ca.
+- **Limiti:** solo online, nessuna lettura o scrittura offline; niente immagini nel testo; nessun verbale
+  per Consiglio degli Anziani e riunioni ordinarie di unità.
+- **Allegati al verbale:** PDF, immagini, Word, Excel, PowerPoint, audio e video, con le regole di lettura
+  del verbale, fuori dal PDF, caricati sul Drive del gruppo; se possibile, ZIP con verbale e allegati su
+  richiesta.
+- **Obbligo e promemoria:** l'assemblea deve avere il verbale; Co.Ca. e riunioni dei genitori mandano un
+  promemoria, salvo che si indichi, anche dopo la riunione, che non c'è verbale; gli altri tipi sono
+  facoltativi e senza promemoria.
+- **Ordine:** incarichi, verbali per le riunioni esistenti, riunioni dei genitori, assemblea; una sola
+  versione alla fine di tutti i blocchi.
 
-1. **Chi legge ogni tipo di verbale?** Proposta: Co.Ca. solo i capi; squadriglia la squadriglia, i suoi
-   genitori e i capi; Alta Squadriglia, Consiglio Capi e Con.Ca.Vi. gli invitati e i capi; genitori e
-   assemblea tutti gli invitati e i capi.
-2. **Chi scrive i verbali di Co.Ca. e delle riunioni dei genitori?** Proposta: i capigruppo, che possono
-   indicare un'altra persona per quella riunione.
-3. **Come si indica chi scrive?** Proposta: per ogni riunione si sceglie una persona (il capo squadriglia
-   o lo staff); capo squadriglia e staff possono sempre scrivere. Il cronista è proposto per primo, ma
-   l'incarico da solo non dà permessi.
-4. **Chi assegna gli incarichi se manca il capo squadriglia?** Proposta: anche lo staff del reparto e i
-   capigruppo.
-5. **Riunioni dei genitori:** di tutto il gruppo, di un'unità o entrambe? Chi le crea? Sono invitati
-   entrambi i genitori? Chi segna le presenze?
-6. **Assemblea dei soci:** chi la convoca? Un genitore per ogni minorenne o per famiglia? Servono deleghe,
-   numero legale o voti? Quanti segretari?
-7. **Il verbale si approva?** Proposta: bozza e definitivo; da definitivo si cambia solo riaprendolo, e
-   l'anno chiuso lo blocca. Nel PDF, spazi per le firme?
-8. **Per quanto si conserva?** Oggi le presenze diventano totali annui dopo due anni: per l'assemblea
-   l'elenco dei presenti andrebbe conservato nel verbale. Cosa succede ai nomi scritti nel testo quando si
-   cancella una persona? Proposta: il testo resta e la cancellazione lo segnala a chi la esegue; da
-   verificare col gruppo gli obblighi di legge.
-9. **I verbali sono dati riservati?** Quelli di Co.Ca. possono parlare di minori. Proposta: testo fuori dal
-   registro delle modifiche (lì lo vedrebbe anche l'amministratore tecnico) e letture registrate, come per
-   gli altri dati sensibili.
-10. **Limiti della prima versione.** Proposta: si scrive solo online, si legge offline come le riunioni se
-    richiesto; niente immagini nel verbale (semplifica il PDF); niente verbali per Consiglio degli Anziani
-    e riunioni ordinarie di unità.
+**Ancora da decidere:** promemoria (quando e a chi), Drive (installazioni senza Drive, limiti, accesso alla
+cartella), se la #12 esce prima con una sua versione.
 
-Queste scelte vanno nell'analisi prima dello sviluppo.
+**Da verificare in sviluppo: allegati su Drive.** Oggi l'app carica su Drive solo gli archivi, tenendoli in
+memoria, e il server accetta file fino a 20 MB. Per audio e video servono caricamento a pezzi (forse diretto
+dal browser a Drive), lettura attraverso l'app per applicare i permessi e uno ZIP che non stia tutto in
+memoria.
 
 ## Chiuse
 

@@ -15,6 +15,9 @@ backend/media/
 *.sqlite3
 *.sqlite3-journal
 
+# --- Details of security reports not yet public: maintainer's copy only ----------------
+TODO_security.md
+
 # --- Python --------------------------------------------------------------------------
 __pycache__/
 *.py[cod]

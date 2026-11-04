@@ -60,4 +60,6 @@ Questo file si aggiorna su richiesta, leggendo la situazione su GitHub.
   la release è pubblicata, si chiude su GitHub indicando la release nel commento di chiusura.
 - **Non si procede:** la issue passa a NO e si chiude su GitHub.
 - **Segnalazioni di sicurezza non ancora pubbliche:** questo file è pubblico, quindi finché la
-  segnalazione non è pubblicata si scrive solo il suo codice GHSA, senza titolo né valutazioni.
+  segnalazione non è pubblicata si scrive solo il suo codice GHSA, senza titolo né valutazioni. I
+  dettagli delle segnalazioni attive stanno in `TODO_security.md`, che resta sul computer del
+  maintainer e non va su GitHub.

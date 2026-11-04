@@ -388,3 +388,63 @@ def test_avviso_del_peg_a_scelta(capogruppo, capo, genitore, ragazza):
 
 def test_durata_sconosciuta_rifiutata(capo):
     assert _carica(capo, per_coca=True, durata="ALTRO").status_code == 422
+
+
+# --- Warning before it goes ------------------------------------------------------------------
+
+
+def _in_scadenza(chi, giorni=5):
+    giorno = (date.today() + timedelta(days=giorni)).isoformat()
+    return _carica(chi, per_coca=True, durata="DATA", scade_il=giorno)
+
+
+def test_avviso_una_volta_una_settimana_prima(capo, capogruppo):
+    _in_scadenza(capo)
+    _in_scadenza(capo, giorni=20)
+    mail.outbox.clear()
+    assert servizi.avvisa_scadenze(date.today()) == 1
+    assert [m.to[0] for m in mail.outbox] == [capo.utente.email]
+    assert "si cancella" in mail.outbox[0].body
+    mail.outbox.clear()
+    assert servizi.avvisa_scadenze(date.today()) == 0
+    assert mail.outbox == []
+
+
+def test_il_preavviso_parte_col_comando_quotidiano(capo):
+    _in_scadenza(capo)
+    mail.outbox.clear()
+    call_command("pulisci_documenti")
+    assert len(mail.outbox) == 1
+    assert Documento.objects.exists()
+
+
+def test_nuova_scadenza_nuovo_avviso(capo):
+    _in_scadenza(capo)
+    servizi.avvisa_scadenze(date.today())
+    documento = Documento.objects.get()
+    assert documento.avvisato_scadenza_il is not None
+    url = f"/api/v1/documenti/{documento.pk}"
+    # Other changes keep it; another last day starts again.
+    stessa = _dati(
+        per_coca="true", durata="DATA", scade_il=documento.scade_il.isoformat(), titolo="Altro"
+    )
+    assert _client(capo).post(url, stessa).status_code == 200
+    documento.refresh_from_db()
+    assert documento.avvisato_scadenza_il is not None
+    altra = {**stessa, "scade_il": (date.today() + timedelta(days=4)).isoformat()}
+    assert _client(capo).post(url, altra).status_code == 200
+    documento.refresh_from_db()
+    assert documento.avvisato_scadenza_il is None
+
+
+def test_senza_autore_avvisa_i_capigruppo(capo, capogruppo):
+    _in_scadenza(capo)
+    Documento.objects.update(autore=None)
+    mail.outbox.clear()
+    servizi.avvisa_scadenze(date.today())
+    assert [m.to[0] for m in mail.outbox] == [capogruppo.utente.email]
+
+
+def test_chi_resta_fino_a_eliminazione_non_ha_avviso(capo):
+    _carica(capo, per_coca=True)
+    assert servizi.avvisa_scadenze(date.today()) == 0

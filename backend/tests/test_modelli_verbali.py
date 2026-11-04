@@ -174,6 +174,20 @@ def test_convocazione_parte_col_pdf_e_si_ferma(capogruppo, capo, genitore, estra
     assert _convocazione(assemblea, capogruppo).status_code == 400
 
 
+def test_verbale_senza_mai_inviare_la_convocazione(capogruppo, capo, assemblea):
+    """Convened by other means: the data make the minutes, also entered after the meeting."""
+    momento = timezone.now() - timedelta(days=1)
+    Evento.objects.filter(pk=assemblea.pk).update(inizio=momento, fine=momento)
+    mail.outbox.clear()
+    assert _convocazione(assemblea, capogruppo).status_code == 200
+    _segna(assemblea, capo, capogruppo)
+    _cariche(assemblea, capogruppo, capo, capogruppo)
+    _verbale_compilato(assemblea, capogruppo, capo)
+    assert _post(capogruppo, _url(assemblea, "/verbale/definitivo")).status_code == 200
+    assert "chiuso al 30/09/2026" in Verbale.objects.get(evento=assemblea).testo
+    assert mail.outbox == []
+
+
 def test_solo_chi_convoca_compila(capo, genitore, estraneo, assemblea):
     for chi in (capo, genitore, estraneo):
         assert _convocazione(assemblea, chi).status_code == 403

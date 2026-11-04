@@ -10,5 +10,8 @@ class Command(BaseCommand):
     help = "Cancella i documenti scaduti."
 
     def handle(self, *args, **options) -> None:
-        cancellati = servizi.cancella_scaduti(timezone.localdate())
+        oggi = timezone.localdate()
+        avvisati = servizi.avvisa_scadenze(oggi)
+        cancellati = servizi.cancella_scaduti(oggi)
+        self.stdout.write(f"Documenti in scadenza avvisati: {avvisati}.")
         self.stdout.write(f"Documenti cancellati: {cancellati}.")

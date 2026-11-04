@@ -418,6 +418,21 @@ _TIPI = [
         ),
         facoltativa=True,
     ),
+    TipoEmail(
+        "documento_in_scadenza",
+        "Documento in scadenza",
+        "A chi ha caricato un documento (o ai capigruppo), una settimana prima che si cancelli. "
+        "Arriva sempre.",
+        "Documento in scadenza: [Titolo]",
+        "<p>Ciao,</p><p>il documento <strong>[Titolo]</strong> si vede fino al [Scadenza]: dopo "
+        "si cancella anche dal server. Se serve ancora, cambia la scadenza da Download:<br>"
+        "[Link]</p>",
+        (
+            Segnaposto("Titolo", "il titolo del documento", "Regolamento del campo", True),
+            Segnaposto("Scadenza", "l'ultimo giorno", "30/09/2027", True),
+            _link("la pagina Download"),
+        ),
+    ),
     # --- Events on BuonaCaccia (always sent, DEC-168) --------------------------------------
     TipoEmail(
         "buonacaccia_iscrizione",

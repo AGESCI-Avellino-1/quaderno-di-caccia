@@ -50,6 +50,7 @@ SEMPRE = {
     "account_figlio",
     "promemoria_verbale",
     "convocazione_riunione",
+    "documento_in_scadenza",
     "documento_riunione",
 }
 # What the person asks for themself: never waits in the queue (DEC-311).

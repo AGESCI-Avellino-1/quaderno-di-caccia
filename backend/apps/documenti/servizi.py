@@ -1,7 +1,7 @@
 """Files of the Download page and the emails when asked for (DEC-342, DEC-343)."""
 
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -21,11 +21,18 @@ from apps.core.file_caricati import (
 from apps.impostazioni.email import invia as invia_email
 from apps.impostazioni.html import pulisci
 from apps.notifiche.servizi import notifica
-from apps.organizzazione.models import Incarico, Unita
-from apps.permessi.policy import STAFF_DI_UNITA, _con_collegate, genitori_vedono
+from apps.organizzazione.models import Incarico, RuoloIncarico, Unita
+from apps.permessi.policy import (
+    STAFF_DI_UNITA,
+    _con_collegate,
+    genitori_vedono,
+    persona_di,
+    puo_modificare_documento,
+)
 
 from .models import Documento, Durata, VersionePeg
 
+GIORNI_PREAVVISO = 7  # DEC-346
 ERRORE_TIPO = "Puoi caricare PDF, Word, Excel o PowerPoint."
 ERRORE_TIPO_PEG = "Il Progetto Educativo di Gruppo si carica come PDF."
 
@@ -75,6 +82,9 @@ def modifica_documento(documento: Documento, unita: list[Unita], file) -> Docume
     """A new file replaces the old one, which is deleted, and shows «aggiornato»; anything
     else changes no label (DEC-342)."""
     _controlla_campi(documento, unita)
+    prima = Documento.objects.get(pk=documento.pk).ultimo_giorno
+    if documento.ultimo_giorno != prima:
+        documento.avvisato_scadenza_il = None
     if file is not None:
         nome, tipo = controlla_file(file, DOCUMENTI, ERRORE_TIPO)
         togli_file_dopo(documento.file)
@@ -108,6 +118,45 @@ def cancella_scaduti(oggi: date) -> int:
 
 
 # --- Emails ------------------------------------------------------------------------------
+
+
+def _chi_gestisce(documento: Documento) -> list[Persona]:
+    """Who loaded it, while a capo; otherwise the capigruppo, who may renew it too."""
+    autore = documento.autore
+    if autore is not None and puo_modificare_documento(autore, documento):
+        persona = persona_di(autore)
+        if persona is not None:
+            return [persona]
+    incarichi = Incarico.objects.attivi().filter(ruolo=RuoloIncarico.CAPOGRUPPO)
+    return list(Persona.objects.filter(pk__in=incarichi.values("persona_id")))
+
+
+def avvisa_scadenze(oggi: date) -> int:
+    """Once, a week before the last day: after it the document goes for good (DEC-346)."""
+    avvisati = 0
+    fine = oggi + timedelta(days=GIORNI_PREAVVISO)
+    in_scadenza = Documento.objects.filter(
+        avvisato_scadenza_il__isnull=True, durata__in=(Durata.ANNO, Durata.DATA)
+    ).select_related("autore")
+    for documento in in_scadenza:
+        giorno = documento.ultimo_giorno
+        if giorno is None or not oggi <= giorno <= fine:
+            continue
+        persone = _chi_gestisce(documento)
+        invia_email(
+            "documento_in_scadenza",
+            {
+                "Titolo": documento.titolo,
+                "Scadenza": f"{giorno:%d/%m/%Y}",
+                "Link": f"{settings.FRONTEND_URL}/download",
+            },
+            {e for e in (_email(p) for p in persone) if e},
+        )
+        notifica("riepiloghi", persone, f"Documento in scadenza: {documento.titolo}", "/download")
+        documento.avvisato_scadenza_il = oggi
+        documento.save(update_fields=["avvisato_scadenza_il", "aggiornato_il"])
+        avvisati += 1
+    return avvisati
 
 
 def _email(persona: Persona) -> str:

@@ -42,6 +42,8 @@ class Documento(ModelloTracciato):
     autore = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    # Told once that it is about to go (DEC-346); a new last day starts again.
+    avvisato_scadenza_il = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "documento"

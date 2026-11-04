@@ -7,10 +7,20 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
+| Issue                                                                    | Titolo                                                    | Tipo     | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | --------------------------------------------------------- | -------- | ------- | ---------- | ------ |
+| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333) | Modifica | Basso   | Bassa      | VAL    |
 
-Nessuna issue e nessuna segnalazione di sicurezza aperta.
+Nessuna segnalazione di sicurezza aperta.
+
+### #15: cose da fare
+
+- `frontend/index.html`, `frontend/src/main.ts`: nell'app installata la schermata resta sopra l'app
+  finché non è passata la durata minima dall'apertura; nel browser sparisce appena l'app è pronta.
+- `QDC_DURATA_AVVIO` (secondi, 2 se non indicata, 0 come oggi), fissata alla costruzione:
+  `.env.example`, `compose.prod.yml`, `frontend/Dockerfile`, `frontend/vite.config.ts`.
+- Guida di installazione: la nuova variabile nella tabella.
+- L'immagine che iOS mostra per prima resta gestita dal sistema: la durata vale per la nostra pagina.
 
 ## Chiuse
 

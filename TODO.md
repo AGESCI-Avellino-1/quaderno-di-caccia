@@ -44,7 +44,7 @@ delle modifiche.
 | Blocco | Contenuto                                                        | Impatto | Difficoltà |
 | ------ | ---------------------------------------------------------------- | ------- | ---------- |
 | 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (**fatto**) | Basso   | Bassa      |
-| 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già | Medio   | Alta       |
+| 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già (in corso) | Medio   | Alta       |
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 

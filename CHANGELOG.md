@@ -5,6 +5,20 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.13.1 — 4 novembre 2026
+
+### Novità
+
+**Schermata di avvio**: nell'app installata si vedeva solo per un istante ([#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15)). Ora resta per almeno due secondi dall'apertura, mentre l'app si carica sotto; nel browser sparisce appena l'app è pronta, come prima.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.13.1
+```
+
+Nessuna migrazione del database. In `.env` non devi cambiare nulla: per una durata diversa scrivi i secondi in `QDC_DURATA_AVVIO` (vuota: 2; `0`: non aspetta), prima di aggiornare.
+
 ## 1.13.0 — 4 novembre 2026
 
 ### Novità

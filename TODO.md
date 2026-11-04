@@ -42,7 +42,8 @@ Stime fatte leggendo la issue e il codice, senza riprodurre nulla né decidere l
 
 ## Come si usa
 
-Questo file si aggiorna su richiesta, leggendo la situazione su GitHub.
+Questo file si aggiorna su richiesta, leggendo la situazione su GitHub. Una richiesta nata fuori da
+GitHub diventa prima una issue.
 
 **Impatto** è il rischio di fare danni al codice esistente implementando la soluzione.
 **Impatto** e **Difficoltà** valgono Basso/Bassa, Medio/Media oppure Alto/Alta.

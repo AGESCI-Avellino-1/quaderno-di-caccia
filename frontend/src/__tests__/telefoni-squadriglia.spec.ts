@@ -40,6 +40,10 @@ function stubFetch(lettura: unknown, stato = 200, chiamate: Chiamata[] = []) {
       if (metodo !== 'GET') {
         chiamate.push({ url, metodo, corpo: JSON.parse((opzioni?.body as string) ?? 'null') })
       }
+      // The patrol's roles have their own answer (DEC-321).
+      if (url.endsWith('/incarichi')) {
+        return risposta(200, { id: 1, nome: 'Aquile', incarichi: [], nomina: [] })
+      }
       return risposta(stato, lettura)
     }),
   )

@@ -5,6 +5,42 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.14.0 — 4 novembre 2026
+
+### Novità
+
+**Modelli AGESCI per l'assemblea e la Comunità capi** ([#20](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/20)): convocazione e verbale dell'assemblea si compilano dai dati e il testo lo scrive l'app, sulla carta intestata del gruppo.
+
+- La convocazione ha l'ordine del giorno a scelta, la prima convocazione di base alle 00:00 del giorno e la seconda all'orario della riunione; l'anno del bilancio e quello di elezione e quota si scelgono a parte.
+- Il verbale chiede ore, scrutatori, voti (favorevoli e contrari, oppure unanimità), risultato di bilancio a mano e quote: se manca qualcosa non diventa definitivo. I verbali già scritti restano come sono.
+- A richiesta, il verbale separato di approvazione del bilancio, con gli stessi dati.
+- Nelle riunioni di Comunità capi, quando serve, il verbale su Capi Gruppo, rappresentante legale e sede, con le sole parti cambiate.
+
+**Download** ([#19](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/19)): una nuova voce con i documenti caricati dai capi (PDF, Word, Excel, PowerPoint, fino a 20 MB), per la Comunità capi, per le unità e per i genitori. Alla scadenza il documento si cancella anche dal server, dopo un avviso una settimana prima.
+
+**Progetto Educativo di Gruppo** ([#18](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/18)): lo caricano i capigruppo, soci e genitori vedono tutte le versioni in Download, chiunque vede quella in vigore all'indirizzo `/peg`, collegato dalla pagina di accesso e aperto ai motori di ricerca.
+
+**Progetto del capo** ([#17](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/17)): nel fascicolo del capo, come testo o PDF, con le versioni. Lo scrive solo il capo, lo legge la Comunità capi; il PDF si legge dentro la pagina.
+
+**Notifiche sul telefono** ([#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21)): su riunioni ed eventi, scadenze di quote e BuonaCaccia, bacheca e documenti, avvisi per i capi. Per ogni tipo si sceglie email, notifica o entrambe, in Privacy e preferenze. Su iPhone servono l'app sulla schermata Home e il permesso. Il testo non contiene mai nomi di persone, importi o dati sanitari.
+
+**Calendario** ([#16](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/16)): per i capi la nuova vista **Tutti i miei eventi** è quella predefinita. Le altre viste ora contano anche gli assistenti ecclesiastici di unità e le unità collegate.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.14.0
+```
+
+Sette migrazioni del database, applicate da sole all'avvio. Dopo l'aggiornamento:
+
+- aggiungi al crontab il lavoro `pulisci_documenti` (la riga è in `deploy/cron/qdc.crontab`), altrimenti i documenti scaduti spariscono dalla vista ma non dal server;
+- le notifiche non si configurano, ma servono `QDC_CHIAVE_SEGRETI` in `.env` e che il server raggiunga i servizi di Apple, Google, Mozilla e Microsoft; le invia il servizio `posta`;
+- se il gruppo ha personalizzato l'informativa privacy, aggiungi il paragrafo sulle notifiche: è cambiato solo il testo predefinito;
+- la prima volta che apri il calendario, la vista ricordata dal browser riparte da **Tutti i miei eventi**.
+
+Le notifiche non sono ancora state provate su telefoni veri: se non arrivano, segnalalo con una issue.
+
 ## 1.13.1 — 4 novembre 2026
 
 ### Novità

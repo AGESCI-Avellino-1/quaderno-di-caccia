@@ -8,7 +8,10 @@ import type { EventoCalendario } from '@/api/qdc'
 export type ModoCalendario = 'mese' | 'elenco'
 
 const CHIAVE_MODO = 'qdc-calendario-modo'
-const CHIAVE_VISTA = 'qdc-calendario-vista'
+// A new name with «Tutti i miei eventi»: every capo moves to it once, then their choice is
+// remembered again (DEC-334).
+const CHIAVE_VISTA = 'qdc-calendario-vista-miei'
+const CHIAVE_VISTA_VECCHIA = 'qdc-calendario-vista'
 
 /** A local day as "yyyy-mm-dd" (not toISOString: that is UTC, the day may change). */
 export function chiaveGiorno(giorno: Date): string {
@@ -54,6 +57,7 @@ export function leggiModo(): ModoCalendario {
 
 export function leggiVista(): string {
   try {
+    localStorage.removeItem(CHIAVE_VISTA_VECCHIA)
     return localStorage.getItem(CHIAVE_VISTA) ?? ''
   } catch {
     return ''

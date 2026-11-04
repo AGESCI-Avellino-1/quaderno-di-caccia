@@ -21,6 +21,16 @@ const evento = (id: number, inizio: string, fine: string): EventoCalendario => (
   annullato: false,
 })
 
+describe('vista ricordata', () => {
+  afterEach(() => localStorage.clear())
+
+  it('una vista scelta prima di «Tutti i miei eventi» non conta più', () => {
+    localStorage.setItem('qdc-calendario-vista', 'gruppo')
+    expect(leggiVista()).toBe('')
+    expect(localStorage.getItem('qdc-calendario-vista')).toBeNull()
+  })
+})
+
 describe('mese del calendario', () => {
   it('settimane da lunedì, con i giorni dei mesi vicini', () => {
     // Novembre 2026 comincia di domenica.

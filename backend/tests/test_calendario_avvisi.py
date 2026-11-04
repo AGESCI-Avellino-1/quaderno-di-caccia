@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.eventi import calendario, servizi
-from apps.eventi.models import CalendarioPersonale, Evento, Livello, TipoEvento
+from apps.eventi.models import CalendarioPersonale, Evento, Livello, Partecipazione, TipoEvento
 from apps.organizzazione.models import Incarico, RuoloIncarico
 from apps.quote.models import CategoriaQuota, Destinatari, Quota, TipoQuota
 from tests.conftest import INIZIO_ANNO, crea_capo
@@ -250,9 +250,63 @@ def test_tre_viste_del_calendario_per_i_capi(
     assert titoli(capogruppo.utente, "coca") == {"Co.Ca."}
     del del_reparto, del_clan, di_coca
     viste = _client(staff).get("/api/v1/calendario").json()["viste"]
-    assert [v["vista"] for v in viste] == ["unita", "coca", "gruppo"]
-    assert viste[1]["url"].endswith("?vista=coca")
+    assert [v["vista"] for v in viste] == ["miei", "unita", "coca", "gruppo"]
+    assert viste[2]["url"].endswith("?vista=coca")
     assert _client(ragazza).get("/api/v1/calendario").json()["viste"] == []
+
+
+def test_tutti_i_miei_eventi(reparto, coca, clan_e_staff, staff, capogruppo, ragazza, genitore):
+    clan, staff_clan = clan_e_staff
+    _uscita(reparto, staff, titolo="Reparto")
+    del_clan = _uscita(clan, staff_clan, titolo="Clan")
+    _uscita(coca, capogruppo, titolo="Co.Ca.")
+    inizio = _futuro(40)
+    di_gruppo = Evento.objects.create(
+        titolo="Gruppo",
+        tipo=TipoEvento.USCITA,
+        livello=Livello.GRUPPO,
+        inizio=inizio,
+        fine=inizio + timedelta(hours=2),
+    )
+
+    def miei(persona):
+        return set(
+            calendario.eventi_del_calendario(persona.utente, "miei").values_list(
+                "titolo", flat=True
+            )
+        )
+
+    # A group event only with an invitation, and an invitation counts anywhere.
+    assert miei(staff) == {"Reparto", "Co.Ca."}
+    Partecipazione.objects.create(evento=di_gruppo, persona=staff)
+    Partecipazione.objects.create(evento=del_clan, persona=staff)
+    assert miei(staff) == {"Reparto", "Co.Ca.", "Gruppo", "Clan"}
+    # Who is not a capo: still only what they or their children are invited to.
+    assert "Co.Ca." not in miei(ragazza)
+    assert "Co.Ca." not in miei(genitore)
+
+
+def test_viste_con_assistente_e_unita_collegate(reparto, coca, staff):
+    from apps.organizzazione.models import Composizione, TipoUnita, Unita
+
+    collegata = Unita.objects.create(
+        gruppo=reparto.gruppo,
+        nome="Altro reparto",
+        tipo=TipoUnita.REPARTO,
+        composizione=Composizione.MISTA,
+        collegata_a=reparto,
+    )
+    reparto.collegata_a = collegata
+    reparto.save(update_fields=["collegata_a"])
+    _uscita(collegata, staff, titolo="Collegata")
+    assistente = crea_capo("Paolo", "Assistente", "assistente@example.invalid")
+    Incarico.objects.create(
+        persona=assistente, ruolo=RuoloIncarico.AE_UNITA, unita=reparto, data_inizio=INIZIO_ANNO
+    )
+    for persona in (staff, assistente):
+        for vista in ("miei", "unita", "coca"):
+            titoli = calendario.eventi_del_calendario(persona.utente, vista)
+            assert titoli.filter(titolo="Collegata").exists()
 
 
 @pytest.fixture

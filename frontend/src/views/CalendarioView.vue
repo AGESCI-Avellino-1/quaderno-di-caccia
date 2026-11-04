@@ -18,7 +18,7 @@ import {
 } from '@/eventi/calendario'
 
 // The user's and their children's events as a month or as a list of the next ones; a
-// capo chooses among the three views (DEC-143, DEC-286). Files to download and the
+// capo chooses among the views, «Tutti i miei eventi» first (DEC-143, DEC-286, DEC-334). Files to download and the
 // personal link to subscribe. Online only for now.
 const { errore, esegui } = useErrore()
 const modo = ref<ModoCalendario>(leggiModo())

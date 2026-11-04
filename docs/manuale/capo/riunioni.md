@@ -4,6 +4,10 @@ Le riunioni non sono eventi: hanno una pagina loro e non hanno mai una quota. Ne
 **Attività**, tocca **Riunioni**: vedi le prossime riunioni, con **Riunioni passate** quelle già
 fatte. Le riunioni sono anche nel calendario, e le famiglie le vedono nell'app.
 
+Nel **Calendario** la voce **Tutti i miei eventi**, già scelta all'apertura, mostra quelli a cui
+sei invitato, quelli delle tue unità e quelli della Comunità capi. Gli altri eventi di gruppo sono
+in **Tutto il gruppo**.
+
 :::{container} schermate
 ![Le riunioni sul telefono](../img/capo/riunioni-telefono.png){.telefono width="30%"}
 ![Le riunioni sul computer](../img/capo/riunioni-computer.png){.computer width="65%"}

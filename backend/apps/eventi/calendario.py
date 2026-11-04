@@ -6,13 +6,15 @@ from datetime import UTC, datetime
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
-from apps.organizzazione.models import Branca, Incarico, RuoloIncarico, TipoUnita
+from apps.organizzazione.models import Branca, TipoUnita
 from apps.permessi import policy
 
 from .models import Evento, Livello, StatoPartecipazione
 
-# A capo chooses among three views (DEC-143); everyone else has one.
+# A capo chooses among these views, the first by default (DEC-143, DEC-334); everyone else
+# has one. A feed without a view keeps giving "unita": links people already subscribed to.
 VISTE = {
+    "miei": "Tutti i miei eventi",
     "unita": "Solo la mia unità",
     "coca": "Co.Ca. e la mia unità",
     "gruppo": "Tutto il gruppo",
@@ -24,11 +26,12 @@ def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
     they take part in. A capo, by view: the events of the units they serve; also
     those of the Co.Ca. and of the whole group; or every event of the group (their own
     participation as a member of the Co.Ca. is the second view, not the first; their own
-    BuonaCaccia events are in every view)."""
+    BuonaCaccia events are in every view). "miei": what they are invited to, the units
+    they serve and the Co.Ca., but no group event without an invitation (DEC-334)."""
     persone = [p.pk for p in policy.tutelati(utente) if policy.genitori_vedono(p, "scheda")]
     propria = policy.persona_di(utente)
     capo = propria is not None and policy.e_capo(utente)
-    if propria is not None and not capo:
+    if propria is not None and (not capo or vista == "miei"):
         persone.append(propria.pk)
     filtro = Q(
         partecipazioni__persona_id__in=persone,
@@ -43,13 +46,13 @@ def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
             partecipazioni__persona=propria,
             partecipazioni__stato=StatoPartecipazione.INVITATO,
         )
-        servite = Incarico.objects.attivi().filter(
-            persona=propria,
-            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA},
-        )
-        filtro |= Q(unita__in=servite.values("unita_id")) | Q(
-            squadriglia__unita__in=servite.values("unita_id")
-        )
+        # With the unit's assistente ecclesiastico and the linked units (DEC-279, DEC-281).
+        servite = policy._unita_servite(utente)
+        filtro |= Q(unita__in=servite) | Q(squadriglia__unita__in=servite)
+        if vista == "miei":
+            filtro |= Q(unita__tipo=TipoUnita.COMUNITA_CAPI) | Q(
+                livello=Livello.BRANCA, branca=Branca.COCA
+            )
         if vista == "coca":
             filtro |= (
                 Q(livello=Livello.GRUPPO)

@@ -5,6 +5,39 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.11.0 — 4 novembre 2026
+
+### Novità
+
+**Riunioni**, separate dagli eventi, nel menu «Riunioni»:
+
+- si creano come serie (per esempio ogni sabato dal 1° ottobre al 31 maggio) o singole; di una serie si annulla o si sposta una sola riunione, e solo allora parte un'email;
+- tipi: di unità e di Comunità capi, di squadriglia, di Alta Squadriglia, Consiglio Capi, Con.Ca.Vi. e Consiglio degli Anziani;
+- uniforme sì o no, informazioni scritte con l'editor, nessuna quota; presenze e calendario come prima;
+- le località del gruppo (sedi, basi) le gestiscono i capigruppo nelle Impostazioni; una località nuova scritta creando una riunione entra subito nell'elenco;
+- le riunioni già create sono diventate riunioni, con le loro presenze.
+
+**Turni di squadriglia e di sestiglia**: dalla pagina dell'unità lo staff definisce i turni (pulizia, preghiera…) e le sestiglie, e li fa girare ogni settimana o ogni mese. Ognuno vede il turno della sua squadriglia o sestiglia sulle riunioni; lo staff può cambiarlo a mano.
+
+**Email un po' alla volta**: le email a molte persone partono a blocchi (di base 20, poi 2 minuti di pausa, al massimo 400 al giorno), cambiabili in Impostazioni. Codici di accesso e nuove password partono subito.
+
+**Account**:
+
+- in Soci e Genitori, «Invita chi non ha un account» manda l'invito a più persone insieme;
+- il link personale per un ragazzo dai 14 ai 18 anni senza account: lo generano lo staff, i capigruppo e il capo squadriglia, e si manda come si vuole (WhatsApp, a voce…); i genitori ricevono un'email quando l'account è creato;
+- un capogruppo porta un genitore in Comunità capi con «Porta in Comunità capi…» e può annullare finché il codice socio è provvisorio; il vecchio link di iscrizione da capo non c'è più (quelli già mandati valgono fino alla scadenza);
+- l'amministratore tecnico ha la pagina «Account», con tutti gli account e le azioni su ognuno (sblocca, disattiva, cambia l'email, cancella…): ogni azione chiede un motivo e la persona riceve un'email.
+
+**Piccole cose**: cliccando sull'avatar accanto a un nome si apre la scheda, se si ha il permesso di vederla; nel PDF dell'organigramma i tipi di incarico si scelgono da un menu a scelta multipla; nell'elenco degli incarichi in PDF chi ha un codice provvisorio è «NUOVO CENSITO».
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.11.0
+```
+
+Sei migrazioni del database, applicate da sole all'avvio. In `compose.prod.yml` c'è un servizio nuovo, `posta`, che manda le email in coda: si avvia con gli altri. Dopo l'aggiornamento controlla con `docker compose ps` che `posta` sia avviato; se resta fermo, le email a molte persone aspettano (i suoi messaggi sono in `docker compose logs posta`). In `.env.example` c'è la voce facoltativa `QDC_EMAIL_IN_CODA` (di base attiva): non serve aggiungerla. Il virtual host non cambia.
+
 ## 1.10.0 — 3 novembre 2026
 
 ### Novità

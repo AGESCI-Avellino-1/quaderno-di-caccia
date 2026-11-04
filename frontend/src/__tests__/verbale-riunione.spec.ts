@@ -8,6 +8,7 @@ import { risposta } from './aiuti'
 
 const base: Verbale = {
   tipo: 'SQUADRIGLIA',
+  da_modello: false,
   stato: 'BOZZA',
   testo: '',
   non_previsto: false,

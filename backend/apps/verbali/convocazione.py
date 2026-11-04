@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from apps.anagrafica.models import Persona
 from apps.eventi.avvisi import indirizzi_diretti, quando
-from apps.eventi.models import CERCHIE_CONVOCATE, Evento, StatoPartecipazione
+from apps.eventi.models import CERCHIE_CONVOCATE, Cerchia, Evento, StatoPartecipazione
 
 from .models import AllegatoVerbale
 
@@ -66,10 +66,20 @@ def _testo_documenti(dentro, fuori) -> str:
     return " ".join(parti)
 
 
-def _invia(evento: Evento, modello: str, allegati) -> int:
+def pdf_del_modello(evento: Evento) -> bytes:
+    """The assembly's convocation on the group's letterhead (DEC-337), never stored: its data
+    do not change once sent, and it stays readable in the app."""
+    from . import modelli, servizi, stampa
+
+    inviata = timezone.localdate(evento.convocata_il) if evento.convocata_il else None
+    return stampa.pdf_convocazione(modelli.testo_convocazione(servizi.verbale_di(evento), inviata))
+
+
+def _invia(evento: Evento, modello: str, allegati, primo=()) -> int:
     from apps.impostazioni.email import invia as invia_email
 
     dentro, fuori = _da_allegare(allegati)
+    dentro = [*primo, *dentro]
     return invia_email(
         modello,
         {
@@ -88,9 +98,19 @@ def invia(evento: Evento) -> int:
         raise ValidationError("La convocazione è già stata inviata.")
     if not si_puo_inviare(evento):
         raise ValidationError("La riunione è passata o annullata.")
+    assemblea = evento.cerchia == Cerchia.SOCI
+    if assemblea:
+        from . import modelli, servizi
+
+        mancanti = modelli.mancanti_convocazione(servizi.verbale_di(evento))
+        if mancanti:
+            raise ValidationError("Per inviarla manca: " + "; ".join(mancanti) + ".")
     evento.convocata_il = timezone.now()
     evento.save(update_fields=["convocata_il", "aggiornato_il"])
-    return _invia(evento, "convocazione_riunione", list(allegati_di(evento)))
+    primo = ()
+    if assemblea:
+        primo = (("convocazione-assemblea.pdf", pdf_del_modello(evento), "application/pdf"),)
+    return _invia(evento, "convocazione_riunione", list(allegati_di(evento)), primo)
 
 
 def allegato_aggiunto(allegato: AllegatoVerbale) -> int:

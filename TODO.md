@@ -10,9 +10,9 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo                                                            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------- | ---------- | ------ |
 | [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata                                | Funzione | Medio   | Media      | VAL    |
-| [#20](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/20) | Modelli di convocazione e verbali del gruppo su carta intestata   | Funzione | Medio   | Alta       | WIP    |
-| [#19](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/19) | Download: documenti del gruppo scaricabili in app                 | Funzione | Basso   | Media      | VAL    |
-| [#18](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/18) | Progetto Educativo di Gruppo (PEG): caricamento e storico         | Funzione | Medio   | Media      | VAL    |
+| [#20](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/20) | Modelli di convocazione e verbali del gruppo su carta intestata   | Funzione | Medio   | Alta       | VER    |
+| [#19](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/19) | Download: documenti del gruppo scaricabili in app                 | Funzione | Basso   | Media      | WIP    |
+| [#18](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/18) | Progetto Educativo di Gruppo (PEG): caricamento e storico         | Funzione | Medio   | Media      | WIP    |
 | [#17](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/17) | Progetto del capo: inserimento e consultazione da parte della Co.Ca. | Funzione | Basso   | Media      | VAL    |
 | [#16](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/16) | Calendario: voce «Tutti i miei eventi» come selezione predefinita | Modifica | Basso   | Bassa      | VER    |
 
@@ -72,9 +72,14 @@ cinque gruppi: da controllare in sviluppo quanti tipi mostrare, per non fare una
    documento della convocazione (DEC-327).
 5. Test, manuale e dati di prova.
 
-**Rischio.** Il cambio uno a molti tocca il flusso dei verbali appena rilasciato. Il verbale della Co.Ca.
-può indicare come redattore un capo che non vede i dati dei Capi Gruppo: lo compilano i capigruppo
-[da verificare durante lo sviluppo].
+**Scelte fatte in sviluppo.** Il verbale principale resta uno per riunione: i verbali in più sono
+`VerbaleCollegato`, così il flusso già rilasciato non cambia. Il verbale collegato lo compilano solo i
+capigruppo, non chi è indicato come redattore. Agli esiti del voto il testo aggiunge «con N voti favorevoli
+e M contrari» o «all'unanimità» anche in elezione e quota, dove il modello non li prevede [da verificare
+col maintainer].
+
+**Da provare nel browser.** Testato con i test automatici e controllando i PDF generati; non provato a mano
+nell'interfaccia. Le schermate del manuale non sono rigenerate.
 
 ### #19 Download e #18 PEG
 

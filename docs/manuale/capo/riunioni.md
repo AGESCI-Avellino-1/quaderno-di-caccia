@@ -120,6 +120,9 @@ c'è, spunta **Per questa riunione il verbale non c'è**.
 
 Di quello di Comunità capi resta registrata ogni lettura: i capigruppo la vedono in **Chi l'ha letto**.
 
+Quando cambiano i capi gruppo, il rappresentante legale o la sede, i capigruppo compilano anche il
+[verbale collegato](../gruppo/assemblea.md#il-verbale-su-capi-gruppo-rappresentante-legale-e-sede).
+
 :::{container} schermate
 ![Il verbale di una riunione sul telefono](../img/capo/verbale-telefono.png){.telefono width="30%"}
 ![Il verbale di una riunione sul computer](../img/capo/verbale-computer.png){.computer width="65%"}

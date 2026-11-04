@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { api, allegatoVerbale, type Convocazione } from '@/api/qdc'
+import { api, allegatoVerbale, convocazionePdf, type Convocazione } from '@/api/qdc'
 import { caricaAPezzi, misura } from '@/components/allegatiVerbale'
+import ConvocazioneAssemblea from '@/components/ConvocazioneAssemblea.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The convocation of a meeting of the parents (DEC-327): the documents first, then one
@@ -85,6 +86,19 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
     <p v-else-if="convocazione.puo_gestire" class="small fg-2 mb-3">
       Non è ancora stata inviata: aggiungi i documenti, poi invia la convocazione agli invitati.
     </p>
+
+    <ConvocazioneAssemblea
+      v-if="convocazione.da_modello && convocazione.puo_gestire"
+      :evento="evento"
+      @salvata="leggi"
+    />
+    <a
+      v-else-if="convocazione.da_modello && convocazione.convocata_il"
+      :href="convocazionePdf(evento)"
+      class="btn btn-sm btn-outline theme-primary align-self-start mb-3"
+    >
+      Scarica il PDF della convocazione
+    </a>
 
     <h3 class="h6">Documenti</h3>
     <ul class="list-unstyled mb-3">

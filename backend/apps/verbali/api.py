@@ -17,8 +17,8 @@ from apps.eventi.models import Evento
 from apps.permessi import policy
 from apps.permessi.models import Azione, registra_accesso_verbale
 
-from . import convocazione, servizi, stampa
-from .models import AllegatoVerbale, TipoVerbale, Verbale
+from . import convocazione, modelli, servizi, stampa
+from .models import AllegatoVerbale, TipoCollegato, TipoVerbale, Verbale, VerbaleCollegato
 
 router = Router(tags=["verbali"])
 
@@ -52,6 +52,8 @@ class VerbaleOut(Schema):
     tipo: str
     stato: str
     testo: str
+    # The assembly's: data asked for, the text comes from the template (DEC-336).
+    da_modello: bool
     non_previsto: bool
     # Only who has reminders can say there are no minutes.
     puo_dire_non_previsto: bool
@@ -160,7 +162,11 @@ def _out(request, verbale: Verbale) -> dict:
         )
         segretari = [f"{s.nome} {s.cognome}" for s in segretari_ora]
     puo_cariche = assemblea and policy.puo_scrivere_verbale(utente, verbale)
+    testo = verbale.testo
+    if verbale.da_modello and not verbale.definitivo:
+        testo = modelli.testo_assemblea(verbale)
     return {
+        "da_modello": verbale.da_modello,
         "presenti": presenti,
         "puo_cariche": puo_cariche,
         "candidati_cariche": list(servizi.presenti_segnati(evento)) if puo_cariche else [],
@@ -170,7 +176,7 @@ def _out(request, verbale: Verbale) -> dict:
         "segretari_ids": [s.pk for s in segretari_ora],
         "tipo": tipo,
         "stato": verbale.stato,
-        "testo": verbale.testo,
+        "testo": testo,
         "non_previsto": verbale.non_previsto,
         "puo_dire_non_previsto": indica
         and tipo in servizi.CON_PROMEMORIA
@@ -405,6 +411,8 @@ def scarica(request, allegato_id: int):
 
 class ConvocazioneOut(Schema):
     convocata_il: datetime | None
+    # The assembly: the letter comes from the AGESCI template (DEC-337).
+    da_modello: bool
     # At the assembly: who marks the attendance besides the capigruppo (DEC-326).
     puo_indicare_presenze: bool
     presenze_da: PersonaVerbale | None
@@ -428,6 +436,7 @@ def _convocazione_out(request, evento: Evento) -> dict:
     indica = policy.puo_indicare_presenze(request.auth, evento)
     invitati = Persona.objects.filter(partecipazioni__evento=evento).order_by("cognome", "nome")
     return {
+        "da_modello": evento.cerchia == "SOCI",
         "puo_indicare_presenze": indica,
         "presenze_da": evento.presenze_da,
         "candidati_presenze": list(invitati) if indica else [],
@@ -490,6 +499,335 @@ def nuovo_allegato_convocazione(request, evento_id: int, dati: NuovoAllegato):
         True,
     )
     return Status(201, allegato)
+
+
+# --- The templates: assembly (DEC-336…DEC-338) --------------------------------------------------
+
+
+class LuogoModello(Schema):
+    presso: str = ""
+    via: str = ""
+    civico: str = ""
+    cap: str = ""
+    citta: str = ""
+    provincia: str = ""
+
+
+class DatiConvocazione(Schema):
+    punti: list[str]
+    prima_il: datetime | None = None
+    anno_bilancio: int | None = None
+    anno_elezione: int | None = None
+    luogo: LuogoModello
+
+
+class ConvocazioneModelloOut(Schema):
+    dati: DatiConvocazione
+    mancanti: list[str]
+    testo: str
+    puo_modificare: bool
+    prima_il: datetime
+
+
+class Voti(Schema):
+    unanimita: bool = False
+    favorevoli: int | None = None
+    contrari: int | None = None
+
+
+class DatiVerbaleAssemblea(Schema):
+    ora_apertura: str = ""
+    ora_chiusura: str = ""
+    scrutatori: list[int] = []
+    voti: dict[str, Voti] = {}
+    risultato: str = ""
+    quota_gruppo: str = ""
+    quota_totale: str = ""
+    quota_modalita: str = ""
+    varie: str = ""
+    bilancio_separato: bool = False
+
+
+class VerbaleModelloOut(Schema):
+    dati: DatiVerbaleAssemblea
+    punti: list[str]
+    delibere: dict[str, str]
+    mancanti: list[str]
+    testo: str
+    candidati_scrutatori: list[PersonaVerbale]
+    puo_modificare: bool
+
+
+def _assemblea(evento_id: int) -> Evento:
+    evento = _con_convocazione(evento_id)
+    if evento.cerchia != "SOCI":
+        raise HttpError(404, "Questa riunione non ha un modello di convocazione.")
+    return evento
+
+
+def _convocazione_modello_out(request, evento: Evento) -> dict:
+    verbale = servizi.verbale_di(evento)
+    dati = modelli.dati_convocazione(verbale)
+    inviata = timezone.localdate(evento.convocata_il) if evento.convocata_il else None
+    return {
+        "dati": dati,
+        "mancanti": modelli.mancanti_convocazione(verbale),
+        "testo": modelli.testo_convocazione(verbale, inviata),
+        "puo_modificare": policy.puo_gestire_convocazione(request.auth, evento)
+        and evento.convocata_il is None,
+        "prima_il": modelli.prima_convocazione(evento, dati),
+    }
+
+
+@router.get("/eventi/{evento_id}/convocazione/modello", response=ConvocazioneModelloOut)
+def leggi_convocazione_modello(request, evento_id: int):
+    evento = _assemblea(evento_id)
+    if not policy.puo_gestire_convocazione(request.auth, evento) and not (
+        evento.convocata_il and policy.puo_leggere_convocazione(request.auth, evento)
+    ):
+        raise HttpError(404, "Non trovato.")
+    return _convocazione_modello_out(request, evento)
+
+
+@router.put("/eventi/{evento_id}/convocazione/modello", response=ConvocazioneModelloOut)
+def scrivi_convocazione_modello(request, evento_id: int, dati: DatiConvocazione):
+    evento = _assemblea(evento_id)
+    if not policy.puo_gestire_convocazione(request.auth, evento):
+        raise HttpError(403, "Non puoi convocare questa riunione.")
+    if not set(dati.punti) <= set(modelli.PUNTI):
+        raise HttpError(400, "Punto dell'ordine del giorno sconosciuto.")
+    salvati = dati.model_dump()
+    salvati["prima_il"] = dati.prima_il.isoformat() if dati.prima_il else None
+    _azione(servizi.salva_dati_convocazione, servizi.verbale_di(evento), salvati)
+    return _convocazione_modello_out(request, evento)
+
+
+@router.get("/eventi/{evento_id}/convocazione.pdf")
+def pdf_convocazione(request, evento_id: int):
+    evento = _assemblea(evento_id)
+    gestisce = policy.puo_gestire_convocazione(request.auth, evento)
+    if not gestisce and not (
+        evento.convocata_il and policy.puo_leggere_convocazione(request.auth, evento)
+    ):
+        raise HttpError(404, "Non trovato.")
+    risposta = HttpResponse(convocazione.pdf_del_modello(evento), content_type="application/pdf")
+    risposta["Content-Disposition"] = f'attachment; filename="convocazione-{evento_id}.pdf"'
+    risposta["Cache-Control"] = "private, no-store"
+    return risposta
+
+
+def _verbale_modello_out(request, verbale: Verbale) -> dict:
+    punti = modelli.dati_convocazione(verbale).get("punti", [])
+    puo = policy.puo_scrivere_verbale(request.auth, verbale)
+    return {
+        "dati": modelli.dati_verbale(verbale),
+        "punti": punti,
+        "delibere": {p: n for p, n in modelli.DELIBERE.items() if p in punti},
+        "mancanti": modelli.mancanti_verbale(verbale),
+        "testo": verbale.testo if verbale.definitivo else modelli.testo_assemblea(verbale),
+        "candidati_scrutatori": list(servizi.presenti_segnati(verbale.evento)) if puo else [],
+        "puo_modificare": puo,
+    }
+
+
+@router.get("/eventi/{evento_id}/verbale/modello", response=VerbaleModelloOut)
+def leggi_verbale_modello(request, evento_id: int):
+    evento = _assemblea(evento_id)
+    verbale = servizi.verbale_di(evento)
+    if not policy.puo_scrivere_verbale(request.auth, verbale) and not verbale.definitivo:
+        raise HttpError(404, "Non trovato.")
+    if not policy.puo_leggere_verbale(request.auth, verbale):
+        raise HttpError(404, "Non trovato.")
+    return _verbale_modello_out(request, verbale)
+
+
+@router.put("/eventi/{evento_id}/verbale/modello", response=VerbaleModelloOut)
+def scrivi_verbale_modello(request, evento_id: int, dati: DatiVerbaleAssemblea):
+    evento = _assemblea(evento_id)
+    verbale = servizi.verbale_di(evento)
+    if not policy.puo_scrivere_verbale(request.auth, verbale):
+        raise HttpError(403, "Non puoi scrivere questo verbale.")
+    autore = policy.persona_di(request.auth)
+    _azione(servizi.salva_dati_verbale, verbale, dati.model_dump(), autore)
+    return _verbale_modello_out(request, verbale)
+
+
+# --- Separate minutes from a template (DEC-339) -----------------------------------------------
+
+
+class SedeModello(Schema):
+    via: str = ""
+    civico: str = ""
+    cap: str = ""
+    citta: str = ""
+    provincia: str = ""
+
+
+class DatiCapiGruppo(Schema):
+    ora_apertura: str = ""
+    ora_chiusura: str = ""
+    luogo: LuogoModello = LuogoModello()
+    cambia_capi_gruppo: bool = False
+    capi_gruppo: list[int] = []
+    cambia_rappresentante: bool = False
+    rappresentante: int | None = None
+    cambia_sede: bool = False
+    sede: SedeModello = SedeModello()
+    varie: str = ""
+
+
+class CollegatoOut(Schema):
+    tipo: str
+    nome: str
+    stato: str
+    definitivo_il: datetime | None
+    testo: str
+    dati: DatiCapiGruppo | None
+    mancanti: list[str]
+    puo_gestire: bool
+
+
+class CollegatiOut(Schema):
+    collegati: list[CollegatoOut]
+    # What may be added here, for who manages them.
+    da_aggiungere: list[str]
+    candidati_capi_gruppo: list[PersonaVerbale]
+
+
+def _riunione_collegati(evento_id: int) -> Evento:
+    evento = get_object_or_404(Evento, pk=evento_id)
+    if not servizi.collegati_ammessi(evento):
+        raise HttpError(404, "Questa riunione non ha verbali collegati.")
+    return evento
+
+
+def _collegato_out(request, collegato: VerbaleCollegato, con_testo: bool = False) -> dict:
+    gestisce = policy.puo_gestire_verbale_collegato(request.auth, collegato.evento)
+    capi_gruppo = collegato.tipo == TipoCollegato.CAPI_GRUPPO
+    dati = None
+    if capi_gruppo and gestisce:
+        dati = modelli.dati_capi_gruppo(collegato.evento, collegato.dati)
+    return {
+        "tipo": collegato.tipo,
+        "nome": collegato.get_tipo_display(),
+        "stato": collegato.stato,
+        "definitivo_il": collegato.definitivo_il,
+        "testo": servizi.testo_collegato(collegato) if con_testo else "",
+        "dati": dati,
+        "mancanti": (
+            servizi.mancanti_collegato(collegato) if gestisce and not collegato.definitivo else []
+        ),
+        "puo_gestire": gestisce,
+    }
+
+
+def _collegato(request, evento_id: int, tipo: str) -> VerbaleCollegato:
+    collegato = VerbaleCollegato.objects.filter(evento_id=evento_id, tipo=tipo).first()
+    if collegato is None or not policy.puo_leggere_verbale_collegato(request.auth, collegato):
+        raise HttpError(404, "Non trovato.")
+    return collegato
+
+
+def _collegato_gestibile(request, evento_id: int, tipo: str) -> VerbaleCollegato:
+    collegato = _collegato(request, evento_id, tipo)
+    if not policy.puo_gestire_verbale_collegato(request.auth, collegato.evento):
+        raise HttpError(403, "Non puoi farlo su questo verbale.")
+    return collegato
+
+
+def _registra_collegato(request, collegato: VerbaleCollegato, azione: str) -> None:
+    """The one of the Co.Ca., like its minutes (DEC-329), on the meeting's register."""
+    if collegato.tipo != TipoCollegato.CAPI_GRUPPO:
+        return
+    verbale, _ = Verbale.objects.get_or_create(evento=collegato.evento)
+    registra_accesso_verbale(request, verbale, azione)
+
+
+@router.get("/eventi/{evento_id}/verbali-collegati", response=CollegatiOut)
+def elenco_collegati(request, evento_id: int):
+    """Without the text: only reading one of them goes to the access log (DEC-329)."""
+    evento = _riunione_collegati(evento_id)
+    utente = request.auth
+    gestisce = policy.puo_gestire_verbale_collegato(utente, evento)
+    leggibili = [
+        c
+        for c in evento.verbali_collegati.select_related("evento").order_by("tipo")
+        if policy.puo_leggere_verbale_collegato(utente, c)
+    ]
+    esistenti = {c.tipo for c in leggibili}
+    aggiungibili = [
+        t
+        for t in servizi.collegati_ammessi(evento)
+        if t == TipoCollegato.CAPI_GRUPPO and t not in esistenti
+    ]
+    candidati = []
+    if gestisce and servizi.tipo_collegato_ammesso(evento, TipoCollegato.CAPI_GRUPPO):
+        candidati = list(
+            Persona.objects.filter(
+                pk__in=Appartenenza.objects.attive()
+                .filter(ruolo=RuoloAppartenenza.CAPO)
+                .values("persona_id")
+            ).order_by("cognome", "nome")
+        )
+    return {
+        "collegati": [_collegato_out(request, c) for c in leggibili],
+        "da_aggiungere": aggiungibili if gestisce else [],
+        "candidati_capi_gruppo": candidati,
+    }
+
+
+@router.get("/eventi/{evento_id}/verbali-collegati/{tipo}.pdf")
+def pdf_collegato(request, evento_id: int, tipo: str):
+    collegato = _collegato(request, evento_id, tipo)
+    if not collegato.definitivo:
+        raise HttpError(400, "Il PDF si scarica quando il verbale è definitivo.")
+    contenuto = stampa.pdf_collegato(collegato)
+    _registra_collegato(request, collegato, Azione.STAMPA)
+    risposta = HttpResponse(contenuto, content_type="application/pdf")
+    nome = f"verbale-{tipo.lower().replace('_', '-')}-{evento_id}.pdf"
+    risposta["Content-Disposition"] = f'attachment; filename="{nome}"'
+    risposta["Cache-Control"] = "private, no-store"
+    return risposta
+
+
+@router.get("/eventi/{evento_id}/verbali-collegati/{tipo}", response=CollegatoOut)
+def leggi_collegato(request, evento_id: int, tipo: str):
+    collegato = _collegato(request, evento_id, tipo)
+    _registra_collegato(request, collegato, Azione.LETTURA)
+    return _collegato_out(request, collegato, con_testo=True)
+
+
+@router.put("/eventi/{evento_id}/verbali-collegati/{tipo}", response=CollegatoOut)
+def scrivi_capi_gruppo(request, evento_id: int, tipo: str, dati: DatiCapiGruppo):
+    """Only this one has data of its own: the budget's are the assembly's."""
+    evento = _riunione_collegati(evento_id)
+    if tipo != TipoCollegato.CAPI_GRUPPO or not servizi.tipo_collegato_ammesso(evento, tipo):
+        raise HttpError(404, "Questa riunione non ha questo verbale.")
+    if not policy.puo_gestire_verbale_collegato(request.auth, evento):
+        raise HttpError(403, "Lo compilano i capigruppo.")
+    collegato = _azione(servizi.salva_capi_gruppo, evento, dati.model_dump())
+    return _collegato_out(request, collegato, con_testo=True)
+
+
+@router.delete("/eventi/{evento_id}/verbali-collegati/{tipo}", response={204: None})
+def togli_collegato(request, evento_id: int, tipo: str):
+    collegato = _collegato_gestibile(request, evento_id, tipo)
+    _azione(servizi.togli_collegato, collegato)
+    return Status(204, None)
+
+
+@router.post("/eventi/{evento_id}/verbali-collegati/{tipo}/definitivo", response=CollegatoOut)
+def definitivo_collegato(request, evento_id: int, tipo: str):
+    collegato = _collegato_gestibile(request, evento_id, tipo)
+    _azione(servizi.collegato_definitivo, collegato, request.auth)
+    return _collegato_out(request, collegato, con_testo=True)
+
+
+@router.post("/eventi/{evento_id}/verbali-collegati/{tipo}/riapri", response=CollegatoOut)
+def riapri_collegato(request, evento_id: int, tipo: str, dati: RiaperturaIn):
+    collegato = _collegato_gestibile(request, evento_id, tipo)
+    _azione(servizi.collegato_riapri, collegato, dati.motivo)
+    return _collegato_out(request, collegato, con_testo=True)
 
 
 def _disposizione(nome: str) -> str:

@@ -1,17 +1,26 @@
 # Assemblea dei soci
 
-L'assemblea dei soci la convocano i capigruppo, ed è di tutto il gruppo. Le votazioni si fanno fuori
-dall'app: al massimo le scrivi nel verbale. L'app non calcola nemmeno deleghe e numero legale.
+L'assemblea dei soci la convocano i capigruppo, ed è di tutto il gruppo. Convocazione e verbale seguono
+i modelli AGESCI, sulla carta intestata del gruppo: inserisci i dati e il testo lo compone l'app. Le
+votazioni si fanno fuori dall'app, che ne riporta solo l'esito e non calcola deleghe e numero legale.
 
 ## Convocarla
 
 1. In **Riunioni** tocca **Nuove riunioni**. In **Di chi** scegli **Assemblea dei soci**, poi il giorno
    e gli orari.
-2. Apri l'assemblea. Nel riquadro **Convocazione** aggiungi i documenti, per esempio il bilancio.
-3. Se le presenze le segna qualcun altro, sceglilo in **Chi segna le presenze, oltre ai capigruppo** e
+2. Apri l'assemblea. Nel riquadro **Convocazione** scegli i punti dell'**Ordine del giorno** e, se
+   servono, l'anno del bilancio (proposto l'ultimo chiuso) e quello di elezione e quota. Il bilancio
+   chiuso al 30/09 di un anno si approva entro il 31/12 dello stesso anno.
+3. La **Prima convocazione** è già proposta alle 00:00 del giorno della riunione e serve per il quorum:
+   compare solo nella convocazione. La seconda è all'orario della riunione.
+4. Scrivi dove si tiene, tocca **Salva i dati** e controlla l'**Anteprima della convocazione**. Se manca
+   qualcosa, l'app te lo dice e non la invia.
+5. Aggiungi gli altri documenti, per esempio il bilancio.
+6. Se le presenze le segna qualcun altro, sceglilo in **Chi segna le presenze, oltre ai capigruppo** e
    tocca **Indica**.
-4. Tocca **Invia la convocazione**: l'email parte una volta sola per tutti gli invitati, anche se le
-   email ai genitori sono spente nelle impostazioni. I documenti aggiunti dopo arrivano da soli.
+7. Tocca **Invia la convocazione**: l'email parte una volta sola per tutti gli invitati, con il PDF della
+   convocazione, anche se le email ai genitori sono spente nelle impostazioni. Da quel momento i dati non
+   si cambiano più. I documenti aggiunti dopo arrivano da soli.
 
 :::{container} schermate
 ![La convocazione dell'assemblea sul telefono](../img/gruppo/assemblea-telefono.png){.telefono width="30%"}
@@ -38,10 +47,14 @@ riunioni.
 L'assemblea deve avere il verbale: non si può dire che non c'è.
 
 1. Segna le presenze.
-2. Nel riquadro **Verbale** tocca **Scrivi il verbale** e scrivi il testo.
+2. Nel riquadro **Verbale** tocca **Compila il verbale**.
 3. Scegli il **Presidente**, un socio maggiorenne o un genitore, e almeno un **Segretario**, tra i
    presenti, e tocca **Salva presidente e segretari**.
-4. Tocca **Rendi definitivo**. Lo leggono tutti gli invitati e i capi. Nel PDF ci sono presidente e
+4. Inserisci ore di apertura e chiusura, scrutatori e, per ogni punto votato, favorevoli e contrari o
+   **All'unanimità**. Secondo l'ordine del giorno ti chiede il **Risultato di bilancio**, da copiare dal
+   Modello D dell'associazione (quello nell'app è solo una bozza), le quote con modalità e termini, le
+   varie ed eventuali. Tocca **Salva i dati**: il testo non si scrive a mano.
+5. Tocca **Rendi definitivo**: se manca qualcosa, l'app elenca cosa. Lo leggono tutti gli invitati e i capi. Nel PDF ci sono presidente e
    segretari con lo spazio per la firma, e l'elenco dei presenti: resta anche quando le presenze, dopo due
    anni, diventano totali annui.
 
@@ -50,3 +63,30 @@ settimana finché non lo è. In **Riunioni**, ai capigruppo resta l'avviso **Ver
 
 Per 5 anni nomi e presenti restano nel verbale anche se una persona chiede la cancellazione dei dati o
 viene archiviata; poi il suo nome viene tolto.
+
+## Il verbale separato del bilancio
+
+Se il bilancio è all'ordine del giorno, spunta **Produci anche il verbale separato del bilancio**. Usa gli
+stessi dati dell'assemblea, quindi non inserisci nulla due volte, ma ha stato e PDF propri: lo trovi nel
+riquadro **Verbali collegati**, dove tocchi **Apri** e poi **Rendi definitivo**. Nel PDF ci sono le firme
+di presidente e segretario e la dichiarazione di conformità dei capi gruppo.
+
+## Il verbale su Capi Gruppo, rappresentante legale e sede
+
+Serve solo quando cambia qualcosa, per esempio il capo gruppo che è anche rappresentante legale. Riguarda
+solo l'Agenzia delle Entrate.
+
+1. Apri la riunione di Comunità capi e, nel riquadro **Verbali collegati**, tocca **Aggiungi il verbale su
+   Capi Gruppo, rappresentante legale o sede**.
+2. In **Cosa cambia** spunta solo ciò che è cambiato: nel verbale c'è solo quella parte. Il rappresentante
+   legale si sceglie tra i capi gruppo.
+3. Codice fiscale, nascita e residenza vengono dalle schede: se manca qualcosa, l'app lo elenca e va
+   completato nella scheda.
+4. Segna le presenze, tocca **Salva i dati**, controlla l'**Anteprima** e tocca **Rendi definitivo**. Nel
+   PDF c'è lo spazio per le firme dei presenti e dei capi gruppo.
+
+In bozza lo vedono solo i capigruppo; definitivo, lo leggono tutti i capi e ogni lettura resta registrata.
+Se non serve più, tocca **Non serve più**.
+
+Rendere definitivo questo verbale non cambia nulla da solo: incarichi, sede e rappresentante legale restano
+come sono, e li aggiorni a parte.

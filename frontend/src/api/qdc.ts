@@ -519,6 +519,8 @@ export interface AllegatoVerbale {
 /** The convocation of a meeting, with its attachments (DEC-327). */
 export interface Convocazione {
   convocata_il: string | null
+  /** The assembly: the letter comes from the AGESCI template (DEC-337). */
+  da_modello: boolean
   /** At the assembly: who marks the attendance besides the capigruppo. */
   puo_indicare_presenze: boolean
   presenze_da: PersonaBreve | null
@@ -533,6 +535,8 @@ export interface Convocazione {
 /** The minutes of a meeting (DEC-322…DEC-331). */
 export interface Verbale {
   tipo: string
+  /** The assembly: data asked for, the text comes from the template (DEC-336). */
+  da_modello: boolean
   stato: 'BOZZA' | 'DEFINITIVO'
   /** Empty unless asked for: reading the Co.Ca.'s goes to the access log. */
   testo: string
@@ -563,6 +567,89 @@ export interface Verbale {
   segretari_ids: number[]
 }
 
+export interface LuogoModello {
+  presso?: string
+  via: string
+  civico: string
+  cap: string
+  citta: string
+  provincia: string
+}
+
+export interface DatiConvocazione {
+  punti: string[]
+  prima_il: string | null
+  anno_bilancio: number | null
+  anno_elezione: number | null
+  luogo: LuogoModello
+}
+
+export interface ConvocazioneModello {
+  dati: DatiConvocazione
+  mancanti: string[]
+  testo: string
+  puo_modificare: boolean
+  prima_il: string
+}
+
+export interface VotiDelibera {
+  unanimita: boolean
+  favorevoli: number | null
+  contrari: number | null
+}
+
+export interface DatiVerbaleAssemblea {
+  ora_apertura: string
+  ora_chiusura: string
+  scrutatori: number[]
+  voti: Record<string, VotiDelibera>
+  risultato: string
+  quota_gruppo: string
+  quota_totale: string
+  quota_modalita: string
+  varie: string
+  bilancio_separato: boolean
+}
+
+export interface VerbaleModello {
+  dati: DatiVerbaleAssemblea
+  punti: string[]
+  delibere: Record<string, string>
+  mancanti: string[]
+  testo: string
+  candidati_scrutatori: PersonaBreve[]
+  puo_modificare: boolean
+}
+
+export interface DatiCapiGruppo {
+  ora_apertura: string
+  ora_chiusura: string
+  luogo: LuogoModello
+  cambia_capi_gruppo: boolean
+  capi_gruppo: number[]
+  cambia_rappresentante: boolean
+  rappresentante: number | null
+  cambia_sede: boolean
+  sede: LuogoModello
+  varie: string
+}
+
+/** Separate minutes of a meeting, from a template (DEC-339). */
+export interface VerbaleCollegato {
+  tipo: string
+  nome: string
+  stato: 'BOZZA' | 'DEFINITIVO'
+  definitivo_il: string | null
+  /** Empty in the list: reading the Co.Ca.'s goes to the access log. */
+  testo: string
+  dati: DatiCapiGruppo | null
+  mancanti: string[]
+  puo_gestire: boolean
+}
+
+export const convocazionePdf = (evento: number) => `/api/v1/eventi/${evento}/convocazione.pdf`
+export const verbaleCollegatoPdf = (evento: number, tipo: string) =>
+  `/api/v1/eventi/${evento}/verbali-collegati/${tipo}.pdf`
 export const verbalePdf = (evento: number) => `/api/v1/eventi/${evento}/verbale.pdf`
 export const verbaleZip = (evento: number) => `/api/v1/eventi/${evento}/verbale.zip`
 export const allegatoVerbale = (id: number) => `/api/v1/allegati-verbale/${id}`
@@ -2876,6 +2963,44 @@ export const api = {
       metodo: 'POST',
       corpo: { nome, dimensione },
     }),
+  convocazioneModello: (evento: number) =>
+    richiesta<ConvocazioneModello>(`/api/v1/eventi/${evento}/convocazione/modello`),
+  salvaConvocazioneModello: (evento: number, corpo: DatiConvocazione) =>
+    richiesta<ConvocazioneModello>(`/api/v1/eventi/${evento}/convocazione/modello`, {
+      metodo: 'PUT',
+      corpo,
+    }),
+  verbaleModello: (evento: number) =>
+    richiesta<VerbaleModello>(`/api/v1/eventi/${evento}/verbale/modello`),
+  salvaVerbaleModello: (evento: number, corpo: DatiVerbaleAssemblea) =>
+    richiesta<VerbaleModello>(`/api/v1/eventi/${evento}/verbale/modello`, {
+      metodo: 'PUT',
+      corpo,
+    }),
+  verbaliCollegati: (evento: number) =>
+    richiesta<{
+      collegati: VerbaleCollegato[]
+      da_aggiungere: string[]
+      candidati_capi_gruppo: PersonaBreve[]
+    }>(`/api/v1/eventi/${evento}/verbali-collegati`),
+  verbaleCollegato: (evento: number, tipo: string) =>
+    richiesta<VerbaleCollegato>(`/api/v1/eventi/${evento}/verbali-collegati/${tipo}`),
+  salvaCapiGruppo: (evento: number, corpo: DatiCapiGruppo) =>
+    richiesta<VerbaleCollegato>(`/api/v1/eventi/${evento}/verbali-collegati/CAPI_GRUPPO`, {
+      metodo: 'PUT',
+      corpo,
+    }),
+  verbaleCollegatoDefinitivo: (evento: number, tipo: string) =>
+    richiesta<VerbaleCollegato>(`/api/v1/eventi/${evento}/verbali-collegati/${tipo}/definitivo`, {
+      metodo: 'POST',
+    }),
+  riapriVerbaleCollegato: (evento: number, tipo: string, motivo: string) =>
+    richiesta<VerbaleCollegato>(`/api/v1/eventi/${evento}/verbali-collegati/${tipo}/riapri`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
+  togliVerbaleCollegato: (evento: number, tipo: string) =>
+    richiesta<null>(`/api/v1/eventi/${evento}/verbali-collegati/${tipo}`, { metodo: 'DELETE' }),
   togliAllegatoVerbale: (id: number) =>
     richiesta<null>(`/api/v1/allegati-verbale/${id}`, { metodo: 'DELETE' }),
   incarichiSquadriglia: (squadriglia: number) =>

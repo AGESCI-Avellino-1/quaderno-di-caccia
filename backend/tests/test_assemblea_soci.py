@@ -12,7 +12,7 @@ from apps.anagrafica.models import Appartenenza, RelazioneTutela, RuoloAppartene
 from apps.eventi.models import Evento, Presenza
 from apps.eventi.servizi import qualita_in_assemblea
 from apps.impostazioni.models import Impostazioni
-from apps.organizzazione.models import AnnoChiuso, TipoUnita, Unita
+from apps.organizzazione.models import AnnoChiuso, Gruppo, TipoUnita, Unita
 from apps.permessi import policy
 from apps.verbali import servizi, stampa
 from apps.verbali.models import TipoVerbale, Verbale
@@ -94,8 +94,28 @@ def _url(evento, altro="") -> str:
     return f"/api/v1/eventi/{evento.pk}/verbale{altro}"
 
 
+def _convocazione_compilata(evento, chi) -> None:
+    Gruppo.objects.update(codice_fiscale="90000000000")
+    corpo = {
+        "punti": ["VARIE"],
+        "luogo": {
+            "presso": "Sede",
+            "via": "Via Roma",
+            "civico": "1",
+            "cap": "83100",
+            "citta": "Avellino",
+            "provincia": "AV",
+        },
+    }
+    risposta = _put(chi, f"/api/v1/eventi/{evento.pk}/convocazione/modello", corpo)
+    assert risposta.status_code == 200, risposta.content
+
+
 def _pronto(evento, chi, presidente, *segretari) -> None:
-    assert _put(chi, _url(evento), {"testo": "<p>Approvato il bilancio.</p>"}).status_code == 200
+    _convocazione_compilata(evento, chi)
+    corpo = {"ora_apertura": "18:05", "ora_chiusura": "19:30", "scrutatori": [presidente.pk]}
+    risposta = _put(chi, _url(evento, "/modello"), corpo)
+    assert risposta.status_code == 200, risposta.content
     corpo = {"presidente_id": presidente.pk, "segretari_ids": [s.pk for s in segretari]}
     risposta = _put(chi, _url(evento, "/cariche"), corpo)
     assert risposta.status_code == 200, risposta.content
@@ -209,7 +229,6 @@ def test_solo_l_assemblea_ha_le_cariche(capogruppo, coca):
 
 
 def test_definitivo_richiede_le_cariche(capogruppo, capo, assemblea):
-    assert _put(capogruppo, _url(assemblea), {"testo": "<p>x</p>"}).status_code == 200
     risposta = _post(capogruppo, _url(assemblea, "/definitivo"))
     assert risposta.status_code == 400
     assert "presidente" in risposta.json()["detail"]
@@ -301,6 +320,7 @@ def test_anno_chiuso_blocca_le_cariche(capogruppo, capo, assemblea):
 def test_convocazione_a_tutti_gli_invitati(
     capogruppo, adulto, genitore_adulto, genitore, assemblea
 ):
+    _convocazione_compilata(assemblea, capogruppo)
     mail.outbox.clear()
     url = f"/api/v1/eventi/{assemblea.pk}/convocazione/invia"
     assert _post(genitore, url).status_code == 403

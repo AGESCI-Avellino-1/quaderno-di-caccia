@@ -55,6 +55,9 @@ class Verbale(ModelloTracciato):
     # [...]}. Out of the audit log: names only, already known by the snapshot's readers.
     presenti = models.JSONField(default=list, blank=True)
     cariche = models.JSONField(default=dict, blank=True)
+    # The data of the AGESCI templates (DEC-336…DEC-338): {"convocazione": {...}, "assemblea":
+    # {...}}, read by `modelli`. Out of the audit log, like the text they become.
+    dati = models.JSONField(default=dict, blank=True)
     # Who was erased during the five years: their names go when these are over.
     nomi_da_togliere = models.JSONField(default=list, blank=True)
     definitivo_il = models.DateTimeField(null=True, blank=True)
@@ -78,6 +81,67 @@ class Verbale(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Verbale di {self.evento}"
+
+    @property
+    def definitivo(self) -> bool:
+        return self.stato == StatoVerbale.DEFINITIVO
+
+    @property
+    def da_modello(self) -> bool:
+        """The assembly always follows the template (DEC-336); minutes already written
+        without it stay as they are."""
+        if self.evento.cerchia != "SOCI":
+            return False
+        return not self.testo.strip() or bool(self.dati)
+
+
+class TipoCollegato(models.TextChoices):
+    BILANCIO = "BILANCIO", "Verbale di approvazione del bilancio di esercizio"
+    CAPI_GRUPPO = "CAPI_GRUPPO", (
+        "Verbale della Comunità capi per l'espressione dei Capi Gruppo e la variazione della "
+        "rappresentanza legale e della sede legale"
+    )
+
+
+class VerbaleCollegato(ModelloTracciato):
+    """A second set of minutes of the same meeting, from a template, produced only when needed,
+    with its own state and PDF (DEC-339). It reads as `Verbale` for the policy."""
+
+    evento = models.ForeignKey(
+        "eventi.Evento", on_delete=models.PROTECT, related_name="verbali_collegati"
+    )
+    tipo = models.CharField(max_length=12, choices=TipoCollegato.choices)
+    # What was asked for. The budget's data are the assembly's, in `Verbale.dati`.
+    dati = models.JSONField(default=dict, blank=True)
+    # Copied when it becomes definitive: the card and the attendance may change later.
+    testo = models.TextField(blank=True)
+    firme = models.JSONField(default=list, blank=True)
+    stato = models.CharField(
+        max_length=10, choices=StatoVerbale.choices, default=StatoVerbale.BOZZA
+    )
+    definitivo_il = models.DateTimeField(null=True, blank=True)
+    definitivo_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    riaperto_il = models.DateTimeField(null=True, blank=True)
+    motivo_riapertura = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "verbale collegato"
+        verbose_name_plural = "verbali collegati"
+        constraints = [
+            models.UniqueConstraint(fields=["evento", "tipo"], name="un_verbale_per_modello")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()}: {self.evento}"
+
+    # Nobody is chosen to write these: only who decides on the minutes (DEC-324).
+    redattore_id = None
 
     @property
     def definitivo(self) -> bool:

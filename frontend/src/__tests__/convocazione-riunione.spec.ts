@@ -7,6 +7,7 @@ import ConvocazioneRiunione from '@/components/ConvocazioneRiunione.vue'
 import { risposta } from './aiuti'
 
 const base: Convocazione = {
+  da_modello: false,
   convocata_il: null,
   puo_indicare_presenze: false,
   presenze_da: null,

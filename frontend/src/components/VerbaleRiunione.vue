@@ -10,6 +10,7 @@ import {
   type Verbale,
 } from '@/api/qdc'
 import { caricaAPezzi, misura } from '@/components/allegatiVerbale'
+import VerbaleAssemblea from '@/components/VerbaleAssemblea.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // The minutes of a meeting (DEC-322…DEC-331): online only, never kept on the device. What
@@ -30,6 +31,8 @@ const caricamento = ref<{ nome: string; percentuale: number } | null>(null)
 const daTogliere = ref<number | null>(null)
 const presidente = ref<number | null>(null)
 const segretari = ref<number[]>([])
+// The form of the template asks again when the offices change: they are in its text.
+const giro = ref(0)
 
 const definitivo = computed(() => verbale.value?.stato === 'DEFINITIVO')
 const dimensioneAllegati = computed(() =>
@@ -48,6 +51,7 @@ async function salvaCariche() {
     api.caricheVerbale(props.evento, presidente.value, segretari.value),
   )
   if (dati) mostra({ ...dati, testo: testo.value })
+  giro.value++
 }
 
 onMounted(async () => {
@@ -85,12 +89,17 @@ async function nonPrevisto(valore: boolean) {
 }
 
 async function rendiDefinitivo() {
-  // What is on screen is what becomes definitive.
-  const scritto = await esegui(() => api.scriviVerbale(props.evento, testo.value))
-  if (!scritto) return
+  const daModello = verbale.value?.da_modello ?? false
+  if (!daModello) {
+    // What is on screen is what becomes definitive.
+    const scritto = await esegui(() => api.scriviVerbale(props.evento, testo.value))
+    if (!scritto) return
+  }
   const dati = await esegui(() => api.verbaleDefinitivo(props.evento))
   confermaDefinitivo.value = false
-  if (dati) mostra({ ...dati, testo: testo.value })
+  if (!dati) return
+  if (daModello) testo.value = dati.testo
+  mostra({ ...dati, testo: testo.value })
 }
 
 async function riapri() {
@@ -128,6 +137,10 @@ async function togli(id: number) {
   if (fatto) daTogliere.value = null
 }
 
+const testoApri = computed(() => {
+  if (!verbale.value?.puo_scrivere) return 'Leggi il verbale'
+  return verbale.value.da_modello ? 'Compila il verbale' : 'Scrivi il verbale'
+})
 const nomeDi = (p: PersonaBreve) => `${p.cognome} ${p.nome}`
 const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
 </script>
@@ -155,14 +168,24 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
       :disabled="inCorso"
       @click="apri"
     >
-      {{ verbale.puo_scrivere ? 'Scrivi il verbale' : 'Leggi il verbale' }}
+      {{ testoApri }}
     </button>
 
     <template v-if="aperto">
+      <VerbaleAssemblea
+        v-if="verbale.puo_scrivere && verbale.da_modello"
+        :key="giro"
+        :evento="evento"
+      />
       <form v-if="verbale.puo_scrivere" class="mb-3" @submit.prevent="salva">
-        <EditorTesto v-model="testo" etichetta="Testo del verbale" />
+        <EditorTesto v-if="!verbale.da_modello" v-model="testo" etichetta="Testo del verbale" />
         <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
-          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+          <button
+            v-if="!verbale.da_modello"
+            type="submit"
+            class="btn btn-sm btn-solid theme-primary"
+            :disabled="inCorso"
+          >
             Salva la bozza
           </button>
           <span v-if="salvato" class="small fg-2" role="status">Salvato.</span>

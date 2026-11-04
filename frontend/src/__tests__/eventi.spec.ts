@@ -6,6 +6,9 @@ import EventoView from '@/views/EventoView.vue'
 
 import { risposta } from './aiuti'
 
+// It asks the server for its own list: tested in verbali-modello.spec.ts.
+vi.mock('@/components/VerbaliCollegati.vue', () => ({ default: { render: () => null } }))
+
 // The minutes have their own tests and their own answers.
 vi.mock('@/components/VerbaleRiunione.vue', () => ({ default: { template: '<div></div>' } }))
 

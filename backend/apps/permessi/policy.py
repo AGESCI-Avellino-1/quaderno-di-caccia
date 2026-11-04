@@ -532,6 +532,20 @@ def puo_leggere_verbale(user, verbale) -> bool:
     return any(genitori_vedono(figlio, "scheda") for figlio in figli)
 
 
+def puo_gestire_verbale_collegato(user, evento) -> bool:
+    """Separate minutes from a template: who decides on the minutes, never someone chosen to
+    write (DEC-339)."""
+    return puo_indicare_redattore(user, evento)
+
+
+def puo_leggere_verbale_collegato(user, collegato) -> bool:
+    """In draft only who manages it: the one of the Co.Ca. carries personal data of the Capi
+    Gruppo. Definitive, like the minutes of that meeting (DEC-323, DEC-339)."""
+    if not collegato.definitivo:
+        return puo_gestire_verbale_collegato(user, collegato.evento)
+    return puo_leggere_verbale(user, collegato)
+
+
 def puo_gestire_convocazione(user, evento) -> bool:
     """Send the convocation and add its attachments: who decides on the minutes (DEC-327)."""
     return puo_indicare_redattore(user, evento)

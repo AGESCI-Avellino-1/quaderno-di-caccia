@@ -173,19 +173,8 @@ def flowable_del_testo(html: str) -> list:
     return lettore.elementi
 
 
-def _firme(verbale: Verbale, tipo: str) -> list:
-    """The space to sign: never for the meetings with the ragazzi, which are informal
-    (DEC-324)."""
-    if tipo == TipoVerbale.ASSEMBLEA:
-        presidente = verbale.cariche.get("presidente", {}).get("nome", "")
-        righe = [f"Il presidente: {presidente}"] + [
-            f"Il segretario: {s['nome']}" for s in verbale.cariche.get("segretari", [])
-        ]
-    elif tipo in (TipoVerbale.COCA, TipoVerbale.GENITORI):
-        righe = [f"Chi ha scritto il verbale: {verbale.autore_nome}"]
-    else:
-        return []
-    elementi: list = [Spacer(1, 4 * mm)]
+def _spazi_firma(righe: list[str]) -> list:
+    elementi: list = []
     for riga in righe:
         tabella = Table(
             [[Paragraph(escape(riga), CELLA)], [""], [""]],
@@ -198,8 +187,24 @@ def _firme(verbale: Verbale, tipo: str) -> list:
     return elementi
 
 
+def _firme(verbale: Verbale, tipo: str) -> list:
+    """The space to sign: never for the meetings with the ragazzi, which are informal
+    (DEC-324)."""
+    if tipo == TipoVerbale.ASSEMBLEA:
+        presidente = verbale.cariche.get("presidente", {}).get("nome", "")
+        righe = [f"Il presidente: {presidente}"] + [
+            f"Il segretario: {s['nome']}" for s in verbale.cariche.get("segretari", [])
+        ]
+    elif tipo in (TipoVerbale.COCA, TipoVerbale.GENITORI):
+        righe = [f"Chi ha scritto il verbale: {verbale.autore_nome}"]
+    else:
+        return []
+    return [Spacer(1, 4 * mm), *_spazi_firma(righe)]
+
+
 def _intestazione_assemblea(verbale: Verbale, tipo: str) -> list:
-    if tipo != TipoVerbale.ASSEMBLEA:
+    # With the template the text already names them.
+    if tipo != TipoVerbale.ASSEMBLEA or verbale.da_modello:
         return []
     presidente = verbale.cariche.get("presidente", {}).get("nome", "")
     segretari = ", ".join(s["nome"] for s in verbale.cariche.get("segretari", []))
@@ -238,7 +243,8 @@ def _presenti(verbale: Verbale, tipo: str) -> list:
     return [Spacer(1, 5 * mm), tabella]
 
 
-def pdf(verbale: Verbale, tipo: str) -> bytes:
+def _documento(titolo: str, corpo: list, titolo_file: str) -> bytes:
+    """On the group's letterhead, the one of every print (DEC-192, DEC-336)."""
     uscita = io.BytesIO()
     documento = SimpleDocTemplate(
         uscita,
@@ -247,25 +253,59 @@ def pdf(verbale: Verbale, tipo: str) -> bytes:
         rightMargin=MARGINE,
         topMargin=14 * mm,
         bottomMargin=16 * mm,
-        title=f"Verbale della riunione del {_giorno(verbale)}",
+        title=titolo_file,
     )
     gruppo = Gruppo.objects.first()
-    evento = verbale.evento
-    elementi = [
-        intestazione(gruppo, LARGHEZZA),
-        Spacer(1, 4 * mm),
-        Paragraph("Verbale della riunione", TITOLO),
-        Paragraph(escape(f"{evento.titolo} – {_giorno(verbale)}"), SOTTOTITOLO),
-        Spacer(1, 5 * mm),
-        *_intestazione_assemblea(verbale, tipo),
-        *flowable_del_testo(verbale.testo),
-        *_presenti(verbale, tipo),
-        *_firme(verbale, tipo),
-    ]
+    elementi = [intestazione(gruppo, LARGHEZZA), Spacer(1, 4 * mm)]
+    if titolo:
+        elementi.append(Paragraph(escape(titolo), TITOLO))
+    elementi += corpo
     pagina = decora_pagina(gruppo, MARGINE)
     documento.build(elementi, onFirstPage=pagina, onLaterPages=pagina)
     return uscita.getvalue()
 
 
-def _giorno(verbale: Verbale) -> str:
-    return f"{timezone.localtime(verbale.evento.inizio):%d/%m/%Y}"
+def pdf(verbale: Verbale, tipo: str) -> bytes:
+    evento = verbale.evento
+    giorno = _giorno(evento)
+    if verbale.da_modello:
+        titolo = "Verbale Assemblea di Gruppo"
+        apertura: list = [Spacer(1, 5 * mm)]
+    else:
+        titolo = "Verbale della riunione"
+        apertura = [
+            Paragraph(escape(f"{evento.titolo} – {giorno}"), SOTTOTITOLO),
+            Spacer(1, 5 * mm),
+        ]
+    return _documento(
+        titolo,
+        [
+            *apertura,
+            *_intestazione_assemblea(verbale, tipo),
+            *flowable_del_testo(verbale.testo),
+            *_presenti(verbale, tipo),
+            *_firme(verbale, tipo),
+        ],
+        f"Verbale della riunione del {giorno}",
+    )
+
+
+def pdf_convocazione(testo: str) -> bytes:
+    return _documento("", flowable_del_testo(testo), "Convocazione Assemblea di Gruppo")
+
+
+def pdf_collegato(collegato) -> bytes:
+    corpo = [Spacer(1, 5 * mm), *flowable_del_testo(collegato.testo)]
+    for blocco in collegato.firme:
+        if blocco.get("intro"):
+            corpo += [Spacer(1, 4 * mm), Paragraph(escape(blocco["intro"]), TESTO)]
+        corpo += _spazi_firma(blocco.get("righe", []))
+    return _documento(
+        collegato.get_tipo_display(),
+        corpo,
+        f"{collegato.get_tipo_display()} del {_giorno(collegato.evento)}",
+    )
+
+
+def _giorno(evento) -> str:
+    return f"{timezone.localtime(evento.inizio):%d/%m/%Y}"

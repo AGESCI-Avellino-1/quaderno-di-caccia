@@ -25,8 +25,15 @@ from apps.impostazioni.html import pulisci
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 from apps.permessi.policy import STAFF_DI_UNITA
 
-from . import convocazione, stampa
-from .models import AllegatoVerbale, StatoVerbale, TipoVerbale, Verbale
+from . import convocazione, modelli, stampa
+from .models import (
+    AllegatoVerbale,
+    StatoVerbale,
+    TipoCollegato,
+    TipoVerbale,
+    Verbale,
+    VerbaleCollegato,
+)
 
 CERCHIE = {
     Cerchia.ALTA_SQUADRIGLIA: TipoVerbale.ALTA_SQUADRIGLIA,
@@ -147,6 +154,8 @@ def _nome(persona: Persona | None) -> str:
 @transaction.atomic
 def salva_testo(verbale: Verbale, testo: str, autore: Persona | None) -> Verbale:
     _in_bozza(verbale)
+    if verbale.da_modello:
+        raise ValidationError("Il verbale dell'assemblea si compila con i dati del modello.")
     verbale.testo = pulisci(testo, immagini=False)
     verbale.autore = autore
     verbale.autore_nome = _nome(autore)
@@ -205,7 +214,8 @@ def salva_cariche(verbale: Verbale, presidente_id: int | None, segretari_ids: li
 
 def _fotografa_cariche(verbale: Verbale) -> None:
     presenti = set(presenti_segnati(verbale.evento).values_list("pk", flat=True))
-    segretari = list(verbale.segretari.order_by("cognome", "nome"))
+    # An assembly with no minutes saved yet has nobody chosen.
+    segretari = list(verbale.segretari.order_by("cognome", "nome")) if verbale.pk else []
     if not verbale.presidente_id or not segretari:
         raise ValidationError("Scegli il presidente e almeno un segretario dell'assemblea.")
     if not {verbale.presidente_id, *(s.pk for s in segretari)} <= presenti:
@@ -216,13 +226,22 @@ def _fotografa_cariche(verbale: Verbale) -> None:
     }
 
 
+def _rifiuta_mancanti(mancanti: list[str]) -> None:
+    if mancanti:
+        raise ValidationError("Per renderlo definitivo manca: " + "; ".join(mancanti) + ".")
+
+
 def rendi_definitivo(verbale: Verbale, utente) -> Verbale:
     _in_bozza(verbale)
-    if not verbale.testo.strip():
+    da_modello = verbale.da_modello
+    if not da_modello and not verbale.testo.strip():
         raise ValidationError("Il verbale è vuoto: scrivilo prima di renderlo definitivo.")
     tipo = tipo_di(verbale.evento)
     if tipo == TipoVerbale.ASSEMBLEA:
         _fotografa_cariche(verbale)
+    if da_modello:
+        _rifiuta_mancanti(modelli.mancanti_verbale(verbale))
+        verbale.testo = modelli.testo_assemblea(verbale)
     if tipo in CONSERVATI_CINQUE_ANNI:
         # Reopened after attendance became yearly totals: the copy made then stays.
         ora = presenti_ora(verbale.evento, tipo)
@@ -251,6 +270,126 @@ def riapri(verbale: Verbale, motivo: str) -> Verbale:
     verbale.motivo_riapertura = motivo[:300]
     verbale.save()
     return verbale
+
+
+# --- The data of the templates (DEC-336…DEC-340) ---------------------------------------------
+
+
+@transaction.atomic
+def salva_dati_convocazione(verbale: Verbale, dati: dict) -> Verbale:
+    """They become the letter that went out: once sent they stay (DEC-337)."""
+    _controlla_aperto(verbale)
+    if verbale.evento.convocata_il is not None:
+        raise ValidationError("La convocazione è già stata inviata.")
+    verbale.dati = {**verbale.dati, "convocazione": dati}
+    verbale.save()
+    return verbale
+
+
+@transaction.atomic
+def salva_dati_verbale(verbale: Verbale, dati: dict, autore: Persona | None) -> Verbale:
+    _in_bozza(verbale)
+    if not verbale.da_modello:
+        raise ValidationError("Questo verbale è già scritto senza il modello.")
+    presenti = set(presenti_segnati(verbale.evento).values_list("pk", flat=True))
+    if not set(dati.get("scrutatori", [])) <= presenti:
+        raise ValidationError("Gli scrutatori si scelgono tra i presenti segnati.")
+    verbale.dati = {**verbale.dati, "assemblea": dati}
+    verbale.autore = autore
+    verbale.autore_nome = _nome(autore)
+    verbale.save()
+    if dati.get("bilancio_separato"):
+        VerbaleCollegato.objects.get_or_create(evento=verbale.evento, tipo=TipoCollegato.BILANCIO)
+    else:
+        VerbaleCollegato.objects.filter(
+            evento=verbale.evento, tipo=TipoCollegato.BILANCIO, stato=StatoVerbale.BOZZA
+        ).delete()
+    return verbale
+
+
+def tipo_collegato_ammesso(evento: Evento, tipo: str) -> bool:
+    return (tipo_di(evento), tipo) in {
+        (TipoVerbale.ASSEMBLEA, TipoCollegato.BILANCIO),
+        (TipoVerbale.COCA, TipoCollegato.CAPI_GRUPPO),
+    }
+
+
+def collegati_ammessi(evento: Evento) -> list[str]:
+    return [t for t in TipoCollegato.values if tipo_collegato_ammesso(evento, t)]
+
+
+def _collegato_in_bozza(collegato: VerbaleCollegato) -> None:
+    controlla_anno_aperto(collegato.evento.inizio)
+    if collegato.definitivo:
+        raise ValidationError("Il verbale è definitivo: per cambiarlo va prima riaperto.")
+
+
+def salva_capi_gruppo(evento: Evento, dati: dict) -> VerbaleCollegato:
+    """Produced only when needed (DEC-339): saving it is what makes it exist."""
+    collegato, _ = VerbaleCollegato.objects.get_or_create(
+        evento=evento, tipo=TipoCollegato.CAPI_GRUPPO
+    )
+    _collegato_in_bozza(collegato)
+    collegato.dati = dati
+    collegato.save()
+    return collegato
+
+
+def togli_collegato(collegato: VerbaleCollegato) -> None:
+    _collegato_in_bozza(collegato)
+    if collegato.tipo == TipoCollegato.BILANCIO:
+        verbale = verbale_di(collegato.evento)
+        assemblea = {**modelli.dati_verbale(verbale), "bilancio_separato": False}
+        verbale.dati = {**verbale.dati, "assemblea": assemblea}
+        verbale.save()
+    collegato.delete()
+
+
+def mancanti_collegato(collegato: VerbaleCollegato) -> list[str]:
+    if collegato.tipo == TipoCollegato.BILANCIO:
+        return modelli.mancanti_bilancio(verbale_di(collegato.evento))
+    dati = modelli.dati_capi_gruppo(collegato.evento, collegato.dati)
+    return modelli.mancanti_capi_gruppo(collegato.evento, dati)
+
+
+def testo_collegato(collegato: VerbaleCollegato) -> str:
+    """Definitive: what was copied. In draft: what it would say today."""
+    if collegato.definitivo:
+        return collegato.testo
+    if collegato.tipo == TipoCollegato.BILANCIO:
+        return modelli.testo_bilancio(verbale_di(collegato.evento))
+    dati = modelli.dati_capi_gruppo(collegato.evento, collegato.dati)
+    return modelli.testo_capi_gruppo(collegato.evento, dati)
+
+
+def collegato_definitivo(collegato: VerbaleCollegato, utente) -> VerbaleCollegato:
+    _collegato_in_bozza(collegato)
+    _rifiuta_mancanti(mancanti_collegato(collegato))
+    collegato.testo = testo_collegato(collegato)
+    if collegato.tipo == TipoCollegato.BILANCIO:
+        collegato.firme = modelli.firme_bilancio(verbale_di(collegato.evento))
+    else:
+        dati = modelli.dati_capi_gruppo(collegato.evento, collegato.dati)
+        collegato.firme = modelli.firme_capi_gruppo(collegato.evento, dati)
+    collegato.stato = StatoVerbale.DEFINITIVO
+    collegato.definitivo_il = timezone.now()
+    collegato.definitivo_da = utente
+    collegato.save()
+    return collegato
+
+
+def collegato_riapri(collegato: VerbaleCollegato, motivo: str) -> VerbaleCollegato:
+    controlla_anno_aperto(collegato.evento.inizio)
+    if not collegato.definitivo:
+        raise ValidationError("Il verbale è già in bozza.")
+    motivo = motivo.strip()
+    if not motivo:
+        raise ValidationError("Scrivi perché lo riapri.")
+    collegato.stato = StatoVerbale.BOZZA
+    collegato.riaperto_il = timezone.now()
+    collegato.motivo_riapertura = motivo[:300]
+    collegato.save()
+    return collegato
 
 
 # --- Files ----------------------------------------------------------------------------------
@@ -533,8 +672,18 @@ def verbali_col_nome(persona: Persona) -> list[Verbale]:
     capogruppo checks it."""
     nome = f"{persona.nome} {persona.cognome}".strip()
     rovescio = f"{persona.cognome} {persona.nome}".strip()
+    collegati = VerbaleCollegato.objects.filter(
+        Q(testo__icontains=nome)
+        | Q(testo__icontains=rovescio)
+        | Q(firme__icontains=nome)
+        | Q(firme__icontains=rovescio)
+    )
     return list(
-        Verbale.objects.filter(Q(testo__icontains=nome) | Q(testo__icontains=rovescio))
+        Verbale.objects.filter(
+            Q(testo__icontains=nome)
+            | Q(testo__icontains=rovescio)
+            | Q(evento__in=collegati.values("evento"))
+        )
         .select_related("evento")
         .order_by("-evento__inizio")
     )
@@ -559,11 +708,28 @@ def _togli_nome(verbale: Verbale, persona_id: int) -> None:
             carica["id"] = None
 
 
+def _togli_dai_dati(persona: Persona) -> None:
+    """Whoever was chosen in a draft; what is definitive is text, checked by a capogruppo."""
+    for verbale in Verbale.objects.exclude(dati={}).exclude(stato=StatoVerbale.DEFINITIVO):
+        assemblea = verbale.dati.get("assemblea", {})
+        if persona.pk in assemblea.get("scrutatori", []):
+            assemblea["scrutatori"] = [i for i in assemblea["scrutatori"] if i != persona.pk]
+            verbale.save()
+    for collegato in VerbaleCollegato.objects.exclude(stato=StatoVerbale.DEFINITIVO):
+        dati = collegato.dati
+        if persona.pk in dati.get("capi_gruppo", []) or dati.get("rappresentante") == persona.pk:
+            dati["capi_gruppo"] = [i for i in dati.get("capi_gruppo", []) if i != persona.pk]
+            if dati.get("rappresentante") == persona.pk:
+                dati["rappresentante"] = None
+            collegato.save()
+
+
 def alla_cancellazione(persona: Persona) -> None:
     """Who wrote, was chosen or was there: the name stays only where the five years apply,
     and only while they last."""
     oggi = timezone.localdate()
     Verbale.segretari.through.objects.filter(persona=persona).delete()
+    _togli_dai_dati(persona)
     for verbale in Verbale.objects.filter(
         Q(autore=persona) | Q(redattore=persona) | Q(presidente=persona)
     ).select_related("evento"):

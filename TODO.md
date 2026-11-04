@@ -10,7 +10,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
 | [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | VAL    |
-| [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | Errore   | Basso   | Media      | VAL    |
+| [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | Errore   | Basso   | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -73,7 +73,7 @@ delle modifiche.
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 
-**Deciso dal maintainer il 04/11/2026** (da riportare nell'analisi prima dello sviluppo):
+**Deciso dal maintainer il 04/11/2026:**
 
 - **Incarichi di squadriglia:** cassiere, cicala, cronista, guardiano dell'angolo, guardiano dello
   stile, guardiano del tempo, infermiere, liturgista, magazziniere, aiuto magazziniere, mercurio
@@ -126,8 +126,18 @@ delle modifiche.
 - **Ordine:** incarichi, verbali per le riunioni esistenti, riunioni dei genitori, assemblea; una sola
   versione alla fine di tutti i blocchi.
 
-**Ancora da decidere:** promemoria (quando e a chi), Drive (installazioni senza Drive, limiti, accesso alla
-cartella), se la #12 esce prima con una sua versione.
+- **Promemoria:** 7 giorni dopo la riunione, poi ogni 7 giorni, alla persona indicata e a chi può indicarla
+  (per l'assemblea, ai capigruppo). Per Co.Ca. e riunioni dei genitori al massimo 3 volte, e si ferma col
+  verbale definitivo o indicando che non c'è. Per l'assemblea continua fino al definitivo, l'indicazione
+  «non c'è verbale» non esiste e ai capigruppo resta segnalato «verbale mancante». Nessun promemoria per
+  una riunione annullata. Sono email sempre inviate.
+- **Drive:** massimo 2 GB per file, senza limite per verbale; tipo di file controllato al caricamento;
+  lettura sempre attraverso l'app, mai link diretti; cartella «Verbali» separata dagli archivi, con
+  sottocartelle per anno associativo, accessibile all'account di servizio dell'app (la guida di
+  installazione avvisa che chi gestisce il Drive può vedere i file). Un allegato tolto sparisce da Drive; da
+  definitivo bisogna riaprire il verbale. ZIP su richiesta; oltre 2 GB l'app avvisa e si scarica un file
+  per volta. Senza Drive configurato, allegati sul server fino a 20 MB.
+- **Versioni:** una per la #12, sviluppata per prima, e una per la #13.
 
 **Da verificare in sviluppo: allegati su Drive.** Oggi l'app carica su Drive solo gli archivi, tenendoli in
 memoria, e il server accetta file fino a 20 MB. Per audio e video servono caricamento a pezzi (forse diretto

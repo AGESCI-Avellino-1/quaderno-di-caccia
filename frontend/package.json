@@ -1,6 +1,6 @@
 {
   "name": "qdc-frontend",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "private": true,
   "description": "Quaderno di Caccia (QdC) — PWA",
   "license": "MIT",

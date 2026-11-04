@@ -5,6 +5,18 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.12.1 — 4 novembre 2026
+
+### Correzioni
+
+**File sull'iPhone**: con l'app installata su iPhone, un PDF si apriva a tutto schermo senza modo di tornare all'app, di condividerlo o di salvarlo. Ora il file resta nell'app: si apre una finestra con «Condividi o salva», da cui si invia o si salva su File, e «Chiudi». Su Android, sul computer e nel browser non cambia nulla.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.12.1
+```
+
 ## 1.12.0 — 4 novembre 2026
 
 ### Novità

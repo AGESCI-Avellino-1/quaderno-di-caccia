@@ -14,6 +14,14 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 Nessuna segnalazione di sicurezza aperta.
 
+### Da verificare sul server (senza issue)
+
+Tempi della build con `scripts/aggiorna.sh`, passo per passo: dove va il tempo. Sul Mac (04/11) le
+immagini della schermata di avvio prendono circa 2,5 s su 8,4 di `npm run build`. Da guardare: le
+immagini (si possono generare in un passo Docker a parte, rifatto solo se cambiano logo, nome del
+gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il numero in
+`package.json` e `package-lock.json`, l'immagine del backend.
+
 ### #15: cose da fare
 
 - `frontend/index.html`, `frontend/src/main.ts`: nell'app installata la schermata resta sopra l'app

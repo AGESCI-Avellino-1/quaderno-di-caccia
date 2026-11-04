@@ -17,6 +17,7 @@ class Categoria(models.TextChoices):
     MODULI = "MODULI", "Moduli firmati"
     ISCRIZIONI = "ISCRIZIONI", "Dati per BuonaStrada"
     REGOLE_MINORE = "REGOLE", "Regole sul rapporto con il minore"
+    VERBALI = "VERBALI", "Verbali della Comunità capi"
 
 
 class Azione(models.TextChoices):
@@ -34,7 +35,13 @@ class AccessoDatoSensibile(models.Model):
     utente = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
     )
-    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="accessi_sensibili")
+    # Empty for what is about no one person: the minutes of the Co.Ca. (DEC-329).
+    persona = models.ForeignKey(
+        Persona, null=True, blank=True, on_delete=models.CASCADE, related_name="accessi_sensibili"
+    )
+    verbale = models.ForeignKey(
+        "verbali.Verbale", null=True, blank=True, on_delete=models.CASCADE, related_name="accessi"
+    )
     categoria = models.CharField(max_length=12, choices=Categoria.choices)
     azione = models.CharField(max_length=16, choices=Azione.choices)
     # Who the user was acting as (apps.impersonazione); `utente` is the real one.
@@ -57,6 +64,19 @@ class AccessoDatoSensibile(models.Model):
 
     def __str__(self) -> str:
         return f"{self.get_azione_display()} {self.get_categoria_display()} di {self.persona}"
+
+
+def registra_accesso_verbale(request, verbale, azione: str) -> None:
+    """Who read the minutes of the Co.Ca. (DEC-329): they may speak of anyone."""
+    impersonatore = getattr(request, "impersonatore", None)
+    AccessoDatoSensibile.objects.create(
+        utente=impersonatore or request.auth,
+        per_conto_di=request.auth if impersonatore else None,
+        verbale=verbale,
+        categoria=Categoria.VERBALI,
+        azione=azione,
+        dispositivo=getattr(request, "dispositivo", None),
+    )
 
 
 def registra_accessi(request, persone, categoria: str, azione: str) -> None:

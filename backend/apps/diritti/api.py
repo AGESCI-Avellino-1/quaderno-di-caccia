@@ -135,6 +135,7 @@ class AnteprimaCancellazione(Schema):
     anonimizza: bool
     motivo_anagrafica: str | None
     voci: list[str]
+    verbali_col_nome: list[str]
 
 
 class Conferma(Schema):

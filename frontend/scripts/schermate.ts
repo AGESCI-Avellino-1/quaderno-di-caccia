@@ -551,6 +551,25 @@ const SCENE: Scena[] = [
   },
   { nome: 'capo/riunioni', chi: 'capoReparto', percorso: '/riunioni', intera: true },
   {
+    nome: 'capo/verbale',
+    chi: 'capogruppo',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      // Last week's meeting of the Co.Ca.: the list shows the ones to come.
+      await pagina.evaluate(async () => {
+        const riunioni: { id: number; titolo: string }[] = await (
+          await fetch('/api/v1/eventi?riunioni=true')
+        ).json()
+        const coca = riunioni.find((r) => r.titolo === 'Comunità capi')!
+        history.pushState({}, '', `/eventi/${coca.id}`)
+        dispatchEvent(new PopStateEvent('popstate'))
+      })
+      await pagina.getByRole('button', { name: 'Leggi il verbale' }).click()
+      await pagina.getByText('Campo di reparto').waitFor()
+    },
+    mostra: 'Verbale',
+  },
+  {
     nome: 'capo/turni',
     chi: 'capoReparto',
     percorso: '/unita',

@@ -535,6 +535,21 @@ _TIPI = [
         facoltativa=True,
     ),
     TipoEmail(
+        "promemoria_verbale",
+        "Verbale da scrivere",
+        "A chi deve scrivere il verbale di una riunione e a chi può indicarlo: 7 giorni dopo la "
+        "riunione, finché non è definitivo o si indica che non c'è. Arriva sempre.",
+        "Verbale da scrivere: [Riunione] del [Data]",
+        "<p>Ciao,</p><p>il verbale della riunione <strong>[Riunione]</strong> del [Data] non è "
+        "ancora definitivo.</p><p>Lo trovi qui:<br>[Link]</p><p>Se per questa riunione il "
+        "verbale non c'è, puoi indicarlo nella stessa pagina: il promemoria non arriverà più.</p>",
+        (
+            Segnaposto("Riunione", "il titolo della riunione", "Comunità capi", True),
+            Segnaposto("Data", "il giorno della riunione", "07/11/2026", True),
+            _link("la pagina della riunione"),
+        ),
+    ),
+    TipoEmail(
         "promemoria_fine_anno",
         "Fine anno e archivio",
         "Ai capigruppo: l'anno da chiudere e chi è da archiviare.",

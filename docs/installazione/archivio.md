@@ -11,6 +11,12 @@ firmata, la tessera sanitaria, i documenti d'identità) dopo averli controllati:
 carica e poi li cancella dal server. Senza il Drive collegato, i capi li scaricano sul
 proprio computer.
 
+Sullo stesso Drive stanno gli **allegati dei verbali delle riunioni**, compresi audio e video fino a
+2 GB per file: nella cartella l'app crea da sola `Verbali` e dentro una sottocartella per anno
+associativo. Si aprono sempre passando dall'app, che controlla chi può leggerli, ma **chi gestisce il
+Drive condiviso può vedere i file**, anche quelli dei verbali di Comunità capi: affidalo a persone
+autorizzate a leggerli. Senza il Drive collegato gli allegati stanno sul server, fino a 20 MB per file.
+
 Per collegarlo, una volta:
 
 1. In Google Cloud crea un progetto, abilita la **Google Drive API** e crea un **account di

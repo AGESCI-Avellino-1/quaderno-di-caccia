@@ -57,6 +57,41 @@ Per annullare una riunione tocca **Annulla la riunione** e scrivi il motivo: le 
 leggono nell'email. Le presenze si segnano come per gli eventi (vedi [Segnare le
 presenze](eventi.md#segnare-le-presenze)).
 
+## Il verbale
+
+Alcune riunioni hanno un verbale: Comunità capi, squadriglia, Alta Squadriglia, Consiglio Capi e
+Con.Ca.Vi. Lo trovi nella pagina della riunione, nel riquadro **Verbale**. Serve la rete: il
+verbale non resta salvato sul telefono.
+
+| Riunione | Chi decide chi lo scrive (e può sempre scriverlo) | Chi lo legge quando è definitivo |
+| --- | --- | --- |
+| Comunità capi | i capigruppo | i capi |
+| Squadriglia | il capo squadriglia e lo staff del reparto | la squadriglia, i suoi genitori, i capi |
+| Alta Squadriglia, Consiglio Capi, Con.Ca.Vi. | lo staff | gli invitati e i capi |
+
+1. Per affidarlo a qualcuno, in **Chi lo scrive** scegli una persona tra gli invitati o i capi e
+   tocca **Indica**. Può scrivere solo il verbale di questa riunione.
+2. Tocca **Scrivi il verbale**, scrivi il testo con l'editor e tocca **Salva la bozza**. La bozza la
+   vedono chi la scrive, chi l'ha indicato e i capi.
+3. Se vuoi, aggiungi dei file in **Allegati**: PDF, immagini, Word, Excel, PowerPoint, audio e video.
+   Le immagini vanno qui, non nel testo.
+4. Quando è finito, chi ha indicato chi scrive tocca **Rendi definitivo**. Da quel momento lo leggono
+   tutti quelli che ne hanno diritto e si scarica il **PDF** su carta intestata; con **Scarica lo ZIP
+   con gli allegati** hai tutto insieme.
+
+Per correggerlo tocca **Riapri il verbale** e scrivi il motivo, che resta registrato. Con l'anno
+associativo chiuso va prima riaperto l'anno.
+
+Il verbale di Comunità capi ha in fondo lo spazio per la firma, e ogni lettura resta registrata: i
+capigruppo lo vedono in **Chi l'ha letto**. Se non è definitivo, una settimana dopo la riunione
+arriva un promemoria ai capigruppo e a chi è stato indicato, poi ogni settimana, al massimo tre
+volte. Se per quella riunione il verbale non c'è, spunta **Per questa riunione il verbale non c'è**.
+
+:::{container} schermate
+![Il verbale di una riunione sul telefono](../img/capo/verbale-telefono.png){.telefono width="30%"}
+![Il verbale di una riunione sul computer](../img/capo/verbale-computer.png){.computer width="65%"}
+:::
+
 ## Le località
 
 I capigruppo trovano le località del gruppo in **Impostazioni › Località**: le correggono

@@ -44,7 +44,7 @@ delle modifiche.
 | Blocco | Contenuto                                                        | Impatto | Difficoltà |
 | ------ | ---------------------------------------------------------------- | ------- | ---------- |
 | 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (**fatto**) | Basso   | Bassa      |
-| 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già (in corso) | Medio   | Alta       |
+| 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già (**sviluppato**) | Medio   | Alta       |
 | 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 
@@ -55,10 +55,8 @@ ora gli incarichi di squadriglia.
 (DEC-321…DEC-331). L'elenco degli incarichi viene da `ignored/Incarichi di Squadriglia.pdf`, sul computer
 del maintainer. La versione esce alla fine dei quattro blocchi.
 
-**Da verificare in sviluppo: allegati su Drive.** Oggi l'app carica su Drive solo gli archivi, tenendoli in
-memoria, e il server accetta file fino a 20 MB. Per audio e video servono caricamento a pezzi (forse diretto
-dal browser a Drive), lettura attraverso l'app per applicare i permessi e uno ZIP che non stia tutto in
-memoria.
+**Da provare prima della versione.** Gli allegati su un vero Drive condiviso: finora il Drive è solo
+simulato nei test. Nelle note di versione: chi aggiorna deve aggiungere `promemoria_verbali` al crontab.
 
 ## Chiuse
 

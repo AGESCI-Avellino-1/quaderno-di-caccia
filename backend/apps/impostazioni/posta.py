@@ -48,6 +48,7 @@ SEMPRE = {
     "account_modificato",
     "attivazione_account",
     "account_figlio",
+    "promemoria_verbale",
 }
 # What the person asks for themself: never waits in the queue (DEC-311).
 SUBITO = {

@@ -44,6 +44,16 @@ Un incarico può avere più persone e una persona può averne più di uno. Per t
 **chiudi** accanto al nome. Gli incarichi li vedono la squadriglia, i genitori e i capi. Non danno
 permessi nell'app: l'infermiere, per esempio, non vede nessun dato in più. Serve la rete.
 
+## Il verbale delle riunioni
+
+Ogni riunione di squadriglia può avere un verbale: è facoltativo. Lo trovi nella pagina della
+riunione, nel riquadro **Verbale**, e serve la rete.
+
+Decidi tu chi lo scrive: in **Chi lo scrive** scegli uno squadrigliere, per esempio il cronista, e
+tocca **Indica**. Puoi anche scriverlo tu con **Scrivi il verbale**. Chi hai indicato scrive e salva
+la bozza; quando è pronto, tocchi tu **Rendi definitivo**. Da lì lo leggono la squadriglia, i
+genitori e i capi. Per correggerlo tocca **Riapri il verbale** e scrivi il motivo.
+
 ## Il cammino degli squadriglieri
 
 Tocca il nome di uno squadrigliere: vedi il suo Sentiero (mete, impegni, specialità e

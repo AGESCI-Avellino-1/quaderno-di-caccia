@@ -102,6 +102,24 @@ describe('il file sull iPhone', () => {
     pagina.unmount()
   })
 
+  it('un file molto grande non si scarica in memoria', async () => {
+    suIphone(true)
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const pagina = mount(FileDaSalvare, { attachTo: document.body })
+    const link = document.createElement('a')
+    link.href = '/api/v1/allegati-verbale/1'
+    link.dataset.dimensione = String(1024 ** 3)
+    document.body.append(link)
+    const evento = new MouseEvent('click', { bubbles: true, cancelable: true })
+    link.dispatchEvent(evento)
+    await nextTick()
+    expect(evento.defaultPrevented).toBe(true)
+    expect(fetch).not.toHaveBeenCalled()
+    expect(pagina.text()).toContain('troppo grande')
+    pagina.unmount()
+  })
+
   it('nel browser e sugli altri dispositivi il link funziona come sempre', async () => {
     const fetch = vi.fn()
     vi.stubGlobal('fetch', fetch)

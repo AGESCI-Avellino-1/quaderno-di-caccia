@@ -14,6 +14,7 @@ import {
 } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
+import VerbaleRiunione from '@/components/VerbaleRiunione.vue'
 import EventoBC from '@/components/EventoBC.vue'
 import ModificaRiunione from '@/components/ModificaRiunione.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
@@ -285,6 +286,8 @@ const STATI: [StatoPresenza, string][] = [
         <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
       </div>
     </div>
+
+    <VerbaleRiunione v-if="riunione" :key="evento.id" :evento="evento.id" />
 
     <section v-if="riunione && evento.turni?.length" class="card card-body mb-5">
       <h2 class="h5">Turni</h2>

@@ -55,10 +55,11 @@ def per_email(html: str) -> str:
     return re.sub(r"<img\b", f'<img style="{STILE_IMMAGINE}"', html)
 
 
-def pulisci(html: str) -> str:
+def pulisci(html: str, immagini: bool = True) -> str:
+    """`immagini=False`: the minutes, whose pictures are attachments (DEC-322)."""
     pulito = nh3.clean(
         html,
-        tags=TAG,
+        tags=TAG if immagini else TAG - {"img"},
         attributes=ATTRIBUTI,
         attribute_filter=_filtra,
         url_schemes=SCHEMI,

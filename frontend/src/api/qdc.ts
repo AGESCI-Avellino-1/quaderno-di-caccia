@@ -509,6 +509,35 @@ export interface Incarico {
   data_fine: string | null
 }
 
+/** The minutes of a meeting (DEC-322…DEC-331). */
+export interface Verbale {
+  tipo: string
+  stato: 'BOZZA' | 'DEFINITIVO'
+  /** Empty unless asked for: reading the Co.Ca.'s goes to the access log. */
+  testo: string
+  non_previsto: boolean
+  puo_dire_non_previsto: boolean
+  redattore: PersonaBreve | null
+  autore_nome: string
+  definitivo_il: string | null
+  puo_scrivere: boolean
+  puo_indicare: boolean
+  puo_riaprire: boolean
+  puo_stampare: boolean
+  candidati: PersonaBreve[]
+  allegati: { id: number; nome_file: string; dimensione: number }[]
+  massimo_allegato: number
+  /** How big each uploaded piece is. */
+  pezzo: number
+  zip_possibile: boolean
+  /** Who read it: for the capigruppo, on the Co.Ca.'s only. */
+  accessi: { chi: string; azione: string; quando: string }[] | null
+}
+
+export const verbalePdf = (evento: number) => `/api/v1/eventi/${evento}/verbale.pdf`
+export const verbaleZip = (evento: number) => `/api/v1/eventi/${evento}/verbale.zip`
+export const allegatoVerbale = (id: number) => `/api/v1/allegati-verbale/${id}`
+
 /** The roles of a patrol (DEC-321). */
 export interface IncarichiDiSquadriglia {
   id: number
@@ -900,6 +929,8 @@ export interface AnteprimaCancellazione {
   /** Why the registry data stay, when they do. */
   motivo_anagrafica: string | null
   voci: string[]
+  /** Meetings whose minutes name the person in their text: to be checked by hand. */
+  verbali_col_nome: string[]
 }
 
 /** Everything the app holds about a person: sections of values, lists or nothing. */
@@ -2756,6 +2787,43 @@ export const api = {
   revocaDeroga: (id: number) =>
     richiesta<Deroga>(`/api/v1/deroghe-squadriglia/${id}/revoca`, { metodo: 'POST' }),
   miaSquadriglia: () => richiesta<MiaSquadriglia[]>('/api/v1/mia-squadriglia'),
+  verbale: (evento: number, testo = false) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale${testo ? '?testo=true' : ''}`),
+  scriviVerbale: (evento: number, testo: string) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale`, { metodo: 'PUT', corpo: { testo } }),
+  indicaRedattore: (evento: number, persona_id: number | null) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale/redattore`, {
+      metodo: 'PUT',
+      corpo: { persona_id },
+    }),
+  verbaleNonPrevisto: (evento: number, non_previsto: boolean) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale/non-previsto`, {
+      metodo: 'PUT',
+      corpo: { non_previsto },
+    }),
+  verbaleDefinitivo: (evento: number) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale/definitivo`, { metodo: 'POST' }),
+  riapriVerbale: (evento: number, motivo: string) =>
+    richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale/riapri`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
+  nuovoAllegatoVerbale: (evento: number, nome: string, dimensione: number) =>
+    richiesta<{ id: number }>(`/api/v1/eventi/${evento}/verbale/allegati`, {
+      metodo: 'POST',
+      corpo: { nome, dimensione },
+    }),
+  pezzoAllegatoVerbale: (id: number, inizio: number, pezzo: Blob) => {
+    const corpo = new FormData()
+    corpo.append('inizio', String(inizio))
+    corpo.append('file', pezzo, 'pezzo')
+    return richiesta<{ ricevuti: number; completo: boolean }>(
+      `/api/v1/allegati-verbale/${id}/pezzo`,
+      { metodo: 'POST', corpo },
+    )
+  },
+  togliAllegatoVerbale: (id: number) =>
+    richiesta<null>(`/api/v1/allegati-verbale/${id}`, { metodo: 'DELETE' }),
   incarichiSquadriglia: (squadriglia: number) =>
     richiesta<IncarichiDiSquadriglia>(`/api/v1/squadriglie/${squadriglia}/incarichi`),
   incarichiSquadrigliaDi: (persona: number) =>

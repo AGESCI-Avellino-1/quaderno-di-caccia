@@ -21,7 +21,7 @@ from apps.attesa.models import InAttesa
 from apps.core.anno import AnnoAssociativo
 from apps.core.codice_fiscale import calcola
 from apps.iscrizioni.models import CodiceIscrizione
-from apps.organizzazione.models import Unita
+from apps.organizzazione.models import TipoUnita, Unita
 
 # Fixed, so that the manual can show the page it opens.
 CODICE_ISCRIZIONE = "CERCHIO2027"
@@ -152,6 +152,30 @@ def crea_attivita(email) -> None:
         f"/persone/{persona['Luca Rossi'].pk}/sanitarie",
         {"nessuna_allergia": True, "nessun_farmaco": True},
     )
+
+    # A meeting of the Co.Ca. last week, its minutes made definitive (DEC-322).
+    coca = capogruppo(
+        "post",
+        "/riunioni",
+        {
+            "titolo": "Comunità capi",
+            "unita": [Unita.objects.get(tipo=TipoUnita.COMUNITA_CAPI).pk],
+            "giorno": (date.today() - timedelta(days=7)).isoformat(),
+            "ora_inizio": "20:30",
+            "ora_fine": "22:30",
+            "nuova_localita": {"nome": "Sede della Comunità capi", "indirizzo": "Via dei Pini 1"},
+        },
+    )[0]
+    capogruppo(
+        "put",
+        f"/eventi/{coca['id']}/verbale",
+        {
+            "testo": "<p>Presenti tutti i capi. Abbiamo fissato le date dei campi estivi e "
+            "scelto i prossimi incontri di formazione.</p><ul><li><p>Campo di reparto: dal 20 "
+            "al 30 luglio.</p></li><li><p>Vacanze di branco: dal 25 al 31 luglio.</p></li></ul>"
+        },
+    )
+    capogruppo("post", f"/eventi/{coca['id']}/verbale/definitivo")
 
     # Meetings (DEC-310): every Saturday at the group's seat, a new place written while
     # creating them; notes on the next one. Then an outing with its fee, a group party.

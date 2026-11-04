@@ -6,6 +6,9 @@ import { fileInArrivo, linkAFile, pwaSuIos, scaricaFile } from '@/pwa/file'
 // The app installed on an iPhone (issue #12): links to files come here instead of opening
 // a page with no way back. The share needs its own tap: Safari may refuse it when it
 // follows the wait for the download.
+const MASSIMO_IN_MEMORIA = 200 * 1024 * 1024
+const TROPPO_GRANDE =
+  'Il file è troppo grande per aprirlo dall\u2019app sull\u2019iPhone: aprilo da Safari o dal computer.'
 const finestra = ref<HTMLDialogElement | null>(null)
 const errore = ref('')
 
@@ -13,6 +16,11 @@ function suClic(evento: MouseEvent) {
   const link = linkAFile(evento)
   if (!link) return
   evento.preventDefault()
+  // A file this big would not fit in the phone's memory.
+  if (Number(link.dataset.dimensione ?? 0) > MASSIMO_IN_MEMORIA) {
+    fileInArrivo.value = { stato: 'errore', messaggio: TROPPO_GRANDE }
+    return
+  }
   void scaricaFile(link.href)
 }
 

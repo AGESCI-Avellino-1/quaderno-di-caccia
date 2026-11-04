@@ -442,5 +442,9 @@ implements them:
   technical administrator (`accounts/gestione.py`, actions with a reason in `AzioneAccount`,
   blocked while impersonating). A parent enters the Co.Ca. in two steps that can be undone
   (`iscrizioni.PassaggioInCoca`, DEC-307).
+- Minutes (DEC-322…DEC-331, `apps/verbali`): online only, never cached. Attachments go to the
+  Drive in 8 MB pieces through the app (the proxies stop at 20 MB, the session address stays on
+  the server) and come back as a stream: this is why gunicorn runs with threads (a sync worker
+  is killed after 30 s of download) and answers carry `X-Accel-Buffering: no`.
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

@@ -9,6 +9,7 @@
 #   promemoria_quote       reminders of unpaid fees due within a week
 #   promemoria_buonacaccia deadlines of BuonaCaccia registrations, to staff and families
 #   promemoria_lista_attesa after two years on the waiting list, asks whether to stay
+#   promemoria_verbali     minutes still to write; names kept for five years; broken uploads
 #   promemoria_fine_anno   the year to close and who is due for archiving, to the capigruppo
 #   backup-db.sh           database and uploaded files, kept 30 days (copy them elsewhere,
 #                          encrypted: a backup on the same server is lost with it)
@@ -22,5 +23,6 @@
 30 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_quote
 35 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_buonacaccia
 40 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_lista_attesa
+45 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_verbali
 50 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_fine_anno
 30 2 * * *  cd /srv/qdc && KEEP_DAYS=30 scripts/backup-db.sh > /dev/null

@@ -6,6 +6,9 @@ import EventoView from '@/views/EventoView.vue'
 
 import { risposta } from './aiuti'
 
+// The minutes have their own tests and their own answers.
+vi.mock('@/components/VerbaleRiunione.vue', () => ({ default: { template: '<div></div>' } }))
+
 function evento(campi: Partial<DettaglioEvento>): DettaglioEvento {
   return {
     id: 5,

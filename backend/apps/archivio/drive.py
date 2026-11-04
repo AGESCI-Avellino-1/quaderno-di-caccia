@@ -108,6 +108,104 @@ FILE = "https://www.googleapis.com/drive/v3/files"
 CARTELLA = "application/vnd.google-apps.folder"
 
 
+def _autorizzazione() -> dict[str, str]:
+    return {"Authorization": f"Bearer {_token()}"}
+
+
+def cartella(nome: str, genitore: str) -> str:
+    """The id of a folder inside `genitore`, created the first time (DEC-330)."""
+    risposta = requests.get(
+        FILE,
+        params={
+            "q": (
+                f"name = '{nome}' and '{genitore}' in parents and "
+                f"mimeType = '{CARTELLA}' and trashed = false"
+            ),
+            "supportsAllDrives": "true",
+            "includeItemsFromAllDrives": "true",
+            "fields": "files(id)",
+        },
+        headers=_autorizzazione(),
+        timeout=30,
+    )
+    if risposta.status_code != 200:
+        raise ErroreDrive("Il Drive del gruppo non risponde: riprova più tardi.")
+    trovate = risposta.json().get("files", [])
+    if trovate:
+        return trovate[0]["id"]
+    creata = requests.post(
+        FILE,
+        params={"supportsAllDrives": "true", "fields": "id"},
+        headers=_autorizzazione(),
+        json={"name": nome, "mimeType": CARTELLA, "parents": [genitore]},
+        timeout=30,
+    )
+    if creata.status_code not in (200, 201):
+        raise ErroreDrive("Non riesco a creare la cartella sul Drive: riprova più tardi.")
+    return creata.json()["id"]
+
+
+def apri_caricamento(nome: str, tipo: str, dimensione: int, genitore: str) -> str:
+    """A resumable upload: big files go piece by piece through the app (DEC-330). The
+    address returned is a secret: it stays on the server."""
+    risposta = requests.post(
+        CARICA,
+        params={"uploadType": "resumable", "supportsAllDrives": "true", "fields": "id,size"},
+        headers={
+            **_autorizzazione(),
+            "X-Upload-Content-Type": tipo,
+            "X-Upload-Content-Length": str(dimensione),
+        },
+        json={"name": nome, "parents": [genitore]},
+        timeout=30,
+    )
+    if risposta.status_code != 200 or "Location" not in risposta.headers:
+        raise ErroreDrive("Il caricamento sul Drive non è partito: riprova più tardi.")
+    return risposta.headers["Location"]
+
+
+def carica_pezzo(sessione: str, dati: bytes, inizio: int, totale: int) -> dict | None:
+    """One piece. The file's data (id, size) when it was the last one, None otherwise."""
+    fine = inizio + len(dati) - 1
+    risposta = requests.put(
+        sessione,
+        data=dati,
+        headers={"Content-Range": f"bytes {inizio}-{fine}/{totale}"},
+        timeout=120,
+    )
+    if risposta.status_code == 308:
+        return None
+    if risposta.status_code in (200, 201):
+        return risposta.json()
+    raise ErroreDrive("Il caricamento sul Drive si è interrotto: riprova.")
+
+
+def leggi(file_id: str):
+    """The file's bytes as they arrive: a big one never stays in memory."""
+    risposta = requests.get(
+        f"{FILE}/{file_id}",
+        params={"alt": "media", "supportsAllDrives": "true"},
+        headers=_autorizzazione(),
+        stream=True,
+        timeout=60,
+    )
+    if risposta.status_code != 200:
+        raise ErroreDrive("Il file non si legge dal Drive: riprova più tardi.")
+    return risposta.iter_content(1024 * 1024)
+
+
+def cancella(file_id: str) -> None:
+    risposta = requests.delete(
+        f"{FILE}/{file_id}",
+        params={"supportsAllDrives": "true"},
+        headers=_autorizzazione(),
+        timeout=30,
+    )
+    # Already gone from the Drive: what was asked for.
+    if risposta.status_code not in (200, 204, 404):
+        raise ErroreDrive("Il file non si toglie dal Drive: riprova più tardi.")
+
+
 def controlla() -> list[tuple[bool, str]]:
     """Check the setup step by step, as (ok, message) pairs; it stops at the first step
     that fails, whose message says what to correct. Nothing is written on the Drive."""

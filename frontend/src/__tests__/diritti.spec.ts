@@ -76,7 +76,12 @@ describe('FascicoloView', () => {
       (url, metodo) =>
         url.endsWith('/fascicolo')
           ? fascicolo
-          : { anonimizza: metodo === 'POST', motivo_anagrafica: null, voci: ['Account'] },
+          : {
+              anonimizza: metodo === 'POST',
+              motivo_anagrafica: null,
+              voci: ['Account'],
+              verbali_col_nome: [],
+            },
       chiamate,
     )
     const vista = mount(FascicoloView, { props: { id: 3 }, ...globali })

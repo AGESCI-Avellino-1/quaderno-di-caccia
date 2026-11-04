@@ -23,7 +23,7 @@ ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=config.settings.prod \
     QDC_MEDIA_ROOT=/data/media \
-    GUNICORN_CMD_ARGS="--workers 3 --access-logfile -"
+    GUNICORN_CMD_ARGS="--workers 3 --threads 4 --access-logfile -"
 COPY --from=build /opt/venv /opt/venv
 COPY --from=build --chown=qdc:qdc /app /app
 WORKDIR /app

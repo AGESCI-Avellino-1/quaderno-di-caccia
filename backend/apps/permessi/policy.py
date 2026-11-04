@@ -462,6 +462,76 @@ def puo_vedere_incarichi_squadriglia(user, squadriglia: Squadriglia) -> bool:
     return any(genitori_vedono(figlio, "scheda") for figlio in figli)
 
 
+# --- Minutes (DEC-322…DEC-331) ---------------------------------------------------------------
+
+
+def puo_indicare_redattore(user, evento) -> bool:
+    """Who decides who writes the minutes, and may always write them: the CSQ and the staff
+    for a patrol, the staff for the reparto councils, the capigruppo for the Co.Ca. (DEC-324)."""
+    from apps.verbali.models import TipoVerbale
+    from apps.verbali.servizi import tipo_di
+
+    tipo = tipo_di(evento)
+    if tipo is None or e_capo_in_attesa(user):
+        return False
+    if tipo == TipoVerbale.COCA:
+        return e_capogruppo(user)
+    if tipo == TipoVerbale.SQUADRIGLIA:
+        squadriglia = evento.squadriglia
+        return (
+            e_staff(user, squadriglia.unita)
+            or squadriglie_guidate(user).filter(pk=squadriglia.pk).exists()
+        )
+    return bool(set(_unita_ids_evento(evento)) & _unita_servite(user))
+
+
+def e_redattore(user, verbale) -> bool:
+    persona = persona_di(user)
+    return persona is not None and verbale.redattore_id == persona.pk
+
+
+def puo_scrivere_verbale(user, verbale) -> bool:
+    if verbale.definitivo:
+        return False
+    return puo_indicare_redattore(user, verbale.evento) or e_redattore(user, verbale)
+
+
+def puo_leggere_verbale(user, verbale) -> bool:
+    """In draft: who writes it, who chooses and the capi. Definitive: the capi; for the
+    councils also who was invited; for a patrol its members and their parents; the Co.Ca.
+    is for the capi only (DEC-323, DEC-324)."""
+    from apps.verbali.models import TipoVerbale
+    from apps.verbali.servizi import tipo_di
+
+    evento = verbale.evento
+    tipo = tipo_di(evento)
+    if tipo is None:
+        return False
+    if e_capo(user) and not e_capo_in_attesa(user):
+        return True
+    if puo_indicare_redattore(user, evento) or e_redattore(user, verbale):
+        return True
+    if not verbale.definitivo or tipo == TipoVerbale.COCA:
+        return False
+    invitati = evento.partecipazioni.values("persona_id")
+    persona = persona_di(user)
+    if persona is not None and invitati.filter(persona=persona).exists():
+        return True
+    if tipo != TipoVerbale.SQUADRIGLIA:
+        return False
+    if squadriglie_di(user).filter(pk=evento.squadriglia_id).exists():
+        return True
+    membri = AppartenenzaSquadriglia.objects.attive().filter(squadriglia=evento.squadriglia_id)
+    figli = tutelati(user).filter(
+        Q(pk__in=invitati.values("persona_id")) | Q(pk__in=membri.values("persona_id"))
+    )
+    return any(genitori_vedono(figlio, "scheda") for figlio in figli)
+
+
+def puo_vedere_accessi_verbale(user) -> bool:
+    return e_capogruppo(user)
+
+
 def puo_impostare_telefono_squadriglia(user, persona: Persona) -> bool:
     """Which phone the patrol sees and whether to hide it (DEC-13, DEC-115):
     the parents of a minor, the adult member, the staff of the unit and the

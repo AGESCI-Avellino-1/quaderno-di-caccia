@@ -175,6 +175,15 @@ async function cancella() {
           <ul class="small mb-0">
             <li v-for="v in anteprima.voci" :key="v">{{ v }}</li>
           </ul>
+          <div v-if="anteprima.verbali_col_nome.length" class="alert theme-warning small">
+            <div>
+              Il nome compare nel testo dei verbali di queste riunioni. Il testo non cambia da solo:
+              controllali e correggili se serve (riaprendoli).
+              <ul class="mb-0">
+                <li v-for="r in anteprima.verbali_col_nome" :key="r">{{ r }}</li>
+              </ul>
+            </div>
+          </div>
           <p v-if="anteprima.motivo_anagrafica" class="small mb-0">
             I dati anagrafici restano: {{ anteprima.motivo_anagrafica }}
           </p>

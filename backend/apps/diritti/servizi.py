@@ -37,6 +37,8 @@ from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
 from apps.quote.models import Quota
 from apps.sanitaria.models import AllegatoSanitario, InformazioniSanitarie, ReperibilitaEvento
+from apps.verbali.models import Verbale
+from apps.verbali.servizi import alla_cancellazione, verbali_col_nome
 
 from .models import RichiestaDiritti
 
@@ -120,6 +122,11 @@ def fascicolo(persona: Persona) -> dict:
             for i in Incarico.objects.filter(persona=persona).select_related(
                 "unita", "squadriglia", "gruppo"
             )
+        ],
+        # Who wrote them: the text itself is a document of the group (DEC-328).
+        "verbali_scritti": [
+            {"Riunione": str(v.evento)}
+            for v in Verbale.objects.filter(autore=persona).select_related("evento")
         ],
         "telefono_in_squadriglia": {
             "Numero mostrato": _telefono(persona),
@@ -574,7 +581,13 @@ def anteprima_cancellazione(persona: Persona) -> dict:
             "Nome, codice fiscale, contatti e gli altri dati anagrafici (restano solo "
             "i periodi nelle unità, senza nome)"
         )
-    return {"anonimizza": motivo is None, "motivo_anagrafica": motivo, "voci": voci}
+    return {
+        "anonimizza": motivo is None,
+        "motivo_anagrafica": motivo,
+        "voci": voci,
+        # The free text does not change by itself: a capogruppo checks it (DEC-328).
+        "verbali_col_nome": [str(v.evento) for v in verbali_col_nome(persona)],
+    }
 
 
 def _cancella_storico(oggetti) -> None:
@@ -595,6 +608,7 @@ def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
     if conserva_nome:
         esito["anonimizza"] = True
     with disable_auditlog():
+        alla_cancellazione(persona)
         sanitarie = InformazioniSanitarie.objects.filter(persona=persona).first()
         if sanitarie is not None:
             _cancella_storico([*sanitarie.allergie.all(), *sanitarie.farmaci.all(), sanitarie])

@@ -8,10 +8,65 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Quaderno di Caccia</title>
+    <style>
+      /* The start screen while the app loads (DEC-332): Vue replaces it when it mounts. On its
+         own here, as the bundled styles are not loaded yet; same colours as scripts/avvio.ts. */
+      .avvio {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background-color: #fff;
+        background-image:
+          linear-gradient(
+            to right,
+            transparent 15%,
+            #e58a8f 15%,
+            #e58a8f calc(15% + 1px),
+            transparent calc(15% + 1px)
+          ),
+          repeating-linear-gradient(to bottom, transparent 0 23px, #c8d7ee 23px 24px);
+        font-family: 'Titillium Web', system-ui, sans-serif;
+        color: #462d7b;
+        text-align: center;
+      }
+      .avvio-etichetta {
+        box-sizing: border-box;
+        width: min(78vw, 42vh);
+        padding: 12px 10px;
+        background: #fff;
+        border: 1px solid #462d7b;
+        border-radius: 6px;
+      }
+      .avvio-etichetta img {
+        display: block;
+        width: 72%;
+        height: auto;
+        margin: 0 auto 8px;
+      }
+      .avvio-nome {
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.15;
+      }
+      .avvio-gruppo {
+        margin-top: 4px;
+        font-size: 13px;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="avvio" role="status" aria-label="Caricamento">
+        <div class="avvio-etichetta">
+          <img src="/icons/icon-512.png" alt="" width="512" height="512" />
+          <div class="avvio-nome">Quaderno di Caccia</div>
+          <!-- qdc-gruppo-avvio -->
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -123,6 +123,14 @@ DJANGO_DEFAULT_FROM_EMAIL=Quaderno di Caccia <noreply@esempio.org>
 Le email ai capi, ai genitori e ai ragazzi partono solo dopo che i capigruppo le accendono
 nelle Impostazioni (**Chi riceve le email**): codici di accesso e inviti partono sempre.
 
+## La schermata di avvio
+
+All'apertura l'app mostra una pagina a righe con un'etichetta: il logo, il nome dell'app e, se lo
+scrivi in `.env`, quello del gruppo (`QDC_NOME_AVVIO=AGESCI Gruppo Avellino 1`). Come il logo, si
+ricava quando si costruisce l'app: se cambia, serve `docker compose up -d --build`. Su un iPhone
+dove l'app era già installata, la nuova schermata può comparire solo reinstallandola sulla schermata
+Home.
+
 ## Il logo del gruppo
 
 Le icone dell'app (quella sul telefono e nel browser) e il logo nella barra in alto sono, di
@@ -191,6 +199,7 @@ servizio senza fermare l'app: `sudo scripts/installa-servizio.sh --rimuovi`.
 | --- | --- | --- |
 | `QDC_INVITO_VALIDITA_GIORNI` | per quanti giorni vale un invito | 14 |
 | `QDC_OFFLINE_GIORNI` | per quanti giorni un telefono tiene i dati senza collegarsi | 14 |
+| `QDC_NOME_AVVIO` | il nome del gruppo sulla schermata di avvio, sotto quello dell'app | vuota: solo il nome dell'app |
 | `QDC_LOGO` | il logo del gruppo per le icone dell'app | vuota: il logo AGESCI (vedi sopra) |
 | `QDC_BANNER_INSTALLAZIONE_GIORNI` | dopo quanti giorni l'invito a installare l'app, chiuso, può ricomparire | 14 |
 | `QDC_DRIVE_CREDENZIALI`, `QDC_DRIVE_CARTELLA`, `QDC_IMPRONTA_CHIAVE` | archivio sul Drive | vuote: vedi [Archivio sul Drive](archivio) |

@@ -9,6 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
+| [#14](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/14) | Schermata di avvio | Funzione | Basso   | Media      | VER    |
 | [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | VER    |
 
 Nessuna segnalazione di sicurezza aperta.

@@ -11,7 +11,9 @@ COPY frontend/ ./
 COPY resources/ /app/resources/
 # The group's own logo (DEC-294), a path from the repository root; empty = AGESCI.
 ARG QDC_LOGO=""
-RUN QDC_LOGO="$QDC_LOGO" npm run build
+# Under the app's name on the start screen (DEC-332); empty = nothing.
+ARG QDC_NOME_AVVIO=""
+RUN QDC_LOGO="$QDC_LOGO" QDC_NOME_AVVIO="$QDC_NOME_AVVIO" npm run build
 
 FROM nginx:stable-alpine
 # The official image renders /etc/nginx/templates/*.template into conf.d at start-up.

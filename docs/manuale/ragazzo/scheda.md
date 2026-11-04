@@ -25,3 +25,5 @@ Da maggiorenne i tuoi dati li gestisci tu:
   prima.
 
 Un mese prima del compleanno e il giorno dei 18 anni ti arriva un'email che te lo ricorda.
+
+Nello stesso riquadro scegli anche chi va alle riunioni dei genitori: di norma sono invitati loro; se attivi **Alle riunioni dei genitori vado io al loro posto**, l'invito arriva a te e non più a loro.

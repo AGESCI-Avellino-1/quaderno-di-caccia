@@ -9,6 +9,7 @@ import {
   type PersonaBreve,
   type Verbale,
 } from '@/api/qdc'
+import { caricaAPezzi, misura } from '@/components/allegatiVerbale'
 import { useErrore } from '@/composables/useErrore'
 
 // The minutes of a meeting (DEC-322…DEC-331): online only, never kept on the device. What
@@ -90,7 +91,6 @@ async function riapri() {
   riapertura.value = null
 }
 
-// Piece by piece through the app (DEC-330): without a Drive the piece is the whole file.
 async function carica(evento: Event) {
   const campo = evento.target as HTMLInputElement
   const file = campo.files?.[0]
@@ -100,13 +100,9 @@ async function carica(evento: Event) {
   caricamento.value = { nome: file.name, percentuale: 0 }
   await esegui(async () => {
     const allegato = await api.nuovoAllegatoVerbale(props.evento, file.name, file.size)
-    for (let inizio = 0; inizio < file.size; inizio += pezzo) {
-      await api.pezzoAllegatoVerbale(allegato.id, inizio, file.slice(inizio, inizio + pezzo))
-      caricamento.value = {
-        nome: file.name,
-        percentuale: Math.round((Math.min(inizio + pezzo, file.size) / file.size) * 100),
-      }
-    }
+    await caricaAPezzi(allegato.id, file, pezzo, (percentuale) => {
+      caricamento.value = { nome: file.name, percentuale }
+    })
     mostra({ ...(await api.verbale(props.evento)), testo: testo.value })
   })
   caricamento.value = null
@@ -119,12 +115,6 @@ async function togli(id: number) {
     return true
   })
   if (fatto) daTogliere.value = null
-}
-
-function misura(byte: number): string {
-  if (byte >= 1024 ** 3) return `${(byte / 1024 ** 3).toFixed(1).replace('.', ',')} GB`
-  if (byte >= 1024 ** 2) return `${Math.ceil(byte / 1024 ** 2)} MB`
-  return `${Math.ceil(byte / 1024)} KB`
 }
 
 const nomeDi = (p: PersonaBreve) => `${p.cognome} ${p.nome}`
@@ -246,7 +236,7 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
       >
         <a :href="allegatoVerbale(a.id)" :data-dimensione="a.dimensione">{{ a.nome_file }}</a>
         <span class="small fg-2">{{ misura(a.dimensione) }}</span>
-        <template v-if="verbale.puo_scrivere">
+        <template v-if="verbale.puo_scrivere && (!a.di_convocazione || verbale.puo_indicare)">
           <button
             v-if="daTogliere !== a.id"
             type="button"

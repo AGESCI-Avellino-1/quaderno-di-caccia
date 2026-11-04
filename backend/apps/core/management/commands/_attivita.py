@@ -177,6 +177,26 @@ def crea_attivita(email) -> None:
     )
     capogruppo("post", f"/eventi/{coca['id']}/verbale/definitivo")
 
+    # A meeting of the parents of the reparto, with a document, not convened yet (DEC-325).
+    genitori = capo_reparto(
+        "post",
+        "/riunioni",
+        {
+            "cerchia": "GENITORI",
+            "unita": [reparto.pk],
+            "giorno": (date.today() + timedelta(days=_sabato(2) + 1)).isoformat(),
+            "ora_inizio": "18:00",
+            "ora_fine": "19:30",
+        },
+    )[0]
+    programma = _pdf_di_prova("Programma dell'anno", "pezzo")
+    documento = capo_reparto(
+        "post",
+        f"/eventi/{genitori['id']}/convocazione/allegati",
+        {"nome": "programma-dell-anno.pdf", "dimensione": programma.size},
+    )
+    capo_reparto.carica(f"/allegati-verbale/{documento['id']}/pezzo", programma, inizio="0")
+
     # Meetings (DEC-310): every Saturday at the group's seat, a new place written while
     # creating them; notes on the next one. Then an outing with its fee, a group party.
     oggi = date.today()

@@ -13,7 +13,7 @@ from apps.anagrafica.preferenze import accetta
 from apps.impostazioni.email import invia
 from apps.permessi.policy import genitori_vedono
 
-from .models import Evento, StatoPartecipazione, TipoEvento
+from .models import Cerchia, Evento, StatoPartecipazione, TipoEvento
 
 
 def indirizzi_famiglia(persone, categoria: str) -> list[str]:
@@ -39,6 +39,23 @@ def indirizzi_famiglia(persone, categoria: str) -> list[str]:
     return indirizzi
 
 
+def indirizzi_diretti(persone, categoria: str | None = None) -> list[str]:
+    """The people themselves: at a meeting of the parents they are the ones invited, not
+    the families of who is invited (DEC-325). No category: an email that always goes."""
+    indirizzi = []
+    for chi in persone.select_related("utente"):
+        if categoria and not accetta(chi, categoria):
+            continue
+        email = chi.email or (chi.utente.email if chi.utente else "")
+        if email and email not in indirizzi:
+            indirizzi.append(email)
+    return indirizzi
+
+
+def quando(evento: Evento) -> str:
+    return _quando(evento)
+
+
 def _quando(evento: Evento) -> str:
     inizio = timezone.localtime(evento.inizio)
     fine = timezone.localtime(evento.fine)
@@ -51,7 +68,11 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
     partecipanti = Persona.objects.filter(
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
-    indirizzi = indirizzi_famiglia(partecipanti, "eventi")
+    indirizzi = (
+        indirizzi_diretti(partecipanti, "eventi")
+        if evento.cerchia == Cerchia.GENITORI
+        else indirizzi_famiglia(partecipanti, "eventi")
+    )
     return invia(
         modello,
         {

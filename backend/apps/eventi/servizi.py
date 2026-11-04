@@ -7,10 +7,18 @@ from django.db import transaction
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 
-from apps.anagrafica.models import Appartenenza, AppartenenzaSquadriglia, Persona
+from apps.anagrafica.models import (
+    Appartenenza,
+    AppartenenzaSquadriglia,
+    Persona,
+    RelazioneTutela,
+    RuoloAppartenenza,
+    VisibilitaGenitori,
+)
 from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
 from apps.organizzazione.models import BRANCA_DEL_TIPO, Incarico, RuoloIncarico, TipoUnita, Unita
+from apps.permessi.policy import STAFF_DI_UNITA
 
 from .models import (
     CERCHIE_DI_REPARTO,
@@ -56,6 +64,8 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
     giorno = giorno_evento(evento)
     if evento.livello == Livello.ESTERNO:
         return Persona.objects.none()  # who registered on BuonaCaccia, one by one
+    if evento.cerchia == Cerchia.GENITORI:
+        return _invitati_genitori(evento, giorno)
     if evento.livello == Livello.SQUADRIGLIA:
         ids = (
             AppartenenzaSquadriglia.objects.filter(
@@ -90,6 +100,54 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
             .values("persona_id")
         )
     return Persona.objects.filter(pk__in=ids)
+
+
+def _invitati_genitori(evento: Evento, giorno: date) -> QuerySet[Persona]:
+    """The parents and guardians of the members, both if there are two, and the staff (the
+    whole Co.Ca. for the group); not the children. For an adult member the parents, unless
+    they chose to come in their place (DEC-325)."""
+    unita = unita_coinvolte(evento)
+    figli = Appartenenza.objects.attive(giorno).filter(
+        unita__in=unita, ruolo=RuoloAppartenenza.RAGAZZO
+    )
+    al_posto = [
+        scelta.persona_id
+        for scelta in VisibilitaGenitori.objects.filter(
+            persona__in=figli.values("persona_id"), al_posto_dei_genitori=True
+        ).select_related("persona")
+        if not scelta.persona.e_minorenne()
+    ]
+    genitori = RelazioneTutela.objects.filter(
+        minore__in=figli.values("persona_id"), responsabilita_genitoriale=True
+    ).exclude(minore__in=al_posto)
+    if evento.livello == Livello.GRUPPO:
+        capi = Appartenenza.objects.attive(giorno).filter(ruolo=RuoloAppartenenza.CAPO)
+    else:
+        capi = Incarico.objects.attivi(giorno).filter(
+            ruolo__in=STAFF_DI_UNITA,
+            unita__in=[*unita.values_list("pk", flat=True), *_collegate(unita)],
+        )
+    return Persona.objects.filter(
+        Q(pk__in=genitori.values("tutore_id"))
+        | Q(pk__in=al_posto)
+        | Q(pk__in=capi.values("persona_id"))
+    )
+
+
+def _collegate(unita) -> list[int]:
+    return [i for i in unita.values_list("collegata_a_id", flat=True) if i]
+
+
+def riallinea_riunioni_genitori() -> None:
+    """An adult member changed their mind: who comes changes for the meetings to come. Who
+    has a mark of attendance stays."""
+    for evento in Evento.objects.filter(
+        cerchia=Cerchia.GENITORI, inizio__gte=timezone.now(), annullato_il__isnull=True
+    ):
+        allinea_partecipanti(evento)
+        evento.partecipazioni.exclude(persona__in=previsti(evento)).exclude(
+            persona__in=evento.presenze.values("persona_id")
+        ).filter(stato=StatoPartecipazione.INVITATO).delete()
 
 
 def allinea_partecipanti(evento: Evento) -> None:
@@ -146,6 +204,13 @@ def annulla(evento: Evento, motivo: str) -> None:
 
 
 # --- Recurring meetings (DEC-78) -------------------------------------------------------------
+
+
+def titolo_riunione_genitori(unita: list[Unita]) -> str:
+    if not unita:
+        return "Riunione dei genitori"
+    nomi = " e ".join(u.nome or u.get_tipo_display() for u in unita)
+    return f"Riunione dei genitori di {nomi}"
 
 
 def titolo_riunione(serie: RiunioneRicorrente) -> str:

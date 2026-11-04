@@ -57,15 +57,40 @@ Per annullare una riunione tocca **Annulla la riunione** e scrivi il motivo: le 
 leggono nell'email. Le presenze si segnano come per gli eventi (vedi [Segnare le
 presenze](eventi.md#segnare-le-presenze)).
 
+## Le riunioni dei genitori
+
+Le creano lo staff, per la sua unità, e i capigruppo, anche per più unità o per tutto il gruppo.
+
+1. In **Nuove riunioni**, in **Di chi**, scegli **Dei genitori**, poi le unità o **Tutto il gruppo**,
+   il giorno e gli orari. Si crea una riunione alla volta.
+2. Apri la riunione. Nel riquadro **Convocazione** aggiungi i documenti, per esempio il programma.
+3. Tocca **Invia la convocazione**: l'email parte per tutti gli invitati con i documenti allegati,
+   una volta sola. I documenti troppo grandi per un'email restano da aprire nell'app, e nell'email
+   ci sono il nome e il link.
+
+Un documento aggiunto dopo arriva da solo per email agli invitati. Se sposti o annulli la riunione,
+gli invitati ricevono l'email come per le altre riunioni.
+
+Sono invitati i genitori e i tutori dei ragazzi, entrambi se ci sono, e lo staff (per il gruppo tutta
+la Comunità capi); i ragazzi no. Per un rover o una scolta maggiorenne sono invitati i genitori, salvo
+che abbia scelto di andare lui al loro posto. Nessuno deve comunicare se viene: le presenze le segna
+lo staff, per ogni genitore, e non contano su quelle dei figli.
+
+:::{container} schermate
+![La convocazione di una riunione sul telefono](../img/capo/convocazione-telefono.png){.telefono width="30%"}
+![La convocazione di una riunione sul computer](../img/capo/convocazione-computer.png){.computer width="65%"}
+:::
+
 ## Il verbale
 
-Alcune riunioni hanno un verbale: Comunità capi, squadriglia, Alta Squadriglia, Consiglio Capi e
-Con.Ca.Vi. Lo trovi nella pagina della riunione, nel riquadro **Verbale**. Serve la rete: il
+Alcune riunioni hanno un verbale: Comunità capi, riunioni dei genitori, squadriglia, Alta Squadriglia,
+Consiglio Capi e Con.Ca.Vi. Lo trovi nella pagina della riunione, nel riquadro **Verbale**. Serve la rete: il
 verbale non resta salvato sul telefono.
 
 | Riunione | Chi decide chi lo scrive (e può sempre scriverlo) | Chi lo legge quando è definitivo |
 | --- | --- | --- |
 | Comunità capi | i capigruppo | i capi |
+| Riunione dei genitori | i capigruppo e, se è di una sola unità, il suo staff | gli invitati e i capi |
 | Squadriglia | il capo squadriglia e lo staff del reparto | la squadriglia, i suoi genitori, i capi |
 | Alta Squadriglia, Consiglio Capi, Con.Ca.Vi. | lo staff | gli invitati e i capi |
 
@@ -82,10 +107,12 @@ verbale non resta salvato sul telefono.
 Per correggerlo tocca **Riapri il verbale** e scrivi il motivo, che resta registrato. Con l'anno
 associativo chiuso va prima riaperto l'anno.
 
-Il verbale di Comunità capi ha in fondo lo spazio per la firma, e ogni lettura resta registrata: i
-capigruppo lo vedono in **Chi l'ha letto**. Se non è definitivo, una settimana dopo la riunione
-arriva un promemoria ai capigruppo e a chi è stato indicato, poi ogni settimana, al massimo tre
-volte. Se per quella riunione il verbale non c'è, spunta **Per questa riunione il verbale non c'è**.
+I verbali di Comunità capi e delle riunioni dei genitori hanno in fondo lo spazio per la firma. Se non
+sono definitivi, una settimana dopo la riunione arriva un promemoria a chi può indicare chi scrive e
+alla persona indicata, poi ogni settimana, al massimo tre volte. Se per quella riunione il verbale non
+c'è, spunta **Per questa riunione il verbale non c'è**.
+
+Di quello di Comunità capi resta registrata ogni lettura: i capigruppo la vedono in **Chi l'ha letto**.
 
 :::{container} schermate
 ![Il verbale di una riunione sul telefono](../img/capo/verbale-telefono.png){.telefono width="30%"}

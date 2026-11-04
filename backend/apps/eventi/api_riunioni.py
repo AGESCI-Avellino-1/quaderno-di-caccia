@@ -114,6 +114,8 @@ class RiunioneIn(Schema):
     titolo: str = ""
     cerchia: Cerchia = Cerchia.TUTTI
     unita: list[int] = []  # the first is the unit's; a second one meets with it
+    # A meeting of the parents of the whole group, with no unit (DEC-325).
+    di_gruppo: bool = False
     squadriglia_id: int | None = None
     ora_inizio: time
     ora_fine: time
@@ -166,10 +168,10 @@ def _serie_out(user, serie: RiunioneRicorrente) -> dict:
     }
 
 
-def _puo_creare(user, unita: list[Unita], squadriglia, cerchia: str) -> bool:
+def _puo_creare(user, unita: list[Unita], squadriglia, cerchia: str, livello=None) -> bool:
     return policy.puo_creare_evento(
         user,
-        Livello.SQUADRIGLIA if squadriglia else Livello.UNITA,
+        livello or (Livello.SQUADRIGLIA if squadriglia else Livello.UNITA),
         unita_ids=[u.pk for u in unita],
         squadriglia=squadriglia,
         tipo=TipoEvento.RIUNIONE,
@@ -197,6 +199,8 @@ def _unita_e_squadriglia(dati: RiunioneIn) -> tuple[list[Unita], Squadriglia | N
     unita = [per_id[i] for i in dict.fromkeys(dati.unita) if i in per_id]
     if not unita:
         raise HttpError(400, "Scegli l'unità.")
+    if dati.cerchia == Cerchia.GENITORI:
+        return unita, None  # the parents of one or more units (DEC-325)
     if len(unita) > 1:
         # Two units meet together only when linked (DEC-279).
         principale = unita[0]
@@ -207,6 +211,10 @@ def _unita_e_squadriglia(dati: RiunioneIn) -> tuple[list[Unita], Squadriglia | N
 
 @router.post("/riunioni", response={201: list[EventoOut]})
 def crea_riunioni(request, dati: RiunioneIn):
+    if dati.cerchia == Cerchia.GENITORI:
+        return _crea_riunione_genitori(request, dati)
+    if dati.di_gruppo:
+        raise HttpError(400, "Solo una riunione dei genitori è di tutto il gruppo.")
     unita, squadriglia = _unita_e_squadriglia(dati)
     cerchia = Cerchia.TUTTI if squadriglia else dati.cerchia
     if not _puo_creare(request.auth, unita, squadriglia, cerchia):
@@ -262,6 +270,38 @@ def crea_riunioni(request, dati: RiunioneIn):
             except ValidationError as errore:
                 raise _errore(errore) from errore
     return Status(201, [_evento_out(request.auth, e) for e in creati])
+
+
+def _crea_riunione_genitori(request, dati: RiunioneIn):
+    """One at a time: each has its own convocation (DEC-325, DEC-327). Nobody is told until
+    who manages it sends the convocation, once the attachments are there."""
+    if dati.giorno is None:
+        raise HttpError(400, "Una riunione dei genitori è una sola: scegli il giorno.")
+    unita, _ = ([], None) if dati.di_gruppo else _unita_e_squadriglia(dati)
+    livello = Livello.GRUPPO if dati.di_gruppo else Livello.UNITA
+    if not _puo_creare(request.auth, unita, None, Cerchia.GENITORI, livello):
+        raise HttpError(403, "Non puoi creare questa riunione.")
+    zona = timezone.get_current_timezone()
+    with transaction.atomic():
+        localita = _localita(request, dati)
+        evento = Evento(
+            titolo=dati.titolo.strip() or servizi.titolo_riunione_genitori(unita),
+            tipo=TipoEvento.RIUNIONE,
+            livello=livello,
+            cerchia=Cerchia.GENITORI,
+            inizio=datetime.combine(dati.giorno, dati.ora_inizio, zona),
+            fine=datetime.combine(dati.giorno, dati.ora_fine, zona),
+            luogo=localita.nome if localita else "",
+            localita=localita,
+            uniforme=False,
+        )
+        try:
+            if evento.fine <= evento.inizio:
+                raise ValidationError("L'ora di fine deve seguire quella di inizio.")
+            creata = servizi.crea(evento, unita, request.auth)
+        except ValidationError as errore:
+            raise _errore(errore) from errore
+    return Status(201, [_evento_out(request.auth, creata)])
 
 
 def _titolo_singola(unita: list[Unita], squadriglia, cerchia: str) -> str:

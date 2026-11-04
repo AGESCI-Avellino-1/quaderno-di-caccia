@@ -18,3 +18,8 @@ scheda sanitaria. Nella pagina della scheda non vedi più i pulsanti per modific
 ![La scheda di una figlia maggiorenne sul telefono](../img/genitore/maggiorenne-telefono.png){.telefono width="30%"}
 ![La scheda di una figlia maggiorenne sul computer](../img/genitore/maggiorenne-computer.png){.computer width="65%"}
 :::
+
+## Le riunioni dei genitori
+
+Se tuo figlio è maggiorenne continui a essere invitato alle riunioni dei genitori, salvo che lui scelga di
+andare al posto tuo: allora l'invito arriva a lui e non più a te.

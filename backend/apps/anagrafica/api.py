@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -506,6 +507,7 @@ class VisibilitaGenitoriIO(Schema):
     sanitarie: bool = True
     scheda: bool = True
     quote: bool = True
+    al_posto_dei_genitori: bool = False
 
 
 class VisibilitaGenitoriOut(VisibilitaGenitoriIO):
@@ -523,6 +525,7 @@ def _visibilita(persona: Persona) -> dict:
         "sanitarie": scelta.sanitarie if scelta else True,
         "scheda": scelta.scheda if scelta else True,
         "quote": scelta.quote if scelta else True,
+        "al_posto_dei_genitori": scelta.al_posto_dei_genitori if scelta else False,
         "decisa_il": scelta.decisa_il if scelta else None,
         "genitori": [f"{g.nome} {g.cognome}" for g in genitori],
     }
@@ -542,17 +545,22 @@ def visibilita_genitori(request, persona_id: int):
 
 @router.put("/persone/{persona_id}/visibilita-genitori", response=VisibilitaGenitoriOut)
 def scegli_visibilita_genitori(request, persona_id: int, dati: VisibilitaGenitoriIO):
+    from apps.eventi.servizi import riallinea_riunioni_genitori
+
     persona = _persona_adulta(request, persona_id)
-    VisibilitaGenitori.objects.update_or_create(
-        persona=persona,
-        defaults={
-            "contatti": dati.contatti,
-            "sanitarie": dati.sanitarie,
-            "scheda": dati.scheda,
-            "quote": dati.quote,
-            "decisa_il": timezone.now(),
-        },
-    )
+    with transaction.atomic():
+        VisibilitaGenitori.objects.update_or_create(
+            persona=persona,
+            defaults={
+                "contatti": dati.contatti,
+                "sanitarie": dati.sanitarie,
+                "scheda": dati.scheda,
+                "quote": dati.quote,
+                "al_posto_dei_genitori": dati.al_posto_dei_genitori,
+                "decisa_il": timezone.now(),
+            },
+        )
+        riallinea_riunioni_genitori()
     return _visibilita(persona)
 
 

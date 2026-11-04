@@ -45,7 +45,7 @@ delle modifiche.
 | ------ | ---------------------------------------------------------------- | ------- | ---------- |
 | 1      | Incarichi di squadriglia, assegnati dal capo squadriglia (**fatto**) | Basso   | Bassa      |
 | 2      | Verbale, PDF e allegati su Drive per le riunioni che esistono già (**sviluppato**) | Medio   | Alta       |
-| 3      | Riunioni dei genitori, con invitati e presenze                   | Alto    | Media      |
+| 3      | Riunioni dei genitori, con invitati, presenze e convocazione (**sviluppato**) | Alto    | Media      |
 | 4      | Assemblea dei soci, con rappresentanza, presidente e segretari   | Alto    | Alta       |
 
 **Prima della versione.** Rifare le schermate del manuale (`mise run docs:schermate`): i dati di prova hanno

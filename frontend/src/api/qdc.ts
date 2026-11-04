@@ -509,6 +509,23 @@ export interface Incarico {
   data_fine: string | null
 }
 
+export interface AllegatoVerbale {
+  id: number
+  nome_file: string
+  dimensione: number
+  di_convocazione: boolean
+}
+
+/** The convocation of a meeting, with its attachments (DEC-327). */
+export interface Convocazione {
+  convocata_il: string | null
+  allegati: AllegatoVerbale[]
+  puo_gestire: boolean
+  puo_inviare: boolean
+  massimo_allegato: number
+  pezzo: number
+}
+
 /** The minutes of a meeting (DEC-322…DEC-331). */
 export interface Verbale {
   tipo: string
@@ -525,7 +542,7 @@ export interface Verbale {
   puo_riaprire: boolean
   puo_stampare: boolean
   candidati: PersonaBreve[]
-  allegati: { id: number; nome_file: string; dimensione: number }[]
+  allegati: AllegatoVerbale[]
   massimo_allegato: number
   /** How big each uploaded piece is. */
   pezzo: number
@@ -883,6 +900,8 @@ export interface SceltaVisibilita {
   sanitarie: boolean
   scheda: boolean
   quote: boolean
+  /** At the meetings of the parents the adult member comes in their place. */
+  al_posto_dei_genitori: boolean
 }
 
 export interface VisibilitaGenitori extends SceltaVisibilita {
@@ -1567,7 +1586,7 @@ export interface ModelloD {
 export type TipoEvento =
   'RIUNIONE' | 'USCITA' | 'CAMPO' | 'AUTOFINANZIAMENTO' | 'MISSIONE' | 'ALTRO'
 /** Who of the reparti involved is invited: all, CSQ, CSQ and VCSQ, Alta Squadriglia. */
-export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ' | 'CDA'
+export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ' | 'CDA' | 'GENITORI'
 export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA' | 'ESTERNO'
 export type StatoPartecipazione = 'INVITATO' | 'NON_PARTECIPA' | 'NON_INVITATO'
 export type StatoPresenza = 'PRESENTE' | 'ASSENTE' | 'GIUSTIFICATO'
@@ -1760,6 +1779,8 @@ export interface LocalitaIn {
 export interface RiunioneIn {
   titolo?: string
   cerchia: Cerchia
+  /** A meeting of the parents of the whole group. */
+  di_gruppo?: boolean
   unita: number[]
   squadriglia_id: number | null
   ora_inizio: string
@@ -2822,6 +2843,15 @@ export const api = {
       { metodo: 'POST', corpo },
     )
   },
+  convocazione: (evento: number) =>
+    richiesta<Convocazione>(`/api/v1/eventi/${evento}/convocazione`),
+  inviaConvocazione: (evento: number) =>
+    richiesta<Convocazione>(`/api/v1/eventi/${evento}/convocazione/invia`, { metodo: 'POST' }),
+  nuovoAllegatoConvocazione: (evento: number, nome: string, dimensione: number) =>
+    richiesta<{ id: number }>(`/api/v1/eventi/${evento}/convocazione/allegati`, {
+      metodo: 'POST',
+      corpo: { nome, dimensione },
+    }),
   togliAllegatoVerbale: (id: number) =>
     richiesta<null>(`/api/v1/allegati-verbale/${id}`, { metodo: 'DELETE' }),
   incarichiSquadriglia: (squadriglia: number) =>

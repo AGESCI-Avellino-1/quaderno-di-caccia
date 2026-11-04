@@ -16,7 +16,7 @@ from apps.eventi.models import Evento
 from apps.permessi import policy
 from apps.permessi.models import Azione, registra_accesso_verbale
 
-from . import servizi, stampa
+from . import convocazione, servizi, stampa
 from .models import AllegatoVerbale, TipoVerbale, Verbale
 
 router = Router(tags=["verbali"])
@@ -32,6 +32,7 @@ class AllegatoOut(Schema):
     id: int
     nome_file: str
     dimensione: int
+    di_convocazione: bool
 
 
 class AccessoOut(Schema):
@@ -45,7 +46,7 @@ class VerbaleOut(Schema):
     stato: str
     testo: str
     non_previsto: bool
-    # Only the Co.Ca. has reminders, so only there it can be said there are none.
+    # Only who has reminders can say there are no minutes.
     puo_dire_non_previsto: bool
     redattore: PersonaVerbale | None
     autore_nome: str
@@ -134,7 +135,9 @@ def _out(request, verbale: Verbale) -> dict:
         "stato": verbale.stato,
         "testo": verbale.testo,
         "non_previsto": verbale.non_previsto,
-        "puo_dire_non_previsto": indica and tipo == TipoVerbale.COCA and not verbale.definitivo,
+        "puo_dire_non_previsto": indica
+        and tipo in servizi.CON_PROMEMORIA
+        and not verbale.definitivo,
         "redattore": verbale.redattore,
         "autore_nome": verbale.autore_nome,
         "definitivo_il": verbale.definitivo_il,
@@ -201,7 +204,7 @@ class NonPrevistoIn(Schema):
 @router.put("/eventi/{evento_id}/verbale/non-previsto", response=VerbaleOut)
 def non_previsto(request, evento_id: int, dati: NonPrevistoIn):
     verbale = _gestibile(request, evento_id)
-    if servizi.tipo_di(verbale.evento) != TipoVerbale.COCA:
+    if servizi.tipo_di(verbale.evento) not in servizi.CON_PROMEMORIA:
         raise HttpError(400, "Per questa riunione il verbale è già facoltativo.")
     return _out(request, _azione(servizi.segna_non_previsto, verbale, dati.non_previsto))
 
@@ -280,6 +283,19 @@ def _allegato(allegato_id: int) -> AllegatoVerbale:
     )
 
 
+def _puo_cambiare(user, allegato: AllegatoVerbale) -> bool:
+    """Those of the convocation are of who sends it; the others of who writes the minutes."""
+    if allegato.di_convocazione:
+        return policy.puo_gestire_convocazione(user, allegato.verbale.evento)
+    return policy.puo_scrivere_verbale(user, allegato.verbale)
+
+
+def _puo_leggere(user, allegato: AllegatoVerbale) -> bool:
+    if allegato.di_convocazione and policy.puo_leggere_convocazione(user, allegato.verbale.evento):
+        return True
+    return policy.puo_leggere_verbale(user, allegato.verbale)
+
+
 class EsitoPezzo(Schema):
     ricevuti: int
     completo: bool
@@ -288,7 +304,7 @@ class EsitoPezzo(Schema):
 @router.post("/allegati-verbale/{allegato_id}/pezzo", response=EsitoPezzo)
 def pezzo(request, allegato_id: int, inizio: Form[int], file: File[UploadedFile]):
     allegato = _allegato(allegato_id)
-    if not policy.puo_scrivere_verbale(request.auth, allegato.verbale):
+    if not _puo_cambiare(request.auth, allegato):
         raise HttpError(403, "Non puoi scrivere questo verbale.")
     return _azione(servizi.ricevi_pezzo, allegato, inizio, file)
 
@@ -296,7 +312,7 @@ def pezzo(request, allegato_id: int, inizio: Form[int], file: File[UploadedFile]
 @router.delete("/allegati-verbale/{allegato_id}", response={204: None})
 def togli(request, allegato_id: int):
     allegato = _allegato(allegato_id)
-    if not policy.puo_scrivere_verbale(request.auth, allegato.verbale):
+    if not _puo_cambiare(request.auth, allegato):
         raise HttpError(403, "Non puoi scrivere questo verbale.")
     _azione(servizi.togli_allegato, allegato)
     return Status(204, None)
@@ -307,7 +323,7 @@ def scarica(request, allegato_id: int):
     """Always through the app, which checks who may read: never a link to the Drive
     (DEC-330). Served as an attachment: the file comes from outside."""
     allegato = _allegato(allegato_id)
-    if not allegato.completo or not policy.puo_leggere_verbale(request.auth, allegato.verbale):
+    if not allegato.completo or not _puo_leggere(request.auth, allegato):
         raise HttpError(404, "Non trovato.")
     try:
         flusso = servizi.contenuto(allegato)
@@ -318,6 +334,70 @@ def scarica(request, allegato_id: int):
     risposta["Content-Disposition"] = _disposizione(allegato.nome_file)
     risposta["Content-Length"] = str(allegato.dimensione)
     return risposta
+
+
+# --- Convocation (DEC-327) -------------------------------------------------------------------
+
+
+class ConvocazioneOut(Schema):
+    convocata_il: datetime | None
+    allegati: list[AllegatoOut]
+    puo_gestire: bool
+    puo_inviare: bool
+    massimo_allegato: int
+    pezzo: int
+
+
+def _con_convocazione(evento_id: int) -> Evento:
+    evento = _riunione(evento_id)
+    if not convocazione.ha_convocazione(evento):
+        raise HttpError(404, "Questa riunione non ha una convocazione.")
+    return evento
+
+
+def _convocazione_out(request, evento: Evento) -> dict:
+    gestisce = policy.puo_gestire_convocazione(request.auth, evento)
+    return {
+        "convocata_il": evento.convocata_il,
+        "allegati": convocazione.allegati_di(evento),
+        "puo_gestire": gestisce,
+        "puo_inviare": gestisce and convocazione.si_puo_inviare(evento),
+        "massimo_allegato": servizi.massimo_allegato(),
+        "pezzo": servizi.PEZZO if drive.configurato() else servizi.MASSIMO_SUL_SERVER,
+    }
+
+
+@router.get("/eventi/{evento_id}/convocazione", response=ConvocazioneOut)
+def leggi_convocazione(request, evento_id: int):
+    evento = _con_convocazione(evento_id)
+    if not policy.puo_leggere_convocazione(request.auth, evento):
+        raise HttpError(404, "Non trovato.")
+    return _convocazione_out(request, evento)
+
+
+@router.post("/eventi/{evento_id}/convocazione/invia", response=ConvocazioneOut)
+def invia_convocazione(request, evento_id: int):
+    evento = _con_convocazione(evento_id)
+    if not policy.puo_gestire_convocazione(request.auth, evento):
+        raise HttpError(403, "Non puoi convocare questa riunione.")
+    _azione(convocazione.invia, evento)
+    return _convocazione_out(request, evento)
+
+
+@router.post("/eventi/{evento_id}/convocazione/allegati", response={201: AllegatoOut})
+def nuovo_allegato_convocazione(request, evento_id: int, dati: NuovoAllegato):
+    evento = _con_convocazione(evento_id)
+    if not policy.puo_gestire_convocazione(request.auth, evento):
+        raise HttpError(403, "Non puoi convocare questa riunione.")
+    allegato = _azione(
+        servizi.inizia_caricamento,
+        servizi.verbale_di(evento),
+        dati.nome,
+        dati.dimensione,
+        request.auth,
+        True,
+    )
+    return Status(201, allegato)
 
 
 def _disposizione(nome: str) -> str:

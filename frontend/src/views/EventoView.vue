@@ -12,6 +12,7 @@ import {
   type StatoPresenza,
   type TipoEvento,
 } from '@/api/qdc'
+import ConvocazioneRiunione from '@/components/ConvocazioneRiunione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
 import VerbaleRiunione from '@/components/VerbaleRiunione.vue'
@@ -271,7 +272,14 @@ const STATI: [StatoPresenza, string][] = [
           >mappa</a
         >
       </div>
-      <div v-if="riunione && evento.uniforme !== null && evento.uniforme !== undefined">
+      <div
+        v-if="
+          riunione &&
+          evento.cerchia !== 'GENITORI' &&
+          evento.uniforme !== null &&
+          evento.uniforme !== undefined
+        "
+      >
         <strong>Uniforme</strong> {{ evento.uniforme ? 'sì' : 'no' }}
       </div>
       <div v-if="!evento.annullato" class="mt-1">
@@ -287,6 +295,11 @@ const STATI: [StatoPresenza, string][] = [
       </div>
     </div>
 
+    <ConvocazioneRiunione
+      v-if="riunione && evento.cerchia === 'GENITORI'"
+      :key="`convocazione-${evento.id}`"
+      :evento="evento.id"
+    />
     <VerbaleRiunione v-if="riunione" :key="evento.id" :evento="evento.id" />
 
     <section v-if="riunione && evento.turni?.length" class="card card-body mb-5">

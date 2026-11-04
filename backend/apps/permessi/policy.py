@@ -476,6 +476,10 @@ def puo_indicare_redattore(user, evento) -> bool:
         return False
     if tipo == TipoVerbale.COCA:
         return e_capogruppo(user)
+    if tipo == TipoVerbale.GENITORI:
+        # The capigruppo, and the staff when the meeting is of one unit only.
+        unita = _unita_ids_evento(evento) if evento.livello == "UNITA" else []
+        return e_capogruppo(user) or (len(unita) == 1 and unita[0] in _unita_servite(user))
     if tipo == TipoVerbale.SQUADRIGLIA:
         squadriglia = evento.squadriglia
         return (
@@ -526,6 +530,21 @@ def puo_leggere_verbale(user, verbale) -> bool:
         Q(pk__in=invitati.values("persona_id")) | Q(pk__in=membri.values("persona_id"))
     )
     return any(genitori_vedono(figlio, "scheda") for figlio in figli)
+
+
+def puo_gestire_convocazione(user, evento) -> bool:
+    """Send the convocation and add its attachments: who decides on the minutes (DEC-327)."""
+    return puo_indicare_redattore(user, evento)
+
+
+def puo_leggere_convocazione(user, evento) -> bool:
+    """Attachments of the convocation: who is invited and the capi, before any minutes."""
+    if e_capo(user) and not e_capo_in_attesa(user):
+        return True
+    persona = persona_di(user)
+    if persona is not None and evento.partecipazioni.filter(persona=persona).exists():
+        return True
+    return puo_gestire_convocazione(user, evento)
 
 
 def puo_vedere_accessi_verbale(user) -> bool:
@@ -1108,6 +1127,8 @@ def puo_segnalare_assenza(user, persona: Persona, evento) -> bool:
     a minor's registration is cancelled by the staff (DEC-144)."""
     if evento.livello == "ESTERNO":
         return puo_segnare_partecipazione_esterna(user, persona) and not persona.e_minorenne()
+    if evento.cerchia == "GENITORI":
+        return False  # nobody says whether they come: attendance is marked (DEC-325)
     livello = _livello_personale(user, persona)
     if livello == LivelloAccesso.PROPRIO:
         return not persona.e_minorenne()

@@ -10,7 +10,13 @@ import { useErrore } from '@/composables/useErrore'
 const props = defineProps<{ id: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const stato = ref<VisibilitaGenitori | null>(null)
-const scelte = reactive({ contatti: true, sanitarie: true, scheda: true, quote: true })
+const scelte = reactive({
+  contatti: true,
+  sanitarie: true,
+  scheda: true,
+  quote: true,
+  al_posto_dei_genitori: false,
+})
 const salvato = ref(false)
 
 const voci = [
@@ -27,6 +33,7 @@ function mostra(dati: VisibilitaGenitori) {
     sanitarie: dati.sanitarie,
     scheda: dati.scheda,
     quote: dati.quote,
+    al_posto_dei_genitori: dati.al_posto_dei_genitori,
   })
 }
 
@@ -72,6 +79,20 @@ async function salva() {
           />
         </div>
         <label :for="`visibile-${v.chiave}`">{{ v.etichetta }}</label>
+      </div>
+      <div class="form-field">
+        <div class="switch">
+          <input
+            id="visibile-al-posto"
+            v-model="scelte.al_posto_dei_genitori"
+            type="checkbox"
+            role="switch"
+            @change="salvato = false"
+          />
+        </div>
+        <label for="visibile-al-posto">
+          Alle riunioni dei genitori vado io al loro posto (loro non sono più invitati)
+        </label>
       </div>
       <div class="d-flex align-items-center gap-3">
         <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">

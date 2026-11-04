@@ -60,6 +60,8 @@ class Cerchia(models.TextChoices):
     ALTA_SQUADRIGLIA = "ALTA_SQ", "Alta Squadriglia"
     # Of a branco or cerchio (DEC-310): its Consiglio degli Anziani.
     CONSIGLIO_ANZIANI = "CDA", "Consiglio degli Anziani"
+    # The parents of the unit's members, or of the whole group (DEC-325).
+    GENITORI = "GENITORI", "Riunione dei genitori"
 
 
 # Who of a reparto is invited, and who of a branco or cerchio.
@@ -188,6 +190,8 @@ class Evento(ModelloTracciato):
     informazioni = models.TextField(blank=True)
     annullato_il = models.DateTimeField(null=True, blank=True)
     motivo_annullamento = models.CharField(max_length=300, blank=True)
+    # When the convocation went out, with its attachments (DEC-327).
+    convocata_il = models.DateTimeField(null=True, blank=True)
     creato_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
@@ -220,7 +224,10 @@ class Evento(ModelloTracciato):
             errori.append("La missione è di una squadriglia.")
         if self.tipo == TipoEvento.RIUNIONE and self.livello == Livello.ESTERNO:
             errori.append("Un evento su BuonaCaccia non è una riunione.")
-        if self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
+        if self.cerchia == Cerchia.GENITORI:
+            if self.livello not in (Livello.UNITA, Livello.GRUPPO):
+                errori.append("Una riunione dei genitori è di una o più unità o del gruppo.")
+        elif self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
             errori.append(
                 "Consiglio Capi, Con.Ca.Vi., Alta Squadriglia e Consiglio degli Anziani "
                 "sono riunioni di un'unità."

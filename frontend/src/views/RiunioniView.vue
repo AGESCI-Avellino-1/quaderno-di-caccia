@@ -100,7 +100,10 @@ const GIORNI = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sa
 const LC = ['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO']
 
 const vuoto = () => ({
-  perChi: (sessione.capo ? 'unita' : 'squadriglia') as 'unita' | 'squadriglia',
+  perChi: (sessione.capo ? 'unita' : 'squadriglia') as 'unita' | 'squadriglia' | 'genitori',
+  // A meeting of the parents (DEC-325): of the whole group, or of one or more units.
+  diGruppo: false,
+  unitaGenitori: [] as number[],
   unita: null as number | null,
   insieme: false,
   squadriglia: null as number | null,
@@ -121,6 +124,8 @@ const vuoto = () => ({
 })
 const modulo = ref<ReturnType<typeof vuoto> | null>(null)
 
+// The Co.Ca. has no parents to convene.
+const unitaConGenitori = computed(() => unita.value.filter((u) => u.tipo !== 'COMUNITA_CAPI'))
 const unitaScelta = computed(() => unita.value.find((u) => u.id === modulo.value?.unita))
 const collegata = computed(() => unita.value.find((u) => u.id === unitaScelta.value?.collegata_a))
 // Who of the unit is invited: a reparto has its councils, a branco or cerchio its
@@ -151,22 +156,28 @@ async function salva() {
   const m = modulo.value
   if (!m) return
   const perSquadriglia = m.perChi === 'squadriglia'
+  const genitori = m.perChi === 'genitori'
   const fatte = await esegui(() =>
     api.creaRiunioni({
       titolo: m.titolo,
-      cerchia: perSquadriglia ? 'TUTTI' : m.cerchia,
-      unita: perSquadriglia
-        ? []
-        : [m.unita!, ...(m.insieme && collegata.value ? [collegata.value.id] : [])],
+      cerchia: genitori ? 'GENITORI' : perSquadriglia ? 'TUTTI' : m.cerchia,
+      di_gruppo: genitori && m.diGruppo,
+      unita: genitori
+        ? m.diGruppo
+          ? []
+          : m.unitaGenitori
+        : perSquadriglia
+          ? []
+          : [m.unita!, ...(m.insieme && collegata.value ? [collegata.value.id] : [])],
       squadriglia_id: perSquadriglia ? m.squadriglia : null,
       ora_inizio: m.ora_inizio,
       ora_fine: m.ora_fine,
-      ...(m.ripeti
+      ...(m.ripeti && !genitori
         ? { giorno_settimana: m.giorno_settimana, dal: m.dal, al: m.al }
         : { giorno: m.giorno }),
       localita_id: m.localita.nuova ? null : m.localita.id,
       nuova_localita: m.localita.nuova,
-      uniforme: m.uniforme,
+      uniforme: !genitori && m.uniforme,
     }),
   )
   if (!fatte) return
@@ -257,6 +268,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <select id="riu-per" v-model="modulo.perChi" class="form-control form-control-sm">
             <option v-if="sessione.capo" value="unita">Di un'unità</option>
             <option v-if="squadriglie.length" value="squadriglia">Di una squadriglia</option>
+            <option v-if="sessione.capo" value="genitori">Dei genitori</option>
           </select>
         </div>
         <template v-if="modulo.perChi === 'unita'">
@@ -283,6 +295,29 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             <label for="riu-insieme">Insieme a {{ nomeUnita(collegata) }}</label>
           </div>
         </template>
+        <fieldset v-else-if="modulo.perChi === 'genitori'" class="md:col-8">
+          <legend class="form-label small">Genitori di</legend>
+          <div v-if="sessione.capogruppo" class="form-field mb-1">
+            <input id="riu-gruppo" v-model="modulo.diGruppo" type="checkbox" class="check" />
+            <label for="riu-gruppo">Tutto il gruppo</label>
+          </div>
+          <template v-if="!modulo.diGruppo">
+            <div v-for="u in unitaConGenitori" :key="u.id" class="form-field mb-1">
+              <input
+                :id="`riu-gen-${u.id}`"
+                v-model="modulo.unitaGenitori"
+                type="checkbox"
+                class="check"
+                :value="u.id"
+              />
+              <label :for="`riu-gen-${u.id}`">{{ nomeUnita(u) }}</label>
+            </div>
+          </template>
+          <p class="form-text mb-0">
+            Sono invitati i genitori e lo staff. Gli invitati ricevono l'email quando invii la
+            convocazione dalla pagina della riunione, dopo aver aggiunto i documenti.
+          </p>
+        </fieldset>
         <div v-else class="md:col-8">
           <label class="form-label small" for="riu-squadriglia">Squadriglia</label>
           <select
@@ -297,7 +332,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             </option>
           </select>
         </div>
-        <fieldset class="col-12">
+        <fieldset v-if="modulo.perChi !== 'genitori'" class="col-12">
           <legend class="form-label small">Quando</legend>
           <div class="d-flex flex-wrap gap-5">
             <div class="form-field mb-0">
@@ -322,7 +357,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             </div>
           </div>
         </fieldset>
-        <template v-if="modulo.ripeti">
+        <template v-if="modulo.ripeti && modulo.perChi !== 'genitori'">
           <div class="md:col-4">
             <label class="form-label small" for="riu-giorno">Ogni</label>
             <select
@@ -388,7 +423,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div class="col-12">
           <SceltaLocalita v-model="modulo.localita" id-campo="riu-localita" :localita="localita" />
         </div>
-        <fieldset class="col-12">
+        <fieldset v-if="modulo.perChi !== 'genitori'" class="col-12">
           <legend class="form-label small">Uniforme</legend>
           <div class="d-flex flex-wrap gap-5">
             <div class="form-field mb-0">
@@ -447,7 +482,10 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </RouterLink>
           <span class="small fg-2">{{ quando(r) }}</span>
           <span v-if="r.annullato" class="badge theme-danger">Annullata</span>
-          <span v-else-if="r.uniforme === false" class="badge theme-secondary">
+          <span
+            v-else-if="r.uniforme === false && r.cerchia !== 'GENITORI'"
+            class="badge theme-secondary"
+          >
             Senza uniforme
           </span>
         </div>

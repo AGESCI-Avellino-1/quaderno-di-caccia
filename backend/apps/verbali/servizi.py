@@ -22,8 +22,9 @@ from apps.core.chiusura import controlla_anno_aperto
 from apps.eventi.models import Cerchia, Evento, Livello, TipoEvento
 from apps.impostazioni.html import pulisci
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
+from apps.permessi.policy import STAFF_DI_UNITA
 
-from . import stampa
+from . import convocazione, stampa
 from .models import AllegatoVerbale, StatoVerbale, TipoVerbale, Verbale
 
 CERCHIE = {
@@ -34,6 +35,8 @@ CERCHIE = {
 # Names and who was there stay five years for the third sector, whatever happens to the
 # person (DEC-328).
 CONSERVATI_CINQUE_ANNI = {TipoVerbale.COCA}
+# Who has reminders until it is definitive or said there is none (DEC-322, DEC-331).
+CON_PROMEMORIA = {TipoVerbale.COCA, TipoVerbale.GENITORI}
 GIORNI_TRA_I_PROMEMORIA = 7  # DEC-331
 MASSIMO_PROMEMORIA = 3
 # Meetings from before the minutes existed are not reminded of.
@@ -94,6 +97,8 @@ def tipo_di(evento: Evento) -> str | None:
     """None: this meeting has no minutes (DEC-322)."""
     if evento.tipo != TipoEvento.RIUNIONE:
         return None
+    if evento.cerchia == Cerchia.GENITORI:
+        return TipoVerbale.GENITORI
     if evento.livello == Livello.SQUADRIGLIA:
         return TipoVerbale.SQUADRIGLIA
     if evento.livello != Livello.UNITA:
@@ -213,7 +218,9 @@ def _cartella_dell_anno(evento: Evento) -> str:
 
 
 @transaction.atomic
-def inizia_caricamento(verbale: Verbale, nome: str, dimensione: int, utente) -> AllegatoVerbale:
+def inizia_caricamento(
+    verbale: Verbale, nome: str, dimensione: int, utente, di_convocazione: bool = False
+) -> AllegatoVerbale:
     _in_bozza(verbale)
     nome = _nome_pulito(nome)
     estensione = _estensione(nome)
@@ -240,6 +247,7 @@ def inizia_caricamento(verbale: Verbale, nome: str, dimensione: int, utente) -> 
         dimensione=dimensione,
         sessione=sessione,
         caricato_da=utente,
+        di_convocazione=di_convocazione,
     )
 
 
@@ -278,6 +286,8 @@ def ricevi_pezzo(allegato: AllegatoVerbale, inizio: int, file) -> AllegatoVerbal
         allegato.ricevuti = len(dati)
         allegato.completo = True
     allegato.save()
+    if allegato.completo and allegato.di_convocazione:
+        transaction.on_commit(lambda: convocazione.allegato_aggiunto(allegato))
     return allegato
 
 
@@ -361,23 +371,25 @@ def _email(persona: Persona | None) -> str:
 
 
 def destinatari_promemoria(verbale: Verbale) -> list[str]:
-    """Who was chosen, and who may choose: the capigruppo for the Co.Ca. (DEC-331)."""
-    capigruppo = (
-        Incarico.objects.attivi()
-        .filter(ruolo__in={RuoloIncarico.CAPOGRUPPO, RuoloIncarico.AE_GRUPPO})
-        .select_related("persona__utente")
-    )
-    indirizzi = [_email(verbale.redattore), *(_email(i.persona) for i in capigruppo)]
+    """Who was chosen, and who may choose: the capigruppo, and the staff of a parents'
+    meeting of one unit (DEC-331)."""
+    evento = verbale.evento
+    chi = Q(ruolo__in={RuoloIncarico.CAPOGRUPPO, RuoloIncarico.AE_GRUPPO})
+    if tipo_di(evento) == TipoVerbale.GENITORI and evento.livello == Livello.UNITA:
+        unita = list(evento.unita.all())
+        if len(unita) == 1:
+            chi |= Q(ruolo__in=STAFF_DI_UNITA, unita=unita[0])
+    incarichi = Incarico.objects.attivi().filter(chi).select_related("persona__utente")
+    indirizzi = [_email(verbale.redattore), *(_email(i.persona) for i in incarichi)]
     return sorted({i for i in indirizzi if i})
 
 
 def _riunioni_con_promemoria(oggi: date):
     return (
         Evento.objects.filter(
+            Q(livello=Livello.UNITA, cerchia=Cerchia.TUTTI, unita__tipo=TipoUnita.COMUNITA_CAPI)
+            | Q(cerchia=Cerchia.GENITORI),
             tipo=TipoEvento.RIUNIONE,
-            livello=Livello.UNITA,
-            cerchia=Cerchia.TUTTI,
-            unita__tipo=TipoUnita.COMUNITA_CAPI,
             annullato_il__isnull=True,
             fine__date__lte=oggi - timedelta(days=GIORNI_TRA_I_PROMEMORIA),
             fine__date__gte=oggi - timedelta(days=GIORNI_MASSIMI_PROMEMORIA),

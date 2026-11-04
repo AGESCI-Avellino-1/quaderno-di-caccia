@@ -535,6 +535,45 @@ _TIPI = [
         facoltativa=True,
     ),
     TipoEmail(
+        "convocazione_riunione",
+        "Convocazione di una riunione",
+        "Agli invitati, quando chi gestisce la riunione invia la convocazione, con i documenti "
+        "allegati. Arriva sempre.",
+        "Convocazione: [Evento]",
+        "<p>Ciao,</p><p>sei convocato alla riunione <strong>[Evento]</strong>: [Quando].</p>"
+        "<p>[Documenti]</p><p>I dettagli nell'app:<br>[Link]</p>",
+        (
+            EVENTO,
+            Segnaposto("Quando", "data, orari e luogo", "07/11/2026, dalle 18:00 alle 19:30", True),
+            Segnaposto(
+                "Documenti",
+                "i documenti della convocazione: allegati o da aprire nell'app",
+                "In allegato: programma.pdf",
+            ),
+            _link("la pagina della riunione"),
+        ),
+    ),
+    TipoEmail(
+        "documento_riunione",
+        "Nuovo documento di una riunione",
+        "Agli invitati, quando si aggiunge un documento a una riunione già convocata. "
+        "Arriva sempre.",
+        "Nuovo documento: [Evento]",
+        "<p>Ciao,</p><p>per la riunione <strong>[Evento]</strong> ([Quando]) c'è un nuovo "
+        "documento.</p><p>[Documenti]</p><p>I dettagli nell'app:<br>[Link]</p>",
+        (
+            EVENTO,
+            Segnaposto("Quando", "data e orari", "07/11/2026, dalle 18:00 alle 19:30"),
+            Segnaposto(
+                "Documenti",
+                "il documento: allegato o da aprire nell'app",
+                "In allegato: programma.pdf",
+                True,
+            ),
+            _link("la pagina della riunione"),
+        ),
+    ),
+    TipoEmail(
         "promemoria_verbale",
         "Verbale da scrivere",
         "A chi deve scrivere il verbale di una riunione e a chi può indicarlo: 7 giorni dopo la "

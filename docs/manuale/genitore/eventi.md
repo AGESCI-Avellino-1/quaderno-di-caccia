@@ -74,3 +74,10 @@ nuovo**: quello vecchio smette di funzionare.
 **Scaricare un file**, che il telefono aggiunge al suo calendario ma non aggiorna più: nella
 pagina **Calendario** tocca **Scarica il calendario** per tutti gli eventi, oppure, nella
 pagina di un evento, **Aggiungi al calendario** per quel solo evento.
+
+## Le riunioni dei genitori
+
+Quando lo staff o i capigruppo ti convocano a una riunione dei genitori ricevi un'email con la data,
+il luogo e i documenti. Sono invitati entrambi i genitori. La riunione è anche nel tuo calendario; nella
+sua pagina trovi i documenti, nel riquadro **Convocazione**, e dopo la riunione il verbale, quando è
+definitivo: tocca **Leggi il verbale**. Non devi comunicare se vieni: le presenze le segnano i capi.

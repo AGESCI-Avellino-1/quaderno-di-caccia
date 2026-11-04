@@ -14,6 +14,7 @@ class TipoVerbale(models.TextChoices):
     ALTA_SQUADRIGLIA = "ALTA_SQ", "Alta Squadriglia"
     CONSIGLIO_CAPI = "CONCA", "Consiglio Capi"
     CONSIGLIO_CAPI_VICE = "CONCAVI", "Consiglio Capi e Vice"
+    GENITORI = "GENITORI", "Riunione dei genitori"
 
 
 class StatoVerbale(models.TextChoices):
@@ -80,6 +81,8 @@ class AllegatoVerbale(ModelloTracciato):
     dimensione = models.BigIntegerField()
     ricevuti = models.BigIntegerField(default=0)
     completo = models.BooleanField(default=False)
+    # Sent with the convocation and read by who is invited, before any minutes (DEC-327).
+    di_convocazione = models.BooleanField(default=False)
     drive_id = models.CharField(max_length=120, blank=True)
     # Where the pieces go while uploading: a secret address, emptied at the end.
     sessione = models.TextField(blank=True)

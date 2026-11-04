@@ -557,6 +557,10 @@ class VisibilitaGenitori(ModelloTracciato):
     )
     # DEC-26: the parent stays linked to the fees until the R/S unlinks them.
     quote = models.BooleanField(default=True, help_text="Quote, pagamenti e ricevute.")
+    # At a meeting of the parents the adult member comes in their place (DEC-325).
+    al_posto_dei_genitori = models.BooleanField(
+        default=False, help_text="Alle riunioni dei genitori partecipa lui al loro posto."
+    )
     decisa_il = models.DateTimeField(null=True, blank=True)
     # Alerts already sent (management command avvisa_maggiore_eta).
     avviso_mese_prima = models.DateField(null=True, blank=True)

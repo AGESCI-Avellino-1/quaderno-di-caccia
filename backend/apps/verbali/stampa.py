@@ -176,7 +176,7 @@ def flowable_del_testo(html: str) -> list:
 def _firme(verbale: Verbale, tipo: str) -> list:
     """The space to sign: never for the meetings with the ragazzi, which are informal
     (DEC-324)."""
-    if tipo != TipoVerbale.COCA:
+    if tipo not in (TipoVerbale.COCA, TipoVerbale.GENITORI):
         return []
     nome = escape(verbale.autore_nome)
     tabella = Table(

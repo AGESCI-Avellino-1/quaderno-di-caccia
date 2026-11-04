@@ -19,6 +19,15 @@ onMounted(async () => {
   anno.value = opzioni.value?.anni[0]?.valore ?? ''
 })
 
+// Quick choices besides all and none (DEC-318): the server says which roles are educational.
+const gruppi = computed(() => {
+  const ruoli = opzioni.value?.ruoli ?? []
+  return [
+    { nome: 'Educativi', valori: ruoli.filter((r) => r.educativo).map((r) => r.valore) },
+    { nome: 'Non educativi', valori: ruoli.filter((r) => !r.educativo).map((r) => r.valore) },
+  ]
+})
+
 // The year in course is "today": no year in the address.
 const indirizzo = computed(() =>
   elencoIncarichiPdf(
@@ -43,6 +52,7 @@ const indirizzo = computed(() =>
         id="elenco-ruoli"
         v-model="scelti"
         :scelte="opzioni.ruoli.map((r) => ({ valore: r.valore, nome: r.nome }))"
+        :gruppi="gruppi"
       />
     </div>
     <fieldset class="mb-5">

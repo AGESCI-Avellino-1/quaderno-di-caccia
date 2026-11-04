@@ -65,7 +65,10 @@ In **Il mio gruppo**, tocca **Organigramma**.
   nel **servizio di supporto al gruppo** o nel **servizio di supporto all'azione
   educativa**; uno solo per capo. Quando un capo viene assegnato a un'unità, il servizio
   di supporto finisce da solo. Prima c'era «a disposizione»: chi lo ha ancora compare in
-  un avviso; scegli per lui uno dei due servizi e «a disposizione» si chiude da solo.
+  un avviso; scegli uno dei due servizi e «a disposizione» si chiude da solo.
+- **Staff delle unità**: per ogni unità, nell'ordine Lupetti e Coccinelle, Esploratori e
+  Guide, Rover e Scolte, il capo unità, lo staff e l'assistente ecclesiastico. Qui si
+  guardano soltanto: si nominano dalla pagina dell'unità, che si apre toccando il suo nome.
 
 In alto un avviso elenca i **capi senza servizio**: assegnali a un'unità o a un servizio di
 supporto. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è il gruppo.
@@ -74,10 +77,14 @@ supporto. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è i
 
 In fondo alla pagina, in **Elenco degli incarichi**, un capogruppo stampa un PDF su carta
 intestata del gruppo con codice socio, cognome, nome e livello di formazione capi di ogni
-capo.
+capo. Cognome e nome sono in maiuscolo, come negli elenchi di BuonaStrada. In ogni unità
+vengono prima i capi unità e in Comunità capi i capigruppo, la capo prima del capo; poi gli
+altri in ordine di cognome.
 
 1. Apri il menu **Incarichi da includere** e tocca gli incarichi da togliere o da
-   rimettere (di base ci sono tutti; **Tutti** e **Nessuno** in cima li scelgono in un colpo).
+   rimettere (di base ci sono tutti). In cima, in un colpo: **Tutti**, **Nessuno**, **Educativi**
+   (tutti tranne tesorieri e amministratore tecnico) e **Non educativi** (tesoriere di gruppo,
+   tesoriere di unità, amministratore tecnico).
    Tocca fuori dal menu per chiuderlo.
 2. Scegli come raggruppare i capi: **Per unità** o **Per incarico**. Per unità, ogni
    incarico sta nella sua sezione: quelli di un'unità nell'unità, quelli di gruppo

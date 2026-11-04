@@ -56,4 +56,22 @@ describe('SceltaMultipla', () => {
     expect(monta.ultimo.at(-1)).toEqual([])
     scelta.unmount()
   })
+
+  it('chooses a group of values at once, in the order of the list', async () => {
+    monta.ultimo = []
+    const scelta = mount(SceltaMultipla, {
+      attachTo: document.body,
+      props: {
+        id: 'prova',
+        scelte: SCELTE,
+        gruppi: [{ nome: 'Educativi', valori: ['B', 'A'] }],
+        modelValue: ['C'],
+        'onUpdate:modelValue': (v: string[]) => monta.ultimo.push(v),
+      },
+    })
+    const gruppo = scelta.findAll('.menu button.btn-link').find((b) => b.text() === 'Educativi')!
+    await gruppo.trigger('click')
+    expect(monta.ultimo.at(-1)).toEqual(['A', 'B'])
+    scelta.unmount()
+  })
 })

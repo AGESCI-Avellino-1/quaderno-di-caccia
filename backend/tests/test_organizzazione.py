@@ -834,3 +834,30 @@ def test_assistente_ecclesiastico_di_unita_come_lo_staff(
     assert policy.puo_modificare_sanitarie(ae, ragazza)
     assert not policy.e_capo_unita(ae, reparto)
     assert not policy.e_capogruppo(ae)
+
+
+def test_organigramma_con_lo_staff_delle_unita(capo, staff, capogruppo, reparto, coca, gruppo):
+    # Read only, one section per active unit but the Co.Ca., L/C before E/G (DEC-316).
+    branco = Unita.objects.create(
+        gruppo=gruppo, nome="Branco", tipo=TipoUnita.BRANCO, composizione=Composizione.MISTA
+    )
+    Unita.objects.create(
+        gruppo=gruppo,
+        nome="Chiuso",
+        tipo=TipoUnita.CLAN_FUOCO,
+        composizione=Composizione.MISTA,
+        attiva=False,
+    )
+    Incarico.objects.create(
+        persona=capogruppo,
+        ruolo=RuoloIncarico.TESORIERE_UNITA,
+        unita=reparto,
+        data_inizio=INIZIO_ANNO,
+    )
+    for chi in (capo, capogruppo):
+        sezioni = _client(chi).get("/api/v1/gruppo/incarichi").json()["staff_unita"]
+        assert [s["unita_id"] for s in sezioni] == [branco.pk, reparto.pk]
+        assert sezioni[0]["incarichi"] == []
+        assert sezioni[1]["unita"] == str(reparto)
+        # Capo unità first; the unit treasurer is not staff.
+        assert [i["ruolo"] for i in sezioni[1]["incarichi"]] == ["CAPO_UNITA", "STAFF"]

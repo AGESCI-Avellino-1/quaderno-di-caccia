@@ -584,6 +584,8 @@ export interface IncarichiGruppo {
   nomina_supporto: Scelta[]
   /** For the capigruppo: capi with no service at all. */
   senza_servizio: PersonaBreve[]
+  /** Staff of every active unit, read only: appointed from the unit's page (DEC-316). */
+  staff_unita: { unita_id: number; unita: string; incarichi: Incarico[] }[]
 }
 
 /** Where a role is held: the group (nothing), a unit or a patrol. */
@@ -2599,7 +2601,8 @@ export const giustificativoSpesa = (id: number) => `/api/v1/spese-anticipate/${i
 export const PERCORSO_PAGAMENTI = '/api/v1/pagamenti'
 /** What the PDF list of the group's roles can include (DEC-284). */
 export interface OpzioniElencoIncarichi {
-  ruoli: { valore: string; nome: string }[]
+  /** `educativo`: for the quick choice of the educational roles or the others (DEC-318). */
+  ruoli: { valore: string; nome: string; educativo: boolean }[]
   anni: { valore: string; nome: string }[]
 }
 

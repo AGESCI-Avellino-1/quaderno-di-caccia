@@ -470,6 +470,12 @@ def dettaglio_unita(request, unita_id: int):
     }
 
 
+class StaffUnita(Schema):
+    unita_id: int
+    unita: str
+    incarichi: list[IncaricoOut]
+
+
 class IncarichiGruppo(Schema):
     # Additional group roles: capigruppo, group treasurers, technical administrators.
     incarichi: list[IncaricoOut]
@@ -479,6 +485,8 @@ class IncarichiGruppo(Schema):
     nomina_supporto: list[Scelta]
     # For the capigruppo: capi with no service at all, to sort out.
     senza_servizio: list[PersonaBreve]
+    # The staff of every active unit, read only: appointed from the unit's page (DEC-316).
+    staff_unita: list[StaffUnita]
 
 
 # "A disposizione" is no longer assigned (DEC-293).
@@ -518,7 +526,36 @@ def incarichi_di_gruppo(request):
         "senza_servizio": (
             list(capi_senza_servizio()) if policy.e_capogruppo(request.auth) else []
         ),
+        "staff_unita": (
+            staff_delle_unita() if policy.puo_vedere_organizzazione(request.auth) else []
+        ),
     }
+
+
+RUOLI_STAFF_DI_UNITA = (RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF, RuoloIncarico.AE_UNITA)
+
+
+def staff_delle_unita() -> list[dict]:
+    """Capo unità, staff and assistente ecclesiastico of every active unit but the Co.Ca.,
+    in the order of the PDF list: L/C, E/G, R/S, each by code (DEC-316, DEC-284)."""
+    from .elenco_incarichi import _ordine_unita
+
+    unita = sorted(
+        Unita.objects.filter(attiva=True).exclude(tipo=TipoUnita.COMUNITA_CAPI),
+        key=_ordine_unita,
+    )
+    per_unita: dict[int, list[Incarico]] = {}
+    for i in _incarichi(ruolo__in=RUOLI_STAFF_DI_UNITA, unita__in=unita):
+        per_unita.setdefault(i.unita_id, []).append(i)
+    ordine = {r: n for n, r in enumerate(RUOLI_STAFF_DI_UNITA)}
+    return [
+        {
+            "unita_id": u.pk,
+            "unita": str(u),
+            "incarichi": sorted(per_unita.get(u.pk, []), key=lambda i: ordine[i.ruolo]),
+        }
+        for u in unita
+    ]
 
 
 class OpzioneElenco(Schema):
@@ -526,8 +563,13 @@ class OpzioneElenco(Schema):
     nome: str
 
 
+class RuoloElenco(OpzioneElenco):
+    # For the quick choice of the educational roles or the others (DEC-318).
+    educativo: bool
+
+
 class OpzioniElencoIncarichi(Schema):
-    ruoli: list[OpzioneElenco]
+    ruoli: list[RuoloElenco]
     # Associative years with roles, latest first: "2026" = 2025/26 (DEC-37).
     anni: list[OpzioneElenco]
 
@@ -539,7 +581,7 @@ def opzioni_elenco_incarichi(request):
         raise HttpError(403, "Riservato ai capigruppo.")
     from apps.core.anno import AnnoAssociativo
 
-    from .elenco_incarichi import RUOLI_ELENCO
+    from .elenco_incarichi import NON_EDUCATIVI, RUOLI_ELENCO
 
     corrente = AnnoAssociativo.corrente().anno_fine
     primo = Incarico.objects.filter(ruolo__in=RUOLI_ELENCO).order_by("data_inizio").first()
@@ -547,7 +589,7 @@ def opzioni_elenco_incarichi(request):
     usati = set(Incarico.objects.values_list("ruolo", flat=True).distinct())
     return {
         "ruoli": [
-            {"valore": r.value, "nome": r.label}
+            {"valore": r.value, "nome": r.label, "educativo": r not in NON_EDUCATIVI}
             for r in RUOLI_ELENCO
             if r != RuoloIncarico.A_DISPOSIZIONE or r in usati
         ],

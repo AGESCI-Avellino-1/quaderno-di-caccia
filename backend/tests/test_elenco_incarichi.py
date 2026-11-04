@@ -64,13 +64,44 @@ def test_per_unita_ogni_capo_in_ogni_sezione_dei_suoi_incarichi(
     # The capogruppo serving the reparto is in both, with that section's roles only
     # (maintainer, 03/11).
     assert _nomi(sezioni[1]) == [("Capo", ["Capo unità"]), ("Doppia", ["Staff di unità"])]
-    # The treasurer with no service shows the support service, in the PDF only.
+    # The treasurer with no service shows the support service, in the PDF only. The
+    # capigruppo first (DEC-319).
     assert _nomi(sezioni[0]) == [
-        ("Disponibile", ["Servizio di supporto al gruppo"]),
         ("Doppia", ["Capogruppo", "Tesoriere di gruppo"]),
         ("Gruppo", ["Capogruppo"]),
+        ("Disponibile", ["Servizio di supporto al gruppo"]),
         ("Tesoriera", ["Servizio di supporto al gruppo", "Tesoriere di gruppo"]),
     ]
+
+
+def test_capi_unita_e_capigruppo_in_cima_le_donne_prima(capi, capo, capogruppo, reparto):
+    # By convention, women before men among who leads the section (DEC-319).
+    capogruppo.sesso = "M"
+    capogruppo.save()
+    capi["doppio"].sesso = "F"
+    capi["doppio"].save()
+    capo.sesso = "M"
+    capo.save()
+    zeta = crea_capo("Zoe", "Zeta", "zeta@example.invalid")
+    zeta.sesso = "F"
+    zeta.save()
+    _incarico(zeta, R.CAPO_UNITA, unita=reparto)
+    alfa = crea_capo("Aldo", "Alfa", "alfa@example.invalid")
+    _incarico(alfa, R.STAFF, unita=reparto)
+
+    sezioni = elenco.sezioni(TUTTI, "unita", date.today())
+    assert [n for n, _ in _nomi(sezioni[1])] == ["Zeta", "Capo", "Alfa", "Doppia"]
+    assert [n for n, _ in _nomi(sezioni[0])][:2] == ["Doppia", "Gruppo"]
+    capogruppo.sesso = "F"
+    capogruppo.save()
+    capi["doppio"].sesso = "M"
+    capi["doppio"].save()
+    sezioni = elenco.sezioni(TUTTI, "unita", date.today())
+    assert [n for n, _ in _nomi(sezioni[0])][:2] == ["Gruppo", "Doppia"]
+
+    per_ruolo = {s.titolo: s for s in elenco.sezioni(TUTTI, "incarico", date.today())}
+    assert [n for n, _ in _nomi(per_ruolo["Capo unità"])] == ["Zeta", "Capo"]
+    assert [n for n, _ in _nomi(per_ruolo["Capogruppo"])] == ["Gruppo", "Doppia"]
 
 
 def test_per_unita_servizio_di_supporto_anche_se_non_scelto(capi, coca):
@@ -96,9 +127,10 @@ def test_per_unita_piu_unita_e_tesoriere_di_unita(gruppo, reparto, coca):
     sezioni = {s.titolo: _nomi(s) for s in elenco.sezioni(TUTTI, "unita", date.today())}
     # In both units; the unit treasurer with no service in the unit and in the Co.Ca.
     assert sezioni[str(reparto)] == [("Doppiaunita", ["Staff di unità"])]
+    # The capo unità on top (DEC-319).
     assert sezioni[str(branco)] == [
-        ("Cassiere", ["Tesoriere di unità"]),
         ("Doppiaunita", ["Capo unità"]),
+        ("Cassiere", ["Tesoriere di unità"]),
     ]
     assert sezioni[str(coca)] == [("Cassiere", ["Servizio di supporto al gruppo"])]
 
@@ -214,3 +246,26 @@ def test_codice_provvisorio_stampato_come_nuovo_censito():
     assert elenco.codice_da_stampare("9000000012") == "NUOVO CENSITO"
     assert elenco.codice_da_stampare("123456") == "123456"
     assert elenco.codice_da_stampare(None) == ""
+
+
+def test_pdf_cognome_e_nome_in_maiuscolo(capi, capo, monkeypatch):
+    # As BuonaStrada prints them; the database keeps them as they are (DEC-317).
+    scritti = []
+    vero = elenco.Paragraph
+    monkeypatch.setattr(
+        elenco, "Paragraph", lambda testo, *a, **k: scritti.append(testo) or vero(testo, *a, **k)
+    )
+    giorno = elenco.giorno_di_riferimento(None)
+    elenco.pdf(elenco.sezioni(TUTTI, "unita", giorno), giorno, "unita")
+    assert capi["tesoriere"].cognome.upper() in scritti
+    assert capi["tesoriere"].nome.upper() in scritti
+    assert capi["tesoriere"].cognome not in scritti
+    capi["tesoriere"].refresh_from_db()
+    assert capi["tesoriere"].cognome == "Tesoriera"
+
+
+def test_opzioni_dicono_quali_incarichi_sono_educativi(capogruppo):
+    opzioni = _client(capogruppo).get("/api/v1/gruppo/incarichi/elenco").json()
+    non_educativi = {r["valore"] for r in opzioni["ruoli"] if not r["educativo"]}
+    # The support services are educational (DEC-318).
+    assert non_educativi == {"TESORIERE_GRUPPO", "TESORIERE_UNITA", "AMMINISTRATORE"}

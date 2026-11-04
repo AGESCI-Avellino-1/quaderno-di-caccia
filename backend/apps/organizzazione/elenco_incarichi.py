@@ -47,6 +47,17 @@ RUOLI_ELENCO = (
     RuoloIncarico.TESORIERE_UNITA,
     RuoloIncarico.AMMINISTRATORE,
 )
+# The roles that are not educational, for the quick choice in the list (DEC-318): every
+# other one is, the two support services and the old «a disposizione» included.
+NON_EDUCATIVI = frozenset(
+    {
+        RuoloIncarico.TESORIERE_GRUPPO,
+        RuoloIncarico.TESORIERE_UNITA,
+        RuoloIncarico.AMMINISTRATORE,
+    }
+)
+# Who leads a section: capo unità in a unit, capogruppo in the Co.Ca. (DEC-319).
+GUIDE = frozenset({RuoloIncarico.CAPO_UNITA, RuoloIncarico.CAPOGRUPPO})
 # A capo with additional roles only (a treasurer serving no unit) shows this next to the
 # name, in the PDF only: nothing is recorded (maintainer, 03/11).
 SENZA_SERVIZIO = RuoloIncarico.SUPPORTO_GRUPPO.label
@@ -64,6 +75,8 @@ def codice_da_stampare(codice: str | None) -> str:
 class Riga:
     persona: Persona
     incarichi: list[str] = field(default_factory=list)
+    # Capo unità in a unit's section, capogruppo in the Co.Ca.'s: on top (DEC-319).
+    guida: bool = False
 
 
 @dataclass
@@ -91,6 +104,14 @@ def _ordine_persona(persona: Persona) -> tuple:
     return (persona.cognome.lower(), persona.nome.lower(), persona.pk)
 
 
+def _ordine_riga(riga: Riga) -> tuple:
+    """Who leads the section first, women before men by convention, then everyone by name
+    (DEC-319)."""
+    if riga.guida:
+        return (0, riga.persona.sesso != "F", *_ordine_persona(riga.persona))
+    return (1, False, *_ordine_persona(riga.persona))
+
+
 def _etichetta(incarico: Incarico, sezione: Unita | None = None) -> str:
     """The role, with its unit when it is not the section's own."""
     testo = incarico.get_ruolo_display()
@@ -114,11 +135,14 @@ def sezioni(ruoli: set[str], raggruppa: str, giorno: date) -> list[Sezione]:
 def _per_incarico(scelti: list[str], incarichi: list[Incarico]) -> list[Sezione]:
     risultato = []
     for ruolo in scelti:
+        # Capi unità and capigruppo: women first within the same unit (DEC-319).
+        donne_prima = ruolo in GUIDE
         del_ruolo = sorted(
             (i for i in incarichi if i.ruolo == ruolo),
-            key=lambda i: (
+            key=lambda i, d=donne_prima: (
                 _ordine_unita(i.unita) if i.unita_id else (),
-                _ordine_persona(i.persona),
+                d and i.persona.sesso != "F",
+                *_ordine_persona(i.persona),
             ),
         )
         righe = [Riga(i.persona, [str(i.unita)] if i.unita_id else []) for i in del_ruolo]
@@ -143,20 +167,24 @@ def _per_unita(scelti: set[str], incarichi: list[Incarico]) -> list[Sezione]:
             continue
         persona = propri[0].persona
         per_sezione: dict[object, list[str]] = {}
+        guide: set[object] = set()
         for i in scelti_propri:
+            sezione = i.unita_id or coca
             if i.unita_id:
                 unita_di[i.unita_id] = i.unita
-                per_sezione.setdefault(i.unita_id, []).append(_etichetta(i, i.unita))
+                per_sezione.setdefault(sezione, []).append(_etichetta(i, i.unita))
             else:
-                per_sezione.setdefault(coca, []).append(_etichetta(i))
+                per_sezione.setdefault(sezione, []).append(_etichetta(i))
+            if i.ruolo in GUIDE:
+                guide.add(sezione)
         # No service at all (e.g. a unit treasurer only): in the Co.Ca. too (DEC-284).
         if not any(i.ruolo in INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO} for i in propri):
             per_sezione.setdefault(coca, []).insert(0, SENZA_SERVIZIO)
         for sezione, etichette in per_sezione.items():
-            righe_di.setdefault(sezione, []).append(Riga(persona, etichette))
+            righe_di.setdefault(sezione, []).append(Riga(persona, etichette, sezione in guide))
 
     risultato = [
-        Sezione(str(unita_di[u]), sorted(righe_di[u], key=lambda r: _ordine_persona(r.persona)))
+        Sezione(str(unita_di[u]), sorted(righe_di[u], key=_ordine_riga))
         for u in sorted(
             (k for k in righe_di if k != coca), key=lambda k: _ordine_unita(unita_di[k])
         )
@@ -167,7 +195,7 @@ def _per_unita(scelti: set[str], incarichi: list[Incarico]) -> list[Sezione]:
             0,
             Sezione(
                 str(coca_unita) if coca_unita else "Comunità Capi",
-                sorted(righe_di[coca], key=lambda r: _ordine_persona(r.persona)),
+                sorted(righe_di[coca], key=_ordine_riga),
             ),
         )
     return risultato
@@ -222,8 +250,9 @@ def pdf(sezioni_: list[Sezione], giorno: date, raggruppa: str) -> bytes:
             righe.append(
                 [
                     Paragraph(escape(codice_da_stampare(p.codice_socio)), TESTO),
-                    Paragraph(escape(p.cognome), TESTO),
-                    Paragraph(escape(p.nome), TESTO),
+                    # In capitals, as BuonaStrada prints them (DEC-317).
+                    Paragraph(escape(p.cognome.upper()), TESTO),
+                    Paragraph(escape(p.nome.upper()), TESTO),
                     Paragraph(escape(livello), TESTO),
                     Paragraph(escape(", ".join(riga.incarichi)), TESTO),
                 ]

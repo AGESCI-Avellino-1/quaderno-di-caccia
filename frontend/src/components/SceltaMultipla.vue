@@ -6,8 +6,13 @@ import Icona from '@/components/Icona.vue'
 
 // Several choices from a drop-down list (DEC-306): Bootstrap 6's combobox markup with
 // its menu, the choice kept here (Bootstrap's own combobox writes its summary in
-// English). The menu stays open while ticking.
-const props = defineProps<{ id: string; scelte: { valore: string; nome: string }[] }>()
+// English). The menu stays open while ticking. `gruppi` adds quick choices next to «Tutti»
+// and «Nessuno»: each picks exactly its values (DEC-318).
+const props = defineProps<{
+  id: string
+  scelte: { valore: string; nome: string }[]
+  gruppi?: { nome: string; valori: string[] }[]
+}>()
 const valori = defineModel<string[]>({ required: true })
 
 const pulsante = ref<HTMLButtonElement | null>(null)
@@ -47,6 +52,9 @@ function cambia(valore: string) {
 }
 
 const tutti = (si: boolean) => (valori.value = si ? props.scelte.map((s) => s.valore) : [])
+
+const scegli = (gruppo: string[]) =>
+  (valori.value = props.scelte.map((s) => s.valore).filter((v) => gruppo.includes(v)))
 </script>
 
 <template>
@@ -66,9 +74,18 @@ const tutti = (si: boolean) => (valori.value = si ? props.scelte.map((s) => s.va
       <Icona nome="chevron-down" class="combobox-caret" />
     </button>
     <div ref="menu" class="menu" role="listbox" aria-multiselectable="true">
-      <div class="d-flex gap-3 px-3 pb-1 small">
+      <div class="d-flex flex-wrap column-gap-3 px-3 pb-1 small">
         <button type="button" class="btn btn-link btn-sm p-0" @click="tutti(true)">Tutti</button>
         <button type="button" class="btn btn-link btn-sm p-0" @click="tutti(false)">Nessuno</button>
+        <button
+          v-for="g in gruppi"
+          :key="g.nome"
+          type="button"
+          class="btn btn-link btn-sm p-0"
+          @click="scegli(g.valori)"
+        >
+          {{ g.nome }}
+        </button>
       </div>
       <button
         v-for="s in scelte"

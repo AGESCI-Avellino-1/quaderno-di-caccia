@@ -280,12 +280,12 @@ release; lo script ne mostra le sezioni tra la versione installata e la nuova **
 chiedere se aggiornare. Lo script che gira è quello della versione installata: l'elenco compare
 negli aggiornamenti che partono dalla 1.10.
 
-### Richieste del 04/11, da raccogliere
+### Richieste del 04/11
 
-Richieste del maintainer del 04/11, solo annotate: si sviluppano quando il maintainer dice di
-partire.
+Richieste del maintainer del 04/11; il maintainer ha detto di partire il 04/11, DEC-316…DEC-319
+nell'analisi.
 
-#### N.50 — Organigramma: anche gli staff delle unità ⏳
+#### N.50 — Organigramma: anche gli staff delle unità ✅ 04/11 (DEC-316)
 
 Nella pagina Organigramma (`GruppoView.vue`) oggi ci sono solo gli incarichi di Comunità capi:
 mostrare anche gli staff di unità (capo unità, staff, assistente ecclesiastico), un po' come nel
@@ -293,18 +293,26 @@ PDF esportato raggruppato per unità. Deciso il 04/11: **sola lettura**, una sez
 (L/C, E/G, R/S, come nel PDF) con capo unità, staff e assistente ecclesiastico e il link alla
 pagina dell'unità; si nomina ancora dalla pagina dell'unità.
 
-#### N.51 — PDF degli incarichi: nomi in maiuscolo ⏳
+#### N.51 — PDF degli incarichi: nomi in maiuscolo ✅ 04/11 (DEC-317)
 
 Nel PDF (`organizzazione/elenco_incarichi.py`) cognome e nome tutti in maiuscolo, come fa
 BuonaStrada; nel database restano come sono. Deciso il 04/11: solo le colonne Cognome e Nome;
 unità e incarichi restano come sono.
 
-#### N.52 — Incarichi da includere: «Educativi» e «Non educativi» ⏳
+#### N.52 — Incarichi da includere: «Educativi» e «Non educativi» ✅ 04/11 (DEC-318)
 
 Nel menu a scelta multipla del PDF (N.40), oltre a «Tutti» e «Nessuno»: **Non educativi** =
 tesoriere di gruppo, tesoriere di unità, amministratore tecnico; **Educativi** = tutti gli altri,
 i due servizi di supporto e «A disposizione» compresi (deciso il 04/11; i servizi di supporto
-corretti dal maintainer lo stesso giorno).
+corretti dal maintainer lo stesso giorno). Il server dice quali incarichi sono educativi
+(`elenco_incarichi.NON_EDUCATIVI`); `SceltaMultipla` ha le scelte rapide `gruppi`.
+
+#### N.53 — PDF degli incarichi: capi unità e capigruppo in cima, le donne prima ✅ 04/11 (DEC-319)
+
+Richiesta del maintainer (04/11, durante N.50–N.52): nel PDF, in ogni unità prima i capi unità,
+in Co.Ca. prima i capigruppo; tra loro, per convenzione, le donne prima degli uomini; poi gli
+altri per cognome. Raggruppando per incarico, nelle sezioni Capo unità e Capogruppo le donne
+prima nella stessa unità.
 
 ### Richieste del 03/11 (sera), da raccogliere
 

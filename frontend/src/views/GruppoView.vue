@@ -16,6 +16,7 @@ import { useSessioneStore } from '@/stores/sessione'
 // capigruppo in office; by the technical administrator only when there is none (first
 // start). Then the capi serving outside the units (two support services, which replaced
 // "a disposizione", DEC-293) and, for the capigruppo, the capi with no service at all.
+// Last, the staff of every unit, read only: appointed from the unit's page (DEC-316).
 const { errore, esegui } = useErrore()
 const dati = ref<IncarichiGruppo | null>(null)
 const copiaDel = ref<string | null>(null)
@@ -92,6 +93,26 @@ const sessione = useSessioneStore()
           @cambiato="carica"
         />
       </div>
+      <template v-if="dati.staff_unita?.length">
+        <h2 class="h5 mt-7">Staff delle unità</h2>
+        <p class="small fg-2">
+          Capi unità, staff e assistenti ecclesiastici. Si nominano dalla pagina dell'unità.
+        </p>
+        <div class="card card-body">
+          <section v-for="(s, n) in dati.staff_unita" :key="s.unita_id" :class="{ 'mt-5': n }">
+            <h3 class="h6 mb-3">
+              <RouterLink :to="`/unita/${s.unita_id}`">{{ s.unita }}</RouterLink>
+            </h3>
+            <ElencoIncarichi
+              :incarichi="s.incarichi"
+              :nomina="[]"
+              :dove="{ unita_id: s.unita_id }"
+              :candidati="capi"
+              vuoto="Nessuno nello staff."
+            />
+          </section>
+        </div>
+      </template>
       <StampaIncarichi v-if="sessione.profilo?.capogruppo" />
       <FineAnno v-if="sessione.profilo?.capogruppo" />
     </template>

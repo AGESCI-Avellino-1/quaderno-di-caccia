@@ -404,6 +404,20 @@ _TIPI = [
         ),
         facoltativa=True,
     ),
+    TipoEmail(
+        "documento_nuovo",
+        "Nuovo documento",
+        "A chi può leggere un documento, quando chi lo carica sceglie di avvisare.",
+        "Nuovo documento: [Titolo]",
+        "<p>Ciao,</p><p>c'è un documento nuovo o aggiornato: <strong>[Titolo]</strong>.</p>"
+        "<p>[Descrizione]</p><p>Lo trovi nell'app, in Download:<br>[Link]</p>",
+        (
+            Segnaposto("Titolo", "il titolo del documento", "Regolamento del campo", True),
+            Segnaposto("Descrizione", "la breve descrizione", "Le regole per il campo estivo."),
+            _link("la pagina Download"),
+        ),
+        facoltativa=True,
+    ),
     # --- Events on BuonaCaccia (always sent, DEC-168) --------------------------------------
     TipoEmail(
         "buonacaccia_iscrizione",

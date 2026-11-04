@@ -37,6 +37,7 @@ privacy
 fine-anno
 impostazioni
 assemblea
+peg
 ```
 
 ```{toctree}

@@ -104,6 +104,8 @@ class Gruppo(ModelloTracciato):
     sito = models.URLField(blank=True)
     runts_repertorio = models.CharField(max_length=30, blank=True)
     runts_data = models.DateField(null=True, blank=True)
+    # A new Progetto Educativo di Gruppo is being written: only a label (DEC-343).
+    peg_in_redazione = models.BooleanField(default=False)
     # PNG or JPEG, re-encoded by Pillow; served only to the prints.
     logo = models.ImageField(upload_to="gruppo/", blank=True)
 

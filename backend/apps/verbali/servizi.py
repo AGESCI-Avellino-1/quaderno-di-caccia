@@ -2,7 +2,6 @@
 files on the Drive, the reminders. Who may do what is in `policy`."""
 
 import io
-import re
 import uuid
 import zipfile
 from collections.abc import Iterator
@@ -19,6 +18,13 @@ from apps.anagrafica.models import Persona
 from apps.archivio import drive
 from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
+from apps.core.file_caricati import (
+    DOCUMENTI,
+    MASSIMO_SUL_SERVER,
+    estensione,
+    nome_pulito,
+    prime_giuste,
+)
 from apps.eventi.models import Cerchia, Evento, Livello, StatoPresenza, TipoEvento
 from apps.eventi.servizi import qualita_in_assemblea
 from apps.impostazioni.html import pulisci
@@ -60,7 +66,6 @@ NOME_TOLTO = "Persona cancellata"
 GB = 1024**3
 MB = 1024**2
 MASSIMO_SU_DRIVE = 2 * GB  # DEC-330
-MASSIMO_SUL_SERVER = 20 * MB
 MASSIMO_ZIP = 2 * GB
 # Under the proxies' 20 MB; Google wants multiples of 256 KB for all pieces but the last.
 PEZZO = 8 * MB
@@ -71,26 +76,12 @@ def _audio_video_mp4(inizio: bytes) -> bool:
 
 
 # By extension: the type served comes from here, never from what the browser says; the
-# first bytes must agree. Word, Excel and PowerPoint are ZIP files, or OLE the old ones.
-OLE = (b"\xd0\xcf\x11\xe0",)
-ZIP = (b"PK\x03\x04",)
+# first bytes must agree.
 TIPI = {
-    ".pdf": ("application/pdf", (b"%PDF",)),
+    **DOCUMENTI,
     ".jpg": ("image/jpeg", (b"\xff\xd8\xff",)),
     ".jpeg": ("image/jpeg", (b"\xff\xd8\xff",)),
     ".png": ("image/png", (b"\x89PNG",)),
-    ".doc": ("application/msword", OLE),
-    ".docx": (
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ZIP,
-    ),
-    ".xls": ("application/vnd.ms-excel", OLE),
-    ".xlsx": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ZIP),
-    ".ppt": ("application/vnd.ms-powerpoint", OLE),
-    ".pptx": (
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        ZIP,
-    ),
     ".mp3": ("audio/mpeg", (b"ID3", b"\xff\xfb", b"\xff\xf3", b"\xff\xf2")),
     ".m4a": ("audio/mp4", _audio_video_mp4),
     ".wav": ("audio/wav", (b"RIFF",)),
@@ -395,21 +386,6 @@ def collegato_riapri(collegato: VerbaleCollegato, motivo: str) -> VerbaleCollega
 # --- Files ----------------------------------------------------------------------------------
 
 
-def _estensione(nome: str) -> str:
-    return PurePosixPath(nome).suffix.lower()
-
-
-def _nome_pulito(nome: str) -> str:
-    """No paths, no control characters: it goes into a header and into a ZIP."""
-    base = re.sub(r"[\x00-\x1f\\/\"]", "_", nome.replace("\\", "/").rsplit("/", 1)[-1]).strip()
-    return base[-200:] or "allegato"
-
-
-def _prime_giuste(estensione: str, inizio: bytes) -> bool:
-    prova = TIPI[estensione][1]
-    return prova(inizio) if callable(prova) else inizio.startswith(prova)
-
-
 def massimo_allegato() -> int:
     return MASSIMO_SU_DRIVE if drive.configurato() else MASSIMO_SUL_SERVER
 
@@ -426,9 +402,8 @@ def inizia_caricamento(
     verbale: Verbale, nome: str, dimensione: int, utente, di_convocazione: bool = False
 ) -> AllegatoVerbale:
     _in_bozza(verbale)
-    nome = _nome_pulito(nome)
-    estensione = _estensione(nome)
-    if estensione not in TIPI:
+    nome = nome_pulito(nome)
+    if estensione(nome) not in TIPI:
         raise ValidationError(ERRORE_TIPO)
     if dimensione <= 0:
         raise ValidationError("Il file è vuoto.")
@@ -438,7 +413,7 @@ def inizia_caricamento(
         raise ValidationError(f"Il file è troppo grande: il massimo è {limite}.")
     if verbale.pk is None:
         verbale.save()
-    tipo = TIPI[estensione][0]
+    tipo = TIPI[estensione(nome)][0]
     sessione = ""
     if drive.configurato():
         sessione = drive.apri_caricamento(
@@ -466,7 +441,7 @@ def ricevi_pezzo(allegato: AllegatoVerbale, inizio: int, file) -> AllegatoVerbal
     dati = file.read()
     if not dati or inizio + len(dati) > allegato.dimensione:
         raise ValidationError("Il file non corrisponde a quello annunciato: riprova.")
-    if inizio == 0 and not _prime_giuste(_estensione(allegato.nome_file), dati[:16]):
+    if inizio == 0 and not prime_giuste(TIPI, estensione(allegato.nome_file), dati[:16]):
         # It stays incomplete, seen by nobody, until the housekeeping removes it.
         raise ValidationError(ERRORE_TIPO)
     if allegato.sessione:
@@ -485,7 +460,7 @@ def ricevi_pezzo(allegato: AllegatoVerbale, inizio: int, file) -> AllegatoVerbal
             raise ValidationError("Il file non corrisponde a quello annunciato: riprova.")
         file.seek(0)
         # A random name on disk: the original may contain someone's.
-        nome = f"{uuid.uuid4().hex}{_estensione(allegato.nome_file)}"
+        nome = f"{uuid.uuid4().hex}{estensione(allegato.nome_file)}"
         allegato.file.save(nome, file, save=False)
         allegato.ricevuti = len(dati)
         allegato.completo = True

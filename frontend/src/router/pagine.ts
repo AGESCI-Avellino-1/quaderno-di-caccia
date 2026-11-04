@@ -56,6 +56,8 @@ export const PAGINE: Record<string, Pagina> = {
   banca: { titolo: 'Estratto conto' },
   'pagamenti-da-verificare': { titolo: 'Pagamenti da verificare' },
   bacheca: { titolo: 'Bacheca' },
+  download: { titolo: 'Download' },
+  peg: { titolo: 'Progetto Educativo di Gruppo' },
   'mie-quote': { titolo: 'Le mie quote' },
   eventi: { titolo: 'Eventi' },
   evento: { titolo: 'Evento', sopra: 'eventi' },

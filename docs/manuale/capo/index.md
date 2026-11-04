@@ -48,6 +48,7 @@ progressione
 passaggi
 fascicolo
 bacheca
+download
 spese
 impersona
 ```

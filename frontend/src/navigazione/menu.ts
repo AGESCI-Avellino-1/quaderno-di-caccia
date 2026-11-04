@@ -155,6 +155,12 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
               to: '/bacheca',
               descrizione: 'Avvisi dei capi per la tua unità e per il gruppo',
             },
+            {
+              nome: 'Download',
+              icona: 'download',
+              to: '/download',
+              descrizione: 'I documenti del gruppo e il Progetto Educativo di Gruppo',
+            },
           ]
         : [],
     },

@@ -1650,6 +1650,65 @@ def puo_gestire_fine_anno(user) -> bool:
     return e_capogruppo(user) and not e_capo_in_attesa(user)
 
 
+# --- Download and Progetto Educativo di Gruppo (DEC-341…DEC-344) ------------------------
+
+
+def puo_caricare_documento(user) -> bool:
+    """Every capo, for any unit; never the ragazzi (DEC-341)."""
+    return e_capo(user) and not e_capo_in_attesa(user)
+
+
+def puo_modificare_documento(user, documento) -> bool:
+    """Who loaded it and the capigruppo."""
+    if not puo_caricare_documento(user):
+        return False
+    return documento.autore_id == user.pk or e_capogruppo(user)
+
+
+def documenti_visibili(user):
+    """The capi see everything; the others what is addressed to them: parents of the whole
+    group, ragazzi and parents of the units chosen; the parents of an adult as the adult decides
+    (DEC-26, DEC-341). Never one past its last day, even before the daily cleaning; never anyone
+    outside the group."""
+    from apps.documenti.models import Documento
+    from apps.documenti.servizi import documenti_scaduti
+
+    documenti = Documento.objects.exclude(pk__in=documenti_scaduti(date.today()).values("pk"))
+    if e_capo(user) and not e_capo_in_attesa(user):
+        return documenti
+    attive = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.RAGAZZO)
+    persona = persona_di(user)
+    da_ragazzo = (
+        set(attive.filter(persona=persona).values_list("unita_id", flat=True)) if persona else set()
+    )
+    figli = [p for p in tutelati(user) if genitori_vedono(p, "scheda")]
+    da_genitore = set(attive.filter(persona__in=figli).values_list("unita_id", flat=True))
+    scelta = Q(pk__in=[])
+    if figli:
+        scelta |= Q(per_genitori=True)
+    if da_ragazzo:
+        scelta |= Q(unita_ragazzi=True, unita__in=da_ragazzo)
+    if da_genitore:
+        scelta |= Q(unita_genitori=True, unita__in=da_genitore)
+    return documenti.filter(scelta).distinct()
+
+
+def puo_gestire_peg(user) -> bool:
+    """The capigruppo (DEC-343)."""
+    return e_capogruppo(user) and not e_capo_in_attesa(user)
+
+
+def puo_vedere_storico_peg(user) -> bool:
+    """Members and parents; who is outside sees only the version in force, on the public page
+    (DEC-343, DEC-344)."""
+    if e_capo(user):
+        return True
+    persona = persona_di(user)
+    if persona is not None and Appartenenza.objects.attive().filter(persona=persona).exists():
+        return True
+    return tutelati(user).exists()
+
+
 # --- Notice board (DEC-03, DEC-218…DEC-220) -------------------------------------------
 
 

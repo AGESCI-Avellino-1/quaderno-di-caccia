@@ -13,6 +13,7 @@ from ninja.errors import HttpError
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
 from apps.archivio import drive
+from apps.core.file_caricati import disposizione
 from apps.eventi.models import Evento
 from apps.permessi import policy
 from apps.permessi.models import Azione, registra_accesso_verbale
@@ -401,7 +402,7 @@ def scarica(request, allegato_id: int):
         raise HttpError(503, str(errore)) from errore
     _registra(request, allegato.verbale, Azione.LETTURA)
     risposta = _flusso(flusso, allegato.tipo_file, f"allegato-{allegato.pk}")
-    risposta["Content-Disposition"] = _disposizione(allegato.nome_file)
+    risposta["Content-Disposition"] = disposizione(allegato.nome_file)
     risposta["Content-Length"] = str(allegato.dimensione)
     return risposta
 
@@ -828,10 +829,3 @@ def riapri_collegato(request, evento_id: int, tipo: str, dati: RiaperturaIn):
     collegato = _collegato_gestibile(request, evento_id, tipo)
     _azione(servizi.collegato_riapri, collegato, dati.motivo)
     return _collegato_out(request, collegato, con_testo=True)
-
-
-def _disposizione(nome: str) -> str:
-    from django.utils.encoding import escape_uri_path
-
-    semplice = nome.encode("ascii", "replace").decode().replace("?", "_")
-    return f"attachment; filename=\"{semplice}\"; filename*=UTF-8''{escape_uri_path(nome)}"

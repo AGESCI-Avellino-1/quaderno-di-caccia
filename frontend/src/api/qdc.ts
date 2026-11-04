@@ -647,6 +647,62 @@ export interface VerbaleCollegato {
   puo_gestire: boolean
 }
 
+export type DurataDocumento = 'ANNO' | 'DATA' | 'SEMPRE'
+
+/** A document of the group (DEC-341, DEC-342). */
+export interface DocumentoDownload {
+  id: number
+  titolo: string
+  descrizione: string
+  nome_file: string
+  dimensione: number
+  durata: DurataDocumento
+  anno: number | null
+  scade_il: string | null
+  ultimo_giorno: string | null
+  per_coca: boolean
+  per_genitori: boolean
+  unita_ids: number[]
+  unita_nomi: string[]
+  unita_ragazzi: boolean
+  unita_genitori: boolean
+  aggiornato: boolean
+  puo_modificare: boolean
+}
+
+/** A version of the Progetto Educativo di Gruppo (DEC-343). */
+export interface VersionePeg {
+  id: number
+  nome_file: string
+  dimensione: number
+  ha_testo: boolean
+  approvato_il: string
+  durata: string
+  in_vigore: boolean
+}
+
+export interface Download {
+  documenti: DocumentoDownload[]
+  /** Null for who has only the public page. */
+  peg: { in_redazione: boolean; versioni: VersionePeg[]; puo_gestire: boolean } | null
+  puo_caricare: boolean
+  unita: { id: number; nome: string }[]
+  anni: { anno: number; etichetta: string }[]
+  massimo: number
+}
+
+export interface PegPubblico {
+  gruppo: string
+  in_redazione: boolean
+  approvato_il: string | null
+  durata: string
+  testo: string
+  ha_pdf: boolean
+}
+
+export const fileDocumento = (id: number) => `/api/v1/documenti/${id}/file`
+export const fileVersionePeg = (id: number) => `/api/v1/peg/versioni/${id}/file`
+export const PEG_PUBBLICO_PDF = '/api/v1/peg/pubblico.pdf'
 export const convocazionePdf = (evento: number) => `/api/v1/eventi/${evento}/convocazione.pdf`
 export const verbaleCollegatoPdf = (evento: number, tipo: string) =>
   `/api/v1/eventi/${evento}/verbali-collegati/${tipo}.pdf`
@@ -2963,6 +3019,22 @@ export const api = {
       metodo: 'POST',
       corpo: { nome, dimensione },
     }),
+  download: () => richiesta<Download>('/api/v1/download'),
+  caricaDocumento: (corpo: FormData) =>
+    richiesta<DocumentoDownload>('/api/v1/documenti', { metodo: 'POST', corpo }),
+  modificaDocumento: (id: number, corpo: FormData) =>
+    richiesta<DocumentoDownload>(`/api/v1/documenti/${id}`, { metodo: 'POST', corpo }),
+  eliminaDocumento: (id: number) =>
+    richiesta<null>(`/api/v1/documenti/${id}`, { metodo: 'DELETE' }),
+  nuovaVersionePeg: (corpo: FormData) =>
+    richiesta<VersionePeg>('/api/v1/peg/versioni', { metodo: 'POST', corpo }),
+  eliminaVersionePeg: (id: number) =>
+    richiesta<null>(`/api/v1/peg/versioni/${id}`, { metodo: 'DELETE' }),
+  testoVersionePeg: (id: number) =>
+    richiesta<{ testo: string }>(`/api/v1/peg/versioni/${id}/testo`),
+  pegInRedazione: (in_redazione: boolean) =>
+    richiesta<null>('/api/v1/peg/in-redazione', { metodo: 'PUT', corpo: { in_redazione } }),
+  pegPubblico: () => richiesta<PegPubblico>('/api/v1/peg/pubblico'),
   convocazioneModello: (evento: number) =>
     richiesta<ConvocazioneModello>(`/api/v1/eventi/${evento}/convocazione/modello`),
   salvaConvocazioneModello: (evento: number, corpo: DatiConvocazione) =>

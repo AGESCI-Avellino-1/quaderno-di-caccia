@@ -221,6 +221,10 @@ const provider = (nome: 'google' | 'apple') =>
         <RouterLink to="/lista-attesa">Mettiti in lista d'attesa</RouterLink>.
       </p>
       <p class="small fg-2 mb-1">
+        Vuoi conoscerci? Leggi il
+        <RouterLink to="/peg">Progetto Educativo di Gruppo</RouterLink>.
+      </p>
+      <p class="small fg-2 mb-1">
         Non hai un account? Ti serve un invito, oppure un codice di iscrizione dai capi.
       </p>
       <form class="d-flex gap-3" @submit.prevent="usaCodice">

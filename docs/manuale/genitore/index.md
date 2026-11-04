@@ -39,6 +39,7 @@ quote
 progressione
 squadriglia
 bacheca
+download
 maggiorenni
 email
 diritti

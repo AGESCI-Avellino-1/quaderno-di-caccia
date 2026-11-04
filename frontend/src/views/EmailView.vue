@@ -68,7 +68,7 @@ const voci = [
   { chiave: 'maggiore_eta', etichetta: 'Avvisi per i 18 anni (tuoi o dei tuoi figli)' },
   {
     chiave: 'avvisi',
-    etichetta: 'Avvisi della bacheca, quando chi li pubblica li manda anche per email',
+    etichetta: 'Avvisi della bacheca e documenti nuovi, quando chi li pubblica li manda per email',
   },
 ] as const
 </script>

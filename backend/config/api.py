@@ -16,6 +16,7 @@ from apps.cassa.api import router as cassa_router
 from apps.core.api import router as core_router
 from apps.diritti.api import router as diritti_router
 from apps.dispositivi.api import router as dispositivi_router
+from apps.documenti.api import router as documenti_router
 from apps.eventi.api import router as eventi_router
 from apps.eventi.api_riunioni import router as riunioni_router
 from apps.eventi.api_turni import router as turni_router
@@ -63,6 +64,7 @@ api.add_router("/", note_router)
 api.add_router("/", fascicolo_router)
 api.add_router("/", archivio_router)
 api.add_router("/", bacheca_router)
+api.add_router("/", documenti_router)
 api.add_router("/", verbali_router)
 api.add_router("/", banca_router)
 api.add_router("/", impostazioni_router)

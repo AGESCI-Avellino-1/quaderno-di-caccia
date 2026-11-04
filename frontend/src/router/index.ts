@@ -245,6 +245,19 @@ const router = createRouter({
       component: () => import('@/views/BachecaView.vue'),
     },
     {
+      // Documents and the Progetto Educativo di Gruppo: the API decides (DEC-341, DEC-343).
+      path: '/download',
+      name: 'download',
+      component: () => import('@/views/DownloadView.vue'),
+    },
+    {
+      // The Progetto Educativo di Gruppo in force, for anyone (DEC-344).
+      path: '/peg',
+      name: 'peg',
+      component: () => import('@/views/PegPubblicoView.vue'),
+      meta: { pubblica: true },
+    },
+    {
       // The family's own fees: the API decides (DEC-16).
       path: '/mie-quote',
       name: 'mie-quote',

@@ -66,8 +66,8 @@ capigruppo, non chi è indicato come redattore. Agli esiti del voto il testo agg
 e M contrari» o «all'unanimità» anche in elezione e quota, dove il modello non li prevede [da verificare
 col maintainer].
 
-**Da provare nel browser.** Testato con i test automatici e controllando i PDF generati; non provato a mano
-nell'interfaccia. Le schermate del manuale non sono rigenerate.
+**Provato in Chromium** dalla convocazione ai PDF dei tre verbali. Per l'assemblea del 29/11/2026, convocata
+fuori dall'app: basta compilare i dati senza usare «Invia la convocazione».
 
 ### #19 Download e #18 PEG
 

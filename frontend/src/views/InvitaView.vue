@@ -8,6 +8,7 @@ import Icona from '@/components/Icona.vue'
 import QrCode from '@/components/QrCode.vue'
 import { useRete } from '@/composables/useRete'
 import { indirizzoListaAttesa, pngQr } from '@/navigazione/condividi'
+import { salvaFile } from '@/pwa/file'
 import { useSessioneStore } from '@/stores/sessione'
 import { useSitoStore } from '@/stores/sito'
 
@@ -24,12 +25,7 @@ const errore = ref('')
 async function scaricaQr() {
   errore.value = ''
   try {
-    const immagine = await pngQr(url)
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(immagine)
-    link.download = 'lista-d-attesa-qr.png'
-    link.click()
-    URL.revokeObjectURL(link.href)
+    salvaFile(await pngQr(url), 'lista-d-attesa-qr.png')
   } catch (e) {
     errore.value = (e as Error).message
   }

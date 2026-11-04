@@ -10,7 +10,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------- | -------- | ------- | ---------- | ------ |
 | [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali           | Funzione | Medio   | Alta       | VAL    |
-| [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | Errore   | Basso   | Media      | WIP    |
+| [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | Errore   | Basso   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -37,6 +37,9 @@ mano si resta bloccati. Il comportamento di iOS 27 non è ancora stato riprodott
    arriva dopo l'attesa dello scaricamento.
 4. Stesso trattamento per i tre scaricamenti creati dalla pagina (QR, rubrica, fascicolo JSON).
 5. Messaggi in italiano per file negato o assenza di rete; test automatici del gestore.
+
+**Stato.** Sviluppata (`pwa/file.ts`, `FileDaSalvare.vue`), con test automatici e prova in Chromium con
+viewport da telefono. Manca la prova su iPhone.
 
 **Rischi e verifiche.** Da provare su un iPhone vero con la PWA installata: PDF, immagini, Excel e il
 file del calendario (che deve ancora aggiungersi al calendario). Android e computer restano come

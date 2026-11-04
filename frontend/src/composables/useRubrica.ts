@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 import { api } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 import { useRete } from '@/composables/useRete'
+import { salvaFile } from '@/pwa/file'
 import { useSessioneStore } from '@/stores/sessione'
 
 export function useRubrica() {
@@ -40,11 +41,7 @@ export function useRubrica() {
   async function scarica() {
     const testo = await esegui(() => api.rubrica([...scelti.value]))
     if (testo === undefined) return
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(new Blob([testo], { type: 'text/vcard' }))
-    link.download = 'contatti.vcf'
-    link.click()
-    URL.revokeObjectURL(link.href)
+    salvaFile(new Blob([testo], { type: 'text/vcard' }), 'contatti.vcf')
     chiudi()
   }
 

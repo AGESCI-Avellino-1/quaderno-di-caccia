@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { api, type AnteprimaCancellazione, type Fascicolo } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePersona } from '@/composables/useNomePagina'
+import { salvaFile } from '@/pwa/file'
 
 // Full personal file for a data subject's request (DEC-102), capigruppo only: JSON for
 // portability, this page to print or save as PDF, and erasure. Online only: never
@@ -72,11 +73,7 @@ const oggetto = (v: unknown): v is Record<string, unknown> =>
 function scarica() {
   if (!fascicolo.value) return
   const file = new Blob([JSON.stringify(fascicolo.value, null, 2)], { type: 'application/json' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(file)
-  link.download = `fascicolo-${props.id}.json`
-  link.click()
-  URL.revokeObjectURL(link.href)
+  salvaFile(file, `fascicolo-${props.id}.json`)
 }
 
 const stampa = () => window.print()

@@ -10,6 +10,7 @@ import BarraImpersonazione from '@/components/BarraImpersonazione.vue'
 import BarraManutenzione from '@/components/BarraManutenzione.vue'
 import BarraOffline from '@/components/BarraOffline.vue'
 import Briciole from '@/components/Briciole.vue'
+import FileDaSalvare from '@/components/FileDaSalvare.vue'
 import Icona from '@/components/Icona.vue'
 import MenuLaterale from '@/components/MenuLaterale.vue'
 import PiePagina from '@/components/PiePagina.vue'
@@ -124,4 +125,5 @@ onBeforeUnmount(() => window.removeEventListener(EVENTO_CANCELLAZIONE, suCancell
   </div>
   <BannerCookie />
   <AggiornamentoApp />
+  <FileDaSalvare />
 </template>

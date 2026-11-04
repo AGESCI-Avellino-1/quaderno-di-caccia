@@ -302,9 +302,9 @@ unità e incarichi restano come sono.
 #### N.52 — Incarichi da includere: «Educativi» e «Non educativi» ⏳
 
 Nel menu a scelta multipla del PDF (N.40), oltre a «Tutti» e «Nessuno»: **Non educativi** =
-servizio di supporto al gruppo, servizio di supporto all'azione educativa, tesoriere di gruppo,
-tesoriere di unità, amministratore tecnico; **Educativi** = tutti gli altri, «A disposizione»
-compreso (deciso il 04/11).
+tesoriere di gruppo, tesoriere di unità, amministratore tecnico; **Educativi** = tutti gli altri,
+i due servizi di supporto e «A disposizione» compresi (deciso il 04/11; i servizi di supporto
+corretti dal maintainer lo stesso giorno).
 
 ### Richieste del 03/11 (sera), da raccogliere
 

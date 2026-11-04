@@ -9,7 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                            | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------- | ---------- | ------ |
-| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333)         | Modifica | Basso   | Bassa      | VER    |
 | [#16](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/16) | Calendario: voce «Tutti i miei eventi» come selezione predefinita | Modifica | Medio   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
@@ -22,19 +21,11 @@ immagini (si possono generare in un passo Docker a parte, rifatto solo se cambia
 gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il numero in
 `package.json` e `package-lock.json`, l'immagine del backend.
 
-### #15: cose da fare
-
-- `frontend/index.html`, `frontend/src/main.ts`: nell'app installata la schermata resta sopra l'app
-  finché non è passata la durata minima dall'apertura; nel browser sparisce appena l'app è pronta.
-- `QDC_DURATA_AVVIO` (secondi, 2 se non indicata, 0 come oggi), fissata alla costruzione:
-  `.env.example`, `compose.prod.yml`, `frontend/Dockerfile`, `frontend/vite.config.ts`.
-- Guida di installazione: la nuova variabile nella tabella.
-- L'immagine che iOS mostra per prima resta gestita dal sistema: la durata vale per la nostra pagina.
-
 ## Chiuse
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333) | [v1.13.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.13.1) |
 | [#14](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/14) | Schermata di avvio | [v1.13.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.13.0) |
 | [#13](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/13) | Verbali | [v1.13.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.13.0) |
 | [#12](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/12) | Errore in pdf PWA | [v1.12.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.12.1) |

@@ -5,3 +5,4 @@ src/theme/_sidebar.scss
 dist
 dev-dist
 coverage
+scripts/font/contorni.json

@@ -13,7 +13,9 @@ COPY resources/ /app/resources/
 ARG QDC_LOGO=""
 # Under the app's name on the start screen (DEC-332); empty = nothing.
 ARG QDC_NOME_AVVIO=""
-RUN QDC_LOGO="$QDC_LOGO" QDC_NOME_AVVIO="$QDC_NOME_AVVIO" npm run build
+# Seconds the installed app keeps the start screen (DEC-333); empty = 2.
+ARG QDC_DURATA_AVVIO=""
+RUN QDC_LOGO="$QDC_LOGO" QDC_NOME_AVVIO="$QDC_NOME_AVVIO" QDC_DURATA_AVVIO="$QDC_DURATA_AVVIO" npm run build
 
 FROM nginx:stable-alpine
 # The official image renders /etc/nginx/templates/*.template into conf.d at start-up.

@@ -83,6 +83,7 @@ services:
       args:
         QDC_LOGO: ${QDC_LOGO:-}
         QDC_NOME_AVVIO: ${QDC_NOME_AVVIO:-}
+        QDC_DURATA_AVVIO: ${QDC_DURATA_AVVIO:-}
     restart: unless-stopped
     depends_on:
       web:

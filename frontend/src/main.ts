@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
 import App from './App.vue'
+import { tieniSchermataDiAvvio } from './pwa/avvio'
 import router from './router'
 import { collegaCassaforte } from './sicurezza/collegamenti'
 
@@ -13,5 +14,7 @@ void navigator.storage?.persist?.()
 
 // Offline expiry header and device revocation from every server answer (DEC-97).
 collegaCassaforte()
+
+tieniSchermataDiAvvio()
 
 createApp(App).use(createPinia()).use(router).mount('#app')

@@ -444,7 +444,8 @@ implements them:
   (`iscrizioni.PassaggioInCoca`, DEC-307).
 - Start screen (DEC-332): `frontend/scripts/avvio.ts` makes the iOS images at every build into the
   copy of `public/`, out of the precache; the same page is inside `#app` in `index.html`; a new
-  iPhone size goes in `SCHERMI`. `QDC_NOME_AVVIO` is a build argument, like `QDC_LOGO`.
+  iPhone size goes in `SCHERMI`. `QDC_NOME_AVVIO` is a build argument, like `QDC_LOGO`. So is
+  `QDC_DURATA_AVVIO` (DEC-333): `pwa/avvio.ts` keeps that page on top in the installed app only.
 - Minutes (DEC-322…DEC-331, `apps/verbali`): online only, never cached. Attachments go to the
   Drive in 8 MB pieces through the app (the proxies stop at 20 MB, the session address stays on
   the server) and come back as a stream: this is why gunicorn runs with threads (a sync worker

@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-import { escapeHtml, generaAvvio, immaginiAvvio } from './scripts/avvio'
+import { durataAvvio, escapeHtml, generaAvvio, immaginiAvvio } from './scripts/avvio'
 import { generaIcone, LOGO_AGESCI, RADICE } from './scripts/icone'
 
 // Paths served by Django. In dev Vite proxies them, so the PWA and the API share the
@@ -40,17 +40,25 @@ function nomeGruppoAvvio(): string {
   return process.env.QDC_NOME_AVVIO?.trim() ?? ''
 }
 
-/** The group's name in the page shown while the app loads, and at build the iPhone's images. */
+/**
+ * The group's name and the minimum duration (DEC-333) in the page shown while the app loads,
+ * and at build the iPhone's images.
+ */
 function paginaDiAvvio(costruzione: boolean): Plugin {
   return {
     name: 'qdc-pagina-di-avvio',
     transformIndexHtml(html) {
       const nome = nomeGruppoAvvio()
       return {
-        html: html.replace(
-          '<!-- qdc-gruppo-avvio -->',
-          nome ? `<div class="avvio-gruppo">${escapeHtml(nome)}</div>` : '',
-        ),
+        html: html
+          .replace(
+            '<!-- qdc-gruppo-avvio -->',
+            nome ? `<div class="avvio-gruppo">${escapeHtml(nome)}</div>` : '',
+          )
+          .replace(
+            'data-durata="2"',
+            `data-durata="${durataAvvio(process.env.QDC_DURATA_AVVIO)}"`,
+          ),
         tags: costruzione
           ? immaginiAvvio().map((i) => ({
               tag: 'link',

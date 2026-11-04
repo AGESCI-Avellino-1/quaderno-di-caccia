@@ -131,6 +131,10 @@ ricava quando si costruisce l'app: se cambia, serve `docker compose up -d --buil
 dove l'app era già installata, la nuova schermata può comparire solo reinstallandola sulla schermata
 Home.
 
+L'app installata tiene la schermata per almeno due secondi dall'apertura; nel browser sparisce appena
+l'app è pronta. Per cambiare la durata scrivi in `.env` i secondi (`QDC_DURATA_AVVIO=3`, oppure `0`
+per non aspettare), poi di nuovo `docker compose up -d --build`.
+
 ## Il logo del gruppo
 
 Le icone dell'app (quella sul telefono e nel browser) e il logo nella barra in alto sono, di
@@ -200,6 +204,7 @@ servizio senza fermare l'app: `sudo scripts/installa-servizio.sh --rimuovi`.
 | `QDC_INVITO_VALIDITA_GIORNI` | per quanti giorni vale un invito | 14 |
 | `QDC_OFFLINE_GIORNI` | per quanti giorni un telefono tiene i dati senza collegarsi | 14 |
 | `QDC_NOME_AVVIO` | il nome del gruppo sulla schermata di avvio, sotto quello dell'app | vuota: solo il nome dell'app |
+| `QDC_DURATA_AVVIO` | per quanti secondi, almeno, l'app installata mostra la schermata di avvio; 0: solo finché non è pronta | 2 |
 | `QDC_LOGO` | il logo del gruppo per le icone dell'app | vuota: il logo AGESCI (vedi sopra) |
 | `QDC_BANNER_INSTALLAZIONE_GIORNI` | dopo quanti giorni l'invito a installare l'app, chiuso, può ricomparire | 14 |
 | `QDC_DRIVE_CREDENZIALI`, `QDC_DRIVE_CARTELLA`, `QDC_IMPRONTA_CHIAVE` | archivio sul Drive | vuote: vedi [Archivio sul Drive](archivio) |

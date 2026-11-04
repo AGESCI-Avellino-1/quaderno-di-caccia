@@ -61,6 +61,16 @@ export function immaginiAvvio(): ImmagineAvvio[] {
   ])
 }
 
+/** Seconds the installed app keeps the start screen (DEC-333): `QDC_DURATA_AVVIO`, default 2. */
+export function durataAvvio(valore: string | undefined): number {
+  const testo = valore?.trim()
+  if (!testo) return 2
+  if (!/^\d+(\.\d+)?$/.test(testo)) {
+    throw new Error(`QDC_DURATA_AVVIO deve essere un numero di secondi: ${testo}`)
+  }
+  return Number(testo)
+}
+
 export function escapeHtml(testo: string): string {
   return testo
     .replaceAll('&', '&amp;')

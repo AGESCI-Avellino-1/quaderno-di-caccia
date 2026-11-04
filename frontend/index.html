@@ -11,11 +11,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Quaderno di Caccia</title>
     <style>
-      /* The start screen while the app loads (DEC-332): Vue replaces it when it mounts. On its
-         own here, as the bundled styles are not loaded yet; same colours as scripts/avvio.ts. */
+      /* The start screen while the app loads (DEC-332): Vue replaces it when it mounts, or in
+         the installed app pwa/avvio.ts keeps it on top for a while (DEC-333). On its own here,
+         as the bundled styles are not loaded yet; same colours as scripts/avvio.ts. */
       .avvio {
         position: fixed;
         inset: 0;
+        z-index: 9999;
         display: grid;
         place-items: center;
         background-color: #fff;
@@ -59,7 +61,7 @@
   </head>
   <body>
     <div id="app">
-      <div class="avvio" role="status" aria-label="Caricamento">
+      <div class="avvio" role="status" aria-label="Caricamento" data-durata="2">
         <div class="avvio-etichetta">
           <img src="/icons/icon-512.png" alt="" width="512" height="512" />
           <div class="avvio-nome">Quaderno di Caccia</div>

@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                    | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | --------------------------------------------------------- | -------- | ------- | ---------- | ------ |
-| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333) | Modifica | Basso   | Bassa      | VAL    |
+| [#15](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/15) | Schermata di avvio: durata minima configurabile (DEC-333) | Modifica | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

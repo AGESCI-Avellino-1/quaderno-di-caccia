@@ -42,6 +42,15 @@ function stub(dati: unknown, chiamate: Chiamata[] = []) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, opzioni?: RequestInit) => {
+      // The box of the admission criteria asks for them by itself: none here.
+      if (url.endsWith('/criteri-ammissione/pubblici')) {
+        return risposta(200, {
+          traccia: false,
+          anno_nome: '',
+          anno_corrente_nome: '',
+          versioni: [],
+        })
+      }
       chiamate.push({ url, metodo: opzioni?.method ?? 'GET', corpo: opzioni?.body })
       return risposta(200, dati)
     }),

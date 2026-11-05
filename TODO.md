@@ -9,8 +9,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | VAL    |
-| [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | VAL    |
+| [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | WIP    |
+| [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 

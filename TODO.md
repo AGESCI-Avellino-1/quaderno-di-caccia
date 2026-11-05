@@ -47,7 +47,6 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 
 **Da decidere.**
 
-- Cosa si mostra se per l'anno in corso non c'è ancora.
 - Se servono anche il numero massimo per unità, con un avviso all'approvazione, e la scadenza dei sessanta giorni sul rifiuto.
 - Se l'app prepara anche la lettera alla Zona.
 
@@ -56,6 +55,8 @@ documento si compila nell'app sulla carta intestata, partendo dal testo del mode
 (`EditorTesto.vue`). Se il testo cambia si indica da quando vale la nuova versione: le altre versioni dello stesso anno
 restano visibili, ognuna con la data fino a cui è valida.
 Lo compilano i capigruppo. Lo vedono tutti in Download e, senza account, dalla lista d'attesa, con tutte le versioni dell'anno.
+Se per l'anno in corso non c'è ancora, si mostra l'ultimo, dicendo che è dell'anno precedente, che è solo una traccia e che il
+nuovo verrà caricato a breve; se non ce n'è nessuno, il collegamento non compare.
 
 ## Chiuse
 

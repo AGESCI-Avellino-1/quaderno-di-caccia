@@ -81,7 +81,7 @@ Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati 
 
 **Da decidere.**
 
-- Se i nautici si offrono a tutti: oggi l'unità non dice se è nautica.
+- Con quali immagini si aggiunge un animale nuovo (vedi sopra, sicurezza).
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
 unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
@@ -91,6 +91,7 @@ L'elenco lo vedono ragazzi e staff dei reparti e i capigruppo; l'immagine, chiun
 Offline restano solo le immagini degli animali usati dalle squadriglie dei reparti; l'elenco completo è solo online.
 Accanto al nome solo l'immagine; nell'elenco nome, plurale, generale o nautico, colori (anche disegnati) con i significati e
 richiamo; la pagina della squadriglia mostra anche i suoi colori. Nome inglese e note sulle fonti non si mostrano.
+I nautici si possono scegliere in tutti i reparti, raggruppati a parte.
 
 ## Chiuse
 

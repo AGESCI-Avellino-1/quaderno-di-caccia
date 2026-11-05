@@ -650,6 +650,12 @@ def puo_vedere_incarichi_di_gruppo(user) -> bool:
     return e_capo(user) or e_amministratore(user)
 
 
+def puo_definire_incarichi(user) -> bool:
+    """New roles for the capi: the capigruppo only (DEC-347). Reading the list follows
+    `puo_vedere_incarichi_di_gruppo`."""
+    return e_capogruppo(user)
+
+
 def puo_gestire_unita(user) -> bool:
     """Create, rename, link and close units: capigruppo (DEC-10)."""
     return e_capogruppo(user)
@@ -697,6 +703,8 @@ def puo_nominare(
         return e_capogruppo(user)  # DEC-165, DEC-166, DEC-281, DEC-293
     if ruolo in {RuoloIncarico.TESORIERE_UNITA, RuoloIncarico.AE_UNITA}:
         return e_capogruppo(user) or (unita is not None and e_capo_unita(user, unita))
+    if ruolo == RuoloIncarico.DEFINITO:
+        return e_capogruppo(user)  # DEC-347
     if ruolo in {RuoloIncarico.CSQ, RuoloIncarico.VCSQ}:
         return squadriglia is not None and e_staff(user, squadriglia.unita)  # DEC-14
     if ruolo in INCARICHI_DI_SQUADRIGLIA:

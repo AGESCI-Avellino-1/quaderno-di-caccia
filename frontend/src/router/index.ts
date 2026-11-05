@@ -118,6 +118,13 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Any capo reads it, the capigruppo change it: the API decides (DEC-347).
+      path: '/gruppo/scheda-incarichi',
+      name: 'scheda-incarichi',
+      component: () => import('@/views/SchedaIncarichiView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Privacy policy and terms, public (DEC-266).
       path: '/privacy',
       name: 'privacy',

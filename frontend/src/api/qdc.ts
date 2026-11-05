@@ -507,6 +507,35 @@ export interface Incarico {
   persona: PersonaBreve
   data_inizio: string
   data_fine: string | null
+  /** A role of a type switched off: no longer offered, it can still be closed (DEC-347). */
+  chiudibile?: boolean
+}
+
+/** A role the capigruppo defined (DEC-347...DEC-349). */
+export interface TipoIncaricoIn {
+  nome: string
+  ambito: 'GRUPPO' | 'UNITA'
+  di_servizio: boolean
+  educativo: boolean
+  attivo: boolean
+}
+
+export interface TipoIncarico extends TipoIncaricoIn {
+  id: number
+  /** Assigned at least once: what it is no longer changes, it is not deleted. */
+  usato: boolean
+}
+
+export interface SchedaIncarichi {
+  /** The fixed roles of the capi, read only (DEC-349). */
+  esistenti: {
+    nome: string
+    ambito: 'GRUPPO' | 'UNITA'
+    di_servizio: boolean
+    educativo: boolean
+  }[]
+  definiti: TipoIncarico[]
+  puo_modificare: boolean
 }
 
 export interface AllegatoVerbale {
@@ -2969,6 +2998,13 @@ export const api = {
   modificaSquadriglia: (id: number, dati: { nome: string; sesso: string; attiva: boolean }) =>
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
+  schedaIncarichi: () => richiesta<SchedaIncarichi>('/api/v1/gruppo/scheda-incarichi'),
+  creaTipoIncarico: (dati: TipoIncaricoIn) =>
+    richiesta<TipoIncarico>('/api/v1/gruppo/tipi-incarico', { metodo: 'POST', corpo: dati }),
+  modificaTipoIncarico: (id: number, dati: TipoIncaricoIn) =>
+    richiesta<TipoIncarico>(`/api/v1/gruppo/tipi-incarico/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaTipoIncarico: (id: number) =>
+    richiesta<void>(`/api/v1/gruppo/tipi-incarico/${id}`, { metodo: 'DELETE' }),
   opzioniElencoIncarichi: () =>
     richiesta<OpzioniElencoIncarichi>('/api/v1/gruppo/incarichi/elenco'),
   /** `presbiteri`: only who may be assistente ecclesiastico (DEC-296). */

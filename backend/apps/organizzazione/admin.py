@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Gruppo, Incarico, Squadriglia, Unita
+from .models import Gruppo, Incarico, Squadriglia, TipoIncarico, Unita
 
 
 @admin.register(Gruppo)
@@ -18,6 +18,11 @@ class UnitaAdmin(admin.ModelAdmin):
 class SquadrigliaAdmin(admin.ModelAdmin):
     list_display = ["nome", "unita", "sesso", "attiva"]
     list_filter = ["unita", "attiva"]
+
+
+@admin.register(TipoIncarico)
+class TipoIncaricoAdmin(admin.ModelAdmin):
+    list_display = ["nome", "ambito", "di_servizio", "educativo", "attivo"]
 
 
 @admin.register(Incarico)

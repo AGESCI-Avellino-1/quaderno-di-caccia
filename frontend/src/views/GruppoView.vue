@@ -38,7 +38,10 @@ const sessione = useSessioneStore()
 
 <template>
   <section>
-    <h1 class="h4 mb-5">Organigramma</h1>
+    <h1 class="h4 mb-1">Organigramma</h1>
+    <p v-if="sessione.profilo?.capo" class="small mb-5">
+      <RouterLink :to="{ name: 'scheda-incarichi' }">Scheda incarichi</RouterLink>
+    </p>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <CopiaLocale :del="copiaDel" />
     <template v-if="dati">

@@ -73,6 +73,39 @@ In **Il mio gruppo**, tocca **Organigramma**.
 In alto un avviso elenca i **capi senza servizio**: assegnali a un'unità o a un servizio di
 supporto. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è il gruppo.
 
+### La scheda degli incarichi
+
+Oltre agli incarichi dell'app, il gruppo può definirne di suoi, per esempio un referente per la
+sicurezza. In alto nell'organigramma tocca **Scheda incarichi**: tutti i capi la leggono, solo i
+capigruppo definiscono e assegnano gli incarichi nuovi, e solo a dei capi.
+
+:::{container} schermate
+![La scheda degli incarichi sul telefono](../img/gruppo/scheda-incarichi-telefono.png){.telefono width="30%"}
+![La scheda degli incarichi sul computer](../img/gruppo/scheda-incarichi-computer.png){.computer width="65%"}
+:::
+
+1. Tocca **Nuovo incarico** e scrivi il **Nome**.
+2. Scegli **Dove vale**: un incarico **di gruppo** si assegna nell'organigramma, uno **di
+   unità** dalla pagina dell'unità.
+3. Scegli il rapporto col servizio del capo. **Aggiuntivo** si somma a quello che il capo già
+   fa. **Di servizio** è il servizio del capo, che così non è più tra i capi senza servizio:
+   - di gruppo, funziona come un servizio di supporto: esclude il servizio in un'unità e gli
+     altri supporti e finisce da solo quando il capo viene assegnato a un'unità;
+   - di unità, esclude i servizi di supporto e li chiude quando viene assegnato.
+4. Spunta **Educativo** se lo è. Conta solo per la scelta rapida nel PDF dell'elenco.
+5. Tocca **Salva**.
+
+:::{warning}
+Un incarico definito dal gruppo non dà **nessun permesso** nell'app. Anche un servizio di unità
+non fa entrare il capo nello staff: non vede i dati dell'unità. Se deve vederli, nominalo nello
+staff.
+:::
+
+Un incarico già assegnato non cambia più tra gruppo e unità né tra aggiuntivo e di servizio, e
+non si elimina: tocca **disattiva**. Non viene più proposto, e chi lo ha lo tiene finché non
+tocchi **chiudi** accanto al suo nome. Gli incarichi dell'app sono in fondo alla pagina, in sola
+lettura.
+
 ### L'elenco degli incarichi
 
 In fondo alla pagina, in **Elenco degli incarichi**, un capogruppo stampa un PDF su carta

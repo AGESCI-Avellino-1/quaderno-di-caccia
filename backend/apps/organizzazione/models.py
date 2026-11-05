@@ -285,6 +285,9 @@ class RuoloIncarico(models.TextChoices):
     # A lupetto or coccinella of a branco or cerchio, appointed by its staff (DEC-66,
     # DEC-182).
     CONSIGLIO_ANZIANI = "CONSIGLIO_ANZIANI", "Consiglio degli Anziani"
+    # A role the capigruppo defined (DEC-347): the name and the rest are on Incarico.tipo. No
+    # permission asks for it, so it gives none.
+    DEFINITO = "DEFINITO", "Incarico definito dal gruppo"
 
 
 # Maximum number of simultaneous holders. None = depends on the unit (diarchy).
@@ -348,6 +351,63 @@ RUOLI_AGGIUNTIVI = {
 }
 
 
+class AmbitoIncarico(models.TextChoices):
+    GRUPPO = "GRUPPO", "Di gruppo"
+    UNITA = "UNITA", "Di unità"
+
+
+# How the API names a role the group defined, next to the plain RuoloIncarico values.
+PREFISSO_DEFINITO = f"{RuoloIncarico.DEFINITO.value}:"
+# The support services, the group's own included (DEC-348).
+Q_SERVIZI_SUPPORTO = models.Q(ruolo__in=SERVIZI_DI_SUPPORTO) | models.Q(
+    tipo__di_servizio=True, tipo__ambito=AmbitoIncarico.GRUPPO
+)
+# Who serves in a unit as far as services go, the group's own roles included (DEC-348).
+Q_SERVIZI_IN_UNITA = models.Q(ruolo__in=SERVIZIO_IN_UNITA) | models.Q(
+    tipo__di_servizio=True, tipo__ambito=AmbitoIncarico.UNITA
+)
+
+
+class TipoIncarico(ModelloTracciato):
+    """A role the capigruppo defined for capi, on top of the fixed ones (DEC-347). It gives
+    no permission. What a role in use is (group or unit, service or not) no longer changes:
+    its history would change meaning. A role in use is switched off, never deleted."""
+
+    nome = models.CharField(max_length=80, unique=True)
+    ambito = models.CharField(max_length=6, choices=AmbitoIncarico.choices)
+    # A group one works like a support service, a unit one counts like the staff for the
+    # services, without the staff's permissions (DEC-348).
+    di_servizio = models.BooleanField(default=False)
+    # Only for the quick choice in the PDF list of the roles (DEC-349).
+    educativo = models.BooleanField(default=True)
+    attivo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "tipo di incarico"
+        verbose_name_plural = "tipi di incarico"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+    @property
+    def codice(self) -> str:
+        return f"{PREFISSO_DEFINITO}{self.pk}"
+
+    def clean(self) -> None:
+        self.nome = self.nome.strip()
+        if self.nome.casefold() in {r.label.casefold() for r in RuoloIncarico}:
+            raise ValidationError(f"«{self.nome}» è già un incarico dell'app.")
+        if not self.pk or not self.incarichi.exists():
+            return
+        prima = TipoIncarico.objects.get(pk=self.pk)
+        if prima.ambito != self.ambito or prima.di_servizio != self.di_servizio:
+            raise ValidationError(
+                "Questo incarico è già stato assegnato: non può cambiare tra gruppo e unità, né "
+                "tra di servizio e aggiuntivo. Disattivalo e definiscine un altro."
+            )
+
+
 class IncaricoQuerySet(models.QuerySet):
     def attivi(self, al_giorno: date | None = None):
         giorno = al_giorno or date.today()
@@ -373,6 +433,10 @@ class Incarico(ModelloTracciato):
     squadriglia = models.ForeignKey(
         Squadriglia, null=True, blank=True, on_delete=models.PROTECT, related_name="incarichi"
     )
+    # Only with the role DEFINITO (DEC-347).
+    tipo = models.ForeignKey(
+        TipoIncarico, null=True, blank=True, on_delete=models.PROTECT, related_name="incarichi"
+    )
     data_inizio = models.DateField(default=date.today)
     # End date is exclusive; null = still active.
     data_fine = models.DateField(null=True, blank=True)
@@ -386,8 +450,25 @@ class Incarico(ModelloTracciato):
     def __str__(self) -> str:
         return f"{self.get_ruolo_display()} — {self.persona}"
 
+    def get_ruolo_display(self) -> str:
+        """The name of the role, the group's own too: every reader goes through here."""
+        if self.tipo_id:
+            return self.tipo.nome
+        return RuoloIncarico(self.ruolo).label
+
+    @property
+    def codice_ruolo(self) -> str:
+        """The role as the API and the PDF list name it."""
+        return self.tipo.codice if self.tipo_id else str(RuoloIncarico(self.ruolo).value)
+
+    @property
+    def e_di_servizio(self) -> bool:
+        """Whether the capo has a service through this role (DEC-165, DEC-348)."""
+        return self.ruolo in INCARICHI_DI_SERVIZIO or bool(self.tipo_id and self.tipo.di_servizio)
+
     def clean(self) -> None:
         ruolo = RuoloIncarico(self.ruolo)
+        self._controlla_tipo(ruolo)
         if ruolo in RUOLI_DI_GRUPPO and not self.gruppo_id:
             raise ValidationError("Un incarico di gruppo richiede il gruppo.")
         if ruolo in RUOLI_DI_UNITA and not self.unita_id:
@@ -408,6 +489,7 @@ class Incarico(ModelloTracciato):
                 gruppo=self.gruppo_id,
                 unita=self.unita_id,
                 squadriglia=self.squadriglia_id,
+                tipo=self.tipo_id,
             )
             .exclude(pk=self.pk)
         )
@@ -419,27 +501,59 @@ class Incarico(ModelloTracciato):
                 f"Il ruolo {self.get_ruolo_display()} ammette al massimo {massimo} titolari."
             )
 
+    def _controlla_tipo(self, ruolo: RuoloIncarico) -> None:
+        """A role the group defined needs its type, in the place the type says (DEC-347)."""
+        if ruolo != RuoloIncarico.DEFINITO:
+            if self.tipo_id:
+                raise ValidationError("Solo un incarico definito dal gruppo ha un tipo.")
+            return
+        if not self.tipo_id:
+            raise ValidationError("Scegli l'incarico definito dal gruppo.")
+        if self._state.adding and not self.tipo.attivo:
+            raise ValidationError(f"L'incarico {self.tipo} è disattivato: non si assegna più.")
+        if self.tipo.ambito == AmbitoIncarico.GRUPPO:
+            if not self.gruppo_id or self.unita_id:
+                raise ValidationError("Un incarico di gruppo richiede il gruppo.")
+            return
+        if not self.unita_id or self.gruppo_id:
+            raise ValidationError("Un incarico di unità richiede l'unità.")
+        if self.unita.tipo == TipoUnita.COMUNITA_CAPI:
+            raise ValidationError("In Comunità capi si assegnano gli incarichi di gruppo.")
+
     def _controlla_servizio(self, ruolo: RuoloIncarico) -> None:
-        """A support service excludes service in a unit and the other support services."""
-        if ruolo in SERVIZI_DI_SUPPORTO:
-            altri = SERVIZIO_IN_UNITA
+        """A support service excludes service in a unit and the other support services; the
+        roles the group defined as services follow the same rule (DEC-348)."""
+        tipo_servizio = self.tipo if self.tipo_id and self.tipo.di_servizio else None
+        supporto = ruolo in SERVIZI_DI_SUPPORTO or (
+            tipo_servizio is not None and tipo_servizio.ambito == AmbitoIncarico.GRUPPO
+        )
+        in_unita = ruolo in SERVIZIO_IN_UNITA or (
+            tipo_servizio is not None and tipo_servizio.ambito == AmbitoIncarico.UNITA
+        )
+        if supporto:
+            altri = Q_SERVIZI_IN_UNITA
             messaggio = "fa servizio in un'unità: chiudi prima quell'incarico."
-            if self._sovrapposti(SERVIZI_DI_SUPPORTO - {ruolo}).exists():
+            # The same one twice is "already holds this role", further on in clean().
+            if (
+                self._sovrapposti(Q_SERVIZI_SUPPORTO)
+                .exclude(ruolo=ruolo, tipo=self.tipo_id)
+                .exists()
+            ):
                 raise ValidationError(
                     f"{self.persona} ha già un servizio di supporto: chiudi prima quello."
                 )
-        elif ruolo in SERVIZIO_IN_UNITA:
-            altri = SERVIZI_DI_SUPPORTO
+        elif in_unita:
+            altri = Q_SERVIZI_SUPPORTO
             messaggio = "ha un servizio di supporto: chiudi prima quell'incarico."
         else:
             return
         if self._sovrapposti(altri).exists():
             raise ValidationError(f"{self.persona} {messaggio}")
 
-    def _sovrapposti(self, ruoli: set[RuoloIncarico]):
-        """The person's roles among `ruoli` overlapping this one's period."""
+    def _sovrapposti(self, filtro: Q):
+        """The person's roles matching `filtro` overlapping this one's period."""
         sovrapposti = (
-            Incarico.objects.filter(persona=self.persona_id, ruolo__in=ruoli)
+            Incarico.objects.filter(filtro, persona=self.persona_id)
             .filter(Q(data_fine__isnull=True) | Q(data_fine__gt=self.data_inizio))
             .exclude(pk=self.pk)
         )

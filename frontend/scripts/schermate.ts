@@ -823,6 +823,12 @@ const SCENE: Scena[] = [
   },
   { nome: 'gruppo/incarichi', chi: 'capogruppo', percorso: '/gruppo', intera: true },
   {
+    nome: 'gruppo/scheda-incarichi',
+    chi: 'capogruppo',
+    percorso: '/gruppo/scheda-incarichi',
+    intera: true,
+  },
+  {
     // The menu of the kinds of role open, one of them unticked.
     nome: 'gruppo/elenco-incarichi',
     chi: 'capogruppo',

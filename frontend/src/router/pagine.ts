@@ -37,6 +37,7 @@ export const PAGINE: Record<string, Pagina> = {
   imprese: { titolo: 'Imprese', sopra: 'unita-dettaglio' },
   passaggi: { titolo: 'Passaggi', sopra: 'unita-dettaglio' },
   gruppo: { titolo: 'Organigramma' },
+  'scheda-incarichi': { titolo: 'Scheda incarichi', sopra: 'gruppo', soloCapi: true },
   iscrizione: { titolo: 'Iscrizione' },
   'lista-attesa': { titolo: "Lista d'attesa" },
   invita: { titolo: 'Invita nel gruppo' },

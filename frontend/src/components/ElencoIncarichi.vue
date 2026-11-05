@@ -64,7 +64,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         />
         <span>{{ i.persona.nome }} {{ i.persona.cognome }}</span>
         <span class="fg-2 small">dal {{ data(i.data_inizio) }}</span>
-        <template v-if="gestibili.has(i.ruolo)">
+        <template v-if="gestibili.has(i.ruolo) || i.chiudibile">
           <button
             v-if="daChiudere !== i.id"
             type="button"

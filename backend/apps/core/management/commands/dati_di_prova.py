@@ -25,7 +25,15 @@ from apps.anagrafica.models import AppartenenzaSquadriglia, Persona, RelazioneTu
 from apps.core.anno import AnnoAssociativo
 from apps.importazione.buonastrada import codice_cognome, codice_nome, leggi_ricerca_soci
 from apps.importazione.servizi import applica
-from apps.organizzazione.models import Gruppo, Incarico, RuoloIncarico, Squadriglia, Unita
+from apps.organizzazione.models import (
+    AmbitoIncarico,
+    Gruppo,
+    Incarico,
+    RuoloIncarico,
+    Squadriglia,
+    TipoIncarico,
+    Unita,
+)
 
 from ._attivita import crea_attivita
 
@@ -207,6 +215,17 @@ class Command(BaseCommand):
         incarico("Elena Conti", RuoloIncarico.CAPO_UNITA, unita=unita["cerchio"])
         incarico("Francesca Gallo", RuoloIncarico.STAFF, unita=unita["cerchio"])
         incarico("Davide Ricci", RuoloIncarico.CAPO_UNITA, unita=unita["clan"])
+        # Roles the group defined (DEC-347): one in use, one still to assign.
+        sicurezza = TipoIncarico.objects.create(
+            nome="Referente sicurezza", ambito=AmbitoIncarico.GRUPPO, educativo=False
+        )
+        TipoIncarico.objects.create(nome="Referente materiale", ambito=AmbitoIncarico.UNITA)
+        incarico(
+            "Marco Ferri",
+            RuoloIncarico.DEFINITO,
+            tipo=sicurezza,
+            gruppo=gruppo,
+        )
 
         pantere = Squadriglia.objects.create(unita=unita["reparto"], nome="Pantere", sesso="F")
         volpi = Squadriglia.objects.create(unita=unita["reparto"], nome="Volpi", sesso="M")

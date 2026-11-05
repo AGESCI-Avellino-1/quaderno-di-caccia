@@ -15,6 +15,7 @@ class OrganizzazioneConfig(AppConfig):
             models.Unita,
             models.Squadriglia,
             models.Incarico,
+            models.TipoIncarico,
             models.AnnoChiuso,
         ):
             auditlog.register(modello)

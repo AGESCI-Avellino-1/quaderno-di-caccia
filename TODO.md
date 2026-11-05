@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | WIP    |
+| [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | VER    |
 | [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
@@ -47,7 +47,7 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 4. Pagina dell'elenco per i capigruppo, scelta nell'assegnazione, organigramma e relativo PDF.
 5. Fascicolo del capo, esportazione e trasferimento: portano il nome dell'incarico. Manuale e dati di prova.
 
-**Decisioni:** DEC-347…DEC-349, tutte prese.
+**Decisioni:** DEC-347…DEC-349. **Fatto**, con i test di ogni ruolo; da provare nell'app.
 
 ### #22 Animali di squadriglia
 

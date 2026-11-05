@@ -25,17 +25,22 @@ from .models import (
     GUIDE_DI_SQUADRIGLIA,
     INCARICHI_DI_SERVIZIO,
     INCARICHI_DI_SQUADRIGLIA,
+    PREFISSO_DEFINITO,
+    Q_SERVIZI_IN_UNITA,
+    Q_SERVIZI_SUPPORTO,
     RUOLI_DI_GRUPPO,
     RUOLI_DI_SQUADRIGLIA,
     RUOLI_DI_UNITA,
     SERVIZI_DI_SUPPORTO,
     SERVIZIO_IN_UNITA,
     Ambiente,
+    AmbitoIncarico,
     Composizione,
     Gruppo,
     Incarico,
     RuoloIncarico,
     Squadriglia,
+    TipoIncarico,
     TipoUnita,
     Unita,
 )
@@ -206,10 +211,22 @@ class IncaricoOut(Schema):
     persona: PersonaBreve
     data_inizio: date
     data_fine: date | None
+    # A role of a type switched off is no longer offered, but can still be closed (DEC-347).
+    chiudibile: bool = False
+
+    @staticmethod
+    def resolve_ruolo(obj: Incarico) -> str:
+        return obj.codice_ruolo
 
     @staticmethod
     def resolve_ruolo_nome(obj: Incarico) -> str:
         return obj.get_ruolo_display()
+
+    @staticmethod
+    def resolve_chiudibile(obj: Incarico, context) -> bool:
+        return bool(obj.tipo_id) and policy.puo_nominare(
+            context["request"].auth, RuoloIncarico.DEFINITO
+        )
 
 
 class Scelta(Schema):
@@ -223,6 +240,16 @@ def _nomina(user, ruoli, **dove) -> list[dict]:
         {"valore": r.value, "etichetta": r.label}
         for r in ruoli
         if policy.puo_nominare(user, r, **dove)
+    ]
+
+
+def _nomina_definiti(user, **filtri) -> list[dict]:
+    """The roles the group defined the user may assign (DEC-347)."""
+    if not policy.puo_nominare(user, RuoloIncarico.DEFINITO):
+        return []
+    return [
+        {"valore": t.codice, "etichetta": t.nome}
+        for t in TipoIncarico.objects.filter(attivo=True, **filtri)
     ]
 
 
@@ -395,7 +422,7 @@ def _incarichi(**filtri):
     return (
         Incarico.objects.attivi()
         .filter(**filtri)
-        .select_related("persona")
+        .select_related("persona", "tipo")
         .order_by("ruolo", "persona__cognome", "persona__nome")
     )
 
@@ -480,6 +507,11 @@ def dettaglio_unita(request, unita_id: int):
                 RuoloIncarico.CONSIGLIO_ANZIANI,
             ),
             unita=unita,
+        )
+        + (
+            _nomina_definiti(utente, ambito=AmbitoIncarico.UNITA)
+            if unita.tipo != TipoUnita.COMUNITA_CAPI
+            else []
         ),
     }
 
@@ -519,7 +551,7 @@ def capi_senza_servizio():
     serves the group: not one to sort out (maintainer, 02/11)."""
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
     in_servizio = Incarico.objects.attivi().filter(
-        ruolo__in=INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO}
+        Q(ruolo__in=INCARICHI_DI_SERVIZIO | {RuoloIncarico.CAPOGRUPPO}) | Q(tipo__di_servizio=True)
     )
     return (
         Persona.objects.filter(pk__in=capi.values("persona_id"))
@@ -533,10 +565,17 @@ def incarichi_di_gruppo(request):
     if not policy.puo_vedere_incarichi_di_gruppo(request.auth):
         raise HttpError(403, "Riservato ai capi.")
     return {
-        "incarichi": list(_incarichi(ruolo__in=RUOLI_AGGIUNTIVI_DI_GRUPPO)),
-        "nomina": _nomina(request.auth, RUOLI_AGGIUNTIVI_DI_GRUPPO),
-        "supporto": list(_incarichi(ruolo__in=SERVIZI_DI_SUPPORTO)),
-        "nomina_supporto": _nomina(request.auth, NUOVI_SERVIZI_DI_SUPPORTO),
+        "incarichi": list(
+            _incarichi().filter(
+                Q(ruolo__in=RUOLI_AGGIUNTIVI_DI_GRUPPO)
+                | Q(tipo__ambito=AmbitoIncarico.GRUPPO, tipo__di_servizio=False)
+            )
+        ),
+        "nomina": _nomina(request.auth, RUOLI_AGGIUNTIVI_DI_GRUPPO)
+        + _nomina_definiti(request.auth, ambito=AmbitoIncarico.GRUPPO, di_servizio=False),
+        "supporto": list(_incarichi().filter(Q_SERVIZI_SUPPORTO)),
+        "nomina_supporto": _nomina(request.auth, NUOVI_SERVIZI_DI_SUPPORTO)
+        + _nomina_definiti(request.auth, ambito=AmbitoIncarico.GRUPPO, di_servizio=True),
         "senza_servizio": (
             list(capi_senza_servizio()) if policy.e_capogruppo(request.auth) else []
         ),
@@ -559,14 +598,17 @@ def staff_delle_unita() -> list[dict]:
         key=_ordine_unita,
     )
     per_unita: dict[int, list[Incarico]] = {}
-    for i in _incarichi(ruolo__in=RUOLI_STAFF_DI_UNITA, unita__in=unita):
+    # With the services the group defined for a unit, after the others (DEC-348).
+    for i in _incarichi(unita__in=unita).filter(Q_SERVIZI_IN_UNITA):
         per_unita.setdefault(i.unita_id, []).append(i)
     ordine = {r: n for n, r in enumerate(RUOLI_STAFF_DI_UNITA)}
     return [
         {
             "unita_id": u.pk,
             "unita": str(u),
-            "incarichi": sorted(per_unita.get(u.pk, []), key=lambda i: ordine[i.ruolo]),
+            "incarichi": sorted(
+                per_unita.get(u.pk, []), key=lambda i: ordine.get(i.ruolo, len(ordine))
+            ),
         }
         for u in unita
     ]
@@ -595,10 +637,14 @@ def opzioni_elenco_incarichi(request):
         raise HttpError(403, "Riservato ai capigruppo.")
     from apps.core.anno import AnnoAssociativo
 
-    from .elenco_incarichi import NON_EDUCATIVI, RUOLI_ELENCO
+    from .elenco_incarichi import NON_EDUCATIVI, RUOLI_ELENCO, tipi_elencabili
 
     corrente = AnnoAssociativo.corrente().anno_fine
-    primo = Incarico.objects.filter(ruolo__in=RUOLI_ELENCO).order_by("data_inizio").first()
+    primo = (
+        Incarico.objects.filter(ruolo__in=[*RUOLI_ELENCO, RuoloIncarico.DEFINITO])
+        .order_by("data_inizio")
+        .first()
+    )
     dal = AnnoAssociativo.da_data(primo.data_inizio).anno_fine if primo else corrente
     usati = set(Incarico.objects.values_list("ruolo", flat=True).distinct())
     return {
@@ -606,6 +652,10 @@ def opzioni_elenco_incarichi(request):
             {"valore": r.value, "nome": r.label, "educativo": r not in NON_EDUCATIVI}
             for r in RUOLI_ELENCO
             if r != RuoloIncarico.A_DISPOSIZIONE or r in usati
+        ]
+        + [
+            {"valore": t.codice, "nome": t.nome, "educativo": t.educativo}
+            for t in tipi_elencabili().order_by("nome")
         ],
         "anni": [
             {"valore": str(a), "nome": AnnoAssociativo(a).etichetta}
@@ -626,7 +676,7 @@ def elenco_incarichi_pdf(
         raise HttpError(403, "Riservato ai capigruppo.")
     from . import elenco_incarichi as elenco
 
-    validi = {r.value for r in elenco.RUOLI_ELENCO}
+    validi = {r.value for r in elenco.RUOLI_ELENCO} | {t.codice for t in elenco.tipi_elencabili()}
     if not ruoli or not set(ruoli) <= validi:
         raise HttpError(400, "Scegli almeno un tipo di incarico tra quelli proposti.")
     if raggruppa not in ("unita", "incarico"):
@@ -658,49 +708,69 @@ def elenco_capi(request, presbiteri: bool = False):
 
 class NuovoIncarico(Schema):
     persona_id: int
-    ruolo: RuoloIncarico
+    # A RuoloIncarico value or, for a role the group defined, "DEFINITO:<id>" (DEC-347).
+    ruolo: str
     unita_id: int | None = None
     squadriglia_id: int | None = None
     data_inizio: date | None = None
 
 
+def _ruolo_scelto(valore: str) -> tuple[RuoloIncarico, TipoIncarico | None]:
+    if valore.startswith(PREFISSO_DEFINITO):
+        numero = valore.removeprefix(PREFISSO_DEFINITO)
+        if not numero.isdecimal():
+            raise HttpError(404, "Incarico non trovato.")
+        return RuoloIncarico.DEFINITO, get_object_or_404(TipoIncarico, pk=int(numero))
+    try:
+        ruolo = RuoloIncarico(valore)
+    except ValueError as errore:
+        raise HttpError(400, "Incarico sconosciuto.") from errore
+    if ruolo == RuoloIncarico.DEFINITO:
+        raise HttpError(400, "Scegli l'incarico definito dal gruppo.")
+    return ruolo, None
+
+
 @router.post("/incarichi", response={201: IncaricoOut})
 def crea_incarico(request, dati: NuovoIncarico):
-    if dati.ruolo == RuoloIncarico.A_DISPOSIZIONE:
+    ruolo, tipo = _ruolo_scelto(dati.ruolo)
+    if ruolo == RuoloIncarico.A_DISPOSIZIONE:
         raise HttpError(
             400, "«A disposizione» non si assegna più: scegli uno dei due servizi di supporto."
         )
     incarico = Incarico(
         persona=get_object_or_404(Persona, pk=dati.persona_id),
-        ruolo=dati.ruolo,
+        ruolo=ruolo,
+        tipo=tipo,
         data_inizio=dati.data_inizio or timezone.localdate(),
     )
-    if dati.ruolo in RUOLI_DI_GRUPPO:
+    if ruolo in RUOLI_DI_GRUPPO or (tipo and tipo.ambito == AmbitoIncarico.GRUPPO):
         incarico.gruppo = _gruppo()
-    elif dati.ruolo in RUOLI_DI_UNITA:
+    elif ruolo in RUOLI_DI_UNITA or tipo:
         incarico.unita = get_object_or_404(Unita, pk=dati.unita_id or 0)
-    elif dati.ruolo in RUOLI_DI_SQUADRIGLIA:
+    elif ruolo in RUOLI_DI_SQUADRIGLIA:
         incarico.squadriglia = get_object_or_404(
             Squadriglia.objects.select_related("unita"), pk=dati.squadriglia_id or 0
         )
     if not policy.puo_nominare(
-        request.auth, dati.ruolo, unita=incarico.unita, squadriglia=incarico.squadriglia
+        request.auth, ruolo, unita=incarico.unita, squadriglia=incarico.squadriglia
     ):
         raise HttpError(403, "Non puoi assegnare questo incarico.")
+    servizio_di = tipo.ambito if tipo and tipo.di_servizio else None
     with transaction.atomic():
-        if dati.ruolo in SERVIZIO_IN_UNITA:
-            # Back in a unit: the support service ends by itself (DEC-165, DEC-293).
-            _chiudi(incarico.persona, incarico.data_inizio, SERVIZI_DI_SUPPORTO)
-        elif dati.ruolo in SERVIZI_DI_SUPPORTO:
-            # One of the two new services replaces "a disposizione" (DEC-293).
+        if ruolo in SERVIZIO_IN_UNITA or servizio_di == AmbitoIncarico.UNITA:
+            # Back in a unit: the support service ends by itself (DEC-165, DEC-293, DEC-348).
+            _chiudi(incarico.persona, incarico.data_inizio, Q_SERVIZI_SUPPORTO)
+        elif ruolo in SERVIZI_DI_SUPPORTO or servizio_di == AmbitoIncarico.GRUPPO:
+            # A new service replaces "a disposizione" (DEC-293, DEC-348).
             _chiudi(incarico.persona, incarico.data_inizio, {RuoloIncarico.A_DISPOSIZIONE})
         _salva(incarico)
     return Status(201, incarico)
 
 
-def _chiudi(persona: Persona, giorno: date, ruoli: set[RuoloIncarico]) -> None:
+def _chiudi(persona: Persona, giorno: date, ruoli: set[RuoloIncarico] | Q) -> None:
+    filtro = ruoli if isinstance(ruoli, Q) else Q(ruolo__in=ruoli)
     for incarico in Incarico.objects.filter(
-        persona=persona, ruolo__in=ruoli, data_inizio__lte=giorno
+        filtro, persona=persona, data_inizio__lte=giorno
     ).filter(Q(data_fine__isnull=True) | Q(data_fine__gt=giorno)):
         if incarico.data_inizio == giorno:
             incarico.delete()  # started the same day: never really in effect
@@ -744,6 +814,102 @@ def termina_incarico(request, incarico_id: int, dati: ChiusuraIncarico):
     incarico.data_fine = fine
     _salva(incarico)
     return {"id": incarico.pk, "rimosso": False, "data_fine": incarico.data_fine}
+
+
+# --- Roles the group defines (DEC-347...DEC-349) ----------------------------------------------
+
+
+class IncaricoEsistente(Schema):
+    """A fixed role, read only in the list (DEC-349)."""
+
+    nome: str
+    ambito: str
+    di_servizio: bool
+    educativo: bool
+
+
+class TipoIncaricoIn(Schema):
+    nome: str
+    ambito: AmbitoIncarico
+    di_servizio: bool = False
+    educativo: bool = True
+    attivo: bool = True
+
+
+class TipoIncaricoOut(Schema):
+    id: int
+    nome: str
+    ambito: str
+    di_servizio: bool
+    educativo: bool
+    attivo: bool
+    # Assigned at least once: what it is no longer changes, it is not deleted.
+    usato: bool
+
+    @staticmethod
+    def resolve_usato(obj: TipoIncarico) -> bool:
+        return obj.incarichi.exists()
+
+
+class SchedaIncarichi(Schema):
+    esistenti: list[IncaricoEsistente]
+    definiti: list[TipoIncaricoOut]
+    puo_modificare: bool
+
+
+def _tipo_da_modificare(request, tipo_id: int | None = None) -> TipoIncarico:
+    if not policy.puo_definire_incarichi(request.auth):
+        raise HttpError(403, "Gli incarichi li definiscono i capigruppo.")
+    return get_object_or_404(TipoIncarico, pk=tipo_id) if tipo_id else TipoIncarico()
+
+
+def _applica_tipo(tipo: TipoIncarico, dati: TipoIncaricoIn) -> TipoIncarico:
+    for campo in ("nome", "ambito", "di_servizio", "educativo", "attivo"):
+        setattr(tipo, campo, getattr(dati, campo))
+    _salva(tipo)
+    return tipo
+
+
+@router.get("/gruppo/scheda-incarichi", response=SchedaIncarichi)
+def scheda_incarichi(request):
+    """Every role of the capi: the fixed ones to read, the group's own to change."""
+    if not policy.puo_vedere_incarichi_di_gruppo(request.auth):
+        raise HttpError(403, "Riservato ai capi.")
+    from .elenco_incarichi import NON_EDUCATIVI, RUOLI_ELENCO
+
+    return {
+        "esistenti": [
+            {
+                "nome": r.label,
+                "ambito": AmbitoIncarico.GRUPPO if r in RUOLI_DI_GRUPPO else AmbitoIncarico.UNITA,
+                "di_servizio": r in INCARICHI_DI_SERVIZIO,
+                "educativo": r not in NON_EDUCATIVI,
+            }
+            for r in RUOLI_ELENCO
+            if r != RuoloIncarico.A_DISPOSIZIONE
+        ],
+        "definiti": list(TipoIncarico.objects.all()),
+        "puo_modificare": policy.puo_definire_incarichi(request.auth),
+    }
+
+
+@router.post("/gruppo/tipi-incarico", response={201: TipoIncaricoOut})
+def crea_tipo_incarico(request, dati: TipoIncaricoIn):
+    return Status(201, _applica_tipo(_tipo_da_modificare(request), dati))
+
+
+@router.put("/gruppo/tipi-incarico/{tipo_id}", response=TipoIncaricoOut)
+def modifica_tipo_incarico(request, tipo_id: int, dati: TipoIncaricoIn):
+    return _applica_tipo(_tipo_da_modificare(request, tipo_id), dati)
+
+
+@router.delete("/gruppo/tipi-incarico/{tipo_id}", response={204: None})
+def elimina_tipo_incarico(request, tipo_id: int):
+    tipo = _tipo_da_modificare(request, tipo_id)
+    if tipo.incarichi.exists():
+        raise HttpError(400, "Questo incarico è già stato assegnato: puoi solo disattivarlo.")
+    tipo.delete()
+    return Status(204, None)
 
 
 # --- Patrols (Squadriglie) -----------------------------------------------------------------

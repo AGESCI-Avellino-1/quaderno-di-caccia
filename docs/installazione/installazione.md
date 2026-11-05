@@ -203,6 +203,7 @@ servizio senza fermare l'app: `sudo scripts/installa-servizio.sh --rimuovi`.
 | --- | --- | --- |
 | `QDC_INVITO_VALIDITA_GIORNI` | per quanti giorni vale un invito | 14 |
 | `QDC_OFFLINE_GIORNI` | per quanti giorni un telefono tiene i dati senza collegarsi | 14 |
+| `QDC_PHOTON_URL` | il servizio che propone gli indirizzi delle località, quello pubblico di Photon o uno tuo; vuota: niente proposte, gli indirizzi si scrivono a mano | `https://photon.komoot.io` |
 | `QDC_NOME_AVVIO` | il nome del gruppo sulla schermata di avvio, sotto quello dell'app | vuota: solo il nome dell'app |
 | `QDC_DURATA_AVVIO` | per quanti secondi, almeno, l'app installata mostra la schermata di avvio; 0: solo finché non è pronta | 2 |
 | `QDC_LOGO` | il logo del gruppo per le icone dell'app | vuota: il logo AGESCI (vedi sopra) |

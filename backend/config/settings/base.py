@@ -251,6 +251,8 @@ QDC_MAILPIT_CONSENTITO = env.bool("QDC_MAILPIT_CONSENTITO", default=False)
 # Emails to many wait in a queue sent a few at a time by the "posta" service (DEC-311,
 # `manage.py invia_email_in_coda --continua`); off, everything goes at once.
 QDC_EMAIL_IN_CODA = env.bool("QDC_EMAIL_IN_CODA", default=True)
+# The service proposing addresses (DEC-360), empty: none, the address is written by hand.
+QDC_PHOTON_URL = env("QDC_PHOTON_URL", default="https://photon.komoot.io")
 # Mailpit's web interface, reached by Django only (proxy at /mailpit/, MP_WEBROOT=/mailpit).
 QDC_MAILPIT_URL = env("QDC_MAILPIT_URL", default="http://localhost:8025")
 # Invitation links expire after this many days (DEC-21).

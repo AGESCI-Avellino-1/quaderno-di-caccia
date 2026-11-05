@@ -2092,6 +2092,12 @@ export interface Localita {
   mappa: string
 }
 
+/** An address proposed while a place is written (DEC-360). */
+export interface PropostaIndirizzo {
+  nome: string
+  indirizzo: string
+}
+
 export interface LocalitaIn {
   nome: string
   indirizzo?: string
@@ -3729,6 +3735,8 @@ export const api = {
     if (filtri.al) parametri.set('al', filtri.al)
     return richiesta<Evento[]>(`/api/v1/eventi?${parametri}`)
   },
+  cercaIndirizzi: (testo: string) =>
+    richiesta<PropostaIndirizzo[]>(`/api/v1/localita/cerca?testo=${encodeURIComponent(testo)}`),
   creaRiunioni: (dati: RiunioneIn) =>
     richiesta<Evento[]>('/api/v1/riunioni', { metodo: 'POST', corpo: dati }),
   serieRiunioni: () => richiesta<SerieRiunioni[]>('/api/v1/riunioni/serie'),

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampoIndirizzo from '@/components/CampoIndirizzo.vue'
 import { onMounted, reactive, ref } from 'vue'
 
 import { api, type Localita } from '@/api/qdc'
@@ -77,7 +78,15 @@ async function togli(l: Localita) {
         </div>
         <div class="md:col-6">
           <label class="form-label small" for="loc-indirizzo">Indirizzo</label>
-          <input id="loc-indirizzo" v-model="dati.indirizzo" class="form-control form-control-sm" />
+          <CampoIndirizzo
+            v-model="dati.indirizzo"
+            id-campo="loc-indirizzo"
+            @scelta="
+              (p) => {
+                if (!dati.nome.trim()) dati.nome = p.nome
+              }
+            "
+          />
         </div>
         <div class="col-12">
           <label class="form-label small" for="loc-mappa">Link alla mappa (facoltativo)</label>
@@ -88,6 +97,7 @@ async function togli(l: Localita) {
             class="form-control form-control-sm"
             placeholder="https://maps.google.com/…"
           />
+          <div class="form-text small">Senza link, la mappa si apre dall'indirizzo.</div>
         </div>
         <div class="col-12 d-flex gap-3">
           <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">

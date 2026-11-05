@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { Localita } from '@/api/qdc'
+import type { Localita, PropostaIndirizzo } from '@/api/qdc'
+import CampoIndirizzo from '@/components/CampoIndirizzo.vue'
 
 // The place of a meeting (DEC-310): one of the group's places, or a new one written here,
 // which enters the group's list when saved.
@@ -20,6 +21,10 @@ const valore = computed({
   },
 })
 const attuale = computed(() => props.localita.find((l) => l.id === scelta.value.id))
+
+function proposta(p: PropostaIndirizzo) {
+  if (scelta.value.nuova && !scelta.value.nuova.nome.trim()) scelta.value.nuova.nome = p.nome
+}
 </script>
 
 <template>
@@ -48,10 +53,10 @@ const attuale = computed(() => props.localita.find((l) => l.id === scelta.value.
         <label class="form-label small" :for="`${idCampo}-indirizzo`"
           >Indirizzo (facoltativo)</label
         >
-        <input
-          :id="`${idCampo}-indirizzo`"
+        <CampoIndirizzo
           v-model="scelta.nuova.indirizzo"
-          class="form-control form-control-sm"
+          :id-campo="`${idCampo}-indirizzo`"
+          @scelta="proposta"
         />
         <div class="form-text small">Entra nell'elenco delle località del gruppo.</div>
       </div>

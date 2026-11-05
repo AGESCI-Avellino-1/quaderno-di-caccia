@@ -141,6 +141,12 @@ Quando cambiano i capi gruppo, il rappresentante legale o la sede, i capigruppo 
 
 ## Le località
 
+Quando scrivi l'indirizzo di una località nuova, l'app ti propone gli indirizzi trovati su OpenStreetMap:
+tocca quello giusto o continua a scrivere a mano. Cerca solo sedi e basi, mai l'indirizzo di una persona:
+quello che scrivi passa da un servizio esterno. Senza rete, o se il servizio non risponde, le proposte non
+compaiono. Nella pagina della riunione **mappa** apre il link della località o, se non c'è, la ricerca
+dell'indirizzo su Google Maps.
+
 I capigruppo trovano le località del gruppo in **Impostazioni › Località**: le correggono
 (nome, indirizzo, link alla mappa), ne aggiungono e tolgono quelle che non servono più. Una
 località tolta resta scritta sulle riunioni che l'avevano.

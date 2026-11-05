@@ -11,12 +11,13 @@ from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
+from ninja.throttling import AuthRateThrottle
 
 from apps.impostazioni.html import in_testo, pulisci
 from apps.organizzazione.models import Squadriglia, Unita
 from apps.permessi import policy
 
-from . import avvisi, servizi
+from . import avvisi, indirizzi, servizi
 from .api import EventoOut, LocalitaOut, _errore, _evento_out
 from .models import (
     CERCHIE_CONVOCATE,
@@ -47,6 +48,26 @@ def _puo_usare_localita(user) -> bool:
         or policy.squadriglie_guidate(user).exists()
         or bool(policy.squadriglie_delegate(user))
     )
+
+
+class _LimiteIndirizzi(AuthRateThrottle):
+    # Its own count: ninja shares one among all the throttles of the same scope.
+    scope = "indirizzi"
+
+
+class PropostaIndirizzo(Schema):
+    nome: str
+    indirizzo: str
+
+
+@router.get(
+    "/localita/cerca", response=list[PropostaIndirizzo], throttle=[_LimiteIndirizzi("60/m")]
+)
+def cerca_indirizzi(request, testo: str = ""):
+    """Proposals while a place is written (DEC-360): only a help, never an error."""
+    if not _puo_usare_localita(request.auth):
+        raise HttpError(403, "Gli indirizzi li cerca chi crea le riunioni.")
+    return indirizzi.cerca(testo)
 
 
 @router.get("/localita", response=list[LocalitaOut])

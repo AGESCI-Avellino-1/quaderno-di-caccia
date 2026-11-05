@@ -43,6 +43,13 @@ const presenze = reactive<Record<number, StatoPresenza | null>>({})
 const esclusione = reactive({ persona: 0, motivo: '' })
 const annullamento = reactive({ aperto: false, motivo: '' })
 const riunione = computed(() => evento.value?.tipo === 'RIUNIONE')
+// The place's own link or, without one, a search of its address (DEC-360).
+const linkMappa = computed(() => {
+  const localita = evento.value?.localita
+  if (localita?.mappa) return localita.mappa
+  if (!localita?.indirizzo) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localita.indirizzo)}`
+})
 const modificaRiunione = ref(false)
 // The parents' meetings and the assembly: a convocation, no uniform (DEC-327).
 const convocata = computed(() => ['GENITORI', 'SOCI'].includes(evento.value?.cerchia ?? ''))
@@ -269,12 +276,7 @@ const STATI: [StatoPresenza, string][] = [
       <div v-if="evento.luogo">
         <strong>Luogo</strong> {{ evento.luogo }}
         <template v-if="evento.localita?.indirizzo"> · {{ evento.localita.indirizzo }}</template>
-        <a
-          v-if="evento.localita?.mappa"
-          :href="evento.localita.mappa"
-          target="_blank"
-          rel="noopener"
-          class="small ms-1"
+        <a v-if="linkMappa" :href="linkMappa" target="_blank" rel="noopener" class="small ms-1"
           >mappa</a
         >
       </div>

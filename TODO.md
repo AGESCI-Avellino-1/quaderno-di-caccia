@@ -72,7 +72,8 @@ CSV «Pantera» e «Volpe».
 3. Migrazione: si collegano i nomi uguali al singolare o al plurale; gli altri restano e la pagina del reparto chiede
    di scegliere.
 4. Scelta dell'animale alla creazione al posto del testo, pagina dell'elenco, tabella dei colori.
-5. Componente con l'immagine e i campi nuovi nelle API, vicino al nome della squadriglia. Da provare offline.
+5. Componente con l'immagine e i campi nuovi nelle API, vicino al nome della squadriglia. Scaricamento delle immagini
+   degli animali in uso per l'offline (oggi il service worker conserva solo la struttura dell'app): da provare al campo.
 6. `dati_di_prova`, schermate e manuale.
 
 **Attenzione alla sicurezza.** Un SVG caricato da un utente può contenere script e nginx non ha una
@@ -80,7 +81,7 @@ Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati 
 
 **Da decidere.**
 
-- Se l'elenco e le immagini servono offline e cosa si mostra oltre all'immagine.
+- Cosa si mostra oltre all'immagine.
 - Se i nautici si offrono a tutti: oggi l'unità non dice se è nautica.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
@@ -88,6 +89,7 @@ unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un 
 Alla creazione si sceglie l'animale e non si scrive il nome: l'elenco ha anche il plurale e il nome della squadriglia è
 quello («Pantere»). Il catalogo va completato con i plurali, da far controllare al maintainer.
 L'elenco lo vedono ragazzi e staff dei reparti e i capigruppo; l'immagine, chiunque veda già il nome della squadriglia.
+Offline restano solo le immagini degli animali usati dalle squadriglie dei reparti; l'elenco completo è solo online.
 
 ## Chiuse
 

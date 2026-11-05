@@ -6,6 +6,7 @@ import {
   api,
   nomeUnita,
   temaDellaBranca,
+  type AnimaleSquadriglia,
   type PersonaBreve,
   type Squadriglia,
   type Unita,
@@ -19,6 +20,7 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import EtaUnita from '@/components/EtaUnita.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
+import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import SestiglieUnita from '@/components/SestiglieUnita.vue'
 import TurniUnita from '@/components/TurniUnita.vue'
@@ -39,7 +41,7 @@ const altre = ref<Unita[]>([])
 const modifica = ref(false)
 const sessione = useSessioneStore()
 const rubrica = useRubrica()
-const nuovaSquadriglia = reactive({ aperta: false, nome: '', sesso: 'F' })
+const nuovaSquadriglia = reactive({ aperta: false, animale: null as number | null, sesso: 'F' })
 
 async function carica(id = props.id) {
   const letto = await esegui(() => leggiConCache(`unita:${id}`, () => api.dettaglioUnita(id)))
@@ -126,17 +128,47 @@ const sessoDelReparto = computed(() =>
   unita.value && unita.value.composizione !== 'X' ? unita.value.composizione : null,
 )
 
+// The animals to choose from (DEC-351): not the switched off ones, nor those of this reparto.
+const animali = ref<AnimaleSquadriglia[]>([])
+const nomiPresi = computed(() => new Set(dettaglio.value?.squadriglie.map((s) => s.nome) ?? []))
+const liberi = computed(() =>
+  animali.value.filter((a) => a.attivo && !nomiPresi.value.has(a.plurale)),
+)
+const generali = computed(() => liberi.value.filter((a) => a.tipo === 'GENERALE'))
+const nautici = computed(() => liberi.value.filter((a) => a.tipo === 'NAUTICO'))
+const animaleScelto = computed(() => animali.value.find((a) => a.id === nuovaSquadriglia.animale))
+// Read once, when the staff first needs them.
+async function caricaAnimali() {
+  if (animali.value.length) return
+  animali.value = (await esegui(() => api.animali()))?.animali ?? []
+}
+
+async function apriNuovaSquadriglia() {
+  nuovaSquadriglia.aperta = true
+  await caricaAnimali()
+}
+
 async function creaSquadriglia() {
+  const animale_id = nuovaSquadriglia.animale
+  if (animale_id === null) return
   const sesso = sessoDelReparto.value ?? nuovaSquadriglia.sesso
-  const dati = { nome: nuovaSquadriglia.nome.trim(), sesso }
-  if (await esegui(() => api.creaSquadriglia(props.id, dati))) {
-    Object.assign(nuovaSquadriglia, { aperta: false, nome: '' })
+  if (await esegui(() => api.creaSquadriglia(props.id, { animale_id, sesso }))) {
+    Object.assign(nuovaSquadriglia, { aperta: false, animale: null })
     await carica()
   }
 }
 
+// A patrol from before the animals (DEC-351).
+async function scegliAnimale(evento: Event, s: Squadriglia) {
+  const scelta = evento.target as HTMLSelectElement
+  const animale_id = Number(scelta.value)
+  if (!animale_id) return
+  const dati = { animale_id, sesso: s.sesso, attiva: s.attiva }
+  if (await esegui(() => api.modificaSquadriglia(s.id, dati))) await carica()
+}
+
 async function attivaSquadriglia(s: Squadriglia, attiva: boolean) {
-  const dati = { nome: s.nome, sesso: s.sesso, attiva }
+  const dati = { sesso: s.sesso, attiva }
   if (await esegui(() => api.modificaSquadriglia(s.id, dati))) await carica()
 }
 
@@ -346,20 +378,34 @@ const iniziale = (u: Unita): UnitaIn => ({
           v-if="dettaglio.puo_gestire_squadriglie && !nuovaSquadriglia.aperta"
           type="button"
           class="btn btn-sm btn-outline theme-primary ms-auto"
-          @click="nuovaSquadriglia.aperta = true"
+          @click="apriNuovaSquadriglia"
         >
           Nuova squadriglia
         </button>
       </div>
       <form v-if="nuovaSquadriglia.aperta" class="row g-3 mb-5" @submit.prevent="creaSquadriglia">
         <div class="col-12 sm:col-6">
-          <input
-            v-model="nuovaSquadriglia.nome"
-            class="form-control form-control-sm"
-            placeholder="Nome (es. Aquile)"
-            aria-label="Nome della squadriglia"
-            required
-          />
+          <div class="d-flex align-items-center gap-3">
+            <ImmagineAnimale :animale="animaleScelto" />
+            <select
+              v-model="nuovaSquadriglia.animale"
+              class="form-control form-control-sm"
+              aria-label="Animale della squadriglia"
+              required
+            >
+              <option :value="null" disabled>Scegli l'animale…</option>
+              <optgroup label="Generali">
+                <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+              </optgroup>
+              <optgroup label="Nautici">
+                <option v-for="a in nautici" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+              </optgroup>
+            </select>
+          </div>
+          <p class="form-text mb-0">
+            Manca?
+            <RouterLink :to="{ name: 'animali-squadriglia' }">Aggiungilo all'elenco</RouterLink>.
+          </p>
         </div>
         <div v-if="!sessoDelReparto" class="col-6 sm:col-3">
           <select
@@ -392,6 +438,7 @@ const iniziale = (u: Unita): UnitaIn => ({
         :class="{ 'opacity-75': !s.attiva }"
       >
         <div class="d-flex align-items-center gap-3 mb-1">
+          <ImmagineAnimale :animale="s.animale" />
           <strong>Sq. {{ s.nome }}</strong>
           <span class="fg-2 small">{{ s.sesso === 'F' ? 'femminile' : 'maschile' }}</span>
           <span v-if="!s.attiva" class="badge theme-secondary">Chiusa</span>
@@ -405,6 +452,22 @@ const iniziale = (u: Unita): UnitaIn => ({
             {{ s.attiva ? 'chiudi' : 'riapri' }}
           </button>
         </div>
+        <select
+          v-if="dettaglio.puo_gestire_squadriglie && !s.animale && s.attiva"
+          class="form-control form-control-sm mb-3"
+          aria-label="Scegli l'animale"
+          :disabled="inCorso"
+          @focus="caricaAnimali"
+          @change="scegliAnimale($event, s)"
+        >
+          <option value="">Scegli l'animale…</option>
+          <optgroup label="Generali">
+            <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+          </optgroup>
+          <optgroup label="Nautici">
+            <option v-for="a in nautici" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+          </optgroup>
+        </select>
         <ul v-if="s.attiva" class="list-unstyled small mb-3">
           <li
             v-for="m in s.membri"

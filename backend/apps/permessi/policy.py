@@ -451,6 +451,33 @@ def squadriglie_di(user) -> QuerySet[Squadriglia]:
     ).distinct()
 
 
+def _serve_un_reparto(user) -> bool:
+    """On the staff of a reparto, or of the unit linked to it (DEC-279)."""
+    return (
+        not e_capo_in_attesa(user)
+        and Unita.objects.filter(pk__in=_unita_servite(user), tipo=TipoUnita.REPARTO).exists()
+    )
+
+
+def puo_vedere_animali(user) -> bool:
+    """The list of the patrol animals: ragazzi and staff of the reparti, capigruppo (DEC-350).
+    The image next to a patrol's name shows to whoever sees that name (DEC-353)."""
+    if e_capogruppo(user) or _serve_un_reparto(user):
+        return True
+    persona = persona_di(user)
+    return (
+        persona is not None
+        and Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.RAGAZZO, unita__tipo=TipoUnita.REPARTO)
+        .exists()
+    )
+
+
+def puo_modificare_animali(user) -> bool:
+    """The staff of a reparto and the capigruppo, as for the patrols (DEC-112, DEC-350)."""
+    return e_capogruppo(user) or _serve_un_reparto(user)
+
+
 def puo_vedere_incarichi_squadriglia(user, squadriglia: Squadriglia) -> bool:
     """The roles of a patrol: its members, their parents and the capi (DEC-321)."""
     if e_capo(user) and not e_capo_in_attesa(user):

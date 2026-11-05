@@ -12,6 +12,7 @@ riassegnati a voci diverse.
 | `specialita_eg.json` | 65 specialità individuali E/G | Regolamento metodologico 2026, Allegato 2 E/G | 4 — PP |
 | `specialita_squadriglia.json` | 12 specialità di squadriglia | Regolamento metodologico 2026, Allegato 3 E/G | 4 — PP (DEC-64) |
 | `brevetti_eg.json` | 15 brevetti di competenza | Regolamento metodologico 2026, Allegato 4 E/G | 4 — PP |
+| `animali_squadriglia.json` | 93 animali di squadriglia (DEC-350): plurale, colori con i significati, richiamo, simbolo; i codici dei colori e i plurali sono di QdC. Caricati nel database all'installazione, poi li modifica il gruppo | Elenco fornito dal maintainer | Issue #22 |
 | `comuni_istat.json` | 7.896 comuni italiani: nome, sigla della provincia, codice catastale (Belfiore), per proporre il codice fiscale | ISTAT, «Elenco dei comuni italiani», CC BY 4.0, scaricato il 31/10/2026 da istat.it/storage/codici-unita-amministrative/Elenco-comuni-italiani.csv | calcolo del codice fiscale |
 
 Regole (DEC-63, DEC-87):

@@ -39,6 +39,10 @@ vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
   (`pwa/notifiche.ts`, DEC-345): a date or a key each, no personal data. Reads for offline use go
   through `leggiConCache` / `salvaInCache` (encrypted, nothing saved in "solo online"
   mode); the service worker caches only the app shell, never API responses.
+- The images of the patrol animals in use (DEC-353) are the service worker's only cache beyond
+  the shell (`pwa/animali.ts`, `runtimeCaching` in `vite.config.ts`): no personal data. An uploaded
+  image only ever goes in an `<img>` (`ImmagineAnimale.vue`, DEC-354). The page is
+  `/animali-squadriglia`: `/animali/` is the folder of the symbols, which nginx would answer for.
 - **Writes** go through `scrivi({metodo, percorso, corpo, descrizione})`: queued and
   encrypted when the vault is active, sent directly otherwise. `descrizione` is stored
   in clear and shown in _Modifiche in sospeso_: no names, no health data. A 4xx stays

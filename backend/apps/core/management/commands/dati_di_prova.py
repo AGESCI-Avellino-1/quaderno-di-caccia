@@ -25,8 +25,10 @@ from apps.anagrafica.models import AppartenenzaSquadriglia, Persona, RelazioneTu
 from apps.core.anno import AnnoAssociativo
 from apps.importazione.buonastrada import codice_cognome, codice_nome, leggi_ricerca_soci
 from apps.importazione.servizi import applica
+from apps.organizzazione.animali import carica_catalogo
 from apps.organizzazione.models import (
     AmbitoIncarico,
+    AnimaleSquadriglia,
     Gruppo,
     Incarico,
     RuoloIncarico,
@@ -227,8 +229,17 @@ class Command(BaseCommand):
             gruppo=gruppo,
         )
 
-        pantere = Squadriglia.objects.create(unita=unita["reparto"], nome="Pantere", sesso="F")
-        volpi = Squadriglia.objects.create(unita=unita["reparto"], nome="Volpi", sesso="M")
+        # A flush also takes the catalog the migration loaded (DEC-350).
+        carica_catalogo()
+
+        def squadriglia_di(animale: str, sesso: str) -> Squadriglia:
+            scelto = AnimaleSquadriglia.objects.get(nome=animale)
+            return Squadriglia.objects.create(
+                unita=unita["reparto"], nome=scelto.plurale, animale=scelto, sesso=sesso
+            )
+
+        pantere = squadriglia_di("Pantera", "F")
+        volpi = squadriglia_di("Volpe", "M")
         for chi, squadriglia in [
             ("Giulia Rossi", pantere),
             ("Alice Marino", pantere),

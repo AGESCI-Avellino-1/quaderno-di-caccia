@@ -12,6 +12,7 @@ import {
   type StatoPresenza,
   type TipoEvento,
 } from '@/api/qdc'
+import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import ConvocazioneRiunione from '@/components/ConvocazioneRiunione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
@@ -238,6 +239,7 @@ const STATI: [StatoPresenza, string][] = [
       <CopiaLocale :del="copiaDel" />
     </div>
     <p class="fg-2 small mb-3">
+      <ImmagineAnimale :animale="evento.animale" />
       {{ evento.tipo_nome }}
       <template v-if="evento.cerchia !== 'TUTTI'"> · {{ evento.cerchia_nome }}</template> ·
       {{

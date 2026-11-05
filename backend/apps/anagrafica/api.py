@@ -8,6 +8,7 @@ from django.utils import timezone
 from ninja import File, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
+from apps.organizzazione.animali import AnimaleBreve, breve
 from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
 from apps.permessi import policy
 from apps.permessi.policy import LivelloAccesso
@@ -373,6 +374,7 @@ class TelefonoGenitore(Schema):
 class MiaSquadriglia(Schema):
     id: int
     nome: str
+    animale: AnimaleBreve | None = None
     reparto: str
     sono_capo: bool
     membri: list[TelefonoMembro]
@@ -444,13 +446,15 @@ def mie_squadriglie(request):
     CSQ also the parents' (DEC-13, DEC-115). Phones only, no email."""
     guidate = set(policy.squadriglie_guidate(request.auth).values_list("pk", flat=True))
     risultato = []
-    for sq in policy.squadriglie_di(request.auth).select_related("unita").order_by("nome"):
+    squadriglie = policy.squadriglie_di(request.auth).select_related("unita", "animale")
+    for sq in squadriglie.order_by("nome"):
         capo = sq.pk in guidate
         membri, genitori = _membri(sq, capo, request.auth)
         risultato.append(
             {
                 "id": sq.pk,
                 "nome": sq.nome,
+                "animale": breve(sq.animale),
                 "reparto": sq.unita.nome,
                 "sono_capo": capo,
                 "membri": membri,

@@ -49,6 +49,7 @@ import megaphone from 'bootstrap-icons/icons/megaphone.svg?raw'
 import paypal from 'bootstrap-icons/icons/paypal.svg?raw'
 import pencilSquare from 'bootstrap-icons/icons/pencil-square.svg?raw'
 import people from 'bootstrap-icons/icons/people.svg?raw'
+import feather from 'bootstrap-icons/icons/feather.svg?raw'
 import personBadge from 'bootstrap-icons/icons/person-badge.svg?raw'
 import personCircle from 'bootstrap-icons/icons/person-circle.svg?raw'
 import personHeart from 'bootstrap-icons/icons/person-heart.svg?raw'
@@ -119,6 +120,7 @@ export const ICONE = {
   eye: eye,
   'eye-slash': eyeSlash,
   'file-earmark-text': fileEarmarkText,
+  feather: feather,
   flag: flag,
   gear: gear,
   'hourglass-split': hourglassSplit,

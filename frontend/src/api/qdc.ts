@@ -81,6 +81,8 @@ export interface Profilo {
   tesoriere: boolean
   amministratore_tecnico: boolean
   squadriglie_guidate: number[]
+  /** The list of the patrol animals: ragazzi and staff of the reparti, capigruppo. */
+  vede_animali?: boolean
   /** Patrols the user is a member of. */
   squadriglie: number[]
   /** Joining from the app: own requests, and waiting requests this user decides. */
@@ -511,6 +513,50 @@ export interface Incarico {
   chiudibile?: boolean
 }
 
+/** A patrol animal (DEC-350...DEC-354). */
+export interface ColoreAnimale {
+  nome: string
+  codice: string
+  significato: string
+}
+
+/** What a patrol's name shows next to it (DEC-353). `immagine` is "" when there is none. */
+export interface AnimaleBreve {
+  nome: string
+  immagine: string
+  /** A symbol of the catalog takes the theme's colour; an uploaded file stays as it is. */
+  simbolo: string
+  colori: ColoreAnimale[]
+}
+
+export interface AnimaleIn {
+  nome: string
+  plurale: string
+  tipo: 'GENERALE' | 'NAUTICO'
+  colore_1: string
+  significato_1: string
+  colore_2: string
+  significato_2: string
+  richiamo: string
+  attivo: boolean
+}
+
+export interface AnimaleSquadriglia extends AnimaleIn {
+  id: number
+  tipo_nome: string
+  colori: ColoreAnimale[]
+  immagine: string
+  simbolo: string
+  /** Chosen by a patrol, even a closed one: it is not deleted (DEC-352). */
+  usato: boolean
+}
+
+export interface ElencoAnimali {
+  animali: AnimaleSquadriglia[]
+  colori: string[]
+  puo_modificare: boolean
+}
+
 /** A role the capigruppo defined (DEC-347...DEC-349). */
 export interface TipoIncaricoIn {
   nome: string
@@ -773,6 +819,7 @@ export const allegatoVerbale = (id: number) => `/api/v1/allegati-verbale/${id}`
 export interface IncarichiDiSquadriglia {
   id: number
   nome: string
+  animale?: AnimaleBreve | null
   incarichi: Incarico[]
   nomina: Scelta[]
 }
@@ -787,6 +834,7 @@ export interface Membro {
 export interface Squadriglia {
   id: number
   nome: string
+  animale?: AnimaleBreve | null
   sesso: 'M' | 'F'
   attiva: boolean
   membri: Membro[]
@@ -916,6 +964,7 @@ export interface TelefonoMembro extends PersonaBreve {
 export interface MiaSquadriglia {
   id: number
   nome: string
+  animale?: AnimaleBreve | null
   reparto: string
   sono_capo: boolean
   membri: TelefonoMembro[]
@@ -1842,6 +1891,7 @@ export interface Evento {
   unita_nomi: string[]
   squadriglia_id: number | null
   squadriglia: string | null
+  animale?: AnimaleBreve | null
   inizio: string
   fine: string
   luogo: string
@@ -2744,6 +2794,7 @@ export interface ImpresaEG {
   livello_nome: string
   squadriglia_id: number | null
   squadriglia: string | null
+  animale?: AnimaleBreve | null
   titolo: string
   descrizione: string
   dal: string
@@ -2762,6 +2813,7 @@ export interface ImpreseReparto {
   squadriglie: {
     id: number
     nome: string
+    animale?: AnimaleBreve | null
     competenze: Competenza[]
     individuali: { id: number; testo: string }[]
   }[]
@@ -2993,11 +3045,28 @@ export const api = {
     richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'POST' }),
   dividiCasse: (id: number) =>
     richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'DELETE' }),
-  creaSquadriglia: (unita: number, dati: { nome: string; sesso: string }) =>
+  creaSquadriglia: (unita: number, dati: { animale_id: number; sesso: string }) =>
     richiesta<Squadriglia>(`/api/v1/unita/${unita}/squadriglie`, { metodo: 'POST', corpo: dati }),
-  modificaSquadriglia: (id: number, dati: { nome: string; sesso: string; attiva: boolean }) =>
-    richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
+  modificaSquadriglia: (
+    id: number,
+    dati: { animale_id?: number; sesso: string; attiva: boolean },
+  ) => richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
+  animali: () => richiesta<ElencoAnimali>('/api/v1/animali'),
+  animaliInUso: () => richiesta<string[]>('/api/v1/animali/in-uso'),
+  creaAnimale: (dati: AnimaleIn) =>
+    richiesta<AnimaleSquadriglia>('/api/v1/animali', { metodo: 'POST', corpo: dati }),
+  modificaAnimale: (id: number, dati: AnimaleIn) =>
+    richiesta<AnimaleSquadriglia>(`/api/v1/animali/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaAnimale: (id: number) => richiesta<void>(`/api/v1/animali/${id}`, { metodo: 'DELETE' }),
+  caricaImmagineAnimale: (id: number, file: File) => {
+    const corpo = new FormData()
+    corpo.append('file', file)
+    return richiesta<AnimaleSquadriglia>(`/api/v1/animali/${id}/immagine`, {
+      metodo: 'POST',
+      corpo,
+    })
+  },
   schedaIncarichi: () => richiesta<SchedaIncarichi>('/api/v1/gruppo/scheda-incarichi'),
   creaTipoIncarico: (dati: TipoIncaricoIn) =>
     richiesta<TipoIncarico>('/api/v1/gruppo/tipi-incarico', { metodo: 'POST', corpo: dati }),

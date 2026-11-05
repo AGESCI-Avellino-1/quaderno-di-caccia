@@ -104,7 +104,19 @@ export default defineConfig(async ({ command }) => ({
         // IndexedDB (src/offline), never in the HTTP cache.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         // One device needs one image, and iOS keeps it by itself: not worth two more MB each.
-        globIgnores: ['avvio/**'],
+        // The patrols' animals: only those in use reach the device (DEC-353), through this
+        // cache, filled by pwa/animali.ts. Not personal data; the app's only API path here.
+        globIgnores: ['avvio/**', 'animali/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin &&
+              (url.pathname.startsWith('/animali/') ||
+                url.pathname.startsWith('/api/v1/animali/immagini/')),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'qdc-animali', expiration: { maxEntries: 150 } },
+          },
+        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: DJANGO_PATHS.map((p) => new RegExp(`^${p}`)),
       },

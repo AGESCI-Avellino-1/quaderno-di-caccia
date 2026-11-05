@@ -112,6 +112,12 @@ def test_lo_staff_scrive_le_sanitarie_della_sua_unita(staff, capo_semplice, raga
 # --- units -------------------------------------------------------------------------------
 
 
+def _animale(nome: str, plurale: str):
+    from apps.organizzazione.models import AnimaleSquadriglia
+
+    return AnimaleSquadriglia.objects.get_or_create(nome=nome, defaults={"plurale": plurale})[0]
+
+
 NUOVA_UNITA = {"nome": "Reparto Nuovo", "tipo": "REPARTO", "composizione": "F"}
 
 
@@ -294,17 +300,24 @@ def test_chiudere_chi_ha_lasciato_il_servizio(capogruppo, staff, reparto):
 
 def test_squadriglie(staff, capogruppo, capo_semplice, reparto, coca):
     url = f"/api/v1/unita/{reparto.pk}/squadriglie"
-    nuova = _post(staff, url, {"nome": "Volpi", "sesso": "M"})
+    volpe, lupo = _animale("Volpe", "Volpi"), _animale("Lupo", "Lupi")
+    nuova = _post(staff, url, {"animale_id": volpe.pk, "sesso": "M"})
     assert nuova.status_code == 201, nuova.content
-    assert _post(capogruppo, url, {"nome": "Volpi", "sesso": "M"}).status_code == 400  # same name
-    assert _post(capo_semplice, url, {"nome": "Lupi", "sesso": "M"}).status_code == 403
+    assert nuova.json()["nome"] == "Volpi"
+    # The same animal twice in a reparto.
+    assert _post(capogruppo, url, {"animale_id": volpe.pk, "sesso": "M"}).status_code == 400
+    assert _post(capo_semplice, url, {"animale_id": lupo.pk, "sesso": "M"}).status_code == 403
     # Patrols live in a reparto only.
     assert (
-        _post(capogruppo, f"/api/v1/unita/{coca.pk}/squadriglie", {"nome": "X", "sesso": "M"})
+        _post(
+            capogruppo,
+            f"/api/v1/unita/{coca.pk}/squadriglie",
+            {"animale_id": lupo.pk, "sesso": "M"},
+        )
     ).status_code == 400
     chiusa = _client(staff).put(
         f"/api/v1/squadriglie/{nuova.json()['id']}",
-        {"nome": "Volpi", "sesso": "M", "attiva": False},
+        {"sesso": "M", "attiva": False},
         content_type="application/json",
     )
     assert chiusa.json()["attiva"] is False
@@ -317,7 +330,9 @@ def test_squadriglie(staff, capogruppo, capo_semplice, reparto, coca):
 def volpi(reparto):
     from apps.organizzazione.models import Squadriglia
 
-    return Squadriglia.objects.create(unita=reparto, nome="Volpi", sesso="F")
+    return Squadriglia.objects.create(
+        unita=reparto, nome="Volpi", animale=_animale("Volpe", "Volpi"), sesso="F"
+    )
 
 
 @pytest.fixture
@@ -755,14 +770,16 @@ def test_ambientazione_solo_per_branco_cerchio(capogruppo, reparto):
 def test_squadriglia_del_sesso_del_reparto(capogruppo, gruppo):
     maschile = _unita(gruppo, "Maschile")
     url = f"/api/v1/unita/{maschile.pk}/squadriglie"
-    rifiutata = _post(capogruppo, url, {"nome": "Gazzelle", "sesso": "F"})
+    rifiutata = _post(
+        capogruppo, url, {"animale_id": _animale("Gazzella", "Gazzelle").pk, "sesso": "F"}
+    )
     assert rifiutata.status_code == 400
     assert "solo maschili" in rifiutata.json()["detail"]
-    creata = _post(capogruppo, url, {"nome": "Lupi", "sesso": "M"})
+    creata = _post(capogruppo, url, {"animale_id": _animale("Lupo", "Lupi").pk, "sesso": "M"})
     assert creata.status_code == 201
     cambio = _client(capogruppo).put(
         f"/api/v1/squadriglie/{creata.json()['id']}",
-        {"nome": "Lupi", "sesso": "F"},
+        {"sesso": "F"},
         content_type="application/json",
     )
     assert cambio.status_code == 400
@@ -777,14 +794,16 @@ def test_squadriglia_dell_altro_sesso_segnalata_e_chiudibile(capogruppo, gruppo,
     assert any("Volpi" in a and "correggila o chiudila" in a for a in avvisi)
     chiusa = _client(capogruppo).put(
         f"/api/v1/squadriglie/{vecchia.pk}",
-        {"nome": "Volpi", "sesso": "M", "attiva": False},
+        {"sesso": "M", "attiva": False},
         content_type="application/json",
     )
     assert chiusa.status_code == 200
     # A mixed reparto keeps both.
     assert (
         _post(
-            capogruppo, f"/api/v1/unita/{reparto.pk}/squadriglie", {"nome": "Orsi", "sesso": "M"}
+            capogruppo,
+            f"/api/v1/unita/{reparto.pk}/squadriglie",
+            {"animale_id": _animale("Orso", "Orsi").pk, "sesso": "M"},
         ).status_code
         == 201
     )  # noqa: E501

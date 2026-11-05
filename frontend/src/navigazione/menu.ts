@@ -292,6 +292,12 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/squadriglia',
           descrizione: 'I numeri di telefono della squadriglia',
         },
+        p.vede_animali && {
+          nome: 'Animali di squadriglia',
+          icona: 'feather',
+          to: '/animali-squadriglia',
+          descrizione: 'Gli animali tra cui scegliere, con i colori e i loro significati',
+        },
       ]),
     },
     {

@@ -28,6 +28,7 @@ from apps.iscrizioni.api import router as iscrizioni_router
 from apps.note.api import router as note_router
 from apps.notifiche.api import router as notifiche_router
 from apps.organizzazione.api import router as organizzazione_router
+from apps.organizzazione.api_animali import router as animali_router
 from apps.progressione.api import router as progressione_router
 from apps.quote.api import router as quote_router
 from apps.sanitaria.api import router as sanitaria_router
@@ -47,6 +48,7 @@ api = NinjaAPI(
 api.add_router("/", core_router)
 api.add_router("/", accounts_router)
 api.add_router("/", organizzazione_router)
+api.add_router("/", animali_router)
 api.add_router("/", anagrafica_router)
 api.add_router("/", importazione_router)
 api.add_router("/", dispositivi_router)

@@ -5,8 +5,10 @@ import { RouterLink } from 'vue-router'
 import { api, type MiaSquadriglia } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
 import BarraRubrica from '@/components/BarraRubrica.vue'
+import ColoriAnimale from '@/components/ColoriAnimale.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
+import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import IncarichiSquadriglia from '@/components/IncarichiSquadriglia.vue'
 import LinkPersonale from '@/components/LinkPersonale.vue'
 import Telefono from '@/components/Telefono.vue'
@@ -41,8 +43,14 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
     <p v-else-if="!squadriglie.length && !errore" class="fg-2">Non sei in una squadriglia.</p>
 
     <section v-for="s in squadriglie" :key="s.id" class="card card-body mb-5">
-      <h2 class="h5 mb-0">{{ s.nome }}</h2>
-      <p class="fg-2 small mb-3">{{ s.reparto }}</p>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <ImmagineAnimale :animale="s.animale" grande />
+        <div>
+          <h2 class="h5 mb-0">{{ s.nome }}</h2>
+          <p class="fg-2 small mb-1">{{ s.reparto }}</p>
+          <ColoriAnimale v-if="s.animale" :colori="s.animale.colori" />
+        </div>
+      </div>
       <BarraRubrica
         v-if="s.sono_capo"
         :rubrica="rubrica"

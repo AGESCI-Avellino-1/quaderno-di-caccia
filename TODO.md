@@ -10,7 +10,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
 | [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | VER    |
-| [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | WIP    |
+| [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -22,10 +22,10 @@ immagini (si possono generare in un passo Docker a parte, rifatto solo se cambia
 gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il numero in
 `package.json` e `package-lock.json`, l'immagine del backend.
 
-## Valutazioni
+## Sviluppate, in attesa dell'ok
 
-Valutazioni fatte leggendo le issue, il codice e l'allegato di #22: nulla è ancora stato sviluppato. Le
-decisioni sono nell'analisi. Le due issue sono indipendenti; conviene partire da #23, più piccola.
+#22 e #23 sono sviluppate, non ancora in una versione pubblicata. Provate in Chromium, senza rete anche le immagini:
+restano da provare su iPhone e Android.
 
 ### #23 Scheda incarichi
 
@@ -47,43 +47,15 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 4. Pagina dell'elenco per i capigruppo, scelta nell'assegnazione, organigramma e relativo PDF.
 5. Fascicolo del capo, esportazione e trasferimento: portano il nome dell'incarico. Manuale e dati di prova.
 
-**Decisioni:** DEC-347…DEC-349. **Fatto**, con i test di ogni ruolo; da provare nell'app.
+**Decisioni:** DEC-347…DEC-349. **Fatto**, con i test di ogni ruolo; schermate fatte in Chromium.
 
 ### #22 Animali di squadriglia
 
-**Fattibile.**
+**Decisioni:** DEC-350…DEC-354. **Fatto**, con i test di ogni ruolo e con SVG costruiti per aggirare la pulizia.
 
-**L'allegato.** 93 animali (81 generali, 12 nautici), con PNG, SVG, un unico file di simboli e un CSV. Simboli e
-righe del CSV corrispondono uno a uno, senza doppioni e senza script. Limiti trovati:
-
-- `animali.svg` pesa 2,07 MB (769 KB compresso) e supera di poco il limite di 2 MB della cache della PWA, che
-  lo salterebbe. Comunque peserebbe su ogni telefono: meglio i 93 SVG singoli (11-223 KB), scaricati quando servono.
-- I colori sono solo nomi (24 diversi), mentre il simbolo vuole un codice come `#0a3d91`: la tabella va scritta.
-- 11 animali hanno un colore solo, 13 non hanno il richiamo; 15 note parlano della fonte e non vanno mostrate.
-
-**Situazione.** `Squadriglia.nome` è testo libero, unico nel reparto, e le altre API lo restituiscono come testo
-(eventi, Progressione, turni). I nomi vecchi possono non coincidere: i dati di prova hanno «Pantere» e «Volpi», il
-CSV «Pantera» e «Volpe».
-
-**Cose da fare.**
-
-1. Catalogo in `backend/data/cataloghi/` con i plurali e la tabella dei colori, da far controllare al maintainer; modello
-   degli animali con disattivazione, permessi e test di ogni ruolo.
-2. `Squadriglia.animale` facoltativo, con `nome` che resta e prende il plurale dell'animale: le letture non cambiano.
-3. Migrazione: si collegano i nomi uguali al singolare o al plurale; gli altri restano e la pagina del reparto chiede
-   di scegliere.
-4. Scelta dell'animale alla creazione al posto del testo, pagina dell'elenco, tabella dei colori.
-5. Componente con l'immagine e i campi nuovi nelle API, vicino al nome della squadriglia. Scaricamento delle immagini
-   degli animali in uso per l'offline (oggi il service worker conserva solo la struttura dell'app): da provare al campo.
-6. `dati_di_prova`, schermate e manuale.
-
-**Sicurezza.** Un SVG caricato da un utente può contenere script e nginx non ha una Content-Security-Policy. Si accettano
-SVG, PNG e JPEG; gli SVG si ripuliscono sul server con una libreria nuova, da scegliere e controllare, tenendo solo gli
-elementi di disegno, e i PNG e JPEG si ricodificano con Pillow. Per non affidarsi alla sola pulizia: il file si mostra come
-immagine e mai dentro la pagina, e si serve con una Content-Security-Policy propria che impedisce gli script. Da provare con
-SVG costruiti apposta per aggirare la pulizia.
-
-**Decisioni:** DEC-350…DEC-354, tutte prese.
+**Da controllare dal maintainer.** I 93 plurali e i codici dei 23 colori in
+`backend/data/cataloghi/animali_squadriglia.json`, scritti in sviluppo: il CSV non li aveva. La libreria che ripulisce
+gli SVG, `py_svg_hush` 0.3.0 (MIT, involucro di `svg-hush` di Cloudflare, un solo autore): è una dipendenza nuova.
 
 ## Chiuse
 

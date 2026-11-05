@@ -9,6 +9,7 @@ import {
   type ImpreseReparto,
   type LivelloImpresa,
 } from '@/api/qdc'
+import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import CompetenzaEG from '@/components/CompetenzaEG.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
@@ -263,6 +264,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
           <div class="d-flex flex-wrap justify-content-between gap-3">
             <strong>{{ i.titolo }}</strong>
             <span class="small fg-2">
+              <ImmagineAnimale :animale="i.animale" />
               {{ i.livello_nome }}<template v-if="i.squadriglia"> · {{ i.squadriglia }}</template> ·
               dal {{ data(i.dal) }}<template v-if="i.al"> al {{ data(i.al) }}</template>
             </span>
@@ -435,6 +437,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
         </p>
         <div v-for="s in dati.squadriglie" :key="s.id" class="mb-3">
           <div class="d-flex flex-wrap align-items-center gap-3 mb-1">
+            <ImmagineAnimale :animale="s.animale" />
             <h3 class="h6 fw-bold mb-0">{{ s.nome }}</h3>
             <button
               v-if="dati.puo_gestire && specialita.squadriglia !== s.id"

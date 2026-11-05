@@ -35,10 +35,13 @@ Scegli il ruolo in **Assegna un incarico…**, poi la persona in **Chi**, e tocc
 
 Le squadriglie le compongono lo staff del reparto e i capigruppo.
 
-- **Nuova squadriglia**: scrivi il nome, scegli **Femminile** o **Maschile** e tocca
-  **Crea**. In un reparto maschile o femminile non si sceglie: la squadriglia è dello stesso
-  sesso del reparto, e una dell'altro sesso rimasta da prima è segnalata in **Da
-  controllare**, da correggere o chiudere.
+- **Nuova squadriglia**: scegli l'animale, poi **Femminile** o **Maschile**, e tocca **Crea**. Il
+  nome è il plurale dell'animale. Se manca, aggiungilo all'elenco degli animali (qui sotto). In
+  un reparto maschile o femminile il sesso non si sceglie: la squadriglia è dello stesso sesso
+  del reparto, e una dell'altro sesso rimasta da prima è segnalata in **Da controllare**, da
+  correggere o chiudere.
+- Una squadriglia nata prima degli animali, con un nome che non corrisponde a nessuno, è
+  segnalata in **Da controllare**: sotto il suo nome scegli l'animale.
 - Per spostare un ragazzo, accanto al suo nome scegli **Sposta in…** e la squadriglia (o
   **Nessuna squadriglia**): vale da oggi. Chi non è in nessuna squadriglia è in **Senza
   squadriglia**, con **Metti in…**.
@@ -57,6 +60,29 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
 ![La delega delle riunioni di squadriglia sul telefono](../img/capo/delega-telefono.png){.telefono width="30%"}
 ![La delega delle riunioni di squadriglia sul computer](../img/capo/delega-computer.png){.computer width="65%"}
 :::
+
+## Gli animali di squadriglia
+
+Dal menu, **Animali di squadriglia** elenca gli animali tra cui scegliere, generali e nautici, con
+immagine, colori e significati per il guidoncino, e richiamo. L'elenco è uno per tutto il gruppo:
+lo leggono i ragazzi e gli staff dei reparti e i capigruppo; lo modificano gli staff dei reparti e
+i capigruppo.
+
+:::{container} schermate
+![Gli animali di squadriglia sul telefono](../img/capo/animali-squadriglia-telefono.png){.telefono width="30%"}
+![Gli animali di squadriglia sul computer](../img/capo/animali-squadriglia-computer.png){.computer width="65%"}
+:::
+
+- **Nuovo animale**: scrivi nome e plurale, scegli tipo e colori, e carica se vuoi un'immagine SVG,
+  PNG o JPEG. Un SVG viene ripulito e resta solo il disegno; se contiene collegamenti esterni è
+  rifiutato.
+- **modifica**: vale ovunque, anche per gli altri reparti. Se cambi il plurale, cambia il nome di
+  tutte le squadriglie con quell'animale.
+- **disattiva**: l'animale non si offre più per le squadriglie nuove, e chi lo ha lo tiene.
+- **elimina**: solo se nessuna squadriglia lo ha mai scelto, nemmeno una chiusa.
+
+Accanto al nome della squadriglia compare la sua immagine, anche ai genitori. Senza rete restano
+visibili le immagini degli animali usati dalle squadriglie; l'elenco completo serve la rete.
 
 ## I turni
 

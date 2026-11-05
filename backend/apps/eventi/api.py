@@ -15,6 +15,7 @@ from ninja.throttling import AnonRateThrottle
 
 from apps.anagrafica.models import Persona
 from apps.core.dataora import DataOra
+from apps.organizzazione.animali import AnimaleBreve, breve
 from apps.organizzazione.models import Branca, Squadriglia, Unita
 from apps.permessi import policy
 
@@ -113,6 +114,8 @@ class EventoOut(Schema):
     unita_nomi: list[str]
     squadriglia_id: int | None
     squadriglia: str | None
+    # Its image, next to the name (DEC-353).
+    animale: AnimaleBreve | None = None
     inizio: datetime
     fine: datetime
     luogo: str
@@ -169,6 +172,7 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "unita_nomi": [str(u) for u in unita],
         "squadriglia_id": evento.squadriglia_id,
         "squadriglia": evento.squadriglia.nome if evento.squadriglia_id else None,
+        "animale": breve(evento.squadriglia.animale) if evento.squadriglia_id else None,
         "inizio": evento.inizio,
         "fine": evento.fine,
         "luogo": evento.luogo,
@@ -284,7 +288,7 @@ def eventi(
     """The events; with `riunioni` the meetings instead, which are not events for who uses
     the app (DEC-310)."""
     elenco = policy.eventi_visibili(request.auth).select_related(
-        "squadriglia", "localita", "riunione"
+        "squadriglia__animale", "localita", "riunione"
     )
     if riunioni:
         elenco = elenco.filter(tipo=TipoEvento.RIUNIONE)

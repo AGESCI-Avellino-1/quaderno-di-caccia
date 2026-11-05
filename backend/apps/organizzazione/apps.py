@@ -14,6 +14,7 @@ class OrganizzazioneConfig(AppConfig):
             models.Gruppo,
             models.Unita,
             models.Squadriglia,
+            models.AnimaleSquadriglia,
             models.Incarico,
             models.TipoIncarico,
             models.AnnoChiuso,

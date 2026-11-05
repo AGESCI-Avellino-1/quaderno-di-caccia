@@ -21,6 +21,7 @@ from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
 from . import servizi
+from .animali import AnimaleBreve, breve
 from .models import (
     GUIDE_DI_SQUADRIGLIA,
     INCARICHI_DI_SERVIZIO,
@@ -35,6 +36,7 @@ from .models import (
     SERVIZIO_IN_UNITA,
     Ambiente,
     AmbitoIncarico,
+    AnimaleSquadriglia,
     Composizione,
     Gruppo,
     Incarico,
@@ -264,6 +266,7 @@ class MembroOut(Schema):
 class SquadrigliaOut(Schema):
     id: int
     nome: str
+    animale: AnimaleBreve | None = None
     sesso: str
     attiva: bool
     membri: list[MembroOut]
@@ -388,6 +391,14 @@ def _avvisi_squadriglie(unita: Unita) -> list[str]:
     return avvisi
 
 
+def _avvisi_animali(unita: Unita) -> list[str]:
+    """Patrols from before the animals, whose name matched none (DEC-351)."""
+    return [
+        f"La squadriglia {s.nome} non ha ancora un animale: sceglilo qui sotto."
+        for s in unita.squadriglie.filter(attiva=True, animale__isnull=True)
+    ]
+
+
 def _avvisi_collegamento(unita: Unita) -> list[str]:
     """A one-way link left by the migration to two-way links (DEC-279)."""
     altra = unita.collegata_a
@@ -446,6 +457,7 @@ def dettaglio_unita(request, unita_id: int):
         {
             "id": s.pk,
             "nome": s.nome,
+            "animale": breve(s.animale),
             "sesso": s.sesso,
             "attiva": s.attiva,
             "membri": list(
@@ -457,7 +469,7 @@ def dettaglio_unita(request, unita_id: int):
             "incarichi": _incarichi_della_squadriglia(s),
             "nomina": _nomina(utente, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=s),
         }
-        for s in unita.squadriglie.order_by("-attiva", "nome")
+        for s in unita.squadriglie.select_related("animale").order_by("-attiva", "nome")
     ]
     senza_squadriglia = Persona.objects.none()
     if unita.tipo == TipoUnita.REPARTO:
@@ -486,6 +498,7 @@ def dettaglio_unita(request, unita_id: int):
         )
         + _avvisi_collegamento(unita)
         + (_avvisi_sesso_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
+        + (_avvisi_animali(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + (_avvisi_squadriglie(unita) if unita.tipo == TipoUnita.REPARTO else [])
         + _avvisi_maggiore_eta(unita),
         "puo_modificare": policy.puo_gestire_unita(utente),
@@ -916,7 +929,8 @@ def elimina_tipo_incarico(request, tipo_id: int):
 
 
 class SquadrigliaIn(Schema):
-    nome: str
+    # Its plural is the patrol's name: required for a new patrol (DEC-351).
+    animale_id: int | None = None
     sesso: str
     attiva: bool = True
 
@@ -924,8 +938,13 @@ class SquadrigliaIn(Schema):
 class SquadrigliaBreve(Schema):
     id: int
     nome: str
+    animale: AnimaleBreve | None = None
     sesso: str
     attiva: bool
+
+    @staticmethod
+    def resolve_animale(obj: Squadriglia) -> dict | None:
+        return breve(obj.animale)
 
 
 def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squadriglia:
@@ -942,7 +961,25 @@ def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squad
             400,
             f"Il reparto è {Composizione(composizione).label.lower()}: le sue squadriglie sono solo {genere}.",
         )
-    squadriglia.nome = dati.nome.strip()
+    if dati.animale_id is None and squadriglia.pk is None:
+        raise HttpError(400, "Scegli l'animale della squadriglia.")
+    if dati.animale_id is not None and dati.animale_id != squadriglia.animale_id:
+        animale = get_object_or_404(AnimaleSquadriglia, pk=dati.animale_id)
+        if not animale.attivo:
+            raise HttpError(400, f"{animale} è disattivato: scegline un altro.")
+        giusta = (
+            Squadriglia.objects.filter(unita=squadriglia.unita, nome=animale.plurale)
+            .exclude(pk=squadriglia.pk)
+            .first()
+        )
+        if giusta is not None:
+            raise HttpError(
+                400,
+                f"In questo reparto c'è già la squadriglia {giusta.nome}"
+                f"{'' if giusta.attiva else ' (chiusa: puoi riaprirla)'}.",
+            )
+        squadriglia.animale = animale
+        squadriglia.nome = animale.plurale
     squadriglia.sesso = dati.sesso
     squadriglia.attiva = dati.attiva
     _salva(squadriglia)
@@ -1050,6 +1087,7 @@ def togli_membro(request, appartenenza_id: int):
 class IncarichiDiSquadriglia(Schema):
     id: int
     nome: str
+    animale: AnimaleBreve | None = None
     incarichi: list[IncaricoOut]
     nomina: list[Scelta]
 
@@ -1061,6 +1099,7 @@ def _incarichi_di_squadriglia(request, squadriglia: Squadriglia) -> dict:
     return {
         "id": squadriglia.pk,
         "nome": squadriglia.nome,
+        "animale": breve(squadriglia.animale),
         "incarichi": _incarichi_della_squadriglia(squadriglia),
         "nomina": _nomina(request.auth, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=squadriglia),
     }

@@ -95,6 +95,8 @@ class Profilo(Schema):
     # unit (GIUNGLA, BOSCO or None) that names their Progressione personale.
     unita_servizio: list[UnitaBreve]
     ambiente: str | None
+    # The list of the patrol animals, in the menu (DEC-350).
+    vede_animali: bool = False
     # Payments families reported that this user may check (DEC-255).
     pagamenti_da_verificare: int = 0
     # The waiting list (DEC-259): every capo sees it.
@@ -120,6 +122,7 @@ def profilo(request):
         "amministratore_tecnico": policy.e_amministratore(user),
         "squadriglie_guidate": list(policy.squadriglie_guidate(user).values_list("id", flat=True)),
         "squadriglie": list(policy.squadriglie_di(user).values_list("id", flat=True)),
+        "vede_animali": policy.puo_vedere_animali(user),
         "mie_iscrizioni": RichiestaIscrizione.objects.filter(utente=user).count(),
         "iscrizioni_da_decidere": RichiestaIscrizione.objects.filter(
             unita__in=policy.unita_da_approvare(user), stato=StatoIscrizione.IN_ATTESA

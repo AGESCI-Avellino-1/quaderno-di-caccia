@@ -216,11 +216,59 @@ class Unita(ModelloTracciato):
         return self.composizione == Composizione.MISTA or self.tipo == TipoUnita.COMUNITA_CAPI
 
 
+class TipoAnimale(models.TextChoices):
+    GENERALE = "GENERALE", "Generale"
+    NAUTICO = "NAUTICO", "Nautico"
+
+
+class AnimaleSquadriglia(ModelloTracciato):
+    """An animal a patrol takes its name from: one list for the group, starting from the
+    catalog (DEC-350). Chosen by a patrol, even a closed one, it is switched off and not
+    deleted (DEC-352). Its image is `simbolo`, shipped with the app, or `immagine`, uploaded
+    and cleaned (DEC-354)."""
+
+    nome = models.CharField(max_length=60, unique=True)
+    # The patrol's name (DEC-351).
+    plurale = models.CharField(max_length=80, unique=True)
+    tipo = models.CharField(max_length=8, choices=TipoAnimale.choices, default=TipoAnimale.GENERALE)
+    colore_1 = models.CharField(max_length=20, blank=True)
+    significato_1 = models.CharField(max_length=200, blank=True)
+    colore_2 = models.CharField(max_length=20, blank=True)
+    significato_2 = models.CharField(max_length=200, blank=True)
+    richiamo = models.CharField(max_length=200, blank=True)
+    simbolo = models.SlugField(max_length=60, blank=True)
+    immagine = models.FileField(upload_to="animali/", blank=True)
+    attivo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "animale di squadriglia"
+        verbose_name_plural = "animali di squadriglia"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+    def clean(self) -> None:
+        from .animali import COLORI
+
+        for colore in (self.colore_1, self.colore_2):
+            if colore and colore not in COLORI:
+                raise ValidationError(f"«{colore}» non è tra i colori proposti.")
+
+
 class Squadriglia(ModelloTracciato):
     """Single-sex patrol inside a Reparto (no diarchy)."""
 
     unita = models.ForeignKey(Unita, on_delete=models.PROTECT, related_name="squadriglie")
+    # With an animal, its plural (DEC-351). Without one, a name from before the animals.
     nome = models.CharField(max_length=80)
+    animale = models.ForeignKey(
+        AnimaleSquadriglia,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="squadriglie",
+    )
     sesso = models.CharField(max_length=1, choices=[("M", "Maschile"), ("F", "Femminile")])
     attiva = models.BooleanField(default=True)
 

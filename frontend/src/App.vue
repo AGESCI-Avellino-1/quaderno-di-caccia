@@ -18,6 +18,7 @@ import PiePagina from '@/components/PiePagina.vue'
 import SchermataManutenzione from '@/components/SchermataManutenzione.vue'
 import { useBloccoAutomatico } from '@/composables/useBloccoAutomatico'
 import { EVENTO_CANCELLAZIONE, stato, type MotivoCancellazione } from '@/sicurezza/cassaforte'
+import { scaricaAnimaliInUso } from '@/pwa/animali'
 import { useNavigazioneStore } from '@/stores/navigazione'
 import { useSessioneStore } from '@/stores/sessione'
 import { useSitoStore } from '@/stores/sito'
@@ -70,6 +71,7 @@ watch(
   () => sessione.profilo,
   (p) => {
     if (p) void navigazione.caricaContatori(p.capogruppo || p.amministratore_tecnico)
+    if (p) void scaricaAnimaliInUso()
   },
   { immediate: true },
 )

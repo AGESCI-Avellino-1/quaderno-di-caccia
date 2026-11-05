@@ -14,6 +14,7 @@ from ninja.responses import Status
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
 from apps.buonacaccia.models import IscrizioneBuonaCaccia
 from apps.core.date_parziali import PrecisioneData
+from apps.organizzazione.animali import AnimaleBreve, breve
 from apps.organizzazione.models import Branca, TipoUnita, Unita
 from apps.permessi import policy
 
@@ -1149,6 +1150,7 @@ class ImpresaOut(Schema):
     livello_nome: str
     squadriglia_id: int | None
     squadriglia: str | None
+    animale: AnimaleBreve | None = None
     titolo: str
     descrizione: str
     dal: date
@@ -1163,6 +1165,7 @@ class ImpresaOut(Schema):
 class SquadrigliaCompetenze(Schema):
     id: int
     nome: str
+    animale: AnimaleBreve | None = None
     competenze: list[CompetenzaOut]
     # Members' specialità and brevetti that may be linked to a patrol's path.
     individuali: list[dict]
@@ -1210,7 +1213,13 @@ def _imprese(user, reparto: Unita) -> dict:
         if not capo:
             if guidate.filter(pk=sq.pk).exists():
                 squadriglie.append(
-                    {"id": sq.pk, "nome": sq.nome, "competenze": [], "individuali": []}
+                    {
+                        "id": sq.pk,
+                        "nome": sq.nome,
+                        "animale": breve(sq.animale),
+                        "competenze": [],
+                        "individuali": [],
+                    }
                 )
             continue
         membri = (
@@ -1223,6 +1232,7 @@ def _imprese(user, reparto: Unita) -> dict:
             {
                 "id": sq.pk,
                 "nome": sq.nome,
+                "animale": breve(sq.animale),
                 "competenze": [
                     _competenza_out(c) for c in sq.competenze.prefetch_related("collegati")
                 ],
@@ -1245,6 +1255,7 @@ def _imprese(user, reparto: Unita) -> dict:
                 "livello_nome": i.get_livello_display(),
                 "squadriglia_id": i.squadriglia_id,
                 "squadriglia": i.squadriglia.nome if i.squadriglia_id else None,
+                "animale": breve(i.squadriglia.animale) if i.squadriglia_id else None,
                 "titolo": i.titolo,
                 "descrizione": i.descrizione,
                 "dal": i.dal,

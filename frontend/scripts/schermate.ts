@@ -336,6 +336,15 @@ const SCENE: Scena[] = [
     prepara: apri('Il mio Sentiero'),
     mostra: 'Impegni',
   },
+  {
+    nome: 'capo/animali-squadriglia',
+    chi: 'capoReparto',
+    percorso: '/animali-squadriglia',
+    prepara: async (pagina) => {
+      await pagina.getByLabel('Cerca un animale').fill('pant')
+      await pagina.getByText('Sq. Pantere').waitFor()
+    },
+  },
   { nome: 'ragazzo/squadriglia', chi: 'capoSquadriglia', percorso: '/squadriglia', intera: true },
   {
     nome: 'ragazzo/nota-csq',

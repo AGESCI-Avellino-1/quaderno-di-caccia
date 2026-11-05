@@ -11,6 +11,7 @@ import {
   type SerieRiunioni,
   type Unita,
 } from '@/api/qdc'
+import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -516,6 +517,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </span>
         </div>
         <div class="small fg-2">
+          <ImmagineAnimale :animale="r.animale" />
           {{ perChi(r) }}<template v-if="r.luogo"> · {{ r.luogo }}</template>
         </div>
         <div v-for="t in (r.turni ?? []).filter((x) => x.mio)" :key="t.turno" class="small">

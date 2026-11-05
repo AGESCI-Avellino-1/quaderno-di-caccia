@@ -31,6 +31,12 @@ squadriglia**, in **Riunioni di squadriglia**, puoi delegare uno squadrigliere a
 lui le riunioni (per esempio quando sei assente): scegli chi in **Delega a** e tocca
 **Delega**. Le presenze invece le segni tu.
 
+## L'animale della squadriglia
+
+In cima alla pagina trovi l'immagine dell'animale della squadriglia e i suoi colori, con i loro
+significati. Dal menu, **Animali di squadriglia** elenca tutti gli animali, con colori e richiamo:
+lo leggono tutti gli esploratori e le guide, ma l'animale di una squadriglia lo sceglie lo staff.
+
 ## Gli incarichi
 
 Nella stessa pagina, in **Incarichi**, assegni gli incarichi di squadriglia: cassiere, cicala,

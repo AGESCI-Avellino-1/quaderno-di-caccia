@@ -17,6 +17,7 @@ dependencies = [
     "nh3>=0.3.7",
     "openpyxl>=3.1.5",
     "psycopg[binary]>=3.3",
+    "py-svg-hush>=0.3.0",
     "pyjwt[crypto]>=2.15,<3",
     "pywebpush>=2.5,<3",
     "reportlab>=5.0.1,<5.1",

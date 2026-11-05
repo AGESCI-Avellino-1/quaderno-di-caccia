@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.18.1 — 5 novembre 2026
+
+### Novità
+
+**Regolamento nella convocazione dell'assemblea** ([#30](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/30)): in una nuova assemblea dei soci il punto **Regolamento dell'Assemblea** parte non spuntato, perché si tratta solo se ci sono modifiche. Gli altri quattro punti restano spuntati e, se serve, il Regolamento si spunta a mano.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.18.1
+```
+
+Nessuna migrazione del database. Le assemblee con la convocazione già salvata restano come sono.
+
+### Documentazione
+
+Il manuale dell'assemblea descrive la nuova proposta, con la schermata aggiornata.
+
+Provata con i test e in Chromium, aprendo la convocazione di una nuova assemblea. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.18.0 — 5 novembre 2026
 
 ### Novità

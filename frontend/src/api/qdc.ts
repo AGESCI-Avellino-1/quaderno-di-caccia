@@ -2088,7 +2088,12 @@ export interface Sestiglie {
 export interface Localita {
   id: number
   nome: string
+  /** Its own name, what who is invited reads (DEC-367). */
+  denominazione: string
   indirizzo: string
+  /** Apart from the address (DEC-366); `indirizzo_completo` has it after the street. */
+  civico: string
+  indirizzo_completo: string
   mappa: string
 }
 
@@ -2096,21 +2101,32 @@ export interface Localita {
 export interface PropostaIndirizzo {
   nome: string
   indirizzo: string
+  civico: string
 }
 
 export interface LocalitaIn {
   nome: string
+  denominazione?: string
   indirizzo?: string
+  civico?: string
   mappa?: string
 }
 
-/** A series of meetings or a single one (DEC-310): `giorno` for a single meeting. */
+/** A place written while creating a meeting (DEC-310). */
+export interface NuovaLocalita {
+  nome: string
+  denominazione: string
+  indirizzo: string
+  civico: string
+}
+
 /** The agenda of a meeting (DEC-362). */
 export interface OrdineDelGiorno {
   testo: string
   puo_scrivere: boolean
 }
 
+/** A series of meetings or a single one (DEC-310): `giorno` for a single meeting. */
 export interface RiunioneIn {
   titolo?: string
   cerchia: Cerchia

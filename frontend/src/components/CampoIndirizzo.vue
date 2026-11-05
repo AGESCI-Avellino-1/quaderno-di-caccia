@@ -8,6 +8,7 @@ import { api, type PropostaIndirizzo } from '@/api/qdc'
 // hand. Online only, nothing kept on the device.
 const props = defineProps<{ idCampo: string }>()
 const indirizzo = defineModel<string>({ required: true })
+const civico = defineModel<string>('civico', { required: true })
 const emit = defineEmits<{ scelta: [proposta: PropostaIndirizzo] }>()
 
 // Each search takes the public service some seconds: only when the writing pauses.
@@ -43,6 +44,8 @@ function scegli(proposta: PropostaIndirizzo) {
   giro++
   cercando.value = false
   indirizzo.value = proposta.indirizzo
+  // A number written by hand stays: the service often has only the street (DEC-366).
+  if (proposta.civico) civico.value = proposta.civico
   proposte.value = []
   emit('scelta', proposta)
 }
@@ -71,7 +74,8 @@ onBeforeUnmount(() => {
         class="list-group-item list-group-item-action"
         @click="scegli(p)"
       >
-        <template v-if="p.nome">{{ p.nome }} · </template>{{ p.indirizzo }}
+        <template v-if="p.nome">{{ p.nome }} · </template>{{ p.indirizzo
+        }}<template v-if="p.civico"> · n. {{ p.civico }}</template>
       </button>
     </div>
     <div class="form-text small">© OpenStreetMap</div>

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/api/qdc'
 import CampoIndirizzo from '@/components/CampoIndirizzo.vue'
 
-const PROPOSTA = { nome: 'Scuola Dante', indirizzo: 'Via Verdi, 83100 Avellino' }
+const PROPOSTA = { nome: 'Scuola Dante', indirizzo: 'Via Verdi, 83100 Avellino', civico: '' }
 
 function monta() {
   return mount(CampoIndirizzo, {
@@ -12,6 +12,8 @@ function monta() {
       idCampo: 'prova',
       modelValue: '',
       'onUpdate:modelValue': () => {},
+      civico: '12',
+      'onUpdate:civico': () => {},
     },
   })
 }
@@ -63,6 +65,22 @@ describe('CampoIndirizzo', () => {
     expect(pagina.emitted('scelta')).toEqual([[PROPOSTA]])
     expect(pagina.emitted('update:modelValue')?.at(-1)).toEqual([PROPOSTA.indirizzo])
     expect(pagina.find('button').exists()).toBe(false)
+  })
+
+  it('un numero scritto a mano resta, se la proposta non ne ha uno', async () => {
+    vi.spyOn(api, 'cercaIndirizzi').mockResolvedValue([PROPOSTA])
+    const pagina = monta()
+    await scrivi(pagina, 'via verdi')
+    await pagina.find('button').trigger('click')
+    expect(pagina.emitted('update:civico')).toBeUndefined()
+  })
+
+  it('il numero della proposta sostituisce quello scritto', async () => {
+    vi.spyOn(api, 'cercaIndirizzi').mockResolvedValue([{ ...PROPOSTA, civico: '3' }])
+    const pagina = monta()
+    await scrivi(pagina, 'via verdi 3')
+    await pagina.find('button').trigger('click')
+    expect(pagina.emitted('update:civico')).toEqual([['3']])
   })
 
   it('non cerca finché il testo è troppo corto', async () => {

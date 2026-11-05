@@ -141,6 +141,11 @@ Quando cambiano i capi gruppo, il rappresentante legale o la sede, i capigruppo 
 
 ## Le località
 
+Una località ha un **Nome**, con cui la riconosci nell'elenco (per esempio «Sede»), e può avere un **Nome
+completo** (per esempio quello della parrocchia che vi ospita): se c'è, è quello che leggono gli invitati
+nella pagina della riunione, nelle email e nel calendario. Il **Numero civico** ha un campo suo: spesso le
+proposte hanno solo la via, e scegliendone una il numero che hai scritto resta.
+
 Quando scrivi l'indirizzo di una località nuova, l'app ti propone gli indirizzi trovati su OpenStreetMap:
 tocca quello giusto o continua a scrivere a mano. Cerca solo sedi e basi, mai l'indirizzo di una persona:
 quello che scrivi passa da un servizio esterno. Senza rete, o se il servizio non risponde, le proposte non

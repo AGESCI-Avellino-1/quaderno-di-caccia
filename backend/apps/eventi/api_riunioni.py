@@ -37,7 +37,9 @@ router = Router(tags=["riunioni"])
 
 class LocalitaIn(Schema):
     nome: str
+    denominazione: str = ""
     indirizzo: str = ""
+    civico: str = ""
     mappa: str = ""
 
 
@@ -58,6 +60,7 @@ class _LimiteIndirizzi(AuthRateThrottle):
 class PropostaIndirizzo(Schema):
     nome: str
     indirizzo: str
+    civico: str
 
 
 @router.get(
@@ -85,7 +88,12 @@ def _nuova_localita(user, dati: LocalitaIn) -> Localita:
     if esistente:
         return esistente
     localita = Localita(
-        nome=nome, indirizzo=dati.indirizzo.strip(), mappa=dati.mappa.strip(), creata_da=user
+        nome=nome,
+        denominazione=dati.denominazione.strip(),
+        indirizzo=dati.indirizzo.strip(),
+        civico=dati.civico.strip(),
+        mappa=dati.mappa.strip(),
+        creata_da=user,
     )
     try:
         localita.full_clean()
@@ -113,7 +121,9 @@ def _localita_del_gruppo(request, localita_id: int) -> Localita:
 def modifica_localita(request, localita_id: int, dati: LocalitaIn):
     localita = _localita_del_gruppo(request, localita_id)
     localita.nome = dati.nome.strip()
+    localita.denominazione = dati.denominazione.strip()
     localita.indirizzo = dati.indirizzo.strip()
+    localita.civico = dati.civico.strip()
     localita.mappa = dati.mappa.strip()
     try:
         localita.full_clean()
@@ -121,7 +131,7 @@ def modifica_localita(request, localita_id: int, dati: LocalitaIn):
         raise _errore(errore) from errore
     localita.save()
     # The meetings to come show the new name.
-    localita.eventi.filter(inizio__gte=timezone.now()).update(luogo=localita.nome)
+    localita.eventi.filter(inizio__gte=timezone.now()).update(luogo=localita.nome_visibile)
     return localita
 
 
@@ -193,7 +203,7 @@ def _serie_out(user, serie: RiunioneRicorrente) -> dict:
         "dal": serie.dal,
         "al": serie.al,
         "localita": serie.localita,
-        "luogo": serie.localita.nome if serie.localita_id else serie.luogo,
+        "luogo": serie.localita.nome_visibile if serie.localita_id else serie.luogo,
         "uniforme": serie.uniforme,
         "riunioni": serie.eventi.filter(annullato_il__isnull=True).count(),
         "puo_gestire": _puo_gestire_serie(user, serie),
@@ -275,7 +285,7 @@ def crea_riunioni(request, dati: RiunioneIn):
                 cerchia=cerchia,
                 inizio=datetime.combine(dati.giorno, dati.ora_inizio, zona),
                 fine=datetime.combine(dati.giorno, dati.ora_fine, zona),
-                luogo=localita.nome if localita else "",
+                luogo=localita.nome_visibile if localita else "",
                 localita=localita,
                 uniforme=dati.uniforme,
             )
@@ -336,7 +346,7 @@ def _crea_riunione_convocata(request, dati: RiunioneIn):
             cerchia=dati.cerchia,
             inizio=datetime.combine(dati.giorno, dati.ora_inizio, zona),
             fine=datetime.combine(dati.giorno, dati.ora_fine, zona),
-            luogo=localita.nome if localita else "",
+            luogo=localita.nome_visibile if localita else "",
             localita=localita,
             uniforme=False,
         )
@@ -435,7 +445,7 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
         )
         evento.inizio, evento.fine = dati.inizio, dati.fine
         evento.localita = localita
-        evento.luogo = localita.nome if localita else dati.luogo.strip()
+        evento.luogo = localita.nome_visibile if localita else dati.luogo.strip()
         if dati.uniforme is None and evento.riunione_id is None:
             raise HttpError(400, "Scegli se la riunione è con l'uniforme.")
         evento.uniforme = dati.uniforme

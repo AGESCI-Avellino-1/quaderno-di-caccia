@@ -47,8 +47,8 @@ const riunione = computed(() => evento.value?.tipo === 'RIUNIONE')
 const linkMappa = computed(() => {
   const localita = evento.value?.localita
   if (localita?.mappa) return localita.mappa
-  if (!localita?.indirizzo) return ''
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localita.indirizzo)}`
+  if (!localita?.indirizzo_completo) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localita.indirizzo_completo)}`
 })
 const modificaRiunione = ref(false)
 // The parents' meetings and the assembly: a convocation, no uniform (DEC-327).
@@ -275,7 +275,9 @@ const STATI: [StatoPresenza, string][] = [
       </div>
       <div v-if="evento.luogo">
         <strong>Luogo</strong> {{ evento.luogo }}
-        <template v-if="evento.localita?.indirizzo"> · {{ evento.localita.indirizzo }}</template>
+        <template v-if="evento.localita?.indirizzo_completo">
+          · {{ evento.localita.indirizzo_completo }}</template
+        >
         <a v-if="linkMappa" :href="linkMappa" target="_blank" rel="noopener" class="small ms-1"
           >mappa</a
         >

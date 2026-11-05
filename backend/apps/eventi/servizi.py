@@ -289,7 +289,7 @@ def genera_riunioni(riunione: RiunioneRicorrente, utente) -> list[Evento]:
                 cerchia=riunione.cerchia,
                 inizio=datetime.combine(giorno, riunione.ora_inizio, zona),
                 fine=datetime.combine(giorno, riunione.ora_fine, zona),
-                luogo=riunione.localita.nome if riunione.localita_id else riunione.luogo,
+                luogo=riunione.localita.nome_visibile if riunione.localita_id else riunione.luogo,
                 localita=riunione.localita,
                 riunione=riunione,
             )
@@ -308,7 +308,7 @@ def cambia_serie(serie: RiunioneRicorrente, *, uniforme: bool, localita) -> None
     if prima != serie.localita_id:
         serie.eventi.filter(
             inizio__gte=timezone.now(), annullato_il__isnull=True, localita_id=prima
-        ).update(localita=localita, luogo=localita.nome if localita else serie.luogo)
+        ).update(localita=localita, luogo=localita.nome_visibile if localita else serie.luogo)
 
 
 # --- Participants ------------------------------------------------------------------------------

@@ -193,6 +193,69 @@ def test_insieme_solo_con_l_unita_collegata(gruppo, capogruppo, reparto):
     assert len(riunioni[0]["unita"]) == 2
 
 
+def test_localita_indirizzo_completo():
+    assert Localita(indirizzo="Via Roma, 83100 Avellino", civico="1").indirizzo_completo == (
+        "Via Roma 1, 83100 Avellino"
+    )
+    assert Localita(indirizzo="Via Roma", civico="1").indirizzo_completo == "Via Roma 1"
+    assert Localita(indirizzo="Via Roma 1, Teora").indirizzo_completo == "Via Roma 1, Teora"
+    assert Localita(indirizzo="", civico="1").indirizzo_completo == ""
+
+
+def test_localita_con_nome_completo_e_civico(capogruppo, capo, reparto):
+    risposta = _post(
+        capo,
+        "/api/v1/riunioni",
+        _serie(
+            reparto,
+            nuova_localita={
+                "nome": "Sede",
+                "denominazione": "Parrocchia di San Rocco",
+                "indirizzo": "Via Roma, 83100 Avellino",
+                "civico": "1",
+            },
+        ),
+    )
+    assert risposta.status_code == 201, risposta.content
+    # Who is invited reads its own name: the page, the emails and the calendar use this copy.
+    assert risposta.json()[0]["luogo"] == "Parrocchia di San Rocco"
+    localita = risposta.json()[0]["localita"]
+    assert localita["nome"] == "Sede"
+    assert localita["indirizzo_completo"] == "Via Roma 1, 83100 Avellino"
+    # The list goes on calling it by its short name.
+    assert [(s["nome"]) for s in _client(capo).get("/api/v1/localita").json()] == ["Sede"]
+    url = f"/api/v1/localita/{localita['id']}"
+    corpo = {"nome": "Sede", "denominazione": "Oratorio", "indirizzo": "Via Roma", "civico": "2"}
+    assert _put(capogruppo, url, corpo).json()["indirizzo_completo"] == "Via Roma 2"
+    prossima = Evento.objects.filter(localita_id=localita["id"]).first()
+    assert prossima.luogo == "Oratorio"
+    corpo["denominazione"] = ""
+    _put(capogruppo, url, corpo)
+    prossima.refresh_from_db()
+    assert prossima.luogo == "Sede"
+
+
+def test_nome_completo_nel_presso_dell_assemblea(capogruppo):
+    from apps.verbali import modelli, servizi
+
+    giorno = timezone.localdate() + timedelta(days=10)
+    risposta = _post(
+        capogruppo,
+        "/api/v1/riunioni",
+        {
+            "cerchia": "SOCI",
+            "giorno": giorno.isoformat(),
+            "ora_inizio": "18:00",
+            "ora_fine": "20:00",
+            "nuova_localita": {"nome": "Sede", "denominazione": "Parrocchia di San Rocco"},
+        },
+    )
+    assert risposta.status_code == 201, risposta.content
+    evento = Evento.objects.get(pk=risposta.json()[0]["id"])
+    dati = modelli.dati_convocazione(servizi.verbale_di(evento))
+    assert dati["luogo"]["presso"] == "Parrocchia di San Rocco"
+
+
 def test_localita_del_gruppo(capogruppo, capo, ragazza):
     assert _post(ragazza, "/api/v1/localita", {"nome": "Sede"}).status_code == 403
     sede = _post(capo, "/api/v1/localita", {"nome": "Sede"}).json()

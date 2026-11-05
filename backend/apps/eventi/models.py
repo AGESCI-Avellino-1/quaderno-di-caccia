@@ -81,8 +81,13 @@ class Localita(ModelloTracciato):
     """A place of the group for meetings and events (DEC-310): the seats, a base. The
     capigruppo keep the list; who creates a meeting may add a new one."""
 
+    # How the list calls it: "Sede".
     nome = models.CharField(max_length=120)
+    # Its own name, whatever the address (DEC-367): what who is invited reads, when there is one.
+    denominazione = models.CharField(max_length=200, blank=True)
     indirizzo = models.CharField(max_length=250, blank=True)
+    # Apart from the address: the search service often has only the street (DEC-366).
+    civico = models.CharField(max_length=20, blank=True)
     mappa = models.URLField(blank=True)
     attiva = models.BooleanField(default=True)
     creata_da = models.ForeignKey(
@@ -96,6 +101,18 @@ class Localita(ModelloTracciato):
 
     def __str__(self) -> str:
         return self.nome
+
+    @property
+    def nome_visibile(self) -> str:
+        return self.denominazione or self.nome
+
+    @property
+    def indirizzo_completo(self) -> str:
+        """The number right after the street: "Via Roma 1, 83100 Avellino"."""
+        if not self.civico or not self.indirizzo:
+            return self.indirizzo
+        via, virgola, resto = self.indirizzo.partition(",")
+        return f"{via.rstrip()} {self.civico}{virgola}{resto}"
 
 
 class RiunioneRicorrente(ModelloTracciato):

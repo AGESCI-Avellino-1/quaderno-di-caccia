@@ -11,7 +11,7 @@ import { useErrore } from '@/composables/useErrore'
 const { errore, inCorso, esegui } = useErrore()
 const elenco = ref<Localita[]>([])
 const aperta = ref<number | 'nuova' | null>(null)
-const dati = reactive({ nome: '', indirizzo: '', mappa: '' })
+const dati = reactive({ nome: '', denominazione: '', indirizzo: '', civico: '', mappa: '' })
 
 async function carica() {
   elenco.value = (await esegui(() => api.localita())) ?? elenco.value
@@ -23,10 +23,18 @@ function apri(l: Localita | null) {
   Object.assign(
     dati,
     l
-      ? { nome: l.nome, indirizzo: l.indirizzo, mappa: l.mappa }
+      ? {
+          nome: l.nome,
+          denominazione: l.denominazione,
+          indirizzo: l.indirizzo,
+          civico: l.civico,
+          mappa: l.mappa,
+        }
       : {
           nome: '',
+          denominazione: '',
           indirizzo: '',
+          civico: '',
           mappa: '',
         },
   )
@@ -63,7 +71,8 @@ async function togli(l: Localita) {
         <li v-for="l in elenco" :key="l.id" class="py-1 border-bottom">
           <div class="d-flex flex-wrap align-items-center gap-3">
             <strong>{{ l.nome }}</strong>
-            <span v-if="l.indirizzo" class="small fg-2">{{ l.indirizzo }}</span>
+            <span v-if="l.denominazione" class="small">{{ l.denominazione }}</span>
+            <span v-if="l.indirizzo_completo" class="small fg-2">{{ l.indirizzo_completo }}</span>
             <button type="button" class="btn btn-link btn-sm p-0 ms-auto" @click="apri(l)">
               modifica
             </button>
@@ -75,17 +84,40 @@ async function togli(l: Localita) {
         <div class="md:col-6">
           <label class="form-label small" for="loc-nome">Nome</label>
           <input id="loc-nome" v-model="dati.nome" class="form-control form-control-sm" required />
+          <div class="form-text small">Come la riconosci nell'elenco: per esempio «Sede».</div>
         </div>
         <div class="md:col-6">
+          <label class="form-label small" for="loc-denominazione"
+            >Nome completo (facoltativo)</label
+          >
+          <input
+            id="loc-denominazione"
+            v-model="dati.denominazione"
+            class="form-control form-control-sm"
+            placeholder="Per esempio: Parrocchia di San Rocco"
+          />
+          <div class="form-text small">Se c'è, è quello che leggono gli invitati.</div>
+        </div>
+        <div class="md:col-9">
           <label class="form-label small" for="loc-indirizzo">Indirizzo</label>
           <CampoIndirizzo
             v-model="dati.indirizzo"
+            v-model:civico="dati.civico"
             id-campo="loc-indirizzo"
             @scelta="
               (p) => {
-                if (!dati.nome.trim()) dati.nome = p.nome
+                if (!dati.denominazione.trim()) dati.denominazione = p.nome
               }
             "
+          />
+        </div>
+        <div class="md:col-3">
+          <label class="form-label small" for="loc-civico">Numero civico</label>
+          <input
+            id="loc-civico"
+            v-model="dati.civico"
+            class="form-control form-control-sm"
+            maxlength="20"
           />
         </div>
         <div class="col-12">

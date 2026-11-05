@@ -8,6 +8,7 @@ import {
   type Cerchia,
   type Evento,
   type Localita,
+  type NuovaLocalita,
   type SerieRiunioni,
   type Unita,
 } from '@/api/qdc'
@@ -129,7 +130,7 @@ const vuoto = () => ({
   ora_fine: '18:30',
   localita: {
     id: null as number | null,
-    nuova: null as { nome: string; indirizzo: string } | null,
+    nuova: null as NuovaLocalita | null,
   },
   uniforme: true,
   ordine_del_giorno: '',

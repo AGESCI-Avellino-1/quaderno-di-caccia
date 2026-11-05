@@ -82,7 +82,10 @@ class QuotaEvento(Schema):
 class LocalitaOut(Schema):
     id: int
     nome: str
+    denominazione: str
     indirizzo: str
+    civico: str
+    indirizzo_completo: str
     mappa: str
 
 

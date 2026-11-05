@@ -67,10 +67,10 @@ def test_chi_cerca(servizio, capo, capogruppo, csq, ragazza, genitore, estraneo)
 def test_le_proposte(servizio, capo):
     chiamate = servizio(VIA, CIVICO, SCUOLA, {"name": "Solo un nome", "street": ""}, {})
     assert _cerca(capo, "  via   roma ").json() == [
-        {"nome": "", "indirizzo": "Piazza della Libertà, 83100 Avellino"},
-        {"nome": "", "indirizzo": "Via Roma 1, Teora"},
-        {"nome": "Scuola Dante", "indirizzo": "Via Verdi, 83100 Avellino"},
-        {"nome": "", "indirizzo": "Solo un nome"},
+        {"nome": "", "indirizzo": "Piazza della Libertà, 83100 Avellino", "civico": ""},
+        {"nome": "", "indirizzo": "Via Roma, Teora", "civico": "1"},
+        {"nome": "Scuola Dante", "indirizzo": "Via Verdi, 83100 Avellino", "civico": ""},
+        {"nome": "", "indirizzo": "Solo un nome", "civico": ""},
     ]
     url, opzioni = chiamate[0]
     assert url == "https://photon.komoot.io/api/"

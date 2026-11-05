@@ -25,8 +25,6 @@ DURATA_CACHE = 24 * 60 * 60
 
 def _riga(proprieta: dict) -> str:
     via = proprieta.get("street") or proprieta.get("name") or ""
-    if via and proprieta.get("housenumber"):
-        via = f"{via} {proprieta['housenumber']}"
     citta = next(
         (
             proprieta[chiave]
@@ -40,7 +38,8 @@ def _riga(proprieta: dict) -> str:
 
 
 def _proposte(risposta: dict) -> list[dict]:
-    """One line per address: a street cut in pieces comes back several times."""
+    """One line per address: a street cut in pieces comes back several times. The number apart,
+    because choosing a proposal must not take away one written by hand (DEC-366)."""
     proposte: dict[str, dict] = {}
     for elemento in risposta.get("features", []):
         proprieta = elemento.get("properties", {})
@@ -48,7 +47,11 @@ def _proposte(risposta: dict) -> list[dict]:
         if indirizzo:
             # A street's name is the address itself, a school's or a parish's is not.
             nome = proprieta.get("name", "") if proprieta.get("street") else ""
-            proposte.setdefault(f"{nome}|{indirizzo}", {"nome": nome, "indirizzo": indirizzo})
+            civico = str(proprieta.get("housenumber", ""))[:20]
+            proposte.setdefault(
+                f"{nome}|{indirizzo}|{civico}",
+                {"nome": nome, "indirizzo": indirizzo, "civico": civico},
+            )
     return list(proposte.values())
 
 

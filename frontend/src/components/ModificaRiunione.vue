@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 
-import { api, type DettaglioEvento, type Localita } from '@/api/qdc'
+import { api, type DettaglioEvento, type Localita, type NuovaLocalita } from '@/api/qdc'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
 import { useErrore } from '@/composables/useErrore'
 
@@ -25,7 +25,7 @@ const dati = reactive({
   ora_fine: inLocale(r.fine).slice(11, 16),
   localita: {
     id: r.localita?.id ?? null,
-    nuova: null as { nome: string; indirizzo: string } | null,
+    nuova: null as NuovaLocalita | null,
   },
   // 'serie': as its series (only for a meeting of a series).
   uniforme: (r.serie_id ? 'serie' : r.uniforme ? 'si' : 'no') as 'serie' | 'si' | 'no',

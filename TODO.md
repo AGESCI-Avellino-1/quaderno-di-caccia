@@ -76,12 +76,15 @@ CSV «Pantera» e «Volpe».
    degli animali in uso per l'offline (oggi il service worker conserva solo la struttura dell'app): da provare al campo.
 6. `dati_di_prova`, schermate e manuale.
 
-**Attenzione alla sicurezza.** Un SVG caricato da un utente può contenere script e nginx non ha una
-Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati con Pillow come le foto.
+**Sicurezza.** Un SVG caricato da un utente può contenere script e nginx non ha una Content-Security-Policy. Si accettano
+SVG, PNG e JPEG; gli SVG si ripuliscono sul server con una libreria nuova, da scegliere e controllare, tenendo solo gli
+elementi di disegno, e i PNG e JPEG si ricodificano con Pillow. Per non affidarsi alla sola pulizia: il file si mostra come
+immagine e mai dentro la pagina, e si serve con una Content-Security-Policy propria che impedisce gli script. Da provare con
+SVG costruiti apposta per aggirare la pulizia.
 
 **Da decidere.**
 
-- Con quali immagini si aggiunge un animale nuovo (vedi sopra, sicurezza).
+- Di che colore è il simbolo e cosa succede cambiando o togliendo un animale in uso.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
 unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
@@ -92,6 +95,7 @@ Offline restano solo le immagini degli animali usati dalle squadriglie dei repar
 Accanto al nome solo l'immagine; nell'elenco nome, plurale, generale o nautico, colori (anche disegnati) con i significati e
 richiamo; la pagina della squadriglia mostra anche i suoi colori. Nome inglese e note sulle fonti non si mostrano.
 I nautici si possono scegliere in tutti i reparti, raggruppati a parte.
+Un animale nuovo si aggiunge anche con un SVG, ripulito dal server.
 
 ## Chiuse
 

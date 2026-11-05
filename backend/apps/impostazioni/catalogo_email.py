@@ -580,10 +580,16 @@ _TIPI = [
         "allegati. Arriva sempre.",
         "Convocazione: [Evento]",
         "<p>Ciao,</p><p>sei convocato alla riunione <strong>[Evento]</strong>: [Quando].</p>"
-        "<p>[Documenti]</p><p>I dettagli nell'app:<br>[Link]</p>",
+        "<p>[Ordine del giorno]</p><p>[Documenti]</p><p>I dettagli nell'app:<br>[Link]</p>",
         (
             EVENTO,
             Segnaposto("Quando", "data, orari e luogo", "07/11/2026, dalle 18:00 alle 19:30", True),
+            Segnaposto(
+                "Ordine del giorno",
+                "i punti dell'ordine del giorno, quando ci sono",
+                "Ordine del giorno:\n1. Programma dell'anno\n2. Varie ed eventuali",
+                True,
+            ),
             Segnaposto(
                 "Documenti",
                 "i documenti della convocazione: allegati o da aprire nell'app",

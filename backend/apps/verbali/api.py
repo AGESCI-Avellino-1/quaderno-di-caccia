@@ -55,6 +55,8 @@ class VerbaleOut(Schema):
     testo: str
     # The assembly's: data asked for, the text comes from the template (DEC-336).
     da_modello: bool
+    # Offers the placeholder of the agenda in the editor (DEC-363).
+    con_ordine_del_giorno: bool
     non_previsto: bool
     # Only who has reminders can say there are no minutes.
     puo_dire_non_previsto: bool
@@ -166,8 +168,11 @@ def _out(request, verbale: Verbale) -> dict:
     testo = verbale.testo
     if verbale.da_modello and not verbale.definitivo:
         testo = modelli.testo_assemblea(verbale)
+    elif not verbale.definitivo:
+        testo = servizi.testo_in_bozza(verbale, policy.puo_scrivere_verbale(utente, verbale))
     return {
         "da_modello": verbale.da_modello,
+        "con_ordine_del_giorno": servizi.ha_ordine_del_giorno(evento),
         "presenti": presenti,
         "puo_cariche": puo_cariche,
         "candidati_cariche": list(servizi.presenti_segnati(evento)) if puo_cariche else [],
@@ -251,6 +256,39 @@ def cariche(request, evento_id: int, dati: CaricheIn):
     verbale = _scrivibile(request, evento_id)
     return _out(
         request, _azione(servizi.salva_cariche, verbale, dati.presidente_id, dati.segretari_ids)
+    )
+
+
+class OrdineDelGiornoOut(Schema):
+    testo: str
+    puo_scrivere: bool
+
+
+def _ordine_del_giorno_out(request, evento: Evento) -> dict:
+    return {
+        "testo": evento.ordine_del_giorno,
+        "puo_scrivere": policy.puo_scrivere_ordine_del_giorno(request.auth, evento),
+    }
+
+
+@router.get("/eventi/{evento_id}/ordine-del-giorno", response=OrdineDelGiornoOut)
+def leggi_ordine_del_giorno(request, evento_id: int):
+    """On its own, because the meeting's card stays on the device and this does not (DEC-365)."""
+    evento = get_object_or_404(Evento, pk=evento_id)
+    if not policy.puo_leggere_ordine_del_giorno(request.auth, evento):
+        raise HttpError(404, "Non trovato.")
+    return _ordine_del_giorno_out(request, evento)
+
+
+@router.put("/eventi/{evento_id}/ordine-del-giorno", response=OrdineDelGiornoOut)
+def scrivi_ordine_del_giorno(request, evento_id: int, dati: TestoIn):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    if not policy.puo_leggere_ordine_del_giorno(request.auth, evento):
+        raise HttpError(404, "Non trovato.")
+    if not policy.puo_scrivere_ordine_del_giorno(request.auth, evento):
+        raise HttpError(403, "Non puoi cambiare l'ordine del giorno di questa riunione.")
+    return _ordine_del_giorno_out(
+        request, _azione(servizi.scrivi_ordine_del_giorno, evento, dati.testo)
     )
 
 

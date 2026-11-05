@@ -8,8 +8,9 @@ votazioni si fanno fuori dall'app, che ne riporta solo l'esito e non calcola del
 
 1. In **Riunioni** tocca **Nuove riunioni**. In **Di chi** scegli **Assemblea dei soci**, poi il giorno
    e gli orari.
-2. Apri l'assemblea. Nel riquadro **Convocazione** scegli i punti dell'**Ordine del giorno** e, se
-   servono, l'anno del bilancio (proposto l'ultimo chiuso) e quello di elezione e quota. Il bilancio
+2. Apri l'assemblea. Nel riquadro **Convocazione** i punti dell'**Ordine del giorno** sono già tutti
+   spuntati: togli quelli che non servono, perché per ogni punto il verbale ti chiederà i suoi dati.
+   L'email di convocazione li riporta. Scegli, se servono, l'anno del bilancio (proposto l'ultimo chiuso) e quello di elezione e quota. Il bilancio
    chiuso al 30/09 di un anno si approva entro il 31/12 dello stesso anno.
 3. La **Prima convocazione** è già proposta alle 00:00 del giorno della riunione e serve per il quorum:
    compare solo nella convocazione. La seconda è all'orario della riunione.

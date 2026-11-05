@@ -76,7 +76,23 @@ def pdf_del_modello(evento: Evento) -> bytes:
     return stampa.pdf_convocazione(modelli.testo_convocazione(servizi.verbale_di(evento), inviata))
 
 
-def _invia(evento: Evento, modello: str, allegati, primo=()) -> int:
+def _testo_ordine_del_giorno(evento: Evento) -> str:
+    """The points of the template at the assembly, the agenda written elsewhere; nothing when
+    there is none (DEC-364). Plain lines: placeholders' values are escaped in the email."""
+    from apps.impostazioni.html import in_testo
+
+    from . import modelli, servizi
+
+    if evento.cerchia == Cerchia.SOCI:
+        dati = modelli.dati_convocazione(servizi.verbale_di(evento))
+        punti = modelli.punti_convocazione(dati)
+        righe = [f"{numero}. {punto}" for numero, punto in enumerate(punti, 1)]
+    else:
+        righe = [r.strip() for r in in_testo(evento.ordine_del_giorno).splitlines() if r.strip()]
+    return "\n".join(["Ordine del giorno:", *righe]) if righe else ""
+
+
+def _invia(evento: Evento, modello: str, allegati, primo=(), valori=None) -> int:
     from apps.impostazioni.email import invia as invia_email
 
     dentro, fuori = _da_allegare(allegati)
@@ -93,6 +109,7 @@ def _invia(evento: Evento, modello: str, allegati, primo=()) -> int:
             "Quando": quando(evento) + (f", a {evento.luogo}" if evento.luogo else ""),
             "Documenti": _testo_documenti(dentro, fuori),
             "Link": f"{settings.FRONTEND_URL}/eventi/{evento.pk}",
+            **(valori or {}),
         },
         _invitati(evento),
         allegati=tuple(dentro),
@@ -116,7 +133,8 @@ def invia(evento: Evento) -> int:
     primo = ()
     if assemblea:
         primo = (("convocazione-assemblea.pdf", pdf_del_modello(evento), "application/pdf"),)
-    return _invia(evento, "convocazione_riunione", list(allegati_di(evento)), primo)
+    valori = {"Ordine del giorno": _testo_ordine_del_giorno(evento)}
+    return _invia(evento, "convocazione_riunione", list(allegati_di(evento)), primo, valori)
 
 
 def allegato_aggiunto(allegato: AllegatoVerbale) -> int:

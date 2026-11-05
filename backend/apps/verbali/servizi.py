@@ -2,10 +2,12 @@
 files on the Drive, the reminders. Who may do what is in `policy`."""
 
 import io
+import re
 import uuid
 import zipfile
 from collections.abc import Iterator
 from datetime import date, timedelta
+from html import escape
 from pathlib import PurePosixPath
 
 from django.conf import settings
@@ -27,7 +29,7 @@ from apps.core.file_caricati import (
 )
 from apps.eventi.models import Cerchia, Evento, Livello, StatoPresenza, TipoEvento
 from apps.eventi.servizi import qualita_in_assemblea
-from apps.impostazioni.html import pulisci
+from apps.impostazioni.html import in_testo, pulisci
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 from apps.permessi.policy import STAFF_DI_UNITA
@@ -52,6 +54,15 @@ CERCHIE = {
 CONSERVATI_CINQUE_ANNI = {TipoVerbale.COCA, TipoVerbale.ASSEMBLEA}
 # Who has reminders until it is definitive or said there is none (DEC-322, DEC-331).
 CON_PROMEMORIA = {TipoVerbale.COCA, TipoVerbale.GENITORI}
+# The assembly has its agenda in the template (DEC-362, DEC-364).
+CON_ORDINE_DEL_GIORNO = {TipoVerbale.COCA, TipoVerbale.GENITORI}
+SEGNAPOSTO_ORDINE_DEL_GIORNO = "[Ordine del giorno]"
+# A paragraph with the placeholder alone, bold or italic at most.
+_PARAGRAFO_ORDINE_DEL_GIORNO = re.compile(
+    r"<p\b[^>]*>(?:\s|<(?!/?p\b)[^>]+>)*"
+    + re.escape(SEGNAPOSTO_ORDINE_DEL_GIORNO)
+    + r"(?:\s|<(?!/?p\b)[^>]+>)*</p>"
+)
 GIORNI_TRA_I_PROMEMORIA = 7  # DEC-331
 MASSIMO_PROMEMORIA = 3
 # Meetings from before the minutes existed are not reminded of.
@@ -134,6 +145,49 @@ def _in_bozza(verbale: Verbale) -> None:
     _controlla_aperto(verbale)
     if verbale.definitivo:
         raise ValidationError("Il verbale è definitivo: per cambiarlo va prima riaperto.")
+
+
+# --- The agenda (DEC-362…DEC-365) ------------------------------------------------------------
+
+
+def ha_ordine_del_giorno(evento: Evento) -> bool:
+    return tipo_di(evento) in CON_ORDINE_DEL_GIORNO
+
+
+def scrivi_ordine_del_giorno(evento: Evento, testo: str) -> Evento:
+    if not ha_ordine_del_giorno(evento):
+        raise ValidationError("Questa riunione non ha un ordine del giorno da scrivere.")
+    controlla_anno_aperto(evento.inizio)
+    nuovo = pulisci(testo, immagini=False) if in_testo(testo).strip() else ""
+    if nuovo != evento.ordine_del_giorno:
+        evento.ordine_del_giorno = nuovo
+        evento.ordine_del_giorno_cambiato_il = timezone.now()
+        evento.save(
+            update_fields=["ordine_del_giorno", "ordine_del_giorno_cambiato_il", "aggiornato_il"]
+        )
+    return evento
+
+
+def _con_ordine_del_giorno(testo: str, evento: Evento) -> str:
+    """The placeholder replaced by the agenda: its own blocks in place of a paragraph with
+    nothing else, one line in the middle of other text."""
+    agenda = evento.ordine_del_giorno
+    blocchi = f"<p><strong>Ordine del giorno</strong></p>{agenda}" if agenda else ""
+    testo = _PARAGRAFO_ORDINE_DEL_GIORNO.sub(lambda _: blocchi, testo)
+    righe = [r.strip() for r in in_testo(agenda).splitlines() if r.strip()]
+    return testo.replace(SEGNAPOSTO_ORDINE_DEL_GIORNO, escape("; ".join(righe)))
+
+
+def testo_in_bozza(verbale: Verbale, scrive: bool) -> str:
+    """Who writes sees the placeholder, there by default until someone writes something
+    (DEC-363); who only reads sees the agenda in its place."""
+    if not ha_ordine_del_giorno(verbale.evento):
+        return verbale.testo
+    if not scrive:
+        return _con_ordine_del_giorno(verbale.testo, verbale.evento)
+    if not verbale.testo.strip() and not verbale.autore_nome:
+        return f"<p>{SEGNAPOSTO_ORDINE_DEL_GIORNO}</p>"
+    return verbale.testo
 
 
 # --- Steps ----------------------------------------------------------------------------------
@@ -226,9 +280,13 @@ def _rifiuta_mancanti(mancanti: list[str]) -> None:
 def rendi_definitivo(verbale: Verbale, utente) -> Verbale:
     _in_bozza(verbale)
     da_modello = verbale.da_modello
-    if not da_modello and not verbale.testo.strip():
+    scritto = verbale.testo.replace(SEGNAPOSTO_ORDINE_DEL_GIORNO, "")
+    if not da_modello and not in_testo(scritto).strip():
         raise ValidationError("Il verbale è vuoto: scrivilo prima di renderlo definitivo.")
     tipo = tipo_di(verbale.evento)
+    if tipo in CON_ORDINE_DEL_GIORNO:
+        # A later change of the agenda does not touch the document (DEC-363).
+        verbale.testo = _con_ordine_del_giorno(verbale.testo, verbale.evento)
     if tipo == TipoVerbale.ASSEMBLEA:
         _fotografa_cariche(verbale)
     if da_modello:

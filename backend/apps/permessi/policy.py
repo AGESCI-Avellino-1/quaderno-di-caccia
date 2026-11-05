@@ -559,6 +559,24 @@ def puo_leggere_verbale(user, verbale) -> bool:
     return any(genitori_vedono(figlio, "scheda") for figlio in figli)
 
 
+def puo_leggere_ordine_del_giorno(user, evento) -> bool:
+    """Who sees the meeting; at the Co.Ca. only the capi (DEC-362, DEC-365)."""
+    from apps.verbali.models import TipoVerbale
+    from apps.verbali.servizi import CON_ORDINE_DEL_GIORNO, tipo_di
+
+    tipo = tipo_di(evento)
+    if tipo not in CON_ORDINE_DEL_GIORNO or e_capo_in_attesa(user):
+        return False
+    if tipo == TipoVerbale.COCA:
+        return e_capo(user)
+    return eventi_visibili(user).filter(pk=evento.pk).exists()
+
+
+def puo_scrivere_ordine_del_giorno(user, evento) -> bool:
+    """Who manages the meeting (DEC-362)."""
+    return puo_leggere_ordine_del_giorno(user, evento) and puo_gestire_evento(user, evento)
+
+
 def puo_gestire_verbale_collegato(user, evento) -> bool:
     """Separate minutes from a template: who decides on the minutes, never someone chosen to
     write (DEC-339)."""

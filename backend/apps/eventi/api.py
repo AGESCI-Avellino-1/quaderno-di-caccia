@@ -129,6 +129,8 @@ class EventoOut(Schema):
     localita: LocalitaOut | None = None
     uniforme: bool | None = None
     informazioni: str = ""
+    # Whether the meeting has an agenda, read online from its own endpoint (DEC-365).
+    con_ordine_del_giorno: bool = False
     # The turns of the meeting (DEC-312): all for the capi, one's own for the others.
     turni: list[TurnoOut] = []
     # The groups a turn may be given to, for who manages the turns.
@@ -159,6 +161,8 @@ def _mie(user, evento: Evento) -> list[dict]:
 
 
 def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
+    from apps.verbali.servizi import ha_ordine_del_giorno
+
     unita = list(servizi.unita_coinvolte(evento))
     return {
         "id": evento.pk,
@@ -187,6 +191,7 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "localita": evento.localita,
         "uniforme": evento.con_uniforme(),
         "informazioni": evento.informazioni,
+        "con_ordine_del_giorno": ha_ordine_del_giorno(evento),
         "turni": _turni_out(user, evento, cache),
         "gruppi_turni": _gruppi_turni(user, evento, cache),
         "annullato": evento.annullato_il is not None,

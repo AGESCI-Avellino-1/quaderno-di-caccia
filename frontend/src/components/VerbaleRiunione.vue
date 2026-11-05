@@ -18,6 +18,7 @@ import { useErrore } from '@/composables/useErrore'
 // there is nothing here. The text is asked for only when opened, because a read of the
 // Co.Ca.'s minutes goes to the access log (DEC-329).
 const EditorTesto = defineAsyncComponent(() => import('@/components/EditorTesto.vue'))
+const editor = ref<{ inserisci: (testo: string) => void } | null>(null)
 const props = defineProps<{ evento: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const verbale = ref<Verbale | null>(null)
@@ -178,7 +179,23 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
         :evento="evento"
       />
       <form v-if="verbale.puo_scrivere" class="mb-3" @submit.prevent="salva">
-        <EditorTesto v-if="!verbale.da_modello" v-model="testo" etichetta="Testo del verbale" />
+        <EditorTesto
+          v-if="!verbale.da_modello"
+          ref="editor"
+          v-model="testo"
+          etichetta="Testo del verbale"
+        />
+        <p v-if="verbale.con_ordine_del_giorno" class="form-text mt-1 mb-0">
+          Dove c'è [Ordine del giorno], nel verbale definitivo trovi l'ordine del giorno della
+          riunione. Puoi toglierlo o
+          <button
+            type="button"
+            class="btn btn-link btn-sm p-0 align-baseline"
+            @click="editor?.inserisci('[Ordine del giorno]')"
+          >
+            inserirlo dove sei
+          </button>
+        </p>
         <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
           <button
             v-if="!verbale.da_modello"

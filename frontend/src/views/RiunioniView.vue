@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -132,14 +132,23 @@ const vuoto = () => ({
     nuova: null as { nome: string; indirizzo: string } | null,
   },
   uniforme: true,
+  ordine_del_giorno: '',
 })
 const modulo = ref<ReturnType<typeof vuoto> | null>(null)
+const EditorTesto = defineAsyncComponent(() => import('@/components/EditorTesto.vue'))
 
 // The Co.Ca. has no parents to convene.
 const unitaConGenitori = computed(() => unita.value.filter((u) => u.tipo !== 'COMUNITA_CAPI'))
 // The parents' meetings and the assembly: one at a time, no uniform.
 const unaAllaVolta = computed(() => ['genitori', 'assemblea'].includes(modulo.value?.perChi ?? ''))
 const unitaScelta = computed(() => unita.value.find((u) => u.id === modulo.value?.unita))
+// Co.Ca. and parents have an agenda (DEC-362): in a series, written on each meeting.
+const diCoca = computed(
+  () => modulo.value?.perChi === 'unita' && unitaScelta.value?.tipo === 'COMUNITA_CAPI',
+)
+const conOrdineDelGiorno = computed(
+  () => modulo.value?.perChi === 'genitori' || (diCoca.value && !modulo.value?.ripeti),
+)
 const collegata = computed(() => unita.value.find((u) => u.id === unitaScelta.value?.collegata_a))
 // Who of the unit is invited: a reparto has its councils, a branco or cerchio its
 // Consiglio degli Anziani.
@@ -192,6 +201,7 @@ async function salva() {
       localita_id: m.localita.nuova ? null : m.localita.id,
       nuova_localita: m.localita.nuova,
       uniforme: !genitori && m.uniforme,
+      ordine_del_giorno: conOrdineDelGiorno.value ? m.ordine_del_giorno : '',
     }),
   )
   if (!fatte) return
@@ -475,6 +485,15 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             </div>
           </div>
         </fieldset>
+        <div v-if="conOrdineDelGiorno" class="col-12">
+          <EditorTesto
+            v-model="modulo.ordine_del_giorno"
+            etichetta="Ordine del giorno (facoltativo)"
+          />
+        </div>
+        <p v-else-if="diCoca" class="form-text col-12 mb-0">
+          L'ordine del giorno lo scrivi poi sulla singola riunione.
+        </p>
         <div class="col-12">
           <label class="form-label small" for="riu-titolo">Titolo (facoltativo)</label>
           <input

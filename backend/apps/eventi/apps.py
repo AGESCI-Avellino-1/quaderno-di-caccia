@@ -10,7 +10,7 @@ class EventiConfig(AppConfig):
 
         from . import models
 
-        auditlog.register(models.Evento)
+        auditlog.register(models.Evento, exclude_fields=["ordine_del_giorno"])
         auditlog.register(models.RiunioneRicorrente)
         auditlog.register(models.Localita)
         auditlog.register(models.Sestiglia)

@@ -193,6 +193,11 @@ class Evento(ModelloTracciato):
     # staff writes about it, as cleaned HTML.
     uniforme = models.BooleanField(null=True, blank=True)
     informazioni = models.TextField(blank=True)
+    # The agenda of a Co.Ca. or parents' meeting, as cleaned HTML (DEC-362): read through its
+    # own endpoint, out of the audit log and of the offline copy (DEC-365).
+    ordine_del_giorno = models.TextField(blank=True)
+    # In the audit log in its place: who changed it and when, never the text.
+    ordine_del_giorno_cambiato_il = models.DateTimeField(null=True, blank=True)
     annullato_il = models.DateTimeField(null=True, blank=True)
     motivo_annullamento = models.CharField(max_length=300, blank=True)
     # When the convocation went out, with its attachments (DEC-327).

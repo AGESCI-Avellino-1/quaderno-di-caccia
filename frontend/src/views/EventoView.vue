@@ -14,6 +14,7 @@ import {
 } from '@/api/qdc'
 import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import ConvocazioneRiunione from '@/components/ConvocazioneRiunione.vue'
+import OrdineDelGiorno from '@/components/OrdineDelGiorno.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
 import VerbaleRiunione from '@/components/VerbaleRiunione.vue'
@@ -295,6 +296,11 @@ const STATI: [StatoPresenza, string][] = [
       </div>
     </div>
 
+    <OrdineDelGiorno
+      v-if="riunione && evento.con_ordine_del_giorno"
+      :key="`ordine-${evento.id}`"
+      :evento="evento.id"
+    />
     <ConvocazioneRiunione
       v-if="riunione && convocata"
       :key="`convocazione-${evento.id}`"

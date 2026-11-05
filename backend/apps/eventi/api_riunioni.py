@@ -12,7 +12,7 @@ from ninja import Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
 
-from apps.impostazioni.html import pulisci
+from apps.impostazioni.html import in_testo, pulisci
 from apps.organizzazione.models import Squadriglia, Unita
 from apps.permessi import policy
 
@@ -134,6 +134,9 @@ class RiunioneIn(Schema):
     localita_id: int | None = None
     nuova_localita: LocalitaIn | None = None
     uniforme: bool = True
+    # Of a single meeting of the Co.Ca. or of the parents (DEC-362); in a series, written later
+    # on each meeting.
+    ordine_del_giorno: str = ""
 
 
 class SerieOut(Schema):
@@ -217,6 +220,14 @@ def _unita_e_squadriglia(dati: RiunioneIn) -> tuple[list[Unita], Squadriglia | N
     return unita, None
 
 
+def _con_ordine_del_giorno(evento: Evento, dati: RiunioneIn) -> Evento:
+    from apps.verbali.servizi import scrivi_ordine_del_giorno
+
+    if in_testo(dati.ordine_del_giorno).strip():
+        scrivi_ordine_del_giorno(evento, dati.ordine_del_giorno)
+    return evento
+
+
 @router.post("/riunioni", response={201: list[EventoOut]})
 def crea_riunioni(request, dati: RiunioneIn):
     if dati.cerchia in CERCHIE_CONVOCATE:
@@ -251,6 +262,7 @@ def crea_riunioni(request, dati: RiunioneIn):
                 if evento.fine <= evento.inizio:
                     raise ValidationError("L'ora di fine deve seguire quella di inizio.")
                 creati = [servizi.crea(evento, [] if squadriglia else unita, request.auth)]
+                _con_ordine_del_giorno(creati[0], dati)
             except ValidationError as errore:
                 raise _errore(errore) from errore
         else:
@@ -310,7 +322,7 @@ def _crea_riunione_convocata(request, dati: RiunioneIn):
         try:
             if evento.fine <= evento.inizio:
                 raise ValidationError("L'ora di fine deve seguire quella di inizio.")
-            creata = servizi.crea(evento, unita, request.auth)
+            creata = _con_ordine_del_giorno(servizi.crea(evento, unita, request.auth), dati)
         except ValidationError as errore:
             raise _errore(errore) from errore
     return Status(201, [_evento_out(request.auth, creata)])

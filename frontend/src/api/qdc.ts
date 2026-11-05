@@ -661,6 +661,8 @@ export interface Convocazione {
 export interface Verbale {
   tipo: string
   /** The assembly: data asked for, the text comes from the template (DEC-336). */
+  /** Offers the placeholder of the agenda in the editor (DEC-363). */
+  con_ordine_del_giorno?: boolean
   da_modello: boolean
   stato: 'BOZZA' | 'DEFINITIVO'
   /** Empty unless asked for: reading the Co.Ca.'s goes to the access log. */
@@ -1961,6 +1963,8 @@ export interface Evento {
   localita?: Localita | null
   uniforme?: boolean | null
   informazioni?: string
+  /** Whether it has an agenda, read online with `ordineDelGiorno` (DEC-365). */
+  con_ordine_del_giorno?: boolean
   /** The turns of the meeting (DEC-312): all for the capi, one's own for the others. */
   turni?: TurnoRiunione[]
   /** The groups a turn may be given to, for who manages the turns. */
@@ -2095,6 +2099,12 @@ export interface LocalitaIn {
 }
 
 /** A series of meetings or a single one (DEC-310): `giorno` for a single meeting. */
+/** The agenda of a meeting (DEC-362). */
+export interface OrdineDelGiorno {
+  testo: string
+  puo_scrivere: boolean
+}
+
 export interface RiunioneIn {
   titolo?: string
   cerchia: Cerchia
@@ -2111,6 +2121,7 @@ export interface RiunioneIn {
   localita_id: number | null
   nuova_localita: LocalitaIn | null
   uniforme: boolean
+  ordine_del_giorno?: string
 }
 
 export interface SerieRiunioni {
@@ -3159,6 +3170,13 @@ export const api = {
   revocaDeroga: (id: number) =>
     richiesta<Deroga>(`/api/v1/deroghe-squadriglia/${id}/revoca`, { metodo: 'POST' }),
   miaSquadriglia: () => richiesta<MiaSquadriglia[]>('/api/v1/mia-squadriglia'),
+  ordineDelGiorno: (evento: number) =>
+    richiesta<OrdineDelGiorno>(`/api/v1/eventi/${evento}/ordine-del-giorno`),
+  scriviOrdineDelGiorno: (evento: number, testo: string) =>
+    richiesta<OrdineDelGiorno>(`/api/v1/eventi/${evento}/ordine-del-giorno`, {
+      metodo: 'PUT',
+      corpo: { testo },
+    }),
   verbale: (evento: number, testo = false) =>
     richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale${testo ? '?testo=true' : ''}`),
   scriviVerbale: (evento: number, testo: string) =>

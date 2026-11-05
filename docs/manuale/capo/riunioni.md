@@ -25,7 +25,9 @@ in **Tutto il gruppo**.
 5. Scegli la **Località** tra quelle del gruppo, oppure **Nuova località…** e scrivine nome e
    indirizzo: entra nell'elenco del gruppo.
 6. Scegli **Con l'uniforme** o **Senza uniforme**. Il **Titolo** è facoltativo.
-7. Tocca **Crea**.
+7. Per una sola riunione della Comunità capi puoi scrivere subito l'**Ordine del giorno**. Se è una
+   riunione di ogni settimana, lo scrivi poi sulla singola riunione.
+8. Tocca **Crea**.
 
 :::{container} schermate
 ![Nuove riunioni sul telefono](../img/capo/riunioni-nuove-telefono.png){.telefono width="30%"}
@@ -86,6 +88,15 @@ lo staff, per ogni genitore, e non contano su quelle dei figli.
 :::
 
 L'[assemblea dei soci](../gruppo/assemblea) la convocano i capigruppo.
+
+## L'ordine del giorno
+
+Le riunioni della Comunità capi e dei genitori hanno un **Ordine del giorno**, nel suo riquadro nella
+pagina della riunione: lo scrive chi gestisce la riunione e lo legge chi la vede (per la Comunità capi
+solo i capi). Tocca **Scrivilo** o **Modifica**. Serve la rete: non resta salvato sul telefono.
+
+Nell'email di convocazione ai genitori c'è l'ordine del giorno scritto fino a quel momento. Se lo cambi
+dopo, non parte un'altra email: la versione aggiornata si legge nell'app.
 
 ## Il verbale
 

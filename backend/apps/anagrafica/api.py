@@ -610,7 +610,8 @@ def scegli_preferenze_email(request, dati: PreferenzeEmailIO):
 @router.get("/rubrica")
 def rubrica(request, persone: str):
     """A vCard file with the chosen people, for the capi and the CSQ: only numbers they
-    already see, name and numbers only. Not in the access log (DEC-302)."""
+    already see, with name, numbers and who the person is. Not in the access log (DEC-302,
+    DEC-361)."""
     user = request.auth
     if not policy.puo_usare_rubrica(user):
         raise HttpError(403, "Solo i capi e i capi squadriglia aggiungono numeri alla rubrica.")

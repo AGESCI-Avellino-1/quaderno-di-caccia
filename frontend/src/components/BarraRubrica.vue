@@ -31,7 +31,8 @@ function tuttiONessuno() {
     <div v-else class="card card-body">
       <p class="small mb-3">
         Spunta le persone e tocca <strong>Scarica i contatti</strong>: il telefono ti propone di
-        salvarli in rubrica. Nel file ci sono solo nome e numeri.
+        salvarli in rubrica. Nel file ci sono nome, numeri e, come azienda, il gruppo con il ruolo o
+        l'unità.
       </p>
       <div v-if="r.errore.value" class="alert theme-danger small" role="alert">
         {{ r.errore.value }}

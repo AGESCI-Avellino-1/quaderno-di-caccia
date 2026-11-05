@@ -22,8 +22,8 @@ nuovo, quello di prima non vale più.
 
 Per salvare i numeri nella rubrica del telefono, con la rete, tocca **Aggiungi alla rubrica
 del telefono**, spunta squadriglieri e genitori (o tocca **Tutti**) e poi **Scarica i
-contatti**: il telefono ti propone di salvarli. Nel file ci sono solo nome e numeri; quando
-li hai salvati, cancellalo dai download.
+contatti**: il telefono ti propone di salvarli. Nel file ci sono nome, numeri e, come azienda, il
+gruppo con l'unità o «Genitore»; quando li hai salvati, cancellalo dai download.
 
 Le riunioni della squadriglia le crei dalla pagina **Riunioni** (in **Attività**), una volta o
 ogni settimana, come spiegato per i capi in [Riunioni](../capo/riunioni). In fondo a **La mia

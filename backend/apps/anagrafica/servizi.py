@@ -8,9 +8,11 @@ from django.utils import timezone
 from .models import (
     CAMPI_BUONASTRADA,
     STATI_APERTI,
+    Appartenenza,
     ContatoreCodiceProvvisorio,
     CorrezioneAnagrafica,
     Persona,
+    RuoloAppartenenza,
     StatoCorrezione,
 )
 
@@ -246,10 +248,30 @@ def _testo_vcard(valore: str) -> str:
     return valore.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", " ")
 
 
+def _chi_e_in_rubrica(persona: Persona) -> str:
+    """Capo, then ragazzo with their unit, then parent, else socio (DEC-361)."""
+    appartenenze = Appartenenza.objects.attive().filter(persona=persona)
+    if appartenenze.filter(ruolo=RuoloAppartenenza.CAPO).exists():
+        return "Capo"
+    ragazzo = (
+        appartenenze.filter(ruolo=RuoloAppartenenza.RAGAZZO)
+        .select_related("unita")
+        .order_by("-data_inizio")
+        .first()
+    )
+    if ragazzo is not None:
+        unita = ragazzo.unita
+        return f"{unita.nome_tipo} {unita.nome.strip() or unita.codice}".strip()
+    return "Genitore" if persona.tutele.exists() else "Socio"
+
+
 def vcard(contatti: list[tuple[Persona, list[tuple[str, str, str]]]]) -> str:
-    """A vCard 3.0 file: name and numbers only (DEC-302). `contatti` pairs each person
-    with (number, kind, note) for each number: kind CELL or VOICE (a landline), the
-    note saying whose it is when it is a parent's."""
+    """A vCard 3.0 file: name, numbers and who the person is in the group (DEC-302, DEC-361).
+    `contatti` pairs each person with (number, kind, note) for each number: kind CELL or
+    VOICE (a landline), the note saying whose it is when it is a parent's."""
+    from apps.impostazioni.models import Impostazioni
+
+    gruppo = Impostazioni.carica().nome_del_gruppo()
     righe = []
     for persona, numeri in contatti:
         righe += [
@@ -258,6 +280,7 @@ def vcard(contatti: list[tuple[Persona, list[tuple[str, str, str]]]]) -> str:
             f"N:{_testo_vcard(persona.cognome)};{_testo_vcard(persona.nome)};;;",
             f"FN:{_testo_vcard(f'{persona.nome} {persona.cognome}')}",
         ]
+        righe.append(f"ORG:{_testo_vcard(f'{gruppo} - {_chi_e_in_rubrica(persona)}')}")
         righe += [f"TEL;TYPE={tipo}:{internazionale(numero)}" for numero, tipo, _ in numeri]
         note = [nota for _, _, nota in numeri if nota]
         if note:

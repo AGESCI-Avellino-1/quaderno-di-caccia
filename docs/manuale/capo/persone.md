@@ -29,7 +29,8 @@ Per avere i numeri dei ragazzi o dei genitori nella rubrica del telefono, con la
 3. Tocca **Scarica i contatti**: il telefono apre il file e ti propone di salvarli in
    rubrica.
 
-Nel file ci sono solo nome e numeri. Resta sul telefono, fuori dalla protezione con il PIN:
+Nel file ci sono nome, numeri e, come azienda, il gruppo con il ruolo o l'unità (per esempio
+«AGESCI Avellino 1 - Reparto Aquile»). Resta sul telefono, fuori dalla protezione con il PIN:
 quando hai salvato i contatti, cancellalo dai download.
 
 ## Correggere un dato di BuonaStrada

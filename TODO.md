@@ -69,7 +69,8 @@ CSV «Pantera» e «Volpe».
 
 1. Catalogo in `backend/data/cataloghi/` e modello degli animali, con permessi e test di ogni ruolo.
 2. `Squadriglia.animale` facoltativo, con `nome` che resta e prende il nome dell'animale: le letture non cambiano.
-3. Migrazione: si collegano i nomi uguali; gli altri restano e la pagina del reparto chiede di scegliere.
+3. Migrazione: si collegano i nomi uguali al singolare o al plurale; gli altri restano e la pagina del reparto chiede
+   di scegliere.
 4. Scelta dell'animale alla creazione al posto del testo, pagina dell'elenco, tabella dei colori.
 5. Componente con l'immagine e i campi nuovi nelle API, vicino al nome della squadriglia. Da provare offline.
 6. `dati_di_prova`, schermate e manuale.
@@ -79,12 +80,13 @@ Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati 
 
 **Da decidere.**
 
-- Se il nome si può ancora scrivere a mano e come si mostrano i nomi al plurale.
 - Se i genitori vedono elenco e immagine, se l'elenco serve offline e cosa si mostra oltre all'immagine.
 - Se i nautici si offrono a tutti: oggi l'unità non dice se è nautica.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
 unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
+Alla creazione si sceglie l'animale e non si scrive il nome: l'elenco ha anche il plurale e il nome della squadriglia è
+quello («Pantere»). Il catalogo va completato con i plurali, da far controllare al maintainer.
 
 ## Chiuse
 

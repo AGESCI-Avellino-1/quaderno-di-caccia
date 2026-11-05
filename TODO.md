@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 05/11/2026 (ultima versione: v1.14.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 05/11/2026 (ultima versione: v1.15.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -24,7 +24,7 @@ gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il
 
 ## Sviluppate, in attesa dell'ok
 
-#22 e #23 sono sviluppate, non ancora in una versione pubblicata. Provate in Chromium, senza rete anche le immagini:
+#22 e #23 sono nella v1.15.0, in attesa della prova del maintainer. Provate in Chromium, senza rete anche le immagini:
 restano da provare su iPhone e Android.
 
 ### #23 Scheda incarichi
@@ -54,8 +54,8 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 **Decisioni:** DEC-350…DEC-354. **Fatto**, con i test di ogni ruolo e con SVG costruiti per aggirare la pulizia.
 
 **Controllati dal maintainer** (05/11) i plurali e i colori di `backend/data/cataloghi/animali_squadriglia.json`, con una
-correzione: «Albatros». **Da confermare.** La libreria che ripulisce gli SVG, `py_svg_hush` 0.3.0 (MIT, involucro di
-`svg-hush` di Cloudflare, un solo autore): è una dipendenza nuova.
+correzione: «Albatros». Confermata (05/11) la libreria che ripulisce gli SVG, `py_svg_hush` 0.3.0 (MIT, involucro di
+`svg-hush` di Cloudflare, un solo autore).
 
 ## Chiuse
 

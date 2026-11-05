@@ -5,6 +5,30 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.15.0 — 5 novembre 2026
+
+### Novità
+
+**Animali di squadriglia** ([#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22)): un elenco unico per il gruppo, con 93 animali già pronti, generali e nautici: immagine, colori con i loro significati per il guidoncino e richiamo.
+
+- Una squadriglia nuova si crea scegliendo l'animale: il suo nome è il plurale («Sq. Pantere»), non si scrive più a mano.
+- L'immagine compare accanto al nome nell'unità, in «La mia squadriglia», negli eventi, nelle riunioni e nelle imprese, anche ai genitori. Senza rete restano quelle degli animali usati dalle squadriglie.
+- L'elenco lo leggono ragazzi e staff dei reparti e i capigruppo; lo modificano gli staff dei reparti e i capigruppo. Una modifica vale ovunque. Un animale scelto da una squadriglia, anche chiusa, si disattiva e non si cancella.
+- Per un animale nuovo si carica un'immagine SVG, PNG o JPEG. Un SVG viene ripulito e resta solo il disegno; se contiene collegamenti esterni viene rifiutato.
+
+**Scheda incarichi** ([#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23)): dall'organigramma, tutti i capi la leggono e i capigruppo definiscono nuovi incarichi per i capi, di gruppo o di unità, aggiuntivi o di servizio, educativi o no. Li assegnano solo i capigruppo e **non danno nessun permesso**: anche un servizio di unità non fa entrare il capo nello staff. Compaiono nell'organigramma, nel suo PDF e nel fascicolo del capo. Quelli già assegnati si disattivano e non si cancellano.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.15.0
+```
+
+Tre migrazioni del database, applicate da sole all'avvio: caricano i 93 animali e collegano le squadriglie il cui nome coincide con uno di loro, al singolare o al plurale, dando loro il plurale. Dopo l'aggiornamento:
+
+- nella pagina di ogni reparto, **Da controllare** segnala le squadriglie con un nome diverso: lo staff o un capogruppo sceglie l'animale sotto il nome, e la squadriglia ne prende il plurale;
+- c'è una dipendenza nuova, `py_svg_hush`, installata da sola con l'immagine del server.
+
 ## 1.14.0 — 4 novembre 2026
 
 ### Novità

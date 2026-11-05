@@ -81,7 +81,6 @@ Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati 
 
 **Da decidere.**
 
-- Cosa si mostra oltre all'immagine.
 - Se i nautici si offrono a tutti: oggi l'unità non dice se è nautica.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
@@ -90,6 +89,8 @@ Alla creazione si sceglie l'animale e non si scrive il nome: l'elenco ha anche i
 quello («Pantere»). Il catalogo va completato con i plurali, da far controllare al maintainer.
 L'elenco lo vedono ragazzi e staff dei reparti e i capigruppo; l'immagine, chiunque veda già il nome della squadriglia.
 Offline restano solo le immagini degli animali usati dalle squadriglie dei reparti; l'elenco completo è solo online.
+Accanto al nome solo l'immagine; nell'elenco nome, plurale, generale o nautico, colori (anche disegnati) con i significati e
+richiamo; la pagina della squadriglia mostra anche i suoi colori. Nome inglese e note sulle fonti non si mostrano.
 
 ## Chiuse
 

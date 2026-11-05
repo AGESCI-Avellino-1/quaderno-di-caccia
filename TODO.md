@@ -48,7 +48,7 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 
 **Da decidere.**
 
-- Come si combina un incarico di servizio nuovo con i servizi esistenti (`Incarico._controlla_servizio`).
+- Cosa succede a un incarico di servizio nuovo definito per un'unità.
 - Se i capigruppo possono cambiare anche «educativo» degli incarichi esistenti, oggi fissato da DEC-318.
 - Se «educativo» serve anche ad altro, oltre al PDF.
 
@@ -56,6 +56,8 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 nessun permesso, come quelli di squadriglia (DEC-321). Chi crea l'incarico sceglie se è di gruppo o
 di unità, e se è di servizio o
 aggiuntivo. Li ricevono solo i capi.
+Un incarico di servizio funziona come un servizio di supporto (DEC-293): esclude l'unità e gli altri supporti
+e si chiude da solo quando il capo viene assegnato a un'unità.
 
 ### #22 Animali di squadriglia
 

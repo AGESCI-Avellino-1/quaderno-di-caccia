@@ -168,6 +168,8 @@ export interface VoceAttesa extends DatiAttesa {
 }
 
 export interface ListaAttesa {
+  /** «30 su 45», only for the units with a maximum (DEC-358). */
+  posti?: Record<string, string>
   anno: string
   anno_prossimo: string
   voci: VoceAttesa[]
@@ -512,6 +514,54 @@ export interface Incarico {
   /** A role of a type switched off: no longer offered, it can still be closed (DEC-347). */
   chiudibile?: boolean
 }
+
+/** The admission criteria of the year (DEC-355...DEC-359). */
+export interface VersioneCriteri {
+  id: number
+  anno: number
+  anno_nome: string
+  valida_dal: string
+  valida_fino_al: string
+  in_vigore: boolean
+  verbale_numero: string
+  verbale_data: string
+}
+
+export interface CriteriPubblici {
+  /** The last year's, only an outline while the new one is missing. */
+  traccia: boolean
+  anno_nome: string
+  anno_corrente_nome: string
+  versioni: VersioneCriteri[]
+}
+
+export interface MassimoUnita {
+  unita_id: number
+  massimo: number
+}
+
+export interface GestioneCriteri {
+  versioni: VersioneCriteri[]
+  anni: { valore: number; nome: string }[]
+  unita: { id: number; nome: string }[]
+  /** Where a new version starts from: the latest one's, or the template. */
+  testo: string
+  massimi: MassimoUnita[]
+  verbale_numero: string
+  verbale_data: string | null
+}
+
+export interface NuovaVersioneCriteri {
+  anno: number
+  valida_dal: string
+  verbale_numero: string
+  verbale_data: string
+  testo: string
+  massimi: MassimoUnita[]
+}
+
+export const criteriPubbliciPdf = (id: number) => `/api/v1/criteri-ammissione/pubblici/${id}.pdf`
+export const criteriPdf = (id: number) => `/api/v1/criteri-ammissione/${id}.pdf`
 
 /** A patrol animal (DEC-350...DEC-354). */
 export interface ColoreAnimale {
@@ -1063,6 +1113,11 @@ export interface RichiestaIscrizione {
   persona_id: number | null
   /** What the family still has to complete, in words. */
   mancanti: string[]
+  /** For who decides: days left, negative past the term (DEC-359). */
+  giorni_per_decidere?: number | null
+  /** The unit's ragazzi against its maximum, "" without one (DEC-358). */
+  posti?: string
+  al_completo?: boolean
 }
 
 export interface Completamento {
@@ -3052,6 +3107,12 @@ export const api = {
     dati: { animale_id?: number; sesso: string; attiva: boolean },
   ) => richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
+  criteriPubblici: () => richiesta<CriteriPubblici>('/api/v1/criteri-ammissione/pubblici'),
+  gestioneCriteri: () => richiesta<GestioneCriteri>('/api/v1/criteri-ammissione'),
+  nuovaVersioneCriteri: (dati: NuovaVersioneCriteri) =>
+    richiesta<VersioneCriteri>('/api/v1/criteri-ammissione', { metodo: 'POST', corpo: dati }),
+  eliminaVersioneCriteri: (id: number) =>
+    richiesta<void>(`/api/v1/criteri-ammissione/${id}`, { metodo: 'DELETE' }),
   animali: () => richiesta<ElencoAnimali>('/api/v1/animali'),
   animaliInUso: () => richiesta<string[]>('/api/v1/animali/in-uso'),
   creaAnimale: (dati: AnimaleIn) =>

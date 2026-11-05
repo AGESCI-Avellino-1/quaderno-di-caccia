@@ -78,6 +78,31 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div class="fg-2 small">
           Richiesta da {{ r.richiesta_da ?? '—' }} il {{ data(r.creata_il) }}
         </div>
+        <!-- The term and the maximum, for who decides: they warn, they stop nothing. -->
+        <div v-if="r.giorni_per_decidere != null" class="small" data-termine>
+          <span v-if="r.giorni_per_decidere < 0" class="badge theme-danger">
+            Termine per rispondere superato da {{ -r.giorni_per_decidere }}
+            {{ r.giorni_per_decidere === -1 ? 'giorno' : 'giorni' }}
+          </span>
+          <span v-else-if="r.giorni_per_decidere <= 10" class="badge theme-warning">
+            {{
+              r.giorni_per_decidere === 1
+                ? 'Resta 1 giorno'
+                : `Restano ${r.giorni_per_decidere} giorni`
+            }}
+            per rispondere
+          </span>
+          <span v-else class="fg-2">
+            Restano {{ r.giorni_per_decidere }} giorni per rispondere
+          </span>
+        </div>
+        <div v-if="r.al_completo" class="alert theme-warning small py-3 mt-1 mb-0" role="status">
+          <div>
+            L'unità ha già {{ r.posti }} ragazzi, il massimo dei criteri di ammissione. Puoi
+            accogliere la richiesta lo stesso, se la Comunità capi lo ha deciso.
+          </div>
+        </div>
+        <div v-else-if="r.posti" class="fg-2 small">Ragazzi nell'unità: {{ r.posti }}</div>
         <template v-if="r.stato !== 'IN_ATTESA'">
           <div class="small">
             <span class="badge" :class="r.stato === 'SOSPESA' ? 'theme-danger' : 'theme-info'">{{

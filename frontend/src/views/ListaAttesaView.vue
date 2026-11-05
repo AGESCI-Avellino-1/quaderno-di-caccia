@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CriteriAmmissione from '@/components/CriteriAmmissione.vue'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -70,6 +71,7 @@ async function chiediLink() {
         si sceglie l'unità: dipende dall'età. I capi chiamano a inizio anno, non secondo l'ordine di
         arrivo.
       </p>
+      <CriteriAmmissione class="mb-5" />
       <ModuloAttesa v-model="dati" prefisso="lista" />
       <div class="alert theme-info small" role="note">
         <div>

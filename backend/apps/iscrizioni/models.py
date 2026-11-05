@@ -164,6 +164,8 @@ class RichiestaIscrizione(ModelloTracciato):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     motivo_rifiuto = models.TextField(blank=True)
+    # The reminder of the term for deciding went out (DEC-359).
+    termine_segnalato_il = models.DateTimeField(null=True, blank=True)
     # A minor's parents, as BuonaStrada asks: one with exclusive custody (True) or both
     # (False); None until the family says.
     genitore_unico = models.BooleanField(null=True, blank=True)

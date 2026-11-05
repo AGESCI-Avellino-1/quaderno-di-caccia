@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+import CriteriAmmissione from '@/components/CriteriAmmissione.vue'
 import { computed, defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 
 import {
@@ -331,6 +333,19 @@ async function leggiTesto(id: number) {
       </template>
     </section>
 
+    <section class="card card-body mb-5">
+      <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+        <h2 class="h5 mb-0">Criteri di ammissione</h2>
+        <RouterLink
+          v-if="pagina.peg?.puo_gestire"
+          :to="{ name: 'criteri-ammissione' }"
+          class="btn btn-sm btn-outline theme-primary ms-auto"
+        >
+          Compila o aggiorna
+        </RouterLink>
+      </div>
+      <CriteriAmmissione />
+    </section>
     <section class="mb-5">
       <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
         <h2 class="h5 mb-0">Documenti</h2>

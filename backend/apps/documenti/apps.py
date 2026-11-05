@@ -11,4 +11,6 @@ class DocumentiConfig(AppConfig):
         from . import models
 
         auditlog.register(models.Documento)
+        auditlog.register(models.VersioneCriteri)
+        auditlog.register(models.MassimoUnita)
         auditlog.register(models.VersionePeg, exclude_fields=["testo"])

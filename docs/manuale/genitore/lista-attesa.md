@@ -18,6 +18,9 @@ nelle unità, non per ordine di arrivo.
 Se hai già 18 anni e vuoi entrare tu, scrivi i tuoi dati: con la tua data di nascita il
 modulo non chiede un genitore, ma i tuoi contatti.
 
+Nella pagina, se il gruppo li ha pubblicati, puoi scaricare i **criteri di ammissione**: i requisiti per entrare e come
+il gruppo decide quando le richieste superano i posti.
+
 :::{container} schermate
 ![La lista d'attesa sul telefono](../img/genitore/lista-attesa-telefono.png){.telefono width="30%"}
 ![La lista d'attesa sul computer](../img/genitore/lista-attesa-computer.png){.computer width="65%"}

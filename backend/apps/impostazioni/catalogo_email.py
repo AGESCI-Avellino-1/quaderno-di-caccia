@@ -175,6 +175,16 @@ _TIPI = [
         (NOME, UNITA, MOTIVO),
     ),
     TipoEmail(
+        "iscrizione_da_decidere",
+        "Richiesta di iscrizione da decidere",
+        "A chi decide le iscrizioni dell'unità, dieci giorni prima del termine per rispondere.",
+        "[Nome sito]: richiesta di iscrizione da decidere",
+        "<p>Ciao,</p><p>c'è una richiesta di iscrizione a [Unità] ancora in attesa: "
+        "lo Statuto chiede di rispondere, motivando un eventuale rifiuto, entro il "
+        "[Scadenza].<br>[Link]</p>",
+        (UNITA, _scadenza("il termine per rispondere"), _link("la pagina delle iscrizioni")),
+    ),
+    TipoEmail(
         "iscrizione_da_completare",
         "Iscrizione da completare",
         "Alla famiglia, una settimana prima del termine per completare l'iscrizione.",

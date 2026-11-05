@@ -2,7 +2,7 @@
 
 import uuid
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -255,6 +255,14 @@ def approva(richiesta: RichiestaIscrizione, utente, scadenza: date) -> Persona:
 
 
 @transaction.atomic
+def giorni_per_decidere(richiesta: RichiestaIscrizione, oggi: date | None = None) -> int:
+    """Days left to answer, counted from the request (DEC-359); negative past the term."""
+    from apps.documenti.criteri import GIORNI_PER_DECIDERE
+
+    giorno = timezone.localtime(richiesta.creato_il).date()
+    return (giorno + timedelta(days=GIORNI_PER_DECIDERE) - (oggi or timezone.localdate())).days
+
+
 def rifiuta(richiesta: RichiestaIscrizione, utente, motivo: str) -> None:
     if richiesta.stato != StatoIscrizione.IN_ATTESA:
         raise ValidationError("Questa richiesta è già stata decisa.")

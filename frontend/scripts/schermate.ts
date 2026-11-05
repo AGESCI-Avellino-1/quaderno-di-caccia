@@ -832,6 +832,16 @@ const SCENE: Scena[] = [
   },
   { nome: 'gruppo/incarichi', chi: 'capogruppo', percorso: '/gruppo', intera: true },
   {
+    nome: 'gruppo/criteri-ammissione',
+    chi: 'capogruppo',
+    percorso: '/criteri-ammissione',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Nuova versione' }).click()
+      await pagina.getByLabel('Valida dal').waitFor()
+    },
+    intera: true,
+  },
+  {
     nome: 'gruppo/scheda-incarichi',
     chi: 'capogruppo',
     percorso: '/gruppo/scheda-incarichi',

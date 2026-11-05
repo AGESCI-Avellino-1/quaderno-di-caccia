@@ -1739,6 +1739,12 @@ def puo_gestire_peg(user) -> bool:
     return e_capogruppo(user) and not e_capo_in_attesa(user)
 
 
+def puo_gestire_criteri(user) -> bool:
+    """The admission criteria of the year: the capigruppo write them (DEC-355). Reading them
+    asks nothing: they are public (DEC-357)."""
+    return e_capogruppo(user) and not e_capo_in_attesa(user)
+
+
 def puo_vedere_storico_peg(user) -> bool:
     """Members and parents; who is outside sees only the version in force, on the public page
     (DEC-343, DEC-344)."""

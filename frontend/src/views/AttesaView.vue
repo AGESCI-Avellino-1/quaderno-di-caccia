@@ -17,6 +17,12 @@ const unitaScelta = reactive<Record<number, number | ''>>({})
 const nuovo = ref<DatiAttesa | null>(null)
 const daTogliere = ref<number | null>(null)
 
+// «Reparto (30 su 45)»: the maximum of the criteria of the year, where there is one (DEC-358).
+const conPosti = (u: { id: number; nome: string }) => {
+  const posti = lista.value?.posti?.[String(u.id)]
+  return posti ? `${u.nome} (${posti})` : u.nome
+}
+
 async function carica() {
   lista.value = (await esegui(() => api.listaAttesa())) ?? null
   for (const v of lista.value?.voci ?? []) {
@@ -152,11 +158,11 @@ async function inserisci() {
         <div class="small mt-1">
           Consigliata:
           <template v-if="v.consigliate.length">{{
-            v.consigliate.map((u) => u.nome).join(', ')
+            v.consigliate.map(conPosti).join(', ')
           }}</template>
           <span v-else class="fg-2">nessuna unità quest'anno</span>
           <template v-if="v.consigliate_prossimo.length">
-            · l'anno prossimo: {{ v.consigliate_prossimo.map((u) => u.nome).join(', ') }}</template
+            · l'anno prossimo: {{ v.consigliate_prossimo.map(conPosti).join(', ') }}</template
           >
         </div>
         <div class="small fg-2">

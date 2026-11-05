@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | WIP    |
+| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -25,31 +25,19 @@ gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il
 
 ### #25 Criteri di ammissione dell'anno
 
-**Fattibile.** Il modello è il Progetto Educativo di Gruppo (DEC-343, DEC-344), che ha già versioni, Download, pagina
-pubblica e scaricamento senza account con un limite alle richieste.
+**Decisioni:** DEC-355…DEC-359. **Fatto**, con i test di ogni ruolo; pagine e PDF guardati in Chromium. Non è ancora in una
+versione pubblicata.
 
-**Situazione.** Il rifiuto di una richiesta di iscrizione chiede già un motivo e lo manda via email (`iscrizioni.servizi.rifiuta`),
-ma senza scadenza né legame coi criteri. La lista d'attesa è pubblica (`ListaAttesaView.vue`). Le unità hanno età minima e
-massima (DEC-260), non un numero massimo di soci.
+**Scelte fatte in sviluppo.** Una versione con una data futura si vede solo da quel giorno. Il promemoria per rifare i criteri
+arriva ai capigruppo il primo di ogni mese, finché mancano. I numeri massimi non sono nel testo: stanno in una tabella in fondo
+al PDF. Nessun avviso alle famiglie quando esce una versione nuova: DEC-357 non lo chiede.
 
-**Norme.** Il Codice del Terzo settore chiede requisiti di ammissione con criteri non discriminatori (art. 21), letto su fonti
-secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo prevede lo Statuto (maintainer, 05/11).
+**Da controllare dal maintainer.** Il testo del modello (`documenti/criteri.py`) con lo Statuto e il Regolamento, compresa l'età
+massima «20/21 anni» presa dall'esempio. La lista d'attesa dice «non secondo l'ordine di arrivo», il modello considera la data
+della richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
-**Cose da fare.**
-
-1. Documento per anno associativo con le sue versioni, data di inizio, riferimento al verbale della Co.Ca., testo pulito sul
-   server come per le email (`html.pulisci`), PDF sulla carta intestata e permessi in `policy.py`.
-2. Voce in Download e collegamento nella pagina pubblica della lista d'attesa, con scaricamento senza account e l'avviso
-   quando il documento è dell'anno precedente.
-3. Numero massimo per unità, con l'avviso all'approvazione e nella lista d'attesa dei capi.
-4. Giorni rimasti nelle richieste in attesa e promemoria via email (`promemoria_iscrizioni`). Promemoria annuale per rifare i
-   criteri, con `promemoria_fine_anno` o accanto a esso. Tipi di email nuovi in `catalogo_email`.
-5. Test di ogni ruolo, manuale e dati di prova.
-
-**Da verificare in sviluppo.** Il testo del modello con lo Statuto e il Regolamento: l'esempio è in
-`docs/analisi/esempi/criteri-ammissione-esempio.pdf`. Le richieste nate prima di questa versione hanno già la data da cui contare.
-
-**Decisioni:** DEC-355…DEC-359. In sviluppo.
+**Altro problema visto, non toccato.** Le altre pagine pubbliche (Progetto Educativo, calendario, codice fiscale) consumano lo
+stesso contatore per indirizzo della lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rifiutare.
 
 ## Chiuse
 

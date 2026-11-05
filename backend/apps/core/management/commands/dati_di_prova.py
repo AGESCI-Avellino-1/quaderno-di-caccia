@@ -23,6 +23,8 @@ from django.db import transaction
 from apps.accounts.models import Invito, User
 from apps.anagrafica.models import AppartenenzaSquadriglia, Persona, RelazioneTutela
 from apps.core.anno import AnnoAssociativo
+from apps.documenti.criteri import MODELLO
+from apps.documenti.models import MassimoUnita, VersioneCriteri
 from apps.importazione.buonastrada import codice_cognome, codice_nome, leggi_ricerca_soci
 from apps.importazione.servizi import applica
 from apps.organizzazione.animali import carica_catalogo
@@ -229,6 +231,15 @@ class Command(BaseCommand):
             gruppo=gruppo,
         )
 
+        # The admission criteria of the year (DEC-355), from its first day.
+        criteri_anno = VersioneCriteri.objects.create(
+            anno=anno.anno_fine,
+            valida_dal=inizio,
+            verbale_numero="1",
+            verbale_data=inizio,
+            testo=MODELLO,
+        )
+        MassimoUnita.objects.create(versione=criteri_anno, unita=unita["reparto"], massimo=30)
         # A flush also takes the catalog the migration loaded (DEC-350).
         carica_catalogo()
 

@@ -12,6 +12,7 @@ from django.utils import timezone
 from apps.anagrafica.preferenze import accetta
 from apps.archivio import servizi
 from apps.core.anno import AnnoAssociativo
+from apps.documenti import criteri
 from apps.impostazioni.email import invia
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico
@@ -30,6 +31,14 @@ class Command(BaseCommand):
                 "aperto: chiudilo quando rendiconto e verifiche sono fatti."
             )
         if oggi.day == 1:
+            # Every associative year has its criteria (DEC-355): from its first day, until they
+            # are there.
+            if criteri.in_vigore(oggi) is None:
+                righe.append(
+                    "i criteri di ammissione dell'anno associativo "
+                    f"{AnnoAssociativo.da_data(oggi).etichetta} non sono ancora nell'app: "
+                    "compilali dopo la delibera della Comunità capi."
+                )
             numero = servizi.da_archiviare(oggi).count()
             if numero:
                 righe.append(

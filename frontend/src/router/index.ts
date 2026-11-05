@@ -118,6 +118,13 @@ const router = createRouter({
       component: () => import('@/views/GruppoView.vue'),
     },
     {
+      // Capigruppo: the API decides (DEC-355).
+      path: '/criteri-ammissione',
+      name: 'criteri-ammissione',
+      component: () => import('@/views/CriteriAmmissioneView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Not /animali: that is the folder of the images, which nginx would answer for.
       // Ragazzi and staff of the reparti, capigruppo: the API decides (DEC-350).
       path: '/animali-squadriglia',

@@ -92,6 +92,12 @@ Con l'interruttore **Anche quelle accolte, da completare** vedi a che punto sono
 richiesta c'è cosa manca. Una settimana prima della scadenza la famiglia riceve un
 promemoria; se la scadenza passa senza che abbia completato, l'iscrizione si sospende.
 
+Lo Statuto chiede di rispondere, e di motivare un rifiuto, entro sessanta giorni dalla richiesta. Sotto ogni
+richiesta in attesa trovi i giorni che restano; dieci giorni prima del termine chi decide riceve un'email. Se
+l'unità ha un numero massimo nei [criteri di ammissione](../gruppo/criteri-ammissione.md), vedi quanti ragazzi ha;
+se è già al massimo compare un avviso, ma puoi accogliere la richiesta lo stesso, se la Comunità capi lo ha deciso.
+Anche nella lista d'attesa i numeri compaiono accanto alle unità consigliate.
+
 ## Verificare i moduli firmati
 
 Quando la famiglia ha caricato i moduli firmati, li trovi nella richiesta, in **Moduli

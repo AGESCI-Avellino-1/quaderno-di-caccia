@@ -14,6 +14,7 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 from ninja.throttling import AnonRateThrottle, AuthRateThrottle
 
+from apps.documenti import criteri
 from apps.organizzazione.models import Unita
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
@@ -287,6 +288,11 @@ class RichiestaOut(Schema):
     persona_id: int | None
     # What the family still has to complete, in words.
     mancanti: list[str]
+    # For who decides a waiting request: days left, negative past the term (DEC-359); the
+    # unit's ragazzi against its maximum, "" without one (DEC-358).
+    giorni_per_decidere: int | None = None
+    posti: str = ""
+    al_completo: bool = False
 
 
 class Decisione(Schema):
@@ -294,8 +300,18 @@ class Decisione(Schema):
     motivo: str = ""
 
 
-def _richiesta_out(r: RichiestaIscrizione) -> dict:
+def _richiesta_out(r: RichiestaIscrizione, per_chi_decide: bool = False) -> dict:
+    decidere = {}
+    if per_chi_decide and r.stato == StatoIscrizione.IN_ATTESA:
+        massimo = criteri.massimo_di(r.unita)
+        soci = criteri.soci_giovani(r.unita)
+        decidere = {
+            "giorni_per_decidere": servizi.giorni_per_decidere(r),
+            "posti": "" if massimo is None else f"{soci} su {massimo}",
+            "al_completo": massimo is not None and soci >= massimo,
+        }
     return {
+        **decidere,
         "id": r.pk,
         "unita": str(r.unita),
         "unita_id": r.unita_id,
@@ -334,7 +350,7 @@ def richieste_da_decidere(request, tutte: bool = False):
     )
     if not tutte:
         richieste = richieste.filter(stato=StatoIscrizione.IN_ATTESA)
-    return [_richiesta_out(r) for r in richieste[:200]]
+    return [_richiesta_out(r, per_chi_decide=True) for r in richieste[:200]]
 
 
 def _richiesta_decidibile(request, richiesta_id: int) -> RichiestaIscrizione:

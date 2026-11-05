@@ -38,6 +38,7 @@ fine-anno
 impostazioni
 assemblea
 peg
+criteri-ammissione
 ```
 
 ```{toctree}

@@ -17,9 +17,10 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.anagrafica.preferenze import accetta
+from apps.documenti.criteri import PREAVVISO_DECISIONE
 from apps.impostazioni.email import invia
 from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
-from apps.iscrizioni.servizi import mancanti
+from apps.iscrizioni.servizi import giorni_per_decidere, mancanti
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 
@@ -70,6 +71,33 @@ class Command(BaseCommand):
             )
             richiesta.segnalata_il = timezone.now()
             richiesta.save(update_fields=["segnalata_il", "aggiornato_il"])
+
+        # The term for answering, once per request (DEC-359).
+        da_decidere = RichiestaIscrizione.objects.filter(
+            stato=StatoIscrizione.IN_ATTESA, termine_segnalato_il__isnull=True
+        ).select_related("unita")
+        for richiesta in da_decidere:
+            giorni = giorni_per_decidere(richiesta, oggi)
+            if giorni > PREAVVISO_DECISIONE:
+                continue
+            scadenza = oggi + timedelta(days=giorni)
+            invia(
+                "iscrizione_da_decidere",
+                {
+                    "Unità": str(richiesta.unita),
+                    "Scadenza": scadenza.strftime("%d/%m/%Y"),
+                    "Link": f"{link}/iscrizioni",
+                },
+                _approvatori(richiesta.unita),
+            )
+            notifica(
+                "riepiloghi",
+                _persone_approvatori(richiesta.unita),
+                "Richiesta di iscrizione da decidere",
+                "/iscrizioni",
+            )
+            richiesta.termine_segnalato_il = timezone.now()
+            richiesta.save(update_fields=["termine_segnalato_il", "aggiornato_il"])
 
         da_completare = RichiestaIscrizione.objects.filter(
             stato=StatoIscrizione.APPROVATA, scadenza_completamento__isnull=False

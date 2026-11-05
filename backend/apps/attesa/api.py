@@ -11,6 +11,7 @@ from ninja.errors import HttpError
 from ninja.throttling import AnonRateThrottle, AuthRateThrottle
 
 from apps.core.anno import AnnoAssociativo
+from apps.documenti import criteri
 from apps.organizzazione.models import Unita
 from apps.permessi import policy
 
@@ -169,6 +170,7 @@ class VoceOut(DatiAttesaIn):
 class ListaOut(Schema):
     anno: str
     anno_prossimo: str
+    posti: dict[str, str] = {}
     voci: list[VoceOut]
     # The units the user may act for (mark contacted, enrol), with their ages.
     unita: list[UnitaBreve]
@@ -225,6 +227,10 @@ def lista(request):
             if policy.puo_gestire_lista_attesa(utente, u)
         ],
         "puo_inserire": policy.puo_gestire_lista_attesa(utente),
+        # «30 su 45», next to the units advised; only those with a maximum (DEC-358).
+        "posti": {
+            str(u.pk): testo for u in servizi.unita_della_lista() if (testo := criteri.posti(u))
+        },
     }
 
 

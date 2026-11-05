@@ -42,23 +42,12 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
    non si cancella, perché lo storico deve restare leggibile.
 2. `Incarico` collegato al nuovo modello senza cambiare i ruoli esistenti; `ruolo` e `get_ruolo_display` restano
    l'unico punto di lettura, così le altre letture (43 tra fascicolo, percorso, email) non cambiano.
-3. Controlli di `Incarico.clean`, `policy.puo_nominare` e `puo_definire_incarichi`, con i test di ogni ruolo.
+3. Controlli di `Incarico.clean` e `_controlla_servizio`, chiusura automatica in `crea_incarico`, `capi_senza_servizio`
+   e il «senza servizio» del PDF; `policy.puo_nominare` e `puo_definire_incarichi`, con i test di ogni ruolo.
 4. Pagina dell'elenco per i capigruppo, scelta nell'assegnazione, organigramma e relativo PDF.
 5. Fascicolo del capo, esportazione e trasferimento: portano il nome dell'incarico. Manuale e dati di prova.
 
-**Da decidere.**
-
-- Se «educativo» serve anche ad altro, oltre al PDF.
-
-**Deciso (maintainer, 05/11).** «Incarico» e «ruolo» sono la stessa cosa: un solo elenco. Gli incarichi nuovi non danno
-nessun permesso, come quelli di squadriglia (DEC-321). Chi crea l'incarico sceglie se è di gruppo o
-di unità, e se è di servizio o
-aggiuntivo. Li ricevono solo i capi.
-Un incarico di servizio di gruppo funziona come un servizio di supporto (DEC-293): esclude l'unità e gli altri
-supporti e si chiude da solo quando il capo viene assegnato a un'unità. Uno di unità conta come lo staff per i
-servizi: esclude i supporti e li chiude, ma senza i permessi dello staff.
-Li definiscono e li assegnano solo i capigruppo. «Educativo» si sceglie solo per gli incarichi nuovi: gli esistenti
-restano come da DEC-318, in sola lettura nella scheda.
+**Decisioni:** DEC-347…DEC-349, tutte prese.
 
 ### #22 Animali di squadriglia
 

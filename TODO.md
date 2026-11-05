@@ -79,13 +79,12 @@ Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati 
 
 **Da decidere.**
 
-- Se anche i capigruppo lo modificano: DEC-112 fa gestire loro le squadriglie, la issue dice solo lo staff.
 - Se il nome si può ancora scrivere a mano e come si mostrano i nomi al plurale.
 - Se i genitori vedono elenco e immagine, se l'elenco serve offline e cosa si mostra oltre all'immagine.
 - Se i nautici si offrono a tutti: oggi l'unità non dice se è nautica.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
-unico per il gruppo, con i 93 animali già pronti.
+unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
 
 ## Chiuse
 

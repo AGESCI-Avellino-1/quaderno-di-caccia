@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | VAL    |
+| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -22,8 +22,6 @@ gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il
 `package.json` e `package-lock.json`, l'immagine del backend.
 
 ## Valutazioni
-
-Nulla è ancora stato sviluppato.
 
 ### #25 Criteri di ammissione dell'anno
 
@@ -51,7 +49,7 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 **Da verificare in sviluppo.** Il testo del modello con lo Statuto e il Regolamento: l'esempio è in
 `docs/analisi/esempi/criteri-ammissione-esempio.pdf`. Le richieste nate prima di questa versione hanno già la data da cui contare.
 
-**Decisioni:** DEC-355…DEC-359, tutte prese. Si parte quando lo dice il maintainer.
+**Decisioni:** DEC-355…DEC-359. In sviluppo.
 
 ## Chiuse
 

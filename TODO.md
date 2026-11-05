@@ -80,13 +80,14 @@ Content-Security-Policy. La proposta è accettare solo PNG e JPEG, ricodificati 
 
 **Da decidere.**
 
-- Se i genitori vedono elenco e immagine, se l'elenco serve offline e cosa si mostra oltre all'immagine.
+- Se l'elenco e le immagini servono offline e cosa si mostra oltre all'immagine.
 - Se i nautici si offrono a tutti: oggi l'unità non dice se è nautica.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
 unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
 Alla creazione si sceglie l'animale e non si scrive il nome: l'elenco ha anche il plurale e il nome della squadriglia è
 quello («Pantere»). Il catalogo va completato con i plurali, da far controllare al maintainer.
+L'elenco lo vedono ragazzi e staff dei reparti e i capigruppo; l'immagine, chiunque veda già il nome della squadriglia.
 
 ## Chiuse
 

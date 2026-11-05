@@ -5,6 +5,27 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.18.0 — 5 novembre 2026
+
+### Novità
+
+**Nome e numero civico delle località** ([#29](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/29)):
+
+- Oltre al **Nome** che la identifica nell'elenco (per esempio «Sede»), una località può avere un **Nome completo** (per esempio quello della parrocchia che la ospita). Se c'è, è quello che leggono gli invitati nella pagina della riunione, nelle email e nel calendario, e la convocazione dell'assemblea lo propone nel campo «presso».
+- Il **Numero civico** ha un campo suo. Scegliendo una proposta il numero scritto resta, a meno che la proposta non ne abbia uno suo: spesso il servizio di ricerca ha solo la via. Il numero compare dopo la via, anche nel link **mappa**.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.18.0
+```
+
+Una migrazione del database, applicata da sola all'avvio. Dopo l'aggiornamento:
+
+- le località già salvate restano come sono: per aggiungere nome completo e civico, aprile da **Impostazioni**. Salvando, le riunioni future mostrano il nuovo nome; quelle passate no.
+
+Provata con i test e in Chromium, con Photon vero, creando una località nuova con il suo nome e il civico: non ancora la modifica di una località già salvata né le email su un server vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.17.0 — 5 novembre 2026
 
 ### Novità

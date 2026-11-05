@@ -41,20 +41,23 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 
 **Cose da fare.**
 
-1. Documento per anno associativo, con data e riferimento al verbale della Co.Ca., e i permessi in `policy.py`.
+1. Documento per anno associativo con le sue versioni, data di inizio, riferimento al verbale della Co.Ca., testo pulito sul
+   server come per le email (`html.pulisci`), PDF sulla carta intestata e permessi in `policy.py`.
 2. Voce in Download e collegamento nella pagina pubblica della lista d'attesa, con scaricamento senza account.
 3. Promemoria annuale, con `promemoria_fine_anno` o accanto a esso.
 4. Test di ogni ruolo, manuale e dati di prova.
 
 **Da decidere.**
 
-- Se il documento si carica come PDF o si compila nell'app sulla carta intestata.
 - Chi lo carica e chi lo vede nell'app.
 - Cosa si mostra se per l'anno in corso non c'è ancora.
 - Se servono anche il numero massimo per unità, con un avviso all'approvazione, e la scadenza dei sessanta giorni sul rifiuto.
 - Se l'app prepara anche la lettera alla Zona.
 
-**Deciso (maintainer, 05/11).** Nel testo nessuna esclusione per diagnosi: la Co.Ca. valuta caso per caso e motiva l'esito.
+**Deciso (maintainer, 05/11).** Nel testo nessuna esclusione per diagnosi: la Co.Ca. valuta caso per caso e motiva l'esito. Il
+documento si compila nell'app sulla carta intestata, partendo dal testo del modello, modificabile con l'editor di testo
+(`EditorTesto.vue`). Se il testo cambia si indica da quando vale la nuova versione: le altre versioni dello stesso anno
+restano visibili, ognuna con la data fino a cui è valida.
 
 ## Sviluppate, in attesa dell'ok
 

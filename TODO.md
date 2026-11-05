@@ -63,7 +63,7 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 righe del CSV corrispondono uno a uno, senza doppioni e senza script. Limiti trovati:
 
 - `animali.svg` pesa 2,07 MB (769 KB compresso) e supera di poco il limite di 2 MB della cache della PWA, che
-  lo salterebbe. Comunque peserebbe su ogni telefono: meglio i 93 SVG singoli (11-62 KB), scaricati quando servono.
+  lo salterebbe. Comunque peserebbe su ogni telefono: meglio i 93 SVG singoli (11-223 KB), scaricati quando servono.
 - I colori sono solo nomi (24 diversi), mentre il simbolo vuole un codice come `#0a3d91`: la tabella va scritta.
 - 11 animali hanno un colore solo, 13 non hanno il richiamo; 15 note parlano della fonte e non vanno mostrate.
 

@@ -84,7 +84,7 @@ SVG costruiti apposta per aggirare la pulizia.
 
 **Da decidere.**
 
-- Di che colore è il simbolo e cosa succede cambiando o togliendo un animale in uso.
+- Cosa succede cambiando o togliendo un animale in uso.
 
 **Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
 unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
@@ -96,6 +96,7 @@ Accanto al nome solo l'immagine; nell'elenco nome, plurale, generale o nautico, 
 richiamo; la pagina della squadriglia mostra anche i suoi colori. Nome inglese e note sulle fonti non si mostrano.
 I nautici si possono scegliere in tutti i reparti, raggruppati a parte.
 Un animale nuovo si aggiunge anche con un SVG, ripulito dal server.
+Il simbolo ha un solo colore per tutti, quello del tema (`var(--ag-primary)`).
 
 ## Chiuse
 

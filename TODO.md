@@ -41,24 +41,17 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 
 1. Documento per anno associativo con le sue versioni, data di inizio, riferimento al verbale della Co.Ca., testo pulito sul
    server come per le email (`html.pulisci`), PDF sulla carta intestata e permessi in `policy.py`.
-2. Voce in Download e collegamento nella pagina pubblica della lista d'attesa, con scaricamento senza account.
-3. Promemoria annuale, con `promemoria_fine_anno` o accanto a esso.
-4. Test di ogni ruolo, manuale e dati di prova.
+2. Voce in Download e collegamento nella pagina pubblica della lista d'attesa, con scaricamento senza account e l'avviso
+   quando il documento è dell'anno precedente.
+3. Numero massimo per unità, con l'avviso all'approvazione e nella lista d'attesa dei capi.
+4. Giorni rimasti nelle richieste in attesa e promemoria via email (`promemoria_iscrizioni`). Promemoria annuale per rifare i
+   criteri, con `promemoria_fine_anno` o accanto a esso. Tipi di email nuovi in `catalogo_email`.
+5. Test di ogni ruolo, manuale e dati di prova.
 
-**Da decidere.**
+**Da verificare in sviluppo.** Il testo del modello con lo Statuto e il Regolamento: l'esempio è in
+`docs/analisi/esempi/criteri-ammissione-esempio.pdf`. Le richieste nate prima di questa versione hanno già la data da cui contare.
 
-- Se l'app prepara anche la lettera alla Zona.
-
-**Deciso (maintainer, 05/11).** Nel testo nessuna esclusione per diagnosi: la Co.Ca. valuta caso per caso e motiva l'esito. Il
-documento si compila nell'app sulla carta intestata, partendo dal testo del modello, modificabile con l'editor di testo
-(`EditorTesto.vue`). Se il testo cambia si indica da quando vale la nuova versione: le altre versioni dello stesso anno
-restano visibili, ognuna con la data fino a cui è valida.
-Lo compilano i capigruppo. Lo vedono tutti in Download e, senza account, dalla lista d'attesa, con tutte le versioni dell'anno.
-Se per l'anno in corso non c'è ancora, si mostra l'ultimo, dicendo che è dell'anno precedente, che è solo una traccia e che il
-nuovo verrà caricato a breve; se non ce n'è nessuno, il collegamento non compare. I numeri massimi si inseriscono per unità:
-all'approvazione di una richiesta un avviso dice quanti soci ha l'unità sul massimo, senza bloccare; la lista d'attesa li mostra
-ai capi accanto alle unità consigliate. I sessanta giorni contano dalla data della richiesta: l'elenco delle richieste in attesa
-mostra i giorni rimasti e un'email avvisa chi decide una decina di giorni prima della scadenza.
+**Decisioni:** DEC-355…DEC-359, tutte prese. Si parte quando lo dice il maintainer.
 
 ## Chiuse
 

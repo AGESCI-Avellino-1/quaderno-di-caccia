@@ -9,6 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
+| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | VAL    |
 | [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | VER    |
 | [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | VER    |
 
@@ -21,6 +22,39 @@ immagini della schermata di avvio prendono circa 2,5 s su 8,4 di `npm run build`
 immagini (si possono generare in un passo Docker a parte, rifatto solo se cambiano logo, nome del
 gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il numero in
 `package.json` e `package-lock.json`, l'immagine del backend.
+
+## Valutazioni
+
+Nulla è ancora stato sviluppato.
+
+### #25 Criteri di ammissione dell'anno
+
+**Fattibile.** Il modello è il Progetto Educativo di Gruppo (DEC-343, DEC-344), che ha già versioni, Download, pagina
+pubblica e scaricamento senza account con un limite alle richieste.
+
+**Situazione.** Il rifiuto di una richiesta di iscrizione chiede già un motivo e lo manda via email (`iscrizioni.servizi.rifiuta`),
+ma senza scadenza né legame coi criteri. La lista d'attesa è pubblica (`ListaAttesaView.vue`). Le unità hanno età minima e
+massima (DEC-260), non un numero massimo di soci.
+
+**Norme da verificare con lo Statuto.** Il Codice del Terzo settore chiede requisiti di ammissione con criteri non
+discriminatori (art. 21) e, salvo diversa previsione dello statuto, un rigetto motivato e comunicato entro sessanta giorni
+(art. 23). Letti su fonti secondarie, non ancora su Normattiva.
+
+**Cose da fare.**
+
+1. Documento per anno associativo, con data e riferimento al verbale della Co.Ca., e i permessi in `policy.py`.
+2. Voce in Download e collegamento nella pagina pubblica della lista d'attesa, con scaricamento senza account.
+3. Promemoria annuale, con `promemoria_fine_anno` o accanto a esso.
+4. Test di ogni ruolo, manuale e dati di prova.
+
+**Da decidere.**
+
+- Come trattare nel testo i bisogni particolari: nell'esempio nessuna esclusione per diagnosi, con valutazione caso per caso.
+- Se il documento si carica come PDF o si compila nell'app sulla carta intestata.
+- Chi lo carica e chi lo vede nell'app.
+- Cosa si mostra se per l'anno in corso non c'è ancora.
+- Se servono anche il numero massimo per unità, con un avviso all'approvazione, e la scadenza dei sessanta giorni sul rifiuto.
+- Se l'app prepara anche la lettera alla Zona.
 
 ## Sviluppate, in attesa dell'ok
 

@@ -24,8 +24,8 @@ gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il
 
 ## Valutazioni
 
-Valutazioni fatte leggendo le issue, il codice e l'allegato di #22: nulla è ancora stato sviluppato e le
-decisioni non sono ancora nell'analisi. Le due issue sono indipendenti; conviene partire da #23, più piccola.
+Valutazioni fatte leggendo le issue, il codice e l'allegato di #22: nulla è ancora stato sviluppato. Le
+decisioni sono nell'analisi. Le due issue sono indipendenti; conviene partire da #23, più piccola.
 
 ### #23 Scheda incarichi
 

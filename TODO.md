@@ -36,9 +36,8 @@ pubblica e scaricamento senza account con un limite alle richieste.
 ma senza scadenza né legame coi criteri. La lista d'attesa è pubblica (`ListaAttesaView.vue`). Le unità hanno età minima e
 massima (DEC-260), non un numero massimo di soci.
 
-**Norme da verificare con lo Statuto.** Il Codice del Terzo settore chiede requisiti di ammissione con criteri non
-discriminatori (art. 21) e, salvo diversa previsione dello statuto, un rigetto motivato e comunicato entro sessanta giorni
-(art. 23). Letti su fonti secondarie, non ancora su Normattiva.
+**Norme.** Il Codice del Terzo settore chiede requisiti di ammissione con criteri non discriminatori (art. 21), letto su fonti
+secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo prevede lo Statuto (maintainer, 05/11).
 
 **Cose da fare.**
 
@@ -49,12 +48,13 @@ discriminatori (art. 21) e, salvo diversa previsione dello statuto, un rigetto m
 
 **Da decidere.**
 
-- Come trattare nel testo i bisogni particolari: nell'esempio nessuna esclusione per diagnosi, con valutazione caso per caso.
 - Se il documento si carica come PDF o si compila nell'app sulla carta intestata.
 - Chi lo carica e chi lo vede nell'app.
 - Cosa si mostra se per l'anno in corso non c'è ancora.
 - Se servono anche il numero massimo per unità, con un avviso all'approvazione, e la scadenza dei sessanta giorni sul rifiuto.
 - Se l'app prepara anche la lettera alla Zona.
+
+**Deciso (maintainer, 05/11).** Nel testo nessuna esclusione per diagnosi: la Co.Ca. valuta caso per caso e motiva l'esito.
 
 ## Sviluppate, in attesa dell'ok
 

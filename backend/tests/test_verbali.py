@@ -48,7 +48,8 @@ def _url(evento, altro="") -> str:
 
 
 def _riunione(titolo="Riunione", giorni_fa=1, unita=(), **campi) -> Evento:
-    inizio = timezone.now() - timedelta(days=giorni_fa)
+    # At noon: started late in the evening it would end the day after, a day off for the reminders.
+    inizio = timezone.localtime().replace(hour=12, minute=0) - timedelta(days=giorni_fa)
     evento = Evento.objects.create(
         titolo=titolo,
         tipo=TipoEvento.RIUNIONE,

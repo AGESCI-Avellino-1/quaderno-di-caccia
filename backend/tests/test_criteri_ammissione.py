@@ -343,7 +343,8 @@ def test_giorni_rimasti(reparto, capogruppo):
     richiesta = _richiesta(reparto)
     [r] = _client(capogruppo).get("/api/v1/iscrizioni").json()
     assert r["giorni_per_decidere"] == 60
-    richiesta.creato_il = timezone.now() - timedelta(days=61)
+    # Local time: in UTC the change of the clocks can move the local day, late in the evening.
+    richiesta.creato_il = timezone.localtime() - timedelta(days=61)
     richiesta.save()
     [r] = _client(capogruppo).get("/api/v1/iscrizioni").json()
     assert r["giorni_per_decidere"] == -1

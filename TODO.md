@@ -48,13 +48,14 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 
 **Da decidere.**
 
-- Se vale per il gruppo, per un'unità o per entrambi, e se può averlo solo un capo o anche un ragazzo.
+- Se può averlo solo un capo o anche un ragazzo.
 - Se è un incarico aggiuntivo o può valere come servizio del capo (DEC-165).
 - Se i capigruppo possono cambiare anche «educativo» degli incarichi esistenti, oggi fissato da DEC-318.
 - Se «educativo» serve anche ad altro, oltre al PDF.
 
 **Deciso (maintainer, 05/11).** «Incarico» e «ruolo» sono la stessa cosa: un solo elenco. Gli incarichi nuovi non danno
-nessun permesso, come quelli di squadriglia (DEC-321).
+nessun permesso, come quelli di squadriglia (DEC-321). Chi crea l'incarico sceglie se è di gruppo o
+di unità.
 
 ### #22 Animali di squadriglia
 

@@ -47,7 +47,7 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 
 **Da decidere.**
 
-- Se servono anche il numero massimo per unità, con un avviso all'approvazione, e la scadenza dei sessanta giorni sul rifiuto.
+- Se il rifiuto di una richiesta deve mostrare la scadenza dei sessanta giorni.
 - Se l'app prepara anche la lettera alla Zona.
 
 **Deciso (maintainer, 05/11).** Nel testo nessuna esclusione per diagnosi: la Co.Ca. valuta caso per caso e motiva l'esito. Il
@@ -56,7 +56,9 @@ documento si compila nell'app sulla carta intestata, partendo dal testo del mode
 restano visibili, ognuna con la data fino a cui è valida.
 Lo compilano i capigruppo. Lo vedono tutti in Download e, senza account, dalla lista d'attesa, con tutte le versioni dell'anno.
 Se per l'anno in corso non c'è ancora, si mostra l'ultimo, dicendo che è dell'anno precedente, che è solo una traccia e che il
-nuovo verrà caricato a breve; se non ce n'è nessuno, il collegamento non compare.
+nuovo verrà caricato a breve; se non ce n'è nessuno, il collegamento non compare. I numeri massimi si inseriscono per unità:
+all'approvazione di una richiesta un avviso dice quanti soci ha l'unità sul massimo, senza bloccare; la lista d'attesa li mostra
+ai capi accanto alle unità consigliate.
 
 ## Chiuse
 

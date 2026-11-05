@@ -28,6 +28,9 @@ lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rif
 La lista d'attesa dice «non secondo l'ordine di arrivo», il modello dei criteri (`documenti/criteri.py`) considera la data della
 richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
+Assemblea: il punto «Regolamento dell'Assemblea (solo se ci sono modifiche)» parte spuntato come gli altri (DEC-364). Se non si toglie,
+finisce nella convocazione e il verbale chiede i voti. Da decidere se farlo partire non spuntato, dopo la verifica della v1.17.0.
+
 ## Chiuse
 
 | Issue | Titolo | Release |

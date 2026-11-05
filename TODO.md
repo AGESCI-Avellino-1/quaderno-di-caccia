@@ -48,7 +48,6 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 
 **Da decidere.**
 
-- Chi assegna gli incarichi nuovi.
 - Se i capigruppo possono cambiare anche «educativo» degli incarichi esistenti, oggi fissato da DEC-318.
 - Se «educativo» serve anche ad altro, oltre al PDF.
 
@@ -59,6 +58,7 @@ aggiuntivo. Li ricevono solo i capi.
 Un incarico di servizio di gruppo funziona come un servizio di supporto (DEC-293): esclude l'unità e gli altri
 supporti e si chiude da solo quando il capo viene assegnato a un'unità. Uno di unità conta come lo staff per i
 servizi: esclude i supporti e li chiude, ma senza i permessi dello staff.
+Li definiscono e li assegnano solo i capigruppo.
 
 ### #22 Animali di squadriglia
 

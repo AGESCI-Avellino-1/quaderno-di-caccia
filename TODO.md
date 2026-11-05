@@ -11,7 +11,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
 | [#26](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/26) | Ordine del giorno in riunione | Funzione | Medio | Media | |
 | [#27](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/27) | Ricerca degli indirizzi per le località (DEC-360) | Funzione | Medio | Media | VAL |
-| [#28](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/28) | Company in vCard | Funzione | Basso | Bassa | |
+| [#28](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/28) | Company in vCard (DEC-361) | Funzione | Basso | Bassa | VAL |
 
 Nessuna segnalazione di sicurezza aperta.
 

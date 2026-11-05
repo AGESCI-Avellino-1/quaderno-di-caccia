@@ -10,8 +10,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
 | [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | VAL    |
-| [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi       | Funzione | Medio   | Media      | VER    |
-| [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | Funzione | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -49,7 +47,6 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 
 **Da decidere.**
 
-- Chi lo carica e chi lo vede nell'app.
 - Cosa si mostra se per l'anno in corso non c'è ancora.
 - Se servono anche il numero massimo per unità, con un avviso all'approvazione, e la scadenza dei sessanta giorni sul rifiuto.
 - Se l'app prepara anche la lettera alla Zona.
@@ -58,46 +55,14 @@ secondarie. Il rigetto va motivato e comunicato entro sessanta giorni: lo preved
 documento si compila nell'app sulla carta intestata, partendo dal testo del modello, modificabile con l'editor di testo
 (`EditorTesto.vue`). Se il testo cambia si indica da quando vale la nuova versione: le altre versioni dello stesso anno
 restano visibili, ognuna con la data fino a cui è valida.
-
-## Sviluppate, in attesa dell'ok
-
-#22 e #23 sono nella v1.15.0, in attesa della prova del maintainer. Provate in Chromium, senza rete anche le immagini:
-restano da provare su iPhone e Android.
-
-### #23 Scheda incarichi
-
-**Fattibile.** Impatto abbassato rispetto alla prima stima: un incarico nuovo non deve toccare quelli esistenti.
-
-**Situazione.** I ruoli sono un elenco fisso nel codice (`RuoloIncarico`, 134 punti in 19 file), ma i permessi
-guardano solo ruoli precisi: un incarico sconosciuto non dà nessun permesso. La PWA riceve già dall'API i ruoli
-assegnabili e, per il PDF dell'organigramma, se sono educativi. Oggi «educativo» serve solo come scelta rapida di
-quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
-
-**Cose da fare.**
-
-1. Modello degli incarichi definiti dal gruppo: nome, educativo o no, attivo o no. Uno già usato si disattiva e
-   non si cancella, perché lo storico deve restare leggibile.
-2. `Incarico` collegato al nuovo modello senza cambiare i ruoli esistenti; `ruolo` e `get_ruolo_display` restano
-   l'unico punto di lettura, così le altre letture (43 tra fascicolo, percorso, email) non cambiano.
-3. Controlli di `Incarico.clean` e `_controlla_servizio`, chiusura automatica in `crea_incarico`, `capi_senza_servizio`
-   e il «senza servizio» del PDF; `policy.puo_nominare` e `puo_definire_incarichi`, con i test di ogni ruolo.
-4. Pagina dell'elenco per i capigruppo, scelta nell'assegnazione, organigramma e relativo PDF.
-5. Fascicolo del capo, esportazione e trasferimento: portano il nome dell'incarico. Manuale e dati di prova.
-
-**Decisioni:** DEC-347…DEC-349. **Fatto**, con i test di ogni ruolo; schermate fatte in Chromium.
-
-### #22 Animali di squadriglia
-
-**Decisioni:** DEC-350…DEC-354. **Fatto**, con i test di ogni ruolo e con SVG costruiti per aggirare la pulizia.
-
-**Controllati dal maintainer** (05/11) i plurali e i colori di `backend/data/cataloghi/animali_squadriglia.json`, con una
-correzione: «Albatros». Confermata (05/11) la libreria che ripulisce gli SVG, `py_svg_hush` 0.3.0 (MIT, involucro di
-`svg-hush` di Cloudflare, un solo autore).
+Lo compilano i capigruppo. Lo vedono tutti in Download e, senza account, dalla lista d'attesa, con tutte le versioni dell'anno.
 
 ## Chiuse
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi | [v1.15.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.15.0) |
+| [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | [v1.15.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.15.0) |
 | [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata | [v1.14.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.14.0) |
 | [#20](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/20) | Modelli di convocazione e verbali del gruppo su carta intestata | [v1.14.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.14.0) |
 | [#19](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/19) | Download: documenti del gruppo scaricabili in app | [v1.14.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.14.0) |

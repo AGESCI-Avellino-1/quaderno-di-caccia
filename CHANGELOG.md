@@ -5,6 +5,30 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.16.0 — 5 novembre 2026
+
+### Novità
+
+**Criteri di ammissione dell'anno** ([#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25)): i requisiti e i criteri che la Comunità capi delibera ogni anno, sulla carta intestata del gruppo.
+
+- I capigruppo li compilano da **Download**, partendo da un testo di esempio modificabile, con il riferimento al verbale e i numeri massimi per unità.
+- Chiunque li scarica in Download e, anche senza account, quando mette qualcuno in lista d'attesa. Se quelli dell'anno mancano, si vedono gli ultimi, con l'avviso che sono solo una traccia.
+- Se cambiano durante l'anno si crea una nuova versione, con la data da cui vale. Le altre restano visibili, ognuna con il suo periodo.
+- I numeri massimi non bloccano nulla: chi decide una richiesta vede quanti ragazzi ha l'unità e, se è già al massimo, un avviso. I numeri compaiono anche nella lista d'attesa dei capi.
+- Le richieste di iscrizione in attesa mostrano i giorni che restano per rispondere: sessanta dalla richiesta, come chiede lo Statuto. Dieci giorni prima del termine chi decide riceve un'email.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.16.0
+```
+
+Due migrazioni del database, applicate da sole all'avvio. Dopo l'aggiornamento:
+
+- il testo di esempio dei criteri va verificato con lo Statuto e il Regolamento e adattato alle decisioni della Comunità capi: il documento è pubblico, senza nomi né dati di persone;
+- le richieste già in attesa da più di cinquanta giorni fanno partire subito un'email a chi decide, una sola volta per richiesta; quelle oltre i sessanta giorni risultano con il termine superato;
+- finché mancano i criteri dell'anno, il primo di ogni mese i capigruppo ricevono un promemoria.
+
 ## 1.15.0 — 5 novembre 2026
 
 ### Novità

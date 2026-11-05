@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 05/11/2026 (ultima versione: v1.15.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 05/11/2026 (ultima versione: v1.16.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -25,15 +25,14 @@ gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il
 
 ### #25 Criteri di ammissione dell'anno
 
-**Decisioni:** DEC-355…DEC-359. **Fatto**, con i test di ogni ruolo; pagine e PDF guardati in Chromium. Non è ancora in una
-versione pubblicata.
+**Decisioni:** DEC-355…DEC-359. **Fatto**, con i test di ogni ruolo; pagine e PDF guardati in Chromium. È nella
+v1.16.0, in attesa della prova del maintainer.
 
 **Scelte fatte in sviluppo.** Una versione con una data futura si vede solo da quel giorno. Il promemoria per rifare i criteri
 arriva ai capigruppo il primo di ogni mese, finché mancano. I numeri massimi non sono nel testo: stanno in una tabella in fondo
 al PDF. Nessun avviso alle famiglie quando esce una versione nuova: DEC-357 non lo chiede.
 
-**Da controllare dal maintainer.** Il testo del modello (`documenti/criteri.py`) con lo Statuto e il Regolamento, compresa l'età
-massima «20/21 anni» presa dall'esempio. La lista d'attesa dice «non secondo l'ordine di arrivo», il modello considera la data
+**Controllato dal maintainer** (05/11) il testo del modello (`documenti/criteri.py`), senza correzioni. La lista d'attesa dice «non secondo l'ordine di arrivo», il modello considera la data
 della richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 **Altro problema visto, non toccato.** Le altre pagine pubbliche (Progetto Educativo, calendario, codice fiscale) consumano lo

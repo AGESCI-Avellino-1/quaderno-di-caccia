@@ -9,7 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | Funzione | Basso   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -21,27 +20,19 @@ immagini (si possono generare in un passo Docker a parte, rifatto solo se cambia
 gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il numero in
 `package.json` e `package-lock.json`, l'immagine del backend.
 
-## Valutazioni
+### Visti e non toccati (senza issue)
 
-### #25 Criteri di ammissione dell'anno
+Le altre pagine pubbliche (Progetto Educativo, calendario, codice fiscale) consumano lo stesso contatore per indirizzo della
+lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rifiutare.
 
-**Decisioni:** DEC-355…DEC-359. **Fatto**, con i test di ogni ruolo; pagine e PDF guardati in Chromium. È nella
-v1.16.0, in attesa della prova del maintainer.
-
-**Scelte fatte in sviluppo.** Una versione con una data futura si vede solo da quel giorno. Il promemoria per rifare i criteri
-arriva ai capigruppo il primo di ogni mese, finché mancano. I numeri massimi non sono nel testo: stanno in una tabella in fondo
-al PDF. Nessun avviso alle famiglie quando esce una versione nuova: DEC-357 non lo chiede.
-
-**Controllato dal maintainer** (05/11) il testo del modello (`documenti/criteri.py`), senza correzioni. La lista d'attesa dice «non secondo l'ordine di arrivo», il modello considera la data
-della richiesta per ultima: da tenere coerenti se si cambia uno dei due.
-
-**Altro problema visto, non toccato.** Le altre pagine pubbliche (Progetto Educativo, calendario, codice fiscale) consumano lo
-stesso contatore per indirizzo della lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rifiutare.
+La lista d'attesa dice «non secondo l'ordine di arrivo», il modello dei criteri (`documenti/criteri.py`) considera la data della
+richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 ## Chiuse
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | [v1.16.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.16.0) |
 | [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi | [v1.15.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.15.0) |
 | [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | [v1.15.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.15.0) |
 | [#21](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/21) | Notifiche push sull'app installata | [v1.14.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.14.0) |

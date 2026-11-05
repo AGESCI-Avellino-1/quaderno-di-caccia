@@ -9,9 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#26](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/26) | Ordine del giorno in riunione (DEC-362…DEC-365) | Funzione | Medio | Media | VER |
-| [#27](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/27) | Ricerca degli indirizzi per le località (DEC-360) | Funzione | Medio | Media | VER |
-| [#28](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/28) | Company in vCard (DEC-361) | Funzione | Basso | Bassa | VER |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -35,6 +32,9 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#28](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/28) | Azienda nel file dei contatti (DEC-361) | [v1.17.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.17.0) |
+| [#27](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/27) | Ricerca degli indirizzi per le località (DEC-360) | [v1.17.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.17.0) |
+| [#26](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/26) | Ordine del giorno in riunione (DEC-362…DEC-365) | [v1.17.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.17.0) |
 | [#25](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/25) | Criteri di ammissione dell'anno | [v1.16.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.16.0) |
 | [#23](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/23) | Scheda incarichi | [v1.15.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.15.0) |
 | [#22](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/22) | Animali di squadriglia | [v1.15.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.15.0) |

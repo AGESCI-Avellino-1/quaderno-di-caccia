@@ -53,9 +53,9 @@ quel PDF (DEC-318), con i non educativi scritti nel codice (`NON_EDUCATIVI`).
 
 **Decisioni:** DEC-350…DEC-354. **Fatto**, con i test di ogni ruolo e con SVG costruiti per aggirare la pulizia.
 
-**Da controllare dal maintainer.** I 93 plurali e i codici dei 23 colori in
-`backend/data/cataloghi/animali_squadriglia.json`, scritti in sviluppo: il CSV non li aveva. La libreria che ripulisce
-gli SVG, `py_svg_hush` 0.3.0 (MIT, involucro di `svg-hush` di Cloudflare, un solo autore): è una dipendenza nuova.
+**Controllati dal maintainer** (05/11) i plurali e i colori di `backend/data/cataloghi/animali_squadriglia.json`, con una
+correzione: «Albatros». **Da confermare.** La libreria che ripulisce gli SVG, `py_svg_hush` 0.3.0 (MIT, involucro di
+`svg-hush` di Cloudflare, un solo autore): è una dipendenza nuova.
 
 ## Chiuse
 

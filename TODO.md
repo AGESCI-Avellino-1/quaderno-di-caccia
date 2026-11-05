@@ -67,8 +67,9 @@ CSV «Pantera» e «Volpe».
 
 **Cose da fare.**
 
-1. Catalogo in `backend/data/cataloghi/` e modello degli animali, con permessi e test di ogni ruolo.
-2. `Squadriglia.animale` facoltativo, con `nome` che resta e prende il nome dell'animale: le letture non cambiano.
+1. Catalogo in `backend/data/cataloghi/` con i plurali e la tabella dei colori, da far controllare al maintainer; modello
+   degli animali con disattivazione, permessi e test di ogni ruolo.
+2. `Squadriglia.animale` facoltativo, con `nome` che resta e prende il plurale dell'animale: le letture non cambiano.
 3. Migrazione: si collegano i nomi uguali al singolare o al plurale; gli altri restano e la pagina del reparto chiede
    di scegliere.
 4. Scelta dell'animale alla creazione al posto del testo, pagina dell'elenco, tabella dei colori.
@@ -82,21 +83,7 @@ elementi di disegno, e i PNG e JPEG si ricodificano con Pillow. Per non affidars
 immagine e mai dentro la pagina, e si serve con una Content-Security-Policy propria che impedisce gli script. Da provare con
 SVG costruiti apposta per aggirare la pulizia.
 
-**Da decidere.**
-
-- Cosa succede cambiando o togliendo un animale in uso.
-
-**Deciso (maintainer, 05/11).** Le immagini sono libere o del maintainer e stanno nel repository, senza indicare l'autore. L'elenco è
-unico per il gruppo, con i 93 animali già pronti. Lo modificano lo staff di un reparto e i capigruppo.
-Alla creazione si sceglie l'animale e non si scrive il nome: l'elenco ha anche il plurale e il nome della squadriglia è
-quello («Pantere»). Il catalogo va completato con i plurali, da far controllare al maintainer.
-L'elenco lo vedono ragazzi e staff dei reparti e i capigruppo; l'immagine, chiunque veda già il nome della squadriglia.
-Offline restano solo le immagini degli animali usati dalle squadriglie dei reparti; l'elenco completo è solo online.
-Accanto al nome solo l'immagine; nell'elenco nome, plurale, generale o nautico, colori (anche disegnati) con i significati e
-richiamo; la pagina della squadriglia mostra anche i suoi colori. Nome inglese e note sulle fonti non si mostrano.
-I nautici si possono scegliere in tutti i reparti, raggruppati a parte.
-Un animale nuovo si aggiunge anche con un SVG, ripulito dal server.
-Il simbolo ha un solo colore per tutti, quello del tema (`var(--ag-primary)`).
+**Decisioni:** DEC-350…DEC-354, tutte prese.
 
 ## Chiuse
 

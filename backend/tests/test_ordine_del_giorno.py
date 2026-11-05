@@ -256,7 +256,7 @@ def test_convocazione_dei_genitori_senza_ordine_del_giorno(di_genitori, capo):
     assert "Ordine del giorno" not in mail.outbox[-1].body
 
 
-def test_assemblea_punti_tutti_spuntati_e_nell_email(capogruppo):
+def test_assemblea_regolamento_non_spuntato_e_punti_nell_email(capogruppo):
     Gruppo.objects.update_or_create(
         defaults={"codice_fiscale": "90000000000"},
         denominazione="Prova 1",
@@ -274,7 +274,12 @@ def test_assemblea_punti_tutti_spuntati_e_nell_email(capogruppo):
         },
     )
     assemblea = Evento.objects.get(pk=creata.json()[0]["id"])
-    assert modelli.dati_convocazione(servizi.verbale_di(assemblea))["punti"] == list(modelli.PUNTI)
+    assert modelli.dati_convocazione(servizi.verbale_di(assemblea))["punti"] == [
+        "ELEZIONE",
+        "BILANCIO",
+        "QUOTA",
+        "VARIE",
+    ]
     risposta = _put(
         capogruppo,
         _url(assemblea, "convocazione/modello"),

@@ -117,9 +117,10 @@ def _datetime(valore: str | None) -> datetime | None:
 
 
 def predefinita_convocazione(evento: Evento) -> dict:
-    """What the form proposes: every point of the template, to be taken off when not needed
-    (DEC-364), the last closed year for the budget, the year in course for election and fee,
-    the place of the previous assembly held in the same place."""
+    """What the form proposes: every point of the template but the Regulation, dealt with only
+    when it changes (DEC-368), to be taken off when not needed (DEC-364), the last closed year
+    for the budget, the year in course for election and fee, the place of the previous assembly
+    held in the same place."""
     giorno = _giorno_riunione(evento)
     anno = AnnoAssociativo.da_data(giorno)
     luogo = {
@@ -142,7 +143,7 @@ def predefinita_convocazione(evento: Evento) -> dict:
             luogo = stesso
             break
     return {
-        "punti": list(PUNTI),
+        "punti": [punto for punto in PUNTI if punto != REGOLAMENTO],
         "prima_il": None,
         "anno_bilancio": anno.precedente().anno_fine,
         "anno_elezione": anno.anno_fine,

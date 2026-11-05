@@ -5,6 +5,36 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.17.0 — 5 novembre 2026
+
+### Novità
+
+**Ordine del giorno delle riunioni** ([#26](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/26)): le riunioni della Comunità capi e dei genitori hanno il loro ordine del giorno.
+
+- Si scrive creando la riunione, se è una sola; per quelle di ogni settimana, sulla singola riunione. Lo scrive chi gestisce la riunione e lo legge chi la vede; per la Comunità capi solo i capi. Serve la rete: non resta salvato sul telefono.
+- Nel verbale c'è già `[Ordine del giorno]`, che si può togliere o spostare. Quando il verbale diventa definitivo, al suo posto si copia il testo, che non cambia più.
+- L'email di convocazione lo riporta, se c'è. Se cambia dopo l'invio non parte un'altra email.
+- Nell'assemblea dei soci i cinque punti del modello sono già tutti spuntati: si tolgono quelli che non servono. L'email di convocazione ora li riporta.
+
+**Indirizzi delle località** ([#27](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/27)): mentre scrivi l'indirizzo di una località, l'app propone quelli trovati su OpenStreetMap, con il servizio gratuito Photon. Si può sempre scrivere a mano; le risposte arrivano in qualche secondo e senza risposta le proposte non compaiono. Il link **mappa** della riunione ora c'è anche per le località che hanno solo l'indirizzo.
+
+**Azienda nei contatti** ([#28](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/28)): il file per la rubrica del telefono riporta come azienda il gruppo e chi è la persona: per esempio «AGESCI Avellino 1 - Reparto Antares», oppure «Capo», «Genitore», «Socio». Gruppo e unità restano nella rubrica del telefono, fuori dalla protezione con il PIN, anche per i minorenni.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.17.0
+```
+
+Una migrazione del database, applicata da sola all'avvio. Dopo l'aggiornamento:
+
+- se avete personalizzato l'email **Convocazione di una riunione**, l'app userà il testo standard finché non aggiungete `[Ordine del giorno]` nel vostro: i capigruppo ricevono un avviso, una sola volta;
+- se avete salvato una vostra privacy policy, aggiungete a mano che gli indirizzi di sedi e basi cercati passano dal servizio Photon: la frase nuova è solo nel testo standard;
+- per non usare il servizio pubblico, o per usarne uno vostro, c'è `QDC_PHOTON_URL` in `.env`: vuota, niente proposte;
+- le assemblee mai compilate partono con tutti i punti spuntati; quelle con dati salvati restano come sono.
+
+Provata con i test e in Chromium, con Photon vero: non ancora il file dei contatti su un telefono, l'email di convocazione su un server di posta vero né le proposte sulle località del vostro gruppo. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.16.0 — 5 novembre 2026
 
 ### Novità

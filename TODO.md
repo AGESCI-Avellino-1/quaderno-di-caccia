@@ -31,10 +31,10 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 Le mie spese (segnalato dal maintainer in produzione il 06/11, sul telefono), dopo aver registrato una spesa:
 
-- iPhone, app installata, foto scattata: barra e breadcrumb restano sopra il bordo dello schermo e non si possono toccare, scorre
-  solo il contenuto, finché non si riavvia l'app. Ipotesi da provare su un iPhone: iOS sposta la finestra (fotocamera o tastiera) e
-  non la riporta giù, e l'app non può farlo perché `.qdc-cornice` non scorre e nessuno azzera lo scorrimento della finestra. Se è
-  così, riguarda tutti i moduli, non solo questo;
+- iPhone, app installata: barra e breadcrumb restano sopra il bordo dello schermo e non si possono toccare, scorre solo il
+  contenuto, finché non si riavvia l'app. Succede anche senza foto, quindi basta la tastiera. Ipotesi: iOS sposta la finestra e non
+  la riporta giù, e l'app non può farlo perché `.qdc-cornice` non scorre e nessuno azzera lo scorrimento della finestra. Se è così,
+  riguarda tutti i moduli, non solo questo;
 - il campo della foto mostra ancora il file di prima (`SpeseView.vue` azzera il dato ma non il campo): la spesa successiva può
   partire senza scontrino anche se il nome del file si vede.
 

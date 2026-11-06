@@ -169,6 +169,18 @@ body {
   overflow: hidden;
 }
 
+// DEC-370: on screen the frame stays on the part the phone really shows
+// (composables/useFinestraVisibile.ts sets the two values only when iOS leaves it shifted).
+@media screen {
+  .qdc-cornice {
+    position: fixed;
+    top: var(--qdc-finestra-alto, 0);
+    right: 0;
+    left: 0;
+    height: var(--qdc-finestra-altezza, 100dvh);
+  }
+}
+
 .qdc-colonna {
   display: flex;
   flex: 1 1 auto;

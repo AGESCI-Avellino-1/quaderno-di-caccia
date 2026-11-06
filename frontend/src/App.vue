@@ -17,6 +17,7 @@ import MenuLaterale from '@/components/MenuLaterale.vue'
 import PiePagina from '@/components/PiePagina.vue'
 import SchermataManutenzione from '@/components/SchermataManutenzione.vue'
 import { useBloccoAutomatico } from '@/composables/useBloccoAutomatico'
+import { useFinestraVisibile } from '@/composables/useFinestraVisibile'
 import { EVENTO_CANCELLAZIONE, stato, type MotivoCancellazione } from '@/sicurezza/cassaforte'
 import { scaricaAnimaliInUso } from '@/pwa/animali'
 import { useNavigazioneStore } from '@/stores/navigazione'
@@ -37,6 +38,7 @@ watch(stato, (nuovo) => {
 const router = useRouter()
 
 useBloccoAutomatico()
+useFinestraVisibile()
 
 // Maintenance (DEC-268): everyone but the technical administrators sees the message
 // instead of the page. Open: privacy and terms, and the way in of an administrator

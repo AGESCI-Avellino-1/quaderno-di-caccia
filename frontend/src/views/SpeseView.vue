@@ -23,6 +23,7 @@ const { errore, inCorso, esegui } = useErrore()
 const spese = ref<SpesaAnticipata[]>([])
 const unita = ref<Unita[]>([])
 const esito = ref('')
+const campoFoto = ref<HTMLInputElement | null>(null)
 const oggi = () => new Date().toLocaleDateString('sv')
 const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 
@@ -64,6 +65,8 @@ async function registra() {
   )
   if (!risultato) return
   Object.assign(modulo, { data: oggi(), importo: '', descrizione: '', giustificativo: '' })
+  // DEC-370: the field would keep showing the file of the expense just recorded.
+  if (campoFoto.value) campoFoto.value.value = ''
   esito.value = risultato.inCoda
     ? 'Spesa salvata su questo dispositivo: arriverà al tesoriere appena torna la rete.'
     : 'Spesa registrata: il tesoriere la rimborserà.'
@@ -120,6 +123,7 @@ async function registra() {
           <label class="form-label small" for="spesa-foto">Foto dello scontrino</label>
           <input
             id="spesa-foto"
+            ref="campoFoto"
             type="file"
             accept="image/*,application/pdf"
             capture="environment"

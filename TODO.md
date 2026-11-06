@@ -9,8 +9,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34) | Le mie spese su iPhone: barra fuori schermo e foto che resta | Bug            | Medio   | Media      | WIP    |
-| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | Documentazione | Basso   | Bassa      | WIP    |
+| [#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34) | Barra fuori schermo su iPhone e foto che resta (DEC-370)     | Bug            | Medio   | Media      | VER    |
+| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | Documentazione | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

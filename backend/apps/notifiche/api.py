@@ -37,6 +37,13 @@ class EndpointIn(Schema):
     endpoint: str
 
 
+class EsitoProvaOut(Schema):
+    servizio: str
+    accettata: bool
+    # What the push service answered; None: it could not be reached.
+    codice: int | None
+
+
 @router.get("/push", response=PushOut)
 def stato(request, endpoint: str = ""):
     persona = policy.persona_di(request.auth)
@@ -85,3 +92,18 @@ def iscrivi(request, dati: IscrizioneIn):
 def togli(request, dati: EndpointIn):
     IscrizionePush.objects.filter(utente=request.auth, endpoint=dati.endpoint).delete()
     return Status(204, None)
+
+
+@router.post("/push/prova", response=list[EsitoProvaOut])
+def prova(request):
+    """DEC-377: only to oneself, and never while acting as another user (`BLOCCATE`)."""
+    if not policy.puo_provare_notifiche(request.auth):
+        raise HttpError(403, "La notifica di prova la usa l'amministratore tecnico.")
+    if not servizi.configurate():
+        raise HttpError(400, "Le notifiche non sono attive su questa installazione.")
+    try:
+        return servizi.prova(request.auth)
+    except servizi.ChiaviNonUtilizzabili as errore:
+        raise HttpError(
+            400, "Le chiavi delle notifiche non si leggono: controlla la configurazione del server."
+        ) from errore

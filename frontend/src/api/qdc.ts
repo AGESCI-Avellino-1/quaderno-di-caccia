@@ -1501,6 +1501,14 @@ export interface NotaIn {
 export const percorsoNote = (persona: number) => `/api/v1/persone/${persona}/note`
 export const percorsoNota = (nota: number) => `/api/v1/note/${nota}`
 
+/** One device's outcome of a test notification (DEC-377). */
+export interface EsitoProvaPush {
+  servizio: string
+  accettata: boolean
+  /** What the push service answered; null: it could not be reached. */
+  codice: number | null
+}
+
 export interface Intestazione {
   /** The official name for the prints, not the one in the title (DEC-245). */
   denominazione: string
@@ -3271,6 +3279,7 @@ export const api = {
     richiesta<PreferenzePush>('/api/v1/push/preferenze', { metodo: 'PUT', corpo }),
   iscriviPush: (corpo: { endpoint: string; p256dh: string; auth: string }) =>
     richiesta<null>('/api/v1/push/iscrizioni', { metodo: 'POST', corpo }),
+  provaPush: () => richiesta<EsitoProvaPush[]>('/api/v1/push/prova', { metodo: 'POST' }),
   togliPush: (endpoint: string) =>
     richiesta<null>('/api/v1/push/iscrizioni/togli', { metodo: 'POST', corpo: { endpoint } }),
   progettoCapo: (persona: number) =>

@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { api, type Impostazioni, type SmtpIn } from '@/api/qdc'
+import { api, type EsitoProvaPush, type Impostazioni, type SmtpIn } from '@/api/qdc'
 import CampoPassword from '@/components/CampoPassword.vue'
 import { useErrore } from '@/composables/useErrore'
 
@@ -78,6 +78,20 @@ async function scollega() {
   if (!nuove) return
   emit('aggiornate', nuove)
   esito.value = 'Gmail scollegato.'
+}
+
+// A test notification to one's own devices, each with its outcome (DEC-377).
+const esitiPush = ref<EsitoProvaPush[] | null>(null)
+
+async function provaNotifica() {
+  esito.value = ''
+  esitiPush.value = (await esegui(() => api.provaPush())) ?? null
+}
+
+function testoEsitoPush(e: EsitoProvaPush): string {
+  if (e.accettata) return `${e.servizio}: accettata.`
+  if (e.codice === null) return `${e.servizio}: servizio non raggiungibile.`
+  return `${e.servizio}: rifiutata (codice ${e.codice}).`
 }
 
 async function prova() {
@@ -282,6 +296,26 @@ async function prova() {
           >
             Manda un'email di prova a me
           </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            :disabled="inCorso"
+            @click="provaNotifica"
+          >
+            Manda una notifica di prova a me
+          </button>
+        </div>
+        <div v-if="esitiPush" class="alert theme-info small mt-3" role="status">
+          <div v-if="esitiPush.length">
+            <p class="mb-1">Esito per ogni dispositivo con le notifiche attive:</p>
+            <ul class="mb-1">
+              <li v-for="(e, i) in esitiPush" :key="i">{{ testoEsitoPush(e) }}</li>
+            </ul>
+            Se è accettata ma non compare, controlla i permessi delle notifiche sul dispositivo.
+          </div>
+          <div v-else>
+            Nessun tuo dispositivo ha le notifiche attive: attivale in Privacy e preferenze.
+          </div>
         </div>
       </div>
     </form>

@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39) | Notifiche: invio di prova, amministratori tecnici (DEC-377)  | Funzione       | Basso   | Bassa      | WIP    |
+| [#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39) | Notifiche: invio di prova, amministratori tecnici (DEC-377)  | Funzione       | Basso   | Bassa      | VER    |
 | [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371)            | Documentazione | Basso   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.

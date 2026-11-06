@@ -33,8 +33,13 @@ SERVIZI_PUSH = (
     ".push.services.mozilla.com",
     ".notify.windows.com",
 )
+NOMI_SERVIZI = dict(zip(SERVIZI_PUSH, ("Google", "Apple", "Mozilla", "Microsoft"), strict=True))
 DURATA_SECONDI = 24 * 60 * 60  # A notification still waiting after a day is old news.
 BLOCCO_CODA = 200
+
+
+class ChiaviNonUtilizzabili(Exception):
+    """QDC_CHIAVE_SEGRETI missing or changed: the keys cannot be read."""
 
 
 def endpoint_ammesso(endpoint: str) -> bool:
@@ -90,9 +95,12 @@ def vuole(persona: Persona, categoria: str) -> bool:
     return preferenze is None or getattr(preferenze, categoria)
 
 
-def _spedisci(iscrizione: IscrizionePush, dati: dict, firma: Vapid, contatto: str) -> bool:
+def _spedisci_con_esito(
+    iscrizione: IscrizionePush, dati: dict, firma: Vapid, contatto: str
+) -> tuple[bool, int | None]:
+    """Whether the push service took it and what it answered (None: no answer)."""
     try:
-        webpush(
+        risposta = webpush(
             subscription_info={
                 "endpoint": iscrizione.endpoint,
                 "keys": {"p256dh": iscrizione.p256dh, "auth": iscrizione.auth},
@@ -110,11 +118,15 @@ def _spedisci(iscrizione: IscrizionePush, dati: dict, firma: Vapid, contatto: st
             iscrizione.delete()
         else:
             logger.warning("Notifica non inviata: risposta %s", stato)
-        return False
+        return False, stato
     except requests.RequestException:
         logger.warning("Notifica non inviata: servizio non raggiungibile")
-        return False
-    return True
+        return False, None
+    return True, getattr(risposta, "status_code", None)
+
+
+def _spedisci(iscrizione: IscrizionePush, dati: dict, firma: Vapid, contatto: str) -> bool:
+    return _spedisci_con_esito(iscrizione, dati, firma, contatto)[0]
 
 
 def _firma_e_contatto() -> tuple[Vapid, str] | None:
@@ -148,6 +160,34 @@ def notifica(
     if pronta is None:
         return 0
     return sum(_spedisci(i, dati, *pronta) for i in iscrizioni)
+
+
+def _servizio(endpoint: str) -> str:
+    """Who runs the push service, the only thing a person can tell their devices apart by."""
+    host = urlsplit(endpoint).hostname or ""
+    for finale, nome in NOMI_SERVIZI.items():
+        if host == finale or host.endswith(finale):
+            return nome
+    return "Altro"
+
+
+def prova(utente) -> list[dict]:
+    """A notification to one's own devices at once, whatever they chose, with each outcome
+    (DEC-377). Not through the queue: the point is to see where it stops."""
+    togli_orfane()
+    iscrizioni = list(IscrizionePush.objects.filter(utente=utente))
+    if not iscrizioni:
+        return []
+    pronta = _firma_e_contatto()
+    if pronta is None:
+        raise ChiaviNonUtilizzabili
+    dati = {"titolo": "Prova del Quaderno di Caccia", "testo": "", "percorso": "/"}
+    esiti = []
+    for iscrizione in iscrizioni:
+        servizio = _servizio(iscrizione.endpoint)
+        accettata, codice = _spedisci_con_esito(iscrizione, dati, *pronta)
+        esiti.append({"servizio": servizio, "accettata": accettata, "codice": codice})
+    return esiti
 
 
 def smaltisci() -> int:

@@ -1919,6 +1919,11 @@ def puo_configurare_smtp(user) -> bool:
     return e_amministratore(user)
 
 
+def puo_provare_notifiche(user) -> bool:
+    """A test notification to one's own devices: the technical administrator only (DEC-377)."""
+    return e_amministratore(user)
+
+
 def puo_gestire_email_di_prova(user) -> bool:
     """The email test mode and Mailpit: the technical administrator only (DEC-249)."""
     return e_amministratore(user)

@@ -35,6 +35,11 @@ sicurezza, utente, password e mittente. Se lo lasci vuoto vale quello configurat
 installato l'app. Poi tocca **Manda un'email di prova a me**: se qualcosa non va, l'app ti
 dice cosa controllare.
 
+Accanto c'è **Manda una notifica di prova a me**: parte subito verso i tuoi dispositivi con le
+notifiche attive, anche se hai spento qualche tipo di notifica, e per ognuno dice se il servizio
+di Apple, Google o degli altri browser l'ha accettata. Se è accettata ma non compare, controlla i
+permessi delle notifiche sul dispositivo.
+
 - **Gmail con accesso Google**, senza password: scegli questa voce, inserisci ID e segreto
   del client OAuth (li prepara chi installa, come spiega la guida di installazione), tocca
   **Salva** e poi **Collega Gmail**, ed entra con l'account da cui partono le email. Con

@@ -279,3 +279,96 @@ def test_quota_in_scadenza_senza_nomi_ne_importi(genitore, ragazza, gruppo, sped
     assert len(spediti) == 1
     assert "Hai una quota in scadenza" in spediti[0]["data"]
     assert ragazza.nome not in spediti[0]["data"] and "50" not in spediti[0]["data"]
+
+
+# --- The test notification ------------------------------------------------------------------
+
+
+@pytest.fixture
+def amministratore(capo):
+    capo.utente.amministratore_tecnico = True
+    capo.utente.save()
+    return capo
+
+
+def test_la_prova_e_solo_per_gli_amministratori(capogruppo, csq, ragazza, genitore, estraneo, capo):
+    for chi in (capo, capogruppo, csq, ragazza, genitore, estraneo):
+        assert _post(_client(chi), "/api/v1/push/prova", {}).status_code == 403, chi
+
+
+def test_la_prova_dice_l_esito_e_ignora_le_preferenze(amministratore, spediti):
+    client = _iscrivi(amministratore)
+    PreferenzePush.objects.create(
+        persona=amministratore, eventi=False, promemoria_quote=False, riepiloghi=False, avvisi=False
+    )
+    risposta = _post(client, "/api/v1/push/prova", {})
+    assert risposta.status_code == 200
+    assert risposta.json() == [{"servizio": "Google", "accettata": True, "codice": None}]
+    assert len(spediti) == 1
+
+
+def test_la_prova_arriva_solo_a_se_stessi(amministratore, estraneo, spediti):
+    _iscrivi(estraneo, {**CORPO, "endpoint": CORPO["endpoint"] + "-altro"})
+    client = _client(amministratore)
+    assert _post(client, "/api/v1/push/prova", {}).json() == []
+    assert spediti == []
+
+
+def test_la_prova_non_passa_dalla_coda(settings, amministratore, spediti):
+    settings.QDC_EMAIL_IN_CODA = True
+    client = _iscrivi(amministratore)
+    assert _post(client, "/api/v1/push/prova", {}).status_code == 200
+    assert len(spediti) == 1
+    assert not PushInCoda.objects.exists()
+
+
+@pytest.mark.parametrize(("stato", "resta"), [(403, True), (410, False)])
+def test_la_prova_riporta_il_rifiuto(amministratore, monkeypatch, stato, resta):
+    client = _iscrivi(amministratore)
+
+    class Risposta:
+        status_code = stato
+        text = ""
+
+    def rifiuta(**_):
+        raise WebPushException("no", response=Risposta())
+
+    monkeypatch.setattr(servizi, "webpush", rifiuta)
+    esito = _post(client, "/api/v1/push/prova", {}).json()
+    assert esito[0]["accettata"] is False and esito[0]["codice"] == stato
+    assert IscrizionePush.objects.exists() is resta
+
+
+def test_la_prova_dice_se_il_servizio_non_risponde(amministratore, monkeypatch):
+    client = _iscrivi(amministratore)
+
+    def giu(**_):
+        raise requests.ConnectionError
+
+    monkeypatch.setattr(servizi, "webpush", giu)
+    esito = _post(client, "/api/v1/push/prova", {}).json()
+    assert esito[0]["accettata"] is False and esito[0]["codice"] is None
+
+
+def test_la_prova_senza_chiavi_leggibili(amministratore, monkeypatch):
+    client = _iscrivi(amministratore)
+    monkeypatch.setattr(servizi, "_firma_e_contatto", lambda: None)
+    risposta = _post(client, "/api/v1/push/prova", {})
+    assert risposta.status_code == 400 and "chiavi" in risposta.json()["detail"]
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "nome"),
+    [
+        ("https://fcm.googleapis.com/fcm/send/x", "Google"),
+        ("https://web.push.apple.com/x", "Apple"),
+        ("https://updates.push.services.mozilla.com/x", "Mozilla"),
+        ("https://wns2-par02p.notify.windows.com/x", "Microsoft"),
+    ],
+)
+def test_il_nome_del_servizio(endpoint, nome):
+    assert servizi._servizio(endpoint) == nome
+
+
+def test_la_prova_e_bloccata_mentre_si_agisce_per_un_altro():
+    assert bloccata("POST", "/api/v1/push/prova")

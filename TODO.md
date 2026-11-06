@@ -2,13 +2,15 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 05/11/2026 (ultima versione: v1.18.1). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 06/11/2026 (ultima versione: v1.18.1). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
+| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | tag versione           | Funzione | Basso   | Bassa      |        |
+| [#31](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/31) | Gestione casse         | Funzione | Alto    | Alta       |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

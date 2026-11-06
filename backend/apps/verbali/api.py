@@ -18,7 +18,7 @@ from apps.eventi.models import Evento
 from apps.permessi import policy
 from apps.permessi.models import Azione, registra_accesso_verbale
 
-from . import convocazione, modelli, servizi, stampa
+from . import convocazione, modelli, segnaposto, servizi, stampa
 from .models import AllegatoVerbale, TipoCollegato, TipoVerbale, Verbale, VerbaleCollegato
 
 router = Router(tags=["verbali"])
@@ -57,6 +57,8 @@ class VerbaleOut(Schema):
     da_modello: bool
     # Offers the placeholder of the agenda in the editor (DEC-363).
     con_ordine_del_giorno: bool
+    # The placeholders the editor offers: for who writes a text by hand (DEC-372).
+    segnaposto: list[str]
     non_previsto: bool
     # Only who has reminders can say there are no minutes.
     puo_dire_non_previsto: bool
@@ -173,6 +175,11 @@ def _out(request, verbale: Verbale) -> dict:
     return {
         "da_modello": verbale.da_modello,
         "con_ordine_del_giorno": servizi.ha_ordine_del_giorno(evento),
+        "segnaposto": (
+            segnaposto.ELENCO
+            if policy.puo_scrivere_verbale(utente, verbale) and not verbale.da_modello
+            else []
+        ),
         "presenti": presenti,
         "puo_cariche": puo_cariche,
         "candidati_cariche": list(servizi.presenti_segnati(evento)) if puo_cariche else [],
@@ -229,6 +236,16 @@ def scrivi(request, evento_id: int, dati: TestoIn):
     verbale = _scrivibile(request, evento_id)
     autore = policy.persona_di(request.auth)
     return _out(request, _azione(servizi.salva_testo, verbale, dati.testo, autore))
+
+
+class AnteprimaOut(Schema):
+    testo: str
+    mancanti: list[str]
+
+
+@router.post("/eventi/{evento_id}/verbale/anteprima", response=AnteprimaOut)
+def anteprima(request, evento_id: int, dati: TestoIn):
+    return _azione(servizi.anteprima, _scrivibile(request, evento_id), dati.testo)
 
 
 class RedattoreIn(Schema):

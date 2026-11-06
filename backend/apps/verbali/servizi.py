@@ -34,7 +34,7 @@ from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
 from apps.permessi.policy import STAFF_DI_UNITA
 
-from . import convocazione, modelli, stampa
+from . import convocazione, modelli, segnaposto, stampa
 from .models import (
     AllegatoVerbale,
     StatoVerbale,
@@ -178,16 +178,33 @@ def _con_ordine_del_giorno(testo: str, evento: Evento) -> str:
     return testo.replace(SEGNAPOSTO_ORDINE_DEL_GIORNO, escape("; ".join(righe)))
 
 
+def _con_i_valori(testo: str, evento: Evento) -> str:
+    """Every placeholder replaced (DEC-372); the agenda last, so its text stays as it is."""
+    testo = segnaposto.sostituisci(testo, evento)
+    return _con_ordine_del_giorno(testo, evento) if ha_ordine_del_giorno(evento) else testo
+
+
 def testo_in_bozza(verbale: Verbale, scrive: bool) -> str:
-    """Who writes sees the placeholder, there by default until someone writes something
-    (DEC-363); who only reads sees the agenda in its place."""
+    """Who writes sees the placeholders, the agenda's there by default until someone writes
+    something (DEC-363, DEC-372); who only reads sees the values in their place."""
+    if not scrive:
+        return _con_i_valori(verbale.testo, verbale.evento)
     if not ha_ordine_del_giorno(verbale.evento):
         return verbale.testo
-    if not scrive:
-        return _con_ordine_del_giorno(verbale.testo, verbale.evento)
     if not verbale.testo.strip() and not verbale.autore_nome:
         return f"<p>{SEGNAPOSTO_ORDINE_DEL_GIORNO}</p>"
     return verbale.testo
+
+
+def anteprima(verbale: Verbale, testo: str) -> dict:
+    """The text on screen as it will be, nothing saved (DEC-373)."""
+    if verbale.da_modello:
+        raise ValidationError("Il verbale dell'assemblea si compila con i dati del modello.")
+    pulito = pulisci(testo, immagini=False)
+    return {
+        "testo": _con_i_valori(pulito, verbale.evento),
+        "mancanti": segnaposto.mancanti(pulito, verbale.evento),
+    }
 
 
 # --- Steps ----------------------------------------------------------------------------------
@@ -284,9 +301,10 @@ def rendi_definitivo(verbale: Verbale, utente) -> Verbale:
     if not da_modello and not in_testo(scritto).strip():
         raise ValidationError("Il verbale è vuoto: scrivilo prima di renderlo definitivo.")
     tipo = tipo_di(verbale.evento)
-    if tipo in CON_ORDINE_DEL_GIORNO:
-        # A later change of the agenda does not touch the document (DEC-363).
-        verbale.testo = _con_ordine_del_giorno(verbale.testo, verbale.evento)
+    if not da_modello:
+        # A later change of the meeting or of the agenda does not touch the document
+        # (DEC-363, DEC-372).
+        verbale.testo = _con_i_valori(verbale.testo, verbale.evento)
     if tipo == TipoVerbale.ASSEMBLEA:
         _fotografa_cariche(verbale)
     if da_modello:

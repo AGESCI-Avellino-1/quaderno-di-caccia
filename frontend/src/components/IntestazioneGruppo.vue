@@ -42,6 +42,7 @@ const CAMPI: [keyof Intestazione, string, string][] = [
   ['denominazione', 'Nome del gruppo in BuonaStrada', 'NOMELUOGO 1'],
   ['denominazione_sociale', 'Denominazione sociale', 'AGESCI Gruppo Nomeluogo 1'],
   ['codice_fiscale', 'Codice fiscale', ''],
+  ['partita_iva', 'Partita IVA', 'Se il gruppo ce l’ha'],
   ['sede_indirizzo', 'Sede: via e numero', ''],
   ['sede_cap', 'CAP', ''],
   ['sede_comune', 'Comune', ''],

@@ -26,9 +26,10 @@ dell'accesso, quindi la versione la legge anche chi non ha un account.
 ## Intestazione delle stampe
 
 I dati ufficiali del gruppo, sui moduli da firmare (come la scheda sanitaria) e sulle
-ricevute: denominazione sociale, codice fiscale, sede, contatti, iscrizione al RUNTS (il
-Registro unico nazionale del Terzo settore) e il **logo** (PNG o JPEG). Denominazione e codice
-fiscale arrivano da BuonaStrada; se li correggi qui, l'importazione non li cambia più.
+ricevute: denominazione sociale, codice fiscale, partita IVA (se il gruppo ce l'ha), sede,
+contatti, iscrizione al RUNTS (il Registro unico nazionale del Terzo settore) e il **logo** (PNG o
+JPEG). Denominazione e codice fiscale arrivano da BuonaStrada; se li correggi qui, l'importazione
+non li cambia più. La partita IVA da BuonaStrada non arriva: la scrivi solo qui.
 
 ## Testi della scheda sanitaria
 

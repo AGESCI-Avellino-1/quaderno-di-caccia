@@ -663,6 +663,8 @@ export interface Verbale {
   /** The assembly: data asked for, the text comes from the template (DEC-336). */
   /** Offers the placeholder of the agenda in the editor (DEC-363). */
   con_ordine_del_giorno?: boolean
+  /** The placeholders the editor offers: for who writes a text by hand (DEC-372). */
+  segnaposto?: string[]
   da_modello: boolean
   stato: 'BOZZA' | 'DEFINITIVO'
   /** Empty unless asked for: reading the Co.Ca.'s goes to the access log. */
@@ -1504,6 +1506,7 @@ export interface Intestazione {
   denominazione: string
   denominazione_sociale: string
   codice_fiscale: string
+  partita_iva: string
   sede_indirizzo: string
   sede_cap: string
   sede_comune: string
@@ -3203,6 +3206,11 @@ export const api = {
     richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale${testo ? '?testo=true' : ''}`),
   scriviVerbale: (evento: number, testo: string) =>
     richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale`, { metodo: 'PUT', corpo: { testo } }),
+  anteprimaVerbale: (evento: number, testo: string) =>
+    richiesta<{ testo: string; mancanti: string[] }>(`/api/v1/eventi/${evento}/verbale/anteprima`, {
+      metodo: 'POST',
+      corpo: { testo },
+    }),
   indicaRedattore: (evento: number, persona_id: number | null) =>
     richiesta<Verbale>(`/api/v1/eventi/${evento}/verbale/redattore`, {
       metodo: 'PUT',

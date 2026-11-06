@@ -605,6 +605,44 @@ const SCENE: Scena[] = [
     mostra: 'Verbale',
   },
   {
+    nome: 'capo/verbale-anteprima',
+    chi: 'capogruppo',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      // A meeting whose minutes are still to write: the assembly's follow the template.
+      await pagina.evaluate(async () => {
+        const riunioni: { id: number }[] = await (
+          await fetch('/api/v1/eventi?riunioni=true')
+        ).json()
+        for (const { id } of riunioni) {
+          const risposta = await fetch(`/api/v1/eventi/${id}/verbale`)
+          if (!risposta.ok) continue
+          const verbale = await risposta.json()
+          if (verbale.stato === 'BOZZA' && verbale.puo_scrivere && !verbale.da_modello) {
+            history.pushState({}, '', `/eventi/${id}`)
+            dispatchEvent(new PopStateEvent('popstate'))
+            return
+          }
+        }
+        throw new Error('Nessun verbale da scrivere nei dati di prova')
+      })
+      await pagina.getByRole('button', { name: 'Scrivi il verbale' }).click()
+      await pagina.locator('.ProseMirror').click()
+      // As who writes: the button gives the cursor back to the text a moment later.
+      const scrivi = async (testo: string, dato: string) => {
+        await pagina.keyboard.type(testo)
+        await pagina.getByRole('button', { name: dato, exact: true }).click()
+        await pagina.locator('.ProseMirror:focus').waitFor()
+      }
+      await scrivi('Riunione del ', '[Data]')
+      await scrivi(', dalle ', '[Ora di inizio]')
+      await scrivi(' alle ', '[Ora di fine]')
+      await scrivi(', a ', '[Luogo]')
+      await pagina.getByRole('button', { name: 'Anteprima', exact: true }).click()
+      await pagina.getByRole('dialog').getByText('Riunione del ').waitFor()
+    },
+  },
+  {
     nome: 'capo/turni',
     chi: 'capoReparto',
     percorso: '/unita',

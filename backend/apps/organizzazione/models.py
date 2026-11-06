@@ -4,6 +4,7 @@ from datetime import date
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
 
@@ -58,6 +59,14 @@ class Gruppo(ModelloTracciato):
     zona = models.CharField(max_length=120, blank=True)
     regione = models.CharField(max_length=120, blank=True)
     codice_fiscale = models.CharField(max_length=16, blank=True)
+    # Not in the BuonaStrada export: written only by the capigruppo (DEC-374).
+    partita_iva = models.CharField(
+        max_length=11,
+        blank=True,
+        validators=[
+            RegexValidator(r"^\d{11}$", "La partita IVA è fatta di 11 cifre.", code="partita_iva")
+        ],
+    )
     denominazione_sociale = models.CharField(max_length=200, blank=True)
     rappresentante_legale = models.CharField(max_length=200, blank=True)
     # Reference date for age (DEC-37), default 30 April.

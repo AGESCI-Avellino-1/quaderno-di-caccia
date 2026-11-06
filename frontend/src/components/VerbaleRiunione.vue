@@ -34,6 +34,10 @@ const presidente = ref<number | null>(null)
 const segretari = ref<number[]>([])
 // The form of the template asks again when the offices change: they are in its text.
 const giro = ref(0)
+// The text on screen as it will be, nothing saved (DEC-373).
+const finestraAnteprima = ref<HTMLDialogElement | null>(null)
+const anteprima = ref<{ testo: string; mancanti: string[] } | null>(null)
+const mancanti = ref<string[]>([])
 
 const definitivo = computed(() => verbale.value?.stato === 'DEFINITIVO')
 const dimensioneAllegati = computed(() =>
@@ -77,6 +81,22 @@ async function salva() {
   if (!dati) return
   mostra(dati)
   salvato.value = true
+}
+
+async function apriAnteprima() {
+  const dati = await esegui(() => api.anteprimaVerbale(props.evento, testo.value))
+  if (!dati) return
+  anteprima.value = dati
+  finestraAnteprima.value?.showModal()
+}
+
+// Before the definitive: a placeholder with no value disappears, who writes must know (DEC-372).
+async function chiediConferma() {
+  const dati = verbale.value?.da_modello
+    ? null
+    : await esegui(() => api.anteprimaVerbale(props.evento, testo.value))
+  mancanti.value = dati?.mancanti ?? []
+  confermaDefinitivo.value = true
 }
 
 async function indica() {
@@ -179,6 +199,22 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
         :evento="evento"
       />
       <form v-if="verbale.puo_scrivere" class="mb-3" @submit.prevent="salva">
+        <div v-if="verbale.segnaposto?.length" class="mb-3">
+          <p class="form-text mt-0 mb-1">
+            Tocca un dato per inserirlo dove sei: nel verbale definitivo trovi il valore.
+          </p>
+          <div class="d-flex flex-wrap gap-1">
+            <button
+              v-for="s in verbale.segnaposto"
+              :key="s"
+              type="button"
+              class="btn btn-sm btn-outline"
+              @click="editor?.inserisci(s)"
+            >
+              {{ s }}
+            </button>
+          </div>
+        </div>
         <EditorTesto
           v-if="!verbale.da_modello"
           ref="editor"
@@ -205,17 +241,30 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
           >
             Salva la bozza
           </button>
+          <button
+            v-if="!verbale.da_modello"
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            :disabled="inCorso"
+            @click="apriAnteprima"
+          >
+            Anteprima
+          </button>
           <span v-if="salvato" class="small fg-2" role="status">Salvato.</span>
           <template v-if="verbale.puo_indicare">
             <button
               v-if="!confermaDefinitivo"
               type="button"
               class="btn btn-sm btn-outline theme-primary"
-              @click="confermaDefinitivo = true"
+              :disabled="inCorso"
+              @click="chiediConferma"
             >
               Rendi definitivo
             </button>
             <span v-else class="small">
+              <template v-if="mancanti.length">
+                Resteranno vuoti: {{ mancanti.join('; ') }}.
+              </template>
               Da definitivo lo leggono tutti quelli che ne hanno diritto. Confermi?
               <button
                 type="button"
@@ -239,6 +288,23 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
       <!-- eslint-disable-next-line vue/no-v-html -- HTML cleaned by the server (DEC-322) -->
       <div v-else-if="verbale.testo" class="mb-3" v-html="verbale.testo"></div>
       <p v-else class="fg-2 small mb-3">Il verbale è ancora vuoto.</p>
+      <dialog ref="finestraAnteprima" class="dialog" aria-labelledby="anteprima-verbale">
+        <div class="dialog-body">
+          <h2 id="anteprima-verbale" class="h5">Anteprima del verbale</h2>
+          <div v-if="anteprima?.mancanti.length" class="alert theme-warning small" role="status">
+            <div>Mancano: {{ anteprima.mancanti.join('; ') }}.</div>
+          </div>
+          <!-- eslint-disable-next-line vue/no-v-html -- HTML cleaned by the server (DEC-322) -->
+          <div class="qdc-anteprima mb-3" v-html="anteprima?.testo"></div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            @click="finestraAnteprima?.close()"
+          >
+            Chiudi
+          </button>
+        </div>
+      </dialog>
     </template>
 
     <template v-if="aperto && verbale.tipo === 'SOCI'">

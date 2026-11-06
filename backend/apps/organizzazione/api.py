@@ -1268,6 +1268,7 @@ class IntestazioneIO(Schema):
     denominazione: str | None = None
     denominazione_sociale: str = ""
     codice_fiscale: str = ""
+    partita_iva: str = ""
     sede_indirizzo: str = ""
     sede_cap: str = ""
     sede_comune: str = ""

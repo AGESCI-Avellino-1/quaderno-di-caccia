@@ -105,6 +105,55 @@ describe('VerbaleRiunione', () => {
     expect(pagina.text()).toContain('Salva la bozza')
   })
 
+  it('offre i dati da inserire e mostra l anteprima senza salvare', async () => {
+    HTMLDialogElement.prototype.showModal = vi.fn()
+    const chiamate = stub((url, metodo) =>
+      url.endsWith('/anteprima') && metodo === 'POST'
+        ? risposta(200, { testo: '<p>6 marzo 2026</p>', mancanti: ['la partita IVA del gruppo'] })
+        : risposta(200, { ...base, puo_scrivere: true, segnaposto: ['[Data]', '[Luogo]'] }),
+    )
+    const pagina = await monta()
+    await pagina.get('section button').trigger('click')
+    await flushPromises()
+
+    expect(pagina.findAll('button').map((b) => b.text())).toEqual(
+      expect.arrayContaining(['[Data]', '[Luogo]', 'Anteprima']),
+    )
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Anteprima')!
+      .trigger('click')
+    await flushPromises()
+
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled()
+    expect(pagina.get('dialog').text()).toContain('6 marzo 2026')
+    expect(pagina.get('dialog').text()).toContain('la partita IVA del gruppo')
+    expect(chiamate.some((c) => c.metodo === 'PUT')).toBe(false)
+  })
+
+  it('prima del definitivo dice cosa resterà vuoto', async () => {
+    stub((url, metodo) =>
+      url.endsWith('/anteprima') && metodo === 'POST'
+        ? risposta(200, { testo: '', mancanti: ['la partita IVA del gruppo'] })
+        : risposta(200, {
+            ...base,
+            puo_scrivere: true,
+            puo_indicare: true,
+            segnaposto: ['[Data]'],
+          }),
+    )
+    const pagina = await monta()
+    await pagina.get('section button').trigger('click')
+    await flushPromises()
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Rendi definitivo')!
+      .trigger('click')
+    await flushPromises()
+
+    expect(pagina.text()).toContain('Resteranno vuoti: la partita IVA del gruppo.')
+  })
+
   it('il redattore scrive ma non rende definitivo', async () => {
     stub(() =>
       risposta(200, {

@@ -114,12 +114,15 @@ verbale non resta salvato sul telefono.
 1. Per affidarlo a qualcuno, in **Chi lo scrive** scegli una persona tra gli invitati o i capi e
    tocca **Indica**. Può scrivere solo il verbale di questa riunione.
 2. Tocca **Scrivi il verbale**, scrivi il testo con l'editor e tocca **Salva la bozza**. La bozza la
-   vedono chi la scrive, chi l'ha indicato e i capi.
+   vedono chi la scrive, chi l'ha indicato e i capi. Sopra il testo trovi i dati che puoi inserire
+   con un tocco, come **[Data]** o **[Indirizzo]**: li vedi tra parentesi quadre mentre scrivi e con
+   il valore vero in **Anteprima**, che mostra anche quello che non hai ancora salvato.
 3. Se vuoi, aggiungi dei file in **Allegati**: PDF, immagini, Word, Excel, PowerPoint, audio e video.
    Le immagini vanno qui, non nel testo.
 4. Quando è finito, chi ha indicato chi scrive tocca **Rendi definitivo**. Da quel momento lo leggono
    tutti quelli che ne hanno diritto e si scarica il **PDF** su carta intestata; con **Scarica lo ZIP
-   con gli allegati** hai tutto insieme.
+   con gli allegati** hai tutto insieme. I dati inseriti restano quelli di quel momento, anche se
+   poi la riunione cambia.
 
 Per correggerlo tocca **Riapri il verbale** e scrivi il motivo, che resta registrato. Con l'anno
 associativo chiuso va prima riaperto l'anno.
@@ -138,6 +141,26 @@ Quando cambiano i capi gruppo, il rappresentante legale o la sede, i capigruppo 
 ![Il verbale di una riunione sul telefono](../img/capo/verbale-telefono.png){.telefono width="30%"}
 ![Il verbale di una riunione sul computer](../img/capo/verbale-computer.png){.computer width="65%"}
 :::
+
+### I dati che puoi inserire nel verbale
+
+| Dato | Cosa mostra |
+| --- | --- |
+| **[Data]**, **[Ora di inizio]**, **[Ora di fine]** | Giorno e orari della riunione, dal calendario |
+| **[Denominazione gruppo]** | La denominazione sociale, o il nome del gruppo se è vuota |
+| **[Codice fiscale gruppo]**, **[Partita IVA gruppo]** | I dati del gruppo nelle Impostazioni |
+| **[Indirizzo completo]** | Il nome della località, la via e il numero civico |
+| **[Indirizzo]** | La via e il numero civico, senza il nome |
+| **[Luogo]** | Solo la città, ricavata dal CAP dell'indirizzo |
+
+:::{container} schermate
+![L'anteprima del verbale](../img/capo/verbale-anteprima-telefono.png){.telefono width="30%"}
+![L'anteprima del verbale](../img/capo/verbale-anteprima-computer.png){.computer width="65%"}
+:::
+
+In una riunione senza località salvata i due indirizzi mostrano il luogo così come è scritto. Un dato
+che manca sparisce dal testo: **Anteprima** e la conferma di **Rendi definitivo** ti dicono quale, così
+puoi completarlo a mano o togliere le parole rimaste sole.
 
 ## Le località
 

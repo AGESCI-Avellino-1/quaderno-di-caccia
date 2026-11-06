@@ -135,6 +135,12 @@ body {
   text-overflow: ellipsis;
 }
 
+// The minutes in their preview window: the buttons stay in sight (DEC-373).
+.qdc-anteprima {
+  max-height: 60dvh;
+  overflow-y: auto;
+}
+
 // Texts written by people (event descriptions, notes): keep their line breaks.
 .testo-a-capo {
   white-space: pre-line;

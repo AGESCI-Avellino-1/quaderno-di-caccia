@@ -15,7 +15,11 @@ GRUPPO = "Gruppo"
 SIGLA_GRUPPO = "Sigla gruppo"
 ANNO = "Anno"
 PAGINA_CORRENTE = "Pagina corrente"
-DEL_TITOLO = (NOME_SITO, SIGLA_SITO, GRUPPO, SIGLA_GRUPPO, ANNO, PAGINA_CORRENTE)
+# The version of the app open on the device (DEC-369): the server does not know it.
+RELEASE = "Release"
+# What the server can fill in by itself.
+DEL_SITO = (NOME_SITO, SIGLA_SITO, GRUPPO, SIGLA_GRUPPO, ANNO)
+DEL_TITOLO = (*DEL_SITO, RELEASE, PAGINA_CORRENTE)
 
 
 def usati(testo: str) -> list[str]:

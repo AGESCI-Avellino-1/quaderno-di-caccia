@@ -11,7 +11,7 @@ from html import escape
 from . import segnaposto as sp
 
 EMAIL_GRUPPO = "Email gruppo"
-SEGNAPOSTO_PAGINE = (*sp.DEL_TITOLO[:-1], EMAIL_GRUPPO)
+SEGNAPOSTO_PAGINE = (*sp.DEL_SITO, EMAIL_GRUPPO)
 
 
 @dataclass(frozen=True)

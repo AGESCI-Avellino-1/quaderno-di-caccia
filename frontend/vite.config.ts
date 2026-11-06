@@ -68,8 +68,15 @@ function paginaDiAvvio(costruzione: boolean): Plugin {
   }
 }
 
+/** The version of the app, for [Release] (DEC-369). */
+async function versioneApp(): Promise<string> {
+  const pacchetto = await readFile(new URL('./package.json', import.meta.url), 'utf8')
+  return (JSON.parse(pacchetto) as { version: string }).version
+}
+
 export default defineConfig(async ({ command }) => ({
   publicDir: await cartellaPubblica(command === 'build'),
+  define: { __VERSIONE_APP__: JSON.stringify(await versioneApp()) },
   plugins: [
     vue(),
     paginaDiAvvio(command === 'build'),

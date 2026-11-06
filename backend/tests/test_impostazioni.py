@@ -111,6 +111,21 @@ def test_segnaposto_sconosciuto_non_si_salva(gruppo, capogruppo):
     assert _put(capogruppo.utente, {**DATI, "titolo_breve": "[sigla sito]"}).status_code == 200
 
 
+def test_segnaposto_release_nel_piede_e_non_nelle_pagine(gruppo, capogruppo):
+    assert _put(capogruppo.utente, {**DATI, "riga_piede": "Versione [Release]"}).status_code == 200
+    # The PWA fills it in: the server keeps it as written, here and in the public answer.
+    assert Client().get("/api/v1/sito").json()["riga_piede"] == "Versione [Release]"
+    # The pages are filled in by the server, which does not know the device's version.
+    for nome in ("Release", "Pagina corrente"):
+        risposta = _client(capogruppo.utente).put(
+            "/api/v1/impostazioni/pagine/privacy",
+            {"testo": f"<p>Versione [{nome}]</p>"},
+            content_type="application/json",
+        )
+        assert risposta.status_code == 400
+        assert f"[{nome}]" in risposta.json()["detail"]
+
+
 def test_nome_del_gruppo_vuoto_torna_quello_di_base(gruppo, capogruppo):
     assert _put(capogruppo.utente, {**DATI, "nome_gruppo": "  "}).status_code == 200
     assert Client().get("/api/v1/sito").json()["gruppo"] == "AGESCI Prova 1"

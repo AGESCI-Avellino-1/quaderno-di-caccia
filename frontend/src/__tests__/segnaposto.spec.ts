@@ -28,6 +28,11 @@ describe('segnaposto del titolo', () => {
     expect(riempi('Anno [Anno]', SITO)).toBe('Anno 2025/26')
   })
 
+  it("mostra la versione dell'app nella forma dei tag", () => {
+    expect(riempi('Versione [Release]', SITO)).toMatch(/^Versione v\d+\.\d+\.\d+$/)
+    expect(riempi('[release]', SITO)).toBe(`v${__VERSIONE_APP__}`)
+  })
+
   it('lascia come sono i segnaposto sconosciuti e i trattini nelle parole', () => {
     expect(riempi('[Altro] Avellino-1', SITO)).toBe('[Altro] Avellino-1')
   })

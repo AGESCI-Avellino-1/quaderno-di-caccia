@@ -11,6 +11,7 @@ export const SEGNAPOSTO_TITOLO = [
   ['Gruppo', 'il nome del gruppo, es. AGESCI Nomeluogo 1'],
   ['Sigla gruppo', 'la sigla del gruppo, es. AV1'],
   ['Anno', "l'anno scout, es. 2025/26"],
+  ['Release', "la versione dell'app aperta su questo dispositivo, es. v1.18.1"],
   ['Pagina corrente', 'il nome della pagina aperta, es. Eventi'],
 ] as const
 
@@ -33,6 +34,9 @@ export function riempi(testo: string, sito: Sito, pagina = ''): string {
     gruppo: sito.gruppo,
     'sigla gruppo': sito.sigla_gruppo || sito.gruppo,
     anno: sito.anno,
+    // The version built into this copy of the app, in the form of the release tags
+    // (DEC-369): a device not updated yet says so.
+    release: `v${__VERSIONE_APP__}`,
     'pagina corrente': pagina,
   }
   const VUOTO = '\uE000'

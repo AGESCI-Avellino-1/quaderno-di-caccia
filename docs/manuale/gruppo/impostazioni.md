@@ -18,6 +18,11 @@ Nei titoli puoi usare i segnaposto tra parentesi quadre, come [Nome sito], [Grup
 campo vedi come diventa. Questi nomi servono solo per il titolo: i dati ufficiali sono più
 sotto.
 
+Con [Release] nella riga del piè di pagina si legge la versione dell'app aperta su quel
+telefono o computer, per esempio v1.18.1: è utile quando qualcuno segnala un errore. Un
+telefono non ancora aggiornato mostra il numero vecchio. La riga si vede anche prima
+dell'accesso, quindi la versione la legge anche chi non ha un account.
+
 ## Intestazione delle stampe
 
 I dati ufficiali del gruppo, sui moduli da firmare (come la scheda sanitaria) e sulle

@@ -9,9 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#38](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/38) | Verbali: nome del file PDF con titolo e data                 | Funzione       | Basso   | Bassa      |        |
-| [#37](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/37) | App installata su macOS: i file non si scaricano (DEC-375)   | Bug            | Basso   | Bassa      | VER    |
-| [#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36) | Verbali: segnaposto e anteprima (DEC-372…DEC-374)            | Funzione       | Medio   | Media      | VER    |
+| [#38](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/38) | Verbali: nome del file PDF con titolo e data (DEC-376)       | Funzione       | Basso   | Bassa      | WIP    |
 | [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371)            | Documentazione | Basso   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
@@ -36,6 +34,8 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#37](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/37) | App installata su macOS: i file non si scaricano (DEC-375) | [v1.20.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.0) |
+| [#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36) | Verbali: segnaposto e anteprima (DEC-372…DEC-374) | [v1.20.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.0) |
 | [#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34) | Barra fuori schermo su iPhone e foto che resta (DEC-370) | [v1.19.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.1) |
 | [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | [v1.19.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.1) |
 | [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | Versione dell'app nel piè di pagina (DEC-369) | [v1.19.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.0) |

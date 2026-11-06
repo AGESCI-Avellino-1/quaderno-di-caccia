@@ -514,6 +514,7 @@ Decisa con il maintainer il 31/10/2026: chi vuole entrare nel gruppo si mette in
 | DEC-373 | **Anteprima del verbale**: un tasto apre una finestra con il testo come risulterà, compreso quello non ancora salvato, con i segnaposto sostituiti e l'indicazione dei dati mancanti. | DEC-372, issue #36, 06/11 |
 | DEC-374 | **Partita IVA del gruppo**: nuovo dato del gruppo, facoltativo, modificato dai capigruppo insieme agli altri dati ufficiali; l'importazione da BuonaStrada non la tocca. | DEC-192, DEC-252, issue #36, 06/11 |
 | DEC-375 | **File nell'app installata su un Mac**: il foglio di condivisione resta solo per l'app installata su iPhone e iPad, dove serve (issue #12). Nell'app installata dal Safari del Mac i file si scaricano con il link normale, come nel browser, perché quel foglio non offre un modo per salvarli. | Issue #12, issue #37, 06/11 |
+| DEC-376 | **Nome del PDF di un verbale**: il titolo della riunione, un trattino e la data della riunione nel formato GGMMAAAA (per esempio «Comunità capi-22112026.pdf»). I verbali separati hanno un nome fisso al posto del titolo: verbale_legale_rappresentante per la nomina del legale rappresentante e il cambio di sede legale, verbale_bilancio per l'approvazione del bilancio. Il titolo resta con spazi e accenti, senza i caratteri che non possono stare nel nome di un file. Lo ZIP con gli allegati non cambia. | DEC-322, issue #38, 06/11 |
 
 ## Architettura tecnica
 

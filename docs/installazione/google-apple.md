@@ -11,12 +11,23 @@ Negli esempi il dominio dell'installazione è `qdc.esempio.org`: usa il tuo.
 In [Google Cloud Console](https://console.cloud.google.com/), con l'account del gruppo:
 
 1. Crea un progetto (per esempio «Quaderno di Caccia»).
-2. In **API e servizi › Schermata consenso OAuth** configura l'app: tipo di utenti
-   **Esterni**, nome dell'app, email di assistenza, il dominio `esempio.org` tra i **domini
-   autorizzati**; come ambiti bastano `email` e `profile`. Poi **pubblica** l'app (finché è in
-   prova, entrano solo gli utenti di prova che indichi).
-3. In **API e servizi › Credenziali** scegli **Crea credenziali › ID client OAuth**, tipo
-   **Applicazione web**, e in **URI di reindirizzamento autorizzati** scrivi:
+2. Apri **Google Auth Platform** e, se è la prima volta, configura l'app: nome, email di
+   assistenza, tipo di utenti **Esterni** ed email di contatto. Poi completa le voci del menu a
+   sinistra:
+
+   - **Branding**: scorri la pagina. In **Dominio app** scrivi la home page, il link alle norme
+     sulla privacy e quello ai termini di servizio dell'installazione
+     (`https://qdc.esempio.org/`, `https://qdc.esempio.org/privacy`,
+     `https://qdc.esempio.org/termini`). In **Domini autorizzati** tocca **Aggiungi dominio** e
+     scrivi il dominio principale, `esempio.org`, senza `https://` e senza `qdc.`. Tocca **Salva**
+     in fondo alla pagina.
+   - **Accesso ai dati**: tocca **Aggiungi o rimuovi ambiti**, spunta `.../auth/userinfo.email` e
+     `.../auth/userinfo.profile`, tocca **Aggiorna** e poi **Salva** in fondo alla pagina.
+   - **Pubblico**: tocca **Pubblica app** e conferma (finché è in prova, entrano solo gli utenti
+     di prova che indichi).
+
+3. In **Client** scegli **Crea client**, tipo **Applicazione web**, e in **URI di reindirizzamento
+   autorizzati** scrivi:
 
    ```text
    https://qdc.esempio.org/accounts/google/login/callback/

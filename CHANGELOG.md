@@ -5,6 +5,22 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.20.1 — 6 novembre 2026
+
+### Novità
+
+**Nome del PDF dei verbali** ([#38](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/38)): il PDF di un verbale ora ha il titolo della riunione e la data, per esempio `Comunità capi-22112026.pdf`, invece di un numero. I verbali separati hanno un nome fisso con la data: `verbale_legale_rappresentante-22112026.pdf` per la nomina del legale rappresentante e il cambio di sede legale, `verbale_bilancio-22112026.pdf` per l'approvazione del bilancio. Lo ZIP con gli allegati non cambia.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.20.1
+```
+
+Nessuna migrazione del database.
+
+Provata con i test: non ancora scaricando un PDF su un telefono o dall'app installata. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.20.0 — 6 novembre 2026
 
 ### Novità

@@ -9,7 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#41](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/41) | Le notifiche push non arrivano                               | Bug            | Medio   | Media      |        |
 | [#40](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/40) | Tutte le email arrivano doppie                               | Bug            | Medio   | Media      |        |
 | [#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39) | Notifiche: invio di prova per gli amministratori tecnici     | Funzione       | Basso   | Bassa      |        |
 | [#38](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/38) | Verbali: nome del file PDF con titolo e data (DEC-376)       | Funzione       | Basso   | Bassa      | VER    |
@@ -65,6 +64,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Motivo |
 | ----- | ------ | ------ |
+| [#41](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/41) | Le notifiche push non arrivano | Non era un problema: le notifiche arrivano |
 | [#31](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/31) | Gestione casse | Già possibile: cassa comune di due unità collegate (DEC-288); banca e PayPal sono già del gruppo |
 
 ## Come si usa

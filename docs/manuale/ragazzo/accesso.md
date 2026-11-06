@@ -28,7 +28,7 @@ quando hai creato l'account.
 
 ## Entrare le volte successive
 
-Apri <https://qdc.avellino1.it>. Il modo più semplice è il **codice via email**: scrivi la
+Apri {{ indirizzo }}. Il modo più semplice è il **codice via email**: scrivi la
 tua email, tocca **Inviami il codice** e scrivi nelle caselle il codice che ti arriva (vale 3 minuti):
 appena è completo, entri.
 Puoi entrare anche con la password, con Google o Apple, o con una passkey (l'impronta o il

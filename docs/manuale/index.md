@@ -1,6 +1,6 @@
 # Manuale d'uso
 
-Il Quaderno di Caccia è l'app del gruppo scout AGESCI Avellino 1: anagrafica, scheda
+Il Quaderno di Caccia è l'app {{ di_chi }}: anagrafica, scheda
 personale, Progressione Personale, eventi e presenze, quote e cassa.
 
 Questo manuale spiega come usare il Quaderno di Caccia, passo per passo. È diviso per

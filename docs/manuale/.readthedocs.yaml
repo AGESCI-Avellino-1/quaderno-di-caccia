@@ -1,6 +1,8 @@
 # Read the Docs (DEC-231): the user manual, one version per release. Its own project on
 # the group's account: set "docs/manuale/.readthedocs.yaml" as the configuration file path
 # in the project's advanced settings. The installation guide will be another project.
+# The project "qdc-manuale" uses this file too: conf.py makes the manual with no group's logo
+# or addresses from its name (DEC-371).
 version: 2
 
 build:

@@ -6,7 +6,7 @@ nelle unità, non per ordine di arrivo.
 
 ## Mettersi in lista
 
-1. Apri <https://qdc.avellino1.it> e, in fondo alla pagina di accesso, tocca **Mettiti in
+1. Apri {{ indirizzo }} e, in fondo alla pagina di accesso, tocca **Mettiti in
    lista d'attesa**.
 2. In **Chi vuole entrare nel gruppo** scrivi nome, cognome, sesso, data e luogo di
    nascita di tuo figlio.

@@ -117,6 +117,11 @@ run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-buil
 description = "Guida di installazione in HTML (docs/_build/installazione/html)"
 run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-build -W docs/installazione docs/_build/installazione/html"
 
+[tasks."docs:generico"]
+description = "Manuale d'uso senza logo e indirizzi del gruppo, solo HTML (docs/_build/manuale-generico/html)"
+env = { QDC_MANUALE = "generico" }
+run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-build -W docs/manuale docs/_build/manuale-generico/html"
+
 [tasks."docs:pdf"]
 description = "Manuale d'uso in un unico PDF (docs/_build/manuale/pdf)"
 run = "uv run --no-project --with-requirements docs/requirements.txt sphinx-build -b rinoh docs/manuale docs/_build/manuale/pdf"

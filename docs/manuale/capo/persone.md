@@ -30,7 +30,7 @@ Per avere i numeri dei ragazzi o dei genitori nella rubrica del telefono, con la
    rubrica.
 
 Nel file ci sono nome, numeri e, come azienda, il gruppo con il ruolo o l'unità (per esempio
-«AGESCI Avellino 1 - Reparto Aquile»). Resta sul telefono, fuori dalla protezione con il PIN:
+«AGESCI {{ esempio_gruppo }} - Reparto Aquile»). Resta sul telefono, fuori dalla protezione con il PIN:
 quando hai salvato i contatti, cancellalo dai download.
 
 ## Correggere un dato di BuonaStrada

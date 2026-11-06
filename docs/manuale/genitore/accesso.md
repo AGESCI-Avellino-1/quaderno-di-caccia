@@ -25,7 +25,7 @@ indirizzo email: se scade, chiedine un altro ai capi.
 
 ## Entrare le volte successive
 
-Apri <https://qdc.avellino1.it>. Puoi entrare in quattro modi.
+Apri {{ indirizzo }}. Puoi entrare in quattro modi.
 
 :::{container} schermate
 ![La pagina di accesso sul telefono](../img/comune/accesso-telefono.png){.telefono width="30%"}

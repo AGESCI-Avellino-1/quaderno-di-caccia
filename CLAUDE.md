@@ -215,7 +215,7 @@ default), `mise run docs` / `docs:pdf` (user manual, HTML and PDF, in `docs/_bui
 Sphinx + MyST Markdown. The user manual and the installation guide are two separate Read
 the Docs projects on the same account (maintainer, 31/10/2026), each with its own folder,
 `conf.py` and `.readthedocs.yaml`: the manual is `docs/manuale/`, the installation guide
-`docs/installazione/` (online only); each project's `.readthedocs.yaml` path is set in its
+`docs/installazione/` (online only); a third project, `qdc-manuale`, makes from the manual's pages a version with no group's logo or addresses (online only, same screenshots with Avellino 1's logo, DEC-371: `myst_substitutions` in `conf.py`, `mise run docs:generico`); each project's `.readthedocs.yaml` path is set in its
 advanced settings on Read the Docs (projects `avellino1-qdc` and `qdc-installazione`, created
 31/10/2026, rebuilt on every push and tag by a GitHub webhook each); the manual's PDF (`mise run docs:pdf`) is attached to every GitHub release
 (DEC-232), the first one v1.0.0, and its notes (Novità, Aggiornare) go also at the top of

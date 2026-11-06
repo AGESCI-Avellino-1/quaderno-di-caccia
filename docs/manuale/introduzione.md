@@ -2,7 +2,7 @@
 
 ## Cos'è il Quaderno di Caccia
 
-È l'app del gruppo Avellino 1. Ci trovi i dati dei tuoi figli (o i tuoi, se sei un
+È l'app {{ del_gruppo }}. Ci trovi i dati dei tuoi figli (o i tuoi, se sei un
 ragazzo o un capo), gli eventi e le presenze, le quote da pagare, la Progressione
 Personale e gli avvisi dei capi.
 
@@ -12,9 +12,8 @@ quella funzione.
 
 ## Come si apre
 
-Il Quaderno di Caccia è un sito: lo apri con il browser all'indirizzo
-**<https://qdc.avellino1.it>**, dal telefono o dal computer. Non serve scaricare niente
-dagli store.
+Il Quaderno di Caccia è un sito: apri {{ indirizzo }} con il browser, dal telefono o dal
+computer. Non serve scaricare niente dagli store.
 
 Sul telefono puoi metterlo nella schermata Home, come un'app:
 

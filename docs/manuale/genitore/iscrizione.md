@@ -6,7 +6,7 @@ capi, come codice, link o QR code. Non serve avere già un account.
 ## Mandare la richiesta
 
 1. Apri il link o inquadra il QR code. Se hai solo il codice, apri
-   <https://qdc.avellino1.it>, scrivilo in fondo alla pagina di accesso, in **Codice di
+   {{ indirizzo }}, scrivilo in fondo alla pagina di accesso, in **Codice di
    iscrizione**, e tocca **Usa**. Se tuo figlio era in lista d'attesa, il link arriva per
    email dai capi e i dati della lista sono già scritti.
 2. In **Il ragazzo o la ragazza** scrivi nome, cognome, data di nascita, sesso e, se vuoi,

@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { fileInArrivo, linkAFile, pwaSuIos, scaricaFile } from '@/pwa/file'
 
-// The app installed on an iPhone (issue #12): links to files come here instead of opening
+// The app installed on an iPhone, not on a Mac (issue #12, DEC-375): links to files come here instead of opening
 // a page with no way back. The share needs its own tap: Safari may refuse it when it
 // follows the wait for the download.
 const MASSIMO_IN_MEMORIA = 200 * 1024 * 1024

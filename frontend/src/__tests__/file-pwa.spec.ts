@@ -7,6 +7,12 @@ import { fileInArrivo, linkAFile, nomeDelFile, salvaFile, scaricaFile } from '@/
 
 function suIphone(installata: boolean) {
   Object.defineProperty(navigator, 'standalone', { value: installata, configurable: true })
+  Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true })
+}
+
+function suMac() {
+  Object.defineProperty(navigator, 'standalone', { value: true, configurable: true })
+  Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true })
 }
 
 function clic(href: string, opzioni: MouseEventInit = {}): MouseEvent {
@@ -30,6 +36,7 @@ beforeEach(() => {
 afterEach(() => {
   fileInArrivo.value = null
   Reflect.deleteProperty(navigator, 'standalone')
+  Reflect.deleteProperty(navigator, 'maxTouchPoints')
   Reflect.deleteProperty(navigator, 'share')
   Reflect.deleteProperty(navigator, 'canShare')
   vi.unstubAllGlobals()
@@ -134,6 +141,32 @@ describe('il file sull iPhone', () => {
     link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     await nextTick()
     expect(fetch).not.toHaveBeenCalled()
+    pagina.unmount()
+  })
+
+  it('nell app installata su un Mac il file si scarica come sempre', async () => {
+    suMac()
+    const pagina = mount(FileDaSalvare, { attachTo: document.body })
+    const link = document.createElement('a')
+    link.href = '/api/v1/documenti/1/file'
+    link.addEventListener('click', (e) => {
+      expect(e.defaultPrevented).toBe(false)
+      e.preventDefault() // jsdom cannot navigate.
+    })
+    document.body.append(link)
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await nextTick()
+    expect(fileInArrivo.value).toBeNull()
+
+    const clicSulLink = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    URL.createObjectURL = vi.fn(() => 'blob:prova')
+    URL.revokeObjectURL = vi.fn()
+    salvaFile(new Blob(['BEGIN:VCARD']), 'contatti.vcf')
+    expect(fileInArrivo.value).toBeNull()
+    expect(clicSulLink).toHaveBeenCalled()
+
+    clicSulLink.mockRestore()
+    link.remove()
     pagina.unmount()
   })
 

@@ -14,9 +14,12 @@ export type FileInArrivo =
 
 export const fileInArrivo = shallowRef<FileInArrivo | null>(null)
 
-/** `navigator.standalone` exists on iOS only, true in the installed app. */
+/** `navigator.standalone` is true in the installed app, also in Safari's web apps on a Mac,
+ * where a link downloads its file as usual and the share sheet cannot save it (DEC-375): only
+ * an iPhone or an iPad has a touch screen. */
 export function pwaSuIos(): boolean {
-  return (navigator as Navigator & { standalone?: boolean }).standalone === true
+  const installata = (navigator as Navigator & { standalone?: boolean }).standalone === true
+  return installata && navigator.maxTouchPoints > 0
 }
 
 const ESTENSIONI: Record<string, string> = {

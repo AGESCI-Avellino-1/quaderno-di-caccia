@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.19.1 — 6 novembre 2026
+
+### Novità
+
+**La barra non finisce più fuori schermo su iPhone** ([#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34)): con l'app installata, dopo aver usato la tastiera o la fotocamera, barra e percorso di pagina potevano restare sopra il bordo dello schermo, e si usciva solo riavviando l'app. Ora la pagina resta sulla parte di schermo che il telefono mostra davvero, in tutte le pagine.
+
+**Foto dello scontrino in Le mie spese** ([#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34)): dopo aver registrato una spesa il campo della foto si svuota. Prima continuava a mostrare il file appena usato, e la spesa successiva poteva partire senza scontrino anche se il nome si vedeva: se hai registrato più spese di seguito, controlla che abbiano il link **Giustificativo**.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.19.1
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+La guida di installazione segue i menu attuali di Google Cloud per l'accesso con Google ([#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33)).
+
+Provata con i test e, solo per l'aspetto delle pagine, su un iPhone simulato con iOS 27: la correzione della barra non è ancora provata con la tastiera e la fotocamera su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.19.0 — 6 novembre 2026
 
 ### Novità

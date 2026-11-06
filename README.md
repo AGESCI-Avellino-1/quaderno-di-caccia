@@ -59,6 +59,7 @@ nell'analisi e nella roadmap di
 | Documento | Per chi |
 | --- | --- |
 | [Manuale d'uso](https://avellino1-qdc.readthedocs.io/) (sorgente in [`docs/manuale/`](docs/manuale/index.md); in PDF allegato a ogni [release](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases)) | Chi usa l'app: genitori, ragazzi, capi, capigruppo e tesorieri |
+| [Manuale d'uso senza logo e indirizzi del gruppo](https://qdc-manuale.readthedocs.io/) (stesse pagine, solo online; le schermate restano con il logo di Avellino 1) | I gruppi che installano la loro copia |
 | [Guida di installazione](https://qdc-installazione.readthedocs.io/) (sorgente in [`docs/installazione/`](docs/installazione/index.md)) | Chi installa una copia per il suo gruppo |
 | [`docs/analisi/analisi-requisiti.md`](docs/analisi/analisi-requisiti.md) | Tutti: cosa fa l'app e perché. Ogni decisione ha un codice `DEC-nn` |
 | [`CLAUDE.md`](CLAUDE.md) | Sviluppatori (e Claude Code): regole, architettura, roadmap |

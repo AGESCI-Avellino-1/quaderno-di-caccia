@@ -9,7 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39) | Notifiche: invio di prova, amministratori tecnici (DEC-377)  | Funzione       | Basso   | Bassa      | VER    |
 | [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371)            | Documentazione | Basso   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
@@ -34,6 +33,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39) | Notifiche: invio di prova, amministratori tecnici (DEC-377) | [v1.21.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.21.0) |
 | [#38](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/38) | Verbali: nome del file PDF con titolo e data (DEC-376) | [v1.20.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.1) |
 | [#37](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/37) | App installata su macOS: i file non si scaricano (DEC-375) | [v1.20.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.0) |
 | [#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36) | Verbali: segnaposto e anteprima (DEC-372…DEC-374) | [v1.20.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.0) |

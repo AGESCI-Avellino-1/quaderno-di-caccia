@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | tag versione           | Funzione | Basso   | Bassa      | VAL    |
+| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | tag versione           | Funzione | Basso   | Bassa      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 

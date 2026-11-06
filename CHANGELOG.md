@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.21.0 — 6 novembre 2026
+
+### Novità
+
+**Notifica di prova** ([#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39)): in **Impostazioni › Server di posta**, gli amministratori tecnici trovano **Manda una notifica di prova a me**. Parte subito verso i propri dispositivi con le notifiche attive, anche se qualche tipo di notifica è spento, e per ognuno dice se il servizio di notifiche l'ha accettata o il codice di errore. Serve a capire se un problema è nell'invio o sul dispositivo.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.21.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Il capitolo sull'amministratore tecnico del manuale spiega il nuovo pulsante.
+
+Provata con i test: l'invio vero al servizio di notifiche non è ancora provato col nuovo pulsante, e si può fare solo da un server in produzione. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.20.1 — 6 novembre 2026
 
 ### Novità

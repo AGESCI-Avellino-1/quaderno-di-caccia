@@ -28,6 +28,11 @@ lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rif
 La lista d'attesa dice «non secondo l'ordine di arrivo», il modello dei criteri (`documenti/criteri.py`) considera la data della
 richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
+La guida di installazione (`docs/installazione/google-apple.md`) usa ancora i vecchi menu di Google Cloud (**API e servizi ›
+Schermata consenso OAuth**, **Credenziali**): oggi le stesse cose sono in **Google Auth Platform** (Branding, Pubblico, Accesso ai
+dati, Client). Trovato il 06/11 attivando l'accesso con Google: da quella pagina non si capisce dove pubblicare l'app, né dove
+impostare domini autorizzati e ambiti.
+
 ## Chiuse
 
 | Issue | Titolo | Release |

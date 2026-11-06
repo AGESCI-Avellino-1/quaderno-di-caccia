@@ -5,6 +5,32 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.20.0 — 6 novembre 2026
+
+### Novità
+
+**Dati della riunione e del gruppo nei verbali** ([#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36)): sopra il testo dei verbali scritti a mano ci sono dei pulsanti per inserire **[Data]**, **[Ora di inizio]**, **[Ora di fine]**, **[Denominazione gruppo]**, **[Codice fiscale gruppo]**, **[Partita IVA gruppo]**, **[Indirizzo completo]**, **[Indirizzo]** e **[Luogo]**, cioè solo la città. Chi scrive li vede tra parentesi quadre, chi legge la bozza vede il valore. Quando il verbale diventa definitivo il valore si copia nel testo e non cambia più, anche se poi la riunione cambia. I verbali già definitivi e i testi generati dal modello dell'assemblea restano come sono.
+
+**Anteprima del verbale** ([#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36)): il tasto **Anteprima** apre una finestra con il testo come risulterà, compreso quello non ancora salvato, e dice quali dati mancano. Lo dice anche la conferma di **Rendi definitivo**. Un dato che manca sparisce dal testo. La città si riconosce solo dopo il CAP nell'indirizzo: se non c'è, la scrivi a mano.
+
+**Partita IVA del gruppo** ([#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36)): si scrive nelle **Impostazioni**, in **Intestazione delle stampe**. È facoltativa e la cambiano i capigruppo; l'importazione da BuonaStrada non la tocca.
+
+**File nell'app installata su un Mac** ([#37](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/37)): nell'app installata da Safari sul Mac i file si scaricano di nuovo come nel browser, invece di aprire un foglio di condivisione senza un modo per salvarli. Su iPhone e iPad non cambia nulla.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.20.0
+```
+
+Una migrazione del database, applicata da sola all'avvio: aggiunge il campo della partita IVA.
+
+### Documentazione
+
+Il manuale spiega i dati da inserire nei verbali e l'anteprima, con una nuova schermata. Dalle stesse pagine nasce anche un manuale senza gli indirizzi e il logo di Avellino 1 nel testo e nel sito, solo online ([#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35)): le schermate restano le stesse, con quel logo.
+
+Provata con i test e, per l'anteprima dei verbali, in un browser automatico. Il download sul Mac e la scrittura del verbale su un iPhone non sono ancora provati sui dispositivi veri. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.19.1 — 6 novembre 2026
 
 ### Novità

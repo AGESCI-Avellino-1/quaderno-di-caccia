@@ -2,14 +2,14 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 06/11/2026 (ultima versione: v1.19.1). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 06/11/2026 (ultima versione: v1.20.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#37](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/37) | App installata su macOS: i file non si scaricano             | Bug            | Basso   | Bassa      | WIP    |
+| [#37](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/37) | App installata su macOS: i file non si scaricano (DEC-375)   | Bug            | Basso   | Bassa      | VER    |
 | [#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36) | Verbali: segnaposto e anteprima (DEC-372…DEC-374)            | Funzione       | Medio   | Media      | VER    |
 | [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371)            | Documentazione | Basso   | Media      | VER    |
 

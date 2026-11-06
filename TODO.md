@@ -9,7 +9,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | Documentazione | Basso   | Bassa      |        |
+| [#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34) | Le mie spese su iPhone: barra fuori schermo e foto che resta | Bug            | Medio   | Media      | WIP    |
+| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | Documentazione | Basso   | Bassa      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -28,15 +29,6 @@ lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rif
 
 La lista d'attesa dice «non secondo l'ordine di arrivo», il modello dei criteri (`documenti/criteri.py`) considera la data della
 richiesta per ultima: da tenere coerenti se si cambia uno dei due.
-
-Le mie spese (segnalato dal maintainer in produzione il 06/11, sul telefono), dopo aver registrato una spesa:
-
-- iPhone, app installata: barra e breadcrumb restano sopra il bordo dello schermo e non si possono toccare, scorre solo il
-  contenuto, finché non si riavvia l'app. Succede con la sola tastiera e con la sola fotocamera. Ipotesi: iOS sposta la finestra e non
-  la riporta giù, e l'app non può farlo perché `.qdc-cornice` non scorre e nessuno azzera lo scorrimento della finestra. Se è così,
-  riguarda tutti i moduli, non solo questo;
-- il campo della foto mostra ancora il file di prima (`SpeseView.vue` azzera il dato ma non il campo): la spesa successiva può
-  partire senza scontrino anche se il nome del file si vede.
 
 ## Chiuse
 

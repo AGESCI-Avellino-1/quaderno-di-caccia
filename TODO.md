@@ -9,8 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | tag versione           | Funzione | Basso   | Bassa      |        |
-| [#31](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/31) | Gestione casse         | Funzione | Alto    | Alta       |        |
+| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | tag versione           | Funzione | Basso   | Bassa      | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -57,6 +56,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Motivo |
 | ----- | ------ | ------ |
+| [#31](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/31) | Gestione casse | Già possibile: cassa comune di due unità collegate (DEC-288); banca e PayPal sono già del gruppo |
 
 ## Come si usa
 

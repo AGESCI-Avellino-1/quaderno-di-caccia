@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from apps.eventi.models import Cerchia, Evento, Livello, Localita, Partecipazione, TipoEvento
 from apps.organizzazione.models import Gruppo
@@ -255,3 +256,48 @@ def test_la_partita_iva_e_di_11_cifre(capogruppo, gruppo):
     risposta = _put(capogruppo, "/api/v1/gruppo/intestazione", {"partita_iva": "123"})
     assert risposta.status_code == 400
     assert "11 cifre" in risposta.json()["detail"]
+
+
+# --- The name of the PDF -----------------------------------------------------------------------
+
+
+def _alle(giorno: int) -> Evento:
+    return Evento(titolo="Comunità capi", inizio=datetime(2026, 3, giorno, 20, 30, tzinfo=ROMA))
+
+
+def test_il_nome_del_pdf_ha_titolo_e_data():
+    assert servizi.nome_pdf(_alle(6)) == "Comunità capi-06032026.pdf"
+
+
+def test_il_nome_del_pdf_prende_il_giorno_locale():
+    # 23:30 in Italy on the 6th is still the 6th, though it is 22:30 UTC.
+    evento = Evento(titolo="Sera", inizio=datetime(2026, 3, 6, 23, 30, tzinfo=ROMA))
+    assert servizi.nome_pdf(evento) == "Sera-06032026.pdf"
+
+
+def test_il_nome_del_pdf_toglie_quello_che_non_puo_starci():
+    evento = _alle(6)
+    evento.titolo = 'Staff/Co.Ca. "marzo"'
+    assert servizi.nome_pdf(evento) == "Staff-Co.Ca. _marzo_-06032026.pdf"
+    evento.titolo = "Due\r\nrighe"
+    assert servizi.nome_pdf(evento) == "Due__righe-06032026.pdf"
+    evento.titolo = ""
+    assert servizi.nome_pdf(evento) == "verbale-06032026.pdf"
+
+
+def test_i_verbali_separati_hanno_il_loro_nome():
+    nomi = servizi.NOMI_FILE_COLLEGATI
+    assert servizi.nome_pdf(_alle(6), nomi["CAPI_GRUPPO"]) == (
+        "verbale_legale_rappresentante-06032026.pdf"
+    )
+    assert servizi.nome_pdf(_alle(6), nomi["BILANCIO"]) == "verbale_bilancio-06032026.pdf"
+
+
+def test_il_pdf_scaricato_si_chiama_cosi(capogruppo, gruppo, di_coca):
+    di_coca.titolo = "Comunità capi"
+    di_coca.save()
+    assert _put(capogruppo, _url(di_coca), {"testo": "<p>Testo</p>"}).status_code == 200
+    assert _post(capogruppo, _url(di_coca, "/definitivo")).status_code == 200
+    intestazione = _client(capogruppo).get(_url(di_coca, ".pdf"))["Content-Disposition"]
+    giorno = timezone.localdate(di_coca.inizio)
+    assert f"filename*=UTF-8''Comunit%C3%A0%20capi-{giorno:%d%m%Y}.pdf" in intestazione

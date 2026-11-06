@@ -132,6 +132,20 @@ def tipo_di(evento: Evento) -> str | None:
     return None
 
 
+# Separate minutes have a name of their own instead of the meeting's title (DEC-376).
+NOMI_FILE_COLLEGATI = {
+    TipoCollegato.CAPI_GRUPPO: "verbale_legale_rappresentante",
+    TipoCollegato.BILANCIO: "verbale_bilancio",
+}
+
+
+def nome_pdf(evento: Evento, nome: str | None = None) -> str:
+    """Title and day of the meeting: "Comunità capi-22112026.pdf" (DEC-376). `nome_pulito` keeps
+    what follows the last slash: a slash in a title is a character, not a path."""
+    titolo = nome_pulito((nome or evento.titolo).replace("/", "-"), "verbale")
+    return f"{titolo}-{timezone.localdate(evento.inizio):%d%m%Y}.pdf"
+
+
 def verbale_di(evento: Evento) -> Verbale:
     """The minutes of the meeting, not saved yet if nobody wrote anything."""
     return Verbale.objects.filter(evento=evento).first() or Verbale(evento=evento)

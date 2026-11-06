@@ -359,7 +359,7 @@ def pdf(request, evento_id: int):
     contenuto = stampa.pdf(verbale, servizi.tipo_di(verbale.evento))
     _registra(request, verbale, Azione.STAMPA)
     risposta = HttpResponse(contenuto, content_type="application/pdf")
-    risposta["Content-Disposition"] = f'attachment; filename="verbale-{evento_id}.pdf"'
+    risposta["Content-Disposition"] = disposizione(servizi.nome_pdf(verbale.evento))
     risposta["Cache-Control"] = "private, no-store"
     return risposta
 
@@ -840,8 +840,8 @@ def pdf_collegato(request, evento_id: int, tipo: str):
     contenuto = stampa.pdf_collegato(collegato)
     _registra_collegato(request, collegato, Azione.STAMPA)
     risposta = HttpResponse(contenuto, content_type="application/pdf")
-    nome = f"verbale-{tipo.lower().replace('_', '-')}-{evento_id}.pdf"
-    risposta["Content-Disposition"] = f'attachment; filename="{nome}"'
+    nome = servizi.nome_pdf(collegato.evento, servizi.NOMI_FILE_COLLEGATI[collegato.tipo])
+    risposta["Content-Disposition"] = disposizione(nome)
     risposta["Cache-Control"] = "private, no-store"
     return risposta
 

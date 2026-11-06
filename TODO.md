@@ -9,7 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
-| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | tag versione           | Funzione | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -33,6 +32,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | Versione dell'app nel piè di pagina (DEC-369) | [v1.19.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.0) |
 | [#30](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/30) | Assemblea: il punto Regolamento parte non spuntato (DEC-368) | [v1.18.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.18.1) |
 | [#29](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/29) | Località: nome facoltativo e numero civico (DEC-366, DEC-367) | [v1.18.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.18.0) |
 | [#28](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/28) | Azienda nel file dei contatti (DEC-361) | [v1.17.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.17.0) |

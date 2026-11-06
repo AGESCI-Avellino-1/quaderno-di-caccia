@@ -29,6 +29,12 @@ lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rif
 La lista d'attesa dice «non secondo l'ordine di arrivo», il modello dei criteri (`documenti/criteri.py`) considera la data della
 richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
+Le mie spese (segnalato dal maintainer in produzione il 06/11, sul telefono), dopo aver registrato una spesa:
+
+- non si riesce a tornare su né alle pagine precedenti, finché non si riavvia l'app: causa ancora da trovare, manca lo screenshot;
+- il campo della foto mostra ancora il file di prima (`SpeseView.vue` azzera il dato ma non il campo): la spesa successiva può
+  partire senza scontrino anche se il nome del file si vede.
+
 ## Chiuse
 
 | Issue | Titolo | Release |

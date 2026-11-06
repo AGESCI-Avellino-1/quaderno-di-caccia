@@ -9,10 +9,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
-| [#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36) | Verbali: segnaposto e anteprima (DEC-372…DEC-374)            | Funzione       | Medio   | Media      | VAL    |
-| [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371)            | Documentazione | Basso   | Media      | VAL    |
-| [#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34) | Barra fuori schermo su iPhone e foto che resta (DEC-370)     | Bug            | Medio   | Media      | VER    |
-| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | Documentazione | Basso   | Bassa      | VER    |
+| [#36](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/36) | Verbali: segnaposto e anteprima (DEC-372…DEC-374)            | Funzione       | Medio   | Media      | WIP    |
+| [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371)            | Documentazione | Basso   | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -36,6 +34,8 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#34](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/34) | Barra fuori schermo su iPhone e foto che resta (DEC-370) | [v1.19.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.1) |
+| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | [v1.19.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.1) |
 | [#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32) | Versione dell'app nel piè di pagina (DEC-369) | [v1.19.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.19.0) |
 | [#30](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/30) | Assemblea: il punto Regolamento parte non spuntato (DEC-368) | [v1.18.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.18.1) |
 | [#29](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/29) | Località: nome facoltativo e numero civico (DEC-366, DEC-367) | [v1.18.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.18.0) |

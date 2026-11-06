@@ -7,8 +7,9 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                 | Tipo     | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ---------------------- | -------- | ------- | ---------- | ------ |
+| Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
+| [#33](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/33) | Guida di installazione: i menu di Google Cloud sono cambiati | Documentazione | Basso   | Bassa      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -27,11 +28,6 @@ lista d'attesa (20 iscrizioni l'ora): su una rete condivisa potrebbero farla rif
 
 La lista d'attesa dice «non secondo l'ordine di arrivo», il modello dei criteri (`documenti/criteri.py`) considera la data della
 richiesta per ultima: da tenere coerenti se si cambia uno dei due.
-
-La guida di installazione (`docs/installazione/google-apple.md`) usa ancora i vecchi menu di Google Cloud (**API e servizi ›
-Schermata consenso OAuth**, **Credenziali**): oggi le stesse cose sono in **Google Auth Platform** (Branding, Pubblico, Accesso ai
-dati, Client). Trovato il 06/11 attivando l'accesso con Google: da quella pagina non si capisce dove pubblicare l'app, né dove
-impostare domini autorizzati e ambiti.
 
 ## Chiuse
 

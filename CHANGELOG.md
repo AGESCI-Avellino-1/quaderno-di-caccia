@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.19.0 — 6 novembre 2026
+
+### Novità
+
+**Versione dell'app nel piè di pagina** ([#32](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/32)): nei titoli e nella riga del piè di pagina delle **Impostazioni** si può scrivere **[Release]**, che mostra la versione dell'app aperta su quel telefono o computer, per esempio v1.19.0. Serve quando qualcuno segnala un errore: si vede subito se sta usando l'ultima versione. Un telefono che non ha ancora accettato l'aggiornamento mostra il numero vecchio.
+
+Il segnaposto è facoltativo: se il gruppo non lo scrive non cambia nulla. La riga del piè di pagina si vede anche prima dell'accesso, quindi chi lo usa lì mostra la versione anche a chi non ha un account. Nelle pagine di privacy e termini non vale.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.19.0
+```
+
+Nessuna migrazione del database. Per vedere la versione, scrivi per esempio `Versione [Release]` nella riga del piè di pagina.
+
+### Documentazione
+
+Il capitolo sulle impostazioni del manuale spiega il nuovo segnaposto.
+
+Provata con i test e in Chromium sulla build di produzione, prima dell'accesso: non ancora su un telefono né durante un aggiornamento dell'app. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.18.1 — 5 novembre 2026
 
 ### Novità

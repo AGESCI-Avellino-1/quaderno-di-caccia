@@ -16,6 +16,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#55](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/55) | BuonaCaccia: la data reale dei passi di un'iscrizione (DEC-392)    | Miglioramento | Basso   | Bassa      | VER    |
 | [#56](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/56) | Testi: socio, Ragazzo/a e ragazzi/e al posto di ragazzo (DEC-393)  | Miglioramento | Basso   | Media      | VER    |
 | [#57](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/57) | BuonaCaccia: senza quota non serve segnare il pagamento (DEC-394)  | Miglioramento | Basso   | Bassa      | VER    |
+| [#58](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/58) | Scelta di una persona: campo con ricerca                           | Miglioramento | Basso   | Media      | VAL    |
+| [#59](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/59) | BuonaCaccia: registrare più iscrizioni insieme                     | Miglioramento | Basso   | Media      | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 

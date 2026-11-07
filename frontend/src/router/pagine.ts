@@ -14,6 +14,7 @@ export interface Pagina {
 
 export const PAGINE: Record<string, Pagina> = {
   home: { titolo: 'Home' },
+  sezione: { titolo: 'Sezione' },
   accesso: { titolo: 'Accesso' },
   sblocco: { titolo: 'Sblocca' },
   protezione: { titolo: 'Protezione del dispositivo' },

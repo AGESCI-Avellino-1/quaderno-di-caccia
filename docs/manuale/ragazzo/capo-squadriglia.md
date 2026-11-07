@@ -34,7 +34,7 @@ lui le riunioni (per esempio quando sei assente): scegli chi in **Delega a** e t
 ## L'animale della squadriglia
 
 In cima alla pagina trovi l'immagine dell'animale della squadriglia e i suoi colori, con i loro
-significati. Dal menu, **Animali di squadriglia** elenca tutti gli animali, con colori e richiamo:
+significati. In **Amministrazione**, **Animali di squadriglia** elenca tutti gli animali, con colori e richiamo:
 lo leggono tutti gli esploratori e le guide, ma l'animale di una squadriglia lo sceglie lo staff.
 
 ## Gli incarichi

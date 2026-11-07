@@ -81,6 +81,6 @@ si chiude.
 
 ## Modulistica
 
-In **Il mio gruppo**, tocca **Modulistica**: qui carichi i moduli vuoti (in PDF) che le
+In **Amministrazione**, tocca **Modulistica**: qui carichi i moduli vuoti (in PDF) che le
 famiglie scaricano con l'iscrizione, firmano e ricaricano, per esempio «Informativa e consensi
 2026/27». Aggiornali ogni anno; quelli vecchi si **disattivano**.

@@ -24,7 +24,7 @@ Le stesse voci sono nel menu (vedi [Come ci si muove](../introduzione.md#come-ci
 ![La Home di Giulia sul computer](../img/ragazzo/home-computer.png){.computer width="65%"}
 :::
 
-Vuoi portare un amico nel gruppo? In **Il mio gruppo** tocca **Invita nel gruppo**: c'è il
+Vuoi portare un amico nel gruppo? In **Profilo** tocca **Invita nel gruppo**: c'è il
 link della lista d'attesa da mandargli (**Condividi** o **Copia il link**) e il QR code da
 fargli inquadrare. Il resto lo fa la sua famiglia, come spiega
 [Lista d'attesa](../genitore/lista-attesa.md#invitare-altre-famiglie).

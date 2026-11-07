@@ -38,26 +38,58 @@ const voci = (p: Profilo, chiave: string) =>
     ?.voci.map((v) => v.nome) ?? []
 
 describe('menu', () => {
-  it('a parent sees the family, the notices, the events and «Invita nel gruppo»', () => {
+  it('a parent sees the family, the notices, the events; the profile has the invitation', () => {
     const genitore = {
       ...BASE,
       persona: io,
       tutelati: [{ id: 2, nome: 'Giulia', cognome: 'Rossi' }],
     }
-    expect(titoli(genitore)).toEqual(['Bacheca', 'La mia famiglia', 'Il mio gruppo', 'Attività'])
+    expect(titoli(genitore)).toEqual(['Bacheca', 'La mia famiglia', 'Attività'])
     expect(voci(genitore, 'famiglia')).toEqual(['Giulia Rossi'])
-    expect(voci(genitore, 'gruppo')).toEqual(['Invita nel gruppo'])
     expect(vociProfilo(genitore).map((v) => v.nome)).toEqual([
       'Il mio profilo',
       'Privacy e preferenze',
       'Password e sicurezza',
       'Le mie quote',
+      'Invita nel gruppo',
     ])
   })
 
-  it('someone with nothing to do sees only «Invita nel gruppo»', () => {
-    expect(titoli(BASE)).toEqual(['Il mio gruppo'])
-    expect(voci(BASE, 'gruppo')).toEqual(['Invita nel gruppo'])
+  it('someone with nothing to do has no group, and the invitation in the profile', () => {
+    expect(titoli(BASE)).toEqual([])
+    expect(vociProfilo(BASE).map((v) => v.nome)).toContain('Invita nel gruppo')
+  })
+
+  it('a ragazzo of a reparto finds the patrol animals in Amministrazione', () => {
+    const ragazzo = { ...BASE, persona: io, vede_animali: true }
+    expect(voci(ragazzo, 'amministrazione')).toEqual(['Animali di squadriglia'])
+    expect(voci(ragazzo, 'attivita')).not.toContain('Animali di squadriglia')
+  })
+
+  it('Il mio gruppo in its order; the rest moved to Amministrazione', () => {
+    const capogruppo = {
+      ...BASE,
+      persona: io,
+      branca: 'capi' as const,
+      capo: true,
+      capogruppo: true,
+      vede_lista_attesa: true,
+      formazione_capi: true,
+      vede_animali: true,
+    }
+    expect(voci(capogruppo, 'gruppo')).toEqual([
+      'Organigramma',
+      'Unità',
+      'Genitori',
+      'Soci',
+      'Richieste di iscrizione',
+      "Lista d'attesa",
+      'Formazione capi',
+    ])
+    expect(voci(capogruppo, 'attivita')).not.toContain('Formazione capi')
+    expect(voci(capogruppo, 'amministrazione')).toEqual(
+      expect.arrayContaining(['Modulistica', 'Richieste privacy', 'Animali di squadriglia']),
+    )
   })
 
   it('names the Progressione personale after the branch and the setting', () => {
@@ -149,12 +181,11 @@ describe('menu', () => {
     ])
     expect(progressione[0]!.nomeInSezione).toBe('Progressione')
     expect(voci(capo, 'gruppo')).toEqual([
-      'Soci',
-      'Genitori',
-      'Unità',
       'Organigramma',
+      'Unità',
+      'Genitori',
+      'Soci',
       'Richieste di iscrizione',
-      'Invita nel gruppo',
     ])
     expect(titoli(capo)).not.toContain('BuonaStrada')
   })

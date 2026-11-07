@@ -21,6 +21,13 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
     {
+      // A group of the menu with only its entries, from the breadcrumb (DEC-382).
+      path: '/sezione/:chiave',
+      name: 'sezione',
+      component: () => import('@/views/SezioneView.vue'),
+      props: true,
+    },
+    {
       path: '/accesso',
       name: 'accesso',
       component: () => import('@/views/AccessoView.vue'),

@@ -69,7 +69,7 @@ voci sono anche nella Home, nel gruppo **Profilo**):
 
 In alto, in ogni pagina tranne la Home, vedi dove sei: la tenda (la Home), il gruppo del
 menu e la pagina, per esempio «La mia famiglia › Giulia Rossi › Progressione personale». Tocca la tenda
-o una pagina per tornarci.
+o una pagina per tornarci. Toccando il gruppo si apre una pagina con tutte e sole le sue voci.
 
 ## Come leggere il manuale
 

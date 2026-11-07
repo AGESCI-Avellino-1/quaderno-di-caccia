@@ -61,7 +61,7 @@ cancellano.
 
 Conosci una famiglia che vorrebbe entrare nel gruppo? Mandale il link della lista d'attesa.
 
-1. Nella Home, in **Il mio gruppo**, tocca **Invita nel gruppo**.
+1. Nella Home, in **Profilo**, tocca **Invita nel gruppo**; dal menu la trovi sotto il tuo nome.
 2. Tocca **Condividi** e scegli come mandarlo (WhatsApp, email…), oppure **Copia il link** e
    incollalo dove vuoi. Sul computer, dove non c'è **Condividi**, usa **Copia il link**.
 3. Se la persona è con te, falle inquadrare il **QR code** con la fotocamera del telefono: si

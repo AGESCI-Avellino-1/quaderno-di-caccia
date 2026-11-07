@@ -1,6 +1,7 @@
 /**
- * The breadcrumb (DEC-244): the menu group, the pages above this one (router/pagine.ts)
- * with their own names, then this page. The Home (a tent) comes before, in the component.
+ * The breadcrumb (DEC-244): the menu group, with a page of its own (DEC-382), the pages above
+ * this one (router/pagine.ts) with their own names, then this page. The Home (a tent) comes
+ * before, in the component.
  */
 import { PAGINE } from '@/router/pagine'
 
@@ -8,7 +9,7 @@ import type { Gruppo, Voce } from './menu'
 
 export interface Briciola {
   nome: string
-  /** Where it leads; none for the group and for this page. */
+  /** Where it leads; none for this page. */
   percorso: string | null
 }
 
@@ -61,7 +62,7 @@ export function briciole(
   )
   return [
     ...(gruppo && gruppo.titolo !== mostrate[mostrate.length - 1]!.nome
-      ? [{ nome: gruppo.titolo, percorso: null }]
+      ? [{ nome: gruppo.titolo, percorso: `/sezione/${gruppo.chiave}` }]
       : []),
     ...mostrate.map((b, i) => ({
       nome: b.nome,

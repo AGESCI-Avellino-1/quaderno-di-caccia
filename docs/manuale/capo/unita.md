@@ -63,7 +63,7 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
 
 ## Gli animali di squadriglia
 
-Dal menu, **Animali di squadriglia** elenca gli animali tra cui scegliere, generali e nautici, con
+In **Amministrazione**, **Animali di squadriglia** elenca gli animali tra cui scegliere, generali e nautici, con
 immagine, colori e significati per il guidoncino, e richiamo. L'elenco è uno per tutto il gruppo:
 lo leggono i ragazzi e gli staff dei reparti e i capigruppo; lo modificano gli staff dei reparti e
 i capigruppo.

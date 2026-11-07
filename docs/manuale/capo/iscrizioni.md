@@ -7,8 +7,8 @@ famiglia riceve un link per l'**iscrizione**, che lo staff dell'unità accoglie.
 
 Nella Home, in **Il mio gruppo**, tocca **Lista d'attesa**. La vedono tutti i capi.
 
-Per far conoscere la lista d'attesa (a una riunione con le famiglie, in parrocchia), in **Il mio
-gruppo** tocca **Invita nel gruppo**: il link da mandare, il QR code e un volantino da stampare
+Per far conoscere la lista d'attesa (a una riunione con le famiglie, in parrocchia), in
+**Profilo** tocca **Invita nel gruppo**: il link da mandare, il QR code e un volantino da stampare
 (vedi [Invitare altre famiglie](../genitore/lista-attesa.md#invitare-altre-famiglie)). Lo
 trovano anche i genitori e i ragazzi.
 

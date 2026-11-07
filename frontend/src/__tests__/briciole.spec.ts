@@ -45,7 +45,7 @@ describe('breadcrumb', () => {
       anello('sentiero', '/persone/3/sentiero', 'Progressione personale'),
     ]
     expect(briciole(catena, gruppi, [], false, percorso)).toEqual([
-      { nome: 'La mia famiglia', percorso: null },
+      { nome: 'La mia famiglia', percorso: '/sezione/famiglia' },
       { nome: 'Giulia Rossi', percorso: '/persone/3' },
       { nome: 'Progressione personale', percorso: null },
     ])
@@ -69,7 +69,7 @@ describe('breadcrumb', () => {
       anello('passaggi', '/unita/2/passaggi', 'Passaggi'),
     ]
     expect(briciole(catena, gruppi, [], true, percorso)).toEqual([
-      { nome: 'Progressione personale', percorso: null },
+      { nome: 'Progressione personale', percorso: '/sezione/progressione' },
       { nome: 'Reparto Antares (N1)', percorso: '/unita/2/sentiero' },
       { nome: 'Passaggi', percorso: null },
     ])

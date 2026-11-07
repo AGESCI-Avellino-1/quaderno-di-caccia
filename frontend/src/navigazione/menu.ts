@@ -187,12 +187,22 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
       chiave: 'gruppo',
       titolo: 'Il mio gruppo',
       icona: 'diagram-3',
+      // In this order, the group's structure first (DEC-383).
       voci: solo([
+        (p.capo || p.amministratore_tecnico) && {
+          // Organigramma since DEC-299 (was «Incarichi di gruppo»).
+          nome: 'Organigramma',
+          icona: 'person-badge',
+          to: '/gruppo',
+          descrizione: p.capo
+            ? 'Capigruppo, tesorieri, staff delle unità e servizi di supporto'
+            : 'Nomina il primo capogruppo del gruppo',
+        },
         p.capo && {
-          nome: 'Soci',
-          icona: 'person-vcard',
-          to: '/soci',
-          descrizione: 'Capi e ragazzi censiti',
+          nome: 'Unità',
+          icona: 'collection',
+          to: '/unita',
+          descrizione: 'Branchi, cerchi, reparti, clan e Comunità capi',
         },
         p.capo && {
           nome: 'Genitori',
@@ -201,19 +211,10 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           descrizione: 'Chi ha la responsabilità genitoriale dei ragazzi',
         },
         p.capo && {
-          nome: 'Unità',
-          icona: 'collection',
-          to: '/unita',
-          descrizione: 'Branchi, cerchi, reparti, clan e Comunità capi',
-        },
-        (p.capo || p.amministratore_tecnico) && {
-          // Organigramma since DEC-299 (was «Incarichi di gruppo»).
-          nome: 'Organigramma',
-          icona: 'person-badge',
-          to: '/gruppo',
-          descrizione: p.capo
-            ? 'Capigruppo, tesorieri, amministratori e servizi di supporto'
-            : 'Nomina il primo capogruppo del gruppo',
+          nome: 'Soci',
+          icona: 'person-vcard',
+          to: '/soci',
+          descrizione: 'Capi e ragazzi censiti',
         },
         (decide > 0 || p.capogruppo || (p.unita_servizio?.length ?? 0) > 0) && {
           nome: 'Richieste di iscrizione',
@@ -228,24 +229,11 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/attesa',
           descrizione: 'Chi vuole entrare nel gruppo, per età e unità consigliata',
         },
-        // Anyone with an account, parents and ragazzi too (DEC-304).
-        {
-          nome: 'Invita nel gruppo',
-          icona: 'qr-code',
-          to: '/invita',
-          descrizione: "Link, QR code e volantino della lista d'attesa",
-        },
-        p.capogruppo && {
-          nome: 'Modulistica',
-          icona: 'file-earmark-text',
-          to: '/modulistica',
-          descrizione: 'Moduli da firmare per le iscrizioni',
-        },
-        p.capogruppo && {
-          nome: 'Richieste privacy',
-          icona: 'shield-lock',
-          to: '/diritti',
-          descrizione: 'Accesso, copia e cancellazione dei dati',
+        p.formazione_capi && {
+          nome: 'Formazione capi',
+          icona: 'award',
+          to: '/buonacaccia/formazione',
+          descrizione: 'I campi di formazione dei capi, per la Zona',
         },
       ]),
     },
@@ -281,13 +269,6 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           descrizione: 'Piccole Orme, campetti, formazione: iscrizioni e liberatorie',
           sottovoce: true,
         },
-        p.formazione_capi && {
-          nome: 'Formazione capi',
-          icona: 'award',
-          to: '/buonacaccia/formazione',
-          descrizione: 'I campi di formazione dei capi, per la Zona',
-          sottovoce: true,
-        },
         p.capo && {
           nome: 'Al campo',
           icona: 'backpack',
@@ -299,12 +280,6 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           icona: 'flag',
           to: '/squadriglia',
           descrizione: 'I numeri di telefono della squadriglia',
-        },
-        p.vede_animali && {
-          nome: 'Animali di squadriglia',
-          icona: 'feather',
-          to: '/animali-squadriglia',
-          descrizione: 'Gli animali tra cui scegliere, con i colori e i loro significati',
         },
       ]),
     },
@@ -398,6 +373,25 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
               ? 'Sito, modelli delle email, privacy policy, email di prova'
               : 'Come le famiglie possono pagare le quote',
         },
+        p.capogruppo && {
+          nome: 'Modulistica',
+          icona: 'file-earmark-text',
+          to: '/modulistica',
+          descrizione: 'Moduli da firmare per le iscrizioni',
+        },
+        p.capogruppo && {
+          nome: 'Richieste privacy',
+          icona: 'shield-lock',
+          to: '/diritti',
+          descrizione: 'Accesso, copia e cancellazione dei dati',
+        },
+        // For all who read the list, the ragazzi of the reparto too (DEC-350, DEC-383).
+        p.vede_animali && {
+          nome: 'Animali di squadriglia',
+          icona: 'feather',
+          to: '/animali-squadriglia',
+          descrizione: 'Gli animali tra cui scegliere, con i colori e i loro significati',
+        },
         p.amministratore_tecnico &&
           contatori.email_di_prova && {
             nome: 'Mailpit',
@@ -465,6 +459,13 @@ export function vociProfilo(p: Profilo): Voce[] {
       icona: 'person-lines-fill',
       to: '/mia-iscrizione',
       descrizione: 'Stato delle richieste, dati e moduli da completare',
+    },
+    // Anyone with an account, parents and ragazzi too (DEC-304, DEC-383).
+    {
+      nome: 'Invita nel gruppo',
+      icona: 'qr-code',
+      to: '/invita',
+      descrizione: "Link, QR code e volantino della lista d'attesa",
     },
     p.puo_impersonare &&
       !p.impersonazione && {

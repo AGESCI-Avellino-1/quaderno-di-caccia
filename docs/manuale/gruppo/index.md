@@ -19,8 +19,8 @@ capigruppo possono anche pubblicare avvisi per tutto il gruppo (vedi
 [Usare l'app al posto di…](../capo/impersona)).
 
 Nel menu trovi in più i gruppi **BuonaStrada**, **Gestione economica** e
-**Amministrazione**, e in **Il mio gruppo** le voci **Organigramma**, **Modulistica**
-e **Richieste privacy**.
+**Amministrazione**, con **Modulistica** e **Richieste privacy**, e in **Il mio gruppo** le
+voci **Organigramma** e **Formazione capi**.
 
 :::{container} schermate
 ![La Home di Laura Bianchi, capogruppo, sul telefono](../img/gruppo/home-telefono.png){.telefono width="30%"}

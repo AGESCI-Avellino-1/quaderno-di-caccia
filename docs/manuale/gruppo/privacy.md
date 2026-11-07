@@ -17,7 +17,7 @@ Chiunque può chiedere di vedere, avere una copia, correggere o cancellare i suo
 quelli del figlio minorenne). Le gestiscono i capigruppo, entro un mese, insieme all'Ufficio
 Privacy nazionale.
 
-In **Il mio gruppo**, tocca **Richieste privacy**:
+In **Amministrazione**, tocca **Richieste privacy**:
 
 1. Tocca **Registra una richiesta**: la persona, cosa chiede, chi l'ha chiesta e come, quando
    è arrivata.

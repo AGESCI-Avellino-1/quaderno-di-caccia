@@ -109,9 +109,8 @@ async function crea(dati: EventoBCIn) {
             <li v-for="e in trovati" :key="e.id" class="list-group-item">
               <RouterLink :to="`/eventi/${e.id}`">{{ e.titolo }}</RouterLink>
               <span class="small fg-2">
-                · {{ data(e.inizio) }}<template v-if="e.luogo"> · {{ e.luogo }}</template>
-                <template v-if="e.formazione_capi"> · formazione capi</template>
-                <template v-if="e.piccole_orme"> · Piccole Orme</template>
+                · {{ data(e.inizio) }}<template v-if="e.luogo"> · {{ e.luogo }}</template> ·
+                {{ e.tipologia }}
               </span>
             </li>
           </ul>

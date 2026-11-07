@@ -22,6 +22,7 @@ from django.db import transaction
 
 from apps.accounts.models import Invito, User
 from apps.anagrafica.models import AppartenenzaSquadriglia, Persona, RelazioneTutela
+from apps.buonacaccia.servizi import carica_tipologie
 from apps.core.anno import AnnoAssociativo
 from apps.documenti.criteri import MODELLO
 from apps.documenti.models import MassimoUnita, VersioneCriteri
@@ -240,8 +241,9 @@ class Command(BaseCommand):
             testo=MODELLO,
         )
         MassimoUnita.objects.create(versione=criteri_anno, unita=unita["reparto"], massimo=30)
-        # A flush also takes the catalog the migration loaded (DEC-350).
+        # A flush also takes the catalogs the migrations loaded (DEC-350, DEC-398).
         carica_catalogo()
+        carica_tipologie()
 
         def squadriglia_di(animale: str, sesso: str) -> Squadriglia:
             scelto = AnimaleSquadriglia.objects.get(nome=animale)

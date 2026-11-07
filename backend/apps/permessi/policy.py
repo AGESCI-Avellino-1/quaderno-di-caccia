@@ -95,7 +95,28 @@ def e_capo_in_attesa(user) -> bool:
     from apps.anagrafica.servizi import e_codice_provvisorio
 
     persona = persona_di(user)
-    return persona is not None and e_codice_provvisorio(persona.codice_socio) and e_capo(user)
+    return (
+        persona is not None
+        and e_codice_provvisorio(persona.codice_socio)
+        # Let in by a capogruppo while BuonaStrada's code is on its way (DEC-400).
+        and persona.abilitato_come_censito_il is None
+        and e_capo(user)
+    )
+
+
+def puo_abilitare_come_censito(user, persona: Persona) -> bool:
+    """A capogruppo (or the group's AE), registered themself, lets in a capo with a
+    provisional code whose joining is complete outside the app (DEC-400)."""
+    from apps.anagrafica.servizi import e_codice_provvisorio
+
+    return (
+        e_capogruppo(user)
+        and not e_capo_in_attesa(user)
+        and e_codice_provvisorio(persona.codice_socio)
+        and Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.CAPO)
+        .exists()
+    )
 
 
 def e_capo_censito(user) -> bool:
@@ -1351,6 +1372,12 @@ def puo_creare_evento_buonacaccia(user) -> bool:
         and not propria.e_minorenne()
         and Appartenenza.objects.attive().filter(persona=propria).exists()
     )
+
+
+def puo_gestire_tipologie_buonacaccia(user) -> bool:
+    """The types of BuonaCaccia events and their default constraints: every capo, whatever
+    their role (DEC-398)."""
+    return e_capo(user)
 
 
 def puo_gestire_evento_buonacaccia(user, evento) -> bool:

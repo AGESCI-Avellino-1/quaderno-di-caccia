@@ -22,6 +22,19 @@ def test_cataloghi_pp(file, voci):
     assert len(set(codici)) == voci
 
 
+def test_tipologie_buonacaccia():
+    dati = json.loads((CATALOGHI / "tipologie_buonacaccia.json").read_text(encoding="utf-8"))
+    codici = [v["codice"] for v in dati["voci"]]
+    assert len(codici) == len(set(codici)) == 64
+    assert {v["categoria"] for v in dati["voci"]} == {
+        "LC",
+        "EG",
+        "RS",
+        "FORMAZIONE_CAPI",
+        "SPECIALE",
+    }
+
+
 def test_modello_d_righe_non_selezionabili():
     dati = json.loads((CATALOGHI / "modello_d_2024_2025.json").read_text(encoding="utf-8"))
     grigie = {

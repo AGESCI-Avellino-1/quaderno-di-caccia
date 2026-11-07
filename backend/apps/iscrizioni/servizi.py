@@ -712,4 +712,13 @@ def annulla_passaggio_in_coca(genitore: Persona) -> None:
     passaggio.save(update_fields=["appartenenza", "annullato_il", "aggiornato_il"])
     appartenenza.delete()
     genitore.codice_socio = passaggio.codice_precedente or None
-    genitore.save(update_fields=["codice_socio", "aggiornato_il"])
+    genitore.abilitato_come_censito_il = None
+    genitore.abilitato_come_censito_da = None
+    genitore.save(
+        update_fields=[
+            "codice_socio",
+            "abilitato_come_censito_il",
+            "abilitato_come_censito_da",
+            "aggiornato_il",
+        ]
+    )

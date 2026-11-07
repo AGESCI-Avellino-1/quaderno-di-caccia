@@ -597,11 +597,17 @@ def crea_attivita(email) -> None:
             ],
         },
     )
+    # The type with its default constraints, as the form copies them (DEC-398).
+    specialita = next(
+        t for t in capo_reparto("get", "/buonacaccia/tipologie") if t["codice"] == "2010101"
+    )
     campo = capo_reparto(
         "post",
         "/buonacaccia/eventi",
         {
             "titolo": "Campo di specialità di Zona",
+            "tipologia_id": specialita["id"],
+            "branche": specialita["branche"],
             "tipo": "CAMPO",
             "inizio": _giorno(_sabato(4), time(9)),
             "fine": _giorno(_sabato(4) + 1, time(17)),

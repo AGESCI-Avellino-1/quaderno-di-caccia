@@ -317,6 +317,10 @@ implements them:
   adult also their own consents); capigruppo and the technical administrator forward
   or discard (`puo_gestire_correzioni`). The daily summary to the capigruppo is
   `manage.py segnala_correzioni`, run by the host's cron (`deploy/cron/qdc.crontab`).
+- A capo with a provisional code is «in attesa» (`policy.e_capo_in_attesa`) unless a capogruppo
+  let them in as registered (`Persona.abilitato_come_censito_il`, DEC-400; the import clears it);
+  their training level is 1 until BuonaStrada brings one (`anagrafica.servizi.livello_formazione`,
+  DEC-399).
 - Joining from the app (DEC-120…DEC-127): sign-up is open with an
   invitation (DEC-21) **or** a registration code (`apps/iscrizioni`, kept in the
   session until the allauth sign-up, `accounts.adapters`). Approval gives a provisional

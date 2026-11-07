@@ -20,21 +20,23 @@ from apps.core.anno import AnnoAssociativo
 from apps.core.dataora import DataOra
 from apps.eventi import avvisi as avvisi_eventi
 from apps.eventi.models import Evento, Livello, Partecipazione, StatoPartecipazione, TipoEvento
-from apps.organizzazione.models import TipoUnita
+from apps.organizzazione.models import Branca, TipoUnita
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
 from . import avvisi, servizi
 from .models import (
     ATTIVE,
+    CategoriaBuonaCaccia,
     EsitoLiberatoria,
     EventoBuonaCaccia,
     IscrizioneBuonaCaccia,
     ModelloScheda,
     ModoLiberatoria,
     StatoIscrizione,
-    TipoCampoFormazione,
     TipoDomanda,
+    TipologiaBuonaCaccia,
+    Vincoli,
 )
 
 router = Router(tags=["buonacaccia"])
@@ -152,10 +154,14 @@ class EventoBCIn(Schema):
     luogo: str = ""
     descrizione: str = ""
     link: str = ""
-    formazione_capi: bool = False
-    piccole_orme: bool = False
-    tipo_campo: TipoCampoFormazione | None = None
-    specifica: str = ""
+    # The type, always (DEC-398), and its constraints as written for this event.
+    tipologia_id: int
+    branche: list[Branca] = []
+    eta_minima: int | None = None
+    eta_massima: int | None = None
+    livello_minimo: int | None = None
+    massimo_per_unita: int | None = None
+    massimo_per_gruppo: int | None = None
 
 
 class EventoTrovato(Schema):
@@ -166,6 +172,7 @@ class EventoTrovato(Schema):
     luogo: str
     formazione_capi: bool
     piccole_orme: bool
+    tipologia: str
 
 
 def _eventi_trovati(elenco) -> list[dict]:
@@ -176,6 +183,7 @@ def _eventi_trovati(elenco) -> list[dict]:
             "inizio": e.inizio,
             "fine": e.fine,
             "luogo": e.luogo,
+            "tipologia": str(getattr(getattr(e, "buonacaccia", None), "tipologia", "")),
             "formazione_capi": getattr(getattr(e, "buonacaccia", None), "formazione_capi", False),
             "piccole_orme": getattr(getattr(e, "buonacaccia", None), "piccole_orme", False),
         }
@@ -210,10 +218,12 @@ def _compila(evento: Evento, dettagli: EventoBuonaCaccia, dati: EventoBCIn) -> N
     evento.luogo = dati.luogo.strip()
     evento.descrizione = dati.descrizione.strip()
     dettagli.link = dati.link.strip()
-    dettagli.formazione_capi = dati.formazione_capi
-    dettagli.piccole_orme = dati.piccole_orme and not dati.formazione_capi
-    dettagli.tipo_campo = (dati.tipo_campo or "") if dati.formazione_capi else ""
-    dettagli.specifica = dati.specifica.strip() if dettagli.tipo_campo else ""
+    tipologia = get_object_or_404(TipologiaBuonaCaccia, pk=dati.tipologia_id)
+    if not tipologia.attiva and tipologia.pk != dettagli.tipologia_id:
+        raise HttpError(400, "Questo tipo di evento non è più attivo: scegline un altro.")
+    servizi.applica_tipologia(dettagli, tipologia)
+    for campo in Vincoli.CAMPI_VINCOLI:
+        setattr(dettagli, campo, getattr(dati, campo))
 
 
 @router.post("/buonacaccia/eventi", response={201: EventoTrovato})
@@ -262,6 +272,112 @@ def modifica_evento(request, evento_id: int, dati: EventoBCIn):
     if quando() != prima:
         transaction.on_commit(lambda: avvisi_eventi.modificato(evento))
     return _eventi_trovati([evento])[0]
+
+
+# --- Types of event and their constraints (DEC-398) ----------------------------------------
+
+
+class TipologiaOut(Schema):
+    id: int
+    codice: str
+    nome: str
+    categoria: str
+    categoria_nome: str
+    attiva: bool
+    altro: bool
+    branche: list[str]
+    eta_minima: int | None
+    eta_massima: int | None
+    livello_minimo: int | None
+    massimo_per_unita: int | None
+    massimo_per_gruppo: int | None
+    eventi: int
+
+
+class TipologiaIn(Schema):
+    nome: str
+    categoria: CategoriaBuonaCaccia
+    attiva: bool = True
+    branche: list[Branca] = []
+    eta_minima: int | None = None
+    eta_massima: int | None = None
+    livello_minimo: int | None = None
+    massimo_per_unita: int | None = None
+    massimo_per_gruppo: int | None = None
+
+
+def _tipologia_out(t: TipologiaBuonaCaccia) -> dict:
+    return {
+        "id": t.pk,
+        "codice": t.codice,
+        "nome": t.nome,
+        "categoria": t.categoria,
+        "categoria_nome": t.get_categoria_display(),
+        "attiva": t.attiva,
+        "altro": t.altro,
+        **{campo: getattr(t, campo) for campo in Vincoli.CAMPI_VINCOLI},
+        "eventi": t.eventi.count(),
+    }
+
+
+def _gestore_tipologie(request) -> None:
+    if not policy.puo_gestire_tipologie_buonacaccia(request.auth):
+        raise HttpError(403, "I tipi di evento li gestiscono i capi.")
+
+
+@router.get("/buonacaccia/tipologie", response=list[TipologiaOut])
+def tipologie(request, tutte: bool = False):
+    """For an event, the active types of the group's branches; `tutte` for the capi who
+    manage them."""
+    if tutte:
+        _gestore_tipologie(request)
+        elenco = TipologiaBuonaCaccia.objects.all()
+    elif policy.puo_creare_evento_buonacaccia(request.auth):
+        elenco = servizi.tipologie_proponibili()
+    else:
+        raise HttpError(403, "Non puoi registrare eventi su BuonaCaccia.")
+    return [_tipologia_out(t) for t in elenco]
+
+
+def _compila_tipologia(tipologia: TipologiaBuonaCaccia, dati: TipologiaIn) -> None:
+    if dati.categoria == CategoriaBuonaCaccia.ALTRO and not tipologia.altro:
+        raise HttpError(400, "Scegli la categoria: «Altro» c'è già.")
+    if tipologia.altro and dati.categoria != CategoriaBuonaCaccia.ALTRO:
+        raise HttpError(400, "«Altro» resta nella sua categoria.")
+    if tipologia.altro and not dati.attiva:
+        raise HttpError(400, "«Altro» serve per gli eventi senza un tipo: resta attivo.")
+    tipologia.nome = dati.nome.strip()
+    tipologia.categoria = dati.categoria
+    tipologia.attiva = dati.attiva
+    for campo in Vincoli.CAMPI_VINCOLI:
+        setattr(tipologia, campo, getattr(dati, campo))
+
+
+@router.post("/buonacaccia/tipologie", response={201: TipologiaOut})
+def crea_tipologia(request, dati: TipologiaIn):
+    _gestore_tipologie(request)
+    tipologia = TipologiaBuonaCaccia()
+    _compila_tipologia(tipologia, dati)
+    _esegui(servizi.salva_tipologia, tipologia)
+    return Status(201, _tipologia_out(tipologia))
+
+
+@router.put("/buonacaccia/tipologie/{tipologia_id}", response=TipologiaOut)
+def modifica_tipologia(request, tipologia_id: int, dati: TipologiaIn):
+    """New constraints apply to the events created afterwards: those already there keep
+    theirs."""
+    _gestore_tipologie(request)
+    tipologia = get_object_or_404(TipologiaBuonaCaccia, pk=tipologia_id)
+    _compila_tipologia(tipologia, dati)
+    _esegui(servizi.salva_tipologia, tipologia)
+    return _tipologia_out(tipologia)
+
+
+@router.delete("/buonacaccia/tipologie/{tipologia_id}", response={204: None})
+def elimina_tipologia(request, tipologia_id: int):
+    _gestore_tipologie(request)
+    _esegui(servizi.elimina_tipologia, get_object_or_404(TipologiaBuonaCaccia, pk=tipologia_id))
+    return Status(204, None)
 
 
 # --- One event with its registrations ------------------------------------------------------
@@ -384,6 +500,8 @@ class AdultoOut(Schema):
     partecipa: bool
     quota_versata: Decimal | None
     puo_modificare: bool
+    # A training level missing from BuonaStrada (DEC-398).
+    avvisi: list[str] = []
 
 
 class DettaglioBC(Schema):
@@ -403,6 +521,19 @@ class DettaglioBC(Schema):
     tipo_campo: str
     tipo_campo_nome: str
     specifica: str
+    tipologia_id: int
+    tipologia: str
+    branche: list[str]
+    branche_nomi: list[str]
+    eta_minima: int | None
+    eta_massima: int | None
+    livello_minimo: int | None
+    massimo_per_unita: int | None
+    massimo_per_gruppo: int | None
+    # Past a maximum: a warning, never a refusal (DEC-398).
+    avvisi: list[str]
+    # Why the user may not add themself, when the constraints say no.
+    non_puoi_partecipare: str | None
     scheda: VersioneOut | None
     iscrizioni: list[IscrizioneOut]
     adulti: list[AdultoOut]
@@ -445,6 +576,7 @@ def _dettaglio(request, evento: Evento) -> dict:
                 "partecipa": p.stato == StatoPartecipazione.INVITATO,
                 "quota_versata": quota.importo if quota else None,
                 "puo_modificare": policy.puo_segnare_partecipazione_esterna(user, p.persona),
+                "avvisi": servizi.avvisi_persona(evento, p.persona),
             }
         )
     propria = policy.persona_di(user)
@@ -465,6 +597,14 @@ def _dettaglio(request, evento: Evento) -> dict:
         "tipo_campo": dettagli.tipo_campo,
         "tipo_campo_nome": dettagli.tipo_campo_testo if dettagli.tipo_campo else "",
         "specifica": dettagli.specifica,
+        "tipologia_id": dettagli.tipologia_id,
+        "tipologia": str(dettagli.tipologia),
+        **{campo: getattr(dettagli, campo) for campo in Vincoli.CAMPI_VINCOLI},
+        "branche_nomi": [Branca(b).label for b in dettagli.branche],
+        "avvisi": servizi.avvisi_massimi(evento) if policy.e_capo(user) else [],
+        "non_puoi_partecipare": (
+            servizi.motivo_esclusione(evento, propria) if propria is not None else None
+        ),
         "scheda": _versione_out(dettagli.scheda) if dettagli.scheda else None,
         "iscrizioni": [_iscrizione_out(user, i) for i in _iscrizioni_visibili(user, evento)],
         "adulti": adulti,
@@ -538,10 +678,13 @@ def iscrivibili(request, evento_id: int):
         .exclude(pk__in=gia)
         .order_by("cognome", "nome")
     )
+    # Who does not fit the branches, the age or the level is not offered (DEC-398).
     return con_unita(
         p
         for p in persone
-        if p.e_minorenne() and policy.puo_gestire_iscrizione_buonacaccia(request.auth, p)
+        if p.e_minorenne()
+        and policy.puo_gestire_iscrizione_buonacaccia(request.auth, p)
+        and servizi.motivo_esclusione(evento, p) is None
     )
 
 

@@ -130,4 +130,22 @@ describe('scelta di una persona, cambiando idea', () => {
     expect(w.props('modelValue')).toBe('EGSP002')
     w.unmount()
   })
+
+  it('keeps what is written when the list arrives late', async () => {
+    const w = mount(SceltaDaElenco, {
+      props: { id: 'p', opzioni: [] as typeof PERSONE, modelValue: null },
+      attachTo: document.body,
+    })
+    const campo = w.find('input')
+    await campo.setValue('luca')
+    await campo.trigger('input')
+    await w.setProps({ opzioni: PERSONE })
+    expect((campo.element as HTMLInputElement).value).toBe('luca')
+    expect(w.findAll('li[role=option]').map((o) => o.text())).toEqual([
+      'Rossi Luca · Branco Seeonee (L1)',
+    ])
+    await campo.trigger('keydown', { key: 'Enter' })
+    expect(w.emitted('update:modelValue')?.at(-1)).toEqual([2])
+    w.unmount()
+  })
 })

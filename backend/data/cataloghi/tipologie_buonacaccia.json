@@ -1,0 +1,493 @@
+{
+  "fonte": "Menu «Categoria» di https://buonacaccia.agesci.it/Events.aspx, letto il 07/11/2026 (DEC-398). Vincoli di base: solo la branca della categoria; età, livello e massimi vuoti, da completare dal gruppo.",
+  "voci": [
+    {
+      "codice": "1010101",
+      "nome": "Piccole Orme",
+      "categoria": "LC",
+      "branche": [
+        "LC"
+      ]
+    },
+    {
+      "codice": "1010102",
+      "nome": "Piccole Tracce",
+      "categoria": "LC",
+      "branche": [
+        "LC"
+      ]
+    },
+    {
+      "codice": "1010103",
+      "nome": "Altro L/C",
+      "categoria": "LC",
+      "branche": [
+        "LC"
+      ]
+    },
+    {
+      "codice": "2010101",
+      "nome": "Specialità",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010102",
+      "nome": "Capi Squadriglia",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010103",
+      "nome": "Specialità Squadriglia",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010104",
+      "nome": "Competenza",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010105",
+      "nome": "Candidature Competenza",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010106",
+      "nome": "Guidoncini verdi",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010107",
+      "nome": "Maestro di competenza",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "2010108",
+      "nome": "Altro E/G",
+      "categoria": "EG",
+      "branche": [
+        "EG"
+      ]
+    },
+    {
+      "codice": "3010101",
+      "nome": "ROSS",
+      "categoria": "RS",
+      "branche": [
+        "RS"
+      ]
+    },
+    {
+      "codice": "3010102",
+      "nome": "Partenti",
+      "categoria": "RS",
+      "branche": [
+        "RS"
+      ]
+    },
+    {
+      "codice": "3010103",
+      "nome": "EPPPI",
+      "categoria": "RS",
+      "branche": [
+        "RS"
+      ]
+    },
+    {
+      "codice": "3010104",
+      "nome": "Campi R/S estero",
+      "categoria": "RS",
+      "branche": [
+        "RS"
+      ]
+    },
+    {
+      "codice": "3010105",
+      "nome": "Altro R/S",
+      "categoria": "RS",
+      "branche": [
+        "RS"
+      ]
+    },
+    {
+      "codice": "4000101",
+      "nome": "CFT",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4000201",
+      "nome": "CFM L/C",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4000202",
+      "nome": "CFM E/G",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4000203",
+      "nome": "CFM R/S",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4000301",
+      "nome": "CFA",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4000401",
+      "nome": "CCG",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010101",
+      "nome": "MF - Percorso di tirocinio",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010201",
+      "nome": "MF - Aggiornam. metodologico L/C",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010202",
+      "nome": "MF - Aggiornam. metodologico E/G",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010203",
+      "nome": "MF - Aggiornam. metodologico R/S",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010204",
+      "nome": "MF - Interbranca",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010205",
+      "nome": "MF - Competenze tecniche",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010206",
+      "nome": "MF - Vita Cristiana",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010207",
+      "nome": "MF - Protezione civile",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010301",
+      "nome": "MF - Approfondim. associativo",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010302",
+      "nome": "MF - Percorsi ass.vi specifici",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010303",
+      "nome": "MF - Terzo settore",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010304",
+      "nome": "MF - Tutela minori",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010401",
+      "nome": "MF - Fede/Spiritualità",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010402",
+      "nome": "MF - Approfondimento Biblico",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010501",
+      "nome": "MF - Capi Gruppo",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010502",
+      "nome": "MF - Quadri associativi",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010503",
+      "nome": "MF - Ass./Animatori di gruppo",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010601",
+      "nome": "MF - Volontari PC",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010602",
+      "nome": "MF - Volontari PC-Formati informati(D.LGS 81/08)",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010603",
+      "nome": "MF - Volontari PC-Form. addestratori(D.LGS 81/08)",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010604",
+      "nome": "MF - Prevenzione incendi",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010605",
+      "nome": "MF - Primo soccorso",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010606",
+      "nome": "MF - HACCP",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010701",
+      "nome": "MF - Tematiche educative",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010801",
+      "nome": "Area Training Team",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010802",
+      "nome": "Regional Training Team",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010803",
+      "nome": "National Training Team",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010804",
+      "nome": "Evento Start Aiuti",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010805",
+      "nome": "Evento Start Assistant",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "4010806",
+      "nome": "Modulo per formatori",
+      "categoria": "FORMAZIONE_CAPI",
+      "branche": [
+        "COCA"
+      ]
+    },
+    {
+      "codice": "6010101",
+      "nome": "Assemblea regionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010102",
+      "nome": "Assemblea di zona",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010103",
+      "nome": "Consiglio regionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010104",
+      "nome": "Convegno regionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010105",
+      "nome": "Altro regionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010106",
+      "nome": "Altro di zona",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010201",
+      "nome": "Assemblea nazionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010202",
+      "nome": "Consiglio generale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010203",
+      "nome": "Consiglio nazionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010204",
+      "nome": "Convegno nazionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6010205",
+      "nome": "Incontro II.RR.",
+      "categoria": "SPECIALE",
+      "branche": []
+    },
+    {
+      "codice": "6020101",
+      "nome": "Altro nazionale",
+      "categoria": "SPECIALE",
+      "branche": []
+    }
+  ]
+}

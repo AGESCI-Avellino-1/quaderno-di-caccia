@@ -41,7 +41,8 @@ Comunità capi; lo modifichi tu (o un capogruppo).
   eventi su BuonaCaccia compaiono da soli.
 
 In alto vedi anche i dati di BuonaStrada: da quando sei in Comunità capi, il livello di
-formazione, la nomina a capo.
+formazione, la nomina a capo. Finché hai il codice socio provvisorio il livello è 1, da
+tirocinante.
 
 :::{container} schermate
 ![Servizio e formazione sul telefono](../img/capo/fascicolo-capo-telefono.png){.telefono width="30%"}

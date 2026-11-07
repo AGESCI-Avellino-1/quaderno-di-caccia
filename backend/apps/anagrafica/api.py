@@ -55,6 +55,10 @@ class PersonaDettaglio(Schema):
     codice_provvisorio: bool = False
     # Joined from the app and the deadline to complete passed (shown to the capi).
     iscrizione_sospesa: bool = False
+    # A capo with a provisional code let in by a capogruppo (DEC-400): when and by whom.
+    abilitato_come_censito_il: datetime | None = None
+    abilitato_come_censito_da: str | None = None
+    puo_abilitare_come_censito: bool = False
     email: str | None = None
     cellulare: str | None = None
     # The person and the Co.Ca. only (DEC-296).
@@ -127,6 +131,12 @@ def dettaglio_persona(request, persona_id: int):
             "codice_socio": persona.codice_socio,
             "codice_provvisorio": servizi.e_codice_provvisorio(persona.codice_socio),
             "iscrizione_sospesa": persona.iscrizioni.filter(stato="SOSPESA").exists(),
+            "abilitato_come_censito_il": persona.abilitato_come_censito_il,
+            "abilitato_come_censito_da": (
+                str(persona.abilitato_come_censito_da)
+                if persona.abilitato_come_censito_da
+                else None
+            ),
             "consenso_foto": persona.consenso_foto,
         }
     if policy.puo_vedere_dati_sensibili(request.auth, persona):
@@ -146,7 +156,47 @@ def dettaglio_persona(request, persona_id: int):
     dati["vede_storico_foto"] = policy.vede_storico_foto(request.auth, persona)
     dati["vede_registro_accessi"] = policy.puo_vedere_registro_accessi(request.auth)
     dati["fascicolo_capo"] = policy.puo_vedere_fascicolo_capo(request.auth, persona)
+    dati["puo_abilitare_come_censito"] = policy.puo_abilitare_come_censito(request.auth, persona)
     return dati
+
+
+def _da_abilitare(request, persona_id: int) -> Persona:
+    persona = get_object_or_404(Persona, pk=persona_id)
+    if not policy.puo_abilitare_come_censito(request.auth, persona):
+        raise HttpError(
+            403,
+            "Solo un capogruppo abilita un capo che ha ancora il codice socio provvisorio.",
+        )
+    return persona
+
+
+@router.post("/persone/{persona_id}/censito", response={204: None})
+def abilita_come_censito(request, persona_id: int):
+    """Joining complete outside the app, BuonaStrada's code still on its way: the capo
+    gets a registered capo's permissions (DEC-400)."""
+    persona = _da_abilitare(request, persona_id)
+    if persona.abilitato_come_censito_il is None:
+        persona.abilitato_come_censito_il = timezone.now()
+        persona.abilitato_come_censito_da = policy.persona_di(request.auth)
+        persona.save(
+            update_fields=[
+                "abilitato_come_censito_il",
+                "abilitato_come_censito_da",
+                "aggiornato_il",
+            ]
+        )
+    return Status(204, None)
+
+
+@router.delete("/persone/{persona_id}/censito", response={204: None})
+def togli_abilitazione(request, persona_id: int):
+    persona = _da_abilitare(request, persona_id)
+    persona.abilitato_come_censito_il = None
+    persona.abilitato_come_censito_da = None
+    persona.save(
+        update_fields=["abilitato_come_censito_il", "abilitato_come_censito_da", "aggiornato_il"]
+    )
+    return Status(204, None)
 
 
 # --- Corrections to BuonaStrada data (DEC-31) ---------------------------------------

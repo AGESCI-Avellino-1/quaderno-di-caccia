@@ -393,6 +393,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/animali-squadriglia',
           descrizione: 'Gli animali tra cui scegliere, con i colori e i loro significati',
         },
+        // Any capo, whatever their role (DEC-398).
+        p.capo && {
+          nome: 'Tipi di evento su BuonaCaccia',
+          icona: 'list-ul',
+          to: '/buonacaccia/tipologie',
+          descrizione: 'I tipi tra cui scegliere, con chi può iscriversi',
+        },
         p.amministratore_tecnico &&
           contatori.email_di_prova && {
             nome: 'Mailpit',

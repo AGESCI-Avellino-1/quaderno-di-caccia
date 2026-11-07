@@ -19,7 +19,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from apps.anagrafica.models import Persona
-from apps.anagrafica.servizi import e_codice_provvisorio
+from apps.anagrafica.servizi import e_codice_provvisorio, livello_formazione
 from apps.core.anno import AnnoAssociativo
 from apps.core.stampa import decora_pagina, intestazione
 
@@ -252,7 +252,7 @@ def pdf(sezioni_: list[Sezione], giorno: date, raggruppa: str) -> bytes:
         ]
         for riga in sezione.righe:
             p = riga.persona
-            livello = "" if p.livello_formazione is None else str(p.livello_formazione)
+            livello = "" if (n := livello_formazione(p)) is None else str(n)
             righe.append(
                 [
                     Paragraph(escape(codice_da_stampare(p.codice_socio)), TESTO),

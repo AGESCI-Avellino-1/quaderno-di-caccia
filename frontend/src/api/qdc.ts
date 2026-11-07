@@ -382,6 +382,10 @@ export interface PersonaDettaglio extends PersonaBreve {
   codice_provvisorio?: boolean
   /** Joined from the app and the deadline to complete passed. */
   iscrizione_sospesa?: boolean
+  /** A capo with a provisional code let in by a capogruppo (DEC-400). */
+  abilitato_come_censito_il?: string | null
+  abilitato_come_censito_da?: string | null
+  puo_abilitare_come_censito?: boolean
   email: string | null
   cellulare: string | null
   /** From BuonaStrada; the person and the Co.Ca. only (DEC-296). */
@@ -2331,15 +2335,6 @@ export const TIPI_DOMANDA: [TipoDomanda, string][] = [
   ['FOTO', 'Foto'],
 ]
 
-export const TIPI_CAMPO: [TipoCampoFormazione, string][] = [
-  ['CFT', 'Campo di Formazione Tirocinanti (CFT)'],
-  ['CFM', 'Campo di Formazione Metodologica (CFM)'],
-  ['CFA', 'Campo di Formazione Associativa (CFA)'],
-  ['CCG', 'Campo per Capigruppo (CCG)'],
-  ['MODULO', 'Modulo formativo'],
-  ['ALTRO', 'Altro'],
-]
-
 export interface Domanda {
   id: string
   tipo: TipoDomanda
@@ -2365,7 +2360,7 @@ export interface SchedaBC {
   usata: number
 }
 
-export interface EventoBCIn {
+export type EventoBCIn = {
   titolo: string
   tipo: TipoEvento
   inizio: string
@@ -2375,11 +2370,53 @@ export interface EventoBCIn {
   luogo: string
   descrizione: string
   link: string
-  formazione_capi: boolean
-  piccole_orme: boolean
-  tipo_campo: TipoCampoFormazione | null
-  specifica: string
+  /** The type, always, and its constraints for this event (DEC-398). */
+  tipologia_id: number
+} & VincoliBC
+
+/** Who may register (DEC-398): empty = no limit. The two maximums only warn. */
+export interface VincoliBC {
+  branche: BrancaVincolo[]
+  eta_minima: number | null
+  eta_massima: number | null
+  livello_minimo: number | null
+  massimo_per_unita: number | null
+  massimo_per_gruppo: number | null
 }
+
+export type BrancaVincolo = 'LC' | 'EG' | 'RS' | 'COCA'
+
+export const BRANCHE_VINCOLO: [BrancaVincolo, string][] = [
+  ['LC', 'Lupetti e Coccinelle'],
+  ['EG', 'Esploratori e Guide'],
+  ['RS', 'Rover e Scolte'],
+  ['COCA', 'Comunità Capi'],
+]
+
+export type CategoriaBC = 'LC' | 'EG' | 'RS' | 'FORMAZIONE_CAPI' | 'SPECIALE' | 'ALTRO'
+
+export const CATEGORIE_BC: [CategoriaBC, string][] = [
+  ['LC', 'L/C'],
+  ['EG', 'E/G'],
+  ['RS', 'R/S'],
+  ['FORMAZIONE_CAPI', 'Formazione capi'],
+  ['SPECIALE', 'Speciale'],
+]
+
+export interface TipologiaBC extends VincoliBC {
+  id: number
+  /** BuonaCaccia's code; empty for the group's own. */
+  codice: string
+  nome: string
+  categoria: CategoriaBC
+  categoria_nome: string
+  attiva: boolean
+  /** «Altro»: no constraints, never removed. */
+  altro: boolean
+  eventi: number
+}
+
+export type TipologiaBCIn = Pick<TipologiaBC, 'nome' | 'categoria' | 'attiva'> & VincoliBC
 
 export interface EventoBCTrovato {
   id: number
@@ -2389,6 +2426,7 @@ export interface EventoBCTrovato {
   luogo: string
   formazione_capi: boolean
   piccole_orme: boolean
+  tipologia: string
 }
 
 export interface QuotaIscrizioneBC {
@@ -2475,9 +2513,11 @@ export interface AdultoBC {
   partecipa: boolean
   quota_versata: string | null
   puo_modificare: boolean
+  /** A training level missing from BuonaStrada (DEC-398). */
+  avvisi: string[]
 }
 
-export interface DettaglioBC {
+export interface DettaglioBC extends VincoliBC {
   id: number
   titolo: string
   tipo: TipoEvento
@@ -2494,6 +2534,13 @@ export interface DettaglioBC {
   tipo_campo: TipoCampoFormazione | ''
   tipo_campo_nome: string
   specifica: string
+  tipologia_id: number
+  tipologia: string
+  branche_nomi: string[]
+  /** Past a maximum of participants: a warning only. */
+  avvisi: string[]
+  /** Why the user may not add themself. */
+  non_puoi_partecipare: string | null
   scheda: VersioneScheda | null
   iscrizioni: IscrizioneBC[]
   adulti: AdultoBC[]
@@ -3540,6 +3587,10 @@ export const api = {
     richiesta<null>(`/api/v1/persone/${persona}/coca`, { metodo: 'POST' }),
   annullaPassaggioInCoca: (persona: number) =>
     richiesta<null>(`/api/v1/persone/${persona}/coca`, { metodo: 'DELETE' }),
+  abilitaComeCensito: (persona: number) =>
+    richiesta<null>(`/api/v1/persone/${persona}/censito`, { metodo: 'POST' }),
+  togliAbilitazione: (persona: number) =>
+    richiesta<null>(`/api/v1/persone/${persona}/censito`, { metodo: 'DELETE' }),
   invita: (dati: NuovoInvito) =>
     richiesta<{ id: number }>('/api/v1/inviti', { metodo: 'POST', corpo: dati }),
   annullaInvito: (id: number) =>
@@ -4006,6 +4057,14 @@ export const api = {
   modificaEventoBC: (id: number, dati: EventoBCIn) =>
     richiesta<EventoBCTrovato>(`/api/v1/buonacaccia/eventi/${id}`, { metodo: 'PUT', corpo: dati }),
   eventoBC: (id: number) => richiesta<DettaglioBC>(`/api/v1/buonacaccia/eventi/${id}`),
+  tipologieBC: (tutte = false) =>
+    richiesta<TipologiaBC[]>(`/api/v1/buonacaccia/tipologie${tutte ? '?tutte=true' : ''}`),
+  creaTipologiaBC: (dati: TipologiaBCIn) =>
+    richiesta<TipologiaBC>('/api/v1/buonacaccia/tipologie', { metodo: 'POST', corpo: dati }),
+  modificaTipologiaBC: (id: number, dati: TipologiaBCIn) =>
+    richiesta<TipologiaBC>(`/api/v1/buonacaccia/tipologie/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaTipologiaBC: (id: number) =>
+    richiesta<null>(`/api/v1/buonacaccia/tipologie/${id}`, { metodo: 'DELETE' }),
   schedaEventoBC: (id: number, versione_id: number | null) =>
     richiesta<DettaglioBC>(`/api/v1/buonacaccia/eventi/${id}/scheda`, {
       metodo: 'PUT',

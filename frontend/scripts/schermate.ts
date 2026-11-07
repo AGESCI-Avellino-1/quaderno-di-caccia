@@ -708,6 +708,32 @@ const SCENE: Scena[] = [
   },
   { nome: 'capo/buonacaccia', chi: 'capoReparto', percorso: '/buonacaccia', intera: true },
   {
+    // A new event: its type brings the constraints (DEC-398); nothing is saved.
+    nome: 'capo/evento-bc-tipo',
+    chi: 'capoReparto',
+    percorso: '/buonacaccia',
+    prepara: async (pagina) => {
+      await pagina.getByLabel("Nome o luogo dell'evento").fill('Capi Squadriglia di Zona')
+      await pagina.getByRole('button', { name: "Non c'è: aggiungilo" }).click()
+      const tipo = pagina.locator('#bc-tipologia')
+      await tipo.click()
+      await tipo.fill('capi sq')
+      await pagina.locator('li[role=option]').first().waitFor()
+      await tipo.press('Enter')
+      await pagina.getByLabel(/Età minima/).fill('14')
+      await pagina.getByLabel(/Età massima/).fill('16')
+    },
+    mostra: 'Tipo di evento',
+  },
+  {
+    nome: 'capo/tipologie-bc',
+    chi: 'capoReparto',
+    percorso: '/buonacaccia/tipologie',
+    prepara: async (pagina) => {
+      await pagina.getByLabel('Cerca un tipo').fill('squadriglia')
+    },
+  },
+  {
     nome: 'capo/iscrizione-bc',
     chi: 'capoReparto',
     percorso: '/eventi',
@@ -1031,6 +1057,31 @@ const SCENE: Scena[] = [
       await pagina.getByRole('button', { name: 'Conferma', exact: true }).click()
       await pagina.getByText('Passkey creata').waitFor()
     },
+  },
+  {
+    // Last: it brings a parent into the Co.Ca. (DEC-307) and lets her in as registered
+    // (DEC-400). Run once per format, so each step only if still to do.
+    nome: 'capo/abilita-censito',
+    chi: 'capogruppo',
+    percorso: '/genitori',
+    prepara: async (pagina) => {
+      await apri('Verdi Carla')(pagina)
+      const porta = pagina.getByRole('button', { name: 'Porta in Comunità capi…' })
+      const abilitata = pagina.getByText('abilitato come censito dal')
+      await porta.or(abilitata).waitFor()
+      if (await porta.isVisible()) {
+        await porta.click()
+        await pagina.getByRole('button', { name: 'Porta in Comunità capi', exact: true }).click()
+      }
+      const abilita = pagina.getByRole('button', { name: 'Abilita come censito…' })
+      await abilita.or(pagina.getByRole('button', { name: "Togli l'abilitazione…" })).waitFor()
+      if (await abilita.isVisible()) {
+        await abilita.click()
+        await pagina.getByRole('button', { name: 'Abilita come censito', exact: true }).click()
+      }
+      await abilitata.waitFor()
+    },
+    mostra: 'Codice socio',
   },
 ]
 

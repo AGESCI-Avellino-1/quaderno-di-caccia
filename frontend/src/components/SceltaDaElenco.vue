@@ -58,7 +58,7 @@ const filtrate = computed(() =>
 // is being written. A choice emptied from outside (a form reset) empties the field.
 let scrivendo = false
 watch(
-  () => [modello.value, props.opzioni],
+  modello,
   () => {
     if (props.multipla) return
     if (scelta.value) testo.value = etichetta(scelta.value)
@@ -66,6 +66,15 @@ watch(
     scrivendo = false
   },
   { immediate: true },
+)
+// A list arriving late shows the name of the choice, never erases what is being written.
+watch(
+  () => props.opzioni,
+  () => {
+    if (!props.multipla && scelta.value) testo.value = etichetta(scelta.value)
+    // What is being written finds its first match, ready for Enter.
+    if (aperta.value) attiva.value = filtrate.value.length ? 0 : -1
+  },
 )
 // Also before anything is written: an untouched required field must stop the form too.
 watch([scelte, testo, campo], () => {

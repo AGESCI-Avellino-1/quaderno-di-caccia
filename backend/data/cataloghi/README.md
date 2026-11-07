@@ -13,6 +13,7 @@ riassegnati a voci diverse.
 | `specialita_squadriglia.json` | 12 specialità di squadriglia | Regolamento metodologico 2026, Allegato 3 E/G | 4 — PP (DEC-64) |
 | `brevetti_eg.json` | 15 brevetti di competenza | Regolamento metodologico 2026, Allegato 4 E/G | 4 — PP |
 | `animali_squadriglia.json` | 93 animali di squadriglia (DEC-350): plurale, colori con i significati, richiamo, simbolo; i codici dei colori e i plurali sono di QdC. Caricati nel database all'installazione, poi li modifica il gruppo | Elenco fornito dal maintainer | Issue #22 |
+| `tipologie_buonacaccia.json` | 64 tipi di evento di BuonaCaccia nelle 5 categorie (L/C, E/G, R/S, Formazione Capi, Speciale), con il codice di BuonaCaccia e la branca come vincolo di base (DEC-398). Caricati nel database all'installazione con «Altro formazione capi» e «Altro», poi li modificano i capi | Menu «Categoria» di buonacaccia.agesci.it/Events.aspx, letto il 07/11/2026 | Issue #61 |
 | `comuni_istat.json` | 7.896 comuni italiani: nome, sigla della provincia, codice catastale (Belfiore), per proporre il codice fiscale | ISTAT, «Elenco dei comuni italiani», CC BY 4.0, scaricato il 31/10/2026 da istat.it/storage/codici-unita-amministrative/Elenco-comuni-italiani.csv | calcolo del codice fiscale |
 
 Regole (DEC-63, DEC-87):

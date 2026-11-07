@@ -399,6 +399,13 @@ const router = createRouter({
       component: () => import('@/views/BuonaCacciaView.vue'),
     },
     {
+      // The types of BuonaCaccia events and their constraints, for any capo (DEC-398).
+      path: '/buonacaccia/tipologie',
+      name: 'tipologie-buonacaccia',
+      component: () => import('@/views/TipologieBCView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Event forms, reusable over the years (DEC-161).
       path: '/buonacaccia/schede',
       name: 'schede-buonacaccia',

@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
+from apps.anagrafica.servizi import livello_formazione
 from apps.core.anno import AnnoAssociativo
 from apps.organizzazione.models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico
 
@@ -129,7 +130,7 @@ def fascicolo(persona: Persona) -> dict:
     return {
         "persona_id": persona.pk,
         "persona": f"{persona.nome} {persona.cognome}",
-        "livello_formazione": persona.livello_formazione,
+        "livello_formazione": livello_formazione(persona),
         "anno_ingresso_coca": persona.anno_ingresso_coca,
         "numero_nomina": persona.numero_nomina,
         "data_nomina": persona.data_nomina,

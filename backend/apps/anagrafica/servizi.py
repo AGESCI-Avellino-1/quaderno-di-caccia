@@ -51,6 +51,14 @@ def e_codice_provvisorio(codice: str | None) -> bool:
     return bool(codice) and len(codice) == 10 and codice.startswith("9") and codice.isdigit()
 
 
+def livello_formazione(persona: Persona) -> int | None:
+    """A capo's training level: BuonaStrada's; a capo still with a provisional code is by
+    definition a tirocinante, level 1, until BuonaStrada brings one (DEC-399)."""
+    if persona.livello_formazione is not None:
+        return persona.livello_formazione
+    return 1 if e_codice_provvisorio(persona.codice_socio) else None
+
+
 @transaction.atomic
 def nuovo_codice_provvisorio() -> str:
     contatore, _ = ContatoreCodiceProvvisorio.objects.select_for_update().get_or_create(pk=1)

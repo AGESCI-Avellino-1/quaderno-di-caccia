@@ -82,6 +82,13 @@ class Persona(ModelloTracciato):
     telefono_squadriglia_nascosto = models.BooleanField(default=False)
     # On a parent: their mobile is the patrol number of every child without one.
     telefono_per_i_figli = models.BooleanField(default=False)
+    # A capo whose joining is complete outside the app, waiting only for BuonaStrada's
+    # code: a capogruppo lets them in as if registered (DEC-400). Pointless once the code
+    # is real; the import clears it.
+    abilitato_come_censito_il = models.DateTimeField(null=True, blank=True)
+    abilitato_come_censito_da = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
 
     class Meta:
         verbose_name = "persona"

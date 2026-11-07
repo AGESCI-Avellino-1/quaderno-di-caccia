@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -119,15 +119,39 @@ async function partecipo(persona: number, partecipa: boolean) {
 }
 
 const io = () => sessione.profilo?.persona?.id
+
+// The event's constraints in words (DEC-398); the maximums only warn.
+const vincoliTesto = computed(() => {
+  const d = dettaglio.value
+  if (!d) return ''
+  const parti: string[] = []
+  if (d.branche_nomi.length) parti.push(d.branche_nomi.join(', '))
+  if (d.eta_minima != null && d.eta_massima != null)
+    parti.push(`da ${d.eta_minima} a ${d.eta_massima} anni alla partenza`)
+  else if (d.eta_minima != null) parti.push(`almeno ${d.eta_minima} anni alla partenza`)
+  else if (d.eta_massima != null) parti.push(`al massimo ${d.eta_massima} anni alla partenza`)
+  if (d.livello_minimo != null) parti.push(`livello Fo.Ca. almeno ${d.livello_minimo}`)
+  if (d.massimo_per_unita != null) parti.push(`al massimo ${d.massimo_per_unita} per unità`)
+  if (d.massimo_per_gruppo != null) parti.push(`al massimo ${d.massimo_per_gruppo} per il gruppo`)
+  return parti.join('; ')
+})
 </script>
 
 <template>
   <section v-if="dettaglio" class="mb-5">
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
-    <p v-if="dettaglio.formazione_capi" class="small">
-      <strong>Formazione capi</strong> · {{ dettaglio.tipo_campo_nome }}
+    <p class="small mb-1">
+      <strong>{{ dettaglio.tipologia }}</strong>
+      <template v-if="dettaglio.formazione_capi">
+        · formazione capi, per la Zona: {{ dettaglio.tipo_campo_nome }}</template
+      >
     </p>
-    <p v-if="dettaglio.piccole_orme" class="small"><strong>Piccole Orme</strong></p>
+    <p v-if="vincoliTesto" class="small">Chi può iscriversi: {{ vincoliTesto }}.</p>
+    <div v-if="dettaglio.avvisi.length" class="alert theme-warning small" role="status">
+      <ul class="mb-0">
+        <li v-for="a in dettaglio.avvisi" :key="a">{{ a }}</li>
+      </ul>
+    </div>
     <p v-if="dettaglio.link" class="small">
       <a :href="dettaglio.link" target="_blank" rel="noopener noreferrer">
         Pagina dell'evento su BuonaCaccia
@@ -316,12 +340,18 @@ const io = () => sessione.profilo?.persona?.id
           e la quota versata, per l'elenco della Zona</template
         >.
       </p>
+      <p v-if="dettaglio.non_puoi_partecipare" class="small fg-2">
+        Non puoi segnarti: {{ dettaglio.non_puoi_partecipare }}
+      </p>
       <ul v-if="dettaglio.adulti.length" class="list-group mb-3">
         <li v-for="a in dettaglio.adulti" :key="a.persona_id" class="list-group-item">
           <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
             <span>
               {{ a.persona }}
               <span v-if="!a.partecipa" class="badge theme-warning ms-1">Non partecipa</span>
+              <span v-for="avviso in a.avvisi" :key="avviso" class="d-block small fg-2">
+                {{ avviso }}
+              </span>
               <span v-if="a.quota_versata && !a.puo_modificare" class="small">
                 · quota {{ euro(a.quota_versata) }}
               </span>
@@ -363,7 +393,10 @@ const io = () => sessione.profilo?.persona?.id
       </ul>
       <button
         v-if="
-          dettaglio.puo_partecipare && io() && !dettaglio.adulti.some((a) => a.persona_id === io())
+          dettaglio.puo_partecipare &&
+          !dettaglio.non_puoi_partecipare &&
+          io() &&
+          !dettaglio.adulti.some((a) => a.persona_id === io())
         "
         type="button"
         class="btn btn-sm btn-outline theme-primary"

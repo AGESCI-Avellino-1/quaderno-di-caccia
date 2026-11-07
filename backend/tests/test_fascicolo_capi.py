@@ -118,3 +118,23 @@ def test_cancellazione(capo, capogruppo):
     )
     assert risposta.status_code == 200, risposta.content
     assert not (Formazione.objects.exists() or ServizioPassato.objects.exists())
+
+
+def test_codice_provvisorio_livello_uno(capo, capogruppo):
+    # A capo who joined from the app is a tirocinante until BuonaStrada says otherwise (DEC-399).
+    from apps.anagrafica.servizi import livello_formazione
+
+    nuovo = crea_capo("Nuovo", "Entrato")
+    nuovo.codice_socio = "9000000007"
+    nuovo.save()
+    assert livello_formazione(nuovo) == 1
+    assert (
+        _client(capogruppo)
+        .get(f"/api/v1/persone/{nuovo.pk}/fascicolo-capo")
+        .json()["livello_formazione"]
+        == 1
+    )
+    nuovo.livello_formazione = 2
+    assert livello_formazione(nuovo) == 2
+    capo.livello_formazione = None
+    assert livello_formazione(capo) is None

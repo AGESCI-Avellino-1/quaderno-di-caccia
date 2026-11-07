@@ -11,6 +11,7 @@ import pytest
 from django.contrib.sessions.backends.db import SessionStore
 from django.core import mail
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela, RuoloAppartenenza
@@ -294,6 +295,47 @@ def test_con_il_codice_vero_vede_tutto(capo_nuovo, ragazza):
     capo_nuovo.save()
     assert policy.e_capo_censito(capo_nuovo.utente)
     assert policy.puo_vedere_dati_sensibili(capo_nuovo.utente, ragazza)
+
+
+def test_abilitato_come_censito_dal_capogruppo(
+    capo_nuovo, capogruppo, capo, csq, ragazza, genitore, estraneo, gruppo
+):
+    # Joining complete outside the app, the code not yet in BuonaStrada (DEC-400).
+    url = f"/api/v1/persone/{capo_nuovo.pk}/censito"
+    for chi in (capo, csq, ragazza, genitore, estraneo, capo_nuovo):
+        assert _post(_client(chi), url).status_code in (403, 404)
+    assert (
+        not _client(capo)
+        .get(f"/api/v1/persone/{capo_nuovo.pk}")
+        .json()["puo_abilitare_come_censito"]
+    )
+    assert not policy.puo_abilitare_come_censito(capogruppo.utente, capo)  # real code
+    assert _post(_client(capogruppo), url).status_code == 204
+    capo_nuovo.refresh_from_db()
+    utente = User.objects.get(pk=capo_nuovo.utente_id)
+    assert not policy.e_capo_in_attesa(utente) and policy.e_capo_censito(utente)
+    assert policy.puo_vedere_dati_sensibili(utente, ragazza)
+    assert _client(utente).get("/api/v1/io").json()["capo_in_attesa"] is False
+    dettaglio = _client(capo).get(f"/api/v1/persone/{capo_nuovo.pk}").json()
+    assert dettaglio["codice_provvisorio"] is True
+    assert dettaglio["abilitato_come_censito_da"] == str(capogruppo)
+    assert dettaglio["abilitato_come_censito_il"]
+
+    # Taken back: waiting again.
+    assert _client(capogruppo).delete(url).status_code == 204
+    assert policy.e_capo_in_attesa(User.objects.get(pk=capo_nuovo.utente_id))
+    assert _client(capo).delete(url).status_code == 403
+
+
+def test_abilitato_anche_dall_assistente_di_gruppo_e_non_dopo_buonastrada(capo_nuovo, capo, gruppo):
+    Incarico.objects.create(
+        persona=capo, ruolo=RuoloIncarico.AE_GRUPPO, gruppo=gruppo, data_inizio=INIZIO_ANNO
+    )
+    url = f"/api/v1/persone/{capo_nuovo.pk}/censito"
+    assert _post(_client(capo), url).status_code == 204
+    capo_nuovo.codice_socio = "123987"  # BuonaStrada's code arrived
+    capo_nuovo.save()
+    assert _post(_client(capo), url).status_code == 403
 
 
 def test_un_adulto_con_account_si_iscrive_con_la_sua_email(coca, capogruppo, genitore):
@@ -584,6 +626,9 @@ def test_l_importazione_sostituisce_il_codice_provvisorio(completata, genitore_n
 
     figlia = completata.persona
     provvisorio = figlia.codice_socio
+    # A go-ahead given meanwhile goes with the real code (DEC-400).
+    figlia.abilitato_come_censito_il = timezone.now()
+    figlia.save()
     export = [
         riga(
             **{
@@ -603,6 +648,7 @@ def test_l_importazione_sostituisce_il_codice_provvisorio(completata, genitore_n
     figlia.refresh_from_db()
     completata.refresh_from_db()
     assert figlia.codice_socio == "9000077"
+    assert figlia.abilitato_come_censito_il is None
     assert completata.stato == StatoIscrizione.RECEPITA
     assert riepilogo.iscrizioni_recepite == [f"Bianco Marta: {provvisorio} → 9000077"]
 

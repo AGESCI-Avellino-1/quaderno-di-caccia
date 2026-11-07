@@ -11,6 +11,7 @@ class BuonaCacciaConfig(AppConfig):
         from . import models
 
         auditlog.register(models.EventoBuonaCaccia)
+        auditlog.register(models.TipologiaBuonaCaccia)
         auditlog.register(models.ModelloScheda)
         auditlog.register(models.VersioneScheda)
         # The management link deletes a registration on BuonaCaccia (DEC-159): it stays

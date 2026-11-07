@@ -28,6 +28,7 @@ from django.core.validators import URLValidator
 from django.db import models
 
 from apps.core.models import ModelloTracciato
+from apps.organizzazione.models import Branca
 
 # Deadlines set by BuonaCaccia (DEC-158) and by the analysis (DEC-160).
 GIORNI_PER_COMPLETARE = 9
@@ -49,11 +50,110 @@ class TipoCampoFormazione(models.TextChoices):
     ALTRO = "ALTRO", "Altro"
 
 
-class EventoBuonaCaccia(ModelloTracciato):
-    """What an external event adds to `Evento`."""
+class CategoriaBuonaCaccia(models.TextChoices):
+    """The groups of BuonaCaccia's «Categoria» menu, plus the app's own «Altro» (DEC-398)."""
+
+    LC = "LC", "L/C"
+    EG = "EG", "E/G"
+    RS = "RS", "R/S"
+    FORMAZIONE_CAPI = "FORMAZIONE_CAPI", "Formazione capi"
+    SPECIALE = "SPECIALE", "Speciale"
+    ALTRO = "ALTRO", "Altro"
+
+
+# A category's branch: its types are offered only to a group that has it (DEC-398).
+BRANCA_DELLA_CATEGORIA = {
+    CategoriaBuonaCaccia.LC: Branca.LC,
+    CategoriaBuonaCaccia.EG: Branca.EG,
+    CategoriaBuonaCaccia.RS: Branca.RS,
+}
+
+
+class Vincoli(models.Model):
+    """Who may register (DEC-398): branches, age in full years on the first day, minimum
+    training level; the two maximums only warn. Empty = no limit."""
+
+    branche = models.JSONField(default=list, blank=True)
+    eta_minima = models.PositiveSmallIntegerField(null=True, blank=True)
+    eta_massima = models.PositiveSmallIntegerField(null=True, blank=True)
+    livello_minimo = models.PositiveSmallIntegerField(null=True, blank=True)
+    massimo_per_unita = models.PositiveSmallIntegerField(null=True, blank=True)
+    massimo_per_gruppo = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    CAMPI_VINCOLI = (
+        "branche",
+        "eta_minima",
+        "eta_massima",
+        "livello_minimo",
+        "massimo_per_unita",
+        "massimo_per_gruppo",
+    )
+
+    class Meta:
+        abstract = True
+
+    def errori_vincoli(self) -> list[str]:
+        errori = []
+        if any(b not in Branca.values for b in self.branche or []):
+            errori.append("Branca sconosciuta.")
+        if (
+            self.eta_minima is not None
+            and self.eta_massima is not None
+            and self.eta_minima > self.eta_massima
+        ):
+            errori.append("L'età minima è maggiore della massima.")
+        return errori
+
+    def senza_vincoli(self) -> bool:
+        return not any(getattr(self, c) for c in self.CAMPI_VINCOLI)
+
+
+class TipologiaBuonaCaccia(ModelloTracciato, Vincoli):
+    """A type of BuonaCaccia event with its default constraints, copied on an event when it
+    is created (DEC-398). Filled at installation from BuonaCaccia's menu; any capo changes
+    them. One already used is deactivated, never deleted; «Altro» has no constraints."""
+
+    # BuonaCaccia's code in its menu; empty for the group's own types.
+    codice = models.CharField(max_length=10, blank=True)
+    nome = models.CharField(max_length=120, unique=True)
+    categoria = models.CharField(max_length=16, choices=CategoriaBuonaCaccia.choices)
+    attiva = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "tipologia di evento su BuonaCaccia"
+        verbose_name_plural = "tipologie di evento su BuonaCaccia"
+        ordering = ["codice", "nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+    @property
+    def altro(self) -> bool:
+        return self.categoria == CategoriaBuonaCaccia.ALTRO
+
+    def clean(self) -> None:
+        errori = self.errori_vincoli()
+        if self.altro and not self.senza_vincoli():
+            errori.append("«Altro» non ha vincoli.")
+        if errori:
+            raise ValidationError(errori)
+
+
+def tipologia_altro() -> TipologiaBuonaCaccia:
+    return TipologiaBuonaCaccia.objects.get_or_create(
+        categoria=CategoriaBuonaCaccia.ALTRO, defaults={"nome": "Altro"}
+    )[0]
+
+
+class EventoBuonaCaccia(ModelloTracciato, Vincoli):
+    """What an external event adds to `Evento`. Its type and constraints (DEC-398); the
+    flags below follow from the type, kept for the Piccole Orme and the Zona's list."""
 
     evento = models.OneToOneField(
         "eventi.Evento", on_delete=models.CASCADE, related_name="buonacaccia"
+    )
+    tipologia = models.ForeignKey(
+        TipologiaBuonaCaccia, on_delete=models.PROTECT, related_name="eventi"
     )
     formazione_capi = models.BooleanField(default=False)
     # Lived once only, in Responsabilità, at least three days (L/C art. 43, V11): the
@@ -88,7 +188,7 @@ class EventoBuonaCaccia(ModelloTracciato):
         return str(self.evento)
 
     def clean(self) -> None:
-        errori = []
+        errori = self.errori_vincoli()
         if self.formazione_capi and not self.tipo_campo:
             errori.append("Scegli il tipo di campo di formazione.")
         if not self.formazione_capi and self.tipo_campo:

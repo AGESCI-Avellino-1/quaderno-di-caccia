@@ -12,14 +12,18 @@ from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 
-from apps.anagrafica.models import Persona
+from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
+from apps.anagrafica.servizi import livello_formazione
 from apps.core.anno import AnnoAssociativo
 from apps.eventi.models import Evento, Livello, Partecipazione, StatoPartecipazione
 from apps.iscrizioni.models import DIMENSIONE_MASSIMA, tipo_file
+from apps.organizzazione.models import BRANCA_DEL_TIPO, Branca, Unita
 
 from .models import (
     ATTIVE,
+    BRANCA_DELLA_CATEGORIA,
     DIMENSIONE_FOTO,
+    CategoriaBuonaCaccia,
     EsitoLiberatoria,
     EventoBuonaCaccia,
     IscrizioneBuonaCaccia,
@@ -27,8 +31,11 @@ from .models import (
     ModoLiberatoria,
     QuotaFormazione,
     StatoIscrizione,
+    TipoCampoFormazione,
     TipoDomanda,
+    TipologiaBuonaCaccia,
     VersioneScheda,
+    tipologia_altro,
 )
 
 MOTIVI = {
@@ -50,6 +57,8 @@ def salva_evento(evento: Evento, dettagli: EventoBuonaCaccia, utente) -> Evento:
     evento.livello = Livello.ESTERNO
     if evento.pk is None:
         evento.creato_da = utente
+    if dettagli.tipologia_id is None:
+        dettagli.tipologia = tipologia_altro()
     evento.full_clean()
     dettagli.full_clean(exclude=["evento"])
     evento.save()
@@ -72,7 +81,183 @@ def cerca_eventi(testo: str = "") -> QuerySet[Evento]:
 
 
 def dettagli(evento: Evento) -> EventoBuonaCaccia:
-    return EventoBuonaCaccia.objects.get_or_create(evento=evento)[0]
+    trovati = EventoBuonaCaccia.objects.filter(evento=evento).first()
+    if trovati is None:
+        trovati = EventoBuonaCaccia.objects.create(evento=evento, tipologia=tipologia_altro())
+    return trovati
+
+
+# --- Types and constraints (DEC-398) ---------------------------------------------------------
+
+PICCOLE_ORME = "1010101"
+# BuonaCaccia's capi camps and the Zona's types of camp (DEC-170); the modules are «MF».
+CAMPI_FORMAZIONE = {
+    "4000101": TipoCampoFormazione.CFT,
+    "4000201": TipoCampoFormazione.CFM,
+    "4000202": TipoCampoFormazione.CFM,
+    "4000203": TipoCampoFormazione.CFM,
+    "4000301": TipoCampoFormazione.CFA,
+    "4000401": TipoCampoFormazione.CCG,
+}
+
+
+def applica_tipologia(dettagli_: EventoBuonaCaccia, tipologia: TipologiaBuonaCaccia) -> None:
+    """The flags that follow from the type: Piccole Orme, a capi camp and its kind for the
+    Zona. Recomputed only when the type changes, so an event converted from the old flags
+    keeps them until someone chooses its type."""
+    if dettagli_.pk is not None and dettagli_.tipologia_id == tipologia.pk:
+        return
+    dettagli_.tipologia = tipologia
+    dettagli_.piccole_orme = tipologia.codice == PICCOLE_ORME
+    dettagli_.formazione_capi = tipologia.categoria == CategoriaBuonaCaccia.FORMAZIONE_CAPI
+    if not dettagli_.formazione_capi:
+        dettagli_.tipo_campo, dettagli_.specifica = "", ""
+    elif tipologia.codice in CAMPI_FORMAZIONE:
+        dettagli_.tipo_campo, dettagli_.specifica = CAMPI_FORMAZIONE[tipologia.codice], ""
+    elif tipologia.nome.startswith("MF"):
+        dettagli_.tipo_campo, dettagli_.specifica = TipoCampoFormazione.MODULO, tipologia.nome
+    else:
+        dettagli_.tipo_campo, dettagli_.specifica = TipoCampoFormazione.ALTRO, tipologia.nome
+
+
+def branche_del_gruppo() -> set[str]:
+    return {
+        BRANCA_DEL_TIPO[tipo]
+        for tipo in Unita.objects.filter(attiva=True).values_list("tipo", flat=True).distinct()
+    }
+
+
+def tipologie_proponibili() -> QuerySet[TipologiaBuonaCaccia]:
+    """The active types of the branches the group has: no Piccole Orme without L/C."""
+    mancanti = [
+        categoria
+        for categoria, branca in BRANCA_DELLA_CATEGORIA.items()
+        if branca not in branche_del_gruppo()
+    ]
+    return TipologiaBuonaCaccia.objects.filter(attiva=True).exclude(categoria__in=mancanti)
+
+
+def carica_tipologie() -> None:
+    """The catalog's types missing from the list, and «Altro»: the data migration does it
+    at installation; for test data, after a flush."""
+    import json
+    from pathlib import Path
+
+    catalogo = Path(__file__).resolve().parents[2] / "data/cataloghi/tipologie_buonacaccia.json"
+    for voce in json.loads(catalogo.read_text(encoding="utf-8"))["voci"]:
+        TipologiaBuonaCaccia.objects.get_or_create(codice=voce["codice"], defaults=voce)
+    TipologiaBuonaCaccia.objects.get_or_create(
+        nome="Altro formazione capi",
+        defaults={"categoria": CategoriaBuonaCaccia.FORMAZIONE_CAPI, "branche": [Branca.COCA]},
+    )
+    tipologia_altro()
+
+
+def salva_tipologia(tipologia: TipologiaBuonaCaccia) -> None:
+    tipologia.full_clean()
+    tipologia.save()
+
+
+def elimina_tipologia(tipologia: TipologiaBuonaCaccia) -> None:
+    if tipologia.altro:
+        raise ValidationError("«Altro» serve per gli eventi senza un tipo: non si toglie.")
+    if tipologia.eventi.exists():
+        raise ValidationError("Ci sono eventi di questo tipo: disattivalo invece di toglierlo.")
+    tipologia.delete()
+
+
+def branche_di(persona: Persona) -> set[str]:
+    """A capo is in the Co.Ca.; a ragazzo in the branch of their unit."""
+    return {
+        Branca.COCA if a.ruolo == RuoloAppartenenza.CAPO else BRANCA_DEL_TIPO[a.unita.tipo]
+        for a in Appartenenza.objects.attive().filter(persona=persona).select_related("unita")
+    }
+
+
+def _giorno(evento: Evento) -> date:
+    return timezone.localdate(evento.inizio)
+
+
+def motivo_esclusione(evento: Evento, persona: Persona) -> str | None:
+    """Why the person may not take part, by branch, age on the first day or training level
+    (DEC-398); None when they may. A level missing from BuonaStrada only warns."""
+    d = dettagli(evento)
+    if d.branche and not branche_di(persona) & set(d.branche):
+        nomi = ", ".join(Branca(b).label for b in d.branche)
+        return f"l'evento è per {nomi}."
+    if d.eta_minima is not None or d.eta_massima is not None:
+        eta = persona.eta(_giorno(evento))
+        if eta is None:
+            return "manca la data di nascita, che serve per il limite di età."
+        if d.eta_minima is not None and eta < d.eta_minima:
+            return f"alla partenza ha {eta} anni, il minimo è {d.eta_minima}."
+        if d.eta_massima is not None and eta > d.eta_massima:
+            return f"alla partenza ha {eta} anni, il massimo è {d.eta_massima}."
+    if d.livello_minimo is not None:
+        livello = livello_formazione(persona)
+        if livello is not None and livello < d.livello_minimo:
+            return f"ha il livello di formazione {livello}, il minimo è {d.livello_minimo}."
+    return None
+
+
+def controlla_vincoli(evento: Evento, persona: Persona) -> None:
+    motivo = motivo_esclusione(evento, persona)
+    if motivo:
+        raise ValidationError(f"Non può partecipare: {motivo}")
+
+
+def avvisi_persona(evento: Evento, persona: Persona) -> list[str]:
+    d = dettagli(evento)
+    if d.livello_minimo is not None and livello_formazione(persona) is None:
+        return [
+            "Il livello di formazione non è in BuonaStrada: controlla che sia almeno "
+            f"{d.livello_minimo}."
+        ]
+    return []
+
+
+def _unita_di(persona: Persona) -> Unita | None:
+    """The unit a participant counts in: their unit, the Co.Ca. for a capo."""
+    attive = Appartenenza.objects.attive().filter(persona=persona).select_related("unita")
+    ragazzo = next((a.unita for a in attive if a.ruolo != RuoloAppartenenza.CAPO), None)
+    return ragazzo or next((a.unita for a in attive), None)
+
+
+def partecipanti(evento: Evento) -> list[Persona]:
+    """Who takes part: the active registrations of minors, the adults who said yes."""
+    con_iscrizione = IscrizioneBuonaCaccia.objects.filter(partecipazione__evento=evento)
+    attive = con_iscrizione.filter(stato__in=ATTIVE).values("partecipazione__persona_id")
+    adulti = (
+        evento.partecipazioni.filter(stato=StatoPartecipazione.INVITATO)
+        .exclude(pk__in=con_iscrizione.values("partecipazione_id"))
+        .values("persona_id")
+    )
+    return list(Persona.objects.filter(Q(pk__in=attive) | Q(pk__in=adulti)))
+
+
+def avvisi_massimi(evento: Evento) -> list[str]:
+    """Past the maximums for a unit (linked units each on its own) or for the group: a
+    warning, never a refusal (DEC-398)."""
+    d = dettagli(evento)
+    if d.massimo_per_unita is None and d.massimo_per_gruppo is None:
+        return []
+    chi = partecipanti(evento)
+    avvisi = []
+    if d.massimo_per_gruppo is not None and len(chi) > d.massimo_per_gruppo:
+        avvisi.append(f"Iscritti del gruppo: {len(chi)}, il massimo è {d.massimo_per_gruppo}.")
+    if d.massimo_per_unita is not None:
+        per_unita: dict[Unita, int] = {}
+        for persona in chi:
+            unita = _unita_di(persona)
+            if unita is not None:
+                per_unita[unita] = per_unita.get(unita, 0) + 1
+        for unita, quanti in sorted(per_unita.items(), key=lambda x: str(x[0])):
+            if quanti > d.massimo_per_unita:
+                avvisi.append(
+                    f"Iscritti di {unita}: {quanti}, il massimo per unità è "
+                    f"{d.massimo_per_unita}."
+                )
+    return avvisi
 
 
 def _partecipazione(evento: Evento, persona: Persona, utente) -> Partecipazione:
@@ -118,6 +303,7 @@ def iscrivi(
     ).first()
     if gia is not None and gia.attiva:
         raise ValidationError("È già iscritto a questo evento.")
+    controlla_vincoli(evento, persona)
     if gia is not None:
         elimina(gia)  # registered again after a cancellation: a new record
     iscrizione = IscrizioneBuonaCaccia(
@@ -601,6 +787,9 @@ def segna_partecipazione(
         raise ValidationError("Vale solo per gli eventi su BuonaCaccia.")
     if persona.e_minorenne():
         raise ValidationError("Per un minorenne lo staff registra l'iscrizione.")
+    gia = evento.partecipazioni.filter(persona=persona, stato=StatoPartecipazione.INVITATO)
+    if not gia.exists():  # the fee of one already there may change whatever the constraints
+        controlla_vincoli(evento, persona)
     partecipazione = _partecipazione(evento, persona, utente)
     imposta_quota_versata(partecipazione, quota_versata)
     return partecipazione

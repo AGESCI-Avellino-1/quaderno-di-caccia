@@ -142,7 +142,7 @@ altri in ordine di cognome.
 
 Il livello di formazione è sempre quello di oggi, anche per un anno passato. Un capo appena
 entrato dall'app, che ha ancora il codice socio provvisorio, compare con «NUOVO CENSITO» al
-posto del codice.
+posto del codice e con il livello 1: è un tirocinante finché BuonaStrada non dice altro.
 
 ## Le eccezioni sulle squadriglie
 

@@ -530,6 +530,9 @@ def _persona(
         # Joined from the app: BuonaStrada's code replaces the provisional one.
         recepisci(persona)
         r.iscrizioni_recepite.append(f"{persona}: {persona.codice_socio} → {riga.codice_socio}")
+        # The real code makes the capogruppo's go-ahead pointless (DEC-400).
+        persona.abilitato_come_censito_il = None
+        persona.abilitato_come_censito_da = None
     persona.codice_socio = riga.codice_socio
     if _aggiorna_campi(persona, valori, r, riga.codice_socio):
         r.persone_aggiornate.append(str(persona))

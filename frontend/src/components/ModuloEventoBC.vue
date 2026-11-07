@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 
-import { TIPI_CAMPO, type DettaglioBC, type EventoBCIn } from '@/api/qdc'
+import { api, type DettaglioBC, type EventoBCIn, type TipologiaBC, type VincoliBC } from '@/api/qdc'
+import CampiVincoliBC from '@/components/CampiVincoliBC.vue'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
 
 // An event on BuonaCaccia, new or to change (DEC-158, DEC-391): the day is required, the hour of
-// start and end may come later. Who may save it is decided by the server.
+// start and end may come later. Its type is required and brings its default constraints, which
+// may be changed for this event (DEC-398). Who may save it is decided by the server.
 const props = defineProps<{
   evento?: DettaglioBC
   titoloIniziale?: string
@@ -27,14 +30,53 @@ const modulo = reactive({
   luogo: e?.luogo ?? '',
   descrizione: e?.descrizione ?? '',
   link: e?.link ?? '',
-  formazione_capi: e?.formazione_capi ?? false,
-  piccole_orme: e?.piccole_orme ?? false,
-  tipo_campo: (e?.tipo_campo || null) as EventoBCIn['tipo_campo'],
-  specifica: e?.specifica ?? '',
 })
-const serveSpecifica = computed(
-  () => modulo.tipo_campo === 'MODULO' || modulo.tipo_campo === 'ALTRO',
+
+const vincoliDi = (v: VincoliBC): VincoliBC => ({
+  branche: [...v.branche],
+  eta_minima: v.eta_minima,
+  eta_massima: v.eta_massima,
+  livello_minimo: v.livello_minimo,
+  massimo_per_unita: v.massimo_per_unita,
+  massimo_per_gruppo: v.massimo_per_gruppo,
+})
+const vincoli = ref<VincoliBC>(
+  e
+    ? vincoliDi(e)
+    : {
+        branche: [],
+        eta_minima: null,
+        eta_massima: null,
+        livello_minimo: null,
+        massimo_per_unita: null,
+        massimo_per_gruppo: null,
+      },
 )
+const tipologie = ref<TipologiaBC[]>([])
+onMounted(async () => {
+  tipologie.value = await api.tipologieBC()
+})
+// An event keeps its type even when no longer offered (deactivated, or a branch gone).
+const opzioni = computed(() => {
+  const elenco = tipologie.value.map((t) => ({
+    id: t.id,
+    nome: t.nome,
+    dettaglio: t.categoria_nome,
+  }))
+  if (e && !elenco.some((o) => o.id === e.tipologia_id))
+    elenco.push({ id: e.tipologia_id, nome: e.tipologia, dettaglio: '' })
+  return elenco
+})
+const tipologiaId = ref<number | null>(e?.tipologia_id ?? null)
+const tipologia = computed({
+  get: () => tipologiaId.value,
+  // A type chosen brings its default constraints (DEC-398).
+  set: (id: number | null) => {
+    tipologiaId.value = id
+    const scelta = tipologie.value.find((t) => t.id === id)
+    if (scelta) vincoli.value = vincoliDi(scelta)
+  },
+})
 
 function invia() {
   const fine = modulo.giornoFine || modulo.giornoInizio
@@ -48,10 +90,8 @@ function invia() {
     luogo: modulo.luogo,
     descrizione: modulo.descrizione,
     link: modulo.link,
-    formazione_capi: modulo.formazione_capi,
-    piccole_orme: modulo.piccole_orme,
-    tipo_campo: modulo.tipo_campo,
-    specifica: modulo.specifica,
+    tipologia_id: tipologiaId.value!,
+    ...vincoli.value,
   })
 }
 </script>
@@ -132,42 +172,24 @@ function invia() {
           rows="2"
         />
       </div>
-      <div class="col-12 form-field">
-        <input id="bc-formazione" v-model="modulo.formazione_capi" type="checkbox" class="check" />
-        <label class="small" for="bc-formazione">Campo di formazione capi</label>
-      </div>
-      <div v-if="!modulo.formazione_capi" class="col-12 form-field">
-        <input id="bc-po" v-model="modulo.piccole_orme" type="checkbox" class="check" />
-        <label class="small" for="bc-po">
-          Piccole Orme (si vivono una volta sola: l'app avvisa se un bambino le ha già fatte)
-        </label>
-      </div>
-      <template v-if="modulo.formazione_capi">
-        <div class="col-12 md:col-6">
-          <label class="form-label small" for="bc-tipo-campo">Tipo di campo</label>
-          <select
-            id="bc-tipo-campo"
-            v-model="modulo.tipo_campo"
-            class="form-control form-control-sm"
-            required
-          >
-            <option v-for="[valore, nome] in TIPI_CAMPO" :key="valore" :value="valore">
-              {{ nome }}
-            </option>
-          </select>
+      <div class="col-12">
+        <label class="form-label small" for="bc-tipologia">Tipo di evento</label>
+        <SceltaDaElenco
+          id="bc-tipologia"
+          v-model="tipologia"
+          :opzioni="opzioni"
+          richiesto
+          segnaposto="Scrivi il tipo, come su BuonaCaccia…"
+          avviso="Scegli il tipo dall'elenco."
+          nessuno="Nessun tipo con questo nome."
+        />
+        <div class="form-text">
+          I vincoli qui sotto vengono dal tipo: cambiali se per questo evento sono diversi.
         </div>
-        <div v-if="serveSpecifica" class="col-12 md:col-6">
-          <label class="form-label small" for="bc-specifica">
-            {{ modulo.tipo_campo === 'MODULO' ? 'Titolo del modulo' : 'Specifica' }}
-          </label>
-          <input
-            id="bc-specifica"
-            v-model="modulo.specifica"
-            class="form-control form-control-sm"
-            required
-          />
-        </div>
-      </template>
+      </div>
+      <div class="col-12">
+        <CampiVincoliBC v-model="vincoli" />
+      </div>
     </div>
     <div class="d-flex gap-3 mt-3">
       <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">

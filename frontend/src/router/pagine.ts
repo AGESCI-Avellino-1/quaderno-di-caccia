@@ -40,6 +40,7 @@ export const PAGINE: Record<string, Pagina> = {
   informazioni: { titolo: 'Informazioni' },
   'altre-unita': { titolo: 'Altre unità', soloCapi: true },
   'animali-squadriglia': { titolo: 'Animali di squadriglia' },
+  'tipologie-buonacaccia': { titolo: 'Tipi di evento su BuonaCaccia', soloCapi: true },
   'criteri-ammissione': { titolo: 'Criteri di ammissione', sopra: 'download', soloCapi: true },
   gruppo: { titolo: 'Organigramma' },
   'scheda-incarichi': { titolo: 'Scheda incarichi', sopra: 'gruppo', soloCapi: true },

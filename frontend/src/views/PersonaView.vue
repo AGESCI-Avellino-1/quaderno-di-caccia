@@ -13,6 +13,7 @@ import AllegatiSanitari from '@/components/AllegatiSanitari.vue'
 import CartaSanitaria from '@/components/CartaSanitaria.vue'
 import FotoProfilo from '@/components/FotoProfilo.vue'
 import IncarichiSquadriglia from '@/components/IncarichiSquadriglia.vue'
+import AbilitaCensito from '@/components/AbilitaCensito.vue'
 import PassaggioInCoca from '@/components/PassaggioInCoca.vue'
 import NotePersona from '@/components/NotePersona.vue'
 import PercorsoScout from '@/components/PercorsoScout.vue'
@@ -126,6 +127,12 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             <span v-if="persona.codice_provvisorio" class="badge theme-warning ms-1">
               provvisorio, in attesa di BuonaStrada
             </span>
+            <span v-if="persona.abilitato_come_censito_il" class="badge theme-success ms-1">
+              abilitato come censito dal {{ formattaData(persona.abilitato_come_censito_il)
+              }}<template v-if="persona.abilitato_come_censito_da">
+                da {{ persona.abilitato_come_censito_da }}</template
+              >
+            </span>
             <span v-if="persona.iscrizione_sospesa" class="badge theme-danger ms-1">
               iscrizione sospesa: scaduto il termine per completarla
             </span>
@@ -198,6 +205,13 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         :persona="persona.id"
         :nome="persona.nome"
         :annullabile="!!persona.puo_annullare_coca"
+        @cambiato="carica(persona.id)"
+      />
+      <AbilitaCensito
+        v-if="online && persona.puo_abilitare_come_censito"
+        :persona="persona.id"
+        :nome="persona.nome"
+        :abilitato="!!persona.abilitato_come_censito_il"
         @cambiato="carica(persona.id)"
       />
       <RegistroAccessi v-if="online && persona.vede_registro_accessi" :id="persona.id" />

@@ -35,9 +35,49 @@ Ci arrivi anche dalla pagina **Eventi**, con **Nuovo evento su BuonaCaccia**.
 2. Se non c'è, tocca **Non c'è: aggiungilo**, scrivi nome (come su BuonaCaccia), giorni e
    località. L'ora di inizio e di fine è facoltativa: se non la sai, lasciala vuota e aggiungila
    dopo. Puoi aggiungere il **link alla pagina su BuonaCaccia**, che vedono anche gli iscritti e
-   le loro famiglie. Spunta **Piccole Orme** se lo è (l'app avvisa se un bambino le ha già fatte)
-   o **Campo di formazione capi**.
-3. Tocca **Aggiungi l'evento**.
+   le loro famiglie.
+3. In **Tipo di evento** scrivi parte del tipo, come su BuonaCaccia (per esempio «capi sq»), e
+   sceglilo: è obbligatorio. Compaiono solo i tipi delle branche che il gruppo ha. Se non c'è,
+   scegli **Altro**.
+4. Sotto trovi **Chi può iscriversi**, con i vincoli che vengono dal tipo: branche, età minima
+   e massima, livello minimo di formazione capi, massimo di iscritti per unità e per il gruppo.
+   Se per questo evento BuonaCaccia dice altro, cambiali; vuoto vuol dire nessun limite.
+5. Tocca **Aggiungi l'evento**.
+
+:::{container} schermate
+![Il tipo di evento e i vincoli sul telefono](../img/capo/evento-bc-tipo-telefono.png){.telefono width="30%"}
+![Il tipo di evento e i vincoli sul computer](../img/capo/evento-bc-tipo-computer.png){.computer width="65%"}
+:::
+
+I vincoli valgono così:
+
+- chi non è di una delle **branche**, non ha l'**età** giusta il giorno in cui l'evento parte o,
+  per i capi, ha un **livello di formazione** più basso, non compare tra chi puoi registrare, e
+  l'app non lo iscrive. Un capo che in BuonaStrada non ha il livello può iscriversi, con un
+  avviso; chi ha ancora il codice socio provvisorio conta come livello 1;
+- i **massimi** per unità e per il gruppo danno solo un avviso nella pagina dell'evento. Le unità
+  collegate contano ciascuna per sé.
+
+Le Piccole Orme sono un tipo: l'app avvisa se un bambino le ha già fatte. I campi di formazione
+capi (CFT, CFM, CFA, CCG, i moduli formativi) vanno nell'elenco per la Zona.
+
+### I tipi di evento
+
+Nella Home, in **Amministrazione**, tocca **Tipi di evento su BuonaCaccia**: ogni capo vede e
+cambia l'elenco. All'inizio ci sono i tipi del menu «Categoria» di BuonaCaccia, solo con la
+branca come vincolo, più **Altro formazione capi** e **Altro**.
+
+:::{container} schermate
+![I tipi di evento sul telefono](../img/capo/tipologie-bc-telefono.png){.telefono width="30%"}
+![I tipi di evento sul computer](../img/capo/tipologie-bc-computer.png){.computer width="65%"}
+:::
+
+- **Modifica** per cambiare nome, categoria e vincoli di base. Valgono per gli eventi che crei da
+  lì in poi: quelli già inseriti tengono i loro.
+- **Nuovo tipo** per aggiungerne uno.
+- **Togli** c'è solo per i tipi mai usati. Un tipo già usato lo disattivi da **Modifica**: non
+  viene più proposto, e gli eventi che lo hanno lo tengono.
+- **Altro** non ha vincoli e non si toglie.
 
 Per correggere un errore o aggiungere ciò che si sa dopo, nella pagina dell'evento tocca **Modifica
 l'evento**: lo possono fare i capigruppo, chi lo ha creato e chi gestisce un iscritto. Se cambiano
@@ -94,5 +134,6 @@ l'iscrizione** e conferma.
 
 :::{note}
 I maggiorenni (rover, scolte e capi) si iscrivono da soli su BuonaCaccia: nell'app toccano
-**Partecipo anch'io**, e per un campo di formazione scrivono la quota versata.
+**Partecipo anch'io**, e per un campo di formazione scrivono la quota versata. Se i vincoli
+dell'evento non lo permettono, il pulsante non c'è e l'app dice perché.
 :::

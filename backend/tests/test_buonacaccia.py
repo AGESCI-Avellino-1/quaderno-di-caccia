@@ -21,6 +21,8 @@ from apps.buonacaccia.models import (
     IscrizioneBuonaCaccia,
     StatoIscrizione,
     TipoCampoFormazione,
+    TipologiaBuonaCaccia,
+    tipologia_altro,
 )
 from apps.cassa.models import Movimento
 from apps.eventi.avvisi import _quando as quando_in_email
@@ -154,23 +156,31 @@ def test_un_evento_solo_per_piu_soci(capo, rover, piccole_orme):
     assert _client(rover).get("/api/v1/buonacaccia/eventi?cerca=nautica").json() == []
 
 
+def _tipologia(codice: str) -> TipologiaBuonaCaccia:
+    return TipologiaBuonaCaccia.objects.get(codice=codice)
+
+
 def test_crea_evento_e_tipo_di_campo(capo):
+    # The type is required; a capi module and camp follow from it (DEC-398).
     url = "/api/v1/buonacaccia/eventi"
     dati = {
         "titolo": "Modulo di formazione",
         "inizio": _quando(OGGI + timedelta(days=10)).isoformat(),
         "fine": _quando(OGGI + timedelta(days=11)).isoformat(),
-        "formazione_capi": True,
-        "tipo_campo": "MODULO",
     }
-    risposta = _json(capo, "post", url, dati)
-    assert risposta.status_code == 400
-    assert "titolo del modulo" in risposta.json()["detail"]
-    risposta = _json(capo, "post", url, {**dati, "specifica": "Comunicazione"})
+    assert _json(capo, "post", url, dati).status_code == 422
+    modulo = _tipologia("4010304")  # MF - Tutela minori
+    risposta = _json(capo, "post", url, {**dati, "tipologia_id": modulo.pk})
     assert risposta.status_code == 201
+    assert risposta.json()["tipologia"] == "MF - Tutela minori"
     evento = Evento.objects.get(pk=risposta.json()["id"])
     assert evento.livello == Livello.ESTERNO and evento.creato_da == capo.utente
-    assert evento.buonacaccia.tipo_campo_testo == "Modulo formativo: Comunicazione"
+    assert evento.buonacaccia.formazione_capi
+    assert evento.buonacaccia.tipo_campo_testo == "Modulo formativo: MF - Tutela minori"
+    cfm = _tipologia("4000202")
+    risposta = _json(capo, "post", url, {**dati, "tipologia_id": cfm.pk})
+    dettagli = Evento.objects.get(pk=risposta.json()["id"]).buonacaccia
+    assert dettagli.tipo_campo == "CFM" and not dettagli.piccole_orme
 
 
 def test_gli_eventi_esterni_non_passano_dagli_eventi_del_gruppo(capogruppo):
@@ -676,6 +686,7 @@ def _dati_evento(**altri) -> dict:
         "inizio": _quando(giorno).isoformat(),
         "fine": _quando(giorno + timedelta(days=2)).isoformat(),
         "luogo": "Salerno",
+        "tipologia_id": tipologia_altro().pk,
         **altri,
     }
 

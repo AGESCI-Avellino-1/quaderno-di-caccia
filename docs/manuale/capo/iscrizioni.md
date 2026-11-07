@@ -61,6 +61,20 @@ suoi figli. Finché non è in BuonaStrada è un capo «in attesa» e non vede i 
 altri. Poi, se non ha ancora un account, manda l'invito da **Accesso all'app**; se ce l'ha già, al
 prossimo accesso trova la parte da capo.
 
+### Abilitare un capo come censito
+
+Il codice socio di BuonaStrada può arrivare settimane dopo che l'iscrizione è completa. Nel
+frattempo un capogruppo, o l'assistente ecclesiastico di gruppo, può abilitare il capo come se
+fosse già censito: nella sua scheda, in **Codice socio provvisorio**, tocca **Abilita come
+censito…** e conferma. Da quel momento vede quello che vede ogni capo; nella scheda, accanto al
+codice, c'è scritto da quando e da chi. Per tornare indietro tocca **Togli l'abilitazione…**.
+Quando l'importazione porta il codice vero, l'abilitazione non serve più.
+
+:::{container} schermate
+![L'abilitazione come censito sul telefono](../img/capo/abilita-censito-telefono.png){.telefono width="30%"}
+![L'abilitazione come censito sul computer](../img/capo/abilita-censito-computer.png){.computer width="65%"}
+:::
+
 Se è stato un errore, finché il codice socio è provvisorio tocca **Annulla il passaggio in
 Comunità capi…**: torna solo genitore, e gli incarichi che ha avuto nel frattempo si chiudono.
 Quando l'importazione da BuonaStrada gli dà il codice vero, il passaggio non si annulla più.

@@ -12,6 +12,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#51](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/51) | Eventi su BuonaCaccia: link allo stato e link all'evento (DEC-389) | Miglioramento | Basso   | Bassa      | VAL    |
 | [#52](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/52) | Eventi: pulsante Nuovo evento su BuonaCaccia (DEC-390)             | Miglioramento | Basso   | Bassa      | VAL    |
 | [#53](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/53) | BuonaCaccia: «Scaduta, manca la scheda» senza scheda               | Bug           | Basso   | Bassa      | VAL    |
+| [#54](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/54) | BuonaCaccia: orario facoltativo e modifica dell'evento             | Miglioramento | Medio   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

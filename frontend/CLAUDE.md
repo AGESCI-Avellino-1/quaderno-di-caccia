@@ -17,7 +17,7 @@ vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
 | `src/stores/sessione.ts`                                        | Profile (`/api/v1/io`), role flags for menus, branch theme                                                                                                                                                                                                                    |
 | `src/composables/`                                              | `useRete` (online state, queue counters, auto-send), `useErrore` (readable errors), `useBloccoAutomatico` (lock after inactivity), `useFinestraVisibile` (the frame follows the viewport iOS leaves shifted, DEC-370)                                                         |
 | `src/router/index.ts`                                           | Routes; `meta.pubblica`, `meta.richiede` (menu guard only)                                                                                                                                                                                                                    |
-| `src/navigazione/`                                              | The menu (DEC-241…DEC-243): `menu.ts` (groups and entries from the profile, shared by `MenuLaterale.vue`, the Home and `Briciole.vue`), `icone.ts` (the icons used). Bootstrap's JavaScript is not loaded: the drawer is a `<dialog>` opened by the component                 |
+| `src/navigazione/`                                              | The menu (DEC-241…DEC-243): `menu.ts` (groups and entries from the profile, shared by `MenuLaterale.vue`, the Home and `Briciole.vue`), `icone.ts` (the icons used), a group's own page at `/sezione/<chiave>` (`SezioneView.vue`, DEC-382). Bootstrap's JavaScript is not loaded: the drawer is a `<dialog>` opened by the component                 |
 | `src/router/pagine.ts`                                          | Name of every page and the page above it: `[Pagina corrente]` in the title, the breadcrumb (DEC-244, DEC-246)                                                                                                                                                                 |
 | `src/components/CampoCodiceFiscale.vue`                         | Every codice fiscale input: "Calcola" proposes it from the person's data (server `/codice-fiscale`, municipalities from ISTAT, DEC-265); use it for any new CF field                                                                                                          |
 | `src/components/EditorTesto.vue`                                | TipTap editor for the email templates (DEC-250), loaded only by `ModelloEmailView`; the server cleans the HTML again                                                                                                                                                          |
@@ -59,8 +59,9 @@ vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
 - UI text in Italian, short, no acronyms without explanation (users are capi and
   parents). Use Bootstrap classes and theme variables (`var(--ag-primary)`), no inline
   colours.
-- The service worker is in **prompt** mode (`AggiornamentoApp.vue`): never switch to
-  auto-update, a capo may be filling a form at camp.
+- The service worker is in **prompt** mode (`pwa/aggiornamento.ts`, `AggiornamentoApp.vue`, the
+  Aggiorna button of `PiePagina.vue`, DEC-380): never switch to auto-update, a capo may be
+  filling a form at camp.
 
 ## Tests
 

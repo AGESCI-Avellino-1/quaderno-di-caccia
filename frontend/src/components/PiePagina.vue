@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { aggiornaOra, versioneInferiore } from '@/pwa/aggiornamento'
@@ -19,13 +19,6 @@ async function aggiorna() {
     inCorso.value = false
   }
 }
-
-// An app left open for days asks again when it comes back in front.
-function suVisibilita() {
-  if (document.visibilityState === 'visible' && navigator.onLine) void sito.carica()
-}
-onMounted(() => document.addEventListener('visibilitychange', suVisibilita))
-onBeforeUnmount(() => document.removeEventListener('visibilitychange', suVisibilita))
 </script>
 
 <template>

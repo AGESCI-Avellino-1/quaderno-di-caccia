@@ -46,6 +46,11 @@ export const useSitoStore = defineStore('sito', () => {
     }
   }
 
+  // An app left open for days asks again when it comes back in front (DEC-380).
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && navigator.onLine) void carica()
+  })
+
   function aggiorna(nuovo: Sito) {
     sito.value = nuovo
   }

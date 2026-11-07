@@ -5,6 +5,32 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.26.0 — 7 novembre 2026
+
+### Novità
+
+**Ricerca mentre scrivi** ([#60](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/60)): nella ricerca degli eventi su BuonaCaccia, in **Impersona** e negli **Account** dell'amministratore tecnico i risultati compaiono mentre scrivi, dopo due lettere e una breve pausa; il pulsante **Cerca** non c'è più. Negli eventi, **Non c'è: aggiungilo** compare appena hai scritto qualcosa.
+
+**Specialità e brevetti scrivendo il nome**: nella Progressione, la specialità o il brevetto da aggiungere si sceglie con lo stesso campo delle persone: scrivi parte del nome e l'elenco si restringe.
+
+### Correzioni
+
+Un campo obbligatorio per scegliere una persona, lasciato vuoto senza toccarlo, ora ferma il modulo come deve.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.26.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Aggiornati i capitoli sugli eventi su BuonaCaccia, sull'impersonare, sulla Progressione e sull'amministratore tecnico. Rifatte le schermate degli eventi su BuonaCaccia, di Impersona e degli account.
+
+Provata con i test e in un browser, sul computer e con la larghezza di un telefono, con dati inventati; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.25.0 — 7 novembre 2026
 
 ### Novità

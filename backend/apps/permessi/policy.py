@@ -1030,6 +1030,55 @@ def puo_registrare_spesa_anticipata(user, capo: Persona) -> bool:
     return puo_gestire_casse(user) or bool(_unita_tesoreria(user))
 
 
+def unita_dei_rimborsi(user) -> set[int] | None:
+    """The expenses paid by capi the user may refund or reject (DEC-86, DEC-379): None = all
+    of them, otherwise those of these units. They stay among capi: an R/S treasurer who is
+    a ragazzo never sees them, nor does a capo not yet in BuonaStrada (DEC-386, DEC-123)."""
+    if not e_capo_censito(user):
+        return set()
+    if puo_gestire_casse(user):
+        return None
+    return _unita_tesoreria(user)
+
+
+def puo_rimborsare_spesa(user, unita_id: int | None) -> bool:
+    unita = unita_dei_rimborsi(user)
+    return unita is None or unita_id in unita
+
+
+def puo_rimborsare_spese(user) -> bool:
+    unita = unita_dei_rimborsi(user)
+    return unita is None or bool(unita)
+
+
+def da_avvisare_per_spesa(unita_id: int | None) -> list[Persona]:
+    """Who is told of a new expense, only among those who may refund it (DEC-379, DEC-385):
+    the unit's treasurers or else its capi unità; then, for an expense of the group too, the
+    group's treasurers or else the capigruppo."""
+    passi: list[tuple[RuoloIncarico, dict]] = [
+        (RuoloIncarico.TESORIERE_GRUPPO, {}),
+        (RuoloIncarico.CAPOGRUPPO, {}),
+    ]
+    if unita_id is not None:
+        dell_unita = {"unita_id__in": _con_cassa_comune({unita_id})}
+        passi = [
+            (RuoloIncarico.TESORIERE_UNITA, dell_unita),
+            (RuoloIncarico.CAPO_UNITA, dell_unita),
+            *passi,
+        ]
+    for ruolo, dove in passi:
+        incarichi = (
+            Incarico.objects.attivi()
+            .filter(ruolo=ruolo, persona__utente__is_active=True, **dove)
+            .select_related("persona__utente")
+        )
+        persone = {i.persona_id: i.persona for i in incarichi}
+        possono = [p for p in persone.values() if puo_rimborsare_spesa(p.utente, unita_id)]
+        if possono:
+            return possono
+    return []
+
+
 # --- Events and attendance (DEC-75, DEC-78) ---------------------------------------------------
 # The family (or the adult member) says the member will not take part; the staff (the
 # Co.Ca. for group events) may not invite a member, with a reason (DEC-137); attendance

@@ -451,7 +451,7 @@ def _spesa_out(user, s: SpesaAnticipata) -> dict:
         "rimborsata_il": s.rimborso.data if s.rimborso_id else None,
         "motivo_rifiuto": s.motivo_rifiuto,
         "puo_rimborsare": stato == "da_rimborsare"
-        and policy.puo_registrare_movimenti(user, s.unita_id),
+        and policy.puo_rimborsare_spesa(user, s.unita_id),
     }
 
 
@@ -495,6 +495,7 @@ def registra_spesa(request, dati: SpesaIn):
     if file is not None:
         spesa.giustificativo = file
     spesa.save()
+    transaction.on_commit(lambda: servizi.avvisa_spesa_da_rimborsare(spesa))
     return Status(201, _spesa_out(utente, spesa))
 
 
@@ -512,7 +513,7 @@ def rimborsa(request, spesa_id: int, dati: RimborsoIn):
     spesa = _spesa(request, spesa_id)
     cassa = get_object_or_404(Cassa, pk=dati.cassa_id)
     utente = request.auth
-    if not policy.puo_registrare_movimenti(utente, spesa.unita_id) or not (
+    if not policy.puo_rimborsare_spesa(utente, spesa.unita_id) or not (
         policy.puo_registrare_in_cassa(utente, cassa)
     ):
         raise HttpError(403, "I rimborsi li registrano i tesorieri e il capo unità.")
@@ -527,7 +528,7 @@ def rimborsa(request, spesa_id: int, dati: RimborsoIn):
 @router.post("/spese-anticipate/{spesa_id}/respingi", response=SpesaOut)
 def respingi(request, spesa_id: int, dati: Motivo):
     spesa = _spesa(request, spesa_id)
-    if not policy.puo_registrare_movimenti(request.auth, spesa.unita_id):
+    if not policy.puo_rimborsare_spesa(request.auth, spesa.unita_id):
         raise HttpError(403, "Le spese le valutano i tesorieri e il capo unità.")
     try:
         servizi.respingi(spesa, dati.motivo)

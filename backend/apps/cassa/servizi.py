@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -17,7 +18,10 @@ from apps.anagrafica.models import Appartenenza
 from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
 from apps.core.euro import euro
+from apps.impostazioni.email import invia
 from apps.iscrizioni.models import DIMENSIONE_MASSIMA, tipo_file
+from apps.notifiche.servizi import notifica
+from apps.permessi import policy
 
 from .catalogo import ENTRATA, USCITA, catalogo, voce_quota, voce_rimborsi
 from .models import (
@@ -199,6 +203,23 @@ def rimborsa(spesa: SpesaAnticipata, cassa: Cassa, utente, data: date | None = N
     spesa.rimborso = movimento
     spesa.save(update_fields=["rimborso", "aggiornato_il"])
     return movimento
+
+
+def avvisa_spesa_da_rimborsare(spesa: SpesaAnticipata) -> None:
+    """An email that always goes, and a notification, to who must refund it (DEC-379). The
+    notification says only what it is: it is read on a locked phone (DEC-345)."""
+    persone = policy.da_avvisare_per_spesa(spesa.unita_id)
+    notifica("riepiloghi", persone, "Spesa da rimborsare", "/spese-da-rimborsare")
+    invia(
+        "spesa_da_rimborsare",
+        {
+            "Capo": f"{spesa.capo.nome} {spesa.capo.cognome}",
+            "Descrizione": spesa.descrizione,
+            "Importo": euro(spesa.importo),
+            "Link": f"{settings.FRONTEND_URL}/spese-da-rimborsare",
+        },
+        [p.utente.email for p in persone],
+    )
 
 
 def respingi(spesa: SpesaAnticipata, motivo: str) -> None:

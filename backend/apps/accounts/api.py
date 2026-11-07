@@ -101,6 +101,9 @@ class Profilo(Schema):
     vede_animali: bool = False
     # Payments families reported that this user may check (DEC-255).
     pagamenti_da_verificare: int = 0
+    # Expenses of capi: who may refund them, and how many wait for this user (DEC-379).
+    rimborsa_spese: bool = False
+    spese_da_rimborsare: int = 0
     # The waiting list (DEC-259): every capo sees it.
     vede_lista_attesa: bool = False
     # The buttons next to phone numbers (DEC-301): "chiama", "whatsapp", "sms".
@@ -166,6 +169,8 @@ def profilo(request):
         ],
         "ambiente": ambiente(persona) if persona is not None else None,
         "pagamenti_da_verificare": _pagamenti_da_verificare(user),
+        "rimborsa_spese": policy.puo_rimborsare_spese(user),
+        "spese_da_rimborsare": _spese_da_rimborsare(user),
         "vede_lista_attesa": policy.vede_lista_attesa(user),
         "pulsanti_telefono": _pulsanti_telefono(user),
     }
@@ -192,6 +197,16 @@ def scegli_pulsanti_telefono(request, dati: PulsantiTelefono):
     user.telefono_sms = dati.sms
     user.save(update_fields=["telefono_chiama", "telefono_whatsapp", "telefono_sms"])
     return dati
+
+
+def _spese_da_rimborsare(user) -> int:
+    from apps.cassa.models import SpesaAnticipata
+
+    unita = policy.unita_dei_rimborsi(user)
+    if unita is not None and not unita:
+        return 0
+    aperte = SpesaAnticipata.objects.filter(rimborso__isnull=True, respinta_il__isnull=True)
+    return (aperte if unita is None else aperte.filter(unita_id__in=unita)).count()
 
 
 def _pagamenti_da_verificare(user) -> int:

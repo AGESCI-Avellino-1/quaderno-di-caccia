@@ -254,6 +254,13 @@ const router = createRouter({
       component: () => import('@/views/PagamentiDaVerificareView.vue'),
     },
     {
+      // Expenses of capi still to refund, for who may refund them (DEC-379, the API decides).
+      path: '/spese-da-rimborsare',
+      name: 'spese-da-rimborsare',
+      component: () => import('@/views/SpeseDaRimborsareView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // The bank statement: group treasurer and capigruppo; the API decides (DEC-221).
       path: '/banca',
       name: 'banca',

@@ -88,6 +88,18 @@ describe('menu', () => {
     )
   })
 
+  it('only who may refund sees the expenses to refund, with how many wait', () => {
+    const capo = { ...BASE, persona: io, branca: 'capi' as const, capo: true }
+    expect(voci(capo, 'economia')).not.toContain('Spese da rimborsare')
+    const tesoriere = { ...capo, rimborsa_spese: true, spese_da_rimborsare: 2 }
+    expect(voci(tesoriere, 'economia')).toContain('Spese da rimborsare')
+    const voce = gruppiMenu(tesoriere)
+      .find((g) => g.chiave === 'economia')!
+      .voci.find((v) => v.nome === 'Spese da rimborsare')!
+    expect(voce.contatore).toBe(2)
+    expect(voce.to).toBe('/spese-da-rimborsare')
+  })
+
   it('a capo reaches the other units from one entry, after their own', () => {
     const capo = {
       ...BASE,

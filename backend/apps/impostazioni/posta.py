@@ -52,6 +52,7 @@ SEMPRE = {
     "convocazione_riunione",
     "documento_in_scadenza",
     "documento_riunione",
+    "spesa_da_rimborsare",
 }
 # What the person asks for themself: never waits in the queue (DEC-311).
 SUBITO = {

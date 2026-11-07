@@ -46,6 +46,14 @@ Nella scheda **Spese da rimborsare** ci sono le spese che i capi hanno pagato di
 (dalla pagina **Le mie spese**), con lo scontrino. **Rimborsa** e scegli da quale cassa:
 diventa un'uscita alla voce «Rimborsi spese volontari». Oppure **Respingi**, con il motivo.
 
+Chi può rimborsare trova anche, in **Gestione economica**, la voce **Spese da rimborsare**: un
+numero dice quante ne ha da fare, e la pagina mostra solo quelle.
+
+Quando un capo registra una spesa, un'email e una notifica avvisano chi deve rimborsarla. Per una
+spesa di un'unità è il tesoriere dell'unità o, se non c'è, il capo unità; per una spesa del gruppo,
+e se in unità non può farlo nessuno, sono i tesorieri di gruppo o, se non ci sono, i capigruppo. Un
+tesoriere rover o scolta non vede le spese dei capi e non riceve l'avviso.
+
 ## Il rendiconto
 
 Nella scheda **Rendiconto** trovi i totali dell'anno nell'ordine del Modello D, da ricopiare

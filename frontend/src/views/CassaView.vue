@@ -6,7 +6,6 @@ import {
   api,
   euro,
   giustificativoMovimento,
-  giustificativoSpesa,
   nomeUnita,
   PERCORSO_MOVIMENTI,
   type Cassa,
@@ -14,13 +13,13 @@ import {
   type CassaIn,
   type ModelloD,
   type Movimento,
-  type SpesaAnticipata,
   type Unita,
   type Verifica,
   type VoceModelloD,
 } from '@/api/qdc'
 import CampoImporto from '@/components/CampoImporto.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import SpeseCapi from '@/components/SpeseCapi.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { leggiGiustificativo } from '@/offline/giustificativo'
@@ -52,7 +51,6 @@ const scelta = ref<number | null>(null)
 const movimenti = ref<Movimento[]>([])
 const copiaDel = ref<string | null>(null)
 const verifiche = ref<Verifica[]>([])
-const spese = ref<SpesaAnticipata[]>([])
 const rendiconto = ref<ModelloD | null>(null)
 const esito = ref('')
 const vista = ref<'movimenti' | 'spese' | 'rendiconto' | 'casse'>('movimenti')
@@ -89,10 +87,6 @@ async function caricaMovimenti() {
   }
 }
 
-async function caricaSpese() {
-  spese.value = (await esegui(() => api.speseAnticipate())) ?? []
-}
-
 async function caricaRendiconto() {
   try {
     rendiconto.value = await api.modelloD(anno.value)
@@ -110,7 +104,7 @@ onMounted(async () => {
   } catch {
     unita.value = []
   }
-  await Promise.all([caricaSpese(), caricaRendiconto()])
+  await caricaRendiconto()
 })
 watch([scelta, anno], caricaMovimenti, { immediate: true })
 watch(
@@ -259,16 +253,8 @@ async function registraVerifica() {
 
 // --- Expenses paid by capi (DEC-86) --------------------------------------------------------
 
-const rimborso = reactive({ id: 0, cassa_id: null as number | null, motivo: '', azione: '' })
-async function rimborsa() {
-  const fatto = await esegui(() =>
-    rimborso.azione === 'rimborsa'
-      ? api.rimborsaSpesa(rimborso.id, rimborso.cassa_id!)
-      : api.respingiSpesa(rimborso.id, rimborso.motivo),
-  )
-  if (!fatto) return
-  rimborso.id = 0
-  await Promise.all([caricaSpese(), caricaCasse(), caricaMovimenti()])
+async function speseCambiate() {
+  await Promise.all([caricaCasse(), caricaMovimenti(), sessione.carica()])
 }
 
 // --- Cash boxes (the group) -------------------------------------------------------------
@@ -690,90 +676,7 @@ const nomeTipo = (tipo: string) => (tipo === 'PAYPAL' ? 'Conto PayPal' : 'Conto 
     </template>
 
     <!-- Expenses paid by capi -->
-    <template v-if="vista === 'spese'">
-      <p class="form-text">
-        Le spese pagate di tasca propria dai capi: diventano un'uscita, alla voce Rimborsi spese
-        volontari, quando le rimborsi. Ogni capo le registra dalla pagina Le mie spese.
-      </p>
-      <p v-if="!spese.length && !inCorso" class="fg-2">Nessuna spesa.</p>
-      <ul class="list-group">
-        <li v-for="s in spese" :key="s.id" class="list-group-item">
-          <div class="d-flex flex-wrap justify-content-between gap-3">
-            <span>{{ data(s.data) }} · {{ s.capo }} · {{ s.descrizione }}</span>
-            <strong>{{ euro(s.importo) }}</strong>
-          </div>
-          <div class="small fg-2">
-            {{ etichettaUnita(s.unita_id) }}
-            <template v-if="s.stato === 'rimborsata'">
-              · rimborsata il {{ data(s.rimborsata_il!) }}</template
-            >
-            <template v-else-if="s.stato === 'respinta'">
-              · respinta: {{ s.motivo_rifiuto }}</template
-            >
-            <template v-else> · da rimborsare</template>
-            ·
-            <a v-if="s.ha_giustificativo" :href="giustificativoSpesa(s.id)" target="_blank"
-              >giustificativo</a
-            >
-            <template v-else>senza giustificativo</template>
-          </div>
-          <div v-if="s.puo_rimborsare && rimborso.id !== s.id" class="d-flex gap-3 mt-1">
-            <button
-              type="button"
-              class="btn btn-sm btn-link"
-              @click="Object.assign(rimborso, { id: s.id, azione: 'rimborsa', cassa_id: null })"
-            >
-              Rimborsa
-            </button>
-            <button
-              type="button"
-              class="btn btn-sm btn-link"
-              @click="Object.assign(rimborso, { id: s.id, azione: 'respingi', motivo: '' })"
-            >
-              Respingi
-            </button>
-          </div>
-          <form
-            v-if="rimborso.id === s.id"
-            class="d-flex flex-wrap align-items-end gap-3 mt-3"
-            @submit.prevent="rimborsa"
-          >
-            <div v-if="rimborso.azione === 'rimborsa'">
-              <label class="form-label small" :for="`rimborso-${s.id}`">Da quale cassa</label>
-              <select
-                :id="`rimborso-${s.id}`"
-                v-model="rimborso.cassa_id"
-                class="form-control form-control-sm"
-                required
-              >
-                <option
-                  v-for="c in casse.filter((x) => x.puo_registrare && x.attiva)"
-                  :key="c.id"
-                  :value="c.id"
-                >
-                  {{ c.nome }}
-                </option>
-              </select>
-            </div>
-            <div v-else class="flex-grow-1">
-              <label class="form-label small" :for="`respingi-${s.id}`">Perché la respingi?</label>
-              <input
-                :id="`respingi-${s.id}`"
-                v-model="rimborso.motivo"
-                class="form-control form-control-sm"
-                required
-              />
-            </div>
-            <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-              {{ rimborso.azione === 'rimborsa' ? 'Rimborsa' : 'Respingi' }}
-            </button>
-            <button type="button" class="btn btn-sm btn-link" @click="rimborso.id = 0">
-              Annulla
-            </button>
-          </form>
-        </li>
-      </ul>
-    </template>
+    <SpeseCapi v-if="vista === 'spese'" :casse="casse" :unita="unita" @cambiato="speseCambiate" />
 
     <!-- Totals for the national report -->
     <template v-if="vista === 'rendiconto' && rendiconto">

@@ -334,6 +334,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           descrizione: 'PayPal e bonifici segnalati dalle famiglie',
           contatore: p.pagamenti_da_verificare || undefined,
         },
+        p.rimborsa_spese && {
+          nome: 'Spese da rimborsare',
+          icona: 'receipt-cutoff',
+          to: '/spese-da-rimborsare',
+          descrizione: 'Quello che i capi hanno pagato per il gruppo',
+          contatore: p.spese_da_rimborsare || undefined,
+        },
         p.vede_cassa && {
           nome: 'Prima nota',
           icona: 'journal-text',

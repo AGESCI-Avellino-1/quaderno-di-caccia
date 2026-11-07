@@ -400,6 +400,21 @@ _TIPI = [
             _link("la pagina delle quote"),
         ),
     ),
+    # --- Cash book (always sent, DEC-379) --------------------------------------------------
+    TipoEmail(
+        "spesa_da_rimborsare",
+        "Spesa da rimborsare",
+        "A chi deve rimborsare la spesa di un capo, quando viene registrata.",
+        "[Nome sito]: spesa da rimborsare",
+        "<p>Ciao,</p><p>[Capo] ha registrato una spesa da rimborsare: [Descrizione], "
+        "[Importo].</p><p>La trovi qui:<br>[Link]</p>",
+        (
+            Segnaposto("Capo", "chi ha pagato la spesa", "Giulia Rossi"),
+            Segnaposto("Descrizione", "per che cosa", "Corde per il campo"),
+            Segnaposto("Importo", "l'importo della spesa", "12,50 €", True),
+            _link("la pagina delle spese da rimborsare"),
+        ),
+    ),
     # --- Notice board ----------------------------------------------------------------------
     TipoEmail(
         "avviso_bacheca",

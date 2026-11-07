@@ -18,7 +18,9 @@ from apps.cassa import servizi
 from apps.cassa.catalogo import catalogo, voce_quota, voce_rimborsi
 from apps.cassa.models import Cassa, Movimento, SpesaAnticipata, TipoCassa, TipoMovimento
 from apps.core.anno import AnnoAssociativo
+from apps.impostazioni.posta import SEMPRE
 from apps.organizzazione.models import Composizione, Incarico, RuoloIncarico, TipoUnita, Unita
+from apps.permessi import policy
 from apps.quote import servizi as quote
 from apps.quote.models import CategoriaQuota, Destinatari, MetodoPagamento, Quota, TipoQuota
 from tests.conftest import INIZIO_ANNO, crea_capo, crea_persona, nato_anni_fa
@@ -407,3 +409,141 @@ def test_pagamenti_registrati_prima_delle_casse(quote_ragazza, staff, capogruppo
     assert contanti.saldo() == Decimal("40")
     assert vecchio.movimenti.get().data == GENNAIO
     assert _post(capogruppo, url, {}).json() == {"riportati": 0}
+
+
+# --- Expenses to refund: menu and alerts (DEC-379, DEC-385, DEC-386) -----------------------------
+
+
+@pytest.fixture
+def tesoriere_reparto(reparto, coca):
+    capo_t = crea_capo("Tea", "Tesoriera", "tea@example.invalid")
+    Incarico.objects.create(
+        persona=capo_t, ruolo=RuoloIncarico.TESORIERE_UNITA, unita=reparto, data_inizio=INIZIO_ANNO
+    )
+    return capo_t
+
+
+@pytest.fixture
+def tesoriere_gruppo(gruppo, coca):
+    capo_t = crea_capo("Gino", "Tesoriere", "gino@example.invalid")
+    Incarico.objects.create(
+        persona=capo_t, ruolo=RuoloIncarico.TESORIERE_GRUPPO, gruppo=gruppo, data_inizio=INIZIO_ANNO
+    )
+    return capo_t
+
+
+def _spesa(unita=None, capo=None):
+    return SpesaAnticipata.objects.create(
+        capo=capo or crea_capo("Paga", "Tutto", "paga@example.invalid"),
+        data=GENNAIO,
+        importo=Decimal("12.50"),
+        descrizione="Corde",
+        unita=unita,
+    )
+
+
+def _da_avvisare(unita=None):
+    return {p.pk for p in policy.da_avvisare_per_spesa(unita.pk if unita else None)}
+
+
+def test_avviso_al_tesoriere_dell_unita_non_al_capo_unita(
+    capo, tesoriere_reparto, tesoriere_gruppo, capogruppo, reparto
+):
+    assert _da_avvisare(reparto) == {tesoriere_reparto.pk}
+
+
+def test_senza_tesoriere_avviso_al_capo_unita(capo, tesoriere_gruppo, reparto):
+    assert _da_avvisare(reparto) == {capo.pk}
+
+
+def test_tesoriere_ragazzo_non_avvisato(tesoriere_rs, tesoriere_gruppo, capogruppo, clan):
+    # They cannot see it (DEC-386): with no capo unità, on to the group.
+    assert _da_avvisare(clan) == {tesoriere_gruppo.pk}
+    Incarico.objects.create(
+        persona=capogruppo, ruolo=RuoloIncarico.CAPO_UNITA, unita=clan, data_inizio=INIZIO_ANNO
+    )
+    assert _da_avvisare(clan) == {capogruppo.pk}
+
+
+def test_spesa_del_gruppo_ai_tesorieri_o_ai_capigruppo(capo, capogruppo, gruppo, coca):
+    assert _da_avvisare() == {capogruppo.pk}
+    tesoriere = crea_capo("Gino", "Tesoriere", "gino@example.invalid")
+    Incarico.objects.create(
+        persona=tesoriere,
+        ruolo=RuoloIncarico.TESORIERE_GRUPPO,
+        gruppo=gruppo,
+        data_inizio=INIZIO_ANNO,
+    )
+    assert _da_avvisare() == {tesoriere.pk}
+
+
+def test_capo_in_attesa_non_avvisato(capo, tesoriere_reparto, tesoriere_gruppo, reparto):
+    tesoriere_reparto.codice_socio = "9000000001"
+    tesoriere_reparto.save(update_fields=["codice_socio"])
+    assert _da_avvisare(reparto) == {capo.pk}
+
+
+def test_registrare_una_spesa_avvisa_con_email_sempre_inviata(
+    staff, tesoriere_reparto, reparto, mailoutbox, django_capture_on_commit_callbacks, monkeypatch
+):
+    avvisati = []
+    monkeypatch.setattr(servizi, "notifica", lambda *a: avvisati.append(a))
+    with django_capture_on_commit_callbacks(execute=True):
+        risposta = _post(
+            staff,
+            "/api/v1/spese-anticipate",
+            {
+                "data": "2026-01-15",
+                "importo": "8.00",
+                "descrizione": "Nastro",
+                "unita_id": reparto.pk,
+            },
+        )
+    assert risposta.status_code == 201, risposta.content
+    assert [m.to for m in mailoutbox] == [[tesoriere_reparto.utente.email]]
+    assert "Nastro" in mailoutbox[0].body
+    assert "spesa_da_rimborsare" in SEMPRE
+    categoria, persone, titolo, percorso = avvisati[0]
+    # Read on a locked phone: no name, no amount.
+    assert titolo == "Spesa da rimborsare" and percorso == "/spese-da-rimborsare"
+    assert [p.pk for p in persone] == [tesoriere_reparto.pk]
+
+
+def test_voce_e_contatore_solo_per_chi_rimborsa(
+    capo,
+    staff,
+    tesoriere_reparto,
+    tesoriere_gruppo,
+    tesoriere_rs,
+    ragazza,
+    genitore,
+    estraneo,
+    reparto,
+    clan,
+):
+    _spesa(reparto, capo=staff)
+    _spesa(clan, capo=staff)
+    _spesa(capo=staff)
+    respinta = _spesa(reparto, capo=staff)
+    servizi.respingi(respinta, "Doppia")
+
+    def profilo(chi):
+        dati = _client(chi).get("/api/v1/io").json()
+        return dati["rimborsa_spese"], dati["spese_da_rimborsare"]
+
+    assert profilo(tesoriere_reparto) == (True, 1)
+    assert profilo(capo) == (True, 1)  # capo unità of the reparto
+    assert profilo(tesoriere_gruppo) == (True, 3)
+    for chi in (staff, tesoriere_rs, ragazza, genitore, estraneo):
+        assert profilo(chi) == (False, 0)
+
+
+def test_tesoriere_ragazzo_non_rimborsa_le_spese_dei_capi(tesoriere_rs, contanti_clan, staff, clan):
+    spesa = _spesa(clan, capo=staff)
+    assert _client(tesoriere_rs).get("/api/v1/spese-anticipate").json() == []
+    risposta = _post(
+        tesoriere_rs,
+        f"/api/v1/spese-anticipate/{spesa.pk}/rimborsa",
+        {"cassa_id": contanti_clan.pk},
+    )
+    assert risposta.status_code == 404

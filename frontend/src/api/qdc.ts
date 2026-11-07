@@ -122,6 +122,9 @@ export interface Profilo {
   ambiente?: 'GIUNGLA' | 'BOSCO' | null
   /** Payments families reported that this user may check (DEC-255). */
   pagamenti_da_verificare?: number
+  /** Expenses of capi: who may refund them, and how many wait for this user (DEC-379). */
+  rimborsa_spese?: boolean
+  spese_da_rimborsare?: number
   /** The waiting list (DEC-259): every capo. */
   vede_lista_attesa?: boolean
   /** The buttons next to phone numbers, one's own choice (DEC-301). */

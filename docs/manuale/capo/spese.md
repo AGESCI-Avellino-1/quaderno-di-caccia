@@ -19,4 +19,4 @@ appena torna la rete.
 
 Sotto vedi le tue spese: **Da rimborsare**, **Rimborsata il …** o **Respinta**, con il motivo.
 I rimborsi li registrano il tesoriere del gruppo, i capigruppo e, per la sua unità, il capo
-unità.
+unità. Chi deve rimborsarti riceve un avviso quando registri la spesa.

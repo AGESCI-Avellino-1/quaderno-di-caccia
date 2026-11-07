@@ -59,6 +59,7 @@ export const PAGINE: Record<string, Pagina> = {
   quote: { titolo: 'Quote' },
   banca: { titolo: 'Estratto conto' },
   'pagamenti-da-verificare': { titolo: 'Pagamenti da verificare' },
+  'spese-da-rimborsare': { titolo: 'Spese da rimborsare' },
   bacheca: { titolo: 'Bacheca' },
   download: { titolo: 'Download' },
   peg: { titolo: 'Progetto Educativo di Gruppo' },

@@ -1335,6 +1335,12 @@ def puo_segnare_partecipazione_esterna(user, persona: Persona) -> bool:
     return puo_gestire_iscrizione_buonacaccia(user, persona)
 
 
+def puo_registrare_iscrizioni_buonacaccia(user) -> bool:
+    """Who may record at least one registration: the capigruppo, the staff of a unit
+    (DEC-158, DEC-389); the single one is `puo_gestire_iscrizione_buonacaccia`."""
+    return not e_capo_in_attesa(user) and unita_da_approvare(user).exists()
+
+
 def puo_creare_evento_buonacaccia(user) -> bool:
     """Who registers someone: the capi; an adult member for themself (DEC-164)."""
     if e_capo(user):

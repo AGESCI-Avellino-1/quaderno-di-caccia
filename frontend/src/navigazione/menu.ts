@@ -248,6 +248,14 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/eventi',
           descrizione: 'Uscite e campi; partecipazione e presenze',
         },
+        // Under Eventi, also in the breadcrumb (DEC-390).
+        p.eventi_buonacaccia && {
+          nome: 'Eventi su BuonaCaccia',
+          icona: 'calendar-event',
+          to: '/buonacaccia',
+          descrizione: 'Piccole Orme, campetti, formazione: iscrizioni e liberatorie',
+          sottovoce: true,
+        },
         // On the Home next to the Bacheca (DEC-286, HomeView).
         membro && {
           nome: 'Riunioni',
@@ -260,13 +268,6 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           icona: 'calendar-week',
           to: '/calendario',
           descrizione: 'I prossimi eventi tuoi e dei tuoi figli, da aggiungere al telefono',
-          sottovoce: true,
-        },
-        p.eventi_buonacaccia && {
-          nome: 'Eventi su BuonaCaccia',
-          icona: 'calendar-event',
-          to: '/buonacaccia',
-          descrizione: 'Piccole Orme, campetti, formazione: iscrizioni e liberatorie',
           sottovoce: true,
         },
         p.capo && {

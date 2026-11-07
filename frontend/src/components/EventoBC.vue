@@ -7,6 +7,7 @@ import {
   euro,
   nomeUnita,
   type DettaglioBC,
+  type EventoBCIn,
   type IscrizioneBC,
   type IscrizioneBCIn,
   type PersonaElenco,
@@ -15,6 +16,7 @@ import {
 } from '@/api/qdc'
 import CampoImporto from '@/components/CampoImporto.vue'
 import IscrizioneBCVue from '@/components/IscrizioneBC.vue'
+import ModuloEventoBC from '@/components/ModuloEventoBC.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -22,6 +24,7 @@ import { useSessioneStore } from '@/stores/sessione'
 // staff of their unit, with what the family has to do; the adults who take part (for a
 // capi training camp also the fee they paid). Online only.
 const props = defineProps<{ evento: number }>()
+const emit = defineEmits<{ cambiato: [] }>()
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const dettaglio = ref<DettaglioBC | null>(null)
@@ -38,6 +41,16 @@ function cambiata(nuova: IscrizioneBC) {
   dettaglio.value.iscrizioni = dettaglio.value.iscrizioni.map((i) =>
     i.id === nuova.id ? nuova : i,
   )
+}
+
+// --- Changing the event (DEC-391): the page around it shows the new dates ---------------
+
+const inModifica = ref(false)
+async function salvaEvento(dati: EventoBCIn) {
+  if (!(await esegui(() => api.modificaEventoBC(props.evento, dati)))) return
+  inModifica.value = false
+  await carica()
+  emit('cambiato')
 }
 
 // --- The event form -----------------------------------------------------------------
@@ -117,6 +130,30 @@ const io = () => sessione.profilo?.persona?.id
       <strong>Formazione capi</strong> · {{ dettaglio.tipo_campo_nome }}
     </p>
     <p v-if="dettaglio.piccole_orme" class="small"><strong>Piccole Orme</strong></p>
+    <p v-if="dettaglio.link" class="small">
+      <a :href="dettaglio.link" target="_blank" rel="noopener noreferrer">
+        Pagina dell'evento su BuonaCaccia
+      </a>
+    </p>
+    <template v-if="dettaglio.puo_gestire && !dettaglio.annullato">
+      <button
+        v-if="!inModifica"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary mb-5"
+        @click="inModifica = true"
+      >
+        Modifica l'evento
+      </button>
+      <ModuloEventoBC
+        v-else
+        class="mb-5"
+        :evento="dettaglio"
+        :in-corso="inCorso"
+        etichetta="Salva"
+        @salva="salvaEvento"
+        @annulla="inModifica = false"
+      />
+    </template>
 
     <!-- Event form -->
     <section v-if="dettaglio.iscrizioni.length || dettaglio.puo_gestire" class="mb-5">

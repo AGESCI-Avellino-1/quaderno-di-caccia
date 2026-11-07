@@ -11,16 +11,20 @@ from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import Client
+from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
 from apps.buonacaccia import servizi
-from apps.buonacaccia.avvisi import promemoria
+from apps.buonacaccia.avvisi import iscritto, promemoria
 from apps.buonacaccia.models import (
     EventoBuonaCaccia,
     IscrizioneBuonaCaccia,
     StatoIscrizione,
     TipoCampoFormazione,
 )
+from apps.cassa.models import Movimento
+from apps.eventi.avvisi import _quando as quando_in_email
+from apps.eventi.calendario import ics
 from apps.eventi.models import Evento, Livello, Partecipazione, StatoPartecipazione, TipoEvento
 from apps.organizzazione.models import Composizione, TipoUnita, Unita
 from apps.permessi import policy
@@ -601,3 +605,172 @@ def test_i_file_della_liberatoria_si_tolgono_appena_decisa(capo, genitore, ragaz
     dati = _json(capo, "post", f"{url}/esito-liberatoria", {"esito": "VALIDATA"}).json()
     assert dati["liberatoria_firmata"] is False and dati["liberatoria_da_firmare"] is False
     assert dati["esito_liberatoria"] == "VALIDATA" and dati["liberatoria_ricevuta_il"]
+
+
+# --- What is missing, one count (DEC-394) ----------------------------------------------------
+
+
+def test_senza_scheda_e_senza_quota_manca_solo_la_liberatoria(capo, ragazza, piccole_orme):
+    iscrizione = _iscrivi(capo, piccole_orme, ragazza)
+    assert servizi.mancanti(iscrizione) == ["liberatoria"]
+    dati = _client(capo).get(f"/api/v1/buonacaccia/eventi/{piccole_orme.pk}").json()
+    assert dati["iscrizioni"][0]["mancanti"] == ["liberatoria"]
+
+
+def test_con_la_quota_serve_il_pagamento(capo, ragazza, piccole_orme):
+    iscrizione = _iscrivi(capo, piccole_orme, ragazza, importo=Decimal("10"), scadenza_quota=OGGI)
+    assert "pagamento" in servizi.mancanti(iscrizione)
+    iscrizione.pagata_il = OGGI
+    iscrizione.save()
+    assert "pagamento" not in servizi.mancanti(iscrizione)
+
+
+def test_promemoria_senza_quota_non_chiede_il_pagamento(capo, ragazza, piccole_orme):
+    _iscrivi(capo, piccole_orme, ragazza, giorni_fa=7)
+    mail.outbox.clear()
+    promemoria(OGGI)
+    allo_staff = [m for m in mail.outbox if m.to == ["capo@example.invalid"]]
+    assert allo_staff and "pagare la quota" not in allo_staff[0].body
+
+
+# --- The real date of each step (DEC-392) ------------------------------------------------------
+
+
+def _passi(chi, iscrizione, **date_):
+    return _json(chi, "put", f"/api/v1/buonacaccia/iscrizioni/{iscrizione.pk}/passi", date_)
+
+
+def test_passo_con_la_data_reale_corretta_e_tolta(capo, ragazza, piccole_orme):
+    iscrizione = _iscrivi(capo, piccole_orme, ragazza)
+    passata = OGGI - timedelta(days=30)
+    assert _passi(capo, iscrizione, pagata_il=str(passata)).status_code == 200
+    iscrizione.refresh_from_db()
+    assert iscrizione.pagata_il == passata
+    assert _passi(capo, iscrizione, pagata_il=str(OGGI)).status_code == 200
+    assert _passi(capo, iscrizione, pagata_il=None).status_code == 200
+    iscrizione.refresh_from_db()
+    assert iscrizione.pagata_il is None
+
+
+def test_passo_mai_nel_futuro(capo, ragazza, piccole_orme):
+    iscrizione = _iscrivi(capo, piccole_orme, ragazza)
+    domani = OGGI + timedelta(days=1)
+    risposta = _passi(capo, iscrizione, liberatoria_ricevuta_il=str(domani))
+    assert risposta.status_code == 400
+    assert "futuro" in risposta.json()["detail"]
+
+
+def test_segnare_il_pagamento_non_crea_movimenti(capo, ragazza, piccole_orme):
+    iscrizione = _iscrivi(capo, piccole_orme, ragazza)
+    _passi(capo, iscrizione, pagata_il=str(OGGI))
+    assert not Movimento.objects.exists()
+
+
+# --- Hours, changes, link (DEC-389, DEC-391) -----------------------------------------------
+
+
+def _dati_evento(**altri) -> dict:
+    giorno = OGGI + timedelta(days=30)
+    return {
+        "titolo": "Capi Squadriglia",
+        "inizio": _quando(giorno).isoformat(),
+        "fine": _quando(giorno + timedelta(days=2)).isoformat(),
+        "luogo": "Salerno",
+        **altri,
+    }
+
+
+def test_evento_con_il_solo_giorno(capo):
+    risposta = _json(
+        capo,
+        "post",
+        "/api/v1/buonacaccia/eventi",
+        _dati_evento(senza_ora_inizio=True, senza_ora_fine=True),
+    )
+    assert risposta.status_code == 201, risposta.content
+    evento = Evento.objects.get(pk=risposta.json()["id"])
+    inizio = timezone.localtime(evento.inizio)
+    fine = timezone.localtime(evento.fine)
+    assert (inizio.hour, inizio.minute) == (0, 0)
+    assert (fine.hour, fine.minute) == (23, 59)
+    # It stays under way for all of its last day.
+    assert fine.date() == OGGI + timedelta(days=32)
+    testo = ics([evento])
+    assert f"DTSTART;VALUE=DATE:{inizio:%Y%m%d}" in testo
+    assert f"DTEND;VALUE=DATE:{OGGI + timedelta(days=33):%Y%m%d}" in testo
+
+
+def test_solo_l_ora_di_inizio(capo):
+    risposta = _json(capo, "post", "/api/v1/buonacaccia/eventi", _dati_evento(senza_ora_fine=True))
+    evento = Evento.objects.get(pk=risposta.json()["id"])
+    assert timezone.localtime(evento.inizio).hour == 9
+    assert not evento.senza_ora_inizio and evento.senza_ora_fine
+    assert "DTSTART:" in ics([evento])
+    assert "09:00" in quando_in_email(evento)
+    assert "23:59" not in quando_in_email(evento)
+
+
+def test_giorno_nelle_email_in_ora_italiana(capo, ragazza):
+    # At midnight in Italy it is still the day before in UTC.
+    giorno = OGGI + timedelta(days=30)
+    risposta = _json(
+        capo,
+        "post",
+        "/api/v1/buonacaccia/eventi",
+        _dati_evento(senza_ora_inizio=True, inizio=_quando(giorno).isoformat()),
+    )
+    evento = Evento.objects.get(pk=risposta.json()["id"])
+    mail.outbox.clear()
+    iscrizione = _iscrivi(capo, evento, ragazza)
+    mail.outbox.clear()
+    iscritto(iscrizione)
+    assert any(f"{giorno:%d/%m/%Y}" in m.body for m in mail.outbox)
+
+
+def test_modifica_dell_evento_avvisa_gli_invitati(
+    capo, ragazza, piccole_orme, genitore, django_capture_on_commit_callbacks
+):
+    _iscrivi(capo, piccole_orme, ragazza)
+    mail.outbox.clear()
+    dati = _dati_evento(titolo=piccole_orme.titolo, senza_ora_fine=True, luogo="Avellino")
+    with django_capture_on_commit_callbacks(execute=True):
+        risposta = _json(capo, "put", f"/api/v1/buonacaccia/eventi/{piccole_orme.pk}", dati)
+    assert risposta.status_code == 200, risposta.content
+    piccole_orme.refresh_from_db()
+    assert piccole_orme.luogo == "Avellino" and piccole_orme.senza_ora_fine
+    assert any(m.to == ["genitore@example.invalid"] for m in mail.outbox)
+
+
+def test_link_dell_evento_solo_https_e_per_chi_vede_l_evento(capo, ragazza, piccole_orme, genitore):
+    _iscrivi(capo, piccole_orme, ragazza)
+    url = f"/api/v1/buonacaccia/eventi/{piccole_orme.pk}"
+    sbagliato = _dati_evento(titolo=piccole_orme.titolo, link="javascript:alert(1)")
+    assert _json(capo, "put", url, sbagliato).status_code == 400
+    giusto = _dati_evento(titolo=piccole_orme.titolo, link="https://buonacaccia.example/evento/1")
+    assert _json(capo, "put", url, giusto).status_code == 200
+    assert _client(genitore).get(url).json()["link"].endswith("/evento/1")
+    assert _client(ragazza).get(url).json()["link"].endswith("/evento/1")
+
+
+def test_registra_solo_per_chi_puo(capo, capogruppo, coca, piccole_orme):
+    url = f"/api/v1/buonacaccia/eventi/{piccole_orme.pk}"
+    assert _client(capo).get(url).json()["puo_iscrivere"] is True
+    assert _client(capogruppo).get(url).json()["puo_iscrivere"] is True
+    senza_servizio = crea_capo("Senza", "Servizio", "senza@example.invalid")
+    assert _client(senza_servizio).get(url).json()["puo_iscrivere"] is False
+
+
+def test_eventi_gia_inseriti_a_mezzanotte_passano_a_senza_ora(capo, piccole_orme):
+    from importlib import import_module
+
+    from django.apps import apps
+
+    mezzanotte = timezone.localtime(piccole_orme.inizio).replace(hour=0, minute=0)
+    Evento.objects.filter(pk=piccole_orme.pk).update(
+        inizio=mezzanotte, fine=mezzanotte + timedelta(days=2)
+    )
+    modulo = import_module("apps.eventi.migrations.0011_senza_ora")
+    modulo.eventi_a_mezzanotte_senza_ora(apps, None)
+    piccole_orme.refresh_from_db()
+    assert piccole_orme.senza_ora_inizio and piccole_orme.senza_ora_fine
+    assert timezone.localtime(piccole_orme.fine).hour == 23

@@ -6,6 +6,7 @@ import { api, nomeUnita, type Evento, type EventoIn, type Squadriglia, type Unit
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
+import { quandoEvento } from '@/eventi/orario'
 import { useSessioneStore } from '@/stores/sessione'
 
 // Events of the user and their children, all of them for the capi (DEC-75). The list is
@@ -105,16 +106,7 @@ async function salva() {
   await carica()
 }
 
-const quando = (e: Evento) => {
-  const inizio = new Date(e.inizio)
-  const fine = new Date(e.fine)
-  const giorno = (d: Date) =>
-    d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
-  const ora = (d: Date) => d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
-  return inizio.toDateString() === fine.toDateString()
-    ? `${giorno(inizio)}, ${ora(inizio)}–${ora(fine)}`
-    : `dal ${giorno(inizio)} al ${giorno(fine)}`
-}
+const quando = (e: Evento) => quandoEvento(e)
 const statoMio = {
   INVITATO: '',
   NON_PARTECIPA: 'non partecipa',
@@ -143,6 +135,14 @@ const statoMio = {
       >
         Nuovo evento
       </button>
+      <!-- To the search: an event on BuonaCaccia is in the app once only (DEC-390). -->
+      <RouterLink
+        v-if="sessione.profilo?.eventi_buonacaccia && !modulo"
+        to="/buonacaccia"
+        class="btn btn-sm btn-outline theme-primary"
+      >
+        Nuovo evento su BuonaCaccia
+      </RouterLink>
     </div>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
 

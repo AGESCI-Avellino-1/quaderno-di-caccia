@@ -340,9 +340,28 @@ def _ricevuta(iscrizione: IscrizioneBuonaCaccia, il: date | None) -> None:
     iscrizione.liberatoria_ricevuta_il = il
 
 
+def mancanti(iscrizione: IscrizioneBuonaCaccia) -> list[str]:
+    """What is still to do on BuonaCaccia, the one count for the pages and the reminders. The
+    event form only if the event has one (DEC-161); the payment only if the family has a fee,
+    the app does not know what BuonaCaccia asks (DEC-394)."""
+    manca = []
+    if not iscrizione.liberatoria_caricata_il or iscrizione.esito_liberatoria == "RIGETTATA":
+        manca.append("liberatoria")
+    if dettagli(iscrizione.partecipazione.evento).scheda and not iscrizione.scheda_inviata_il:
+        manca.append("scheda")
+    quota = iscrizione.quota
+    serve_il_pagamento = quota is not None and quota.annullata_il is None and quota.importo > 0
+    if serve_il_pagamento and not iscrizione.pagata_il:
+        manca.append("pagamento")
+    return manca
+
+
 def segna_passi(iscrizione: IscrizioneBuonaCaccia, **date_) -> None:
     """What the staff ticks: release form received (the way "other channels"), loaded
-    on BuonaCaccia, event form filled in on BuonaCaccia, paid on BuonaCaccia."""
+    on BuonaCaccia, event form filled in on BuonaCaccia, paid on BuonaCaccia. Each with its
+    real date, never in the future; None takes it away (DEC-392, DEC-394)."""
+    if any(valore is not None and valore > oggi() for valore in date_.values()):
+        raise ValidationError("La data non può essere nel futuro.")
     if "liberatoria_ricevuta_il" in date_:
         _ricevuta(iscrizione, date_.pop("liberatoria_ricevuta_il"))
     for campo, valore in date_.items():

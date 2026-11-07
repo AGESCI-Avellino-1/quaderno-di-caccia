@@ -24,6 +24,7 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 
 from apps.core.models import ModelloTracciato
@@ -61,6 +62,16 @@ class EventoBuonaCaccia(ModelloTracciato):
     tipo_campo = models.CharField(max_length=8, choices=TipoCampoFormazione.choices, blank=True)
     # The title of a module, or what "other" is.
     specifica = models.CharField(max_length=160, blank=True)
+    # Its page on BuonaCaccia, for whoever sees the event (DEC-389).
+    link = models.URLField(
+        max_length=500,
+        blank=True,
+        validators=[
+            URLValidator(
+                schemes=["https"], message="Il link dell'evento deve iniziare con https://."
+            )
+        ],
+    )
     scheda = models.ForeignKey(
         "VersioneScheda",
         null=True,

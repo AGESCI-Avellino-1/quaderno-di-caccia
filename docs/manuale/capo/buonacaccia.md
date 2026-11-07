@@ -28,11 +28,19 @@ stesso.
 
 Ogni evento di BuonaCaccia è nell'app una volta sola: prima cercalo.
 
+Ci arrivi anche dalla pagina **Eventi**, con **Nuovo evento su BuonaCaccia**.
+
 1. In **Cerca o aggiungi un evento** scrivi il nome o il luogo e tocca **Cerca**.
-2. Se non c'è, tocca **Non c'è: aggiungilo**, scrivi nome (come su BuonaCaccia), date e
-   località. Spunta **Piccole Orme** se lo è (l'app avvisa se un bambino le ha già fatte) o
-   **Campo di formazione capi**.
+2. Se non c'è, tocca **Non c'è: aggiungilo**, scrivi nome (come su BuonaCaccia), giorni e
+   località. L'ora di inizio e di fine è facoltativa: se non la sai, lasciala vuota e aggiungila
+   dopo. Puoi aggiungere il **link alla pagina su BuonaCaccia**, che vedono anche gli iscritti e
+   le loro famiglie. Spunta **Piccole Orme** se lo è (l'app avvisa se un bambino le ha già fatte)
+   o **Campo di formazione capi**.
 3. Tocca **Aggiungi l'evento**.
+
+Per correggere un errore o aggiungere ciò che si sa dopo, nella pagina dell'evento tocca **Modifica
+l'evento**: lo possono fare i capigruppo, chi lo ha creato e chi gestisce un iscritto. Se cambiano
+date, orari o luogo, gli invitati ricevono un avviso.
 
 ## La scheda dell'evento
 
@@ -46,7 +54,7 @@ tocca **Scegli la scheda**: la famiglia risponde dall'app.
 Dopo aver iscritto il ragazzo su BuonaCaccia:
 
 1. Nella pagina dell'evento, in **Iscrizioni su BuonaCaccia**, tocca **Registra
-   un'iscrizione**.
+   un'iscrizione** (lo trovano lo staff di un'unità e i capigruppo).
 2. Scegli unità e ragazzo, il giorno dell'iscrizione e lo stato (**Ammesso** o **In lista
    d'attesa**).
 3. Incolla il **Link di gestione** dalla prima email di BuonaCaccia (lo vedono solo i capi
@@ -62,18 +70,22 @@ Dopo aver iscritto il ragazzo su BuonaCaccia:
 
 ## Seguire l'iscrizione
 
-Ogni iscrizione ha i suoi passi, da segnare man mano:
+Ogni iscrizione ha i suoi passi, da segnare man mano. Per ognuno scegli la data reale, di base
+quella di oggi, poi tocca **Segna**; se hai sbagliato, accanto alla data trovi **Cambia** e
+**Togli**.
 
 - **Liberatoria**: carica il PDF ricevuto da BuonaCaccia (la famiglia riceve un'email);
-  quando la famiglia lo ricarica firmato, tocca **Segna caricata su BuonaCaccia oggi** dopo
+  quando la famiglia lo ricarica firmato, tocca **Segna caricata su BuonaCaccia** dopo
   averlo caricato lì, poi **Validata dalla segreteria** o **Rigettata…** con il motivo (la
   famiglia riceve un'email e ne firma una nuova).
 - **Scheda dell'evento**: quando la famiglia ha risposto, apri **Riepilogo da ricopiare su
   BuonaCaccia**: ogni risposta ha **Copia**, la foto è già pronta (JPG, al massimo 1 MB).
-  Poi tocca **Segna compilata su BuonaCaccia oggi**. Puoi scrivere anche una
+  Poi tocca **Segna compilata su BuonaCaccia**. Puoi scrivere anche una
   **Presentazione dello staff**, che vedono solo i capi.
-- **Quota**: quando hai pagato BuonaCaccia tocca **Segna pagata su BuonaCaccia oggi** (e
-  registra l'uscita in prima nota). La quota della famiglia la trovi qui e nelle sue quote.
+- **Quota**: quando hai pagato BuonaCaccia tocca **Segna pagata su BuonaCaccia**. Non crea
+  movimenti: l'uscita in prima nota la registri tu. La quota della famiglia la trovi qui e nelle
+  sue quote. Se non c'è una quota per la famiglia, il pagamento non risulta mancante e non hai
+  promemoria; puoi comunque segnarlo, per esempio se paga il gruppo.
 
 Per chiudere un'iscrizione cancellata su BuonaCaccia o non ammessa, scegli in **Chiudi
 l'iscrizione** e conferma.

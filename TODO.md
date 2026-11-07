@@ -9,13 +9,13 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                             | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
-| [#51](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/51) | Eventi su BuonaCaccia: link allo stato e link all'evento (DEC-389) | Miglioramento | Basso   | Bassa      | WIP    |
-| [#52](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/52) | Eventi: pulsante Nuovo evento su BuonaCaccia (DEC-390)             | Miglioramento | Basso   | Bassa      | WIP    |
-| [#53](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/53) | BuonaCaccia: «Scaduta, manca la scheda» senza scheda               | Bug           | Basso   | Bassa      | WIP    |
-| [#54](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/54) | BuonaCaccia: orario facoltativo e modifica dell'evento (DEC-391)   | Miglioramento | Medio   | Media      | WIP    |
-| [#55](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/55) | BuonaCaccia: la data reale dei passi di un'iscrizione (DEC-392)    | Miglioramento | Basso   | Bassa      | WIP    |
+| [#51](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/51) | Eventi su BuonaCaccia: link allo stato e link all'evento (DEC-389) | Miglioramento | Basso   | Bassa      | VER    |
+| [#52](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/52) | Eventi: pulsante Nuovo evento su BuonaCaccia (DEC-390)             | Miglioramento | Basso   | Bassa      | VER    |
+| [#53](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/53) | BuonaCaccia: «Scaduta, manca la scheda» senza scheda               | Bug           | Basso   | Bassa      | VER    |
+| [#54](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/54) | BuonaCaccia: orario facoltativo e modifica dell'evento (DEC-391)   | Miglioramento | Medio   | Media      | VER    |
+| [#55](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/55) | BuonaCaccia: la data reale dei passi di un'iscrizione (DEC-392)    | Miglioramento | Basso   | Bassa      | VER    |
 | [#56](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/56) | Testi: socio, Ragazzo/a e ragazzi/e al posto di ragazzo (DEC-393)  | Miglioramento | Basso   | Media      | WIP    |
-| [#57](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/57) | BuonaCaccia: senza quota non serve segnare il pagamento (DEC-394)  | Miglioramento | Basso   | Bassa      | WIP    |
+| [#57](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/57) | BuonaCaccia: senza quota non serve segnare il pagamento (DEC-394)  | Miglioramento | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

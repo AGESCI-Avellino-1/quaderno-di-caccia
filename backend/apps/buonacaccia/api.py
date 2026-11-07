@@ -143,8 +143,12 @@ class EventoBCIn(Schema):
     tipo: TipoEvento = TipoEvento.CAMPO
     inizio: DataOra
     fine: DataOra
+    # Only the day: the hour sent is ignored (DEC-391).
+    senza_ora_inizio: bool = False
+    senza_ora_fine: bool = False
     luogo: str = ""
     descrizione: str = ""
+    link: str = ""
     formazione_capi: bool = False
     piccole_orme: bool = False
     tipo_campo: TipoCampoFormazione | None = None
@@ -184,13 +188,25 @@ def cerca_eventi(request, cerca: str = ""):
     return _eventi_trovati(servizi.cerca_eventi(cerca)[:30])
 
 
+def _alle(momento: datetime, ore: int, minuti: int) -> datetime:
+    locale = timezone.localtime(momento)
+    return locale.replace(hour=ore, minute=minuti, second=0, microsecond=0)
+
+
 def _compila(evento: Evento, dettagli: EventoBuonaCaccia, dati: EventoBCIn) -> None:
     evento.titolo = dati.titolo.strip()
     evento.tipo = dati.tipo
     evento.inizio = dati.inizio
     evento.fine = dati.fine
+    evento.senza_ora_inizio = dati.senza_ora_inizio
+    evento.senza_ora_fine = dati.senza_ora_fine
+    if dati.senza_ora_inizio:
+        evento.inizio = _alle(dati.inizio, 0, 0)
+    if dati.senza_ora_fine:
+        evento.fine = _alle(dati.fine, 23, 59)
     evento.luogo = dati.luogo.strip()
     evento.descrizione = dati.descrizione.strip()
+    dettagli.link = dati.link.strip()
     dettagli.formazione_capi = dati.formazione_capi
     dettagli.piccole_orme = dati.piccole_orme and not dati.formazione_capi
     dettagli.tipo_campo = (dati.tipo_campo or "") if dati.formazione_capi else ""
@@ -227,10 +243,20 @@ def modifica_evento(request, evento_id: int, dati: EventoBCIn):
     evento = _evento(request, evento_id)
     _gestore_evento(request, evento)
     dettagli = servizi.dettagli(evento)
-    prima = (evento.inizio, evento.fine, evento.luogo)
+
+    def quando() -> tuple:
+        return (
+            evento.inizio,
+            evento.fine,
+            evento.senza_ora_inizio,
+            evento.senza_ora_fine,
+            evento.luogo,
+        )
+
+    prima = quando()
     _compila(evento, dettagli, dati)
     _esegui(servizi.salva_evento, evento, dettagli, request.auth)
-    if (evento.inizio, evento.fine, evento.luogo) != prima:
+    if quando() != prima:
         transaction.on_commit(lambda: avvisi_eventi.modificato(evento))
     return _eventi_trovati([evento])[0]
 
@@ -275,6 +301,8 @@ class IscrizioneOut(Schema):
     risposte: dict
     risposte_il: datetime | None
     risposte_mancanti: list[str]
+    # What is still to do on BuonaCaccia: liberatoria, scheda, pagamento (DEC-394).
+    mancanti: list[str]
     foto: bool
     presentazione: str | None  # None: capi only
     # Piccole Orme: what does not fit (lived before, not in Responsabilità, too short).
@@ -333,6 +361,7 @@ def _iscrizione_out(user, i: IscrizioneBuonaCaccia) -> dict:
         "risposte": i.risposte,
         "risposte_il": i.risposte_il,
         "risposte_mancanti": servizi.risposte_mancanti(i),
+        "mancanti": servizi.mancanti(i),
         "foto": bool(i.foto),
         "presentazione": (i.presentazione if policy.vede_presentazione_buonacaccia(user) else None),
         "scheda_inviata_il": i.scheda_inviata_il,
@@ -360,8 +389,11 @@ class DettaglioBC(Schema):
     tipo: TipoEvento
     inizio: datetime
     fine: datetime
+    senza_ora_inizio: bool
+    senza_ora_fine: bool
     luogo: str
     descrizione: str
+    link: str
     annullato: bool
     formazione_capi: bool
     piccole_orme: bool
@@ -419,8 +451,11 @@ def _dettaglio(request, evento: Evento) -> dict:
         "tipo": evento.tipo,
         "inizio": evento.inizio,
         "fine": evento.fine,
+        "senza_ora_inizio": evento.senza_ora_inizio,
+        "senza_ora_fine": evento.senza_ora_fine,
         "luogo": evento.luogo,
         "descrizione": evento.descrizione,
+        "link": dettagli.link,
         "annullato": evento.annullato_il is not None,
         "formazione_capi": dettagli.formazione_capi,
         "piccole_orme": dettagli.piccole_orme,
@@ -431,7 +466,7 @@ def _dettaglio(request, evento: Evento) -> dict:
         "iscrizioni": [_iscrizione_out(user, i) for i in _iscrizioni_visibili(user, evento)],
         "adulti": adulti,
         "puo_gestire": policy.puo_gestire_evento_buonacaccia(user, evento),
-        "puo_iscrivere": policy.e_capo(user) and not policy.e_capo_in_attesa(user),
+        "puo_iscrivere": policy.puo_registrare_iscrizioni_buonacaccia(user),
         "puo_partecipare": (
             propria is not None and policy.puo_segnare_partecipazione_esterna(user, propria)
         ),

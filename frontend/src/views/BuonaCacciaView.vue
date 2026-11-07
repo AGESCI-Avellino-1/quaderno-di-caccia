@@ -1,14 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
-import {
-  api,
-  TIPI_CAMPO,
-  type EventoBCIn,
-  type EventoBCTrovato,
-  type IscrizioneBC,
-} from '@/api/qdc'
+import { api, type EventoBCIn, type EventoBCTrovato, type IscrizioneBC } from '@/api/qdc'
+import ModuloEventoBC from '@/components/ModuloEventoBC.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -32,42 +27,13 @@ async function trova() {
   trovati.value = (await esegui(() => api.cercaEventiBC(cerca.value))) ?? []
 }
 
-const manca = (i: IscrizioneBC) =>
-  [
-    (!i.liberatoria_caricata_il || i.esito_liberatoria === 'RIGETTATA') && 'liberatoria',
-    !i.scheda_inviata_il && 'scheda',
-    !i.pagata_il && 'pagamento',
-  ].filter(Boolean)
-const scaduta = (i: IscrizioneBC) => manca(i).length > 0 && i.scadenza < oggi()
+const scaduta = (i: IscrizioneBC) => i.mancanti.length > 0 && i.scadenza < oggi()
 
 // --- New event -----------------------------------------------------------------------------
 
-const modulo = ref<EventoBCIn | null>(null)
-const apri = () =>
-  (modulo.value = {
-    titolo: cerca.value,
-    tipo: 'CAMPO',
-    inizio: '',
-    fine: '',
-    luogo: '',
-    descrizione: '',
-    formazione_capi: false,
-    piccole_orme: false,
-    tipo_campo: null,
-    specifica: '',
-  })
-const daLocale = (valore: string) => (valore ? new Date(valore).toISOString() : '')
-const serveSpecifica = computed(
-  () => modulo.value?.tipo_campo === 'MODULO' || modulo.value?.tipo_campo === 'ALTRO',
-)
+const nuovo = ref(false)
 
-async function crea() {
-  if (!modulo.value) return
-  const dati = {
-    ...modulo.value,
-    inizio: daLocale(modulo.value.inizio),
-    fine: daLocale(modulo.value.fine || modulo.value.inizio),
-  }
+async function crea(dati: EventoBCIn) {
   const evento = await esegui(() => api.creaEventoBC(dati))
   if (evento) await router.push(`/eventi/${evento.id}`)
 }
@@ -106,8 +72,8 @@ async function crea() {
                 In lista d'attesa
               </span>
               <span v-if="scaduta(i)" class="badge theme-danger me-1">Scaduta</span>
-              <template v-if="manca(i).length">
-                Entro il {{ data(i.scadenza) }} manca: {{ manca(i).join(', ') }}
+              <template v-if="i.mancanti.length">
+                Entro il {{ data(i.scadenza) }} manca: {{ i.mancanti.join(', ') }}
               </template>
               <template v-else>Tutto fatto su BuonaCaccia</template>
               <template v-if="i.risposte_mancanti.length">
@@ -147,107 +113,22 @@ async function crea() {
         </ul>
         <p v-else class="small">Nessun evento trovato.</p>
         <button
-          v-if="!modulo"
+          v-if="!nuovo"
           type="button"
           class="btn btn-sm btn-outline theme-primary"
-          @click="apri"
+          @click="nuovo = true"
         >
           Non c'è: aggiungilo
         </button>
       </template>
 
-      <form v-if="modulo" class="card card-body mt-3" @submit.prevent="crea">
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label small" for="bc-titolo">Nome (come su BuonaCaccia)</label>
-            <input
-              id="bc-titolo"
-              v-model="modulo.titolo"
-              class="form-control form-control-sm"
-              required
-            />
-          </div>
-          <div class="col-12 md:col-6">
-            <label class="form-label small" for="bc-inizio">Inizio</label>
-            <input
-              id="bc-inizio"
-              v-model="modulo.inizio"
-              type="datetime-local"
-              class="form-control form-control-sm"
-              required
-            />
-          </div>
-          <div class="col-12 md:col-6">
-            <label class="form-label small" for="bc-fine">Fine</label>
-            <input
-              id="bc-fine"
-              v-model="modulo.fine"
-              type="datetime-local"
-              class="form-control form-control-sm"
-            />
-          </div>
-          <div class="col-12">
-            <label class="form-label small" for="bc-luogo">Località</label>
-            <input id="bc-luogo" v-model="modulo.luogo" class="form-control form-control-sm" />
-          </div>
-          <div class="col-12">
-            <label class="form-label small" for="bc-descrizione">Note</label>
-            <textarea
-              id="bc-descrizione"
-              v-model="modulo.descrizione"
-              class="form-control form-control-sm"
-              rows="2"
-            />
-          </div>
-          <div class="col-12 form-field">
-            <input
-              id="bc-formazione"
-              v-model="modulo.formazione_capi"
-              type="checkbox"
-              class="check"
-            />
-            <label class="small" for="bc-formazione">Campo di formazione capi</label>
-          </div>
-          <div v-if="!modulo.formazione_capi" class="col-12 form-field">
-            <input id="bc-po" v-model="modulo.piccole_orme" type="checkbox" class="check" />
-            <label class="small" for="bc-po">
-              Piccole Orme (si vivono una volta sola: l'app avvisa se un bambino le ha già fatte)
-            </label>
-          </div>
-          <template v-if="modulo.formazione_capi">
-            <div class="col-12 md:col-6">
-              <label class="form-label small" for="bc-tipo-campo">Tipo di campo</label>
-              <select
-                id="bc-tipo-campo"
-                v-model="modulo.tipo_campo"
-                class="form-control form-control-sm"
-                required
-              >
-                <option v-for="[valore, nome] in TIPI_CAMPO" :key="valore" :value="valore">
-                  {{ nome }}
-                </option>
-              </select>
-            </div>
-            <div v-if="serveSpecifica" class="col-12 md:col-6">
-              <label class="form-label small" for="bc-specifica">
-                {{ modulo.tipo_campo === 'MODULO' ? 'Titolo del modulo' : 'Specifica' }}
-              </label>
-              <input
-                id="bc-specifica"
-                v-model="modulo.specifica"
-                class="form-control form-control-sm"
-                required
-              />
-            </div>
-          </template>
-        </div>
-        <div class="d-flex gap-3 mt-3">
-          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-            Aggiungi l'evento
-          </button>
-          <button type="button" class="btn btn-sm btn-link" @click="modulo = null">Annulla</button>
-        </div>
-      </form>
+      <ModuloEventoBC
+        v-if="nuovo"
+        :titolo-iniziale="cerca"
+        etichetta="Aggiungi l'evento"
+        @salva="crea"
+        @annulla="nuovo = false"
+      />
     </section>
   </section>
 </template>

@@ -187,6 +187,10 @@ class Evento(ModelloTracciato):
     )
     inizio = models.DateTimeField()
     fine = models.DateTimeField()
+    # Only the day is known, for an event on BuonaCaccia (DEC-391): `inizio` at 00:00 and
+    # `fine` at 23:59 local time, so it stays under way for all of its last day.
+    senza_ora_inizio = models.BooleanField(default=False)
+    senza_ora_fine = models.BooleanField(default=False)
     luogo = models.CharField(max_length=200, blank=True)
     descrizione = models.TextField(blank=True)
     # Notes the parents and the capi read, the ragazzi do not (a patrol's mission).

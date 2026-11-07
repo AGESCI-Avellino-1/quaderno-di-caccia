@@ -1,10 +1,11 @@
 """The personal calendar feed (DEC-79), RFC 5545 written by hand: title, dates and place
 of the user's and their children's events, nothing else (no names, no notes)."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from django.conf import settings
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 
 from apps.organizzazione.models import Branca, TipoUnita
 from apps.permessi import policy
@@ -91,6 +92,16 @@ def _utc(momento: datetime) -> str:
     return momento.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
+def _estremi(evento) -> list[str]:
+    """With no start time, an event of whole days: its end in the file is the day after
+    (RFC 5545) (DEC-391)."""
+    if evento.senza_ora_inizio:
+        dal = timezone.localdate(evento.inizio)
+        al = timezone.localdate(evento.fine) + timedelta(days=1)
+        return [f"DTSTART;VALUE=DATE:{dal:%Y%m%d}", f"DTEND;VALUE=DATE:{al:%Y%m%d}"]
+    return [f"DTSTART:{_utc(evento.inizio)}", f"DTEND:{_utc(evento.fine)}"]
+
+
 def ics(eventi) -> str:
     dominio = settings.FRONTEND_URL.split("//", 1)[-1].split("/", 1)[0]
     righe = [
@@ -108,8 +119,7 @@ def ics(eventi) -> str:
             f"UID:evento-{evento.pk}@{dominio}",
             f"DTSTAMP:{adesso}",
             f"LAST-MODIFIED:{_utc(evento.aggiornato_il)}",
-            f"DTSTART:{_utc(evento.inizio)}",
-            f"DTEND:{_utc(evento.fine)}",
+            *_estremi(evento),
             f"SUMMARY:{_testo(evento.titolo)}",
         ]
         if evento.luogo:

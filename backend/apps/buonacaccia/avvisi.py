@@ -15,6 +15,7 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 
 from apps.anagrafica.models import Appartenenza, Persona
 from apps.impostazioni.email import invia
@@ -126,7 +127,7 @@ def iscritto(iscrizione: IscrizioneBuonaCaccia) -> int:
         {
             "Nome": persona.nome,
             "Evento": evento.titolo,
-            "Data": f"{evento.inizio:%d/%m/%Y}",
+            "Data": f"{timezone.localtime(evento.inizio):%d/%m/%Y}",
             "Stato": iscrizione.get_stato_display().lower(),
             "Cosa serve": "\n\n".join(righe),
             "Link": _link(iscrizione),
@@ -176,17 +177,15 @@ def _passo(scadenza: date, oggi: date) -> str | None:
     return None
 
 
+AZIONI_STAFF = {
+    "liberatoria": "caricare la liberatoria",
+    "scheda": "compilare la scheda",
+    "pagamento": "pagare la quota",
+}
+
+
 def _manca_allo_staff(iscrizione: IscrizioneBuonaCaccia) -> list[str]:
-    manca = []
-    if not iscrizione.liberatoria_caricata_il or iscrizione.esito_liberatoria == "RIGETTATA":
-        manca.append("caricare la liberatoria")
-    if servizi.dettagli(iscrizione.partecipazione.evento).scheda and not (
-        iscrizione.scheda_inviata_il
-    ):
-        manca.append("compilare la scheda")
-    if not iscrizione.pagata_il:
-        manca.append("pagare la quota")
-    return manca
+    return [AZIONI_STAFF[m] for m in servizi.mancanti(iscrizione)]
 
 
 def promemoria(oggi: date) -> int:

@@ -1975,6 +1975,9 @@ export interface Evento {
   animale?: AnimaleBreve | null
   inizio: string
   fine: string
+  /** Only the day is known, on BuonaCaccia (DEC-391). */
+  senza_ora_inizio?: boolean
+  senza_ora_fine?: boolean
   luogo: string
   descrizione: string
   /** null: not for this user (the ragazzi). */
@@ -2281,6 +2284,8 @@ export interface EventoCalendario {
   tipo_nome: string
   inizio: string
   fine: string
+  senza_ora_inizio?: boolean
+  senza_ora_fine?: boolean
   luogo: string
   annullato: boolean
 }
@@ -2363,8 +2368,11 @@ export interface EventoBCIn {
   tipo: TipoEvento
   inizio: string
   fine: string
+  senza_ora_inizio: boolean
+  senza_ora_fine: boolean
   luogo: string
   descrizione: string
+  link: string
   formazione_capi: boolean
   piccole_orme: boolean
   tipo_campo: TipoCampoFormazione | null
@@ -2419,6 +2427,8 @@ export interface IscrizioneBC {
   risposte: Record<string, RispostaScheda>
   risposte_il: string | null
   risposte_mancanti: string[]
+  /** Still to do on BuonaCaccia: liberatoria, scheda, pagamento (DEC-394). */
+  mancanti: string[]
   foto: boolean
   /** Capi only. */
   presentazione: string | null
@@ -2460,8 +2470,11 @@ export interface DettaglioBC {
   tipo: TipoEvento
   inizio: string
   fine: string
+  senza_ora_inizio: boolean
+  senza_ora_fine: boolean
   luogo: string
   descrizione: string
+  link: string
   annullato: boolean
   formazione_capi: boolean
   piccole_orme: boolean

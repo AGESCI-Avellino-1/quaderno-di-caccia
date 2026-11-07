@@ -75,8 +75,18 @@ def _quando(evento: Evento) -> str:
     inizio = timezone.localtime(evento.inizio)
     fine = timezone.localtime(evento.fine)
     if inizio.date() == fine.date():
-        return f"{inizio:%d/%m/%Y}, dalle {inizio:%H:%M} alle {fine:%H:%M}"
-    return f"dal {inizio:%d/%m/%Y %H:%M} al {fine:%d/%m/%Y %H:%M}"
+        giorno = f"{inizio:%d/%m/%Y}"
+        # Only the day may be known, on BuonaCaccia (DEC-391).
+        if evento.senza_ora_inizio and evento.senza_ora_fine:
+            return giorno
+        if evento.senza_ora_fine:
+            return f"{giorno}, dalle {inizio:%H:%M}"
+        if evento.senza_ora_inizio:
+            return f"{giorno}, fino alle {fine:%H:%M}"
+        return f"{giorno}, dalle {inizio:%H:%M} alle {fine:%H:%M}"
+    dal = f"{inizio:%d/%m/%Y}" if evento.senza_ora_inizio else f"{inizio:%d/%m/%Y %H:%M}"
+    al = f"{fine:%d/%m/%Y}" if evento.senza_ora_fine else f"{fine:%d/%m/%Y %H:%M}"
+    return f"dal {dal} al {al}"
 
 
 def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:

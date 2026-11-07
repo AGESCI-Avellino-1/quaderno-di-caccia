@@ -55,6 +55,7 @@ function iscrizione(altro: Partial<IscrizioneBC> = {}): IscrizioneBC {
     risposte: { a: 'S' },
     risposte_il: null,
     risposte_mancanti: ['Una tua foto'],
+    mancanti: [],
     avvisi: [],
     foto: false,
     presentazione: null,

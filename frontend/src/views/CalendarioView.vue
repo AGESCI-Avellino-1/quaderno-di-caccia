@@ -16,6 +16,7 @@ import {
   settimaneDelMese,
   type ModoCalendario,
 } from '@/eventi/calendario'
+import { quandoEvento } from '@/eventi/orario'
 
 // The user's and their children's events as a month or as a list of the next ones; a
 // capo chooses among the views, «Tutti i miei eventi» first (DEC-143, DEC-286, DEC-334). Files to download and the
@@ -82,16 +83,7 @@ const delGiornoScelto = computed(() =>
   eventiDelGiorno(eventi.value, new Date(`${scelto.value}T12:00:00`)),
 )
 
-const quando = (e: EventoCalendario) => {
-  const inizio = new Date(e.inizio)
-  const fine = new Date(e.fine)
-  const giorno = (d: Date) =>
-    d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
-  const ora = (d: Date) => d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
-  return chiaveGiorno(inizio) === chiaveGiorno(fine)
-    ? `${giorno(inizio)}, ${ora(inizio)}–${ora(fine)}`
-    : `${giorno(inizio)} ${ora(inizio)} – ${giorno(fine)} ${ora(fine)}`
-}
+const quando = (e: EventoCalendario) => quandoEvento(e, true)
 </script>
 
 <template>

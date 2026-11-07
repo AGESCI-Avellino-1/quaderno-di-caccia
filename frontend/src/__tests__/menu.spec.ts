@@ -121,6 +121,18 @@ describe('menu', () => {
     )
   })
 
+  it('the events on BuonaCaccia hang from Eventi, in the breadcrumb too', () => {
+    const capo = {
+      ...BASE,
+      persona: io,
+      branca: 'capi' as const,
+      capo: true,
+      eventi_buonacaccia: true,
+    }
+    const elenco = voci(capo, 'attivita')
+    expect(elenco.indexOf('Eventi su BuonaCaccia')).toBe(elenco.indexOf('Eventi') + 1)
+  })
+
   it('only who may refund sees the expenses to refund, with how many wait', () => {
     const capo = { ...BASE, persona: io, branca: 'capi' as const, capo: true }
     expect(voci(capo, 'economia')).not.toContain('Spese da rimborsare')

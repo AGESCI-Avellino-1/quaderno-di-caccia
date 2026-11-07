@@ -15,6 +15,7 @@ import {
 } from '@/api/qdc'
 import CampoImporto from '@/components/CampoImporto.vue'
 import RisposteSchedaBC from '@/components/RisposteSchedaBC.vue'
+import DataPasso from '@/components/DataPasso.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // One minor's registration on BuonaCaccia (DEC-158…DEC-163). Who manages it (the staff
@@ -123,14 +124,18 @@ const puoCaricareFirmata = computed(
     (!i.value.liberatoria_caricata_il || i.value.esito_liberatoria === 'RIGETTATA'),
 )
 
-const manca = computed(() => {
-  const elenco: string[] = []
-  if (!i.value.liberatoria_caricata_il || i.value.esito_liberatoria === 'RIGETTATA')
-    elenco.push('liberatoria')
-  if (props.scheda && !i.value.scheda_inviata_il) elenco.push('scheda')
-  if (!i.value.pagata_il) elenco.push('pagamento')
-  return elenco
+// What the deadline asks: the form if the event has one, the payment if there is a fee.
+const daFareEntro = computed(() => {
+  const quota = i.value.quota
+  const conQuota = !!quota && !quota.annullata && Number(quota.importo) > 0
+  return [
+    'caricare la liberatoria',
+    ...(props.scheda ? ['compilare la scheda'] : []),
+    ...(conQuota ? ['pagare la quota'] : []),
+  ].join(', ')
 })
+// The one count of what is missing is on the server, as for the reminders (DEC-394).
+const manca = computed(() => i.value.mancanti)
 const scaduta = computed(
   () => i.value.attiva && manca.value.length > 0 && i.value.scadenza < oggi(),
 )
@@ -163,8 +168,7 @@ const scaduta = computed(
     <p class="small mb-3">
       Iscritto su BuonaCaccia il {{ data(i.iscritto_il) }}.
       <template v-if="i.attiva">
-        Entro il <strong>{{ data(i.scadenza) }}</strong> su BuonaCaccia vanno caricati liberatoria e
-        scheda e pagata la quota.
+        Entro il <strong>{{ data(i.scadenza) }}</strong> su BuonaCaccia: {{ daFareEntro }}.
         <template v-if="i.puo_gestire">
           Si cancella senza perdere la quota fino al {{ data(i.limite_cancellazione) }}.
         </template>
@@ -309,25 +313,26 @@ const scaduta = computed(
             @change="carica($event, false)"
           />
         </div>
+        <DataPasso
+          :id="`arrivata-${i.id}`"
+          class="mb-3"
+          :valore="i.liberatoria_ricevuta_il"
+          segna="Segna arrivata"
+          fatto="Arrivata il"
+          :in-corso="inCorso"
+          @scegli="passo({ liberatoria_ricevuta_il: $event })"
+        />
+        <DataPasso
+          v-if="i.liberatoria_ricevuta_il"
+          :id="`caricata-${i.id}`"
+          class="mb-3"
+          :valore="i.liberatoria_caricata_il"
+          segna="Segna caricata su BuonaCaccia"
+          fatto="Caricata su BuonaCaccia il"
+          :in-corso="inCorso"
+          @scegli="passo({ liberatoria_caricata_il: $event })"
+        />
         <div class="d-flex flex-wrap gap-3">
-          <button
-            v-if="!i.liberatoria_ricevuta_il"
-            type="button"
-            class="btn btn-sm btn-outline theme-primary"
-            :disabled="inCorso"
-            @click="passo({ liberatoria_ricevuta_il: oggi() })"
-          >
-            Segna arrivata oggi
-          </button>
-          <button
-            v-if="i.liberatoria_ricevuta_il && !i.liberatoria_caricata_il"
-            type="button"
-            class="btn btn-sm btn-outline theme-primary"
-            :disabled="inCorso"
-            @click="passo({ liberatoria_caricata_il: oggi() })"
-          >
-            Segna caricata su BuonaCaccia oggi
-          </button>
           <template v-if="i.liberatoria_caricata_il && !i.esito_liberatoria">
             <button
               type="button"
@@ -409,19 +414,17 @@ const scaduta = computed(
           >
             {{ riepilogo ? 'Chiudi il riepilogo' : 'Riepilogo da ricopiare su BuonaCaccia' }}
           </button>
-          <button
-            v-if="i.attiva && !i.scheda_inviata_il"
-            type="button"
-            class="btn btn-sm btn-outline theme-primary"
-            :disabled="inCorso"
-            @click="passo({ scheda_inviata_il: oggi() })"
-          >
-            Segna compilata su BuonaCaccia oggi
-          </button>
-          <span v-else-if="i.scheda_inviata_il" class="small">
-            Compilata su BuonaCaccia il {{ data(i.scheda_inviata_il) }}
-          </span>
         </div>
+        <DataPasso
+          v-if="i.attiva || i.scheda_inviata_il"
+          :id="`scheda-${i.id}`"
+          class="mt-3"
+          :valore="i.scheda_inviata_il"
+          segna="Segna compilata su BuonaCaccia"
+          fatto="Compilata su BuonaCaccia il"
+          :in-corso="inCorso"
+          @scegli="passo({ scheda_inviata_il: $event })"
+        />
         <div v-if="riepilogo" class="card card-body mt-3 small">
           <div v-for="r in riepilogo.righe" :key="r.domanda" class="mb-3">
             <div class="fg-2">{{ r.domanda }}</div>
@@ -471,21 +474,19 @@ const scaduta = computed(
       <p v-else-if="i.quota?.annullata" class="small mb-1">Quota tolta.</p>
       <p v-else class="small fg-2 mb-1">Nessuna quota per la famiglia.</p>
       <template v-if="i.puo_gestire">
-        <p class="small mb-1">
-          <template v-if="i.pagata_il">Pagata su BuonaCaccia il {{ data(i.pagata_il) }}.</template>
-          <button
-            v-else-if="i.attiva"
-            type="button"
-            class="btn btn-sm btn-outline theme-primary"
-            :disabled="inCorso"
-            @click="passo({ pagata_il: oggi() })"
-          >
-            Segna pagata su BuonaCaccia oggi
-          </button>
-          <span class="fg-2">
-            Il pagamento a BuonaCaccia si registra come uscita in
-            <RouterLink to="/cassa">prima nota</RouterLink> (voce A.2).
-          </span>
+        <DataPasso
+          v-if="i.attiva || i.pagata_il"
+          :id="`pagata-${i.id}`"
+          class="mb-1"
+          :valore="i.pagata_il"
+          segna="Segna pagata su BuonaCaccia"
+          fatto="Pagata su BuonaCaccia il"
+          :in-corso="inCorso"
+          @scegli="passo({ pagata_il: $event })"
+        />
+        <p class="small fg-2 mb-1">
+          Segnarlo qui non crea movimenti: se hai pagato, registra tu l'uscita in
+          <RouterLink to="/cassa">prima nota</RouterLink> (voce A.2).
         </p>
         <form
           v-if="i.attiva || (i.quota && !i.quota.annullata)"

@@ -121,6 +121,8 @@ class EventoOut(Schema):
     animale: AnimaleBreve | None = None
     inizio: datetime
     fine: datetime
+    senza_ora_inizio: bool = False
+    senza_ora_fine: bool = False
     luogo: str
     descrizione: str
     note_genitori: str | None  # None: not for this user
@@ -182,6 +184,8 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "animale": breve(evento.squadriglia.animale) if evento.squadriglia_id else None,
         "inizio": evento.inizio,
         "fine": evento.fine,
+        "senza_ora_inizio": evento.senza_ora_inizio,
+        "senza_ora_fine": evento.senza_ora_fine,
         "luogo": evento.luogo,
         "descrizione": evento.descrizione,
         "note_genitori": (
@@ -838,6 +842,8 @@ class EventoCalendario(Schema):
     tipo_nome: str
     inizio: datetime
     fine: datetime
+    senza_ora_inizio: bool
+    senza_ora_fine: bool
     luogo: str
     annullato: bool
 
@@ -870,6 +876,8 @@ def eventi_del_mio_calendario(
             "tipo_nome": e.get_tipo_display(),
             "inizio": e.inizio,
             "fine": e.fine,
+            "senza_ora_inizio": e.senza_ora_inizio,
+            "senza_ora_fine": e.senza_ora_fine,
             "luogo": e.luogo,
             "annullato": e.annullato_il is not None,
         }

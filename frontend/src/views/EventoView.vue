@@ -20,6 +20,7 @@ import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
 import VerbaleRiunione from '@/components/VerbaleRiunione.vue'
 import VerbaliCollegati from '@/components/VerbaliCollegati.vue'
 import EventoBC from '@/components/EventoBC.vue'
+import { dataEOra } from '@/eventi/orario'
 import ModificaRiunione from '@/components/ModificaRiunione.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
@@ -221,15 +222,6 @@ async function annulla() {
   await carica()
 }
 
-const dataOra = (iso: string) =>
-  new Date(iso).toLocaleString('it-IT', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 const STATI: [StatoPresenza, string][] = [
   ['PRESENTE', 'Presente'],
   ['ASSENTE', 'Assente'],
@@ -270,8 +262,8 @@ const STATI: [StatoPresenza, string][] = [
 
     <div class="card card-body mb-5">
       <div>
-        <strong>Inizio</strong> {{ dataOra(evento.inizio) }}<br />
-        <strong>Fine</strong> {{ dataOra(evento.fine) }}
+        <strong>Inizio</strong> {{ dataEOra(evento.inizio, evento.senza_ora_inizio) }}<br />
+        <strong>Fine</strong> {{ dataEOra(evento.fine, evento.senza_ora_fine) }}
       </div>
       <div v-if="evento.luogo">
         <strong>Luogo</strong> {{ evento.luogo }}
@@ -459,7 +451,7 @@ const STATI: [StatoPresenza, string][] = [
       </form>
     </section>
 
-    <EventoBC v-if="evento.livello === 'ESTERNO'" :evento="evento.id" />
+    <EventoBC v-if="evento.livello === 'ESTERNO'" :evento="evento.id" @cambiato="carica" />
 
     <template v-else>
       <QuotaEvento

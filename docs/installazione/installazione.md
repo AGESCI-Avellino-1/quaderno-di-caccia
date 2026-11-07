@@ -5,12 +5,12 @@
 ```bash
 git clone https://github.com/AGESCI-Avellino-1/quaderno-di-caccia.git /srv/qdc
 cd /srv/qdc
-git checkout v1.22.0
+git checkout v1.23.0
 ```
 
 Installa sempre una **versione rilasciata**: le trovi, con il PDF del manuale d'uso, nella
 pagina [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases) del
-progetto; al posto di `v1.22.0` metti l'ultima. Il ramo `main` è quello di sviluppo e può
+progetto; al posto di `v1.23.0` metti l'ultima. Il ramo `main` è quello di sviluppo e può
 contenere lavori non ancora provati.
 
 Negli esempi l'installazione è in `/srv/qdc`: se scegli un'altra cartella, cambiala anche

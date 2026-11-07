@@ -5,6 +5,32 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.23.0 — 7 novembre 2026
+
+### Novità
+
+**Pagina Informazioni** ([#49](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/49)): in fondo a ogni pagina e nel menu del profilo, anche prima dell'accesso e con l'app bloccata. Raccoglie versione dell'app e del server, modalità, browser, dispositivo, connessione, aggiornamento, protezione dei dati, sblocco con impronta o volto, notifiche e modifiche in sospeso, da copiare con un tocco, senza nomi né altri dati personali. Per segnalare un problema: **Scrivi al gruppo**, un'email privata con i dati già inseriti, se il gruppo ha scritto il suo indirizzo nei dati ufficiali; oppure **Apri una segnalazione**, che porta alle segnalazioni pubbliche su GitHub, dove serve un account, o al link che il gruppo sceglie in **Impostazioni**. Di conseguenza l'email del gruppo si può leggere anche senza account, come già nella privacy policy.
+
+**Rinominare una passkey** ([#50](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/50)): in **Password e sicurezza**, **Rinomina…** cambia il nome nell'app; nel gestore delle password del telefono resta quello di quando è stata creata.
+
+### Correzioni
+
+**Sblocco con impronta o volto su più dispositivi** ([#50](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/50)): chi usa più dispositivi con lo stesso account Apple o Google trova su tutti la passkey creata su uno, e il dispositivo rifiutava di crearne un'altra: compariva «Su questo dispositivo c'è già una passkey» e lo sblocco non si attivava. Ora l'app chiede l'impronta o il volto e usa quella che c'è già. Chi rimuove una passkey è avvisato che può smettere di funzionare anche sugli altri suoi dispositivi.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.23.0
+```
+
+Una migrazione: aggiunge alle impostazioni il link per le segnalazioni, vuoto.
+
+### Documentazione
+
+L'introduzione del manuale ha il capitolo «Se qualcosa non va». Il capitolo sulla protezione del dispositivo spiega le passkey sincronizzate e il capitolo sulle impostazioni il link per le segnalazioni.
+
+Provata con i test e in un browser da computer, con dati inventati: la passkey con un autenticatore virtuale di Chrome. Lo sblocco con una passkey arrivata davvero dal Portachiavi iCloud si può provare solo su un iPhone, con questa versione. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.22.0 — 7 novembre 2026
 
 ### Novità

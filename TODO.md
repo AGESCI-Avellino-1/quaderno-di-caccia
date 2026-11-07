@@ -9,10 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                             | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
-| [#60](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/60) | Ricerca mentre si scrive: eventi su BuonaCaccia e altri campi      | Miglioramento | Basso   | Media      | VER    |
-| [#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61) | BuonaCaccia: tipi di evento e vincoli di iscrizione                | Miglioramento | Medio   | Alta       | VER    |
-| [#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62) | Formazione capi: livello 1 con il codice socio provvisorio         | Miglioramento | Basso   | Bassa      | VER    |
-| [#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63) | Capo con codice provvisorio abilitato come censito                 | Miglioramento | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -36,6 +32,10 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63) | Capo con codice provvisorio abilitato come censito | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |
+| [#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62) | Formazione capi: livello 1 con il codice socio provvisorio | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |
+| [#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61) | BuonaCaccia: tipi di evento e vincoli di iscrizione | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |
+| [#60](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/60) | Ricerca mentre si scrive: eventi su BuonaCaccia e altri campi | [v1.26.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.26.0) |
 | [#59](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/59) | BuonaCaccia: registrare più iscrizioni insieme (DEC-396) | [v1.25.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.25.0) |
 | [#58](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/58) | Scelta di una persona: campo con ricerca (DEC-395) | [v1.25.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.25.0) |
 | [#57](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/57) | BuonaCaccia: senza quota non serve segnare il pagamento (DEC-394) | [v1.24.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.24.0) |

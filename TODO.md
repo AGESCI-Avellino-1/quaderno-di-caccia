@@ -2,13 +2,19 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 06/11/2026 (ultima versione: v1.21.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 07/11/2026 (ultima versione: v1.21.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                       | Tipo           | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------- | ------- | ---------- | ------ |
+| Issue                                                                    | Titolo                                                    | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | --------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42) | Unità in ordine di branca, ovunque compaiono              | Miglioramento | Basso   | Media      | VAL    |
+| [#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43) | Spese da rimborsare: voce, contatore e notifica           | Miglioramento | Basso   | Media      | VAL    |
+| [#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44) | Versione sul server nel piè di pagina e pulsante Aggiorna | Miglioramento | Medio   | Media      | VAL    |
+| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi | Miglioramento | Basso   | Bassa      | VAL    |
+| [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci   | Miglioramento | Basso   | Media      | VAL    |
+| [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità      | Miglioramento | Basso   | Bassa      | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -72,7 +78,11 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 Questo file si aggiorna su richiesta, leggendo la situazione su GitHub. Una richiesta nata fuori da
 GitHub diventa prima una issue.
 
-**Impatto** è il rischio di fare danni al codice esistente implementando la soluzione.
+**Impatto** è il rischio di fare danni al codice esistente implementando la soluzione: quanto può
+rompersi quello che oggi funziona.
+**Difficoltà** è quanto è lungo e complicato realizzare la soluzione, a prescindere da quel rischio.
+Le due cose sono indipendenti: spostare una decina di voci di menu può essere facile e toccare poco;
+cambiare una riga in un punto da cui dipende tutta l'app è facile, ma ha un impatto alto.
 **Impatto** e **Difficoltà** valgono Basso/Bassa, Medio/Media oppure Alto/Alta.
 
 | Status | Significato                                                                          |

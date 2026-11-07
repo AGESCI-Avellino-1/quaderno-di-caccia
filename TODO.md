@@ -9,8 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                                      | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#49](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/49) | Pagina Informazioni, con i dati tecnici da copiare (DEC-387)                | Miglioramento | Basso   | Bassa      | VER    |
-| [#50](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/50) | Passkey: su iPhone non si crea se ne esiste già una sincronizzata (DEC-388) | Bug           | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -34,6 +32,8 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#50](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/50) | Passkey: su iPhone non si crea se ne esiste già una sincronizzata (DEC-388) | [v1.23.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.23.0) |
+| [#49](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/49) | Pagina Informazioni, con i dati tecnici da copiare (DEC-387) | [v1.23.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.23.0) |
 | [#48](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/48) | Avvisi esistenti solo a chi può agire (DEC-385) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
 | [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità (DEC-384) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
 | [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci (DEC-382, DEC-383) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |

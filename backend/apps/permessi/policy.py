@@ -1949,11 +1949,7 @@ def vede_impostazioni(user) -> bool:
 def unita_progressione(user) -> QuerySet[Unita]:
     """The Progressione personale entries of the PWA menu: the units the capo serves and
     those linked to them (DEC-242, DEC-279)."""
-    return (
-        Unita.objects.filter(pk__in=_unita_servite(user))
-        .exclude(tipo=TipoUnita.COMUNITA_CAPI)
-        .order_by("tipo", "progressivo")
-    )
+    return Unita.objects.filter(pk__in=_unita_servite(user)).exclude(tipo=TipoUnita.COMUNITA_CAPI)
 
 
 def altre_unita_progressione(user) -> QuerySet[Unita]:
@@ -1965,7 +1961,6 @@ def altre_unita_progressione(user) -> QuerySet[Unita]:
         Unita.objects.filter(attiva=True, archiviata_il__isnull=True)
         .exclude(tipo=TipoUnita.COMUNITA_CAPI)
         .exclude(pk__in=_unita_servite(user))
-        .order_by("tipo", "progressivo")
     )
 
 

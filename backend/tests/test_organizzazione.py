@@ -18,6 +18,7 @@ from apps.organizzazione.models import (
     RuoloIncarico,
     TipoUnita,
     Unita,
+    ordine_unita,
 )
 from apps.permessi import policy
 from tests.conftest import INIZIO_ANNO, crea_capo, crea_persona, nato_anni_fa
@@ -946,3 +947,34 @@ def test_capo_in_piu_unita_assistente_non_conta(capo_semplice, capogruppo, repar
     _serve(capo_semplice, reparto, RuoloIncarico.AE_UNITA)
     _serve(capo_semplice, branco, RuoloIncarico.AE_UNITA)
     assert _in_piu_unita(capogruppo) == []
+
+
+def test_ordine_delle_unita(gruppo, coca):
+    # Branch, then name; with no name the code takes its place (DEC-378).
+    def crea(nome, tipo, cun="", progressivo=None):
+        return Unita.objects.create(
+            gruppo=gruppo,
+            nome=nome,
+            tipo=tipo,
+            composizione=Composizione.MISTA,
+            codice_unita=cun,
+            progressivo=progressivo,
+        )
+
+    clan = crea("Antares", TipoUnita.CLAN_FUOCO, "T", 1)
+    zefiro = crea("Zefiro", TipoUnita.REPARTO, "O", 1)
+    o10 = crea("", TipoUnita.REPARTO, "O", 10)
+    o2 = crea("", TipoUnita.REPARTO, "O", 2)
+    aquile = crea("aquile", TipoUnita.REPARTO, "O", 3)
+    uguale_2 = crea("Uguale", TipoUnita.BRANCO, "L", 2)
+    uguale_1 = crea("Uguale", TipoUnita.CERCHIO, "L", 1)
+    attese = [uguale_1, uguale_2, aquile, o2, o10, zefiro, clan, coca]
+    assert list(Unita.objects.all()) == attese
+    assert sorted(attese[::-1], key=lambda u: u.chiave_ordine) == attese
+    # Through a relation too, the same.
+    for capo, unita in ((crea_capo("Zeta", "Capo"), o2), (crea_capo("Alfa", "Capo"), uguale_1)):
+        Incarico.objects.create(
+            persona=capo, ruolo=RuoloIncarico.STAFF, unita=unita, data_inizio=INIZIO_ANNO
+        )
+    incarichi = Incarico.objects.filter(unita__isnull=False).order_by(*ordine_unita("unita__"))
+    assert [i.unita_id for i in incarichi] == [uguale_1.pk, o2.pk]

@@ -132,7 +132,7 @@ def elenco_unita(request, tutte: bool = False):
         if tutte
         else Unita.objects.filter(attiva=True)
     )
-    return unita.order_by("tipo", "nome")
+    return unita
 
 
 @transaction.atomic
@@ -630,7 +630,10 @@ def capi_in_piu_unita() -> list[dict]:
     for i in incarichi:
         per_capo.setdefault(i.persona_id, (i.persona, {}))[1][i.unita_id] = i.unita
     return [
-        {"persona": persona, "unita": [str(u) for u in unita.values()]}
+        {
+            "persona": persona,
+            "unita": [str(u) for u in sorted(unita.values(), key=lambda u: u.chiave_ordine)],
+        }
         for persona, unita in per_capo.values()
         if len({min(u.pk, u.collegata_a_id or u.pk) for u in unita.values()}) > 1
     ]
@@ -638,14 +641,9 @@ def capi_in_piu_unita() -> list[dict]:
 
 def staff_delle_unita(user) -> list[dict]:
     """Capo unità, staff and assistente ecclesiastico of every active unit but the Co.Ca.,
-    in the order of the PDF list: L/C, E/G, R/S, each by code (DEC-316, DEC-284). A capogruppo
-    also appoints them here; the others only look (DEC-384)."""
-    from .elenco_incarichi import _ordine_unita
-
-    unita = sorted(
-        Unita.objects.filter(attiva=True).exclude(tipo=TipoUnita.COMUNITA_CAPI),
-        key=_ordine_unita,
-    )
+    in the units' order (DEC-316, DEC-378). A capogruppo also appoints them here; the others
+    only look (DEC-384)."""
+    unita = list(Unita.objects.filter(attiva=True).exclude(tipo=TipoUnita.COMUNITA_CAPI))
     per_unita: dict[int, list[Incarico]] = {}
     # With the services the group defined for a unit, after the others (DEC-348).
     for i in _incarichi(unita__in=unita).filter(Q_SERVIZI_IN_UNITA):

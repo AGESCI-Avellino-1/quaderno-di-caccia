@@ -92,7 +92,6 @@ def unita_da_archiviare() -> models.QuerySet:
         Unita.objects.filter(attiva=False, archiviata_il__isnull=True, appartenenze__isnull=False)
         .exclude(appartenenze__persona__archiviazioni__isnull=True)
         .distinct()
-        .order_by("tipo", "codice_unita", "progressivo")
     )
 
 

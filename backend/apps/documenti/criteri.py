@@ -22,7 +22,7 @@ from apps.core.testo_pdf import (
     TITOLO,
     flowable_del_testo,
 )
-from apps.organizzazione.models import Gruppo, Unita
+from apps.organizzazione.models import Gruppo, Unita, ordine_unita
 
 from .models import MassimoUnita, VersioneCriteri
 
@@ -176,7 +176,7 @@ def pdf(versione: VersioneCriteri) -> bytes:
         Spacer(1, 5 * mm),
         *flowable_del_testo(versione.testo),
     ]
-    massimi = list(versione.massimi.select_related("unita").order_by("unita__tipo", "unita__nome"))
+    massimi = list(versione.massimi.select_related("unita").order_by(*ordine_unita("unita__")))
     if massimi:
         righe = [
             [Paragraph("<b>Unità</b>", CELLA), Paragraph("<b>Soci giovani al massimo</b>", CELLA)]

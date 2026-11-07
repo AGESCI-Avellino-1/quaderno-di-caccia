@@ -161,9 +161,7 @@ def gestione_criteri(request):
         "anni": [
             {"valore": a.anno_fine, "nome": a.etichetta} for a in (corrente, corrente.successivo())
         ],
-        "unita": [
-            {"id": u.pk, "nome": str(u)} for u in _unita_da_limitare().order_by("tipo", "nome")
-        ],
+        "unita": [{"id": u.pk, "nome": str(u)} for u in _unita_da_limitare()],
         "testo": ultima.testo if ultima else criteri.MODELLO,
         "massimi": (
             [{"unita_id": m.unita_id, "massimo": m.massimo} for m in ultima.massimi.all()]

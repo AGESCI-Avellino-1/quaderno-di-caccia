@@ -6,7 +6,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Case, CharField, F, IntegerField, Q, Value, When
+from django.db.models.functions import Cast, Coalesce, Concat, Lower, LPad, NullIf, Trim
 
 from apps.core.models import ModelloTracciato
 
@@ -126,6 +127,41 @@ class Gruppo(ModelloTracciato):
         return self.denominazione
 
 
+# The order units are listed in, everywhere (DEC-378).
+ORDINE_BRANCHE = (Branca.LC, Branca.EG, Branca.RS, Branca.COCA)
+
+
+def ordine_unita(prefisso: str = "") -> list:
+    """Branch, then name, then code; a unit with no name takes its code as its name. The
+    progressive is padded so that O2 comes before O10. `Unita.chiave_ordine` is the same in
+    Python. `prefisso` is the path from another model ("unita__")."""
+    posto = Case(
+        *[
+            When(
+                **{f"{prefisso}tipo__in": [t.value for t, b in BRANCA_DEL_TIPO.items() if b == br]},
+                then=Value(n),
+            )
+            for n, br in enumerate(ORDINE_BRANCHE)
+        ],
+        default=Value(len(ORDINE_BRANCHE)),
+        output_field=IntegerField(),
+    )
+    codice = Concat(
+        F(f"{prefisso}codice_unita"),
+        LPad(Cast(f"{prefisso}progressivo", CharField()), 4, Value("0")),
+        output_field=CharField(),
+    )
+    nome = Lower(
+        Coalesce(NullIf(Trim(f"{prefisso}nome"), Value("")), codice, output_field=CharField())
+    )
+    return [
+        posto.asc(),
+        nome.asc(),
+        F(f"{prefisso}codice_unita").asc(),
+        F(f"{prefisso}progressivo").asc(),
+    ]
+
+
 # Default ages of each branch for the waiting list (DEC-260): minimum and maximum.
 ETA_DELLA_BRANCA = {Branca.LC: (8, 11), Branca.EG: (12, 16), Branca.RS: (16, 20)}
 
@@ -163,6 +199,7 @@ class Unita(ModelloTracciato):
     class Meta:
         verbose_name = "unità"
         verbose_name_plural = "unità"
+        ordering = ordine_unita()
         constraints = [
             models.UniqueConstraint(
                 fields=["gruppo", "codice_unita", "progressivo"],
@@ -190,6 +227,18 @@ class Unita(ModelloTracciato):
     def senza_ambiente(self) -> bool:
         """An L/C unit whose setting (giungla or bosco) is not known yet (DEC-225)."""
         return BRANCA_DEL_TIPO.get(self.tipo) == Branca.LC and self.ambiente == Ambiente.NESSUNO
+
+    @property
+    def chiave_ordine(self) -> tuple:
+        """`ordine_unita` in Python, for units already read (DEC-378)."""
+        progressivo = "" if self.progressivo is None else f"{self.progressivo:04d}"
+        nome = self.nome.strip() or f"{self.codice_unita}{progressivo}"
+        return (
+            ORDINE_BRANCHE.index(self.branca),
+            nome.lower(),
+            self.codice_unita,
+            self.progressivo or 0,
+        )
 
     @property
     def senza_nome(self) -> bool:

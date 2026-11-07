@@ -24,7 +24,6 @@ from apps.core.anno import AnnoAssociativo
 from apps.core.stampa import decora_pagina, intestazione
 
 from .models import (
-    Branca,
     Gruppo,
     Incarico,
     RuoloIncarico,
@@ -62,9 +61,8 @@ GUIDE = frozenset({RuoloIncarico.CAPO_UNITA, RuoloIncarico.CAPOGRUPPO})
 # A capo with additional roles only (a treasurer serving no unit) shows this next to the
 # name, in the PDF only: nothing is recorded (maintainer, 03/11).
 SENZA_SERVIZIO = RuoloIncarico.SUPPORTO_GRUPPO.label
-# The sections by unit: the Co.Ca. first, then L/C, E/G, R/S, each by code (maintainer,
-# 03/11).
-ORDINE_BRANCHE = [Branca.LC, Branca.EG, Branca.RS]
+# The sections by unit: the Co.Ca. first (maintainer, 03/11, confirmed 07/11), then the others
+# in the units' order (DEC-378).
 
 
 def codice_da_stampare(codice: str | None) -> str:
@@ -92,13 +90,6 @@ def giorno_di_riferimento(anno: int | None, oggi: date | None = None) -> date:
     if anno is None or AnnoAssociativo(anno).contiene(oggi):
         return oggi
     return AnnoAssociativo(anno).fine
-
-
-def _ordine_unita(unita: Unita) -> tuple:
-    branca = unita.branca
-    posto = ORDINE_BRANCHE.index(branca) if branca in ORDINE_BRANCHE else len(ORDINE_BRANCHE)
-    # A unit with no BuonaStrada code yet goes after the coded ones of its branch.
-    return (posto, not unita.codice_unita, unita.codice_unita, unita.progressivo or 0, unita.nome)
 
 
 def _ordine_persona(persona: Persona) -> tuple:
@@ -157,7 +148,7 @@ def _per_incarico(
         del_ruolo = sorted(
             (i for i in incarichi if i.codice_ruolo == ruolo),
             key=lambda i, d=donne_prima: (
-                _ordine_unita(i.unita) if i.unita_id else (),
+                i.unita.chiave_ordine if i.unita_id else (),
                 d and i.persona.sesso != "F",
                 *_ordine_persona(i.persona),
             ),
@@ -202,9 +193,7 @@ def _per_unita(scelti: set[str], incarichi: list[Incarico], ordine: list[str]) -
 
     risultato = [
         Sezione(str(unita_di[u]), sorted(righe_di[u], key=_ordine_riga))
-        for u in sorted(
-            (k for k in righe_di if k != coca), key=lambda k: _ordine_unita(unita_di[k])
-        )
+        for u in sorted((k for k in righe_di if k != coca), key=lambda k: unita_di[k].chiave_ordine)
     ]
     if coca in righe_di:
         coca_unita = Unita.objects.filter(tipo=TipoUnita.COMUNITA_CAPI).first()

@@ -151,7 +151,7 @@ def pagina_download(request):
         attive = Unita.objects.filter(archiviata_il__isnull=True).exclude(
             tipo=TipoUnita.COMUNITA_CAPI
         )
-        unita = [{"id": u.pk, "nome": str(u)} for u in attive.order_by("tipo", "progressivo")]
+        unita = [{"id": u.pk, "nome": str(u)} for u in attive]
     documenti = policy.documenti_visibili(user).prefetch_related("unita")
     return {
         "documenti": [_documento_out(user, d) for d in documenti],

@@ -90,8 +90,7 @@ def _out(user, avviso: Avviso) -> dict:
 def _pubblica_in(user) -> list[dict]:
     dove = []
     luoghi = [(None, "Tutto il gruppo")] + [
-        (u, str(u))
-        for u in Unita.objects.exclude(tipo=TipoUnita.COMUNITA_CAPI).order_by("tipo", "nome")
+        (u, str(u)) for u in Unita.objects.exclude(tipo=TipoUnita.COMUNITA_CAPI)
     ]
     for unita, nome in luoghi:
         destinatari = [d for d in Destinatari if policy.puo_pubblicare_avviso(user, unita, d)]

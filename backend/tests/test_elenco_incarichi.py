@@ -215,8 +215,8 @@ def test_pdf_richieste_sbagliate(capogruppo):
     assert client.get(f"{base}?ruoli=STAFF&anno={futuro}").status_code == 400
 
 
-def test_per_unita_coca_poi_lc_eg_rs_per_codice(gruppo, coca):
-    """The Co.Ca. first, then L/C, E/G and R/S, each by code (maintainer, 03/11)."""
+def test_per_unita_coca_poi_le_altre_nel_loro_ordine(gruppo, coca):
+    """The Co.Ca. first (maintainer, 03/11), then the units' order (DEC-378)."""
     from apps.organizzazione.models import Composizione, TipoUnita, Unita
 
     def unita(tipo, codice, progressivo):

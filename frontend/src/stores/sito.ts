@@ -18,6 +18,8 @@ export const CODICE_MANUTENZIONE = 'manutenzione'
 
 export const useSitoStore = defineStore('sito', () => {
   const sito = ref<Sito>({ ...SITO_DI_BASE })
+  /** The version the server has just said, never the one of a copy on the device (DEC-380). */
+  const versioneServer = ref('')
 
   osservaRisposte((risposta, dati) => {
     const corpo = dati as { codice?: string; detail?: string } | null
@@ -35,6 +37,7 @@ export const useSitoStore = defineStore('sito', () => {
   async function carica() {
     try {
       const letto = await leggiConCache('sito', () => api.sito())
+      versioneServer.value = letto.copiaDel ? '' : (letto.dati.versione ?? '')
       sito.value = letto.copiaDel
         ? { ...letto.dati, manutenzione: false, messaggio_manutenzione: '' }
         : letto.dati
@@ -55,5 +58,5 @@ export const useSitoStore = defineStore('sito', () => {
   )
   const rigaPiede = computed(() => riempi(sito.value.riga_piede, sito.value, pagina.value))
 
-  return { sito, pagina, carica, aggiorna, titoloCompleto, titoloBreve, rigaPiede }
+  return { sito, versioneServer, pagina, carica, aggiorna, titoloCompleto, titoloBreve, rigaPiede }
 })

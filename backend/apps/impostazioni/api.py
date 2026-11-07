@@ -21,6 +21,7 @@ from .models import (
     ModoInvio,
     SicurezzaSmtp,
 )
+from .versione import versione_server
 
 router = Router(tags=["impostazioni"])
 
@@ -45,11 +46,14 @@ class SitoOut(Schema):
     messaggio_manutenzione: str = ""
     # Days before a closed banner suggesting to install the app shows again (DEC-283).
     banner_installazione_giorni: int = 14
+    # The version on this server: [Release server], the Aggiorna button (DEC-380).
+    versione: str = ""
 
 
 def _sito() -> dict:
     imp = Impostazioni.carica()
     return {
+        "versione": versione_server(),
         "nome_sito": imp.nome_sito,
         "sigla_sito": imp.sigla_sito,
         "gruppo": imp.nome_del_gruppo(),

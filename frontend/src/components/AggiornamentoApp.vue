@@ -1,9 +1,7 @@
 <script setup lang="ts">
 // Service worker in "prompt" mode: a new version is installed only when the user agrees,
 // so nobody loses a half-filled form at camp.
-import { useRegisterSW } from 'virtual:pwa-register/vue'
-
-const { needRefresh, updateServiceWorker } = useRegisterSW()
+import { needRefresh, updateServiceWorker } from '@/pwa/aggiornamento'
 </script>
 
 <template>

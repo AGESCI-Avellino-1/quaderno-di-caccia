@@ -20,8 +20,12 @@ sotto.
 
 Con [Release] nella riga del piè di pagina si legge la versione dell'app aperta su quel
 telefono o computer, per esempio v1.18.1: è utile quando qualcuno segnala un errore. Un
-telefono non ancora aggiornato mostra il numero vecchio. La riga si vede anche prima
-dell'accesso, quindi la versione la legge anche chi non ha un account.
+telefono non ancora aggiornato mostra il numero vecchio. Con [Release server] si legge invece la
+versione installata sul server. La riga si vede anche prima dell'accesso, quindi la versione la
+legge anche chi non ha un account.
+
+Se il telefono o il computer è rimasto indietro, nel piè di pagina compare a tutti il pulsante
+**Aggiorna**, anche se non usi questi segnaposto.
 
 ## Intestazione delle stampe
 

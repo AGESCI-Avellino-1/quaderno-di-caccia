@@ -1,8 +1,10 @@
 """Settings of the installation: names, titles, footer (DEC-245…DEC-248)."""
 
+import tomllib
 from datetime import date
 
 import pytest
+from django.conf import settings
 from django.test import Client
 
 from apps.accounts.models import User
@@ -109,6 +111,21 @@ def test_segnaposto_sconosciuto_non_si_salva(gruppo, capogruppo):
     assert "[Sigla]" in risposta.json()["detail"]
     # Case does not matter.
     assert _put(capogruppo.utente, {**DATI, "titolo_breve": "[sigla sito]"}).status_code == 200
+
+
+def test_versione_del_server_pubblica_e_nel_piede(gruppo, capogruppo):
+    # The version in pyproject.toml, also before the login (DEC-380).
+    progetto = tomllib.loads((settings.BASE_DIR / "pyproject.toml").read_text())
+    assert Client().get("/api/v1/sito").json()["versione"] == progetto["project"]["version"]
+    risposta = _put(capogruppo.utente, {**DATI, "riga_piede": "Server [Release server]"})
+    assert risposta.status_code == 200
+    # As with [Release], the pages are filled in by the server and refuse it.
+    risposta = _client(capogruppo.utente).put(
+        "/api/v1/impostazioni/pagine/privacy",
+        {"testo": "<p>Versione [Release server]</p>"},
+        content_type="application/json",
+    )
+    assert risposta.status_code == 400
 
 
 def test_segnaposto_release_nel_piede_e_non_nelle_pagine(gruppo, capogruppo):

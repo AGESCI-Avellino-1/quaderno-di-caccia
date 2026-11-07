@@ -31,6 +31,9 @@ describe('segnaposto del titolo', () => {
   it("mostra la versione dell'app nella forma dei tag", () => {
     expect(riempi('Versione [Release]', SITO)).toMatch(/^Versione v\d+\.\d+\.\d+$/)
     expect(riempi('[release]', SITO)).toBe(`v${__VERSIONE_APP__}`)
+    expect(riempi('Server [Release server]', { ...SITO, versione: '1.22.0' })).toBe(
+      'Server v1.22.0',
+    )
   })
 
   it('lascia come sono i segnaposto sconosciuti e i trattini nelle parole', () => {

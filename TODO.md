@@ -7,9 +7,10 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                       | Tipo          | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
-| [#49](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/49) | Pagina Informazioni, con i dati tecnici da copiare (DEC-387) | Miglioramento | Basso   | Bassa      | VAL    |
+| Issue                                                                    | Titolo                                                            | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#49](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/49) | Pagina Informazioni, con i dati tecnici da copiare (DEC-387)      | Miglioramento | Basso   | Bassa      | VAL    |
+| [#50](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/50) | Passkey: su iPhone non si crea se ne esiste già una sincronizzata | Bug           | Medio   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.27.1 — 7 novembre 2026
+
+### Correzioni
+
+**Eventi su BuonaCaccia nell'elenco degli eventi** ([#64](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/64)): sotto il nome compariva «Campo · · Località», con una parte vuota tra due punti. Ora c'è scritto «BuonaCaccia», il tipo di evento e la località, per esempio «BuonaCaccia · Capi Squadriglia · Atripalda».
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.27.1
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Rifatta la schermata dell'elenco degli eventi.
+
+Provata con i test e in un browser con dati inventati; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.27.0 — 7 novembre 2026
 
 ### Novità

@@ -83,6 +83,10 @@ dispositivo, senza nomi né altri dati personali.
    dove serve un account e dove **tutti possono leggere**. Lì non scrivere nomi, numeri di telefono,
    dati sanitari o altri dati personali.
 
+Dove scegli una persona, per esempio a chi dare un incarico, scrivi parte del nome o del
+cognome: l'elenco si restringe e accanto a ogni nome vedi la sua unità, così non confondi due
+persone con lo stesso nome. Tocca quella giusta.
+
 ## Come leggere il manuale
 
 Ogni funzione ha i passi da fare, nell'ordine, con le immagini. Le immagini mostrano il

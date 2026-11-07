@@ -5,6 +5,7 @@ import type { Convocazione } from '@/api/qdc'
 import ConvocazioneRiunione from '@/components/ConvocazioneRiunione.vue'
 
 import { risposta } from './aiuti'
+import { scegliPersona } from './aiuti-scelta'
 
 const base: Convocazione = {
   da_modello: false,
@@ -93,7 +94,7 @@ describe('ConvocazioneRiunione', () => {
       }),
     )
     const pagina = await monta()
-    await pagina.find('select').setValue(4)
+    await scegliPersona(pagina, 'input[role="combobox"]', 'Rino')
     await pagina.find('form').trigger('submit')
     await flushPromises()
     expect(chiamate.at(-1)).toEqual({

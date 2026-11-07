@@ -38,6 +38,8 @@ class PersonaElenco(Schema):
     nome: str
     cognome: str
     codice_socio: str | None
+    # Next to the name where a person is chosen (DEC-395).
+    unita: str = ""
 
 
 class PersonaDettaglio(Schema):
@@ -78,6 +80,11 @@ class PersonaDettaglio(Schema):
 
 @router.get("/persone", response=list[PersonaElenco])
 def elenco_persone(request, unita: int | None = None, tipo: str | None = None):
+    """The people the caller sees, with their unit next to the name (DEC-395)."""
+    return servizi.con_unita(persone_visibili_in(request, unita, tipo), campi=("codice_socio",))
+
+
+def persone_visibili_in(request, unita: int | None = None, tipo: str | None = None):
     """The people the caller sees. `tipo`: "soci" (members, capi and ragazzi, provisional
     codes included) or "genitori" (who holds parental responsibility for someone); with
     `unita`, the unit's members or their parents. A capo who is also a parent is in both."""

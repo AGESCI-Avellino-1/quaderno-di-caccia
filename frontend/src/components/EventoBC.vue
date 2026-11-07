@@ -5,18 +5,17 @@ import { RouterLink } from 'vue-router'
 import {
   api,
   euro,
-  nomeUnita,
   type DettaglioBC,
   type EventoBCIn,
   type IscrizioneBC,
-  type IscrizioneBCIn,
-  type PersonaElenco,
+  type IscrizioniBCIn,
   type SchedaBC,
-  type Unita,
 } from '@/api/qdc'
 import CampoImporto from '@/components/CampoImporto.vue'
 import IscrizioneBCVue from '@/components/IscrizioneBC.vue'
 import ModuloEventoBC from '@/components/ModuloEventoBC.vue'
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa, type Opzione } from '@/components/sceltaPersona'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -70,33 +69,32 @@ async function salvaScheda() {
 
 // --- New registration ---------------------------------------------------------------
 
-const unita = ref<Unita[]>([])
-const persone = ref<PersonaElenco[]>([])
-const unitaScelta = ref<number | null>(null)
-const nuova = ref<IscrizioneBCIn | null>(null)
+// One or more at once, with the same data (DEC-396); the management link of each is added
+// afterwards in their card, as it differs for each.
+const iscrivibili = ref<Opzione[]>([])
+const nuova = ref<IscrizioniBCIn | null>(null)
 
 async function apriIscrizione() {
   nuova.value = {
-    persona_id: 0,
+    persone: [],
     iscritto_il: oggi(),
     stato: 'AMMESSO',
-    link_gestione: '',
     modo_liberatoria: 'APP',
     scadenza_liberatoria: null,
     importo: null,
     scadenza_quota: null,
   }
-  unita.value = ((await esegui(() => api.unita())) ?? []).filter((u) => u.tipo !== 'COMUNITA_CAPI')
+  iscrivibili.value = opzioniDa((await esegui(() => api.iscrivibiliBC(props.evento))) ?? [])
 }
-watch(unitaScelta, async (id) => {
-  persone.value = id === null ? [] : ((await esegui(() => api.persone(id))) ?? [])
-})
 
 async function iscrivi() {
-  if (!nuova.value) return
+  if (!nuova.value?.persone.length) {
+    errore.value = 'Scegli almeno una persona.'
+    return
+  }
   const dati = { ...nuova.value, importo: nuova.value.importo || null }
   if (!dati.importo) dati.scadenza_quota = null
-  if (await esegui(() => api.iscriviBC(props.evento, dati))) {
+  if (await esegui(() => api.iscriviInsiemeBC(props.evento, dati))) {
     nuova.value = null
     await carica()
   }
@@ -217,30 +215,21 @@ const io = () => sessione.profilo?.persona?.id
       </div>
       <form v-if="nuova" class="card card-body mb-3" @submit.prevent="iscrivi">
         <p class="small fg-2">
-          Registra qui un socio minorenne che lo staff ha già iscritto su BuonaCaccia. I maggiorenni
-          si iscrivono da soli: segna solo la loro partecipazione qui sotto.
+          Registra qui uno o più soci minorenni che lo staff ha già iscritto su BuonaCaccia, con gli
+          stessi dati: il link di gestione di ciascuno lo aggiungi poi nella sua scheda. I
+          maggiorenni si iscrivono da soli: segna solo la loro partecipazione qui sotto.
         </p>
         <div class="row g-3">
-          <div class="col-12 md:col-6">
-            <label class="form-label small" for="bc-unita">Unità</label>
-            <select id="bc-unita" v-model="unitaScelta" class="form-control form-control-sm">
-              <option :value="null">—</option>
-              <option v-for="u in unita" :key="u.id" :value="u.id">{{ nomeUnita(u) }}</option>
-            </select>
-          </div>
-          <div class="col-12 md:col-6">
-            <label class="form-label small" for="bc-persona">Socio</label>
-            <select
-              id="bc-persona"
-              v-model="nuova.persona_id"
-              class="form-control form-control-sm"
-              required
-            >
-              <option :value="0" disabled>—</option>
-              <option v-for="p in persone" :key="p.id" :value="p.id">
-                {{ p.cognome }} {{ p.nome }}
-              </option>
-            </select>
+          <div class="col-12">
+            <label class="form-label small" for="bc-persone">
+              Chi (uno o più, delle unità che gestisci)
+            </label>
+            <SceltaPersona
+              id="bc-persone"
+              v-model="nuova.persone"
+              :opzioni="iscrivibili"
+              multipla
+            />
           </div>
           <div class="col-12 md:col-6">
             <label class="form-label small" for="bc-data">Iscritto su BuonaCaccia il</label>
@@ -259,18 +248,6 @@ const io = () => sessione.profilo?.persona?.id
               <option value="AMMESSO">Ammesso</option>
               <option value="IN_ATTESA">In lista d'attesa</option>
             </select>
-          </div>
-          <div class="col-12">
-            <label class="form-label small" for="bc-link">
-              Link di gestione (dalla prima email di BuonaCaccia; lo vedono solo i capi che
-              gestiscono l'iscrizione)
-            </label>
-            <input
-              id="bc-link"
-              v-model="nuova.link_gestione"
-              type="url"
-              class="form-control form-control-sm"
-            />
           </div>
           <div class="col-12 md:col-6">
             <label class="form-label small" for="bc-modo">La liberatoria</label>

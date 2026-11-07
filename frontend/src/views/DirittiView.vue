@@ -2,6 +2,8 @@
 import { onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { api, TIPI_RICHIESTA, type PersonaElenco, type RichiestaDiritti } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
@@ -14,7 +16,13 @@ const persone = ref<PersonaElenco[]>([])
 const aperto = ref(false)
 // Local date as YYYY-MM-DD (toISOString would give the UTC day around midnight).
 const oggi = new Date().toLocaleDateString('sv')
-const modulo = reactive({ persona: '', tipo: 'ACCESSO', richiedente: '', ricevuta: oggi, note: '' })
+const modulo = reactive({
+  persona: null as number | null,
+  tipo: 'ACCESSO',
+  richiedente: '',
+  ricevuta: oggi,
+  note: '',
+})
 
 async function carica() {
   richieste.value = (await esegui(() => api.richiesteDiritti())) ?? []
@@ -23,14 +31,20 @@ onMounted(carica)
 
 async function apri() {
   if (!persone.value.length) persone.value = (await esegui(() => api.persone())) ?? []
-  Object.assign(modulo, { persona: '', tipo: 'ACCESSO', richiedente: '', ricevuta: oggi, note: '' })
+  Object.assign(modulo, {
+    persona: null,
+    tipo: 'ACCESSO',
+    richiedente: '',
+    ricevuta: oggi,
+    note: '',
+  })
   aperto.value = true
 }
 
 async function registra() {
   const fatta = await esegui(() =>
     api.registraRichiesta({
-      persona_id: Number(modulo.persona),
+      persona_id: modulo.persona!,
       tipo: modulo.tipo,
       richiedente: modulo.richiedente,
       ricevuta_il: modulo.ricevuta,
@@ -73,17 +87,12 @@ const scaduta = (r: RichiestaDiritti) => !r.evasa_il && r.scadenza < oggi
     <form v-if="aperto" class="card card-body row g-3 mb-5 mx-0" @submit.prevent="registra">
       <div class="col-12 md:col-6">
         <label class="form-label small" for="richiesta-persona">Persona</label>
-        <select
+        <SceltaPersona
           id="richiesta-persona"
           v-model="modulo.persona"
-          class="form-control form-control-sm"
-          required
-        >
-          <option value="" disabled>Scegli…</option>
-          <option v-for="p in persone" :key="p.id" :value="String(p.id)">
-            {{ p.cognome }} {{ p.nome }}
-          </option>
-        </select>
+          :opzioni="opzioniDa(persone)"
+          richiesto
+        />
       </div>
       <div class="col-12 md:col-6">
         <label class="form-label small" for="richiesta-tipo">Cosa chiede</label>

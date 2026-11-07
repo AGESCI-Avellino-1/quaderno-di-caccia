@@ -14,16 +14,19 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 from ninja.responses import Status
 
-from apps.anagrafica.models import Persona
+from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
+from apps.anagrafica.servizi import con_unita
 from apps.core.anno import AnnoAssociativo
 from apps.core.dataora import DataOra
 from apps.eventi import avvisi as avvisi_eventi
 from apps.eventi.models import Evento, Livello, Partecipazione, StatoPartecipazione, TipoEvento
+from apps.organizzazione.models import TipoUnita
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
 from . import avvisi, servizi
 from .models import (
+    ATTIVE,
     EsitoLiberatoria,
     EventoBuonaCaccia,
     IscrizioneBuonaCaccia,
@@ -509,6 +512,88 @@ class IscrizioneIn(Schema):
     scadenza_liberatoria: date | None = None
     importo: Decimal | None = None
     scadenza_quota: date | None = None
+
+
+class Iscrivibile(Schema):
+    id: int
+    nome: str
+    cognome: str
+    unita: str
+
+
+@router.get("/buonacaccia/eventi/{evento_id}/iscrivibili", response=list[Iscrivibile])
+def iscrivibili(request, evento_id: int):
+    """Who the user may register (DEC-396): the minors of the units they manage, not
+    already registered to the event, with their unit (DEC-395)."""
+    evento = _evento(request, evento_id)
+    if not policy.puo_registrare_iscrizioni_buonacaccia(request.auth):
+        return []
+    unita = policy.unita_da_approvare(request.auth).exclude(tipo=TipoUnita.COMUNITA_CAPI)
+    membri = Appartenenza.objects.attive().filter(unita__in=unita, ruolo=RuoloAppartenenza.RAGAZZO)
+    gia = IscrizioneBuonaCaccia.objects.filter(
+        partecipazione__evento=evento, stato__in=ATTIVE
+    ).values("partecipazione__persona_id")
+    persone = (
+        Persona.objects.filter(pk__in=membri.values("persona_id"))
+        .exclude(pk__in=gia)
+        .order_by("cognome", "nome")
+    )
+    return con_unita(
+        p
+        for p in persone
+        if p.e_minorenne() and policy.puo_gestire_iscrizione_buonacaccia(request.auth, p)
+    )
+
+
+class IscrizioniIn(Schema):
+    """Several registrations with the same data (DEC-396); the management link of each is
+    added afterwards, as it differs for each."""
+
+    persone: list[int]
+    iscritto_il: date
+    stato: StatoIscrizione = StatoIscrizione.AMMESSO
+    modo_liberatoria: ModoLiberatoria = ModoLiberatoria.APP
+    scadenza_liberatoria: date | None = None
+    importo: Decimal | None = None
+    scadenza_quota: date | None = None
+
+
+@router.post(
+    "/buonacaccia/eventi/{evento_id}/iscrizioni-insieme", response={201: list[IscrizioneOut]}
+)
+def iscrivi_insieme(request, evento_id: int, dati: IscrizioniIn):
+    """All or none: who is already registered is named, and nothing is saved."""
+    evento = _evento(request, evento_id)
+    if not dati.persone:
+        raise HttpError(400, "Scegli almeno una persona.")
+    persone = list(Persona.objects.filter(pk__in=set(dati.persone)).order_by("cognome", "nome"))
+    if len(persone) != len(set(dati.persone)):
+        raise HttpError(404, "Persona non trovata.")
+    for persona in persone:
+        if not policy.puo_gestire_iscrizione_buonacaccia(request.auth, persona):
+            raise HttpError(
+                403, f"{_nome(persona)}: l'iscrizione la registra lo staff della sua unità."
+            )
+    gia = [
+        _nome(p)
+        for p in persone
+        if IscrizioneBuonaCaccia.objects.filter(
+            partecipazione__evento=evento, partecipazione__persona=p, stato__in=ATTIVE
+        ).exists()
+    ]
+    if gia:
+        raise HttpError(400, f"Già iscritti a questo evento: {', '.join(gia)}.")
+    comuni = dati.dict(exclude={"persone"})
+    fatte = []
+    with transaction.atomic():
+        for persona in persone:
+            try:
+                fatte.append(servizi.iscrivi(evento, persona, request.auth, **comuni))
+            except ValidationError as errore:
+                raise HttpError(400, f"{_nome(persona)}: {' '.join(errore.messages)}") from errore
+    for iscrizione in fatte:
+        transaction.on_commit(lambda i=iscrizione: avvisi.iscritto(i))
+    return Status(201, [_iscrizione_out(request.auth, i) for i in fatte])
 
 
 @router.post("/buonacaccia/eventi/{evento_id}/iscrizioni", response={201: IscrizioneOut})

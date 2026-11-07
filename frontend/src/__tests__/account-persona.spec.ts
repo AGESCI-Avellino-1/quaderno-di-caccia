@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import AccountPersona from '@/components/AccountPersona.vue'
+import { scegliPersona } from './aiuti-scelta'
 
 const json = (dati: unknown, stato = 200) =>
   new Response(JSON.stringify(dati), {
@@ -106,9 +107,9 @@ describe('AccountPersona', () => {
     const metodi = () =>
       pannello.findAll('select[aria-label="Come è stato verificato"] option').map((o) => o.text())
 
-    await pannello.get('select[aria-label="Genitore che dà il consenso"]').setValue(2)
+    await scegliPersona(pannello, 'input[aria-label="Genitore che dà il consenso"]', 'Lucia')
     expect(metodi()).toContain("Dall'account del genitore collegato")
-    await pannello.get('select[aria-label="Genitore che dà il consenso"]').setValue(3)
+    await scegliPersona(pannello, 'input[aria-label="Genitore che dà il consenso"]', 'Mario')
     expect(metodi()).not.toContain("Dall'account del genitore collegato")
   })
 })

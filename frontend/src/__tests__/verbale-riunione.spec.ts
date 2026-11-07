@@ -5,6 +5,7 @@ import type { Verbale } from '@/api/qdc'
 import VerbaleRiunione from '@/components/VerbaleRiunione.vue'
 
 import { risposta } from './aiuti'
+import { scegliPersona } from './aiuti-scelta'
 
 const base: Verbale = {
   tipo: 'SQUADRIGLIA',
@@ -224,7 +225,7 @@ describe('VerbaleRiunione', () => {
     await pagina.find('button').trigger('click')
     await flushPromises()
     expect(pagina.text()).toContain('con diritto di voto')
-    await pagina.find('select').setValue(2)
+    await scegliPersona(pagina, 'input[role="combobox"]', 'Alice')
     await pagina.find('input[value="3"]').setValue(true)
     const moduli = pagina.findAll('form')
     await moduli.find((m) => m.text().includes('Salva presidente'))!.trigger('submit')

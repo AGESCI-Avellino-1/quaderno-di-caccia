@@ -531,9 +531,9 @@ class EsitoInviti(Schema):
 @router.get("/inviti/candidati", response=list[CandidatoInvito])
 def candidati_invito(request, unita: int | None = None, tipo: str | None = None):
     """Who of the list (the same as GET /persone) may get an invitation now."""
-    from apps.anagrafica.api import elenco_persone
+    from apps.anagrafica.api import persone_visibili_in
 
-    persone = elenco_persone(request, unita=unita, tipo=tipo).filter(utente__isnull=True)
+    persone = persone_visibili_in(request, unita=unita, tipo=tipo).filter(utente__isnull=True)
     return [
         p
         for p in persone.exclude(email__isnull=True).exclude(email="").prefetch_related("inviti")

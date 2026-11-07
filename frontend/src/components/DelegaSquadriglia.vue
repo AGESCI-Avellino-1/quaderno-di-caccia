@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { api, type Delega, type PersonaBreve } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
@@ -53,16 +55,12 @@ async function revoca() {
     >
       <div>
         <label class="form-label small" :for="`delega-${squadriglia}`">Delega a</label>
-        <select
+        <SceltaPersona
           :id="`delega-${squadriglia}`"
           v-model="scelto"
-          class="form-control form-control-sm"
-          required
-        >
-          <option v-for="m in membri" :key="m.id" :value="m.id">
-            {{ m.nome }} {{ m.cognome }}
-          </option>
-        </select>
+          :opzioni="opzioniDa(membri)"
+          richiesto
+        />
       </div>
       <button type="submit" class="btn btn-sm btn-outline theme-primary" :disabled="inCorso">
         Delega

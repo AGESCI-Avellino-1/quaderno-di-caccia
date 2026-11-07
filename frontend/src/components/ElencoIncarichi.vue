@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 
 import { api, type DoveIncarico, type Incarico, type PersonaBreve, type Scelta } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { useErrore } from '@/composables/useErrore'
 
 // Active roles of the group, a unit or a patrol, with "assign" and "close" for the roles
@@ -23,6 +25,8 @@ const persona = ref<number | null>(null)
 const elenco = ref<PersonaBreve[]>([])
 const daChiudere = ref<number | null>(null)
 
+// One field per list, and the Organigramma has one list per unit.
+const idChi = `incarico-chi-${useId()}`
 const gestibili = computed(() => new Set(props.nomina.map((n) => n.valore)))
 
 watch(ruolo, async (valore) => {
@@ -102,17 +106,14 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </select>
       </div>
       <div v-if="ruolo" class="col-12 sm:col-5">
-        <select
+        <SceltaPersona
+          :id="idChi"
           v-model="persona"
-          class="form-control form-control-sm"
+          :opzioni="opzioniDa(elenco)"
+          segnaposto="Chi: scrivi un nome…"
           aria-label="Persona"
-          required
-        >
-          <option :value="null" disabled>Chi</option>
-          <option v-for="p in elenco" :key="p.id" :value="p.id">
-            {{ p.cognome }} {{ p.nome }}
-          </option>
-        </select>
+          richiesto
+        />
       </div>
       <div v-if="ruolo" class="col-12 sm:col-3">
         <button type="submit" class="btn btn-sm btn-solid theme-primary w-100" :disabled="inCorso">

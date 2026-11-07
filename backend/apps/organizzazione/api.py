@@ -16,6 +16,7 @@ from apps.anagrafica.models import (
     Persona,
     RuoloAppartenenza,
 )
+from apps.anagrafica.servizi import con_unita
 from apps.core.anno import compie_anni
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
@@ -745,7 +746,15 @@ def elenco_incarichi_pdf(
     return risposta
 
 
-@router.get("/capi", response=list[PersonaBreve])
+class CapoDaScegliere(Schema):
+    id: int
+    nome: str
+    cognome: str
+    # Next to the name, to tell namesakes apart (DEC-395).
+    unita: str = ""
+
+
+@router.get("/capi", response=list[CapoDaScegliere])
 def elenco_capi(request, presbiteri: bool = False):
     """Active capi: who can be appointed to staff and group roles. `presbiteri`: only who
     may be assistente ecclesiastico (DEC-296)."""
@@ -757,7 +766,7 @@ def elenco_capi(request, presbiteri: bool = False):
         persone = persone.filter(
             Q(professione__icontains="presbitero") | Q(professione__icontains="sacerdote")
         )
-    return persone.order_by("cognome", "nome")
+    return con_unita(persone.order_by("cognome", "nome"))
 
 
 class NuovoIncarico(Schema):

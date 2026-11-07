@@ -51,17 +51,18 @@ tocca **Scegli la scheda**: la famiglia risponde dall'app.
 
 ## Registrare un'iscrizione
 
-Dopo aver iscritto il ragazzo/a su BuonaCaccia:
+Dopo aver iscritto i ragazzi/e su BuonaCaccia, li registri nell'app anche tutti insieme:
 
 1. Nella pagina dell'evento, in **Iscrizioni su BuonaCaccia**, tocca **Registra
    un'iscrizione** (lo trovano lo staff di un'unità e i capigruppo).
-2. Scegli unità e socio, il giorno dell'iscrizione e lo stato (**Ammesso** o **In lista
-   d'attesa**).
-3. Incolla il **Link di gestione** dalla prima email di BuonaCaccia (lo vedono solo i capi
-   che gestiscono l'iscrizione: con quel link si cancella).
-4. Scegli se la liberatoria **passa dall'app** o arriva in altro modo, e la quota per la
-   famiglia.
-5. Tocca **Registra**: la famiglia riceve subito un'email con quello che serve.
+2. In **Chi** scrivi parte del nome e tocca il socio: si aggiunge sotto, e lo togli con la ×.
+   Ripeti per gli altri, anche di altre unità che gestisci. Chi è già iscritto non compare.
+3. Scegli il giorno dell'iscrizione e lo stato (**Ammesso** o **In lista d'attesa**), se la
+   liberatoria **passa dall'app** o arriva in altro modo, e la quota per la famiglia: valgono
+   per tutti. Se qualcuno ha dati diversi, correggili dopo nella sua scheda.
+4. Tocca **Registra**: ogni famiglia riceve subito un'email con quello che serve.
+5. Nella scheda di ciascuno incolla il **Link di gestione** dalla prima email di BuonaCaccia
+   (lo vedono solo i capi che gestiscono l'iscrizione: con quel link si cancella).
 
 :::{container} schermate
 ![Un'iscrizione su BuonaCaccia sul telefono](../img/capo/iscrizione-bc-telefono.png){.telefono width="30%"}

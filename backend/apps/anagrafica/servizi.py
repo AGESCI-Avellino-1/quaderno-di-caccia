@@ -287,3 +287,34 @@ def vcard(contatti: list[tuple[Persona, list[tuple[str, str, str]]]]) -> str:
             righe.append(f"NOTE:{_testo_vcard(' · '.join(note))}")
         righe.append("END:VCARD")
     return "\r\n".join(righe) + "\r\n"
+
+
+def unita_delle_persone(persone) -> dict[int, str]:
+    """The unit next to a name where a person is chosen from a list, to tell namesakes apart
+    (DEC-395): one query; a capo is in the Co.Ca.; nobody's unit for who has none."""
+    from apps.organizzazione.models import TipoUnita
+
+    ids = [p.pk for p in persone]
+    trovate: dict[int, list[str]] = {}
+    for a in Appartenenza.objects.attive().filter(persona_id__in=ids).select_related("unita"):
+        nome = "Co.Ca." if a.unita.tipo == TipoUnita.COMUNITA_CAPI else str(a.unita)
+        elenco = trovate.setdefault(a.persona_id, [])
+        if nome not in elenco:
+            elenco.append(nome)
+    return {pk: ", ".join(nomi) for pk, nomi in trovate.items()}
+
+
+def con_unita(persone, **altri) -> list[dict]:
+    """People for a list to choose from: id, name, surname, unit (DEC-395)."""
+    persone = list(persone)
+    unita = unita_delle_persone(persone)
+    return [
+        {
+            "id": p.pk,
+            "nome": p.nome,
+            "cognome": p.cognome,
+            "unita": unita.get(p.pk, ""),
+            **{campo: getattr(p, campo) for campo in altri.get("campi", ())},
+        }
+        for p in persone
+    ]

@@ -4,6 +4,8 @@ import { onMounted, ref } from 'vue'
 import { api, allegatoVerbale, convocazionePdf, type Convocazione } from '@/api/qdc'
 import { caricaAPezzi, misura } from '@/components/allegatiVerbale'
 import ConvocazioneAssemblea from '@/components/ConvocazioneAssemblea.vue'
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { useErrore } from '@/composables/useErrore'
 
 // The convocation of a meeting of the parents (DEC-327): the documents first, then one
@@ -161,16 +163,12 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
         <label class="form-label small" :for="`presenze-da-${evento}`">
           Chi segna le presenze, oltre ai capigruppo
         </label>
-        <select
+        <SceltaPersona
           :id="`presenze-da-${evento}`"
           v-model="presenzeDa"
-          class="form-control form-control-sm"
-        >
-          <option :value="null">Nessun altro</option>
-          <option v-for="p in convocazione.candidati_presenze" :key="p.id" :value="p.id">
-            {{ p.cognome }} {{ p.nome }}
-          </option>
-        </select>
+          :opzioni="opzioniDa(convocazione.candidati_presenze)"
+          vuoto="Nessun altro"
+        />
       </div>
       <div class="col-12 sm:col-4">
         <button

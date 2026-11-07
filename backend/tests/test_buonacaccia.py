@@ -774,3 +774,58 @@ def test_eventi_gia_inseriti_a_mezzanotte_passano_a_senza_ora(capo, piccole_orme
     piccole_orme.refresh_from_db()
     assert piccole_orme.senza_ora_inizio and piccole_orme.senza_ora_fine
     assert timezone.localtime(piccole_orme.fine).hour == 23
+
+
+# --- Several registrations at once (DEC-395, DEC-396) -----------------------------------------
+
+
+def _insieme(chi, evento, persone, **altri):
+    return _json(
+        chi,
+        "post",
+        f"/api/v1/buonacaccia/eventi/{evento.pk}/iscrizioni-insieme",
+        {"persone": [p.pk for p in persone], "iscritto_il": str(OGGI), **altri},
+    )
+
+
+def test_chi_si_puo_iscrivere_con_la_sua_unita(capo, ragazza, csq, piccole_orme, reparto):
+    url = f"/api/v1/buonacaccia/eventi/{piccole_orme.pk}/iscrivibili"
+    elenco = _client(capo).get(url).json()
+    assert {p["id"] for p in elenco} == {ragazza.pk, csq.pk}
+    assert all(p["unita"] == str(reparto) for p in elenco)
+    _iscrivi(capo, piccole_orme, ragazza)
+    assert {p["id"] for p in _client(capo).get(url).json()} == {csq.pk}
+    senza_servizio = crea_capo("Senza", "Servizio", "senza@example.invalid")
+    assert _client(senza_servizio).get(url).json() == []
+
+
+def test_piu_iscrizioni_insieme_con_un_email_per_famiglia(capo, ragazza, csq, piccole_orme):
+    mail.outbox.clear()
+    risposta = _insieme(capo, piccole_orme, [ragazza, csq], stato="IN_ATTESA")
+    assert risposta.status_code == 201, risposta.content
+    assert {i["persona_id"] for i in risposta.json()} == {ragazza.pk, csq.pk}
+    iscrizioni = IscrizioneBuonaCaccia.objects.filter(partecipazione__evento=piccole_orme)
+    assert iscrizioni.count() == 2
+    assert all(i.stato == StatoIscrizione.IN_ATTESA and not i.link_gestione for i in iscrizioni)
+
+
+def test_insieme_tutte_o_nessuna(capo, ragazza, csq, piccole_orme):
+    _iscrivi(capo, piccole_orme, ragazza)
+    risposta = _insieme(capo, piccole_orme, [ragazza, csq])
+    assert risposta.status_code == 400
+    assert f"{ragazza.nome} {ragazza.cognome}" in risposta.json()["detail"]
+    # Nothing saved for the other one either.
+    assert not IscrizioneBuonaCaccia.objects.filter(partecipazione__persona=csq).exists()
+
+
+def test_insieme_solo_chi_si_gestisce(capo, ragazza, piccole_orme, gruppo, coca):
+    altro = crea_capo("Altro", "Staff", "altro@example.invalid")
+    assert _insieme(altro, piccole_orme, [ragazza]).status_code == 403
+    assert _insieme(capo, piccole_orme, []).status_code == 400
+
+
+def test_unita_accanto_ai_nomi(capo, capogruppo, ragazza, reparto):
+    persone = {p["id"]: p for p in _client(capogruppo).get("/api/v1/persone").json()}
+    assert persone[ragazza.pk]["unita"] == str(reparto)
+    capi = {p["id"]: p for p in _client(capogruppo).get("/api/v1/capi").json()}
+    assert "Co.Ca." in capi[capo.pk]["unita"]

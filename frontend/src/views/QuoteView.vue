@@ -14,6 +14,8 @@ import {
   type Unita,
 } from '@/api/qdc'
 import CampoImporto from '@/components/CampoImporto.vue'
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -53,7 +55,7 @@ const unitaScelta = ref<number | null>(null)
 const situazione = ref<RigaSituazione[]>([])
 const coniugi = ref<Coniugi[]>([])
 const persone = ref<PersonaElenco[]>([])
-const nuoviConiugi = reactive({ a: '', b: '' })
+const nuoviConiugi = reactive({ a: null as number | null, b: null as number | null })
 const messaggio = ref('')
 
 const vuoto = (): TipoQuotaIn => ({
@@ -138,11 +140,9 @@ async function emetti(tipo: TipoQuota) {
 }
 
 async function aggiungiConiugi() {
-  const fatto = await esegui(() =>
-    api.aggiungiConiugi(Number(nuoviConiugi.a), Number(nuoviConiugi.b)),
-  )
+  const fatto = await esegui(() => api.aggiungiConiugi(nuoviConiugi.a!, nuoviConiugi.b!))
   if (!fatto) return
-  Object.assign(nuoviConiugi, { a: '', b: '' })
+  Object.assign(nuoviConiugi, { a: null, b: null })
   coniugi.value = (await esegui(() => api.coniugi())) ?? []
 }
 
@@ -420,31 +420,21 @@ const scadenzaTipo = (t: TipoQuota) =>
         <form class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="aggiungiConiugi">
           <div>
             <label class="form-label small" for="coniuge-a">Socio</label>
-            <select
+            <SceltaPersona
               id="coniuge-a"
               v-model="nuoviConiugi.a"
-              class="form-control form-control-sm"
-              required
-            >
-              <option value="" disabled>Scegli…</option>
-              <option v-for="p in persone" :key="p.id" :value="p.id">
-                {{ p.cognome }} {{ p.nome }}
-              </option>
-            </select>
+              :opzioni="opzioniDa(persone)"
+              richiesto
+            />
           </div>
           <div>
             <label class="form-label small" for="coniuge-b">Coniuge</label>
-            <select
+            <SceltaPersona
               id="coniuge-b"
               v-model="nuoviConiugi.b"
-              class="form-control form-control-sm"
-              required
-            >
-              <option value="" disabled>Scegli…</option>
-              <option v-for="p in persone" :key="p.id" :value="p.id">
-                {{ p.cognome }} {{ p.nome }}
-              </option>
-            </select>
+              :opzioni="opzioniDa(persone)"
+              richiesto
+            />
           </div>
           <button type="submit" class="btn btn-sm btn-outline theme-primary" :disabled="inCorso">
             Aggiungi

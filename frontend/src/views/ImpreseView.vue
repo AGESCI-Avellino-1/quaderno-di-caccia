@@ -13,6 +13,7 @@ import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import CompetenzaEG from '@/components/CompetenzaEG.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
+import SceltaPersona from '@/components/SceltaPersona.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
@@ -94,13 +95,13 @@ async function salvaConsiglio() {
   if (ok) consiglio.impresa = 0
 }
 
-const posto = reactive({ impresa: 0, persona_id: 0, ruolo: '' })
+const posto = reactive({ impresa: 0, persona_id: null as number | null, ruolo: '' })
 async function nuovoPosto() {
   const ok = await fatto(
-    () => api.nuovoPosto(posto.impresa, { persona_id: posto.persona_id, ruolo: posto.ruolo }),
+    () => api.nuovoPosto(posto.impresa, { persona_id: posto.persona_id!, ruolo: posto.ruolo }),
     "Posto d'azione salvato.",
   )
-  if (ok) Object.assign(posto, { impresa: 0, persona_id: 0, ruolo: '' })
+  if (ok) Object.assign(posto, { impresa: 0, persona_id: null, ruolo: '' })
 }
 
 const verifica = reactive({ posto: 0, il: oggi(), sede: '', sede_descrizione: '' })
@@ -399,15 +400,12 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
             >
               <div>
                 <label class="form-label small" :for="`p-chi-${i.id}`">Chi</label>
-                <select
+                <SceltaPersona
                   :id="`p-chi-${i.id}`"
                   v-model="posto.persona_id"
-                  class="form-control form-control-sm"
-                  required
-                >
-                  <option :value="0" disabled>—</option>
-                  <option v-for="r in dati.ragazzi" :key="r.id" :value="r.id">{{ r.nome }}</option>
-                </select>
+                  :opzioni="dati.ragazzi"
+                  richiesto
+                />
               </div>
               <div class="flex-grow-1">
                 <label class="form-label small" :for="`p-ruolo-${i.id}`">Posto d'azione</label>

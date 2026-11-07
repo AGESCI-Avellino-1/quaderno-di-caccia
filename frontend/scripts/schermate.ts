@@ -415,13 +415,18 @@ const SCENE: Scena[] = [
     percorso: '/unita',
     prepara: async (pagina) => {
       await apri('Antares')(pagina)
+      // A field with search (DEC-395): write, then Enter on the first match.
       const delega = pagina.getByLabel('Delega a').last()
-      await delega.selectOption({ label: 'Luca Rossi' })
+      const scegli = async () => {
+        await delega.fill('Luca')
+        await delega.press('Enter')
+      }
+      await scegli()
       await pagina.getByRole('button', { name: 'Delega', exact: true }).last().click()
       await pagina.getByText('Le può inserire anche Luca Rossi').waitFor()
       await pagina.getByRole('button', { name: 'Togli la delega' }).click()
       await pagina.getByText('Le inseriscono il capo squadriglia e lo staff.').last().waitFor()
-      await delega.selectOption({ label: 'Luca Rossi' })
+      await scegli()
     },
     mostra: 'Sq. Volpi',
   },

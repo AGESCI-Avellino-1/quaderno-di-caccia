@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { api, type SchedaAccount, type StatoAccount } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
@@ -118,18 +120,16 @@ const schede = () => (stato.value ? [stato.value.persona, ...stato.value.genitor
           <legend class="small fw-semibold mb-1">
             Ha meno di 14 anni: serve il consenso di un genitore
           </legend>
-          <select
+          <SceltaPersona
+            id="consenso-da"
             v-model="modulo.consensoDa"
-            class="form-control form-control-sm mb-1"
+            class="mb-1"
+            :opzioni="opzioniDa(stato.genitori)"
+            segnaposto="Chi ha dato il consenso"
             aria-label="Genitore che dà il consenso"
-            required
-            @change="modulo.metodo = ''"
-          >
-            <option :value="null" disabled>Chi ha dato il consenso</option>
-            <option v-for="g in stato.genitori" :key="g.id" :value="g.id">
-              {{ g.nome }} {{ g.cognome }}
-            </option>
-          </select>
+            richiesto
+            @update:model-value="modulo.metodo = ''"
+          />
           <select
             v-model="modulo.metodo"
             class="form-control form-control-sm"

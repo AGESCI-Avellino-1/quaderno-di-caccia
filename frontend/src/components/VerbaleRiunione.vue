@@ -11,6 +11,8 @@ import {
 } from '@/api/qdc'
 import { caricaAPezzi, misura } from '@/components/allegatiVerbale'
 import VerbaleAssemblea from '@/components/VerbaleAssemblea.vue'
+import SceltaPersona from '@/components/SceltaPersona.vue'
+import { opzioniDa } from '@/components/sceltaPersona'
 import { useErrore } from '@/composables/useErrore'
 
 // The minutes of a meeting (DEC-322…DEC-331): online only, never kept on the device. What
@@ -320,16 +322,13 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
         </p>
         <template v-else>
           <label class="form-label small" :for="`presidente-${evento}`">Presidente</label>
-          <select
+          <SceltaPersona
             :id="`presidente-${evento}`"
             v-model="presidente"
-            class="form-control form-control-sm mb-3"
-          >
-            <option :value="null">Scegli…</option>
-            <option v-for="p in verbale.candidati_cariche" :key="p.id" :value="p.id">
-              {{ nomeDi(p) }}
-            </option>
-          </select>
+            class="mb-3"
+            :opzioni="opzioniDa(verbale.candidati_cariche)"
+            vuoto="Nessuno scelto"
+          />
           <fieldset class="mb-3">
             <legend class="form-label small">Segretari</legend>
             <div v-for="p in verbale.candidati_cariche" :key="p.id" class="form-field mb-1">
@@ -365,14 +364,12 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
     <form v-if="verbale.puo_indicare" class="row g-3 align-items-end mb-3" @submit.prevent="indica">
       <div class="col-12 sm:col-8">
         <label class="form-label small" :for="`redattore-${evento}`">Chi lo scrive</label>
-        <select
+        <SceltaPersona
           :id="`redattore-${evento}`"
           v-model="redattore"
-          class="form-control form-control-sm"
-        >
-          <option :value="null">Nessuno in particolare</option>
-          <option v-for="p in verbale.candidati" :key="p.id" :value="p.id">{{ nomeDi(p) }}</option>
-        </select>
+          :opzioni="opzioniDa(verbale.candidati)"
+          vuoto="Nessuno in particolare"
+        />
       </div>
       <div class="col-12 sm:col-4">
         <button

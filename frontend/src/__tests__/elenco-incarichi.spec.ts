@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
+import { scegliPersona } from './aiuti-scelta'
 
 const json = (dati: unknown, stato = 200) =>
   new Response(JSON.stringify(dati), {
@@ -59,7 +60,7 @@ describe('ElencoIncarichi', () => {
 
     await elenco.get('select[aria-label="Incarico"]').setValue('TESORIERE_UNITA')
     await flushPromises()
-    await elenco.get('select[aria-label="Persona"]').setValue(99)
+    await scegliPersona(elenco, 'input[aria-label="Persona"]', 'Carlo')
     await elenco.get('form').trigger('submit')
     await flushPromises()
 

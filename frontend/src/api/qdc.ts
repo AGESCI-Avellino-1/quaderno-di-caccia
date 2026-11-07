@@ -370,6 +370,8 @@ export interface CandidatoImpersonazione {
 
 export interface PersonaElenco extends PersonaBreve {
   codice_socio: string | null
+  /** Next to the name where a person is chosen (DEC-395). */
+  unita?: string
 }
 
 export interface PersonaDettaglio extends PersonaBreve {
@@ -2456,6 +2458,17 @@ export interface IscrizioneBCIn {
   scadenza_quota: string | null
 }
 
+/** Several registrations with the same data (DEC-396). */
+export interface IscrizioniBCIn {
+  persone: number[]
+  iscritto_il: string
+  stato: StatoIscrizioneBC
+  modo_liberatoria: ModoLiberatoria
+  scadenza_liberatoria: string | null
+  importo: string | null
+  scadenza_quota: string | null
+}
+
 export interface AdultoBC {
   persona_id: number
   persona: string
@@ -4004,6 +4017,13 @@ export const api = {
   ) =>
     richiesta<DettaglioBC>(`/api/v1/buonacaccia/eventi/${evento}/partecipanti`, {
       metodo: 'PUT',
+      corpo: dati,
+    }),
+  iscrivibiliBC: (evento: number) =>
+    richiesta<PersonaElenco[]>(`/api/v1/buonacaccia/eventi/${evento}/iscrivibili`),
+  iscriviInsiemeBC: (evento: number, dati: IscrizioniBCIn) =>
+    richiesta<IscrizioneBC[]>(`/api/v1/buonacaccia/eventi/${evento}/iscrizioni-insieme`, {
+      metodo: 'POST',
       corpo: dati,
     }),
   iscriviBC: (evento: number, dati: IscrizioneBCIn) =>

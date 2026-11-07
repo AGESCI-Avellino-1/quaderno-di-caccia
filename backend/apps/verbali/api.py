@@ -12,6 +12,7 @@ from ninja import File, Form, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
+from apps.anagrafica.servizi import con_unita
 from apps.archivio import drive
 from apps.core.file_caricati import disposizione
 from apps.eventi.models import Evento
@@ -28,6 +29,8 @@ class PersonaVerbale(Schema):
     id: int
     nome: str
     cognome: str
+    # Next to the name, to tell namesakes apart (DEC-395).
+    unita: str = ""
 
 
 class AllegatoOut(Schema):
@@ -182,7 +185,7 @@ def _out(request, verbale: Verbale) -> dict:
         ),
         "presenti": presenti,
         "puo_cariche": puo_cariche,
-        "candidati_cariche": list(servizi.presenti_segnati(evento)) if puo_cariche else [],
+        "candidati_cariche": (con_unita(servizi.presenti_segnati(evento)) if puo_cariche else []),
         "presidente": presidente,
         "segretari": segretari,
         "presidente_id": verbale.presidente_id,
@@ -201,7 +204,7 @@ def _out(request, verbale: Verbale) -> dict:
         "puo_indicare": indica and not verbale.definitivo,
         "puo_riaprire": indica and verbale.definitivo,
         "puo_stampare": verbale.definitivo,
-        "candidati": _candidati(evento) if indica and not verbale.definitivo else [],
+        "candidati": con_unita(_candidati(evento)) if indica and not verbale.definitivo else [],
         "allegati": list(servizi.allegati_completi(verbale)),
         "massimo_allegato": servizi.massimo_allegato(),
         "pezzo": servizi.PEZZO if drive.configurato() else servizi.MASSIMO_SUL_SERVER,
@@ -495,7 +498,7 @@ def _convocazione_out(request, evento: Evento) -> dict:
         "da_modello": evento.cerchia == "SOCI",
         "puo_indicare_presenze": indica,
         "presenze_da": evento.presenze_da,
-        "candidati_presenze": list(invitati) if indica else [],
+        "candidati_presenze": con_unita(invitati) if indica else [],
         "convocata_il": evento.convocata_il,
         "allegati": convocazione.allegati_di(evento),
         "puo_gestire": gestisce,
@@ -828,7 +831,7 @@ def elenco_collegati(request, evento_id: int):
     return {
         "collegati": [_collegato_out(request, c) for c in leggibili],
         "da_aggiungere": aggiungibili if gestisce else [],
-        "candidati_capi_gruppo": candidati,
+        "candidati_capi_gruppo": con_unita(candidati),
     }
 
 

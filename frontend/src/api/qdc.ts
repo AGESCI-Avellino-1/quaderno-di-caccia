@@ -954,8 +954,10 @@ export interface IncarichiGruppo {
   nomina_supporto: Scelta[]
   /** For the capigruppo: capi with no service at all. */
   senza_servizio: PersonaBreve[]
-  /** Staff of every active unit, read only: appointed from the unit's page (DEC-316). */
-  staff_unita: { unita_id: number; unita: string; incarichi: Incarico[] }[]
+  /** For the capigruppo: who serves more than one unit (DEC-384). Missing in an older copy. */
+  capi_in_piu_unita?: { persona: PersonaBreve; unita: string[] }[]
+  /** Staff of every active unit (DEC-316), appointed here by the capigruppo (DEC-384). */
+  staff_unita: { unita_id: number; unita: string; incarichi: Incarico[]; nomina?: Scelta[] }[]
 }
 
 /** Where a role is held: the group (nothing), a unit or a patrol. */

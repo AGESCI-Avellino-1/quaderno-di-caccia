@@ -67,11 +67,16 @@ In **Il mio gruppo**, tocca **Organigramma**.
   di supporto finisce da solo. Prima c'era «a disposizione»: chi lo ha ancora compare in
   un avviso; scegli uno dei due servizi e «a disposizione» si chiude da solo.
 - **Staff delle unità**: per ogni unità, nell'ordine Lupetti e Coccinelle, Esploratori e
-  Guide, Rover e Scolte, il capo unità, lo staff e l'assistente ecclesiastico. Qui si
-  guardano soltanto: si nominano dalla pagina dell'unità, che si apre toccando il suo nome.
+  Guide, Rover e Scolte, il capo unità, lo staff e l'assistente ecclesiastico. I capigruppo
+  li assegnano e li chiudono anche da qui, come nella pagina dell'unità, che si apre toccando
+  il suo nome. Gli altri capi qui guardano soltanto.
 
 In alto un avviso elenca i **capi senza servizio**: assegnali a un'unità o a un servizio di
 supporto. Un capogruppo senza un'unità non è nell'elenco: il suo servizio è il gruppo.
+
+Un altro avviso, solo per i capigruppo, elenca i **capi inseriti in più unità**, come capo
+unità o staff. Non è un errore, un capo può servire più unità: è un promemoria per controllare
+che sia voluto. Due unità collegate contano come una e l'assistente ecclesiastico non conta.
 
 ### La scheda degli incarichi
 

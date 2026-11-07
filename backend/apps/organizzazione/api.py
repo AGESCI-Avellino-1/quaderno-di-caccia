@@ -533,6 +533,13 @@ class StaffUnita(Schema):
     unita_id: int
     unita: str
     incarichi: list[IncaricoOut]
+    # What a capogruppo may assign from the Organigramma; empty for the others (DEC-384).
+    nomina: list[Scelta]
+
+
+class CapoInPiuUnita(Schema):
+    persona: PersonaBreve
+    unita: list[str]
 
 
 class IncarichiGruppo(Schema):
@@ -544,7 +551,9 @@ class IncarichiGruppo(Schema):
     nomina_supporto: list[Scelta]
     # For the capigruppo: capi with no service at all, to sort out.
     senza_servizio: list[PersonaBreve]
-    # The staff of every active unit, read only: appointed from the unit's page (DEC-316).
+    # For the capigruppo: who serves more than one unit, a warning and no more (DEC-384).
+    capi_in_piu_unita: list[CapoInPiuUnita]
+    # The staff of every active unit (DEC-316), appointed here by the capigruppo (DEC-384).
     staff_unita: list[StaffUnita]
 
 
@@ -592,8 +601,11 @@ def incarichi_di_gruppo(request):
         "senza_servizio": (
             list(capi_senza_servizio()) if policy.e_capogruppo(request.auth) else []
         ),
+        "capi_in_piu_unita": capi_in_piu_unita() if policy.e_capogruppo(request.auth) else [],
         "staff_unita": (
-            staff_delle_unita() if policy.puo_vedere_organizzazione(request.auth) else []
+            staff_delle_unita(request.auth)
+            if policy.puo_vedere_organizzazione(request.auth)
+            else []
         ),
     }
 
@@ -601,9 +613,33 @@ def incarichi_di_gruppo(request):
 RUOLI_STAFF_DI_UNITA = (RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF, RuoloIncarico.AE_UNITA)
 
 
-def staff_delle_unita() -> list[dict]:
+def capi_in_piu_unita() -> list[dict]:
+    """Who is capo unità or staff of more than one unit (DEC-384). Two linked units have one
+    staff and count as one (DEC-279); the assistente ecclesiastico does not count."""
+    incarichi = (
+        Incarico.objects.attivi()
+        .filter(
+            ruolo__in=(RuoloIncarico.CAPO_UNITA, RuoloIncarico.STAFF),
+            unita__attiva=True,
+        )
+        .exclude(unita__tipo=TipoUnita.COMUNITA_CAPI)
+        .select_related("persona", "unita")
+        .order_by("persona__cognome", "persona__nome")
+    )
+    per_capo: dict[int, tuple[Persona, dict[int, Unita]]] = {}
+    for i in incarichi:
+        per_capo.setdefault(i.persona_id, (i.persona, {}))[1][i.unita_id] = i.unita
+    return [
+        {"persona": persona, "unita": [str(u) for u in unita.values()]}
+        for persona, unita in per_capo.values()
+        if len({min(u.pk, u.collegata_a_id or u.pk) for u in unita.values()}) > 1
+    ]
+
+
+def staff_delle_unita(user) -> list[dict]:
     """Capo unità, staff and assistente ecclesiastico of every active unit but the Co.Ca.,
-    in the order of the PDF list: L/C, E/G, R/S, each by code (DEC-316, DEC-284)."""
+    in the order of the PDF list: L/C, E/G, R/S, each by code (DEC-316, DEC-284). A capogruppo
+    also appoints them here; the others only look (DEC-384)."""
     from .elenco_incarichi import _ordine_unita
 
     unita = sorted(
@@ -615,12 +651,19 @@ def staff_delle_unita() -> list[dict]:
     for i in _incarichi(unita__in=unita).filter(Q_SERVIZI_IN_UNITA):
         per_unita.setdefault(i.unita_id, []).append(i)
     ordine = {r: n for n, r in enumerate(RUOLI_STAFF_DI_UNITA)}
+    capogruppo = policy.e_capogruppo(user)
     return [
         {
             "unita_id": u.pk,
             "unita": str(u),
             "incarichi": sorted(
                 per_unita.get(u.pk, []), key=lambda i: ordine.get(i.ruolo, len(ordine))
+            ),
+            "nomina": (
+                _nomina(user, RUOLI_STAFF_DI_UNITA, unita=u)
+                + _nomina_definiti(user, ambito=AmbitoIncarico.UNITA, di_servizio=True)
+                if capogruppo
+                else []
             ),
         }
         for u in unita

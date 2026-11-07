@@ -16,7 +16,8 @@ import { useSessioneStore } from '@/stores/sessione'
 // capigruppo in office; by the technical administrator only when there is none (first
 // start). Then the capi serving outside the units (two support services, which replaced
 // "a disposizione", DEC-293) and, for the capigruppo, the capi with no service at all.
-// Last, the staff of every unit, read only: appointed from the unit's page (DEC-316).
+// Last, the staff of every unit (DEC-316): the capigruppo appoint them here too, the others
+// only look; only the capigruppo are told who serves more than one unit (DEC-384).
 const { errore, esegui } = useErrore()
 const dati = ref<IncarichiGruppo | null>(null)
 const copiaDel = ref<string | null>(null)
@@ -29,7 +30,7 @@ async function carica() {
 onMounted(carica)
 
 // Only a presbitero may be assistente ecclesiastico (DEC-296): the list shows only them.
-const capi = (ruolo: string) => api.capi(ruolo === 'AE_GRUPPO')
+const capi = (ruolo: string) => api.capi(ruolo === 'AE_GRUPPO' || ruolo === 'AE_UNITA')
 const ancoraADisposizione = computed(
   () => dati.value?.supporto.filter((i) => i.ruolo === 'A_DISPOSIZIONE') ?? [],
 )
@@ -53,6 +54,18 @@ const sessione = useSessioneStore()
             <RouterLink :to="`/persone/${p.id}`">{{ p.nome }} {{ p.cognome }}</RouterLink
             >{{ n < dati.senza_servizio.length - 1 ? ', ' : '.' }}
           </template>
+        </div>
+      </div>
+      <div v-if="dati.capi_in_piu_unita?.length" class="alert theme-warning small" role="status">
+        <div>
+          Capi inseriti in più unità, che non sono collegate tra loro:
+          <ul class="mb-0">
+            <li v-for="c in dati.capi_in_piu_unita" :key="c.persona.id">
+              <RouterLink :to="`/persone/${c.persona.id}`"
+                >{{ c.persona.nome }} {{ c.persona.cognome }}</RouterLink
+              >: {{ c.unita.join(', ') }}
+            </li>
+          </ul>
         </div>
       </div>
       <h2 class="h5">Capigruppo, tesorieri e amministratori</h2>
@@ -99,7 +112,12 @@ const sessione = useSessioneStore()
       <template v-if="dati.staff_unita?.length">
         <h2 class="h5 mt-7">Staff delle unità</h2>
         <p class="small fg-2">
-          Capi unità, staff e assistenti ecclesiastici. Si nominano dalla pagina dell'unità.
+          Capi unità, staff e assistenti ecclesiastici.
+          {{
+            sessione.profilo?.capogruppo
+              ? "Puoi nominarli qui o dalla pagina dell'unità."
+              : "Si nominano dalla pagina dell'unità."
+          }}
         </p>
         <div class="card card-body">
           <section v-for="(s, n) in dati.staff_unita" :key="s.unita_id" :class="{ 'mt-5': n }">
@@ -108,10 +126,11 @@ const sessione = useSessioneStore()
             </h3>
             <ElencoIncarichi
               :incarichi="s.incarichi"
-              :nomina="[]"
+              :nomina="s.nomina ?? []"
               :dove="{ unita_id: s.unita_id }"
               :candidati="capi"
               vuoto="Nessuno nello staff."
+              @cambiato="carica"
             />
           </section>
         </div>

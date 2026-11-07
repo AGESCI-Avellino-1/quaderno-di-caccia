@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+from apps.organizzazione import servizi
 from apps.organizzazione.models import (
     Composizione,
     Incarico,
@@ -880,3 +881,68 @@ def test_organigramma_con_lo_staff_delle_unita(capo, staff, capogruppo, reparto,
         assert sezioni[1]["unita"] == str(reparto)
         # Capo unità first; the unit treasurer is not staff.
         assert [i["ruolo"] for i in sezioni[1]["incarichi"]] == ["CAPO_UNITA", "STAFF"]
+
+
+def test_organigramma_nomina_solo_per_i_capigruppo(capo, capogruppo, reparto):
+    # Only a capogruppo appoints from here; a capo unità goes on using the unit's page.
+    per_capogruppo = _client(capogruppo).get("/api/v1/gruppo/incarichi").json()
+    assert _valori(per_capogruppo["staff_unita"][0]["nomina"]) == [
+        "CAPO_UNITA",
+        "STAFF",
+        "AE_UNITA",
+    ]
+    for sezione in _client(capo).get("/api/v1/gruppo/incarichi").json()["staff_unita"]:
+        assert sezione["nomina"] == []
+
+
+def _serve(persona, unita, ruolo=RuoloIncarico.STAFF):
+    return Incarico.objects.create(
+        persona=persona, ruolo=ruolo, unita=unita, data_inizio=INIZIO_ANNO
+    )
+
+
+def _in_piu_unita(chi):
+    return _client(chi).get("/api/v1/gruppo/incarichi").json()["capi_in_piu_unita"]
+
+
+def test_capo_in_piu_unita_segnalato_ai_soli_capigruppo(
+    capo, capo_semplice, capogruppo, reparto, gruppo
+):
+    branco = Unita.objects.create(
+        gruppo=gruppo, nome="Branco", tipo=TipoUnita.BRANCO, composizione=Composizione.MISTA
+    )
+    _serve(capo_semplice, reparto)
+    assert _in_piu_unita(capogruppo) == []
+    _serve(capo_semplice, branco, RuoloIncarico.CAPO_UNITA)
+    segnalati = _in_piu_unita(capogruppo)
+    assert [s["persona"]["id"] for s in segnalati] == [capo_semplice.pk]
+    assert set(segnalati[0]["unita"]) == {str(reparto), str(branco)}
+    assert _in_piu_unita(capo) == []
+
+
+def test_capo_in_piu_unita_collegate_e_chiuse_non_contano(
+    capo_semplice, capogruppo, reparto, gruppo
+):
+    parallelo = Unita.objects.create(
+        gruppo=gruppo, nome="Parallelo", tipo=TipoUnita.REPARTO, composizione=Composizione.MISTA
+    )
+    servizi.collega(reparto, parallelo, "")
+    chiuso = Unita.objects.create(
+        gruppo=gruppo,
+        nome="Chiuso",
+        tipo=TipoUnita.CLAN_FUOCO,
+        composizione=Composizione.MISTA,
+        attiva=False,
+    )
+    for unita in (reparto, parallelo, chiuso):
+        _serve(capo_semplice, unita)
+    assert _in_piu_unita(capogruppo) == []
+
+
+def test_capo_in_piu_unita_assistente_non_conta(capo_semplice, capogruppo, reparto, gruppo):
+    branco = Unita.objects.create(
+        gruppo=gruppo, nome="Branco", tipo=TipoUnita.BRANCO, composizione=Composizione.MISTA
+    )
+    _serve(capo_semplice, reparto, RuoloIncarico.AE_UNITA)
+    _serve(capo_semplice, branco, RuoloIncarico.AE_UNITA)
+    assert _in_piu_unita(capogruppo) == []

@@ -14,6 +14,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#53](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/53) | BuonaCaccia: «Scaduta, manca la scheda» senza scheda               | Bug           | Basso   | Bassa      | VAL    |
 | [#54](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/54) | BuonaCaccia: orario facoltativo e modifica dell'evento (DEC-391)   | Miglioramento | Medio   | Media      | VAL    |
 | [#55](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/55) | BuonaCaccia: la data reale dei passi di un'iscrizione (DEC-392)    | Miglioramento | Basso   | Bassa      | VAL    |
+| [#56](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/56) | Moduli: «socio» al posto di «ragazzo», «Ragazzo/a» per i non soci  | Miglioramento | Basso   | Bassa      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

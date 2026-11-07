@@ -9,7 +9,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                             | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
-| [#64](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/64) | Eventi: «Campo · · Località» per gli eventi su BuonaCaccia         | Bug           | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -33,6 +32,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#64](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/64) | Eventi: «Campo · · Località» per gli eventi su BuonaCaccia | [v1.27.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.1) |
 | [#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63) | Capo con codice provvisorio abilitato come censito | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |
 | [#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62) | Formazione capi: livello 1 con il codice socio provvisorio | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |
 | [#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61) | BuonaCaccia: tipi di evento e vincoli di iscrizione | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |

@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { api, type EventoBCIn, type EventoBCTrovato, type IscrizioneBC } from '@/api/qdc'
 import ModuloEventoBC from '@/components/ModuloEventoBC.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useRicercaMentreScrivi } from '@/composables/useRicercaMentreScrivi'
 import { useSessioneStore } from '@/stores/sessione'
 
 // The staff's notebook for BuonaCaccia (DEC-158): the registrations to follow, nearest
@@ -12,10 +13,9 @@ import { useSessioneStore } from '@/stores/sessione'
 // event share it. Adults use this page to add the events they registered for (DEC-164).
 const sessione = useSessioneStore()
 const router = useRouter()
-const { errore, inCorso, esegui } = useErrore()
+const { errore, esegui } = useErrore()
 const iscrizioni = ref<IscrizioneBC[]>([])
 const cerca = ref('')
-const trovati = ref<EventoBCTrovato[] | null>(null)
 const oggi = () => new Date().toLocaleDateString('sv')
 const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 
@@ -23,9 +23,10 @@ onMounted(async () => {
   if (sessione.capo) iscrizioni.value = (await esegui(() => api.iscrizioniBC())) ?? []
 })
 
-async function trova() {
-  trovati.value = (await esegui(() => api.cercaEventiBC(cerca.value))) ?? []
-}
+// The events appear while one writes (DEC-397).
+const { trovati, subito } = useRicercaMentreScrivi<EventoBCTrovato[]>(cerca, (testo) =>
+  esegui(() => api.cercaEventiBC(testo)),
+)
 
 const scaduta = (i: IscrizioneBC) => i.mancanti.length > 0 && i.scadenza < oggi()
 
@@ -91,36 +92,40 @@ async function crea(dati: EventoBCIn) {
         Se un altro capo o un altro socio ha già aggiunto l'evento, usa quello: nell'app ogni evento
         di BuonaCaccia c'è una volta sola.
       </p>
-      <form class="d-flex flex-wrap align-items-end gap-3 mb-3" @submit.prevent="trova">
-        <div class="flex-grow-1">
-          <label class="form-label small" for="cerca-bc">Nome o luogo dell'evento</label>
-          <input id="cerca-bc" v-model="cerca" class="form-control form-control-sm" />
-        </div>
-        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-          Cerca
-        </button>
+      <form class="mb-3" role="search" @submit.prevent="subito">
+        <label class="form-label small" for="cerca-bc">Nome o luogo dell'evento</label>
+        <input
+          id="cerca-bc"
+          v-model="cerca"
+          type="search"
+          class="form-control form-control-sm"
+          autocomplete="off"
+          placeholder="Scrivi almeno due lettere…"
+        />
       </form>
-      <template v-if="trovati">
-        <ul v-if="trovati.length" class="list-group mb-3">
-          <li v-for="e in trovati" :key="e.id" class="list-group-item">
-            <RouterLink :to="`/eventi/${e.id}`">{{ e.titolo }}</RouterLink>
-            <span class="small fg-2">
-              · {{ data(e.inizio) }}<template v-if="e.luogo"> · {{ e.luogo }}</template>
-              <template v-if="e.formazione_capi"> · formazione capi</template>
-              <template v-if="e.piccole_orme"> · Piccole Orme</template>
-            </span>
-          </li>
-        </ul>
-        <p v-else class="small">Nessun evento trovato.</p>
-        <button
-          v-if="!nuovo"
-          type="button"
-          class="btn btn-sm btn-outline theme-primary"
-          @click="nuovo = true"
-        >
-          Non c'è: aggiungilo
-        </button>
-      </template>
+      <div aria-live="polite">
+        <template v-if="trovati">
+          <ul v-if="trovati.length" class="list-group mb-3">
+            <li v-for="e in trovati" :key="e.id" class="list-group-item">
+              <RouterLink :to="`/eventi/${e.id}`">{{ e.titolo }}</RouterLink>
+              <span class="small fg-2">
+                · {{ data(e.inizio) }}<template v-if="e.luogo"> · {{ e.luogo }}</template>
+                <template v-if="e.formazione_capi"> · formazione capi</template>
+                <template v-if="e.piccole_orme"> · Piccole Orme</template>
+              </span>
+            </li>
+          </ul>
+          <p v-else class="small">Nessun evento trovato.</p>
+        </template>
+      </div>
+      <button
+        v-if="!nuovo && cerca.trim()"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary"
+        @click="nuovo = true"
+      >
+        Non c'è: aggiungilo
+      </button>
 
       <ModuloEventoBC
         v-if="nuovo"

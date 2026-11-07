@@ -170,7 +170,8 @@ capigruppo.
 Nel menu **Amministrazione**, **Account** elenca tutti gli account dell'app: l'email, la
 persona collegata, da quando esiste e l'ultimo accesso, con cosa entra (password, passkey,
 secondo fattore, Google, Apple), quanti dispositivi ha e se è bloccato per troppi tentativi.
-Non ci sono i dati delle schede. Cerca per email in alto.
+Non ci sono i dati delle schede. Scrivi parte dell'email in alto: l'elenco si restringe mentre
+scrivi.
 
 Tocca **Gestisci** accanto a un account, scegli **Cosa fare** e scrivi il **Motivo**, poi
 tocca **Conferma**:

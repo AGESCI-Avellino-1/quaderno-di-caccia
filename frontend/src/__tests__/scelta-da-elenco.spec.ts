@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { coincide, opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { coincide, opzioniDa } from '@/components/sceltaDaElenco'
 
 const PERSONE = opzioniDa([
   { id: 1, nome: 'Giulia', cognome: 'Rossi', unita: 'Reparto Antares (N1)' },
@@ -20,7 +20,7 @@ describe('scelta di una persona', () => {
   })
 
   it('shows the unit next to the name', async () => {
-    const w = mount(SceltaPersona, {
+    const w = mount(SceltaDaElenco, {
       props: { id: 'p', opzioni: PERSONE, modelValue: null },
       attachTo: document.body,
     })
@@ -30,7 +30,7 @@ describe('scelta di una persona', () => {
   })
 
   it('chooses with arrows and Enter, and only from the list', async () => {
-    const w = mount(SceltaPersona, {
+    const w = mount(SceltaDaElenco, {
       props: {
         id: 'p',
         opzioni: PERSONE,
@@ -55,7 +55,7 @@ describe('scelta di una persona', () => {
   })
 
   it('with several, the chosen ones line up and leave the list', async () => {
-    const w = mount(SceltaPersona, {
+    const w = mount(SceltaDaElenco, {
       props: {
         id: 'p',
         opzioni: PERSONE,
@@ -80,7 +80,7 @@ describe('scelta di una persona', () => {
 
 describe('scelta di una persona, cambiando idea', () => {
   it('writing over a choice keeps the text and finds the new one', async () => {
-    const w = mount(SceltaPersona, {
+    const w = mount(SceltaDaElenco, {
       props: {
         id: 'p',
         opzioni: PERSONE,
@@ -98,6 +98,36 @@ describe('scelta di una persona, cambiando idea', () => {
     // Emptied from outside, as a form does after saving.
     await w.setProps({ modelValue: null })
     expect((campo.element as HTMLInputElement).value).toBe('')
+    w.unmount()
+  })
+
+  it('chooses from a catalog by its code, with its own messages', async () => {
+    const w = mount(SceltaDaElenco<string>, {
+      props: {
+        id: 's',
+        opzioni: [
+          { id: 'EGSP001', nome: 'Allevatore' },
+          { id: 'EGSP002', nome: 'Alpinista' },
+        ],
+        modelValue: null,
+        richiesto: true,
+        avviso: "Scegli dall'elenco.",
+        nessuno: 'Nessuna voce con questo nome.',
+        'onUpdate:modelValue': (v: unknown) => w.setProps({ modelValue: v as string }),
+      },
+      attachTo: document.body,
+    })
+    const campo = w.find('input')
+    await w.vm.$nextTick()
+    // Untouched, the form does not go.
+    expect((campo.element as HTMLInputElement).validationMessage).toBe("Scegli dall'elenco.")
+    await campo.setValue('zzz')
+    await campo.trigger('input')
+    expect(w.text()).toContain('Nessuna voce con questo nome.')
+    await campo.setValue('alp')
+    await campo.trigger('input')
+    await campo.trigger('keydown', { key: 'Enter' })
+    expect(w.props('modelValue')).toBe('EGSP002')
     w.unmount()
   })
 })

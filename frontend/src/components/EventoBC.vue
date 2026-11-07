@@ -14,8 +14,8 @@ import {
 import CampoImporto from '@/components/CampoImporto.vue'
 import IscrizioneBCVue from '@/components/IscrizioneBC.vue'
 import ModuloEventoBC from '@/components/ModuloEventoBC.vue'
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa, type Opzione } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa, type Opzione } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -224,7 +224,7 @@ const io = () => sessione.profilo?.persona?.id
             <label class="form-label small" for="bc-persone">
               Chi (uno o più, delle unità che gestisci)
             </label>
-            <SceltaPersona
+            <SceltaDaElenco
               id="bc-persone"
               v-model="nuova.persone"
               :opzioni="iscrivibili"

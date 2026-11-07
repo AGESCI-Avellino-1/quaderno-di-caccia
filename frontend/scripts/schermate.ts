@@ -827,8 +827,8 @@ const SCENE: Scena[] = [
     chi: 'capoReparto',
     percorso: '/impersonazioni',
     prepara: async (pagina) => {
+      // The results appear while one writes (DEC-397).
       await pagina.getByLabel('Nome, cognome o email').fill('Rossi')
-      await pagina.getByRole('button', { name: 'Cerca' }).click()
       await pagina
         .getByRole('button', { name: /^Impersona / })
         .first()

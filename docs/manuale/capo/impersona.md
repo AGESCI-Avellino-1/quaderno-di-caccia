@@ -6,7 +6,8 @@ ragazzi/e della tua unità e dei loro genitori, mai di un capo.
 
 1. Nel menu del profilo tocca **Impersona** (o, nella scheda della persona, **Impersona
    …**).
-2. Cerca la persona per nome o email e tocca **Impersona …**.
+2. Scrivi il nome o l'email della persona: dopo due lettere compare chi puoi impersonare. Tocca
+   **Impersona …**.
 3. Scrivi **perché**: la persona lo leggerà.
 4. Tocca **Inizia**.
 

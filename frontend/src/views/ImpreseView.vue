@@ -13,7 +13,7 @@ import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import CompetenzaEG from '@/components/CompetenzaEG.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import InputDataParziale from '@/components/InputDataParziale.vue'
-import SceltaPersona from '@/components/SceltaPersona.vue'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
@@ -400,7 +400,7 @@ const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it
             >
               <div>
                 <label class="form-label small" :for="`p-chi-${i.id}`">Chi</label>
-                <SceltaPersona
+                <SceltaDaElenco
                   :id="`p-chi-${i.id}`"
                   v-model="posto.persona_id"
                   :opzioni="dati.ragazzi"

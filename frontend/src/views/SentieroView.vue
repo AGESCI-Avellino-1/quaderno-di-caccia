@@ -22,6 +22,7 @@ import InputDataParziale from '@/components/InputDataParziale.vue'
 import Passi from '@/components/Passi.vue'
 import PercorsoEG from '@/components/PercorsoEG.vue'
 import PuntiStrada from '@/components/PuntiStrada.vue'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePersona } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
@@ -254,7 +255,7 @@ const cataloghi = ref<CataloghiPP | null>(null)
 const nuovaCompetenza = reactive({
   aperta: false,
   tipo: 'SPECIALITA' as TipoCompetenza,
-  codice: '',
+  codice: null as string | null,
   carta: '',
   maestro: '',
   passata: false,
@@ -267,6 +268,10 @@ const vociCatalogo = computed(() =>
       ? cataloghi.value?.specialita_lc
       : cataloghi.value?.specialita,
 )
+// A computed, not a map in the template: a new list at every keystroke would empty the field.
+const opzioniCatalogo = computed(() =>
+  (vociCatalogo.value ?? []).map((v) => ({ id: v.codice, nome: v.nome })),
+)
 const specialitaCollegabili = computed(() =>
   (scheda.value?.competenze ?? [])
     .filter((c) => c.tipo === 'SPECIALITA')
@@ -276,7 +281,7 @@ const specialitaCollegabili = computed(() =>
 async function apriCompetenza() {
   nuovaCompetenza.aperta = true
   nuovaCompetenza.tipo = lc.value ? 'SPECIALITA_LC' : 'SPECIALITA'
-  nuovaCompetenza.codice = ''
+  nuovaCompetenza.codice = null
   if (!cataloghi.value) {
     cataloghi.value =
       (await esegui(async () => (await leggiConCache('cataloghi-pp', api.cataloghiPP)).dati)) ??
@@ -289,7 +294,7 @@ async function salvaCompetenza() {
     () =>
       api.nuovaCompetenza(props.id, {
         tipo: nuovaCompetenza.tipo,
-        codice: nuovaCompetenza.codice,
+        codice: nuovaCompetenza.codice ?? '',
         carta: nuovaCompetenza.carta,
         maestro: nuovaCompetenza.maestro,
         conquistata: nuovaCompetenza.passata ? nuovaCompetenza.quando : null,
@@ -299,7 +304,7 @@ async function salvaCompetenza() {
   if (fatto)
     Object.assign(nuovaCompetenza, {
       aperta: false,
-      codice: '',
+      codice: null,
       carta: '',
       maestro: '',
       passata: false,
@@ -1046,7 +1051,7 @@ async function salvaNuova() {
                 id="nc-tipo"
                 v-model="nuovaCompetenza.tipo"
                 class="form-control form-control-sm"
-                @change="nuovaCompetenza.codice = ''"
+                @change="nuovaCompetenza.codice = null"
               >
                 <option value="SPECIALITA">Specialità</option>
                 <option value="BREVETTO">Brevetto di competenza</option>
@@ -1054,17 +1059,15 @@ async function salvaNuova() {
             </div>
             <div class="flex-grow-1">
               <label class="form-label small" for="nc-voce">Quale</label>
-              <select
+              <SceltaDaElenco
                 id="nc-voce"
                 v-model="nuovaCompetenza.codice"
-                class="form-control form-control-sm"
-                required
-              >
-                <option value="" disabled>—</option>
-                <option v-for="v in vociCatalogo ?? []" :key="v.codice" :value="v.codice">
-                  {{ v.nome }}
-                </option>
-              </select>
+                :opzioni="opzioniCatalogo"
+                richiesto
+                segnaposto="Scrivi il nome…"
+                avviso="Scegli dall'elenco."
+                nessuno="Nessuna voce con questo nome."
+              />
             </div>
           </div>
           <div class="form-field mb-3">

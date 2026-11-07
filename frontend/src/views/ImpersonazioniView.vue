@@ -4,14 +4,14 @@ import { onMounted, ref } from 'vue'
 import { api, type CandidatoImpersonazione, type Impersonazione } from '@/api/qdc'
 import AvviaImpersonazione from '@/components/AvviaImpersonazione.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useRicercaMentreScrivi } from '@/composables/useRicercaMentreScrivi'
 
 // Using the app as another user, to help them or check a problem: the capigruppo and
 // the administrators who are capi with anyone, the unit staff with its ragazzi and their
 // parents (the API decides). Also accounts without a record, e.g. a family still
 // completing a registration. The Co.Ca. sees who did it, when and why.
-const { errore, inCorso, esegui } = useErrore()
+const { errore, esegui } = useErrore()
 const cerca = ref('')
-const trovati = ref<CandidatoImpersonazione[] | null>(null)
 const elenco = ref<Impersonazione[]>([])
 
 onMounted(async () => {
@@ -22,9 +22,10 @@ onMounted(async () => {
   }
 })
 
-async function trova() {
-  trovati.value = (await esegui(() => api.candidatiImpersonazione(cerca.value))) ?? []
-}
+// Who can be impersonated appears while one writes (DEC-397).
+const { trovati, subito } = useRicercaMentreScrivi<CandidatoImpersonazione[]>(cerca, (testo) =>
+  esegui(() => api.candidatiImpersonazione(testo)),
+)
 
 const quando = (iso: string) =>
   new Date(iso).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })
@@ -40,18 +41,20 @@ const quando = (iso: string) =>
       minuti; la persona vede chi l'ha fatto e perché.
     </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
-    <form class="d-flex flex-wrap align-items-end gap-3 mb-3" @submit.prevent="trova">
-      <div class="flex-grow-1">
-        <label class="form-label small" for="cerca-imp">Nome, cognome o email</label>
-        <input id="cerca-imp" v-model="cerca" class="form-control form-control-sm" minlength="2" />
-      </div>
-      <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-        Cerca
-      </button>
+    <form class="mb-3" role="search" @submit.prevent="subito">
+      <label class="form-label small" for="cerca-imp">Nome, cognome o email</label>
+      <input
+        id="cerca-imp"
+        v-model="cerca"
+        type="search"
+        class="form-control form-control-sm"
+        autocomplete="off"
+        placeholder="Scrivi almeno due lettere…"
+      />
     </form>
-    <template v-if="trovati">
-      <p v-if="!trovati.length" class="small">Nessuno che tu possa impersonare.</p>
-      <ul v-else class="list-group mb-5">
+    <div aria-live="polite">
+      <p v-if="trovati && !trovati.length" class="small">Nessuno che tu possa impersonare.</p>
+      <ul v-else-if="trovati" class="list-group mb-5">
         <li v-for="c in trovati" :key="c.utente_id" class="list-group-item">
           <div class="mb-1">
             <strong>{{ c.nome }}</strong> <span class="small fg-2">{{ c.email }}</span>
@@ -59,7 +62,7 @@ const quando = (iso: string) =>
           <AvviaImpersonazione :utente="c.utente_id" :nome="c.nome" />
         </li>
       </ul>
-    </template>
+    </div>
 
     <section v-if="elenco.length" class="mt-5">
       <h2 class="h5">Chi l'ha fatto</h2>

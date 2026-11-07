@@ -1,6 +1,7 @@
-/** One choice of SceltaPersona.vue (DEC-395): the name as shown, the unit next to it. */
-export interface Opzione {
-  id: number
+/** One choice of SceltaDaElenco.vue (DEC-395, DEC-397): the name as shown, a detail next to it
+ * (a person's unit). The id is a person's, or a catalog's code. */
+export interface Opzione<K extends number | string = number> {
+  id: K
   nome: string
   dettaglio?: string
 }
@@ -8,7 +9,7 @@ export interface Opzione {
 const semplice = (testo: string) => testo.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
 /** Every word written is in the name, in any order: «ros giu» finds Giulia Rossi. */
-export function coincide(o: Opzione, testo: string): boolean {
+export function coincide(o: Opzione<number | string>, testo: string): boolean {
   const nome = semplice(o.nome)
   return semplice(testo)
     .split(/\s+/)

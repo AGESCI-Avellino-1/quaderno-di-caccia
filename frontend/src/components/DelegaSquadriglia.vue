@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa } from '@/components/sceltaDaElenco'
 import { api, type Delega, type PersonaBreve } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
@@ -55,7 +55,7 @@ async function revoca() {
     >
       <div>
         <label class="form-label small" :for="`delega-${squadriglia}`">Delega a</label>
-        <SceltaPersona
+        <SceltaDaElenco
           :id="`delega-${squadriglia}`"
           v-model="scelto"
           :opzioni="opzioniDa(membri)"

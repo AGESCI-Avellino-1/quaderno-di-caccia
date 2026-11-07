@@ -30,7 +30,8 @@ Ogni evento di BuonaCaccia è nell'app una volta sola: prima cercalo.
 
 Ci arrivi anche dalla pagina **Eventi**, con **Nuovo evento su BuonaCaccia**.
 
-1. In **Cerca o aggiungi un evento** scrivi il nome o il luogo e tocca **Cerca**.
+1. In **Cerca o aggiungi un evento** scrivi il nome o il luogo: dopo due lettere gli eventi
+   trovati compaiono sotto mentre scrivi. Tocca un evento per aprirlo.
 2. Se non c'è, tocca **Non c'è: aggiungilo**, scrivi nome (come su BuonaCaccia), giorni e
    località. L'ora di inizio e di fine è facoltativa: se non la sai, lasciala vuota e aggiungila
    dopo. Puoi aggiungere il **link alla pagina su BuonaCaccia**, che vedono anche gli iscritti e

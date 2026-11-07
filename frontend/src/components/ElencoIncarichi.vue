@@ -3,8 +3,8 @@ import { computed, ref, useId, watch } from 'vue'
 
 import { api, type DoveIncarico, type Incarico, type PersonaBreve, type Scelta } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
 
 // Active roles of the group, a unit or a patrol, with "assign" and "close" for the roles
@@ -106,7 +106,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </select>
       </div>
       <div v-if="ruolo" class="col-12 sm:col-5">
-        <SceltaPersona
+        <SceltaDaElenco
           :id="idChi"
           v-model="persona"
           :opzioni="opzioniDa(elenco)"

@@ -78,10 +78,10 @@ impegno, una meta, una specialità.
   dopo la Promessa, con la motivazione.
 - **Mete**: il ragazzo/a può segnarne una come **riservata**: la vedono lui o lei, i genitori e i
   capi, mai il capo squadriglia.
-- **Specialità e brevetti**: tocca **Aggiungi**, scegli dal catalogo, scrivi la carta (anche
-  dopo) e il maestro (anche un adulto esterno). Quando è pronto, **Conquistata (Consiglio
-  della Legge)** con il giorno della conquista; poi **Distintivo consegnato**. Per ricostruire
-  la storia spunta **Già conquistata in passato**.
+- **Specialità e brevetti**: tocca **Aggiungi**, scrivi parte del nome e scegli dall'elenco che
+  si restringe, poi scrivi la carta (anche dopo) e il maestro (anche un adulto esterno). Quando è
+  pronto, **Conquistata (Consiglio della Legge)** con il giorno della conquista; poi
+  **Distintivo consegnato**. Per ricostruire la storia spunta **Già conquistata in passato**.
 - **Imprese**: dalla pagina dell'unità, **Imprese e specialità di squadriglia**. Crei imprese
   di reparto, di squadriglia o di Alta Squadriglia, nomini il **Consiglio d'impresa**, assegni
   e verifichi i **posti d'azione**. L'impresa di squadriglia la guida il capo squadriglia. Lì

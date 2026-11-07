@@ -1,6 +1,6 @@
 import type { DOMWrapper, VueWrapper } from '@vue/test-utils'
 
-/** Chooses in a SceltaPersona (DEC-395): writes in the field, then picks the first match. */
+/** Chooses in a SceltaDaElenco (DEC-395): writes in the field, then picks the first match. */
 export async function scegliPersona(
   pagina: VueWrapper | DOMWrapper<Element>,
   campo: string,

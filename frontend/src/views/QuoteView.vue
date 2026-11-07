@@ -14,8 +14,8 @@ import {
   type Unita,
 } from '@/api/qdc'
 import CampoImporto from '@/components/CampoImporto.vue'
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -420,7 +420,7 @@ const scadenzaTipo = (t: TipoQuota) =>
         <form class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="aggiungiConiugi">
           <div>
             <label class="form-label small" for="coniuge-a">Socio</label>
-            <SceltaPersona
+            <SceltaDaElenco
               id="coniuge-a"
               v-model="nuoviConiugi.a"
               :opzioni="opzioniDa(persone)"
@@ -429,7 +429,7 @@ const scadenzaTipo = (t: TipoQuota) =>
           </div>
           <div>
             <label class="form-label small" for="coniuge-b">Coniuge</label>
-            <SceltaPersona
+            <SceltaDaElenco
               id="coniuge-b"
               v-model="nuoviConiugi.b"
               :opzioni="opzioniDa(persone)"

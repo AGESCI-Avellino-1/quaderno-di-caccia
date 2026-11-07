@@ -11,8 +11,8 @@ import {
 } from '@/api/qdc'
 import { caricaAPezzi, misura } from '@/components/allegatiVerbale'
 import VerbaleAssemblea from '@/components/VerbaleAssemblea.vue'
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
 
 // The minutes of a meeting (DEC-322…DEC-331): online only, never kept on the device. What
@@ -322,7 +322,7 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
         </p>
         <template v-else>
           <label class="form-label small" :for="`presidente-${evento}`">Presidente</label>
-          <SceltaPersona
+          <SceltaDaElenco
             :id="`presidente-${evento}`"
             v-model="presidente"
             class="mb-3"
@@ -364,7 +364,7 @@ const quando = (iso: string) => new Date(iso).toLocaleString('it-IT')
     <form v-if="verbale.puo_indicare" class="row g-3 align-items-end mb-3" @submit.prevent="indica">
       <div class="col-12 sm:col-8">
         <label class="form-label small" :for="`redattore-${evento}`">Chi lo scrive</label>
-        <SceltaPersona
+        <SceltaDaElenco
           :id="`redattore-${evento}`"
           v-model="redattore"
           :opzioni="opzioniDa(verbale.candidati)"

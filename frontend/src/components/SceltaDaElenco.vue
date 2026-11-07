@@ -1,22 +1,26 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="K extends number | string">
 import { computed, ref, useAttrs, useId, watch } from 'vue'
 
-import { coincide, type Opzione } from '@/components/sceltaPersona'
+import { coincide, type Opzione } from '@/components/sceltaDaElenco'
 
-// Choosing a person (DEC-395): a field where one writes and the list narrows, by name or
-// surname, ignoring case and accents; only a person of the list is accepted, also from the
-// keyboard. The unit is next to the name, to tell namesakes apart. ARIA combobox pattern.
-// With `multipla` the chosen ones line up below, each with its ×, and the value is a list
-// (DEC-396).
+// Choosing from a list (DEC-395): a field where one writes and the list narrows, by every
+// word of the name, ignoring case and accents; only an item of the list is accepted, also from
+// the keyboard. For a person the unit is next to the name, to tell namesakes apart. ARIA
+// combobox pattern. With `multipla` the chosen ones line up below, each with its ×, and the
+// value is a list (DEC-396). Also for the catalogs of specialità and brevetti (DEC-397).
 const props = defineProps<{
   id: string
-  opzioni: Opzione[]
+  opzioni: Opzione<K>[]
   /** Required: the form does not go without a choice. */
   richiesto?: boolean
   /** The label of «nobody», for an optional choice. */
   vuoto?: string
   multipla?: boolean
   segnaposto?: string
+  /** Shown while nothing is chosen in a required field; the default is for people. */
+  avviso?: string
+  /** Shown when nothing matches; the default is for people. */
+  nessuno?: string
 }>()
 // The class goes to the box around, aria-label and the rest to the field itself.
 defineOptions({ inheritAttrs: false })
@@ -27,7 +31,7 @@ const attributiCampo = computed(() => {
   return altri
 })
 
-const modello = defineModel<number | null | number[]>({ required: true })
+const modello = defineModel<K | null | K[]>({ required: true })
 
 const lista = `${useId()}-lista`
 const testo = ref('')
@@ -35,10 +39,10 @@ const aperta = ref(false)
 const attiva = ref(-1)
 const campo = ref<HTMLInputElement | null>(null)
 
-const scelte = computed<number[]>(() =>
+const scelte = computed<K[]>(() =>
   Array.isArray(modello.value) ? modello.value : modello.value == null ? [] : [modello.value],
 )
-const etichetta = (o: Opzione) => o.nome
+const etichetta = (o: Opzione<K>) => o.nome
 const scelta = computed(() =>
   props.multipla ? undefined : props.opzioni.find((o) => o.id === modello.value),
 )
@@ -63,9 +67,10 @@ watch(
   },
   { immediate: true },
 )
-watch([scelte, testo], () => {
+// Also before anything is written: an untouched required field must stop the form too.
+watch([scelte, testo, campo], () => {
   const manca = props.richiesto && !scelte.value.length
-  campo.value?.setCustomValidity(manca ? "Scegli una persona dall'elenco." : '')
+  campo.value?.setCustomValidity(manca ? (props.avviso ?? "Scegli una persona dall'elenco.") : '')
 })
 
 function scrivi() {
@@ -77,7 +82,7 @@ function scrivi() {
   }
 }
 
-function scegli(o: Opzione) {
+function scegli(o: Opzione<K>) {
   if (props.multipla) {
     modello.value = [...scelte.value, o.id]
     testo.value = ''
@@ -89,7 +94,7 @@ function scegli(o: Opzione) {
   attiva.value = -1
 }
 
-function togli(id: number) {
+function togli(id: K) {
   modello.value = scelte.value.filter((s) => s !== id)
 }
 
@@ -123,11 +128,11 @@ function lascia() {
   }, 150)
 }
 
-const nomeDi = (id: number) => props.opzioni.find((o) => o.id === id)
+const nomeDi = (id: K) => props.opzioni.find((o) => o.id === id)
 </script>
 
 <template>
-  <div class="qdc-scelta-persona" :class="attrs.class">
+  <div class="qdc-scelta" :class="attrs.class">
     <div class="d-flex gap-1">
       <input
         v-bind="attributiCampo"
@@ -176,7 +181,9 @@ const nomeDi = (id: number) => props.opzioni.find((o) => o.id === id)
       >
         {{ o.nome }}<span v-if="o.dettaglio" class="fg-2"> · {{ o.dettaglio }}</span>
       </li>
-      <li v-if="!filtrate.length" class="list-group-item small fg-2">Nessuno con questo nome.</li>
+      <li v-if="!filtrate.length" class="list-group-item small fg-2">
+        {{ nessuno ?? 'Nessuno con questo nome.' }}
+      </li>
     </ul>
     <p v-if="!multipla && vuoto && !scelta && !testo" class="form-text mb-0">{{ vuoto }}.</p>
     <ul v-if="multipla && scelte.length" class="list-unstyled d-flex flex-wrap gap-1 mt-1 mb-0">
@@ -196,7 +203,7 @@ const nomeDi = (id: number) => props.opzioni.find((o) => o.id === id)
 </template>
 
 <style scoped>
-.qdc-scelta-persona {
+.qdc-scelta {
   position: relative;
 }
 .qdc-scelta-elenco {

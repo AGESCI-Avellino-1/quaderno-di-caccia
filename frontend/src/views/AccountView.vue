@@ -8,26 +8,31 @@ import {
   type TipoAzioneAccount,
 } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
+import { useRicercaMentreScrivi } from '@/composables/useRicercaMentreScrivi'
 
 // Every account of the platform, for the technical administrator (DEC-313): what it has
 // and what may be done to it. Every action asks a reason; the person is told by email when
 // the address or the ways in change or the account is deleted. No data of the person's
 // file: deleting an account removes only the way in.
 const { errore, inCorso, esegui } = useErrore()
-const account = ref<AccountPiattaforma[] | null>(null)
 const azioni = ref<AzioneAccountFatta[]>([])
 const cerca = ref('')
+// The list narrows while one writes (DEC-397); empty, every account.
+const { trovati: account, subito: carica } = useRicercaMentreScrivi<AccountPiattaforma[]>(
+  cerca,
+  (testo) => esegui(() => api.accountPiattaforma(testo)),
+  { minimo: 0 },
+)
 const aperto = ref<number | null>(null)
 const tipo = ref<TipoAzioneAccount | ''>('')
 const motivo = ref('')
 const nuovaEmail = ref('')
 const esito = ref('')
 
-async function carica() {
-  account.value = (await esegui(() => api.accountPiattaforma(cerca.value))) ?? account.value
+onMounted(async () => {
+  await carica()
   azioni.value = (await esegui(() => api.azioniAccount())) ?? azioni.value
-}
-onMounted(carica)
+})
 
 const AZIONI: {
   tipo: TipoAzioneAccount
@@ -109,7 +114,7 @@ const data = (iso: string | null) =>
   <div v-if="esito" class="alert theme-success small" role="status">
     <div>{{ esito }}</div>
   </div>
-  <form class="d-flex gap-3 mb-5" role="search" @submit.prevent="carica">
+  <form class="mb-5" role="search" @submit.prevent="carica">
     <label for="account-cerca" class="visually-hidden">Cerca per email</label>
     <input
       id="account-cerca"
@@ -117,8 +122,8 @@ const data = (iso: string | null) =>
       type="search"
       class="form-control"
       placeholder="Cerca per email"
+      autocomplete="off"
     />
-    <button type="submit" class="btn btn-outline theme-primary" :disabled="inCorso">Cerca</button>
   </form>
   <p v-if="account && !account.length" class="fg-2">Nessun account.</p>
   <ul v-else-if="account" class="list-group mb-7">

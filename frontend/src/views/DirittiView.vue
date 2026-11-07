@@ -2,8 +2,8 @@
 import { onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa } from '@/components/sceltaDaElenco'
 import { api, TIPI_RICHIESTA, type PersonaElenco, type RichiestaDiritti } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
@@ -87,7 +87,7 @@ const scaduta = (r: RichiestaDiritti) => !r.evasa_il && r.scadenza < oggi
     <form v-if="aperto" class="card card-body row g-3 mb-5 mx-0" @submit.prevent="registra">
       <div class="col-12 md:col-6">
         <label class="form-label small" for="richiesta-persona">Persona</label>
-        <SceltaPersona
+        <SceltaDaElenco
           id="richiesta-persona"
           v-model="modulo.persona"
           :opzioni="opzioniDa(persone)"

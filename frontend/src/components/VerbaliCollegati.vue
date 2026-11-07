@@ -9,8 +9,8 @@ import {
   type VerbaleCollegato,
 } from '@/api/qdc'
 import CampiLuogo from '@/components/CampiLuogo.vue'
-import SceltaPersona from '@/components/SceltaPersona.vue'
-import { opzioniDa } from '@/components/sceltaPersona'
+import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { opzioniDa } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
 
 // Separate minutes of the same meeting from a template, produced only when needed, with
@@ -203,7 +203,7 @@ const quando = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </div>
           <div v-if="dati.cambia_rappresentante" class="mb-3 ms-3">
             <label class="form-label small" for="cg-rappresentante">Rappresentante legale</label>
-            <SceltaPersona
+            <SceltaDaElenco
               id="cg-rappresentante"
               v-model="dati.rappresentante"
               :opzioni="opzioniDa(candidati)"

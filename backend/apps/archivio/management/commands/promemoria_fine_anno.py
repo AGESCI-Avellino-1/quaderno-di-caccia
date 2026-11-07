@@ -16,6 +16,17 @@ from apps.documenti import criteri
 from apps.impostazioni.email import invia
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico
+from apps.permessi import policy
+
+
+def _capigruppo() -> list:
+    """Only who may close the year and archive (DEC-385)."""
+    incarichi = (
+        Incarico.objects.attivi()
+        .filter(ruolo=RuoloIncarico.CAPOGRUPPO)
+        .select_related("persona__utente")
+    )
+    return policy.chi_puo((i.persona for i in incarichi), policy.puo_gestire_fine_anno)
 
 
 class Command(BaseCommand):
@@ -47,25 +58,13 @@ class Command(BaseCommand):
                 )
         if not righe:
             return
-        destinatari = sorted(
-            {
-                i.persona.utente.email
-                for i in Incarico.objects.attivi()
-                .filter(ruolo=RuoloIncarico.CAPOGRUPPO, persona__utente__isnull=False)
-                .select_related("persona__utente")
-                if accetta(i.persona, "riepiloghi")
-            }
-        )
+        capigruppo = _capigruppo()
+        destinatari = sorted({p.utente.email for p in capigruppo if accetta(p, "riepiloghi")})
         if not destinatari:
             return
         notifica(
             "riepiloghi",
-            [
-                i.persona
-                for i in Incarico.objects.attivi()
-                .filter(ruolo=RuoloIncarico.CAPOGRUPPO, persona__utente__isnull=False)
-                .select_related("persona__utente")
-            ],
+            capigruppo,
             "Fine anno: cose da fare",
             "/gruppo",
         )

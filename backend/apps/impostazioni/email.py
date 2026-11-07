@@ -323,7 +323,7 @@ def _segnala_da_correggere(t: TipoEmail, salvato: ModelloEmail) -> None:
 
     capigruppo = Incarico.objects.attivi().filter(
         ruolo__in={RuoloIncarico.CAPOGRUPPO, RuoloIncarico.AMMINISTRATORE},
-        persona__utente__isnull=False,
+        persona__utente__is_active=True,
     )
     indirizzi = {i.persona.utente.email for i in capigruppo.select_related("persona__utente")}
     indirizzi |= set(

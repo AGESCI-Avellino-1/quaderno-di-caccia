@@ -20,6 +20,7 @@ from apps.anagrafica.models import Appartenenza, Persona
 from apps.impostazioni.email import invia
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico
+from apps.permessi import policy
 
 from . import servizi
 from .models import ATTIVE, IscrizioneBuonaCaccia, ModoLiberatoria
@@ -55,14 +56,21 @@ def indirizzi_famiglia(persona: Persona) -> list[str]:
 
 
 def persone_staff(persona: Persona) -> list[Persona]:
-    """The staff of the member's unit; the capigruppo when the unit has none."""
+    """The staff of the member's unit; the capigruppo when nobody there may act (DEC-385)."""
+
+    def possono(incarichi) -> list[Persona]:
+        return policy.chi_puo(
+            (i.persona for i in incarichi.select_related("persona__utente")),
+            lambda u: policy.puo_gestire_iscrizione_buonacaccia(u, persona),
+        )
+
     unita = Appartenenza.objects.attive().filter(persona=persona).values("unita_id")
-    incarichi = Incarico.objects.attivi().filter(
-        ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita_id__in=unita
+    staff = possono(
+        Incarico.objects.attivi().filter(
+            ruolo__in={RuoloIncarico.STAFF, RuoloIncarico.CAPO_UNITA}, unita_id__in=unita
+        )
     )
-    if not incarichi.exists():
-        incarichi = Incarico.objects.attivi().filter(ruolo=RuoloIncarico.CAPOGRUPPO)
-    return [i.persona for i in incarichi.select_related("persona__utente")]
+    return staff or possono(Incarico.objects.attivi().filter(ruolo=RuoloIncarico.CAPOGRUPPO))
 
 
 def indirizzi_staff(persona: Persona) -> list[str]:

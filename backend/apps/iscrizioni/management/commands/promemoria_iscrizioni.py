@@ -23,6 +23,7 @@ from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.iscrizioni.servizi import giorni_per_decidere, mancanti
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
+from apps.permessi import policy
 
 # How many days before the deadline the family is reminded (DEC-125).
 PREAVVISO = timedelta(days=7)
@@ -37,7 +38,11 @@ def _persone_approvatori(unita) -> list:
         if unita.tipo != TipoUnita.COMUNITA_CAPI
         else filtro.none()
     )
-    return [i.persona for i in (capigruppo | staff).select_related("persona__utente")]
+    incarichi = (capigruppo | staff).select_related("persona__utente")
+    # Only who may decide (DEC-385): not a capo still waiting for BuonaStrada.
+    return policy.chi_puo(
+        (i.persona for i in incarichi), lambda u: policy.puo_approvare_iscrizione(u, unita)
+    )
 
 
 def _approvatori(unita) -> set[str]:

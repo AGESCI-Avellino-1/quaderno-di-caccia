@@ -25,6 +25,7 @@ from apps.organizzazione.models import Incarico, RuoloIncarico, Unita
 from apps.permessi.policy import (
     STAFF_DI_UNITA,
     _con_collegate,
+    chi_puo,
     genitori_vedono,
     persona_di,
     puo_modificare_documento,
@@ -121,14 +122,20 @@ def cancella_scaduti(oggi: date) -> int:
 
 
 def _chi_gestisce(documento: Documento) -> list[Persona]:
-    """Who loaded it, while a capo; otherwise the capigruppo, who may renew it too."""
-    autore = documento.autore
-    if autore is not None and puo_modificare_documento(autore, documento):
-        persona = persona_di(autore)
-        if persona is not None:
-            return [persona]
+    """Who loaded it, while they may change it; otherwise the capigruppo who may (DEC-385)."""
+
+    def regola(user) -> bool:
+        return puo_modificare_documento(user, documento)
+
+    persona = persona_di(documento.autore) if documento.autore is not None else None
+    autori = chi_puo([persona], regola) if persona is not None else []
+    if autori:
+        return autori
     incarichi = Incarico.objects.attivi().filter(ruolo=RuoloIncarico.CAPOGRUPPO)
-    return list(Persona.objects.filter(pk__in=incarichi.values("persona_id")))
+    return chi_puo(
+        Persona.objects.filter(pk__in=incarichi.values("persona_id")).select_related("utente"),
+        regola,
+    )
 
 
 def avvisa_scadenze(oggi: date) -> int:

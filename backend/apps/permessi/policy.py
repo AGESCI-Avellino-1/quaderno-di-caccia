@@ -1051,6 +1051,16 @@ def puo_rimborsare_spese(user) -> bool:
     return unita is None or bool(unita)
 
 
+def chi_puo(persone, regola) -> list[Persona]:
+    """Who, among `persone`, an email or a notification asking to do something may reach: an
+    active account and `regola(user)`, the same rule that lets them do it (DEC-385)."""
+    trovate: dict[int, Persona] = {}
+    for p in persone:
+        if p.utente_id and p.utente.is_active and regola(p.utente):
+            trovate[p.pk] = p
+    return list(trovate.values())
+
+
 def da_avvisare_per_spesa(unita_id: int | None) -> list[Persona]:
     """Who is told of a new expense, only among those who may refund it (DEC-379, DEC-385):
     the unit's treasurers or else its capi unità; then, for an expense of the group too, the
@@ -1068,12 +1078,11 @@ def da_avvisare_per_spesa(unita_id: int | None) -> list[Persona]:
         ]
     for ruolo, dove in passi:
         incarichi = (
-            Incarico.objects.attivi()
-            .filter(ruolo=ruolo, persona__utente__is_active=True, **dove)
-            .select_related("persona__utente")
+            Incarico.objects.attivi().filter(ruolo=ruolo, **dove).select_related("persona__utente")
         )
-        persone = {i.persona_id: i.persona for i in incarichi}
-        possono = [p for p in persone.values() if puo_rimborsare_spesa(p.utente, unita_id)]
+        possono = chi_puo(
+            (i.persona for i in incarichi), lambda u: puo_rimborsare_spesa(u, unita_id)
+        )
         if possono:
             return possono
     return []

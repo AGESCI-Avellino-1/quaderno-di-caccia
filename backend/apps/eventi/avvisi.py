@@ -25,14 +25,14 @@ TITOLI_PUSH = {
 }
 
 
-def famiglia(persone) -> list[Persona]:
+def famiglia(persone, vedono: str = "scheda") -> list[Persona]:
     """The adult member themself, the parents with parental responsibility of a minor
-    (of an adult while they still see their activities)."""
+    (of an adult while they still see `vedono`, what the email is about, DEC-26)."""
     chi: list[Persona] = []
     for persona in persone:
         if not persona.e_minorenne():
             chi.append(persona)
-        if persona.e_minorenne() or genitori_vedono(persona, "scheda"):
+        if persona.e_minorenne() or genitori_vedono(persona, vedono):
             chi += [
                 t.tutore
                 for t in persona.tutori.select_related("tutore__utente").filter(
@@ -42,10 +42,10 @@ def famiglia(persone) -> list[Persona]:
     return chi
 
 
-def indirizzi_famiglia(persone, categoria: str) -> list[str]:
+def indirizzi_famiglia(persone, categoria: str, vedono: str = "scheda") -> list[str]:
     """The family's addresses; not who chose not to receive this kind of email."""
     indirizzi: list[str] = []
-    for chi in famiglia(persone):
+    for chi in famiglia(persone, vedono):
         if not accetta(chi, categoria):
             continue
         email = chi.email or (chi.utente.email if chi.utente else "")

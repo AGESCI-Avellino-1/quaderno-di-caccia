@@ -38,8 +38,11 @@ class Command(BaseCommand):
             if quota.residuo <= 0:
                 continue
             ricordate.append(quota)
-            da_notificare |= {p.pk: p for p in famiglia([quota.persona])}
-            for indirizzo in indirizzi_famiglia([quota.persona], "promemoria_quote"):
+            # The parents of an adult only while they see the fees: the same as /mie-quote.
+            da_notificare |= {p.pk: p for p in famiglia([quota.persona], vedono="quote")}
+            for indirizzo in indirizzi_famiglia(
+                [quota.persona], "promemoria_quote", vedono="quote"
+            ):
                 per_indirizzo[indirizzo].append(quota)
         messaggi = []
         link = f"{settings.FRONTEND_URL}/mie-quote"

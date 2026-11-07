@@ -32,7 +32,7 @@ from apps.eventi.servizi import qualita_in_assemblea
 from apps.impostazioni.html import in_testo, pulisci
 from apps.notifiche.servizi import notifica
 from apps.organizzazione.models import Incarico, RuoloIncarico, TipoUnita
-from apps.permessi.policy import STAFF_DI_UNITA
+from apps.permessi.policy import STAFF_DI_UNITA, chi_puo, puo_scrivere_verbale
 
 from . import convocazione, modelli, segnaposto, stampa
 from .models import (
@@ -642,7 +642,7 @@ def _email(persona: Persona | None) -> str:
 
 def persone_promemoria(verbale: Verbale) -> list[Persona]:
     """Who was chosen, and who may choose: the capigruppo, and the staff of a parents'
-    meeting of one unit (DEC-331)."""
+    meeting of one unit (DEC-331). Only who may write them (DEC-385)."""
     evento = verbale.evento
     chi = Q(ruolo__in={RuoloIncarico.CAPOGRUPPO, RuoloIncarico.AE_GRUPPO})
     if tipo_di(evento) == TipoVerbale.GENITORI and evento.livello == Livello.UNITA:
@@ -651,7 +651,9 @@ def persone_promemoria(verbale: Verbale) -> list[Persona]:
             chi |= Q(ruolo__in=STAFF_DI_UNITA, unita=unita[0])
     incarichi = Incarico.objects.attivi().filter(chi).select_related("persona__utente")
     persone = [i.persona for i in incarichi]
-    return [verbale.redattore, *persone] if verbale.redattore else persone
+    if verbale.redattore:
+        persone.insert(0, verbale.redattore)
+    return chi_puo(persone, lambda u: puo_scrivere_verbale(u, verbale))
 
 
 def destinatari_promemoria(verbale: Verbale) -> list[str]:

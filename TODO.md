@@ -10,6 +10,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo                                                             | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
 | [#60](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/60) | Ricerca mentre si scrive: eventi su BuonaCaccia e altri campi      | Miglioramento | Basso   | Media      | VER    |
+| [#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61) | BuonaCaccia: tipi di evento e vincoli di iscrizione                | Miglioramento | Medio   | Alta       | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 

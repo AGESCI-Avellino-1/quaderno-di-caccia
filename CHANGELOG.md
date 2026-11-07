@@ -5,6 +5,39 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.27.0 — 7 novembre 2026
+
+### Novità
+
+**Tipi di evento su BuonaCaccia e chi può iscriversi** ([#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61)): ogni evento su BuonaCaccia ha un tipo, obbligatorio, scelto scrivendone il nome: all'inizio ci sono i 64 tipi del menu «Categoria» di BuonaCaccia (Piccole Orme, Capi Squadriglia, EPPPI, CFT, CFM, i moduli formativi, le assemblee…), più **Altro formazione capi** e **Altro**. Compaiono solo quelli delle branche che il gruppo ha: senza unità L/C niente Piccole Orme. Ogni tipo porta i suoi vincoli, che sull'evento si possono cambiare:
+
+- branche, età alla partenza e livello minimo di formazione capi decidono chi si può iscrivere: chi non li rispetta non compare tra chi registrare e l'app non lo iscrive, dicendo perché;
+- il massimo di iscritti per unità (le unità collegate contano ciascuna per sé) e per il gruppo danno solo un avviso nella pagina dell'evento.
+
+L'elenco dei tipi lo gestisce ogni capo da **Amministrazione**, **Tipi di evento su BuonaCaccia**. Un tipo già usato non si toglie, si disattiva; **Altro** non ha vincoli e resta sempre.
+
+**Capo abilitato come censito** ([#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63)): quando l'iscrizione di un capo è completa ma il codice socio di BuonaStrada non è ancora arrivato, un capogruppo o l'assistente ecclesiastico di gruppo lo abilita dalla sua scheda, con **Abilita come censito…**: vede quello che vede ogni capo. La scheda dice da quando e da chi; si può togliere, e con il codice vero non serve più.
+
+**Livello di formazione 1 con il codice provvisorio** ([#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62)): chi entra in Comunità capi dall'app è tirocinante finché BuonaStrada non dice altro, nel fascicolo del capo, nell'elenco degli incarichi e nei vincoli degli eventi.
+
+### Correzioni
+
+Nel campo per scegliere da un elenco, se l'elenco arrivava mentre stavi già scrivendo, il testo si cancellava: ora resta e trova subito la voce giusta.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.27.0
+```
+
+L'aggiornamento migra il database: carica i tipi di evento e dà un tipo agli eventi su BuonaCaccia già inseriti. Le Piccole Orme e i campi CFT, CFA e CCG prendono il loro tipo; gli altri campi di formazione capi prendono **Altro formazione capi**, con la loro descrizione, e restano nell'elenco per la Zona; tutti gli altri prendono **Altro**. Dopo l'aggiornamento apri gli eventi in corso e scegli il tipo giusto con **Modifica l'evento**.
+
+### Documentazione
+
+Il capitolo sugli eventi su BuonaCaccia spiega il tipo, i vincoli e la pagina dei tipi; quello sulle iscrizioni l'abilitazione come censito. Nuove schermate del modulo dell'evento, dei tipi e dell'abilitazione; rifatta quella degli eventi su BuonaCaccia.
+
+Provata con i test e in un browser, sul computer e con la larghezza di un telefono, con dati inventati; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.26.0 — 7 novembre 2026
 
 ### Novità

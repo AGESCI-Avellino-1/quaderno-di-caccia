@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 07/11/2026 (ultima versione: v1.26.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 07/11/2026 (ultima versione: v1.27.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -10,9 +10,9 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo                                                             | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
 | [#60](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/60) | Ricerca mentre si scrive: eventi su BuonaCaccia e altri campi      | Miglioramento | Basso   | Media      | VER    |
-| [#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61) | BuonaCaccia: tipi di evento e vincoli di iscrizione                | Miglioramento | Medio   | Alta       | WIP    |
-| [#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62) | Formazione capi: livello 1 con il codice socio provvisorio         | Miglioramento | Basso   | Bassa      | WIP    |
-| [#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63) | Capo con codice provvisorio abilitato come censito                 | Miglioramento | Medio   | Media      | WIP    |
+| [#61](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/61) | BuonaCaccia: tipi di evento e vincoli di iscrizione                | Miglioramento | Medio   | Alta       | VER    |
+| [#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62) | Formazione capi: livello 1 con il codice socio provvisorio         | Miglioramento | Basso   | Bassa      | VER    |
+| [#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63) | Capo con codice provvisorio abilitato come censito                 | Miglioramento | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

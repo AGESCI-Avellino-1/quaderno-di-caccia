@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.25.0 — 7 novembre 2026
+
+### Novità
+
+**Scegliere una persona scrivendo il nome** ([#58](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/58)): ovunque si sceglie una persona (incarichi, iscrizioni su BuonaCaccia, coniugi nelle quote, richieste privacy, verbali e convocazioni, imprese, deleghe di squadriglia, consenso dei genitori) al posto del menu a tendina c'è un campo: scrivi parte del nome o del cognome, in qualsiasi ordine e senza badare agli accenti, e l'elenco si restringe. Accanto a ogni nome c'è l'unità, «Co.Ca.» per i capi, così due persone con lo stesso nome non si confondono. Si accetta solo una persona dell'elenco, anche da tastiera, con le frecce e Invio.
+
+**Più iscrizioni su BuonaCaccia insieme** ([#59](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/59)): in **Registra un'iscrizione** scegli uno o più soci, anche di unità diverse tra quelle che gestisci; chi è già iscritto non compare. Giorno, stato, liberatoria e quota valgono per tutti; il link di gestione di ciascuno lo aggiungi poi nella sua scheda. Si registrano tutte o nessuna, e ogni famiglia riceve la sua email.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.25.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+L'introduzione del manuale spiega il campo per scegliere una persona; il capitolo sugli eventi su BuonaCaccia le iscrizioni insieme. Rifatte le schermate dell'organigramma e della delega di squadriglia.
+
+Provata con i test e in un browser, sul computer e con la larghezza di un telefono, con dati inventati; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.24.0 — 7 novembre 2026
 
 ### Novità

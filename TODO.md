@@ -7,14 +7,14 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                    | Tipo          | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | --------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42) | Unità in ordine di branca, ovunque compaiono              | Miglioramento | Basso   | Media      | VAL    |
-| [#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43) | Spese da rimborsare: voce, contatore e notifica           | Miglioramento | Basso   | Media      | VAL    |
-| [#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44) | Versione sul server nel piè di pagina e pulsante Aggiorna | Miglioramento | Medio   | Media      | VAL    |
-| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi | Miglioramento | Basso   | Bassa      | VAL    |
-| [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci   | Miglioramento | Basso   | Media      | VAL    |
-| [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità      | Miglioramento | Basso   | Bassa      | VAL    |
+| Issue                                                                    | Titolo                                                                     | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42) | Unità in ordine di branca, ovunque compaiono (DEC-378)                     | Miglioramento | Basso   | Media      | VAL    |
+| [#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43) | Spese da rimborsare: voce, contatore e notifica (DEC-379)                  | Miglioramento | Basso   | Media      | VAL    |
+| [#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44) | Versione sul server nel piè di pagina e pulsante Aggiorna (DEC-380)        | Miglioramento | Medio   | Media      | VAL    |
+| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi (DEC-381)        | Miglioramento | Basso   | Bassa      | VAL    |
+| [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci (DEC-382, DEC-383) | Miglioramento | Basso   | Media      | VAL    |
+| [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità (DEC-384)             | Miglioramento | Basso   | Bassa      | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 

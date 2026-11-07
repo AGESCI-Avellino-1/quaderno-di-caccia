@@ -1,11 +1,11 @@
 # Progressione Personale
 
-La Progressione dei ragazzi della tua unità la scrive lo staff dell'unità: tappe o momenti,
+La Progressione dei ragazzi/e della tua unità la scrive lo staff dell'unità: tappe o momenti,
 Promessa, verifiche, specialità. Tutti i capi la leggono.
 
 ## La pagina dell'unità
 
-Nella Home, in **Progressione personale**, tocca la tua unità. Vedi tutti i ragazzi, in
+Nella Home, in **Progressione personale**, tocca la tua unità. Vedi tutti i ragazzi/e, in
 ordine di cognome, con la tappa (o il momento, o il passo) in cui sono e cosa c'è da fare:
 **Promessa da registrare**, **distintivo da consegnare**, quante cose sono **da verificare**
 e **da concordare**. Tocca un nome per aprire la sua pagina.
@@ -47,21 +47,21 @@ stesso giorno.
 ![La correzione di una data sul computer](../img/capo/correggi-tappa-computer.png){.computer width="65%"}
 :::
 
-**Impegni e mete** (obiettivi in clan, prede o voli in branco e cerchio). Il ragazzo li può
+**Impegni e mete** (obiettivi in clan, prede o voli in branco e cerchio). Il ragazzo/a li può
 proporre: restano **Bozza** finché non li concordate. Lo staff li porta avanti:
 
 | Quando è… | tocca | e diventa |
 | --- | --- | --- |
 | Bozza | **Concorda** (un impegno deve avere un «entro il») | Concordato |
 | Concordato | **Avvia** | In corso |
-| In corso | **Pronto per la verifica** (anche il ragazzo o il capo squadriglia) | Da verificare |
+| In corso | **Pronto per la verifica** (anche il ragazzo/a o il capo squadriglia) | Da verificare |
 | Da verificare | **Convalida…**: il giorno e dove (Consiglio della Legge, di squadriglia…) | Concluso |
 | Da verificare | **Non ancora: prosegue** | In corso |
 
 **Interrompi** chiude un impegno con un motivo; **Riformula** ne cambia il testo (la versione
 di prima resta).
 
-**Allegati.** Con **Allega una foto o un PDF** tu o il ragazzo aggiungete qualcosa a un
+**Allegati.** Con **Allega una foto o un PDF** tu o il ragazzo/a aggiungete qualcosa a un
 impegno, una meta, una specialità.
 
 ## Esploratori e guide
@@ -76,7 +76,7 @@ impegno, una meta, una specialità.
 - **Distintivo consegnato**: segna il giorno della consegna.
 - **Entrato più grande: colloca in un'altra tappa**: per chi entra in reparto più grande,
   dopo la Promessa, con la motivazione.
-- **Mete**: il ragazzo può segnarne una come **riservata**: la vedono lui, i genitori e i
+- **Mete**: il ragazzo/a può segnarne una come **riservata**: la vedono lui o lei, i genitori e i
   capi, mai il capo squadriglia.
 - **Specialità e brevetti**: tocca **Aggiungi**, scegli dal catalogo, scrivi la carta (anche
   dopo) e il maestro (anche un adulto esterno). Quando è pronto, **Conquistata (Consiglio

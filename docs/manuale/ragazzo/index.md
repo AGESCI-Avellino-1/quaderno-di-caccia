@@ -1,4 +1,4 @@
-# Ragazzo
+# Ragazzo/a
 
 ## Chi sei, cosa puoi fare
 
@@ -10,7 +10,7 @@ Puoi avere un account tuo dai 14 anni; prima, solo se i tuoi genitori sono d'acc
 lo apre un capo con un invito.
 
 :::{note}
-Non vedi le note che i capi tengono per sé, né i dati degli altri ragazzi. In squadriglia
+Non vedi le note che i capi tengono per sé, né i dati degli altri soci. In squadriglia
 vedete solo i numeri di telefono gli uni degli altri.
 :::
 

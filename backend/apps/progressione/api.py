@@ -750,7 +750,7 @@ class ImpegnoIn(PercorsoIn):
 def _sentiero_attivo(request, persona_id: int) -> tuple[Persona, PeriodoBranca]:
     persona = _persona(request, persona_id)
     if not policy.puo_proporre_percorsi(request.auth, persona):
-        raise HttpError(403, "Mete e impegni li scrivono il ragazzo e lo staff.")
+        raise HttpError(403, "Mete e impegni li scrivono il ragazzo/a e lo staff.")
     periodo = servizi.periodo_attivo(persona)
     if periodo is None:
         raise HttpError(400, "Il sentiero non è ancora aperto: lo apre lo staff.")
@@ -872,7 +872,7 @@ def azione(request, tipo: str, oggetto_id: int, azione: str, dati: AzioneIn):
     elif azione == "proponi_verifica":
         if not policy.puo_proporre_verifica(request.auth, persona):
             raise HttpError(
-                403, "La verifica la propongono il ragazzo, il capo squadriglia o lo staff."
+                403, "La verifica la propongono il ragazzo/a, il capo squadriglia o lo staff."
             )
     else:
         raise HttpError(404, "Operazione sconosciuta.")
@@ -1131,7 +1131,7 @@ def passo_competenza(request, competenza_id: int, azione: str, dati: PassoCompet
     if azione == "proponi_verifica" and percorso.periodo_id:
         if not policy.puo_proporre_verifica(request.auth, percorso.periodo.persona):
             raise HttpError(
-                403, "La verifica la propongono il ragazzo, il capo squadriglia o lo staff."
+                403, "La verifica la propongono il ragazzo/a, il capo squadriglia o lo staff."
             )
     else:
         _gestore_competenza(request, percorso)
@@ -1378,7 +1378,7 @@ def consiglio_impresa(request, impresa_id: int, dati: ConsiglioIn):
         raise HttpError(400, "L'impresa di squadriglia la guida il capo squadriglia.")
     persone = list(servizi.ragazzi_di(reparto).filter(pk__in=dati.persone))
     if len(persone) != len(set(dati.persone)):
-        raise HttpError(400, "Scegli ragazzi del reparto.")
+        raise HttpError(400, "Scegli ragazzi/e del reparto.")
     impresa.consiglio.set(persone)
     return _imprese(request.auth, reparto)
 
@@ -1399,7 +1399,7 @@ def nuovo_posto(request, impresa_id: int, dati: PostoIn):
     staff = policy.puo_gestire_reparto_progressione(request.auth, reparto)
     persona = get_object_or_404(Persona, pk=dati.persona_id)
     if not Appartenenza.objects.attive().filter(persona=persona, unita=reparto).exists():
-        raise HttpError(400, "Scegli un ragazzo del reparto.")
+        raise HttpError(400, "Scegli un ragazzo/a del reparto.")
     if (
         not staff
         and impresa.squadriglia_id
@@ -1808,7 +1808,7 @@ def carica_allegato(request, tipo: str, voce_id: int, titolo: Form[str], file: F
     else:
         voce, persona = _oggetto(request, tipo, voce_id)
     if not policy.puo_caricare_allegato_pp(request.auth, persona):
-        raise HttpError(403, "Gli allegati li caricano lo staff e il ragazzo.")
+        raise HttpError(403, "Gli allegati li caricano lo staff e il ragazzo/a.")
     if not titolo.strip():
         raise HttpError(400, "Scrivi cos'è l'allegato.")
     salvato, tipo_file = _esegui(

@@ -70,8 +70,8 @@ async function salva() {
   <section>
     <h1 class="h4">Schede degli eventi su BuonaCaccia</h1>
     <p class="small fg-2">
-      Le domande che BuonaCaccia fa al partecipante. Il ragazzo o i genitori rispondono dall'app; lo
-      staff ricopia tutto su BuonaCaccia in una volta. Le schede si riusano negli anni: cambia le
+      Le domande che BuonaCaccia fa al partecipante. Il ragazzo/a o i genitori rispondono dall'app;
+      lo staff ricopia tutto su BuonaCaccia in una volta. Le schede si riusano negli anni: cambia le
       domande che sono cambiate e salva, l'app ne fa una nuova versione.
     </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>

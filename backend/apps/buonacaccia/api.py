@@ -516,7 +516,7 @@ def iscrivi(request, evento_id: int, dati: IscrizioneIn):
     evento = _evento(request, evento_id)
     persona = get_object_or_404(Persona, pk=dati.persona_id)
     if not policy.puo_gestire_iscrizione_buonacaccia(request.auth, persona):
-        raise HttpError(403, "L'iscrizione la registra lo staff dell'unità del ragazzo.")
+        raise HttpError(403, "L'iscrizione la registra lo staff dell'unità del socio.")
     with transaction.atomic():
         iscrizione = _esegui(
             servizi.iscrivi,
@@ -548,7 +548,7 @@ def _da_gestire(request, iscrizione_id: int) -> IscrizioneBuonaCaccia:
     if not policy.puo_gestire_iscrizione_buonacaccia(
         request.auth, iscrizione.partecipazione.persona
     ):
-        raise HttpError(403, "L'iscrizione la gestisce lo staff dell'unità del ragazzo.")
+        raise HttpError(403, "L'iscrizione la gestisce lo staff dell'unità del socio.")
     return iscrizione
 
 
@@ -728,7 +728,7 @@ class RisposteIn(Schema):
 def _famiglia(request, iscrizione: IscrizioneBuonaCaccia) -> None:
     if not policy.puo_scrivere_scheda(request.auth, iscrizione.partecipazione.persona):
         raise HttpError(
-            403, "Alla scheda rispondono il ragazzo, i genitori o chi gestisce l'iscrizione."
+            403, "Alla scheda rispondono il socio, i genitori o chi gestisce l'iscrizione."
         )
 
 

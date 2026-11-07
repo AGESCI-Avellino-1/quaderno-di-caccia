@@ -1,7 +1,7 @@
 # Quote
 
 Le quote le gestiscono il **tesoriere di gruppo** e i **capigruppo**. Il tesoriere di
-un'unità e il capo unità registrano i pagamenti dei ragazzi della loro unità; tutti i capi
+un'unità e il capo unità registrano i pagamenti dei ragazzi/e della loro unità; tutti i capi
 vedono chi ha pagato.
 
 Nella Home, in **Gestione economica**, tocca **Quote**. In alto scegli l'anno scout (da
@@ -21,7 +21,7 @@ Ogni anno, in **Tipi di quota**, tocca **Nuovo tipo di quota**:
    gruppo** o **Quota mensile di unità**.
 2. Scrivi l'**Importo** e lo **Sconto famiglia**, che si toglie a ognuno quando in famiglia
    ci sono almeno due soci (il censimento non ha sconto).
-3. In **Chi la paga** scegli tutti i soci, solo i ragazzi, solo i capi o alcune unità.
+3. In **Chi la paga** scegli tutti i soci, solo i ragazzi/e, solo i capi o alcune unità.
 4. Scegli la **Scadenza** (per la mensile, i mesi e il giorno del mese entro cui pagare).
 5. Tocca **Salva**.
 

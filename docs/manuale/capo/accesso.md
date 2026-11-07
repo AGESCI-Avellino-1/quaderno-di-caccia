@@ -6,7 +6,7 @@ Entri come tutti: con l'invito la prima volta, poi con il codice via email, la p
 una passkey o Google e Apple. I passi sono in [Primo accesso](../genitore/accesso).
 
 Sul telefono che porti al campo **attiva la protezione con il PIN**: senza, l'app non
-salva niente e senza rete non vedi i dati dei ragazzi. I passi sono in [Proteggere il
+salva niente e senza rete non vedi i dati dei ragazzi/e. I passi sono in [Proteggere il
 dispositivo](../genitore/protezione).
 
 :::{warning}

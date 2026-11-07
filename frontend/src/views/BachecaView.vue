@@ -26,9 +26,9 @@ async function carica() {
 onMounted(carica)
 
 const DESTINATARI: { valore: DestinatariAvviso; nome: string }[] = [
-  { valore: 'FAMIGLIE', nome: 'Famiglie e ragazzi' },
+  { valore: 'FAMIGLIE', nome: 'Famiglie e ragazzi/e' },
   { valore: 'GENITORI', nome: 'Solo i genitori' },
-  { valore: 'RAGAZZI', nome: 'Solo i ragazzi' },
+  { valore: 'RAGAZZI', nome: 'Solo i ragazzi/e' },
   { valore: 'CAPI', nome: 'Comunità capi' },
 ]
 

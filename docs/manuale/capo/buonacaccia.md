@@ -6,7 +6,7 @@ parla con BuonaCaccia: serve a tenere le scadenze e a raccogliere dalle famiglie
 risposte alla scheda e foto.
 
 Nella Home, in **Attività**, tocca **Eventi su BuonaCaccia**. In **Iscrizioni da seguire**
-vedi le iscrizioni dei tuoi ragazzi, la scadenza più vicina per prima, con quello che manca.
+vedi le iscrizioni dei tuoi ragazzi/e, la scadenza più vicina per prima, con quello che manca.
 
 :::{container} schermate
 ![Gli eventi su BuonaCaccia sul telefono](../img/capo/buonacaccia-telefono.png){.telefono width="30%"}
@@ -15,9 +15,9 @@ vedi le iscrizioni dei tuoi ragazzi, la scadenza più vicina per prima, con quel
 
 ## Le scadenze
 
-Quando iscrivi un ragazzo su BuonaCaccia:
+Quando iscrivi un ragazzo/a su BuonaCaccia:
 
-- entro **9 giorni** dall'iscrizione vanno caricati liberatoria e scheda e pagata la quota;
+- entro **9 giorni** dall'iscrizione va caricata la liberatoria, compilata la scheda se l'evento ne ha una e pagata la quota se c'è;
 - fino a **7 giorni** prima dell'evento lo puoi cancellare senza perdere la quota;
 - la famiglia deve darti la liberatoria **2 giorni** prima della scadenza (o quando decidi tu).
 
@@ -51,11 +51,11 @@ tocca **Scegli la scheda**: la famiglia risponde dall'app.
 
 ## Registrare un'iscrizione
 
-Dopo aver iscritto il ragazzo su BuonaCaccia:
+Dopo aver iscritto il ragazzo/a su BuonaCaccia:
 
 1. Nella pagina dell'evento, in **Iscrizioni su BuonaCaccia**, tocca **Registra
    un'iscrizione** (lo trovano lo staff di un'unità e i capigruppo).
-2. Scegli unità e ragazzo, il giorno dell'iscrizione e lo stato (**Ammesso** o **In lista
+2. Scegli unità e socio, il giorno dell'iscrizione e lo stato (**Ammesso** o **In lista
    d'attesa**).
 3. Incolla il **Link di gestione** dalla prima email di BuonaCaccia (lo vedono solo i capi
    che gestiscono l'iscrizione: con quel link si cancella).

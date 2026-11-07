@@ -77,8 +77,8 @@ Le creano lo staff, per la sua unità, e i capigruppo, anche per più unità o p
 Un documento aggiunto dopo arriva da solo per email agli invitati. Se sposti o annulli la riunione,
 gli invitati ricevono l'email come per le altre riunioni.
 
-Sono invitati i genitori e i tutori dei ragazzi, entrambi se ci sono, e lo staff (per il gruppo tutta
-la Comunità capi); i ragazzi no. Per un rover o una scolta maggiorenne sono invitati i genitori, salvo
+Sono invitati i genitori e i tutori dei ragazzi/e, entrambi se ci sono, e lo staff (per il gruppo tutta
+la Comunità capi); i ragazzi/e no. Per un rover o una scolta maggiorenne sono invitati i genitori, salvo
 che abbia scelto di andare lui al loro posto. Nessuno deve comunicare se viene: le presenze le segna
 lo staff, per ogni genitore, e non contano su quelle dei figli.
 

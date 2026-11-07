@@ -162,7 +162,7 @@ class Farmaco(models.Model):
     posologia = models.CharField(max_length=200)
     orari = models.CharField(max_length=200, blank=True)
     autonomo = models.BooleanField(
-        default=False, help_text="Il ragazzo assume il farmaco da solo, senza un capo."
+        default=False, help_text="Il ragazzo/a assume il farmaco da solo, senza un capo."
     )
     note = models.CharField(max_length=300, blank=True)
 
@@ -204,7 +204,7 @@ class TipoAllegatoSanitario(models.TextChoices):
     """The documents attached to the form (DEC-290), and the signed form itself."""
 
     TESSERA = "TESSERA", "Tessera sanitaria o codice fiscale"
-    DOCUMENTO = "DOCUMENTO", "Documento d'identità del ragazzo o dell'interessato"
+    DOCUMENTO = "DOCUMENTO", "Documento d'identità del ragazzo/a o dell'interessato"
     DOCUMENTO_GENITORE = "DOC_GENITORE", "Documento d'identità del genitore che firma"
     SCHEDA_FIRMATA = "SCHEDA", "Scheda sanitaria firmata"
 

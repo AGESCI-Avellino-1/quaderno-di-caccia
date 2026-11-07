@@ -1,8 +1,8 @@
 # Soci e genitori
 
-Nella Home, in **Il mio gruppo**, tocca **Soci** per i capi e i ragazzi censiti, oppure
-**Genitori** per chi ha la responsabilità genitoriale dei ragazzi. In tutte e due scegli
-un'unità (in **Genitori**: i genitori dei ragazzi di quell'unità) o cerca per nome, poi
+Nella Home, in **Il mio gruppo**, tocca **Soci** per i capi e i ragazzi/e censiti, oppure
+**Genitori** per chi ha la responsabilità genitoriale dei ragazzi/e. In tutte e due scegli
+un'unità (in **Genitori**: i genitori dei ragazzi/e di quell'unità) o cerca per nome, poi
 tocca una persona per aprire la sua scheda. Un capo che è anche genitore è in tutte e due.
 
 Anche altrove (organigramma, staff e squadriglie nella pagina dell'unità, «La mia
@@ -20,7 +20,7 @@ scheda sanitaria, le note, le quote, il telefono in squadriglia e l'accesso all'
 
 ## Numeri nella rubrica del telefono
 
-Per avere i numeri dei ragazzi o dei genitori nella rubrica del telefono, con la rete:
+Per avere i numeri dei soci o dei genitori nella rubrica del telefono, con la rete:
 
 1. In **Soci** o **Genitori** scegli l'unità e tocca **Aggiungi alla rubrica del telefono**.
    Dalla pagina dell'unità arrivi qui già pronto, con **Soci dell'unità** o **Genitori** in
@@ -37,7 +37,7 @@ quando hai salvato i contatti, cancellalo dai download.
 
 Se un dato è sbagliato, correggilo come fa un genitore (vedi [Correggere un
 dato](../genitore/figli.md#correggere-un-dato-di-buonastrada)): vale subito nell'app, e i
-capigruppo lo mandano alla segreteria. Per i ragazzi della tua unità puoi correggere quasi
+capigruppo lo mandano alla segreteria. Per i ragazzi/e della tua unità puoi correggere quasi
 tutto, anche il sesso e il luogo di nascita; nome, cognome, data di nascita e codice fiscale
 li correggono solo i capigruppo.
 
@@ -46,7 +46,7 @@ corregge scegliendola dall'elenco di BuonaStrada.
 
 ## Il percorso scout
 
-Il riquadro **Percorso scout** elenca tutti i periodi della persona, da ragazzo e da capo,
+Il riquadro **Percorso scout** elenca tutti i periodi della persona, da ragazzo/a e da capo,
 uno per riga con l'unità, gli anni e il gruppo, e da quando è nel gruppo. I periodi nel
 nostro gruppo vengono da BuonaStrada e dall'app; quelli in un altro gruppo da BuonaStrada,
 quando l'esportazione li ha (per esempio per chi è arrivato da un altro gruppo). Lo vedono
@@ -54,7 +54,7 @@ i capi, la persona stessa e i genitori di un minore.
 
 Gli anni che mancano (prima di BuonaStrada, o in un gruppo che l'esportazione non porta) li
 aggiunge un capogruppo, o il capo stesso nel suo percorso: tocca **Aggiungi un periodo**,
-scrivi l'unità, il gruppo (vuoto se era il nostro), se era ragazzo o capo e gli anni
+scrivi l'unità, il gruppo (vuoto se era il nostro), se era ragazzo/a o capo e gli anni
 (quello in cui finiscono: 2014/15 è 2015), poi **Salva**. Questi periodi sono segnati come
 «ricostruito» e si tolgono con **Togli**.
 
@@ -65,8 +65,8 @@ scrivi l'unità, il gruppo (vuoto se era il nostro), se era ragazzo o capo e gli
 
 ## La foto
 
-La foto serve a riconoscere il ragazzo, per esempio nelle iscrizioni su BuonaCaccia. Per i
-ragazzi della tua unità tocca **Aggiungi una foto** (o **Cambia la foto**), ritaglia in
+La foto serve a riconoscere il ragazzo/a, per esempio nelle iscrizioni su BuonaCaccia. Per i
+ragazzi/e della tua unità tocca **Aggiungi una foto** (o **Cambia la foto**), ritaglia in
 modo che nel riquadro ci sia solo lui o lei e tocca **Salva la foto**. Le foto precedenti
 restano per i capi: tocca **Foto precedenti** per vederle, con la data.
 
@@ -87,7 +87,7 @@ Gli inviti li mandano il capo unità e i capigruppo.
 
 1. Nella scheda, in **Accesso all'app**, accanto alla persona (o a un genitore) tocca
    **Invita**.
-2. Scrivi l'email **della persona**: un ragazzo non si invita con l'email di un genitore.
+2. Scrivi l'email **della persona**: un ragazzo/a non si invita con l'email di un genitore.
 3. Se ha meno di 14 anni serve il consenso di un genitore: scegli chi l'ha dato e come
    l'hai verificato (dall'account del genitore, in presenza davanti a un capo, con un modulo
    firmato).
@@ -95,12 +95,12 @@ Gli inviti li mandano il capo unità e i capigruppo.
 
 L'invito vale 14 giorni; finché non viene usato lo puoi **annullare**.
 
-### Il link personale di un ragazzo
+### Il link personale di un ragazzo/a
 
-Un ragazzo dai 14 ai 18 anni senza account può entrare anche senza che tu conosca la sua
+Un ragazzo/a dai 14 ai 18 anni senza account può entrare anche senza che tu conosca la sua
 email: nella sua scheda, in **Link personale per l'app**, tocca **Genera il link** e mandaglielo
 come vuoi (**Condividi** sul telefono, o **Copia il link**). Lo può fare lo staff della sua
-unità, un capogruppo e il suo capo squadriglia. Il ragazzo conferma la data di nascita, scrive
+unità, un capogruppo e il suo capo squadriglia. Il ragazzo/a conferma la data di nascita, scrive
 la sua email e riceve lì l'invito; i genitori ricevono un'email quando l'account è creato.
 
 Il link vale 30 giorni e una volta sola, e lo vedi solo appena generato: se lo perdi, generane
@@ -114,10 +114,10 @@ uno nuovo (quello di prima smette di valere). Dopo 5 date di nascita sbagliate n
 ### Più persone insieme
 
 In **Soci** o **Genitori** (scegli prima l'unità, se vuoi) tocca **Invita chi non ha un
-account**: compaiono i genitori e i maggiorenni, capi e ragazzi, che hanno un'email e non hanno
+account**: compaiono i genitori e i maggiorenni, capi e ragazzi/e, che hanno un'email e non hanno
 ancora un account né un invito valido. Spunta chi invitare (o tocca **Tutti**) e poi **Manda gli
 inviti**. Le email partono un po' alla volta; se qualcuno nel frattempo non si poteva più
-invitare, l'app ti dice chi e perché. I ragazzi minorenni non sono nell'elenco: per loro c'è il
+invitare, l'app ti dice chi e perché. I ragazzi/e minorenni non sono nell'elenco: per loro c'è il
 link personale.
 
 :::{container} schermate
@@ -139,6 +139,6 @@ capi; ai genitori, se lo chiedono, lo mostrano i capigruppo (è anche nel fascic
 :::
 
 :::{container} schermate
-![L'invito di un ragazzo sul telefono](../img/capo/invito-telefono.png){.telefono width="30%"}
-![L'invito di un ragazzo sul computer](../img/capo/invito-computer.png){.computer width="65%"}
+![L'invito di un ragazzo/a sul telefono](../img/capo/invito-telefono.png){.telefono width="30%"}
+![L'invito di un ragazzo/a sul computer](../img/capo/invito-computer.png){.computer width="65%"}
 :::

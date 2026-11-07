@@ -2,12 +2,12 @@
 
 ## Chi sei, cosa puoi fare
 
-Sei il genitore (o chi ne fa le veci) di un ragazzo del gruppo. Nel Quaderno di Caccia
+Sei il genitore (o chi ne fa le veci) di un ragazzo/a del gruppo. Nel Quaderno di Caccia
 vedi i tuoi figli: la loro scheda, la scheda sanitaria, gli eventi, le quote, la
 Progressione Personale e gli avvisi dei capi.
 
 :::{note}
-Non vedi i dati degli altri ragazzi, né le note che i capi tengono per sé. Le regole che
+Non vedi i dati degli altri soci, né le note che i capi tengono per sé. Le regole che
 hai dato ai capi sul rapporto con tuo figlio (per esempio chi può venire a riprenderlo) le
 leggono solo i capi.
 :::

@@ -1,4 +1,4 @@
-# Nuovi ragazzi: lista d'attesa e iscrizioni
+# Nuovi ragazzi/e: lista d'attesa e iscrizioni
 
 Chi vuole entrare nel gruppo passa di solito dalla **lista d'attesa**; quando c'è posto, la
 famiglia riceve un link per l'**iscrizione**, che lo staff dell'unità accoglie.
@@ -10,10 +10,10 @@ Nella Home, in **Il mio gruppo**, tocca **Lista d'attesa**. La vedono tutti i ca
 Per far conoscere la lista d'attesa (a una riunione con le famiglie, in parrocchia), in
 **Profilo** tocca **Invita nel gruppo**: il link da mandare, il QR code e un volantino da stampare
 (vedi [Invitare altre famiglie](../genitore/lista-attesa.md#invitare-altre-famiglie)). Lo
-trovano anche i genitori e i ragazzi.
+trovano anche i genitori e i ragazzi/e.
 
-I ragazzi sono divisi per età nell'anno scout in corso (tra parentesi l'età dell'anno
-prossimo). Per ognuno vedi l'unità **Consigliata**, scelta dalle età e dalla composizione
+La lista è divisa per età nell'anno scout in corso (tra parentesi l'età dell'anno
+prossimo). Per ogni ragazzo/a vedi l'unità **Consigliata**, scelta dalle età e dalla composizione
 delle unità, chi contattare e da quando è in lista. **Possibile doppione** segnala due
 iscrizioni con stesso nome e data di nascita.
 
@@ -27,12 +27,12 @@ Le età delle unità si cambiano nella pagina dell'unità (vedi [La tua unità](
 ![La lista d'attesa sul computer](../img/capo/attesa-computer.png){.computer width="65%"}
 :::
 
-Per un ragazzo, scegli l'**Unità** (vedi solo quelle in cui fai servizio) e poi:
+Per un ragazzo/a, scegli l'**Unità** (vedi solo quelle in cui fai servizio) e poi:
 
 - **Contattato**, quando hai sentito la famiglia; **Di nuovo da contattare** per
   annullarlo;
 - **Iscrivi**, quando c'è posto: la famiglia riceve per email un link personale, valido 30
-  giorni, con i dati della lista già scritti, e il ragazzo esce dalla lista. Poi la
+  giorni, con i dati della lista già scritti, e il ragazzo/a esce dalla lista. Poi la
   richiesta arriva in **Richieste di iscrizione** (sotto);
 - **Togli dalla lista**: i dati si cancellano.
 
@@ -41,7 +41,7 @@ il modulo come farebbe lei: riceve la stessa email di conferma.
 
 ## I codici di iscrizione
 
-Per far iscrivere qualcuno direttamente (per esempio un ragazzo che arriva da un altro
+Per far iscrivere qualcuno direttamente (per esempio un ragazzo/a che arriva da un altro
 gruppo) crea un codice nella pagina della tua unità, in **Codici di iscrizione**:
 
 1. Tocca **Nuovo codice**.
@@ -84,7 +84,7 @@ quante ne aspettano una decisione.
 2. Scegli entro quando la famiglia deve completare dati e moduli (di base 30 giorni) e tocca
    **Accogli**.
 
-Il ragazzo entra subito nell'unità con un codice socio provvisorio, e la famiglia riceve
+Il ragazzo/a entra subito nell'unità con un codice socio provvisorio, e la famiglia riceve
 un'email per completare. Se non la accogli, tocca **Non accogliere…** e scrivi il motivo: lo
 legge chi ha fatto la richiesta.
 
@@ -94,7 +94,7 @@ promemoria; se la scadenza passa senza che abbia completato, l'iscrizione si sos
 
 Lo Statuto chiede di rispondere, e di motivare un rifiuto, entro sessanta giorni dalla richiesta. Sotto ogni
 richiesta in attesa trovi i giorni che restano; dieci giorni prima del termine chi decide riceve un'email. Se
-l'unità ha un numero massimo nei [criteri di ammissione](../gruppo/criteri-ammissione.md), vedi quanti ragazzi ha;
+l'unità ha un numero massimo nei [criteri di ammissione](../gruppo/criteri-ammissione.md), vedi quanti ragazzi/e ha;
 se è già al massimo compare un avviso, ma puoi accogliere la richiesta lo stesso, se la Comunità capi lo ha deciso.
 Anche nella lista d'attesa i numeri compaiono accanto alle unità consigliate.
 
@@ -107,5 +107,5 @@ firmati**:
 2. Spunta i consensi firmati (iscrizione, foto, commerciale, riviste).
 3. Tocca **Moduli verificati**.
 
-Quando tutto è completo, i capigruppo inseriscono il ragazzo in BuonaStrada, che gli dà il
+Quando tutto è completo, i capigruppo inseriscono il ragazzo/a in BuonaStrada, che gli dà il
 codice socio definitivo.

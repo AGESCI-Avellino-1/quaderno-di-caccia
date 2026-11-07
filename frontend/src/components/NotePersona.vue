@@ -83,7 +83,7 @@ async function cancella(nota: Nota) {
 
 function chiLaLegge(n: Nota): string {
   const chi = [
-    n.visibile_ragazzo ? 'il ragazzo' : '',
+    n.visibile_ragazzo ? 'il socio' : '',
     n.visibile_genitori ? 'i genitori' : '',
     n.visibile_csq ? 'il capo squadriglia' : '',
   ].filter(Boolean)
@@ -129,7 +129,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             type="checkbox"
             class="check"
           />
-          <label class="small" for="nota-ragazzo">il ragazzo o la ragazza</label>
+          <label class="small" for="nota-ragazzo">il socio</label>
         </div>
         <div class="form-field">
           <input

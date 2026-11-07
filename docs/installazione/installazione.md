@@ -120,7 +120,7 @@ DJANGO_EMAIL_USE_TLS=true
 DJANGO_DEFAULT_FROM_EMAIL=Quaderno di Caccia <noreply@esempio.org>
 ```
 
-Le email ai capi, ai genitori e ai ragazzi partono solo dopo che i capigruppo le accendono
+Le email ai capi, ai genitori e ai ragazzi/e partono solo dopo che i capigruppo le accendono
 nelle Impostazioni (**Chi riceve le email**): codici di accesso e inviti partono sempre.
 
 ## La schermata di avvio

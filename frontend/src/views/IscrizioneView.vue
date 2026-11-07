@@ -134,7 +134,7 @@ async function invia() {
       </p>
 
       <fieldset class="card card-body vstack gap-3">
-        <legend class="h6">{{ perFiglio ? 'Il ragazzo o la ragazza' : 'I tuoi dati' }}</legend>
+        <legend class="h6">{{ perFiglio ? 'Ragazzo/a' : 'I tuoi dati' }}</legend>
         <div class="row g-3">
           <div class="col-12 sm:col-6">
             <label class="form-label small" for="isc-nome">Nome</label>

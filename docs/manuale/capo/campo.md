@@ -1,6 +1,6 @@
 # Al campo
 
-La pagina **Al campo** ha, per ogni ragazzo e capo di un'unità, quello che serve fuori
+La pagina **Al campo** ha, per ogni ragazzo/a e capo di un'unità, quello che serve fuori
 sede: i contatti dei genitori, farmaci, allergie e intolleranze, cosa non mangia, e le
 regole sul rapporto con il minore. Funziona anche senza rete, se l'hai scaricata prima.
 
@@ -12,7 +12,7 @@ regole sul rapporto con il minore. Funziona anche senza rete, se l'hai scaricata
 3. In **Scegli l'unità** scegli l'unità e tocca **Scarica sul dispositivo**. Ripeti per ogni
    unità che ti serve (per esempio a un campo di gruppo).
 
-Sotto vedi quando li hai scaricati e quanti ragazzi non hanno ancora compilato farmaci e
+Sotto vedi quando li hai scaricati e quanti soci non hanno ancora compilato farmaci e
 allergie. Prima di partire, tocca **Aggiorna** per avere l'ultima versione.
 
 :::{container} schermate
@@ -47,13 +47,13 @@ scritto nel registro degli accessi.
 Sono le indicazioni che i genitori scrivono sul modulo firmato per un minore: per esempio
 chi può venire a riprenderlo all'uscita, a chi non dare informazioni, o quello che ha deciso
 un giudice dopo una separazione. Al campo compaiono in un riquadro giallo sulla scheda del
-ragazzo.
+ragazzo/a.
 
-- Le leggono **solo i capi** della Comunità capi, mai i genitori né il ragazzo.
-- Le scrivono lo staff dell'unità del ragazzo e i capigruppo, ricopiandole dal modulo.
+- Le leggono **solo i capi** della Comunità capi, mai i genitori né il ragazzo/a.
+- Le scrivono lo staff dell'unità del ragazzo/a e i capigruppo, ricopiandole dal modulo.
 - Valgono finché i genitori non danno nuove indicazioni scritte.
 
-Per scriverle o cambiarle, apri la scheda del ragazzo (vedi [Soci e genitori](persone)): sopra la
+Per scriverle o cambiarle, apri la scheda del ragazzo/a (vedi [Soci e genitori](persone)): sopra la
 scheda sanitaria tocca **Regole sul rapporto con il minore indicate dai genitori…** (o
 **Modifica**), ricopia il testo del modulo e tocca **Salva**. Se non ce ne sono più, svuota
 il testo e salva. Si fa solo con la rete.

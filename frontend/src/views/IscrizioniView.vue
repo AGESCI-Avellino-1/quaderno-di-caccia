@@ -98,11 +98,11 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </div>
         <div v-if="r.al_completo" class="alert theme-warning small py-3 mt-1 mb-0" role="status">
           <div>
-            L'unità ha già {{ r.posti }} ragazzi, il massimo dei criteri di ammissione. Puoi
+            L'unità ha già {{ r.posti }} ragazzi/e, il massimo dei criteri di ammissione. Puoi
             accogliere la richiesta lo stesso, se la Comunità capi lo ha deciso.
           </div>
         </div>
-        <div v-else-if="r.posti" class="fg-2 small">Ragazzi nell'unità: {{ r.posti }}</div>
+        <div v-else-if="r.posti" class="fg-2 small">Ragazzi/e nell'unità: {{ r.posti }}</div>
         <template v-if="r.stato !== 'IN_ATTESA'">
           <div class="small">
             <span class="badge" :class="r.stato === 'SOSPESA' ? 'theme-danger' : 'theme-info'">{{

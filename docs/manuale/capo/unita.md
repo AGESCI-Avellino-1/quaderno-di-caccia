@@ -4,7 +4,7 @@ Nella Home, in **Il mio gruppo**, tocca **Unità** e poi la tua unità.
 
 In alto trovi i collegamenti a **Chi ne fa parte**, **Passaggi**, **Progressione
 Personale** e, a seconda dell'unità, **Carta di clan** o **Imprese e specialità di
-squadriglia**. Il riquadro **Da controllare** segnala cosa manca: per esempio un ragazzo che
+squadriglia**. Il riquadro **Da controllare** segnala cosa manca: per esempio un ragazzo/a che
 compie 18 anni senza account (invitalo, così sceglie cosa vedono i genitori), o qualcuno in
 una squadriglia dell'altro sesso senza un'eccezione.
 
@@ -42,14 +42,14 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   correggere o chiudere.
 - Una squadriglia nata prima degli animali, con un nome che non corrisponde a nessuno, è
   segnalata in **Da controllare**: sotto il suo nome scegli l'animale.
-- Per spostare un ragazzo, accanto al suo nome scegli **Sposta in…** e la squadriglia (o
+- Per spostare un ragazzo/a, accanto al suo nome scegli **Sposta in…** e la squadriglia (o
   **Nessuna squadriglia**): vale da oggi. Chi non è in nessuna squadriglia è in **Senza
   squadriglia**, con **Metti in…**.
 - Prima di spostare un capo o vice capo squadriglia, chiudi il suo incarico.
 - **Incarichi di squadriglia** (cassiere, cicala, cronista e gli altri): li assegnano lo staff del
   reparto, dalla squadriglia in questa pagina, e il capo squadriglia, dalla sua pagina. Un
   capogruppo lo fa solo se è nello staff di quel reparto. Non danno permessi e si chiudono da soli
-  quando il ragazzo lascia la squadriglia.
+  quando il ragazzo/a lascia la squadriglia.
 - Per chiudere una squadriglia tocca **chiudi** (e **riapri** per riaprirla).
 - **Riunioni di squadriglia**: le inseriscono, dalla pagina **Riunioni**, il capo squadriglia e
   lo staff. Puoi delegare un membro della squadriglia a inserirle anche lui (solo a inserirle, non a segnare le
@@ -65,7 +65,7 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
 
 In **Amministrazione**, **Animali di squadriglia** elenca gli animali tra cui scegliere, generali e nautici, con
 immagine, colori e significati per il guidoncino, e richiamo. L'elenco è uno per tutto il gruppo:
-lo leggono i ragazzi e gli staff dei reparti e i capigruppo; lo modificano gli staff dei reparti e
+lo leggono i ragazzi/e e gli staff dei reparti e i capigruppo; lo modificano gli staff dei reparti e
 i capigruppo.
 
 :::{container} schermate
@@ -102,7 +102,7 @@ togliere i turni, svuota l'elenco e salva.
 
 Nella pagina di una riunione, in **Turni**, puoi dare un turno di quella riunione a un altro
 gruppo con **Cambia…**; dopo, la rotazione riprende come prevista (**Come da rotazione**
-annulla il cambio). Ragazzi e genitori vedono nelle riunioni il turno della propria squadriglia
+annulla il cambio). Ragazzi/e e genitori vedono nelle riunioni il turno della propria squadriglia
 o sestiglia.
 
 :::{container} schermate
@@ -119,13 +119,13 @@ bambino è in una sestiglia alla volta: metterlo in un'altra lo toglie dalla pri
 toglie, **chiudi** chiude la sestiglia. Chi lascia l'unità esce anche dalla sestiglia.
 
 :::{note}
-Le squadriglie sono maschili o femminili. Un ragazzo può entrare in una squadriglia
+Le squadriglie sono maschili o femminili. Un ragazzo/a può entrare in una squadriglia
 dell'altro sesso solo con un'eccezione decisa dalla Comunità capi e registrata da un
 capogruppo nella sua scheda («Eccezioni sulla squadriglia»): tu la vedi, ma non la puoi
 registrare. Ogni lettura delle eccezioni resta nel registro degli accessi.
 :::
 
-In reparto c'è anche **Alta Squadriglia**: spunta i ragazzi che ne fanno parte e tocca
+In reparto c'è anche **Alta Squadriglia**: spunta i ragazzi/e che ne fanno parte e tocca
 **Salva**; gli eventi di Alta Squadriglia invitano loro.
 
 ## Età per la lista d'attesa

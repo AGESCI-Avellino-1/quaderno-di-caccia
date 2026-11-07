@@ -543,8 +543,8 @@ class PassaggioPersona(ModelloTracciato):
     motivo_rettifica = models.CharField(max_length=300, blank=True)
 
     class Meta:
-        verbose_name = "ragazzo in un passaggio"
-        verbose_name_plural = "ragazzi nei passaggi"
+        verbose_name = "ragazzo/a in un passaggio"
+        verbose_name_plural = "ragazzi/e nei passaggi"
         ordering = ["persona__cognome", "persona__nome"]
         constraints = [
             models.UniqueConstraint(fields=["passaggio", "persona"], name="passaggio_persona_unica")

@@ -967,7 +967,7 @@ async function salvaNuova() {
           Nessun obiettivo: si fissano o si ricalibrano nel Punto della Strada.
         </p>
         <p v-else-if="!scheda.mete.length" class="small fg-2">
-          Nessuna meta: si introducono quando il ragazzo sa formularle; prima bastano gli impegni.
+          Nessuna meta: si introducono quando il ragazzo/a sa formularle; prima bastano gli impegni.
         </p>
         <ul v-else class="list-group">
           <PercorsoEG

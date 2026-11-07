@@ -290,7 +290,7 @@ const scadenzaTipo = (t: TipoQuota) =>
                 class="form-control form-control-sm"
               >
                 <option value="TUTTI">Tutti i soci</option>
-                <option value="RAGAZZI">Solo i ragazzi</option>
+                <option value="RAGAZZI">Solo i ragazzi/e</option>
                 <option value="CAPI">Solo i capi</option>
                 <option value="UNITA">Le unità indicate</option>
               </select>

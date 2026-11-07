@@ -99,7 +99,7 @@ function tipoProfilo(profilo: Profilo | null, stato: Ambiente['stato']): string 
   if (profilo.capo) return 'Capo'
   if (profilo.amministratore_tecnico) return 'Amministratore tecnico'
   if (profilo.tutelati.length) return 'Genitore'
-  if (profilo.persona) return 'Ragazzo'
+  if (profilo.persona) return 'Ragazzo/a'
   return 'Altro'
 }
 

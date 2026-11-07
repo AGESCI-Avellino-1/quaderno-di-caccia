@@ -121,7 +121,7 @@ dal loro modello.
 
 Quando inizi a usare l'app, le email non arrivano a nessuno: puoi importare i dati e
 preparare tutto con calma. In **Chi riceve le email** accendi un gruppo alla volta, quando
-gli hai presentato l'app: prima **Capi**, poi **Genitori** e **Ragazzi**.
+gli hai presentato l'app: prima **Capi**, poi **Genitori** e **Ragazzi/e**.
 
 - Finché un gruppo è spento, le email per lui non partono e non vengono tenute da parte:
   accendendolo non arrivano promemoria vecchi. Accanto al gruppo vedi quante non sono partite.

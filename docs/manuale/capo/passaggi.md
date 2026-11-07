@@ -1,8 +1,8 @@
 # Passaggi
 
 I passaggi da una branca all'altra li decide la Comunità capi. Nell'app lo staff dell'unità
-che i ragazzi lasciano li prepara, con una sintesi per i nuovi capi, e li esegue dalla loro
-data. Tappe e specialità restano nella storia del ragazzo: non si convertono.
+che i ragazzi/e lasciano li prepara, con una sintesi per i nuovi capi, e li esegue dalla loro
+data. Tappe e specialità restano nella storia del ragazzo/a: non si convertono.
 
 Nella pagina dell'unità tocca **Passaggi**.
 
@@ -21,19 +21,19 @@ Nella pagina dell'unità tocca **Passaggi**.
 :::
 
 Finché è **Preparato** lo puoi cambiare (**Modifica**) o annullare (**Annulla…**, con il
-motivo). Per ogni ragazzo c'è anche il **report** in PDF.
+motivo). Per ogni ragazzo/a c'è anche il **report** in PDF.
 
 ## Eseguirlo
 
 Dal giorno del passaggio tocca **Esegui…**: l'app ti mostra chi passa e dove, e che si
 chiude il percorso nella branca di oggi e se ne apre uno nuovo; cambiano unità, squadriglia
 e incarichi di squadriglia. Tocca **Confermo, esegui**. La sintesi compare nella pagina del
-ragazzo nella nuova branca.
+ragazzo/a nella nuova branca.
 
 ## Se hai sbagliato
 
 - **Annulla l'esecuzione…** (sotto «Eseguito per errore?»): scegli per chi e scrivi perché; i
-  ragazzi tornano dov'erano, con il loro percorso.
+  ragazzi/e tornano dov'erano, con il loro percorso.
 - **Correggi la data…**: scrivi la data giusta e perché; periodi e unità si spostano al
   giorno giusto.
 

@@ -1,8 +1,8 @@
 # Fascicoli
 
-## Il fascicolo dell'anno di un ragazzo
+## Il fascicolo dell'anno di un ragazzo/a
 
-Nella scheda del ragazzo tocca **Fascicolo dell'anno**: in una pagina c'è tutto il suo anno
+Nella scheda del ragazzo/a tocca **Fascicolo dell'anno**: in una pagina c'è tutto il suo anno
 scout. Scegli l'anno in **Anno associativo**; con **Stampa (PDF)** lo scarichi.
 
 Le parti sono: anagrafica e famiglia, regole sul rapporto con il minore (solo per i capi),
@@ -22,7 +22,7 @@ registro degli accessi.
 
 ## Il report per il passaggio
 
-Quando prepari un passaggio (vedi [Passaggi](passaggi)), accanto a ogni ragazzo c'è il
+Quando prepari un passaggio (vedi [Passaggi](passaggi)), accanto a ogni ragazzo/a c'è il
 **report (PDF)** per i nuovi capi: il passaggio con la sintesi, il percorso nella branca e le
 presenze. Non contiene note né regole sul rapporto con il minore.
 

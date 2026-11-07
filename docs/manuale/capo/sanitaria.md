@@ -1,12 +1,12 @@
 # Scheda sanitaria
 
 La scheda sanitaria di un minore la compilano i genitori; quella di un maggiorenne la
-compila lui. I capi la **leggono** tutti; lo staff dell'unità del ragazzo e i capigruppo la
+compila lui. I capi la **leggono** tutti; lo staff dell'unità del socio e i capigruppo la
 possono anche **ricopiare** dal modulo di carta, per una famiglia che non usa l'app.
 
 ## Ricopiarla dal modulo
 
-1. Apri la scheda del ragazzo (vedi [Soci e genitori](persone)).
+1. Apri la scheda del socio (vedi [Soci e genitori](persone)).
 2. Nel riquadro **Scheda sanitaria** tocca **Compila** (o **Modifica**).
 3. Compila come farebbe un genitore: contatti, stato di salute, allergie e intolleranze,
    terapie, esigenze alimentari, antitetanica e farmaci da banco, altre informazioni (le
@@ -15,13 +15,13 @@ possono anche **ricopiare** dal modulo di carta, per una famiglia che non usa l'
 
 ## Il modulo firmato
 
-La scheda va anche firmata su carta dai genitori (o dal ragazzo maggiorenne).
+La scheda va anche firmata su carta dai genitori (o dal socio maggiorenne).
 
 1. Nel riquadro sotto la scheda sanitaria tocca **Stampa il modulo da firmare**: è la scheda
    del gruppo già compilata, su carta intestata.
 2. Quando la famiglia te la riconsegna firmata su carta, tocca **Segna la consegna su
    carta…**.
-3. In **Modulo firmato il** metti il giorno della firma e, se il ragazzo prende farmaci, in
+3. In **Modulo firmato il** metti il giorno della firma e, se il socio prende farmaci, in
    **Prescrizione consegnata il** il giorno in cui hai avuto la prescrizione del medico.
 4. Tocca **Salva**.
 
@@ -30,8 +30,8 @@ l'ultima firma»: stampa il modulo e fallo firmare di nuovo.
 
 ## Verificare i documenti caricati
 
-La famiglia (o il ragazzo maggiorenne) può caricare nell'app la scheda firmata e i
-documenti da allegare: tessera sanitaria o codice fiscale, documento d'identità del ragazzo
+La famiglia (o il socio maggiorenne) può caricare nell'app la scheda firmata e i
+documenti da allegare: tessera sanitaria o codice fiscale, documento d'identità del socio
 e del genitore che firma. Li verifica lo staff dell'unità o un capogruppo, e restano
 sull'app solo finché non sono verificati.
 

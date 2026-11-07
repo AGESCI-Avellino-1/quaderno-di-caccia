@@ -41,7 +41,7 @@ const etichetta = (fine: number) => `${fine - 1}/${String(fine).slice(-2)}`
 <template>
   <section v-if="alta" class="card card-body mb-5">
     <h2 class="h5 mb-1">Alta Squadriglia {{ etichetta(alta.anno) }}</h2>
-    <p class="form-text">Gli eventi di Alta Squadriglia invitano questi ragazzi.</p>
+    <p class="form-text">Gli eventi di Alta Squadriglia invitano questi ragazzi/e.</p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <form @submit.prevent="salva">
       <div class="d-flex flex-wrap gap-5 mb-3">

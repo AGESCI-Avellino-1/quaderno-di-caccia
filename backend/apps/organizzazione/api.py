@@ -1260,7 +1260,7 @@ def registra_deroga(request, persona_id: int, dati: NuovaDeroga):
         .filter(persona=persona, unita=reparto, ruolo=RuoloAppartenenza.RAGAZZO)
         .exists()
     ):
-        raise HttpError(400, f"{persona} non è un ragazzo o una ragazza di {reparto}.")
+        raise HttpError(400, f"{persona} non è un ragazzo/a di {reparto}.")
     deroga = DerogaSquadriglia(
         persona=persona,
         reparto=reparto,

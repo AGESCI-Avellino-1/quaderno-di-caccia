@@ -67,7 +67,7 @@ const giorno = (iso: string) =>
       I turni (per esempio pulizia, preghiera, cassa) passano a rotazione tra
       {{ turni.gruppi.length ? turni.gruppi.join(', ') : 'le squadriglie o le sestiglie' }}. Con
       «ogni settimana» il turno passa al gruppo dopo a ogni riunione dell'unità che si fa (una
-      settimana senza riunione non conta); con «ogni mese» alla prima riunione del mese. Ragazzi e
+      settimana senza riunione non conta); con «ogni mese» alla prima riunione del mese. Ragazzi/e e
       genitori vedono il loro turno nelle riunioni.
     </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>

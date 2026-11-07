@@ -2,7 +2,7 @@
 
 L'amministratore tecnico cura la parte tecnica dell'app. Il primo lo crea chi installa l'app;
 gli altri li nominano i capigruppo nell'**Organigramma**, e devono essere capi.
-L'incarico non dà accesso ai dati educativi dei ragazzi.
+L'incarico non dà accesso ai dati educativi dei ragazzi/e.
 
 Può:
 

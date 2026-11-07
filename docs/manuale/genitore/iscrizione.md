@@ -9,7 +9,7 @@ capi, come codice, link o QR code. Non serve avere già un account.
    {{ indirizzo }}, scrivilo in fondo alla pagina di accesso, in **Codice di
    iscrizione**, e tocca **Usa**. Se tuo figlio era in lista d'attesa, il link arriva per
    email dai capi e i dati della lista sono già scritti.
-2. In **Il ragazzo o la ragazza** scrivi nome, cognome, data di nascita, sesso e, se vuoi,
+2. In **Ragazzo/a** scrivi nome, cognome, data di nascita, sesso e, se vuoi,
    il comune di nascita di tuo figlio. Se la data di nascita è di un maggiorenne, il
    modulo diventa quello per iscriversi da sé.
 3. Scrivi il suo codice fiscale, oppure tocca **Calcola**: l'app te lo propone dai dati

@@ -56,7 +56,7 @@ async function salva() {
   <section v-if="stato?.in_squadriglia" class="card card-body mb-5">
     <h2 class="h5 mb-1">Telefono in squadriglia</h2>
     <p class="form-text mb-3">
-      Gli altri ragazzi della squadriglia vedono questo numero; il capo squadriglia vede anche
+      Gli altri ragazzi/e della squadriglia vedono questo numero; il capo squadriglia vede anche
       quelli dei genitori. Niente email.
     </p>
     <div v-if="errore" class="alert theme-danger py-3 small" role="alert">{{ errore }}</div>
@@ -107,7 +107,7 @@ async function salva() {
           @change="salvato = false"
         />
         <label class="small" for="telefono-nascosto">
-          Non mostrarlo agli altri ragazzi (il capo squadriglia lo vede comunque)
+          Non mostrarlo agli altri ragazzi/e (il capo squadriglia lo vede comunque)
         </label>
       </div>
       <div class="d-flex align-items-center gap-3">

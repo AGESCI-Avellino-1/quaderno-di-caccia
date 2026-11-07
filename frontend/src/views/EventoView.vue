@@ -287,7 +287,7 @@ const STATI: [StatoPresenza, string][] = [
       <div v-if="evento.informazioni" class="mt-3" v-html="evento.informazioni"></div>
       <div v-if="evento.note_genitori" class="mt-3">
         <strong>Note per i genitori</strong>
-        <span class="small fg-2">(non le vedono i ragazzi)</span>
+        <span class="small fg-2">(non le vedono i ragazzi/e)</span>
         <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
       </div>
     </div>
@@ -426,7 +426,7 @@ const STATI: [StatoPresenza, string][] = [
           </div>
           <div v-if="modifica.tipo === 'MISSIONE'" class="col-12">
             <label class="form-label small" for="mod-note"
-              >Note per i genitori (le leggono i genitori e i capi, non i ragazzi)</label
+              >Note per i genitori (le leggono i genitori e i capi, non i ragazzi/e)</label
             >
             <textarea
               id="mod-note"

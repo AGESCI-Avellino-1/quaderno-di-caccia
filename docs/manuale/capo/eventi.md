@@ -12,7 +12,7 @@ riunioni hanno una pagina loro: vedi [Riunioni](riunioni).
      reparti, Consiglio Capi, Con.Ca.Vi. o Alta Squadriglia;
    - **Una branca**, per un evento di tutta la branca;
    - **Una squadriglia**, per un evento di squadriglia (anche la **Missione di squadriglia**,
-     con le **Note per i genitori**, che non leggono i ragazzi).
+     con le **Note per i genitori**, che non leggono i ragazzi/e).
 4. Scegli **Inizio** e **Fine**, scrivi **Luogo** e **Descrizione**.
 5. Tocca **Crea l'evento**.
 
@@ -48,7 +48,7 @@ leggono) e conferma.
 ## Chi partecipa
 
 Nella pagina dell'evento, il riquadro **Partecipanti** mostra tutti gli invitati. Chi la
-famiglia ha detto che non viene ha **Non partecipa**. Se un ragazzo non deve partecipare,
+famiglia ha detto che non viene ha **Non partecipa**. Se un ragazzo/a non deve partecipare,
 tocca **Non invitare…** e scrivi il motivo (la famiglia lo legge); **Invita di nuovo** lo
 riporta tra gli invitati.
 

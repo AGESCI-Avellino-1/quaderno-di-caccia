@@ -208,13 +208,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           nome: 'Genitori',
           icona: 'people',
           to: '/genitori',
-          descrizione: 'Chi ha la responsabilità genitoriale dei ragazzi',
+          descrizione: 'Chi ha la responsabilità genitoriale dei ragazzi/e',
         },
         p.capo && {
           nome: 'Soci',
           icona: 'person-vcard',
           to: '/soci',
-          descrizione: 'Capi e ragazzi censiti',
+          descrizione: 'Capi e ragazzi/e censiti',
         },
         (decide > 0 || p.capogruppo || (p.unita_servizio?.length ?? 0) > 0) && {
           nome: 'Richieste di iscrizione',

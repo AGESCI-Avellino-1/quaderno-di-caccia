@@ -133,7 +133,7 @@ def fascicolo(persona: Persona) -> dict:
             "Numero di un genitore scelto per lui o lei": (
                 str(persona.telefono_squadriglia_da) if persona.telefono_squadriglia_da else ""
             ),
-            "Nascosto agli altri ragazzi": persona.telefono_squadriglia_nascosto,
+            "Nascosto agli altri ragazzi/e": persona.telefono_squadriglia_nascosto,
             "Il suo numero vale per i figli senza cellulare": persona.telefono_per_i_figli,
         },
         "informazioni_sanitarie": (
@@ -205,7 +205,7 @@ def fascicolo(persona: Persona) -> dict:
                 "Tipo": n.get_tipo_display(),
                 "Testo": n.testo,
                 "Scritta il": _giorno(n.creato_il),
-                "La legge il ragazzo": n.visibile_ragazzo,
+                "La legge il socio": n.visibile_ragazzo,
                 "La leggono i genitori": n.visibile_genitori,
             }
             for n in Nota.objects.filter(persona=persona)

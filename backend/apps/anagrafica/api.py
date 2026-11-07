@@ -768,7 +768,7 @@ def aggiungi_periodo_percorso(request, persona_id: int, dati: PeriodoPercorsoIn)
     if not policy.puo_modificare_percorso(request.auth, persona):
         raise HttpError(403, "Il percorso lo completano il capo stesso o i capigruppo.")
     if dati.ruolo not in RuoloAppartenenza.values:
-        raise HttpError(400, "Indica se era ragazzo o capo.")
+        raise HttpError(400, "Indica se era ragazzo/a o capo.")
     periodo = PeriodoPercorso(
         persona=persona,
         gruppo=dati.gruppo.strip()[:160],

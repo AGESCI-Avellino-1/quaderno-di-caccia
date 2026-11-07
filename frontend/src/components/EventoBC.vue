@@ -217,8 +217,8 @@ const io = () => sessione.profilo?.persona?.id
       </div>
       <form v-if="nuova" class="card card-body mb-3" @submit.prevent="iscrivi">
         <p class="small fg-2">
-          Registra qui un ragazzo minorenne che lo staff ha già iscritto su BuonaCaccia. I
-          maggiorenni si iscrivono da soli: segna solo la loro partecipazione qui sotto.
+          Registra qui un socio minorenne che lo staff ha già iscritto su BuonaCaccia. I maggiorenni
+          si iscrivono da soli: segna solo la loro partecipazione qui sotto.
         </p>
         <div class="row g-3">
           <div class="col-12 md:col-6">
@@ -229,7 +229,7 @@ const io = () => sessione.profilo?.persona?.id
             </select>
           </div>
           <div class="col-12 md:col-6">
-            <label class="form-label small" for="bc-persona">Ragazzo</label>
+            <label class="form-label small" for="bc-persona">Socio</label>
             <select
               id="bc-persona"
               v-model="nuova.persona_id"
@@ -327,7 +327,7 @@ const io = () => sessione.profilo?.persona?.id
           @cambiata="cambiata"
         />
       </ul>
-      <p v-else class="small fg-2">Nessuna iscrizione di ragazzi minorenni.</p>
+      <p v-else class="small fg-2">Nessuna iscrizione di soci minorenni.</p>
     </section>
 
     <!-- Adults (DEC-164) -->

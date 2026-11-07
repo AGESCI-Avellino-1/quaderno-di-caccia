@@ -1,8 +1,8 @@
-# Usare l'app al posto di un ragazzo o di un genitore
+# Usare l'app al posto di un ragazzo/a o di un genitore
 
 A volte serve vedere l'app come la vede qualcun altro: per aiutare un genitore a compilare la
 scheda sanitaria, o per capire un problema che ti racconta. Puoi usare l'app al posto dei
-ragazzi della tua unità e dei loro genitori, mai di un capo.
+ragazzi/e della tua unità e dei loro genitori, mai di un capo.
 
 1. Nel menu del profilo tocca **Impersona** (o, nella scheda della persona, **Impersona
    …**).

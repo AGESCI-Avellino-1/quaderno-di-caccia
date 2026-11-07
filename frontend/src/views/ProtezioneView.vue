@@ -97,7 +97,7 @@ async function soloOnline() {
     <h1 class="h4 mb-5">Proteggi i dati su questo dispositivo</h1>
     <p>
       Per funzionare anche senza rete, l'app salva su questo dispositivo una copia dei dati che puoi
-      vedere: contatti, e per i capi farmaci e allergie dei ragazzi. Sono dati di minori: la copia
+      vedere: contatti, e per i capi farmaci e allergie dei ragazzi/e. Sono dati di minori: la copia
       viene cifrata e si apre solo con un PIN, o con impronta o volto.
     </p>
     <ul class="small">
@@ -150,7 +150,9 @@ async function soloOnline() {
     <p class="small mb-3">
       Preferisci non salvare niente su questo dispositivo (ad esempio se non è tuo)? L'app
       funzionerà solo con la rete.
-      <template v-if="sessione.capo"> Al campo, senza rete, non avrai i dati dei ragazzi.</template>
+      <template v-if="sessione.capo">
+        Al campo, senza rete, non avrai i dati dei ragazzi/e.</template
+      >
     </p>
     <button type="button" class="btn btn-outline theme-secondary btn-sm" @click="soloOnline">
       Usa solo online

@@ -356,9 +356,7 @@ class AppartenenzaSquadriglia(ModelloTracciato):
             .filter(ruolo=RuoloAppartenenza.RAGAZZO)
             .exists()
         ):
-            raise ValidationError(
-                f"{self.persona} non è un ragazzo o una ragazza di {squadriglia.unita}."
-            )
+            raise ValidationError(f"{self.persona} non è un ragazzo/a di {squadriglia.unita}.")
         # One patrol at a time: a change closes the previous membership first.
         if (
             AppartenenzaSquadriglia.objects.attive(self.data_inizio)

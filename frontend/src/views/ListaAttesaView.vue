@@ -60,7 +60,7 @@ async function chiediLink() {
     <div v-if="inviato" class="alert theme-success" role="status">
       <div>
         <strong>Siete in lista d'attesa.</strong> Vi abbiamo mandato un'email con un link per
-        correggere i dati o uscire dalla lista, e con l'anno scout da cui il ragazzo potrà essere
+        correggere i dati o uscire dalla lista, e con l'anno scout da cui il ragazzo/a potrà essere
         contattato. I capi chiamano a inizio anno, secondo i posti nelle unità.
       </div>
     </div>

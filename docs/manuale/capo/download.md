@@ -12,7 +12,7 @@ i capi vedono tutti i documenti, anche quelli delle altre unità.
    **Finché non viene eliminato**. Attenzione: alla scadenza il documento si cancella anche dal server e, se
    serve ancora, va ricaricato. Una settimana prima ti arriva un avviso, così puoi cambiare la scadenza.
 4. In **Chi lo vede** spunta la Comunità capi, tutti i genitori del gruppo, una o più unità. Lo staff delle
-   unità scelte lo vede sempre; sotto scegli se lo vedono anche i ragazzi e i genitori di quelle unità.
+   unità scelte lo vede sempre; sotto scegli se lo vedono anche i ragazzi/e e i genitori di quelle unità.
 5. Se vuoi, spunta **Avvisa i destinatari per email**. Chi ha rifiutato questi avvisi nelle preferenze non la
    riceve.
 6. Tocca **Salva**.

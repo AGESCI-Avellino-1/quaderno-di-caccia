@@ -18,8 +18,8 @@ Altrimenti scegli tu quale numero mostrare:
 2. In **Non ha un cellulare suo: quale numero mostrare?** scegli il cellulare di un
    genitore, oppure **Nessun numero**.
 3. Se hai più figli senza cellulare, spunta **Usalo per tutti i figli senza cellulare**.
-4. Se non vuoi che gli altri ragazzi lo vedano, spunta **Non mostrarlo agli altri
-   ragazzi**: il capo squadriglia lo vede comunque.
+4. Se non vuoi che gli altri ragazzi/e lo vedano, spunta **Non mostrarlo agli altri
+   ragazzi/e**: il capo squadriglia lo vede comunque.
 5. Tocca **Salva**.
 
 :::{container} schermate

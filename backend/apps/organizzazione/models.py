@@ -697,7 +697,7 @@ class Incarico(ModelloTracciato):
                 ruolo=RuoloAppartenenza.RAGAZZO, unita=self.squadriglia.unita_id
             ).exists():
                 raise ValidationError(
-                    f"{self.persona} non è un ragazzo o una ragazza di {self.squadriglia.unita}."
+                    f"{self.persona} non è un ragazzo/a di {self.squadriglia.unita}."
                 )
             if (
                 not AppartenenzaSquadriglia.objects.attive(self.data_inizio)

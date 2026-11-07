@@ -125,7 +125,7 @@ async function riformula() {
             }}.
           </template>
           <template v-if="voce.proposto_dal_ragazzo && voce.stato === 'BOZZA'">
-            Proposto dal ragazzo, da concordare con lo staff.
+            Proposto dal ragazzo/a, da concordare con lo staff.
           </template>
           <template v-if="voce.verificato_il">
             Verificato il {{ data(voce.verificato_il) }} ({{ voce.sede_nome }}).

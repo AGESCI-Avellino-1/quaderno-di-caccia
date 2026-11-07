@@ -60,7 +60,7 @@ async function salva() {
 }
 
 const ETICHETTE = {
-  quota: 'Quota pro capite dei ragazzi',
+  quota: 'Quota pro capite dei ragazzi/e',
   contributo: 'Contributo dalla cassa',
   totale: 'Budget complessivo',
 } as const
@@ -82,7 +82,7 @@ const ETICHETTE = {
           Contributo pro capite dello staff: <strong>{{ euro(conti.budget.quota_staff) }}</strong>
         </div>
         <div class="small fg-2">
-          Su {{ conti.budget.partecipanti }} ragazzi e {{ conti.budget.staff }} capi dello staff
+          Su {{ conti.budget.partecipanti }} ragazzi/e e {{ conti.budget.staff }} capi dello staff
         </div>
       </div>
       <p v-else class="fg-2 small">Budget non ancora fissato.</p>
@@ -97,7 +97,7 @@ const ETICHETTE = {
       <form v-if="modulo.aperto" class="border rounded p-5 mb-3" @submit.prevent="salva">
         <p class="form-text">
           Fissa due valori, il terzo lo calcola l'app sul numero dei partecipanti: budget = quota
-          dei ragazzi × ragazzi + contributo dello staff × capi dello staff + contributo dalla
+          dei ragazzi/e × ragazzi/e + contributo dello staff × capi dello staff + contributo dalla
           cassa. Lo staff è quello delle unità coinvolte.
         </p>
         <div class="mb-3">

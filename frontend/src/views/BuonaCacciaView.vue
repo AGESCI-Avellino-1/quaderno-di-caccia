@@ -58,7 +58,7 @@ async function crea(dati: EventoBCIn) {
     <section v-if="sessione.capo" class="mb-5">
       <h2 class="h5">Iscrizioni da seguire</h2>
       <p v-if="!iscrizioni.length" class="small fg-2">
-        Nessuna iscrizione aperta dei ragazzi delle tue unità.
+        Nessuna iscrizione aperta dei ragazzi/e delle tue unità.
       </p>
       <ul v-else class="list-group">
         <li v-for="i in iscrizioni" :key="i.id" class="list-group-item">

@@ -18,7 +18,7 @@ da correggere, le quote e, per esploratori e guide, il telefono in squadriglia.
 ## La foto
 
 La foto serve ai capi per riconoscere tuo figlio, per esempio nelle iscrizioni agli eventi
-su BuonaCaccia. Non viene pubblicata e gli altri ragazzi non la vedono.
+su BuonaCaccia. Non viene pubblicata e gli altri ragazzi/e non la vedono.
 
 1. Nella scheda tocca **Aggiungi una foto** (o **Cambia la foto**) e scegli una foto dal
    telefono.

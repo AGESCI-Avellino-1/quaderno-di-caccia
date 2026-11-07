@@ -4,7 +4,7 @@
 
 Quando una famiglia ti dà i soldi (o vedi un bonifico):
 
-1. Apri la scheda del ragazzo e, nel riquadro **Quote**, tocca **Registra un pagamento**.
+1. Apri la scheda del socio e, nel riquadro **Quote**, tocca **Registra un pagamento**.
 2. Spunta le quote che paga e quanto per ognuna (anche solo una parte). Compaiono anche le
    quote di fratelli e genitori: con un pagamento si pagano quelle di tutta la famiglia.
 3. Scegli la **Data**, **Come** (contanti, bonifico, PayPal, altro) e scrivi **Chi ha

@@ -21,9 +21,9 @@ from apps.organizzazione.models import Unita
 
 
 class Destinatari(models.TextChoices):
-    FAMIGLIE = "FAMIGLIE", "Famiglie e ragazzi"
+    FAMIGLIE = "FAMIGLIE", "Famiglie e ragazzi/e"
     GENITORI = "GENITORI", "Solo i genitori"
-    RAGAZZI = "RAGAZZI", "Solo i ragazzi"
+    RAGAZZI = "RAGAZZI", "Solo i ragazzi/e"
     CAPI = "CAPI", "Comunità capi"
 
 

@@ -58,7 +58,7 @@ async function invia() {
       <p class="small mb-3">
         Qui ci sono i genitori e i maggiorenni con un'email che non hanno ancora un account né un
         invito valido. Spunta chi invitare e tocca <strong>Manda gli inviti</strong>: le email
-        partono un po' alla volta. I ragazzi minorenni si invitano con il link personale, dalla loro
+        partono un po' alla volta. I soci minorenni si invitano con il link personale, dalla loro
         scheda.
       </p>
       <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>

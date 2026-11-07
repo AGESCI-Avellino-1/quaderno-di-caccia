@@ -147,7 +147,7 @@ posto del codice.
 ## Le eccezioni sulle squadriglie
 
 Le squadriglie sono maschili o femminili. Quando la Comunità capi decide un'eccezione, un
-capogruppo la registra nella scheda del ragazzo, in **Eccezioni sulla squadriglia**:
+capogruppo la registra nella scheda del ragazzo/a, in **Eccezioni sulla squadriglia**:
 
 1. Tocca **Registra**.
 2. Scegli il reparto, se può entrare nelle squadriglie **femminili** o **maschili**, il giorno
@@ -155,5 +155,5 @@ capogruppo la registra nella scheda del ragazzo, in **Eccezioni sulla squadrigli
    i capi).
 3. Tocca **Registra**.
 
-Con **revoca** la togli da oggi. L'eccezione finisce da sola quando il ragazzo lascia il
+Con **revoca** la togli da oggi. L'eccezione finisce da sola quando il ragazzo/a lascia il
 reparto. Ogni lettura resta nel registro degli accessi.

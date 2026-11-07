@@ -13,7 +13,7 @@ docker compose exec web python manage.py createsuperuser
 ```
 
 È l'**amministratore tecnico**: gestisce account, importazioni e impostazioni del sito, ma
-**non vede i dati educativi e sanitari** dei ragazzi. Gli altri amministratori li nominano poi
+**non vede i dati educativi e sanitari** dei soci. Gli altri amministratori li nominano poi
 i capigruppo dall'app, e devono essere capi.
 
 Al primo accesso nell'app, con l'email e la password appena scelte, arriva per email un

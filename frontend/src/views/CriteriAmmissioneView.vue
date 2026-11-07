@@ -133,7 +133,7 @@ const futura = (iso: string) => iso > oggi()
         </div>
         <EditorTesto v-model="modulo.testo" etichetta="Testo dei criteri" class="mb-5" />
         <fieldset class="mb-5">
-          <legend class="small fw-bold">Numero massimo di ragazzi per unità</legend>
+          <legend class="small fw-bold">Numero massimo di ragazzi/e per unità</legend>
           <p class="form-text">
             Vuoto vuol dire nessun limite. Compaiono in una tabella in fondo al PDF. Oltre il
             massimo chi accoglie una richiesta riceve un avviso, ma può accoglierla lo stesso.

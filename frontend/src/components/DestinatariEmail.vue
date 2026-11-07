@@ -14,7 +14,7 @@ const { errore, inCorso, esegui } = useErrore()
 const GRUPPI = [
   { chiave: 'capi', nome: 'Capi' },
   { chiave: 'genitori', nome: 'Genitori' },
-  { chiave: 'ragazzi', nome: 'Ragazzi' },
+  { chiave: 'ragazzi', nome: 'Ragazzi/e' },
 ] as const
 type Gruppo = (typeof GRUPPI)[number]['chiave']
 

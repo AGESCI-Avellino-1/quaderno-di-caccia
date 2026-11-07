@@ -115,7 +115,7 @@ async function applicaRettifica() {
   esito.value =
     rettifica.tipo === 'data'
       ? 'Data corretta: periodi e unità spostati al giorno giusto.'
-      : 'Passaggio annullato: i ragazzi sono tornati dove erano.'
+      : 'Passaggio annullato: i ragazzi/e sono tornati dove erano.'
   rettifica.id = 0
 }
 

@@ -266,7 +266,7 @@ const statoMio = {
         </div>
         <div v-if="modulo.tipo === 'MISSIONE'" class="col-12">
           <label class="form-label small" for="ev-note-genitori">
-            Note per i genitori (le leggono i genitori e i capi, non i ragazzi)
+            Note per i genitori (le leggono i genitori e i capi, non i ragazzi/e)
           </label>
           <textarea
             id="ev-note-genitori"

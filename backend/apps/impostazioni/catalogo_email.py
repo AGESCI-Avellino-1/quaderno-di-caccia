@@ -17,7 +17,7 @@ PERSONA = Segnaposto("Persona", "nome e cognome della persona", "Giulia Rossi")
 NOME = Segnaposto("Nome", "il nome della persona", "Giulia")
 UNITA = Segnaposto("Unità", "l'unità", "Reparto Antares (N1)")
 EVENTO = Segnaposto("Evento", "il titolo dell'evento", "Uscita di reparto")
-RAGAZZO = Segnaposto("Ragazzo", "nome e cognome del ragazzo", "Giulia Rossi")
+RAGAZZO = Segnaposto("Ragazzo", "nome e cognome del ragazzo/a", "Giulia Rossi")
 MOTIVO = Segnaposto("Motivo", "il motivo scritto dal capo", "Il reparto è al completo.", True)
 
 
@@ -69,7 +69,7 @@ _TIPI = [
     TipoEmail(
         "attivazione_account",
         "Attivazione dal link personale",
-        "Al ragazzo che ha aperto il suo link personale e ha scritto la sua email.",
+        "Al socio che ha aperto il suo link personale e ha scritto la sua email.",
         "[Nome sito]: crea il tuo account",
         "<p>Ciao [Nome],</p><p>per creare il tuo account del [Nome sito] apri questo link:<br>"
         "[Link]</p><p>Il link vale fino al [Scadenza] e si può usare una sola volta.<br>Se non "
@@ -88,7 +88,7 @@ _TIPI = [
         "<p>Ciao,</p><p>[Ragazzo] ha creato il suo account del [Nome sito] con il link "
         "personale ricevuto dai capi.</p><p>Se hai domande, scrivi ai capi "
         "dell'unità.</p><p>[Nome sito]</p>",
-        (Segnaposto("Ragazzo", "nome e cognome del ragazzo", "Giulia Rossi", True),),
+        (Segnaposto("Ragazzo", "nome e cognome del socio", "Giulia Rossi", True),),
     ),
     TipoEmail(
         "reimposta_password",

@@ -17,7 +17,7 @@ usarlo verificalo con lo Statuto e il Regolamento, e adattalo a quello che la Co
 3. Scegli l'**Anno associativo**, quello in corso o il successivo, e **Valida dal**.
 4. Scrivi numero e data del **verbale della Co.Ca.** che li ha deliberati.
 5. Modifica il testo.
-6. In **Numero massimo di ragazzi per unità** scrivi i numeri decisi. Lascia vuoto dove non c'è un limite.
+6. In **Numero massimo di ragazzi/e per unità** scrivi i numeri decisi. Lascia vuoto dove non c'è un limite.
 7. Tocca **Salva la versione**.
 
 :::{container} schermate

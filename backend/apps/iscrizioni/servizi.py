@@ -398,7 +398,7 @@ def completa(richiesta: RichiestaIscrizione, dati: dict) -> None:
     socio.email = socio.email.lower()
     padre_o_madre = genitore(richiesta)
     if padre_o_madre is not None and socio.email and socio.email == padre_o_madre.email.lower():
-        raise ValidationError("L'email del ragazzo deve essere sua, non quella del genitore.")
+        raise ValidationError("L'email del socio deve essere sua, non quella del genitore.")
     if socio.cap and not (socio.cap.isdigit() and len(socio.cap) == 5):
         raise ValidationError("Il CAP ha 5 cifre.")
     if socio.provincia and not (socio.provincia.isalpha() and len(socio.provincia) == 2):

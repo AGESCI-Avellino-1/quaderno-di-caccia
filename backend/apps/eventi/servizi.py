@@ -442,7 +442,7 @@ def imposta_alta_squadriglia(reparto: Unita, anno: int, persone: list[Persona]) 
         .values_list("persona_id", flat=True)
     )
     if any(p.pk not in del_reparto for p in persone):
-        raise ValidationError("L'Alta Squadriglia si sceglie tra i ragazzi del reparto.")
+        raise ValidationError("L'Alta Squadriglia si sceglie tra i ragazzi/e del reparto.")
     MembroAltaSquadriglia.objects.filter(reparto=reparto, anno=anno).exclude(
         persona__in=persone
     ).delete()

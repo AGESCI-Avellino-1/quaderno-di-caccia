@@ -8,7 +8,7 @@ clan o fuoco), come capo unità o nello staff. Nel Quaderno di Caccia:
 - vedi tutte le persone del gruppo, con i contatti e i dati sanitari;
 - gestisci la tua unità: squadriglie, codici di iscrizione, lista d'attesa;
 - scrivi la Progressione Personale, le note e le regole sul rapporto con i minori dei
-  ragazzi della tua unità;
+  ragazzi/e della tua unità;
 - organizzi gli eventi e segni le presenze, anche senza rete;
 - al campo hai con te farmaci, allergie e contatti di tutti.
 

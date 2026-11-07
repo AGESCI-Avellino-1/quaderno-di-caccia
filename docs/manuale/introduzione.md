@@ -3,11 +3,11 @@
 ## Cos'è il Quaderno di Caccia
 
 È l'app {{ del_gruppo }}. Ci trovi i dati dei tuoi figli (o i tuoi, se sei un
-ragazzo o un capo), gli eventi e le presenze, le quote da pagare, la Progressione
+ragazzo/a o un capo), gli eventi e le presenze, le quote da pagare, la Progressione
 Personale e gli avvisi dei capi.
 
-Ognuno vede solo la sua parte: un genitore vede i suoi figli, un ragazzo vede sé stesso,
-un capo vede i ragazzi della sua unità. In ogni capitolo trovi scritto chi può usare
+Ognuno vede solo la sua parte: un genitore vede i suoi figli, un ragazzo/a vede i propri dati,
+un capo vede i ragazzi/e della sua unità. In ogni capitolo trovi scritto chi può usare
 quella funzione.
 
 ## Come si apre

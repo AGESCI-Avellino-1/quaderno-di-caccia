@@ -423,7 +423,7 @@ def _allegati(minore: bool) -> Table:
         ),
         Paragraph(
             "• Fotocopia del documento d'identità in corso di validità"
-            + (" del ragazzo e del genitore firmatario." if minore else "."),
+            + (" del/la ragazzo/a e del genitore firmatario." if minore else "."),
             TESTO,
         ),
     ]

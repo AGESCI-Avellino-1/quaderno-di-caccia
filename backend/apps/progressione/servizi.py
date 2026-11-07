@@ -100,7 +100,7 @@ def apri_sentiero(persona: Persona, quando: DataParziale, utente) -> PeriodoBran
     controlla_anno_aperto(quando.valore)
     branca = branca_attuale(persona)
     if branca is None:
-        raise ValidationError("Il percorso si apre per chi è in un'unità come ragazzo.")
+        raise ValidationError("Il percorso si apre per chi è in un'unità come ragazzo/a.")
     if branca == Branca.RS:
         # Back in clan after an interruption or a transfer: a new period, the old one
         # stays in the history; never after the Partenza (DEC-189).

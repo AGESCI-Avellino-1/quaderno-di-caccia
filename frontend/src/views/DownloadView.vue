@@ -451,7 +451,7 @@ async function leggiTesto(id: number) {
               type="checkbox"
               class="check"
             />
-            <label for="doc-unita-ragazzi">I ragazzi</label>
+            <label for="doc-unita-ragazzi">I ragazzi/e</label>
           </div>
           <div class="form-field mb-1">
             <input

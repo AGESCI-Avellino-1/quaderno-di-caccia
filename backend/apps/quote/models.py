@@ -66,7 +66,7 @@ class CategoriaQuota(models.TextChoices):
 
 class Destinatari(models.TextChoices):
     TUTTI = "TUTTI", "Tutti i soci"
-    RAGAZZI = "RAGAZZI", "Solo i ragazzi"
+    RAGAZZI = "RAGAZZI", "Solo i ragazzi/e"
     CAPI = "CAPI", "Solo i capi"
     UNITA = "UNITA", "Le unità indicate"
 

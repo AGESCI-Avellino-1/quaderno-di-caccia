@@ -19,6 +19,12 @@ La pagina si legge anche senza rete, se l'hai aperta prima. Senza rete puoi anch
 impegni (o prede e voli) e fare i passi di impegni, mete, specialità e brevetti; il resto si
 fa con la rete.
 
+### Le altre unità
+
+In **Progressione personale**, **Altre unità** elenca le unità del gruppo in cui non servi. Si
+aprono le stesse pagine delle tue: progressione, imprese, Carta di clan e passaggi. Puoi
+guardarle, ma le modifiche spettano al loro staff, quindi i pulsanti per cambiare non ci sono.
+
 ## Cose comuni a tutte le branche
 
 **Aprire il percorso.** Per chi entra nell'unità tocca **Apri il percorso** e scrivi quando

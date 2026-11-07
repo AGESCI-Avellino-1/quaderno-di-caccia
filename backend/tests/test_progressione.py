@@ -342,3 +342,39 @@ def test_staff_dell_unita_collegata_gestisce_la_progressione(
     assert not policy.puo_gestire_progressione(estraneo.utente, ragazza)
     collega(parallelo, None)
     assert not policy.puo_gestire_progressione(altro_capo.utente, ragazza)
+
+
+def _altre_unita(chi) -> set[int]:
+    return {u["id"] for u in _client(chi).get("/api/v1/io").json()["altre_unita"]}
+
+
+def test_altre_unita_per_chi(
+    capo, altro_capo, capogruppo, ragazza, csq, genitore, estraneo, reparto, gruppo
+):
+    clan = Unita.objects.create(gruppo=gruppo, nome="Clan", tipo=TipoUnita.CLAN_FUOCO)
+    Unita.objects.create(gruppo=gruppo, nome="Chiuso", tipo=TipoUnita.CLAN_FUOCO, attiva=False)
+    # Not the unit they serve, nor the Co.Ca., nor a closed unit.
+    assert _altre_unita(capo) == {clan.pk}
+    assert _altre_unita(altro_capo) == {clan.pk, reparto.pk}
+    assert _altre_unita(capogruppo) == {clan.pk, reparto.pk}
+    for chi in (ragazza, csq, genitore, estraneo):
+        assert _altre_unita(chi) == set()
+    # A capo still waiting for BuonaStrada sees no ragazzi's data.
+    altro_capo.codice_socio = "9000000001"
+    altro_capo.save(update_fields=["codice_socio"])
+    assert _altre_unita(altro_capo) == set()
+
+
+def test_altre_unita_solo_in_lettura(altro_capo, reparto):
+    # The pages answer, and none of them offers a change to a capo who is not staff.
+    base = f"/api/v1/unita/{reparto.pk}"
+    assert _client(altro_capo).get(f"{base}/progressione").json()["puo_gestire"] is False
+    imprese = _client(altro_capo).get(f"{base}/imprese").json()
+    assert imprese["puo_gestire"] is False and imprese["puo_creare"] is False
+    assert _client(altro_capo).get(f"{base}/passaggi").json()["puo_preparare"] is False
+    risposta = _post(
+        altro_capo,
+        f"{base}/passaggi",
+        {"unita_destinazione_id": reparto.pk, "data": str(date.today()), "persone": []},
+    )
+    assert risposta.status_code == 403

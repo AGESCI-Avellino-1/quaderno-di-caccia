@@ -95,6 +95,8 @@ class Profilo(Schema):
     # unit (GIUNGLA, BOSCO or None) that names their Progressione personale.
     unita_servizio: list[UnitaBreve]
     ambiente: str | None
+    # The units the capo does not serve, whose progression they read (DEC-381).
+    altre_unita: list[UnitaBreve] = []
     # The list of the patrol animals, in the menu (DEC-350).
     vede_animali: bool = False
     # Payments families reported that this user may check (DEC-255).
@@ -157,6 +159,10 @@ def profilo(request):
         "unita_servizio": [
             {"id": u.id, "nome": str(u), "tipo": u.tipo, "branca": u.branca.value}
             for u in policy.unita_progressione(user)
+        ],
+        "altre_unita": [
+            {"id": u.id, "nome": str(u), "tipo": u.tipo, "branca": u.branca.value}
+            for u in policy.altre_unita_progressione(user)
         ],
         "ambiente": ambiente(persona) if persona is not None else None,
         "pagamenti_da_verificare": _pagamenti_da_verificare(user),

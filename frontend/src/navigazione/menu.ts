@@ -136,6 +136,14 @@ function progressione(p: Profilo): Voce[] {
       sezione,
     })
   }
+  if (p.altre_unita?.length) {
+    voci.push({
+      nome: 'Altre unità',
+      icona: 'collection',
+      to: '/progressione/altre-unita',
+      descrizione: 'La progressione delle unità in cui non servi, da guardare',
+    })
+  }
   return voci
 }
 

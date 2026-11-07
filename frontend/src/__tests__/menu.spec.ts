@@ -88,6 +88,24 @@ describe('menu', () => {
     )
   })
 
+  it('a capo reaches the other units from one entry, after their own', () => {
+    const capo = {
+      ...BASE,
+      persona: io,
+      branca: 'capi' as const,
+      capo: true,
+      unita_servizio: [{ id: 7, nome: 'Reparto Antares (N1)', tipo: 'REPARTO', branca: 'EG' }],
+      altre_unita: [{ id: 8, nome: 'Clan/Fuoco Hirpinia (T1)', tipo: 'CLAN_FUOCO', branca: 'RS' }],
+    }
+    expect(voci(capo, 'progressione')).toEqual([
+      'Reparto Antares (N1)',
+      'Imprese',
+      'Passaggi',
+      'Altre unità',
+    ])
+    expect(voci({ ...capo, altre_unita: [] }, 'progressione')).not.toContain('Altre unità')
+  })
+
   it('a capo sees the units they serve under Progressione personale', () => {
     const capo = {
       ...BASE,

@@ -332,6 +332,13 @@ const router = createRouter({
       props: (rotta) => ({ id: Number(rotta.params.id) }),
     },
     {
+      // The units a capo does not serve, to read their progression (DEC-381).
+      path: '/progressione/altre-unita',
+      name: 'altre-unita',
+      component: () => import('@/views/AltreUnitaView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // The reparto at a glance: capi (DEC-72).
       path: '/unita/:id(\\d+)/sentiero',
       name: 'sentiero-unita',

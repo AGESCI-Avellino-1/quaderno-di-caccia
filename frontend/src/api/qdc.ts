@@ -116,6 +116,8 @@ export interface Profilo {
   vede_impostazioni?: boolean
   /** Units the capo serves: their Progressione personale entries in the menu. */
   unita_servizio?: { id: number; nome: string; tipo: string; branca: string }[]
+  /** Units the capo does not serve, whose progression they read (DEC-381). */
+  altre_unita?: { id: number; nome: string; tipo: string; branca: string }[]
   /** L/C setting of the child's unit, which names their Progressione personale. */
   ambiente?: 'GIUNGLA' | 'BOSCO' | null
   /** Payments families reported that this user may check (DEC-255). */

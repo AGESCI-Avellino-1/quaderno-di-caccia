@@ -12,7 +12,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42) | Unità in ordine di branca, ovunque compaiono (DEC-378)                     | Miglioramento | Basso   | Media      | WIP    |
 | [#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43) | Spese da rimborsare: voce, contatore e notifica (DEC-379, DEC-386)         | Miglioramento | Basso   | Media      | WIP    |
 | [#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44) | Versione sul server nel piè di pagina e pulsante Aggiorna (DEC-380)        | Miglioramento | Medio   | Media      | WIP    |
-| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi (DEC-381)        | Miglioramento | Basso   | Bassa      | WIP    |
+| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi (DEC-381)        | Miglioramento | Basso   | Bassa      | VER    |
 | [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci (DEC-382, DEC-383) | Miglioramento | Basso   | Media      | WIP    |
 | [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità (DEC-384)             | Miglioramento | Basso   | Bassa      | VER    |
 | [#48](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/48) | Avvisi esistenti solo a chi può agire (DEC-385)                            | Miglioramento | Medio   | Media      |        |

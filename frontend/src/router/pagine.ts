@@ -36,6 +36,7 @@ export const PAGINE: Record<string, Pagina> = {
   'sentiero-unita': { titolo: "Progressione dell'unità", sopra: 'unita-dettaglio' },
   imprese: { titolo: 'Imprese', sopra: 'unita-dettaglio' },
   passaggi: { titolo: 'Passaggi', sopra: 'unita-dettaglio' },
+  'altre-unita': { titolo: 'Altre unità', soloCapi: true },
   'animali-squadriglia': { titolo: 'Animali di squadriglia' },
   'criteri-ammissione': { titolo: 'Criteri di ammissione', sopra: 'download', soloCapi: true },
   gruppo: { titolo: 'Organigramma' },

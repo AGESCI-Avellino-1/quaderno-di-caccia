@@ -1956,6 +1956,19 @@ def unita_progressione(user) -> QuerySet[Unita]:
     )
 
 
+def altre_unita_progressione(user) -> QuerySet[Unita]:
+    """The units a capo does not serve, to read their progression (DEC-381): every capo
+    already reads it (DEC-09, DEC-41), not one still waiting for BuonaStrada (DEC-123)."""
+    if not e_capo_censito(user):
+        return Unita.objects.none()
+    return (
+        Unita.objects.filter(attiva=True, archiviata_il__isnull=True)
+        .exclude(tipo=TipoUnita.COMUNITA_CAPI)
+        .exclude(pk__in=_unita_servite(user))
+        .order_by("tipo", "progressivo")
+    )
+
+
 # --- Waiting list (DEC-256…DEC-263) ---------------------------------------------------------
 
 

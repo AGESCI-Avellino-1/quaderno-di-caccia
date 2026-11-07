@@ -9,6 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                             | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- | ------- | ---------- | ------ |
+| [#64](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/64) | Eventi: «Campo · · Località» per gli eventi su BuonaCaccia         | Bug           | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

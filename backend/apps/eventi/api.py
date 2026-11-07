@@ -115,6 +115,8 @@ class EventoOut(Schema):
     branca: str
     unita: list[int]
     unita_nomi: list[str]
+    # The type of an event on BuonaCaccia, in place of the units it has not (DEC-398).
+    tipologia_bc: str = ""
     squadriglia_id: int | None
     squadriglia: str | None
     # Its image, next to the name (DEC-353).
@@ -179,6 +181,11 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "branca": evento.branca,
         "unita": [u.pk for u in unita],
         "unita_nomi": [str(u) for u in unita],
+        "tipologia_bc": (
+            str(evento.buonacaccia.tipologia)
+            if evento.livello == Livello.ESTERNO and hasattr(evento, "buonacaccia")
+            else ""
+        ),
         "squadriglia_id": evento.squadriglia_id,
         "squadriglia": evento.squadriglia.nome if evento.squadriglia_id else None,
         "animale": breve(evento.squadriglia.animale) if evento.squadriglia_id else None,
@@ -300,7 +307,7 @@ def eventi(
     """The events; with `riunioni` the meetings instead, which are not events for who uses
     the app (DEC-310)."""
     elenco = policy.eventi_visibili(request.auth).select_related(
-        "squadriglia__animale", "localita", "riunione"
+        "squadriglia__animale", "localita", "riunione", "buonacaccia__tipologia"
     )
     if riunioni:
         elenco = elenco.filter(tipo=TipoEvento.RIUNIONE)

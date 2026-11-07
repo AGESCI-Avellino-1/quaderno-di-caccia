@@ -1976,6 +1976,8 @@ export interface Evento {
   branca: string
   unita: number[]
   unita_nomi: string[]
+  /** The type of an event on BuonaCaccia (DEC-398). */
+  tipologia_bc?: string
   squadriglia_id: number | null
   squadriglia: string | null
   animale?: AnimaleBreve | null

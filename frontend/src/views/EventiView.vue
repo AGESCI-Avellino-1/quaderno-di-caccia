@@ -107,6 +107,22 @@ async function salva() {
 }
 
 const quando = (e: Evento) => quandoEvento(e)
+
+// Type, who it is for, circle and place: only the parts there are, never an empty one
+// between dots. An event on BuonaCaccia has no unit: «BuonaCaccia» and its type there
+// (DEC-398).
+function sottotitolo(e: Evento): string {
+  if (e.livello === 'ESTERNO')
+    return ['BuonaCaccia', e.tipologia_bc, e.luogo].filter(Boolean).join(' · ')
+  const per =
+    e.livello === 'GRUPPO'
+      ? 'tutto il gruppo'
+      : e.squadriglia
+        ? `Sq. ${e.squadriglia}`
+        : e.unita_nomi.join(', ')
+  const cerchia = e.cerchia !== 'TUTTI' ? e.cerchia_nome : ''
+  return [e.tipo_nome, per, cerchia, e.luogo].filter(Boolean).join(' · ')
+}
 const statoMio = {
   INVITATO: '',
   NON_PARTECIPA: 'non partecipa',
@@ -301,18 +317,7 @@ const statoMio = {
           <span class="small fg-2">{{ quando(e) }}</span>
           <span v-if="e.annullato" class="badge theme-danger">Annullato</span>
         </div>
-        <div class="small fg-2">
-          {{ e.tipo_nome }} ·
-          {{
-            e.livello === 'GRUPPO'
-              ? 'tutto il gruppo'
-              : e.squadriglia
-                ? `Sq. ${e.squadriglia}`
-                : e.unita_nomi.join(', ')
-          }}
-          <template v-if="e.cerchia !== 'TUTTI'"> · {{ e.cerchia_nome }}</template>
-          <template v-if="e.luogo"> · {{ e.luogo }}</template>
-        </div>
+        <div class="small fg-2">{{ sottotitolo(e) }}</div>
         <div
           v-for="m in e.mie.filter((x) => x.stato !== 'INVITATO')"
           :key="m.persona_id"

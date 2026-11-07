@@ -261,3 +261,10 @@ def test_eventi_gia_inseriti_prendono_il_tipo(capo):
     assert tipi[2].tipo_campo == "CFM" and tipi[2].formazione_capi
     assert tipi[0].branche == ["LC"] and tipi[3].branche == []
     assert TipologiaBuonaCaccia.objects.filter(categoria="ALTRO").count() == 1
+
+
+def test_nell_elenco_degli_eventi_il_tipo(capo, ragazza):
+    evento = _evento(capo)
+    _iscrivi(capo, evento, ragazza)
+    (trovato,) = [e for e in _client(capo).get("/api/v1/eventi").json() if e["id"] == evento.pk]
+    assert trovato["tipologia_bc"] == "Capi Squadriglia"

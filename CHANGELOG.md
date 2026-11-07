@@ -5,6 +5,42 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.22.0 — 7 novembre 2026
+
+### Novità
+
+**Unità in ordine di branca** ([#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42)): ovunque compaiano, le unità sono in ordine: Lupetti e Coccinelle, Esploratori e Guide, Rover e Scolte e per ultima la Comunità capi; dentro la branca per nome, oppure per codice se l'unità non ha un nome. Nel PDF degli incarichi per unità la Comunità capi resta la prima sezione.
+
+**Spese da rimborsare** ([#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43)): chi può rimborsare trova in **Gestione economica** la voce **Spese da rimborsare**, con il numero di quelle che lo aspettano; la scheda in Prima nota resta. Quando un capo registra una spesa, un'email e una notifica avvisano il tesoriere dell'unità o, se non c'è, il capo unità; per le spese del gruppo, e se in unità non può farlo nessuno, i tesorieri di gruppo o, se non ci sono, i capigruppo. Le spese dei capi restano fra capi: un tesoriere rover o scolta non le vede.
+
+**Versione del server e pulsante Aggiorna** ([#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44)): nel titolo e nel piè di pagina si può scrivere [Release server], che mostra la versione installata sul server. Se il telefono o il computer è rimasto indietro, nel piè di pagina compare a tutti il pulsante **Aggiorna**: l'aggiornamento parte solo quando lo tocchi. Di conseguenza la versione del server si può leggere anche senza account.
+
+**Progressione delle altre unità** ([#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45)): in **Progressione personale** i capi hanno la voce **Altre unità**, con le schede delle unità in cui non servono, da guardare; le modifiche spettano al loro staff.
+
+**Menu riordinato** ([#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46)): ogni gruppo del menu ha una pagina con le sue voci, che si apre toccandolo nel percorso in alto. **Il mio gruppo** ora ha, in ordine, Organigramma, Unità, Genitori, Soci, Richieste di iscrizione, Lista d'attesa e Formazione capi. **Modulistica**, **Richieste privacy** e **Animali di squadriglia** passano ad **Amministrazione**, **Invita nel gruppo** al **Profilo**. Genitori e ragazzi non hanno più il gruppo Il mio gruppo; i ragazzi del reparto trovano in Amministrazione gli animali di squadriglia.
+
+**Incarichi di unità dall'Organigramma** ([#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47)): i capigruppo assegnano e chiudono da lì anche capo unità, staff e assistente ecclesiastico, e un avviso segnala loro chi è capo unità o staff in più unità. Due unità collegate contano come una, l'assistente ecclesiastico non conta: servire più unità resta permesso.
+
+**Avvisi solo a chi può agire** ([#48](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/48)): richieste di iscrizione, correzioni, verbali, documenti in scadenza, fine anno, scadenze BuonaCaccia e modelli di email da correggere non arrivano più a chi non può fare ciò che chiedono: account disattivato, nessun account o, dove la regola lo esclude, codice provvisorio. Per le scadenze BuonaCaccia, se nello staff non può agire nessuno, l'avviso va ai capigruppo.
+
+### Correzioni
+
+**Promemoria delle quote di un maggiorenne** ([#48](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/48)): ai genitori arrivava seguendo la scelta sulla scheda, non quella sulle quote: chi aveva tolto ai genitori la vista delle sole quote faceva arrivare loro comunque nome e importo. Ora arriva solo finché le vedono, come nella pagina delle quote.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.22.0
+```
+
+Una migrazione, che non cambia le tabelle né i dati: registra solo il nuovo ordine delle unità.
+
+### Documentazione
+
+Il manuale segue il nuovo menu, con le schermate della Home e dell'Organigramma rifatte; le altre schermate da computer mostrano ancora il menu laterale di prima. Spiega anche le altre unità, le spese da rimborsare e il pulsante Aggiorna.
+
+Provata con i test e in un browser da computer, con dati inventati. Non sono ancora provati su un server in produzione né su un telefono il passaggio alla nuova versione con il pulsante Aggiorna, soprattutto su iPhone, e l'arrivo vero di email e notifiche per le spese. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.21.0 — 6 novembre 2026
 
 ### Novità

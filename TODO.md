@@ -2,20 +2,13 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 07/11/2026 (ultima versione: v1.21.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 07/11/2026 (ultima versione: v1.22.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
 | Issue                                                                    | Titolo                                                                     | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42) | Unità in ordine di branca, ovunque compaiono (DEC-378)                     | Miglioramento | Basso   | Media      | VER    |
-| [#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43) | Spese da rimborsare: voce, contatore e notifica (DEC-379, DEC-386)         | Miglioramento | Basso   | Media      | VER    |
-| [#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44) | Versione sul server nel piè di pagina e pulsante Aggiorna (DEC-380)        | Miglioramento | Medio   | Media      | VER    |
-| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi (DEC-381)        | Miglioramento | Basso   | Bassa      | VER    |
-| [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci (DEC-382, DEC-383) | Miglioramento | Basso   | Media      | VER    |
-| [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità (DEC-384)             | Miglioramento | Basso   | Bassa      | VER    |
-| [#48](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/48) | Avvisi esistenti solo a chi può agire (DEC-385)                            | Miglioramento | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -39,6 +32,13 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue | Titolo | Release |
 | ----- | ------ | ------- |
+| [#48](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/48) | Avvisi esistenti solo a chi può agire (DEC-385) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
+| [#47](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/47) | Organigramma: incarichi di unità e capi in più unità (DEC-384) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
+| [#46](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/46) | Menu: pagine dei gruppi e nuova disposizione delle voci (DEC-382, DEC-383) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
+| [#45](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/45) | Progressione delle altre unità in sola lettura per i capi (DEC-381) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
+| [#44](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/44) | Versione sul server nel piè di pagina e pulsante Aggiorna (DEC-380) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
+| [#43](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/43) | Spese da rimborsare: voce, contatore e notifica (DEC-379, DEC-386) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
+| [#42](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/42) | Unità in ordine di branca, ovunque compaiono (DEC-378) | [v1.22.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.22.0) |
 | [#35](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/35) | Manuale d'uso online non personalizzato (DEC-371) | [v1.20.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.0) |
 | [#39](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/39) | Notifiche: invio di prova, amministratori tecnici (DEC-377) | [v1.21.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.21.0) |
 | [#38](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/38) | Verbali: nome del file PDF con titolo e data (DEC-376) | [v1.20.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.20.1) |

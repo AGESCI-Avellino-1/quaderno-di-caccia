@@ -5,6 +5,42 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.24.0 — 7 novembre 2026
+
+### Novità
+
+**Orari e modifica degli eventi su BuonaCaccia** ([#54](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/54)): il giorno di inizio e di fine sono obbligatori, l'ora di ciascuno è facoltativa e si può aggiungere dopo. Dove manca si mostra il solo giorno, anche nel calendario del telefono, e l'evento resta in corso per tutto il suo ultimo giorno. Gli eventi già inseriti con le 00:00 passano da soli a «senza ora». Nella pagina dell'evento, **Modifica l'evento** è per i capigruppo, per chi lo ha creato e per chi gestisce un iscritto; se cambiano date, orari o luogo, gli invitati ricevono un avviso.
+
+**Link all'evento** ([#51](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/51)): ogni evento su BuonaCaccia può avere il link alla sua pagina, che vedono anche gli iscritti e le famiglie. **Registra un'iscrizione** ora compare solo allo staff di un'unità e ai capigruppo.
+
+**Nuovo evento su BuonaCaccia dagli Eventi** ([#52](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/52)): un pulsante accanto a **Nuovo evento** porta alla ricerca, perché ogni evento lì è nell'app una volta sola. Nel menu e nel percorso in alto, **Eventi su BuonaCaccia** sta sotto **Eventi**.
+
+**Data reale dei passi** ([#55](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/55)): liberatoria arrivata e caricata, scheda compilata e pagamento su BuonaCaccia si segnano con la loro data, di base oggi, mai nel futuro. Accanto alla data ci sono **Cambia** e **Togli**.
+
+**Pagamento solo se c'è una quota** ([#57](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/57)): con la quota per la famiglia vuota, 0 o tolta, il pagamento su BuonaCaccia non risulta mancante e non ha promemoria; si può comunque segnare, per quando paga il gruppo. Segnarlo non crea movimenti: l'uscita in prima nota la registra chi ha pagato. Le iscrizioni già segnate come pagate non cambiano: se il pagamento non c'è stato, tocca **Togli**.
+
+**Socio e ragazzo/a nei testi** ([#56](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/56)): in moduli, pagine, messaggi, email e manuale si scrive «socio» per chi è iscritto al gruppo, «Ragazzo/a» per chi non lo è ancora, «ragazzi/e» dove vanno distinti dai capi. I modelli di email già personalizzati da un gruppo restano come sono.
+
+### Correzioni
+
+**«Scaduta, manca la scheda»** ([#53](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/53)): in **Iscrizioni da seguire** la scheda risultava mancante anche per gli eventi che non ne hanno una, e non c'era modo di togliere l'avviso. Ora l'elenco, la pagina dell'evento e i promemoria usano lo stesso calcolo.
+
+**Giorno nell'email di iscrizione a BuonaCaccia** ([#54](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/54)): non era convertito nell'ora italiana, quindi un evento che inizia a mezzanotte risultava il giorno prima.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.24.0
+```
+
+Alcune migrazioni: aggiungono all'evento i dati sull'ora e il link, passano a «senza ora» gli eventi su BuonaCaccia già inseriti a mezzanotte e registrano i nuovi testi.
+
+### Documentazione
+
+Il capitolo sugli eventi su BuonaCaccia spiega orari, modifica, date dei passi e pagamento; tutto il manuale segue i nuovi testi. Sono rifatte le schermate di Home, eventi su BuonaCaccia e dei moduli che cambiano; le altre possono mostrare ancora le parole di prima.
+
+Provata con i test e in un browser da computer, con dati inventati. Le notifiche reali e il file del calendario su un telefono vero non sono ancora provati. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.23.0 — 7 novembre 2026
 
 ### Novità

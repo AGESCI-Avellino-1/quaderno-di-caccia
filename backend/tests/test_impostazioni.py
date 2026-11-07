@@ -113,6 +113,22 @@ def test_segnaposto_sconosciuto_non_si_salva(gruppo, capogruppo):
     assert _put(capogruppo.utente, {**DATI, "titolo_breve": "[sigla sito]"}).status_code == 200
 
 
+def test_link_delle_segnalazioni_solo_https(gruppo, capogruppo):
+    # It becomes a link for everyone on the Informazioni page (DEC-387).
+    for sbagliato in ("javascript:alert(1)", "http://esempio.it/segnala"):
+        risposta = _put(capogruppo.utente, {**DATI, "link_segnalazioni": sbagliato})
+        assert risposta.status_code == 400, sbagliato
+    giusto = "https://esempio.it/segnala"
+    assert _put(capogruppo.utente, {**DATI, "link_segnalazioni": giusto}).status_code == 200
+    assert Client().get("/api/v1/sito").json()["link_segnalazioni"] == giusto
+
+
+def test_email_del_gruppo_nel_sito(gruppo):
+    gruppo.email = "gruppo@example.invalid"
+    gruppo.save(update_fields=["email"])
+    assert Client().get("/api/v1/sito").json()["email_gruppo"] == "gruppo@example.invalid"
+
+
 def test_versione_del_server_pubblica_e_nel_piede(gruppo, capogruppo):
     # The version in pyproject.toml, also before the login (DEC-380).
     progetto = tomllib.loads((settings.BASE_DIR / "pyproject.toml").read_text())

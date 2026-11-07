@@ -236,18 +236,18 @@ export function conVecchiaPasskey(): boolean {
 
 /**
  * Creates the login passkey of this device, named after it, and lets it unlock the data
- * too (DEC-295). The secret source is injectable for tests; in the app it is the PRF of
- * the new passkey.
+ * too (DEC-295); a device that already has one, synced, uses that (DEC-388): the answer says
+ * so. The secret source is injectable for tests; in the app it is the PRF of the passkey.
  */
 export async function attivaBiometria(
   crea: typeof creaPasskeyDiSblocco = creaPasskeyDiSblocco,
   nomePasskey?: string,
-): Promise<void> {
+): Promise<boolean> {
   if (!configurazione || !chiaveDati) throw new Error('Sblocca prima con il PIN.')
   const sale = casuali(32)
   const nome =
     nomePasskey ?? (await database.meta.get('dispositivo_nome'))?.valore ?? 'Questo dispositivo'
-  const { idCredenziale, segreto } = await crea(nome, sale)
+  const { idCredenziale, segreto, esistente } = await crea(nome, sale)
   const kek = await chiaveDaSegreto(segreto, sale)
   const vecchia = vecchiaPasskey()
   configurazione.biometria = {
@@ -258,6 +258,7 @@ export async function attivaBiometria(
   }
   await salva()
   if (vecchia) void dimenticaCredenziale(vecchia)
+  return !!esistente
 }
 
 /** The login passkey stays (it still lets you in); an old unlock passkey goes. */

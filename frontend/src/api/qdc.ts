@@ -201,6 +201,9 @@ export interface Sito {
   messaggio_manutenzione?: string
   /** The version installed on the server: [Release server], Aggiorna (DEC-380). */
   versione?: string
+  /** The Informazioni page: where to report (DEC-387). */
+  email_gruppo?: string
+  link_segnalazioni?: string
   /** Days before a closed install banner shows again (DEC-283). */
   banner_installazione_giorni?: number
 }
@@ -228,6 +231,7 @@ export interface ImpostazioniSito {
   titolo_completo: string
   titolo_breve: string
   riga_piede: string
+  link_segnalazioni?: string
 }
 
 /** An email the group may personalise (DEC-250). */

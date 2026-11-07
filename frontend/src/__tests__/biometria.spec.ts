@@ -1,3 +1,4 @@
+import { WebAuthnError } from '@simplewebauthn/browser'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { PasskeyCreata } from '@/api/allauth'
@@ -24,6 +25,71 @@ const creata = (prf: PasskeyCreata['prf']) =>
   }))
 
 afterEach(() => vi.unstubAllGlobals())
+
+const giaPresente = () =>
+  new WebAuthnError({
+    message: 'già presente',
+    code: 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED',
+    cause: new Error('InvalidStateError'),
+  })
+
+// DEC-388.
+describe('passkey already on the device, synced', () => {
+  const sale = new Uint8Array(32) as Uint8Array<ArrayBuffer>
+  const lista = async () => [
+    { id: 9, name: 'Mac', created_at: 1, last_used_at: null, id_credenziale: 'AQID' },
+    { id: 10, name: 'Vecchia', created_at: 1, last_used_at: null },
+  ]
+
+  it('uses it to unlock instead of failing, asking for the ones of the account', async () => {
+    const { leggi } = finte()
+    const risultato = await creaPasskeyDiSblocco(
+      'iPhone',
+      sale,
+      async () => {
+        throw giaPresente()
+      },
+      lista,
+    )
+    expect(risultato.esistente).toBe(true)
+    expect(new Uint8Array(risultato.idCredenziale)).toEqual(new Uint8Array([1, 2, 3]))
+    expect(risultato.segreto).toBe(segreto)
+    const ammesse = leggi.mock.calls[0]![0].publicKey!.allowCredentials!
+    expect(ammesse).toHaveLength(1)
+  })
+
+  it('without a secret the passkey still lets you in, and it says so', async () => {
+    const leggi = vi.fn(async () => ({
+      ...credenziale,
+      getClientExtensionResults: () => ({}),
+    }))
+    vi.stubGlobal('navigator', { credentials: { get: leggi } })
+    await expect(
+      creaPasskeyDiSblocco(
+        'iPhone',
+        sale,
+        async () => {
+          throw giaPresente()
+        },
+        lista,
+      ),
+    ).rejects.toThrow(/Hai già una passkey/)
+  })
+
+  it('any other refusal stays an error', async () => {
+    finte()
+    await expect(
+      creaPasskeyDiSblocco(
+        'iPhone',
+        sale,
+        async () => {
+          throw new Error('rete')
+        },
+        lista,
+      ),
+    ).rejects.toThrow('rete')
+  })
+})
 
 describe('biometria', () => {
   it('unlocks with the login passkey of this device, named after the device', async () => {

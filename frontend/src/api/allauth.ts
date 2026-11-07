@@ -185,6 +185,15 @@ export const passkey = {
     return { idCredenziale: credenziale.rawId, prf }
   },
 
+  /** Only the name in the app: the password manager keeps its own (DEC-388). */
+  rinomina: (id: number, nome: string) =>
+    oRiautentica(() =>
+      richiesta(`${BASE}/account/authenticators/webauthn`, {
+        metodo: 'PUT',
+        corpo: { id, name: nome },
+      }),
+    ),
+
   rimuovi: (id: number) =>
     oRiautentica(() =>
       richiesta(`${BASE}/account/authenticators/webauthn`, {

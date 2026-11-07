@@ -38,7 +38,8 @@ async function aggiorna() {
       <p v-if="sito.rigaPiede" class="mb-1">{{ sito.rigaPiede }}</p>
       <p class="mb-0">
         <RouterLink to="/privacy">Privacy policy</RouterLink> ·
-        <RouterLink to="/termini">Termini e condizioni</RouterLink> · Sviluppato da
+        <RouterLink to="/termini">Termini e condizioni</RouterLink> ·
+        <RouterLink to="/informazioni">Informazioni</RouterLink> · Sviluppato da
         <a href="https://bruand81.it" target="_blank" rel="noopener">Andrea Bruno</a> e distribuito
         con licenza MIT
       </p>

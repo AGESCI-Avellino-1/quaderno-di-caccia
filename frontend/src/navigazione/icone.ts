@@ -76,6 +76,7 @@ import wallet2 from 'bootstrap-icons/icons/wallet2.svg?raw'
 import whatsapp from 'bootstrap-icons/icons/whatsapp.svg?raw'
 import xLg from 'bootstrap-icons/icons/x-lg.svg?raw'
 import clipboard from 'bootstrap-icons/icons/clipboard.svg?raw'
+import infoCircle from 'bootstrap-icons/icons/info-circle.svg?raw'
 import download from 'bootstrap-icons/icons/download.svg?raw'
 import printer from 'bootstrap-icons/icons/printer.svg?raw'
 import qrCode from 'bootstrap-icons/icons/qr-code.svg?raw'
@@ -108,6 +109,7 @@ export const ICONE = {
   'chevron-right': chevronRight,
   'chevron-up': chevronUp,
   clipboard: clipboard,
+  'info-circle': infoCircle,
   'cloud-upload': cloudUpload,
   'code-slash': codeSlash,
   collection: collection,

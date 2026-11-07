@@ -5,7 +5,12 @@ import { onMounted, ref, watch } from 'vue'
 import { passkey, RiautenticazioneRichiesta, type Passkey } from '@/api/allauth'
 import CampoPassword from '@/components/CampoPassword.vue'
 import { testoErrore } from '@/composables/useErrore'
-import { base64url, dimenticaCredenziale, SbloccoNonDisponibile } from '@/sicurezza/biometria'
+import {
+  base64url,
+  dimenticaCredenziale,
+  passkeyGiaSulDispositivo,
+  SbloccoNonDisponibile,
+} from '@/sicurezza/biometria'
 import {
   attivaBiometria,
   biometriaAttiva,
@@ -33,9 +38,6 @@ const password = ref('')
 let dopoConferma: (() => Promise<void>) | null = null
 
 function testo(e: unknown): string {
-  if (e instanceof WebAuthnError && e.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED') {
-    return 'Su questo dispositivo c’è già una passkey per il tuo account.'
-  }
   if (e instanceof Error && (e.name === 'NotAllowedError' || e.name === 'AbortError')) {
     return 'Operazione annullata.'
   }
@@ -94,16 +96,27 @@ const sblocca = () => {
 async function crea() {
   const nomePasskey = nome.value.trim() || props.nomePredefinito
   if (!(protetta() && sbloccata())) {
-    await esegui(
-      async () => void (await passkey.crea(nomePasskey)),
-      'Passkey creata: la prossima volta tocca «Accedi con passkey».',
-    )
+    let giaPresente = false
+    await esegui(async () => {
+      try {
+        await passkey.crea(nomePasskey)
+      } catch (e) {
+        // Synced from another device of the same person (DEC-388): nothing to create.
+        if (!passkeyGiaSulDispositivo(e)) throw e
+        giaPresente = true
+      }
+    }, 'Passkey creata: la prossima volta tocca «Accedi con passkey».')
+    if (giaPresente) {
+      fatto.value =
+        'Su questo dispositivo c’è già una passkey del tuo account: tocca «Accedi con passkey».'
+    }
     return
   }
   let senzaSblocco: string | null = null
+  let esistente = false
   await esegui(async () => {
     try {
-      await attivaBiometria(undefined, nomePasskey)
+      esistente = await attivaBiometria(undefined, nomePasskey)
     } catch (e) {
       // Created, but it cannot unlock here: it still lets you in.
       if (!(e instanceof SbloccoNonDisponibile)) throw e
@@ -111,6 +124,21 @@ async function crea() {
     }
   }, 'Passkey creata: ti fa entrare con «Accedi con passkey» e sblocca l’app su questo dispositivo.')
   if (senzaSblocco) fatto.value = senzaSblocco
+  else if (esistente) {
+    fatto.value =
+      'Su questo dispositivo c’era già una passkey del tuo account: ora sblocca anche l’app qui.'
+  }
+}
+
+const inRinomina = ref<{ id: number; nome: string } | null>(null)
+
+async function rinomina() {
+  const scelta = inRinomina.value
+  if (!scelta?.nome.trim()) return
+  await esegui(async () => {
+    await passkey.rinomina(scelta.id, scelta.nome.trim())
+    inRinomina.value = null
+  }, 'Nome cambiato.')
 }
 
 const rimuovi = (p: Passkey) =>
@@ -216,9 +244,32 @@ const data = (secondi: number) => new Date(secondi * 1000).toLocaleDateString('i
               </span>
             </div>
             <div class="mt-3">
-              <template v-if="daRimuovere === p.id">
+              <form
+                v-if="inRinomina?.id === p.id"
+                class="d-flex flex-wrap align-items-end gap-3"
+                @submit.prevent="rinomina"
+              >
+                <div>
+                  <label class="form-label small mb-0" :for="`rinomina-${p.id}`">Nuovo nome</label>
+                  <input
+                    :id="`rinomina-${p.id}`"
+                    v-model="inRinomina.nome"
+                    class="form-control form-control-sm"
+                    maxlength="100"
+                    required
+                  />
+                </div>
+                <button class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+                  Salva
+                </button>
+                <button type="button" class="btn btn-sm btn-link" @click="inRinomina = null">
+                  Annulla
+                </button>
+              </form>
+              <template v-else-if="daRimuovere === p.id">
                 <span class="small me-3">
-                  Non potrai più entrare con questa passkey, né sbloccare con lei l'app.
+                  Non potrai più entrare con questa passkey, né sbloccare con lei l'app. Se è
+                  sincronizzata, smette di funzionare anche sugli altri tuoi dispositivi.
                 </span>
                 <button
                   type="button"
@@ -232,14 +283,22 @@ const data = (secondi: number) => new Date(secondi * 1000).toLocaleDateString('i
                   Annulla
                 </button>
               </template>
-              <button
-                v-else
-                type="button"
-                class="btn btn-sm btn-outline theme-danger"
-                @click="daRimuovere = p.id"
-              >
-                Rimuovi…
-              </button>
+              <div v-else class="d-flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline theme-primary"
+                  @click="inRinomina = { id: p.id, nome: p.name }"
+                >
+                  Rinomina…
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline theme-danger"
+                  @click="daRimuovere = p.id"
+                >
+                  Rimuovi…
+                </button>
+              </div>
             </div>
           </li>
         </ul>

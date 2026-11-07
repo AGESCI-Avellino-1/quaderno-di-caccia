@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 
 from apps.core.models import ModelloTracciato
@@ -45,6 +46,16 @@ class Impostazioni(ModelloTracciato):
     titolo_breve = models.CharField(max_length=120, default=TITOLO_BREVE)
     # Shown above the fixed line of the footer (DEC-247).
     riga_piede = models.CharField(max_length=300, blank=True)
+    # Where the Informazioni page sends a report; empty: the project's issues (DEC-387). https
+    # only: it becomes a link for everyone.
+    link_segnalazioni = models.URLField(
+        blank=True,
+        validators=[
+            URLValidator(
+                schemes=["https"], message="Il link delle segnalazioni deve iniziare con https://."
+            )
+        ],
+    )
     # Email test mode (DEC-249): emails go to Mailpit, nobody receives them. Effective only
     # where settings.QDC_MAILPIT_CONSENTITO: see `email_di_prova_attiva`.
     email_di_prova = models.BooleanField(default=False)

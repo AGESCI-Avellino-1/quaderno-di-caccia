@@ -11,6 +11,7 @@ from ninja import File, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 
 from apps.core.anno import AnnoAssociativo
+from apps.organizzazione.models import Gruppo
 from apps.permessi import policy
 
 from . import blocchi, gmail, segreti
@@ -48,12 +49,17 @@ class SitoOut(Schema):
     banner_installazione_giorni: int = 14
     # The version on this server: [Release server], the Aggiorna button (DEC-380).
     versione: str = ""
+    # The Informazioni page: where to report, by email and by link (DEC-387).
+    email_gruppo: str = ""
+    link_segnalazioni: str = ""
 
 
 def _sito() -> dict:
     imp = Impostazioni.carica()
     return {
         "versione": versione_server(),
+        "email_gruppo": getattr(Gruppo.objects.first(), "email", ""),
+        "link_segnalazioni": imp.link_segnalazioni,
         "nome_sito": imp.nome_sito,
         "sigla_sito": imp.sigla_sito,
         "gruppo": imp.nome_del_gruppo(),
@@ -85,6 +91,7 @@ class ImpostazioniSitoIO(Schema):
     titolo_completo: str
     titolo_breve: str
     riga_piede: str = ""
+    link_segnalazioni: str = ""
 
 
 class ImpostazioniOut(ImpostazioniSitoIO):

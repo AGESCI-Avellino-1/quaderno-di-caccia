@@ -146,6 +146,13 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      // The technical data for a report (DEC-387), public: also with the app locked.
+      path: '/informazioni',
+      name: 'informazioni',
+      component: () => import('@/views/InformazioniView.vue'),
+      meta: { pubblica: true },
+    },
+    {
       // Privacy policy and terms, public (DEC-266).
       path: '/privacy',
       name: 'privacy',
@@ -508,7 +515,8 @@ router.beforeEach(async (verso) => {
   }
   // Locked vault: nothing (not even the cached profile) is readable before unlocking.
   if (cassaforte.stato.value === 'bloccata') {
-    if (verso.name === 'sblocco') return true
+    // The technical data read nothing protected, and help most when unlocking fails (DEC-387).
+    if (verso.name === 'sblocco' || verso.name === 'informazioni') return true
     return { name: 'sblocco', query: { prossima: verso.fullPath } }
   }
   if (verso.name === 'sblocco') return { name: 'home' }

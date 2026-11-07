@@ -76,6 +76,12 @@ Per attivarli crea la passkey in **Passkey per entrare** (vedi [Con una
 passkey](accesso.md#con-una-passkey)). Se rimuovi quella passkey, l'app si sblocca con il PIN e
 il telefono, se il browser lo permette, la toglie anche dal suo gestore delle password.
 
+Se usi più dispositivi con lo stesso account Apple o Google, la passkey creata su uno può arrivare
+anche sugli altri. In quel caso, toccando **Crea una passkey su questo dispositivo** il telefono
+ti chiede l'impronta o il volto e usa quella che ha già, senza crearne un'altra. Rimuoverla vale
+quindi per tutti i tuoi dispositivi. Con **Rinomina…** le cambi il nome, per esempio da «Mac» a
+«I miei dispositivi Apple»: il nome cambia nell'app, non nel gestore delle password.
+
 Alcuni browser creano la passkey ma non le permettono di sbloccare i dati salvati (per esempio
 Chrome sul Mac, con l'app installata): l'app te lo dice, la passkey ti serve comunque per
 entrare e i dati si sbloccano con il PIN. Sul Mac puoi usare Safari, con **File** → **Aggiungi

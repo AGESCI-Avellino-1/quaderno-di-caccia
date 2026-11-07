@@ -52,6 +52,7 @@ describe('menu', () => {
       'Password e sicurezza',
       'Le mie quote',
       'Invita nel gruppo',
+      'Informazioni',
     ])
   })
 

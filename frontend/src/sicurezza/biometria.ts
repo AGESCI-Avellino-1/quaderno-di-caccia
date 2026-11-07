@@ -13,7 +13,9 @@
  * Manager, Windows Hello with Chrome/Edge 147+. Chrome installed as an app on macOS gives
  * no PRF value (maintainer, 03/11); some password managers neither: the PIN always remains.
  */
-import { passkey, type PasskeyCreata } from '@/api/allauth'
+import { WebAuthnError } from '@simplewebauthn/browser'
+
+import { passkey, type Passkey, type PasskeyCreata } from '@/api/allauth'
 
 import { casuali } from './cripto'
 
@@ -25,10 +27,14 @@ export class BiometriaNonDisponibile extends Error {
 
 /** The passkey was created and lets you log in, but here it gives no secret to unlock. */
 export class SbloccoNonDisponibile extends Error {
-  constructor(agente = typeof navigator === 'undefined' ? '' : navigator.userAgent) {
+  constructor(
+    agente = typeof navigator === 'undefined' ? '' : navigator.userAgent,
+    giaPresente = false,
+  ) {
     const macChrome = /Macintosh/.test(agente) && /Chrome\//.test(agente)
     super(
-      'Passkey creata: ti serve per entrare. Su questo dispositivo, però, non può sbloccare ' +
+      (giaPresente ? 'Hai già una passkey qui' : 'Passkey creata') +
+        ': ti serve per entrare. Su questo dispositivo, però, non può sbloccare ' +
         'i dati salvati: usa il PIN.' +
         (macChrome ? ' Sul Mac puoi usare Safari: File → Aggiungi al Dock.' : ''),
     )
@@ -58,39 +64,82 @@ function segretoDa(risultati: RisultatiPrf): ArrayBuffer | null {
   return primo instanceof ArrayBuffer ? primo : (primo.buffer as ArrayBuffer)
 }
 
-export async function leggiSegreto(
-  idCredenziale: ArrayBuffer,
+async function chiediPasskey(
+  ids: ArrayBuffer[],
   sale: Uint8Array<ArrayBuffer>,
-): Promise<ArrayBuffer> {
+): Promise<PublicKeyCredential | null> {
   // `hints` (WebAuthn level 3) is typed only in the JSON variants of the options.
   const opzioni: PublicKeyCredentialRequestOptions & { hints: string[] } = {
     challenge: casuali(32),
     // The passkey is on this device: no QR code for a phone.
-    allowCredentials: [{ type: 'public-key', id: idCredenziale, transports: ['internal'] }],
+    allowCredentials: ids.map((id) => ({
+      type: 'public-key' as const,
+      id,
+      transports: ['internal' as const],
+    })),
     hints: ['client-device'],
     userVerification: 'required',
     extensions: { prf: { eval: { first: sale } } },
   }
-  const credenziale = (await navigator.credentials.get({
-    publicKey: opzioni,
-  })) as PublicKeyCredential | null
-  const segreto = credenziale && segretoDa(credenziale.getClientExtensionResults() as RisultatiPrf)
+  return (await navigator.credentials.get({ publicKey: opzioni })) as PublicKeyCredential | null
+}
+
+const segretoDella = (credenziale: PublicKeyCredential | null) =>
+  credenziale && segretoDa(credenziale.getClientExtensionResults() as RisultatiPrf)
+
+export async function leggiSegreto(
+  idCredenziale: ArrayBuffer,
+  sale: Uint8Array<ArrayBuffer>,
+): Promise<ArrayBuffer> {
+  const segreto = segretoDella(await chiediPasskey([idCredenziale], sale))
   if (!segreto) throw new BiometriaNonDisponibile()
   return segreto
 }
 
 /**
+ * A passkey of the account this device already has, synced by Apple or Google (DEC-388): it
+ * unlocks here too, with a secret of its own for this device's salt. Which one the device
+ * picked is in the answer.
+ */
+async function passkeyGiaPresente(
+  ids: ArrayBuffer[],
+  sale: Uint8Array<ArrayBuffer>,
+): Promise<{ idCredenziale: ArrayBuffer; segreto: ArrayBuffer }> {
+  const credenziale = await chiediPasskey(ids, sale)
+  const segreto = segretoDella(credenziale)
+  if (!credenziale || !segreto) throw new SbloccoNonDisponibile(undefined, true)
+  return { idCredenziale: credenziale.rawId, segreto }
+}
+
+/** The device refused a new passkey: it already has one of those the server listed. */
+export function passkeyGiaSulDispositivo(e: unknown): boolean {
+  return e instanceof WebAuthnError && e.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED'
+}
+
+/**
  * Creates the login passkey of this device, named after it (the name shown on the
- * Dispositivi page), and reads its unlock secret. Throws `SbloccoNonDisponibile` when the
- * passkey exists but gives no secret, and allauth's `RiautenticazioneRichiesta` when the
- * user must first confirm who they are.
+ * Dispositivi page), and reads its unlock secret. A device that already has a passkey of the
+ * account refuses a second one: that one is used instead (`esistente`, DEC-388). Throws
+ * `SbloccoNonDisponibile` when the passkey exists but gives no secret, and allauth's
+ * `RiautenticazioneRichiesta` when the user must first confirm who they are.
  */
 export async function creaPasskeyDiSblocco(
   nome: string,
   sale: Uint8Array<ArrayBuffer>,
   crea: (nome: string, sale: Uint8Array<ArrayBuffer>) => Promise<PasskeyCreata> = passkey.crea,
-): Promise<{ idCredenziale: ArrayBuffer; segreto: ArrayBuffer }> {
-  const creata = await crea(nome, sale)
+  elenco: () => Promise<Passkey[]> = passkey.elenco,
+): Promise<{ idCredenziale: ArrayBuffer; segreto: ArrayBuffer; esistente?: boolean }> {
+  let creata: PasskeyCreata
+  try {
+    creata = await crea(nome, sale)
+  } catch (e) {
+    if (!passkeyGiaSulDispositivo(e)) throw e
+    const ids = (await elenco()).flatMap((p) =>
+      p.id_credenziale ? [daBase64url(p.id_credenziale)] : [],
+    )
+    if (!ids.length) throw e
+    return { ...(await passkeyGiaPresente(ids, sale)), esistente: true }
+  }
   const idCredenziale = daBase64url(creata.idCredenziale)
   if (creata.prf?.enabled === false) throw new SbloccoNonDisponibile()
   // Some authenticators return the secret only on get(), not on create().

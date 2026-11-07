@@ -95,7 +95,7 @@ deploy/, compose.*.yml, scripts/   Docker, reverse proxy  ─┘
   Dispositivi page (`components/PasskeyAccesso.vue`, after allauth's reauthentication)
   and are a way in, not a second factor (DEC-240): only TOTP asks for one
   (`accounts/stages.py`), so the emailed code stays the fallback. On a device whose data
-  are protected, the passkey created there also unlocks them (DEC-295); allauth 65.20 asks
+  are protected, the passkey created there also unlocks them (DEC-295); a device that already has one, synced by Apple or Google, refuses a second and that one unlocks (DEC-388); allauth 65.20 asks
   who has a password to confirm it before adding one, even right after logging in.
 - **API:** `/api/v1/` (django-ninja, `backend/config/api.py`). OpenAPI docs at
   `/api/v1/docs` in dev.

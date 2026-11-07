@@ -474,5 +474,11 @@ export function vociProfilo(p: Profilo): Voce[] {
         to: '/impersonazioni',
         descrizione: "Usa l'app come un'altra persona, per aiutarla",
       },
+    {
+      nome: 'Informazioni',
+      icona: 'info-circle',
+      to: '/informazioni',
+      descrizione: 'I dati tecnici da copiare quando segnali un problema',
+    },
   ])
 }

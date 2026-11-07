@@ -43,6 +43,9 @@ vite-plugin-pwa 2 · Vitest 5. Node 26. Read the root `CLAUDE.md` first.
   the shell (`pwa/animali.ts`, `runtimeCaching` in `vite.config.ts`): no personal data. An uploaded
   image only ever goes in an `<img>` (`ImmagineAnimale.vue`, DEC-354). The page is
   `/animali-squadriglia`: `/animali/` is the folder of the symbols, which nginx would answer for.
+- **What a report carries** is decided in `pwa/informazioni.ts` (the Informazioni page, DEC-387,
+  also with the app locked): reports are public, never a name, an email, a codice socio or a
+  device id. A new line there means checking it against its test.
 - **Writes** go through `scrivi({metodo, percorso, corpo, descrizione})`: queued and
   encrypted when the vault is active, sent directly otherwise. `descrizione` is stored
   in clear and shown in _Modifiche in sospeso_: no names, no health data. A 4xx stays

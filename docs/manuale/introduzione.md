@@ -71,6 +71,18 @@ In alto, in ogni pagina tranne la Home, vedi dove sei: la tenda (la Home), il gr
 menu e la pagina, per esempio «La mia famiglia › Giulia Rossi › Progressione personale». Tocca la tenda
 o una pagina per tornarci. Toccando il gruppo si apre una pagina con tutte e sole le sue voci.
 
+## Se qualcosa non va
+
+Tocca **Informazioni**, in fondo a ogni pagina o nel menu del profilo: si apre anche se non riesci
+a entrare o a sbloccare l'app. Trovi la versione dell'app e del server e i dati tecnici del tuo
+dispositivo, senza nomi né altri dati personali.
+
+1. Tocca **Copia le informazioni**, se vuoi incollarle tu da qualche parte.
+2. Per segnalare il problema, tocca **Scrivi al gruppo**: si apre un'email con questi dati già
+   inseriti, e resta tra te e il gruppo. Oppure **Apri una segnalazione**: di base porta su GitHub,
+   dove serve un account e dove **tutti possono leggere**. Lì non scrivere nomi, numeri di telefono,
+   dati sanitari o altri dati personali.
+
 ## Come leggere il manuale
 
 Ogni funzione ha i passi da fare, nell'ordine, con le immagini. Le immagini mostrano il

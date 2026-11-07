@@ -155,6 +155,22 @@ async function salva() {
                 <template v-if="dati.riga_piede">Diventa: {{ esempio(dati.riga_piede) }}</template>
               </div>
             </div>
+            <div class="col-12">
+              <label class="form-label small mb-0" for="imp-segnalazioni">
+                Link per le segnalazioni (facoltativo)
+              </label>
+              <input
+                id="imp-segnalazioni"
+                v-model="dati.link_segnalazioni"
+                class="form-control form-control-sm"
+                type="url"
+                placeholder="https://…"
+              />
+              <div class="form-text">
+                Dove porta «Apri una segnalazione» nella pagina Informazioni. Se lo lasci vuoto,
+                alle segnalazioni pubbliche del progetto su GitHub.
+              </div>
+            </div>
           </div>
           <SezioneApribile titolo="Cosa puoi scrivere tra parentesi quadre" class="mt-3">
             <ul class="mb-0">

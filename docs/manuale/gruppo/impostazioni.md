@@ -27,6 +27,12 @@ legge anche chi non ha un account.
 Se il telefono o il computer è rimasto indietro, nel piè di pagina compare a tutti il pulsante
 **Aggiorna**, anche se non usi questi segnaposto.
 
+Il **Link per le segnalazioni** è dove porta **Apri una segnalazione** nella pagina
+[Informazioni](../introduzione.md#se-qualcosa-non-va): un modulo o una pagina del gruppo, con un
+indirizzo che inizia con `https://`. Se lo lasci vuoto, porta alle segnalazioni pubbliche del
+progetto su GitHub. **Scrivi al gruppo** usa invece l'email del gruppo scritta nei dati ufficiali:
+se manca, quella voce non compare.
+
 ## Intestazione delle stampe
 
 I dati ufficiali del gruppo, sui moduli da firmare (come la scheda sanitaria) e sulle

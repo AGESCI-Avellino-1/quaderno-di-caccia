@@ -7,9 +7,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                                     | Tipo         | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------ | ------- | ---------- | ------ |
-| [#65](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/65) | Riunioni: di staff e di staff congiunti, online o miste (DEC-401, DEC-402) | Funzionalità | Medio   | Media      | VER    |
+| Issue | Titolo | Tipo | Impatto | Difficoltà | Status |
+| ----- | ------ | ---- | ------- | ---------- | ------ |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -33,6 +32,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                      | Release                                                                                 |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#65](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/65) | Riunioni: di staff e di staff congiunti, online o miste (DEC-401, DEC-402)  | [v1.28.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.28.0) |
 | [#64](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/64) | Eventi: «Campo · · Località» per gli eventi su BuonaCaccia                  | [v1.27.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.1) |
 | [#63](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/63) | Capo con codice provvisorio abilitato come censito                          | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |
 | [#62](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/62) | Formazione capi: livello 1 con il codice socio provvisorio                  | [v1.27.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.27.0) |

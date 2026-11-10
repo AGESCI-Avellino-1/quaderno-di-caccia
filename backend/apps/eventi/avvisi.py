@@ -14,7 +14,7 @@ from apps.impostazioni.email import invia
 from apps.notifiche.servizi import notifica
 from apps.permessi.policy import genitori_vedono
 
-from .models import CERCHIE_CONVOCATE, Evento, StatoPartecipazione, TipoEvento
+from .models import CERCHIE_CONVOCATE, Cerchia, Evento, StatoPartecipazione, TipoEvento
 
 TITOLI_PUSH = {
     "evento_nuovo": "Nuovo evento",
@@ -93,7 +93,8 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
     partecipanti = Persona.objects.filter(
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
-    diretti = evento.cerchia in CERCHIE_CONVOCATE
+    # A staff meeting is for the capi themselves, never their families (DEC-401).
+    diretti = evento.cerchia in CERCHIE_CONVOCATE or evento.cerchia == Cerchia.STAFF
     indirizzi = (
         indirizzi_diretti(partecipanti, "eventi")
         if diretti
@@ -139,7 +140,8 @@ def nuovo(evento: Evento) -> int:
 def modificato(evento: Evento) -> int:
     if not _da_annunciare(evento):
         return 0
-    quando = _quando(evento) + (f", a {evento.luogo}" if evento.luogo else "")
+    dove = evento.dove()
+    quando = _quando(evento) + (f", {dove}" if dove else "")
     modello = "riunione_spostata" if _riunione(evento) else "evento_modificato"
     return _invia(evento, modello, {"Quando": quando})
 

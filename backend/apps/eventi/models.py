@@ -64,10 +64,24 @@ class Cerchia(models.TextChoices):
     GENITORI = "GENITORI", "Riunione dei genitori"
     # The members of age and the parents of the minors, for the whole group (DEC-326).
     SOCI = "SOCI", "Assemblea dei soci"
+    # The staff of one unit, or the staffs of units chosen freely (DEC-401).
+    STAFF = "STAFF", "Riunione di staff"
 
 
 # Convened one at a time with an email and documents; nobody says whether they come (DEC-327).
 CERCHIE_CONVOCATE = {Cerchia.GENITORI, Cerchia.SOCI}
+
+# Seen only by who is invited, the staff of those units and the capigruppo (DEC-401).
+CERCHIE_RISERVATE = {Cerchia.STAFF}
+
+
+class Modalita(models.TextChoices):
+    """Where a meeting is held (DEC-402): online it has the link and no place, mixed both."""
+
+    PRESENZA = "PRESENZA", "In presenza"
+    ONLINE = "ONLINE", "Online"
+    MISTA = "MISTA", "Mista"
+
 
 # Who of a reparto is invited, and who of a branco or cerchio.
 CERCHIE_DI_REPARTO = {
@@ -115,6 +129,14 @@ class Localita(ModelloTracciato):
         return f"{via.rstrip()} {self.civico}{virgola}{resto}"
 
 
+def _errori_modalita(modalita: str, link: str) -> list[str]:
+    if modalita != Modalita.PRESENZA and not link:
+        return ["Scrivi il link della riunione online."]
+    if link and not link.lower().startswith("https://"):
+        return ["Il link della riunione deve iniziare con https://."]
+    return []
+
+
 class RiunioneRicorrente(ModelloTracciato):
     """e.g. every Saturday 16–18 from October to June (DEC-78): the app creates one
     event per date, each with its own attendance; a single date can be cancelled."""
@@ -149,6 +171,9 @@ class RiunioneRicorrente(ModelloTracciato):
         Localita, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     uniforme = models.BooleanField(default=True)
+    # DEC-402: online or mixed with the platform's link; a meeting may change both.
+    modalita = models.CharField(max_length=8, choices=Modalita.choices, default=Modalita.PRESENZA)
+    link = models.URLField(max_length=500, blank=True)
 
     class Meta:
         verbose_name = "riunione ricorrente"
@@ -167,6 +192,7 @@ class RiunioneRicorrente(ModelloTracciato):
             errori.append("La data di fine deve seguire quella di inizio.")
         elif self.al and self.dal and (self.al - self.dal).days > 366:
             errori.append("Le riunioni ricorrenti coprono al massimo un anno.")
+        errori += _errori_modalita(self.modalita, self.link)
         if errori:
             raise ValidationError(errori)
 
@@ -214,6 +240,9 @@ class Evento(ModelloTracciato):
     # staff writes about it, as cleaned HTML.
     uniforme = models.BooleanField(null=True, blank=True)
     informazioni = models.TextField(blank=True)
+    # DEC-402: in person, online or mixed, with the link; copied from the series.
+    modalita = models.CharField(max_length=8, choices=Modalita.choices, default=Modalita.PRESENZA)
+    link = models.URLField(max_length=500, blank=True)
     # The agenda of a Co.Ca. or parents' meeting, as cleaned HTML (DEC-362): read through its
     # own endpoint, out of the audit log and of the offline copy (DEC-365).
     ordine_del_giorno = models.TextField(blank=True)
@@ -239,6 +268,14 @@ class Evento(ModelloTracciato):
     def __str__(self) -> str:
         return f"{self.titolo} ({self.inizio:%d/%m/%Y})"
 
+    def dove(self) -> str:
+        """The place and the link, for an email: "a Sede", "online: https://…" (DEC-402)."""
+        online = f"online: {self.link}" if self.modalita != Modalita.PRESENZA else ""
+        if self.modalita == Modalita.ONLINE:
+            return online
+        luogo = f"a {self.luogo}" if self.luogo else ""
+        return " e ".join(p for p in (luogo, online) if p)
+
     def con_uniforme(self) -> bool | None:
         """A meeting's uniform: its own choice, or its series' (DEC-310)."""
         if self.tipo != TipoEvento.RIUNIONE:
@@ -259,12 +296,18 @@ class Evento(ModelloTracciato):
             errori.append("La missione è di una squadriglia.")
         if self.tipo == TipoEvento.RIUNIONE and self.livello == Livello.ESTERNO:
             errori.append("Un evento su BuonaCaccia non è una riunione.")
+        errori += _errori_modalita(self.modalita, self.link)
+        if self.modalita != Modalita.PRESENZA and self.tipo != TipoEvento.RIUNIONE:
+            errori.append("Solo una riunione può essere online.")
         if self.cerchia == Cerchia.GENITORI:
             if self.livello not in (Livello.UNITA, Livello.GRUPPO):
                 errori.append("Una riunione dei genitori è di una o più unità o del gruppo.")
         elif self.cerchia == Cerchia.SOCI:
             if self.livello != Livello.GRUPPO:
                 errori.append("L'assemblea dei soci è di tutto il gruppo.")
+        elif self.cerchia == Cerchia.STAFF:
+            if self.livello != Livello.UNITA:
+                errori.append("Una riunione di staff è di una o più unità.")
         elif self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
             errori.append(
                 "Consiglio Capi, Con.Ca.Vi., Alta Squadriglia e Consiglio degli Anziani "

@@ -27,6 +27,7 @@ from .models import (
     Evento,
     Livello,
     MembroAltaSquadriglia,
+    Modalita,
     Partecipazione,
     Presenza,
     PresenzeAnnue,
@@ -68,6 +69,8 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
         return _invitati_genitori(evento, giorno)
     if evento.cerchia == Cerchia.SOCI:
         return _invitati_assemblea(giorno)
+    if evento.cerchia == Cerchia.STAFF:
+        return _invitati_staff(evento, giorno)
     if evento.livello == Livello.SQUADRIGLIA:
         ids = (
             AppartenenzaSquadriglia.objects.filter(
@@ -134,6 +137,17 @@ def _invitati_genitori(evento: Evento, giorno: date) -> QuerySet[Persona]:
         | Q(pk__in=al_posto)
         | Q(pk__in=capi.values("persona_id"))
     )
+
+
+def _invitati_staff(evento: Evento, giorno: date) -> QuerySet[Persona]:
+    """The capi serving the units, linked ones included (DEC-279, DEC-401); not the
+    capigruppo outside those staffs."""
+    unita = unita_coinvolte(evento)
+    capi = Incarico.objects.attivi(giorno).filter(
+        ruolo__in=STAFF_DI_UNITA,
+        unita__in=[*unita.values_list("pk", flat=True), *_collegate(unita)],
+    )
+    return Persona.objects.filter(pk__in=capi.values("persona_id"))
 
 
 def _invitati_assemblea(giorno: date) -> QuerySet[Persona]:
@@ -234,6 +248,27 @@ def controlla_cerchia(cerchia: str, unita: list[Unita]) -> None:
         raise ValidationError("Consiglio Capi, Con.Ca.Vi. e Alta Squadriglia sono di reparto.")
     if cerchia == Cerchia.CONSIGLIO_ANZIANI and any(u.tipo not in LC for u in unita):
         raise ValidationError("Il Consiglio degli Anziani è di un branco o di un cerchio.")
+    if cerchia == Cerchia.STAFF and any(u.tipo == TipoUnita.COMUNITA_CAPI for u in unita):
+        raise ValidationError("La Co.Ca. si riunisce come Co.Ca., non come staff.")
+
+
+def puo_essere_online(cerchia: str, unita: list[Unita]) -> bool:
+    """The Co.Ca., the staffs and the parents (DEC-402); never the assembly, whose AGESCI
+    templates want a place."""
+    if cerchia in (Cerchia.STAFF, Cerchia.GENITORI):
+        return True
+    return (
+        cerchia == Cerchia.TUTTI
+        and bool(unita)
+        and all(u.tipo == TipoUnita.COMUNITA_CAPI for u in unita)
+    )
+
+
+def controlla_modalita(modalita: str, cerchia: str, unita: list[Unita]) -> None:
+    if modalita != Modalita.PRESENZA and not puo_essere_online(cerchia, unita):
+        raise ValidationError(
+            "Online o mista può essere solo una riunione della Co.Ca., di staff o dei genitori."
+        )
 
 
 def annulla(evento: Evento, motivo: str) -> None:
@@ -256,9 +291,18 @@ def titolo_riunione_genitori(unita: list[Unita]) -> str:
     return f"Riunione dei genitori di {nomi}"
 
 
-def titolo_riunione(serie: RiunioneRicorrente) -> str:
+def titolo_riunione_staff(unita: list[Unita]) -> str:
+    nomi = " e ".join(u.nome or u.get_tipo_display() for u in unita)
+    return f"Riunione di staff di {nomi}" if len(unita) == 1 else f"Riunione degli staff di {nomi}"
+
+
+def titolo_riunione(serie: RiunioneRicorrente, unita: list[Unita] | None = None) -> str:
     if serie.titolo:
         return serie.titolo
+    if serie.cerchia == Cerchia.STAFF:
+        if unita is None:
+            unita = unita_della_serie(serie) if serie.pk else [serie.unita]
+        return titolo_riunione_staff(unita)
     if serie.squadriglia_id:
         return f"Riunione di squadriglia {serie.squadriglia.nome}"
     if serie.cerchia != Cerchia.TUTTI:
@@ -292,23 +336,43 @@ def genera_riunioni(riunione: RiunioneRicorrente, utente) -> list[Evento]:
                 luogo=riunione.localita.nome_visibile if riunione.localita_id else riunione.luogo,
                 localita=riunione.localita,
                 riunione=riunione,
+                modalita=riunione.modalita,
+                link=riunione.link,
             )
             nuovi.append(crea(evento, [] if riunione.squadriglia_id else unita, utente))
         giorno += timedelta(days=7)
     return nuovi
 
 
-def cambia_serie(serie: RiunioneRicorrente, *, uniforme: bool, localita) -> None:
+def cambia_serie(
+    serie: RiunioneRicorrente,
+    *,
+    uniforme: bool,
+    localita,
+    modalita: str = Modalita.PRESENZA,
+    link: str = "",
+) -> None:
     """The uniform follows by itself on the meetings that did not choose their own; the
-    place changes on the future meetings that still had the series' one."""
+    place, and how and where online (DEC-402), change on the future meetings that still had
+    the series' ones."""
     prima = serie.localita_id
+    prima_online = (serie.modalita, serie.link)
     serie.uniforme = uniforme
-    serie.localita = localita
+    serie.localita = None if modalita == Modalita.ONLINE else localita
+    serie.modalita = modalita
+    serie.link = link.strip() if modalita != Modalita.PRESENZA else ""
+    serie.full_clean()
     serie.save()
+    future = serie.eventi.filter(inizio__gte=timezone.now(), annullato_il__isnull=True)
     if prima != serie.localita_id:
-        serie.eventi.filter(
-            inizio__gte=timezone.now(), annullato_il__isnull=True, localita_id=prima
-        ).update(localita=localita, luogo=localita.nome_visibile if localita else serie.luogo)
+        nuova = serie.localita
+        future.filter(localita_id=prima).update(
+            localita=nuova, luogo=nuova.nome_visibile if nuova else serie.luogo
+        )
+    if prima_online != (serie.modalita, serie.link):
+        future.filter(modalita=prima_online[0], link=prima_online[1]).update(
+            modalita=serie.modalita, link=serie.link
+        )
 
 
 # --- Participants ------------------------------------------------------------------------------

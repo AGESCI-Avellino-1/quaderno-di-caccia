@@ -136,6 +136,10 @@ class EventoOut(Schema):
     localita: LocalitaOut | None = None
     uniforme: bool | None = None
     informazioni: str = ""
+    # In person, online or mixed, and the link (DEC-402).
+    modalita: str = "PRESENZA"
+    link: str = ""
+    puo_essere_online: bool = False
     # Whether the meeting has an agenda, read online from its own endpoint (DEC-365).
     con_ordine_del_giorno: bool = False
     # The turns of the meeting (DEC-312): all for the capi, one's own for the others.
@@ -205,6 +209,11 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "localita": evento.localita,
         "uniforme": evento.con_uniforme(),
         "informazioni": evento.informazioni,
+        "modalita": evento.modalita,
+        "link": evento.link,
+        "puo_essere_online": (
+            evento.tipo == TipoEvento.RIUNIONE and servizi.puo_essere_online(evento.cerchia, unita)
+        ),
         "con_ordine_del_giorno": ha_ordine_del_giorno(evento),
         "turni": _turni_out(user, evento, cache),
         "gruppi_turni": _gruppi_turni(user, evento, cache),
@@ -885,7 +894,7 @@ def eventi_del_mio_calendario(
             "fine": e.fine,
             "senza_ora_inizio": e.senza_ora_inizio,
             "senza_ora_fine": e.senza_ora_fine,
-            "luogo": e.luogo,
+            "luogo": e.luogo or ("Online" if e.modalita == "ONLINE" else ""),
             "annullato": e.annullato_il is not None,
         }
         for e in elenco

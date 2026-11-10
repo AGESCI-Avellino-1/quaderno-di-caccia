@@ -106,7 +106,7 @@ def _invia(evento: Evento, modello: str, allegati, primo=(), valori=None) -> int
         modello,
         {
             "Evento": evento.titolo,
-            "Quando": quando(evento) + (f", a {evento.luogo}" if evento.luogo else ""),
+            "Quando": quando(evento) + (f", {evento.dove()}" if evento.dove() else ""),
             "Documenti": _testo_documenti(dentro, fuori),
             "Link": f"{settings.FRONTEND_URL}/eventi/{evento.pk}",
             **(valori or {}),

@@ -1,5 +1,6 @@
 """The personal calendar feed (DEC-79), RFC 5545 written by hand: title, dates and place
-of the user's and their children's events, nothing else (no names, no notes)."""
+of the user's and their children's events, nothing else (no names, no notes); the link of a
+meeting online (DEC-402)."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -10,7 +11,7 @@ from django.utils import timezone
 from apps.organizzazione.models import Branca, TipoUnita
 from apps.permessi import policy
 
-from .models import Evento, Livello, StatoPartecipazione
+from .models import Evento, Livello, Modalita, StatoPartecipazione
 
 # A capo chooses among these views, the first by default (DEC-143, DEC-334); everyone else
 # has one. A feed without a view keeps giving "unita": links people already subscribed to.
@@ -40,7 +41,8 @@ def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
     )
     if capo:
         if vista == "gruppo":
-            return Evento.objects.all().order_by("inizio")
+            # Not the staff meetings of others (DEC-401).
+            return policy.eventi_visibili(utente).order_by("inizio")
         # Their own BuonaCaccia events (a training camp, DEC-164) in every view.
         filtro |= Q(
             livello=Livello.ESTERNO,
@@ -122,8 +124,12 @@ def ics(eventi) -> str:
             *_estremi(evento),
             f"SUMMARY:{_testo(evento.titolo)}",
         ]
-        if evento.luogo:
+        if evento.modalita == Modalita.ONLINE:
+            righe.append(f"LOCATION:{_testo(evento.link)}")
+        elif evento.luogo:
             righe.append(f"LOCATION:{_testo(evento.luogo)}")
+        if evento.modalita != Modalita.PRESENZA and evento.link:
+            righe.append(f"DESCRIPTION:{_testo('Link della riunione: ' + evento.link)}")
         righe.append(f"URL:{settings.FRONTEND_URL}/eventi/{evento.pk}")
         righe.append("STATUS:CANCELLED" if evento.annullato_il else "STATUS:CONFIRMED")
         righe.append("END:VEVENT")

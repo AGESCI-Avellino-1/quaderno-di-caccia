@@ -16,6 +16,8 @@ class TipoVerbale(models.TextChoices):
     CONSIGLIO_CAPI_VICE = "CONCAVI", "Consiglio Capi e Vice"
     GENITORI = "GENITORI", "Riunione dei genitori"
     ASSEMBLEA = "SOCI", "Assemblea dei soci"
+    # Optional, like the reparto councils (DEC-401).
+    STAFF = "STAFF", "Riunione di staff"
 
 
 class StatoVerbale(models.TextChoices):

@@ -16,16 +16,19 @@ in **Tutto il gruppo**.
 ## Creare le riunioni
 
 1. Tocca **Nuove riunioni**.
-2. In **Di chi** scegli **Di un'unità** (anche la Comunità capi) o **Di una squadriglia**.
+2. In **Di chi** scegli **Di un'unità** (anche la Comunità capi), **Di staff** o **Di una
+   squadriglia**.
 3. Per un'unità scegli l'**Unità** e **Chi è invitato**: tutta l'unità oppure, per un reparto,
    l'Alta Squadriglia, il Consiglio Capi o il Con.Ca.Vi., per un branco o un cerchio il
    Consiglio degli Anziani. Se l'unità è collegata a un'altra, puoi spuntare **Insieme a…**.
 4. In **Quando** scegli **Ogni settimana** (il giorno, **Dal** e **Al**: per esempio ogni sabato
    dal 1° ottobre al 31 maggio) oppure **Una volta** (il **Giorno**), poi **Dalle** e **Alle**.
 5. Scegli la **Località** tra quelle del gruppo, oppure **Nuova località…** e scrivine nome e
-   indirizzo: entra nell'elenco del gruppo.
+   indirizzo: entra nell'elenco del gruppo. Una riunione della Comunità capi o di staff può essere
+   anche **Online** o **Mista**: in **Come** scegli come si tiene e scrivi il **Link della
+   riunione** (Meet o un'altra piattaforma). Online non serve la località.
 6. Scegli **Con l'uniforme** o **Senza uniforme**. Il **Titolo** è facoltativo.
-7. Per una sola riunione della Comunità capi puoi scrivere subito l'**Ordine del giorno**. Se è una
+7. Per una sola riunione della Comunità capi o di staff puoi scrivere subito l'**Ordine del giorno**. Se è una
    riunione di ogni settimana, lo scrivi poi sulla singola riunione.
 8. Tocca **Crea**.
 
@@ -39,20 +42,32 @@ squadriglia il capo squadriglia (o chi ha delegato) e lo staff del reparto. Le r
 annunciano per email: le famiglie ricevono un'email solo quando sposti o annulli una singola
 riunione.
 
+## Le riunioni di staff
+
+Una riunione di staff riunisce lo staff di un'unità oppure gli staff di più unità insieme, per
+esempio quelli del branco e del reparto per preparare i passaggi. In **Di chi** scegli **Di staff**
+e spunta le unità. Sono invitati i capi di quegli staff (capo unità, staff, assistente
+ecclesiastico); la crea uno di loro o un capogruppo. La vedono solo gli invitati e i capigruppo:
+gli altri capi, i ragazzi/e e i genitori no. Ordine del giorno e verbale sono facoltativi.
+
 ## Le riunioni di ogni settimana
 
 In fondo alla pagina, **Riunioni di ogni settimana** elenca le serie. L'interruttore **Con
 l'uniforme** cambia tutte le riunioni della serie che non hanno una scelta loro; **Togli le
 prossime** annulla tutte le riunioni future della serie (quelle passate restano, con le loro
-presenze).
+presenze). Per le serie che possono essere online, **In presenza o online** cambia come si tengono
+le prossime riunioni e il link, salvo quelle che hai cambiato una per una.
 
 ## Una singola riunione
 
 Tocca una riunione: vedi giorno, orari, località (con l'indirizzo), uniforme e le informazioni
 dello staff. Con **Modifica la riunione** puoi spostarla (giorno, orari), cambiare la località,
-dire se è con l'uniforme (**Come le altre riunioni** segue la serie) e scrivere le
+dire se è con l'uniforme (**Come le altre riunioni** segue la serie), se è online o mista con il
+suo link, e scrivere le
 **Informazioni per questa riunione** con l'editor di testo (cosa portare, cosa si fa). Tocca
-**Salva**. Se la sposti, gli invitati ricevono un'email; per le informazioni e l'uniforme no.
+**Salva**. Se la sposti o cambi il link, gli invitati ricevono un'email; per le informazioni e
+l'uniforme no. Il link si vede nella pagina della riunione (**Entra nella riunione**), nel
+calendario e nelle email.
 
 :::{container} schermate
 ![La modifica di una riunione sul telefono](../img/capo/riunione-modifica-telefono.png){.telefono width="30%"}
@@ -68,7 +83,8 @@ presenze](eventi.md#segnare-le-presenze)).
 Le creano lo staff, per la sua unità, e i capigruppo, anche per più unità o per tutto il gruppo.
 
 1. In **Nuove riunioni**, in **Di chi**, scegli **Dei genitori**, poi le unità o **Tutto il gruppo**,
-   il giorno e gli orari. Si crea una riunione alla volta.
+   il giorno e gli orari. Si crea una riunione alla volta. Anche questa può essere **Online** o
+   **Mista**, con il link.
 2. Apri la riunione. Nel riquadro **Convocazione** aggiungi i documenti, per esempio il programma.
 3. Tocca **Invia la convocazione**: l'email parte per tutti gli invitati con i documenti allegati,
    una volta sola. I documenti troppo grandi per un'email restano da aprire nell'app, e nell'email
@@ -91,7 +107,7 @@ L'[assemblea dei soci](../gruppo/assemblea) la convocano i capigruppo.
 
 ## L'ordine del giorno
 
-Le riunioni della Comunità capi e dei genitori hanno un **Ordine del giorno**, nel suo riquadro nella
+Le riunioni della Comunità capi, di staff e dei genitori hanno un **Ordine del giorno**, nel suo riquadro nella
 pagina della riunione: lo scrive chi gestisce la riunione e lo legge chi la vede (per la Comunità capi
 solo i capi). Tocca **Scrivilo** o **Modifica**. Serve la rete: non resta salvato sul telefono.
 
@@ -101,7 +117,7 @@ dopo, non parte un'altra email: la versione aggiornata si legge nell'app.
 ## Il verbale
 
 Alcune riunioni hanno un verbale: Comunità capi, riunioni dei genitori, squadriglia, Alta Squadriglia,
-Consiglio Capi e Con.Ca.Vi. Lo trovi nella pagina della riunione, nel riquadro **Verbale**. Serve la rete: il
+Consiglio Capi, Con.Ca.Vi. e riunioni di staff. Lo trovi nella pagina della riunione, nel riquadro **Verbale**. Serve la rete: il
 verbale non resta salvato sul telefono.
 
 | Riunione | Chi decide chi lo scrive (e può sempre scriverlo) | Chi lo legge quando è definitivo |
@@ -110,6 +126,7 @@ verbale non resta salvato sul telefono.
 | Riunione dei genitori | i capigruppo e, se è di una sola unità, il suo staff | gli invitati e i capi |
 | Squadriglia | il capo squadriglia e lo staff del reparto | la squadriglia, i suoi genitori, i capi |
 | Alta Squadriglia, Consiglio Capi, Con.Ca.Vi. | lo staff | gli invitati e i capi |
+| Riunione di staff | lo staff | gli invitati e i capigruppo |
 
 1. Per affidarlo a qualcuno, in **Chi lo scrive** scegli una persona tra gli invitati o i capi e
    tocca **Indica**. Può scrivere solo il verbale di questa riunione.

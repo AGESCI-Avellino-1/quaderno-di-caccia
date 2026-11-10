@@ -48,14 +48,16 @@ CERCHIE = {
     Cerchia.ALTA_SQUADRIGLIA: TipoVerbale.ALTA_SQUADRIGLIA,
     Cerchia.CONSIGLIO_CAPI: TipoVerbale.CONSIGLIO_CAPI,
     Cerchia.CONSIGLIO_CAPI_VICE: TipoVerbale.CONSIGLIO_CAPI_VICE,
+    Cerchia.STAFF: TipoVerbale.STAFF,
 }
 # Names and who was there stay five years for the third sector, whatever happens to the
 # person (DEC-328).
 CONSERVATI_CINQUE_ANNI = {TipoVerbale.COCA, TipoVerbale.ASSEMBLEA}
 # Who has reminders until it is definitive or said there is none (DEC-322, DEC-331).
 CON_PROMEMORIA = {TipoVerbale.COCA, TipoVerbale.GENITORI}
-# The assembly has its agenda in the template (DEC-362, DEC-364).
-CON_ORDINE_DEL_GIORNO = {TipoVerbale.COCA, TipoVerbale.GENITORI}
+# The assembly has its agenda in the template (DEC-362, DEC-364); a staff meeting may have one
+# (DEC-401).
+CON_ORDINE_DEL_GIORNO = {TipoVerbale.COCA, TipoVerbale.GENITORI, TipoVerbale.STAFF}
 SEGNAPOSTO_ORDINE_DEL_GIORNO = "[Ordine del giorno]"
 # A paragraph with the placeholder alone, bold or italic at most.
 _PARAGRAFO_ORDINE_DEL_GIORNO = re.compile(

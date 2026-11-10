@@ -3,10 +3,12 @@ import { defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 
 import { api, type DettaglioEvento, type Localita, type NuovaLocalita } from '@/api/qdc'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
+import SceltaModalita from '@/components/SceltaModalita.vue'
 import { useErrore } from '@/composables/useErrore'
 
 // One meeting (DEC-310): moved, another place, with the uniform or not, notes written
 // with the text editor. Moving it tells the invited by email; notes and uniform do not.
+// Co.Ca., staff and parents' meetings also online or mixed, with the link (DEC-402).
 // Online only, like creating it.
 const EditorTesto = defineAsyncComponent(() => import('@/components/EditorTesto.vue'))
 const props = defineProps<{ riunione: DettaglioEvento }>()
@@ -30,6 +32,7 @@ const dati = reactive({
   // 'serie': as its series (only for a meeting of a series).
   uniforme: (r.serie_id ? 'serie' : r.uniforme ? 'si' : 'no') as 'serie' | 'si' | 'no',
   informazioni: r.informazioni ?? '',
+  online: { modalita: r.modalita ?? 'PRESENZA', link: r.link ?? '' },
 })
 
 onMounted(async () => {
@@ -52,6 +55,7 @@ async function salva() {
       luogo: !dati.localita.id && !dati.localita.nuova && !r.localita ? r.luogo : '',
       uniforme: dati.uniforme === 'serie' ? null : dati.uniforme === 'si',
       informazioni: dati.informazioni,
+      ...(r.puo_essere_online ? dati.online : {}),
     }),
   )
   if (fatta) emit('salvata')
@@ -92,7 +96,10 @@ async function salva() {
           required
         />
       </div>
-      <div class="col-12">
+      <div v-if="riunione.puo_essere_online" class="col-12">
+        <SceltaModalita v-model="dati.online" id-campo="mr-online" />
+      </div>
+      <div v-if="dati.online.modalita !== 'ONLINE'" class="col-12">
         <SceltaLocalita v-model="dati.localita" id-campo="mr-localita" :localita="localita" />
       </div>
       <div class="md:col-6">
@@ -108,7 +115,7 @@ async function salva() {
       </div>
     </div>
     <p class="form-text mt-3 mb-0">
-      Se cambi giorno, orari o località, gli invitati ricevono un'email; per le informazioni e
+      Se cambi giorno, orari, località o link, gli invitati ricevono un'email; per le informazioni e
       l'uniforme no.
     </p>
     <div class="d-flex gap-3 mt-3">

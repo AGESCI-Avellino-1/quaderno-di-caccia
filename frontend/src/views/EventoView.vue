@@ -274,8 +274,19 @@ const STATI: [StatoPresenza, string][] = [
           >mappa</a
         >
       </div>
+      <!-- Online or mixed: the platform's link (DEC-402). -->
+      <div v-if="evento.modalita && evento.modalita !== 'PRESENZA' && evento.link">
+        <strong>{{ evento.modalita === 'ONLINE' ? 'Online' : 'Anche online' }}</strong>
+        <a :href="evento.link" target="_blank" rel="noopener" class="ms-1">Entra nella riunione</a>
+      </div>
       <div
-        v-if="riunione && !convocata && evento.uniforme !== null && evento.uniforme !== undefined"
+        v-if="
+          riunione &&
+          !convocata &&
+          evento.cerchia !== 'STAFF' &&
+          evento.uniforme !== null &&
+          evento.uniforme !== undefined
+        "
       >
         <strong>Uniforme</strong> {{ evento.uniforme ? 'sì' : 'no' }}
       </div>

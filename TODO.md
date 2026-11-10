@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                                     | Tipo         | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------ | ------- | ---------- | ------ |
-| [#65](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/65) | Riunioni: di staff e di staff congiunti, online o miste (DEC-401, DEC-402) | Funzionalità | Medio   | Media      |        |
+| [#65](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/65) | Riunioni: di staff e di staff congiunti, online o miste (DEC-401, DEC-402) | Funzionalità | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

@@ -8,6 +8,7 @@ import {
   type Cerchia,
   type Evento,
   type Localita,
+  type ModalitaRiunione,
   type NuovaLocalita,
   type SerieRiunioni,
   type Unita,
@@ -15,13 +16,16 @@ import {
 import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
+import SceltaModalita from '@/components/SceltaModalita.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
 
 // Meetings, apart from the events (DEC-310): of the unit (the Co.Ca. too), of a patrol
 // (the CSQ), the councils of a unit and of the unit linked to it. Weekly series or a
-// single meeting, with the place and whether the uniform is worn; never a fee. The list
+// single meeting, with the place and whether the uniform is worn; never a fee. Staff
+// meetings, of one unit or of several (DEC-401); Co.Ca., staff and parents also online or
+// mixed, with the link (DEC-402). The list
 // is cached for offline use; creating needs the network. The API decides who may.
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
@@ -112,10 +116,12 @@ const LC = ['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO']
 const mancanti = ref<{ id: number; titolo: string; inizio: string }[]>([])
 const vuoto = () => ({
   perChi: (sessione.capo ? 'unita' : 'squadriglia') as
-    'unita' | 'squadriglia' | 'genitori' | 'assemblea',
+    'unita' | 'squadriglia' | 'genitori' | 'assemblea' | 'staff',
   // A meeting of the parents (DEC-325): of the whole group, or of one or more units.
   diGruppo: false,
   unitaGenitori: [] as number[],
+  // The staffs of one or more units, chosen freely (DEC-401).
+  unitaStaff: [] as number[],
   unita: null as number | null,
   insieme: false,
   squadriglia: null as number | null,
@@ -133,6 +139,7 @@ const vuoto = () => ({
     nuova: null as NuovaLocalita | null,
   },
   uniforme: true,
+  online: { modalita: 'PRESENZA' as ModalitaRiunione, link: '' },
   ordine_del_giorno: '',
 })
 const modulo = ref<ReturnType<typeof vuoto> | null>(null)
@@ -147,8 +154,17 @@ const unitaScelta = computed(() => unita.value.find((u) => u.id === modulo.value
 const diCoca = computed(
   () => modulo.value?.perChi === 'unita' && unitaScelta.value?.tipo === 'COMUNITA_CAPI',
 )
+const diStaff = computed(() => modulo.value?.perChi === 'staff')
 const conOrdineDelGiorno = computed(
-  () => modulo.value?.perChi === 'genitori' || (diCoca.value && !modulo.value?.ripeti),
+  () =>
+    modulo.value?.perChi === 'genitori' ||
+    ((diCoca.value || diStaff.value) && !modulo.value?.ripeti),
+)
+const puoEssereOnline = computed(
+  () => modulo.value?.perChi === 'genitori' || diCoca.value || diStaff.value,
+)
+const soloOnline = computed(
+  () => puoEssereOnline.value && modulo.value?.online.modalita === 'ONLINE',
 )
 const collegata = computed(() => unita.value.find((u) => u.id === unitaScelta.value?.collegata_a))
 // Who of the unit is invited: a reparto has its councils, a branco or cerchio its
@@ -181,18 +197,30 @@ async function salva() {
   const perSquadriglia = m.perChi === 'squadriglia'
   const assemblea = m.perChi === 'assemblea'
   const genitori = m.perChi === 'genitori' || assemblea
+  const staff = m.perChi === 'staff'
+  const online = puoEssereOnline.value ? m.online : { modalita: 'PRESENZA' as const, link: '' }
   const fatte = await esegui(() =>
     api.creaRiunioni({
       titolo: m.titolo,
-      cerchia: assemblea ? 'SOCI' : genitori ? 'GENITORI' : perSquadriglia ? 'TUTTI' : m.cerchia,
+      cerchia: assemblea
+        ? 'SOCI'
+        : genitori
+          ? 'GENITORI'
+          : staff
+            ? 'STAFF'
+            : perSquadriglia
+              ? 'TUTTI'
+              : m.cerchia,
       di_gruppo: assemblea || (genitori && m.diGruppo),
       unita: genitori
         ? m.diGruppo || assemblea
           ? []
           : m.unitaGenitori
-        : perSquadriglia
-          ? []
-          : [m.unita!, ...(m.insieme && collegata.value ? [collegata.value.id] : [])],
+        : staff
+          ? m.unitaStaff
+          : perSquadriglia
+            ? []
+            : [m.unita!, ...(m.insieme && collegata.value ? [collegata.value.id] : [])],
       squadriglia_id: perSquadriglia ? m.squadriglia : null,
       ora_inizio: m.ora_inizio,
       ora_fine: m.ora_fine,
@@ -201,7 +229,9 @@ async function salva() {
         : { giorno: m.giorno }),
       localita_id: m.localita.nuova ? null : m.localita.id,
       nuova_localita: m.localita.nuova,
-      uniforme: !genitori && m.uniforme,
+      uniforme: !genitori && !staff && m.uniforme,
+      modalita: online.modalita,
+      link: online.link,
       ordine_del_giorno: conOrdineDelGiorno.value ? m.ordine_del_giorno : '',
     }),
   )
@@ -229,6 +259,34 @@ async function cambiaUniforme(s: SerieRiunioni, uniforme: boolean) {
   )
   if (!fatta) return
   await Promise.all([carica(), caricaSerie()])
+}
+
+// How a series is held, changed on the meetings to come that still had it (DEC-402).
+const serieOnline = ref<number | null>(null)
+const modoSerie = ref({ modalita: 'PRESENZA' as ModalitaRiunione, link: '' })
+function apriOnline(s: SerieRiunioni) {
+  modoSerie.value = { modalita: s.modalita, link: s.link }
+  serieOnline.value = s.id
+}
+async function salvaOnline(s: SerieRiunioni) {
+  const scelta = modoSerie.value
+  const fatta = await esegui(() =>
+    api.modificaSerie(s.id, {
+      uniforme: s.uniforme,
+      localita_id: s.localita?.id ?? null,
+      nuova_localita: null,
+      modalita: scelta.modalita,
+      link: scelta.link,
+    }),
+  )
+  if (!fatta) return
+  serieOnline.value = null
+  await Promise.all([carica(), caricaSerie()])
+}
+const MODI: Record<ModalitaRiunione, string> = {
+  PRESENZA: '',
+  ONLINE: 'Online',
+  MISTA: 'In presenza e online',
 }
 
 const daTogliere = ref<number | null>(null)
@@ -301,6 +359,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <select id="riu-per" v-model="modulo.perChi" class="form-control form-control-sm">
             <option v-if="sessione.capo" value="unita">Di un'unità</option>
             <option v-if="squadriglie.length" value="squadriglia">Di una squadriglia</option>
+            <option v-if="sessione.capo" value="staff">Di staff</option>
             <option v-if="sessione.capo" value="genitori">Dei genitori</option>
             <option v-if="sessione.capogruppo" value="assemblea">Assemblea dei soci</option>
           </select>
@@ -350,6 +409,22 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           <p class="form-text mb-0">
             Sono invitati i genitori e lo staff. Gli invitati ricevono l'email quando invii la
             convocazione dalla pagina della riunione, dopo aver aggiunto i documenti.
+          </p>
+        </fieldset>
+        <fieldset v-else-if="modulo.perChi === 'staff'" class="md:col-8">
+          <legend class="form-label small">Staff di</legend>
+          <div v-for="u in unitaConGenitori" :key="u.id" class="form-field mb-1">
+            <input
+              :id="`riu-staff-${u.id}`"
+              v-model="modulo.unitaStaff"
+              type="checkbox"
+              class="check"
+              :value="u.id"
+            />
+            <label :for="`riu-staff-${u.id}`">{{ nomeUnita(u) }}</label>
+          </div>
+          <p class="form-text mb-0">
+            Sono invitati i capi degli staff scelti. La vedono solo loro e i capigruppo.
           </p>
         </fieldset>
         <p v-else-if="modulo.perChi === 'assemblea'" class="form-text md:col-8 mb-0">
@@ -458,10 +533,13 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             required
           />
         </div>
-        <div class="col-12">
+        <div v-if="puoEssereOnline" class="col-12">
+          <SceltaModalita v-model="modulo.online" id-campo="riu-online" />
+        </div>
+        <div v-if="!soloOnline" class="col-12">
           <SceltaLocalita v-model="modulo.localita" id-campo="riu-localita" :localita="localita" />
         </div>
-        <fieldset v-if="!unaAllaVolta" class="col-12">
+        <fieldset v-if="!unaAllaVolta && !diStaff" class="col-12">
           <legend class="form-label small">Uniforme</legend>
           <div class="d-flex flex-wrap gap-5">
             <div class="form-field mb-0">
@@ -492,7 +570,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             etichetta="Ordine del giorno (facoltativo)"
           />
         </div>
-        <p v-else-if="diCoca" class="form-text col-12 mb-0">
+        <p v-else-if="diCoca || diStaff" class="form-text col-12 mb-0">
           L'ordine del giorno lo scrivi poi sulla singola riunione.
         </p>
         <div class="col-12">
@@ -529,8 +607,13 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </RouterLink>
           <span class="small fg-2">{{ quando(r) }}</span>
           <span v-if="r.annullato" class="badge theme-danger">Annullata</span>
+          <span v-else-if="r.modalita && MODI[r.modalita]" class="badge theme-info">
+            {{ MODI[r.modalita] }}
+          </span>
           <span
-            v-else-if="r.uniforme === false && r.cerchia !== 'GENITORI'"
+            v-if="
+              !r.annullato && r.uniforme === false && !['GENITORI', 'STAFF'].includes(r.cerchia)
+            "
             class="badge theme-secondary"
           >
             Senza uniforme
@@ -555,8 +638,9 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             <span class="small fg-2">
               · ogni {{ GIORNI[s.giorno_settimana] }}, {{ s.ora_inizio.slice(0, 5) }}–{{
                 s.ora_fine.slice(0, 5)
-              }}<template v-if="s.luogo"> · {{ s.luogo }}</template> · dal {{ data(s.dal) }} al
-              {{ data(s.al) }} · {{ s.riunioni }} riunioni
+              }}<template v-if="s.luogo"> · {{ s.luogo }}</template
+              ><template v-if="MODI[s.modalita]"> · {{ MODI[s.modalita].toLowerCase() }}</template>
+              · dal {{ data(s.dal) }} al {{ data(s.al) }} · {{ s.riunioni }} riunioni
             </span>
           </div>
           <div v-if="s.puo_gestire" class="d-flex flex-wrap align-items-center gap-3 mt-1">
@@ -573,6 +657,14 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
               </div>
               <label :for="`serie-uniforme-${s.id}`" class="small">Con l'uniforme</label>
             </div>
+            <button
+              v-if="s.puo_essere_online && serieOnline !== s.id"
+              type="button"
+              class="btn btn-sm btn-link"
+              @click="apriOnline(s)"
+            >
+              In presenza o online
+            </button>
             <button
               v-if="daTogliere !== s.id"
               type="button"
@@ -596,6 +688,24 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
               </button>
             </template>
           </div>
+          <form
+            v-if="serieOnline === s.id"
+            class="border rounded p-3 mt-3"
+            @submit.prevent="salvaOnline(s)"
+          >
+            <SceltaModalita v-model="modoSerie" :id-campo="`serie-online-${s.id}`" />
+            <p class="form-text mb-0">
+              Cambia le prossime riunioni che non hai già cambiato una per una.
+            </p>
+            <div class="d-flex gap-3 mt-3">
+              <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+                Salva
+              </button>
+              <button type="button" class="btn btn-sm btn-link" @click="serieOnline = null">
+                Annulla
+              </button>
+            </div>
+          </form>
         </li>
       </ul>
       <p class="form-text">

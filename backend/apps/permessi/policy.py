@@ -559,6 +559,20 @@ def puo_leggere_verbale(user, verbale) -> bool:
     tipo = tipo_di(evento)
     if tipo is None:
         return False
+    if tipo == TipoVerbale.STAFF:
+        # Who is invited and the capigruppo, not every capo (DEC-401).
+        if e_capo_in_attesa(user):
+            return False
+        if e_capogruppo(user) or puo_indicare_redattore(user, evento):
+            return True
+        if e_redattore(user, verbale):
+            return True
+        persona = persona_di(user)
+        return (
+            verbale.definitivo
+            and persona is not None
+            and evento.partecipazioni.filter(persona=persona).exists()
+        )
     if e_capo(user) and not e_capo_in_attesa(user):
         return True
     if puo_indicare_redattore(user, evento) or e_redattore(user, verbale):
@@ -1240,16 +1254,33 @@ def puo_non_invitare(user, evento) -> bool:
 
 def eventi_visibili(user):
     """The capi see every event; everyone else the events they or their children are
-    involved in (invited, not taking part or not invited, with the reason)."""
+    involved in (invited, not taking part or not invited, with the reason). A staff
+    meeting only who is invited, the staff of its units and the capigruppo (DEC-401)."""
     from apps.eventi.models import Evento
 
     if e_capo(user):
-        return Evento.objects.all()
+        if e_capogruppo(user):
+            return Evento.objects.all()
+        return Evento.objects.exclude(
+            Q(cerchia="STAFF") & ~Q(pk__in=_riunioni_di_staff_visibili(user))
+        )
     persone = [p.pk for p in tutelati(user) if genitori_vedono(p, "scheda")]
     propria = persona_di(user)
     if propria is not None:
         persone.append(propria.pk)
     return Evento.objects.filter(partecipazioni__persona_id__in=persone).distinct()
+
+
+def _riunioni_di_staff_visibili(user):
+    from apps.eventi.models import Evento
+
+    persona = persona_di(user)
+    invitato = Q(partecipazioni__persona=persona) if persona is not None else Q(pk__in=[])
+    return (
+        Evento.objects.filter(cerchia="STAFF")
+        .filter(invitato | Q(unita__in=_unita_servite(user)))
+        .values("pk")
+    )
 
 
 def puo_gestire_turni(user, unita: Unita) -> bool:

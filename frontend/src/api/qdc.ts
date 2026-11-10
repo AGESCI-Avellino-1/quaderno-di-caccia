@@ -1936,7 +1936,18 @@ export interface ModelloD {
 export type TipoEvento =
   'RIUNIONE' | 'USCITA' | 'CAMPO' | 'AUTOFINANZIAMENTO' | 'MISSIONE' | 'ALTRO'
 /** Who of the reparti involved is invited: all, CSQ, CSQ and VCSQ, Alta Squadriglia. */
-export type Cerchia = 'TUTTI' | 'CONCA' | 'CONCAVI' | 'ALTA_SQ' | 'CDA' | 'GENITORI' | 'SOCI'
+export type Cerchia =
+  | 'TUTTI'
+  | 'CONCA'
+  | 'CONCAVI'
+  | 'ALTA_SQ'
+  | 'CDA'
+  | 'GENITORI'
+  | 'SOCI'
+  /** The staff of one unit or of several (DEC-401). */
+  | 'STAFF'
+/** Where a meeting is held (DEC-402): online it has only the link, mixed place and link. */
+export type ModalitaRiunione = 'PRESENZA' | 'ONLINE' | 'MISTA'
 export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA' | 'ESTERNO'
 export type StatoPartecipazione = 'INVITATO' | 'NON_PARTECIPA' | 'NON_INVITATO'
 export type StatoPresenza = 'PRESENTE' | 'ASSENTE' | 'GIUSTIFICATO'
@@ -1998,6 +2009,10 @@ export interface Evento {
   localita?: Localita | null
   uniforme?: boolean | null
   informazioni?: string
+  modalita?: ModalitaRiunione
+  link?: string
+  /** Co.Ca., staff and parents' meetings may be online or mixed (DEC-402). */
+  puo_essere_online?: boolean
   /** Whether it has an agenda, read online with `ordineDelGiorno` (DEC-365). */
   con_ordine_del_giorno?: boolean
   /** The turns of the meeting (DEC-312): all for the capi, one's own for the others. */
@@ -2178,6 +2193,8 @@ export interface RiunioneIn {
   localita_id: number | null
   nuova_localita: LocalitaIn | null
   uniforme: boolean
+  modalita?: ModalitaRiunione
+  link?: string
   ordine_del_giorno?: string
 }
 
@@ -2196,6 +2213,9 @@ export interface SerieRiunioni {
   localita: Localita | null
   luogo: string
   uniforme: boolean
+  modalita: ModalitaRiunione
+  link: string
+  puo_essere_online: boolean
   riunioni: number
   puo_gestire: boolean
 }
@@ -2209,6 +2229,8 @@ export interface ModificaRiunione {
   /** null: as its series. */
   uniforme: boolean | null
   informazioni: string
+  modalita?: ModalitaRiunione
+  link?: string
 }
 
 /** Optional emails; access codes, invitations, security warnings, registration and
@@ -3867,7 +3889,13 @@ export const api = {
   serieRiunioni: () => richiesta<SerieRiunioni[]>('/api/v1/riunioni/serie'),
   modificaSerie: (
     id: number,
-    dati: { uniforme: boolean; localita_id: number | null; nuova_localita: LocalitaIn | null },
+    dati: {
+      uniforme: boolean
+      localita_id: number | null
+      nuova_localita: LocalitaIn | null
+      modalita?: ModalitaRiunione
+      link?: string
+    },
   ) => richiesta<SerieRiunioni>(`/api/v1/riunioni/serie/${id}`, { metodo: 'PUT', corpo: dati }),
   togliSerie: (id: number) =>
     richiesta<SerieRiunioni>(`/api/v1/riunioni/serie/${id}`, { metodo: 'DELETE' }),

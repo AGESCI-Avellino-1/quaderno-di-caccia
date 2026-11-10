@@ -440,6 +440,11 @@ implements them:
   (also the Consiglio degli Anziani), the linked unit, its `Localita` and the uniform, which a
   meeting may override (`Evento.uniforme`, None = as the series). Turns of patrols and
   sestiglie go round the unit's meetings (`eventi/turni.py`, DEC-312).
+  Staff meetings (`Cerchia.STAFF`, DEC-401) join the staffs of units chosen freely, linked or not;
+  only who is invited, the staffs of those units and the capigruppo see them (`policy.eventi_visibili`,
+  `puo_leggere_verbale`). Co.Ca., staff and parents' meetings may be online or mixed with a link
+  (`Evento.modalita`/`link`, copied from the series like the place; `servizi.puo_essere_online`,
+  DEC-402), shown in the page, the iCal feed and the emails (`Evento.dove()`); the assembly never.
 - Accounts (DEC-308, DEC-309, DEC-313): several invitations at once
   (`accounts.servizi.invita_molti`), a minor's personal link (`accounts/attivazione.py`: only
   the secret's fingerprint is kept; it ends in an ordinary invitation), every account for the

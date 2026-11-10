@@ -25,6 +25,7 @@ from .models import (
     Evento,
     Livello,
     Localita,
+    Modalita,
     RiunioneRicorrente,
     TipoEvento,
 )
@@ -165,6 +166,9 @@ class RiunioneIn(Schema):
     localita_id: int | None = None
     nuova_localita: LocalitaIn | None = None
     uniforme: bool = True
+    # In person, online or mixed, with the link (DEC-402).
+    modalita: Modalita = Modalita.PRESENZA
+    link: str = ""
     # Of a single meeting of the Co.Ca. or of the parents (DEC-362); in a series, written later
     # on each meeting.
     ordine_del_giorno: str = ""
@@ -185,6 +189,9 @@ class SerieOut(Schema):
     localita: LocalitaOut | None
     luogo: str
     uniforme: bool
+    modalita: Modalita
+    link: str
+    puo_essere_online: bool
     riunioni: int
     puo_gestire: bool
 
@@ -205,6 +212,11 @@ def _serie_out(user, serie: RiunioneRicorrente) -> dict:
         "localita": serie.localita,
         "luogo": serie.localita.nome_visibile if serie.localita_id else serie.luogo,
         "uniforme": serie.uniforme,
+        "modalita": serie.modalita,
+        "link": serie.link,
+        "puo_essere_online": servizi.puo_essere_online(
+            serie.cerchia, servizi.unita_della_serie(serie)
+        ),
         "riunioni": serie.eventi.filter(annullato_il__isnull=True).count(),
         "puo_gestire": _puo_gestire_serie(user, serie),
     }
@@ -226,6 +238,8 @@ def _puo_gestire_serie(user, serie: RiunioneRicorrente) -> bool:
 
 
 def _localita(request, dati: RiunioneIn) -> Localita | None:
+    if dati.modalita == Modalita.ONLINE:
+        return None  # online there is only the link (DEC-402)
     if dati.nuova_localita and dati.nuova_localita.nome.strip():
         return _nuova_localita(request.auth, dati.nuova_localita)
     if dati.localita_id:
@@ -241,8 +255,10 @@ def _unita_e_squadriglia(dati: RiunioneIn) -> tuple[list[Unita], Squadriglia | N
     unita = [per_id[i] for i in dict.fromkeys(dati.unita) if i in per_id]
     if not unita:
         raise HttpError(400, "Scegli l'unità.")
-    if dati.cerchia == Cerchia.GENITORI:
-        return unita, None  # the parents of one or more units (DEC-325)
+    if dati.cerchia in (Cerchia.GENITORI, Cerchia.STAFF):
+        # The parents of one or more units (DEC-325); the staffs of units chosen freely,
+        # linked or not (DEC-401).
+        return unita, None
     if len(unita) > 1:
         # Two units meet together only when linked (DEC-279).
         principale = unita[0]
@@ -271,8 +287,10 @@ def crea_riunioni(request, dati: RiunioneIn):
         raise HttpError(403, "Non puoi creare questa riunione.")
     try:
         servizi.controlla_cerchia(cerchia, unita)
+        servizi.controlla_modalita(dati.modalita, cerchia, unita)
     except ValidationError as errore:
         raise _errore(errore) from errore
+    link = _link(dati)
     with transaction.atomic():
         localita = _localita(request, dati)
         if dati.giorno is not None:
@@ -288,6 +306,8 @@ def crea_riunioni(request, dati: RiunioneIn):
                 luogo=localita.nome_visibile if localita else "",
                 localita=localita,
                 uniforme=dati.uniforme,
+                modalita=dati.modalita,
+                link=link,
             )
             try:
                 if evento.fine <= evento.inizio:
@@ -311,6 +331,8 @@ def crea_riunioni(request, dati: RiunioneIn):
                 al=dati.al,
                 localita=localita,
                 uniforme=dati.uniforme,
+                modalita=dati.modalita,
+                link=link,
                 creata_da=request.auth,
             )
             try:
@@ -335,6 +357,10 @@ def _crea_riunione_convocata(request, dati: RiunioneIn):
     livello = Livello.GRUPPO if di_gruppo else Livello.UNITA
     if not _puo_creare(request.auth, unita, None, dati.cerchia, livello):
         raise HttpError(403, "Non puoi creare questa riunione.")
+    try:
+        servizi.controlla_modalita(dati.modalita, dati.cerchia, unita)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
     titolo = "Assemblea dei soci" if assemblea else servizi.titolo_riunione_genitori(unita)
     zona = timezone.get_current_timezone()
     with transaction.atomic():
@@ -349,6 +375,8 @@ def _crea_riunione_convocata(request, dati: RiunioneIn):
             luogo=localita.nome_visibile if localita else "",
             localita=localita,
             uniforme=False,
+            modalita=dati.modalita,
+            link=_link(dati),
         )
         try:
             if evento.fine <= evento.inizio:
@@ -361,7 +389,11 @@ def _crea_riunione_convocata(request, dati: RiunioneIn):
 
 def _titolo_singola(unita: list[Unita], squadriglia, cerchia: str) -> str:
     serie = RiunioneRicorrente(unita=unita[0], squadriglia=squadriglia, cerchia=cerchia)
-    return servizi.titolo_riunione(serie)
+    return servizi.titolo_riunione(serie, unita)
+
+
+def _link(dati) -> str:
+    return dati.link.strip() if dati.modalita != Modalita.PRESENZA else ""
 
 
 @router.get("/riunioni/serie", response=list[SerieOut])
@@ -380,6 +412,9 @@ class SerieIn(Schema):
     uniforme: bool
     localita_id: int | None = None
     nuova_localita: LocalitaIn | None = None
+    # None: as it is (an app not yet updated does not send them).
+    modalita: Modalita | None = None
+    link: str | None = None
 
 
 def _serie(request, serie_id: int) -> RiunioneRicorrente:
@@ -392,11 +427,26 @@ def _serie(request, serie_id: int) -> RiunioneRicorrente:
 @router.put("/riunioni/serie/{serie_id}", response=SerieOut)
 def modifica_serie(request, serie_id: int, dati: SerieIn):
     serie = _serie(request, serie_id)
-    with transaction.atomic():
-        localita = _localita(
-            request, RiunioneIn(ora_inizio=time(0), ora_fine=time(0), **dati.dict())
-        )
-        servizi.cambia_serie(serie, uniforme=dati.uniforme, localita=localita)
+    modalita = dati.modalita or serie.modalita
+    link = serie.link if dati.link is None else dati.link
+    try:
+        servizi.controlla_modalita(modalita, serie.cerchia, servizi.unita_della_serie(serie))
+        with transaction.atomic():
+            localita = _localita(
+                request,
+                RiunioneIn(
+                    ora_inizio=time(0),
+                    ora_fine=time(0),
+                    localita_id=dati.localita_id,
+                    nuova_localita=dati.nuova_localita,
+                    modalita=modalita,
+                ),
+            )
+            servizi.cambia_serie(
+                serie, uniforme=dati.uniforme, localita=localita, modalita=modalita, link=link
+            )
+    except ValidationError as errore:
+        raise _errore(errore) from errore
     return _serie_out(request.auth, serie)
 
 
@@ -421,6 +471,9 @@ class ModificaRiunione(Schema):
     # None: as its series.
     uniforme: bool | None = None
     informazioni: str = ""
+    # None: as it is (an app not yet updated does not send them).
+    modalita: Modalita | None = None
+    link: str | None = None
 
 
 @router.put("/riunioni/{evento_id}", response=EventoOut)
@@ -432,7 +485,15 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
     )
     if not policy.puo_gestire_evento(request.auth, evento):
         raise HttpError(403, "Non puoi cambiare questa riunione.")
-    prima = (evento.inizio, evento.fine, evento.luogo)
+    prima = (evento.inizio, evento.fine, evento.luogo, evento.modalita, evento.link)
+    modalita = dati.modalita or evento.modalita
+    if modalita != evento.modalita:
+        try:
+            servizi.controlla_modalita(
+                modalita, evento.cerchia, list(servizi.unita_coinvolte(evento))
+            )
+        except ValidationError as errore:
+            raise _errore(errore) from errore
     with transaction.atomic():
         localita = _localita(
             request,
@@ -441,11 +502,19 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
                 ora_fine=time(0),
                 localita_id=dati.localita_id,
                 nuova_localita=dati.nuova_localita,
+                modalita=modalita,
             ),
         )
+        evento.modalita = modalita
+        if dati.link is not None:
+            evento.link = dati.link.strip()
+        if modalita == Modalita.PRESENZA:
+            evento.link = ""
         evento.inizio, evento.fine = dati.inizio, dati.fine
         evento.localita = localita
         evento.luogo = localita.nome_visibile if localita else dati.luogo.strip()
+        if modalita == Modalita.ONLINE:
+            evento.luogo = ""
         if dati.uniforme is None and evento.riunione_id is None:
             raise HttpError(400, "Scegli se la riunione è con l'uniforme.")
         evento.uniforme = dati.uniforme
@@ -456,6 +525,6 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
             raise _errore(errore) from errore
         evento.save()
         servizi.allinea_partecipanti(evento)
-    if (evento.inizio, evento.fine, evento.luogo) != prima:
+    if (evento.inizio, evento.fine, evento.luogo, evento.modalita, evento.link) != prima:
         transaction.on_commit(lambda: avvisi.modificato(evento))
     return _evento_out(request.auth, evento)

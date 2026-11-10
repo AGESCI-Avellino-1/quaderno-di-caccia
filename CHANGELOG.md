@@ -5,6 +5,32 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.28.0 — 10 novembre 2026
+
+### Novità
+
+**Riunioni di staff e di staff congiunti** ([#65](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/65)): in **Nuove riunioni**, **Di staff** riunisce lo staff di un'unità oppure gli staff di più unità insieme, anche non collegate (per esempio branco e reparto per preparare i passaggi). Sono invitati i capi di quegli staff; la crea uno di loro o un capogruppo. La vedono solo gli invitati e i capigruppo: gli altri capi, i ragazzi/e e i genitori no. Ordine del giorno e verbale sono facoltativi.
+
+**Riunioni online o miste** ([#65](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/65)): le riunioni della Comunità capi, di staff e dei genitori possono essere **Online** o **Mista**, con il link di Meet o di un'altra piattaforma. Si sceglie per la serie e si può cambiare sulla singola riunione. Il link si vede nella pagina della riunione (**Entra nella riunione**), nel calendario e nelle email. L'assemblea dei soci resta in presenza.
+
+### Correzioni
+
+Nell'elenco delle riunioni l'assemblea dei soci non porta più l'etichetta «Senza uniforme».
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.28.0
+```
+
+L'aggiornamento migra il database: le riunioni già inserite restano in presenza.
+
+### Documentazione
+
+Il capitolo sulle riunioni spiega le riunioni di staff e quelle online. Nuova schermata della riunione di staff online; rifatte quelle delle riunioni e del modulo delle nuove riunioni.
+
+Provata con i test e, per il modulo delle nuove riunioni, in un browser con dati inventati; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.27.1 — 7 novembre 2026
 
 ### Correzioni

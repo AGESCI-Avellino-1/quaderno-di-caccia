@@ -583,7 +583,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           />
         </div>
       </div>
-      <p class="form-text mt-3 mb-0">
+      <p v-if="!diStaff" class="form-text mt-3 mb-0">
         Le riunioni non hanno quote e non si annunciano per email: le famiglie le vedono nell'app e
         nel calendario. Un'email parte solo se sposti o annulli una singola riunione.
       </p>
@@ -612,7 +612,9 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </span>
           <span
             v-if="
-              !r.annullato && r.uniforme === false && !['GENITORI', 'STAFF'].includes(r.cerchia)
+              !r.annullato &&
+              r.uniforme === false &&
+              !['GENITORI', 'SOCI', 'STAFF'].includes(r.cerchia)
             "
             class="badge theme-secondary"
           >

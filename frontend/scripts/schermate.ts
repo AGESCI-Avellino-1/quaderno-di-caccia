@@ -678,6 +678,24 @@ const SCENE: Scena[] = [
     intera: true,
   },
   {
+    // A joint staff meeting of the reparto and the cerchio, online, not created (DEC-401, DEC-402).
+    nome: 'capo/riunioni-staff',
+    chi: 'capoReparto',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Nuove riunioni' }).click()
+      await pagina.getByLabel('Di chi').selectOption('staff')
+      await pagina.getByLabel(/Antares/).check()
+      await pagina.getByLabel(/Fiordaliso/).check()
+      await pagina.getByLabel('Una volta').check()
+      await pagina.getByLabel('Dalle').fill('21:00')
+      await pagina.getByLabel('Alle', { exact: true }).fill('22:30')
+      await pagina.getByLabel('Come').selectOption('ONLINE')
+      await pagina.getByLabel('Link della riunione').fill('https://meet.google.com/abc-defg-hij')
+    },
+    intera: true,
+  },
+  {
     // The next meeting being changed: its notes in the editor.
     nome: 'capo/riunione-modifica',
     chi: 'capoReparto',

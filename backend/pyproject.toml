@@ -1,6 +1,6 @@
 [project]
 name = "qdc-backend"
-version = "1.27.1"
+version = "1.28.0"
 description = "Quaderno di Caccia (QdC) — backend Django per la gestione di un Gruppo AGESCI"
 requires-python = ">=3.14"
 license = "MIT"

@@ -50,6 +50,11 @@ e spunta le unità. Sono invitati i capi di quegli staff (capo unità, staff, as
 ecclesiastico); la crea uno di loro o un capogruppo. La vedono solo gli invitati e i capigruppo:
 gli altri capi, i ragazzi/e e i genitori no. Ordine del giorno e verbale sono facoltativi.
 
+:::{container} schermate
+![Una riunione di staff online sul telefono](../img/capo/riunioni-staff-telefono.png){.telefono width="30%"}
+![Una riunione di staff online sul computer](../img/capo/riunioni-staff-computer.png){.computer width="65%"}
+:::
+
 ## Le riunioni di ogni settimana
 
 In fondo alla pagina, **Riunioni di ogni settimana** elenca le serie. L'interruttore **Con

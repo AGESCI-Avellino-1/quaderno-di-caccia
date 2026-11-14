@@ -7,9 +7,10 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                                     | Tipo          | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#73](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/73) | Squadriglia creata senza animale, lo sceglie il capo squadriglia (DEC-409) | Miglioramento | Medio   | Media      | VAL    |
+| Issue                                                                    | Titolo                                                                            | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#73](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/73) | Squadriglia creata senza animale, lo sceglie il capo squadriglia (DEC-409)        | Miglioramento | Medio   | Media      | VAL    |
+| [#74](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/74) | Notifica: dopo lo sblocco si torna all'ultima pagina, non a quella della notifica | Correzione    | Medio   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

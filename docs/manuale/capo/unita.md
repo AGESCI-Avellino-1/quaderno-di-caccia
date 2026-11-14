@@ -113,8 +113,9 @@ collegati.
 - Una squadriglia che resta senza membri porta **sarà archiviata**.
 - Con **Mostra ai futuri capi squadriglia** i capi e vice della bozza la vedono, senza poterla
   cambiare, in **Le squadriglie future**.
-- **Da controllare** dice chi ha lasciato il reparto (sarà ignorato) e chi è arrivato dopo (resta
-  dov'è, a meno che tu non lo sposti nella bozza).
+- **Da controllare** dice chi ha lasciato il reparto (sarà ignorato), chi è arrivato dopo (resta
+  dov'è, a meno che tu non lo sposti nella bozza) e chi ha cambiato squadriglia davvero dopo la
+  bozza: applicandola andrà dove dice la bozza, quindi se serve correggi la bozza.
 
 Dal giorno scelto in poi tocca **Applica la bozza…** e conferma: gli spostamenti valgono da quel
 giorno, i capi e vice di prima lasciano l'incarico, partono i nuovi e le squadriglie vuote vengono

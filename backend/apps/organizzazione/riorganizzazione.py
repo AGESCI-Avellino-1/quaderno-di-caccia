@@ -88,6 +88,30 @@ def differenze(bozza: BozzaSquadriglie) -> list[str]:
         for pk, persona in sorted(nella_bozza.items(), key=lambda v: str(v[1]))
         if pk not in oggi
     ]
+    # A real move since the draft: applying it, the draft wins (DEC-410).
+    reali = {
+        m.persona_id: m.squadriglia
+        for m in AppartenenzaSquadriglia.objects.attive()
+        .filter(squadriglia__unita__in=reparti(bozza))
+        .select_related("squadriglia")
+    }
+    for membro in bozza.membri.select_related(
+        "persona", "squadriglia__squadriglia", "squadriglia__animale", "squadriglia_di_partenza"
+    ).order_by("persona__cognome", "persona__nome"):
+        if membro.persona_id not in oggi:
+            continue
+        reale = reali.get(membro.persona_id)
+        if getattr(reale, "pk", None) == membro.squadriglia_di_partenza_id:
+            continue
+        prima = membro.squadriglia_di_partenza or "nessuna squadriglia"
+        adesso = reale or "nessuna squadriglia"
+        verso = (
+            f"in Sq. {membro.squadriglia.nome}" if membro.squadriglia_id else "senza squadriglia"
+        )
+        avvisi.append(
+            f"{membro.persona} è passato/a da {prima} a {adesso} dopo la bozza: applicandola "
+            f"andrà {verso}, come nella bozza."
+        )
     arrivati = Persona.objects.filter(pk__in=set(oggi) - set(nella_bozza)).order_by(
         "cognome", "nome"
     )
@@ -139,7 +163,12 @@ def crea(unita: Unita, data_inizio: date) -> BozzaSquadriglie:
     }
     for persona_id in ragazzi(reparti(bozza)):
         posto = posti.get(attuali.get(persona_id))
-        MembroInBozza.objects.create(bozza=bozza, persona_id=persona_id, squadriglia=posto)
+        MembroInBozza.objects.create(
+            bozza=bozza,
+            persona_id=persona_id,
+            squadriglia=posto,
+            squadriglia_di_partenza_id=attuali.get(persona_id),
+        )
     return bozza
 
 
@@ -175,7 +204,13 @@ def sposta(bozza: BozzaSquadriglie, persona: Persona, posto: SquadrigliaInBozza 
     if membro is None:
         if persona.pk not in ragazzi(reparti(bozza)):
             raise ValidationError(f"{persona} non è un ragazzo/a del reparto.")
-        membro = MembroInBozza(bozza=bozza, persona=persona)  # arrived after the draft
+        # Arrived after the draft: their patrol of today is where they start from.
+        attuale = AppartenenzaSquadriglia.objects.attive().filter(persona=persona).first()
+        membro = MembroInBozza(
+            bozza=bozza,
+            persona=persona,
+            squadriglia_di_partenza_id=attuale.squadriglia_id if attuale else None,
+        )
     if posto is not None:
         if posto.bozza_id != bozza.pk:
             raise ValidationError("Scegli una squadriglia della bozza.")

@@ -272,3 +272,25 @@ def test_scartare(capo, scena):
     bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
     assert _json(capo, "delete", f"/api/v1/bozze-squadriglie/{bozza['id']}").status_code == 204
     assert not BozzaSquadriglie.objects.exists()
+
+
+def test_uno_spostamento_vero_dopo_la_bozza_e_segnalato(capo, scena):
+    # Reported, never blocking: applying it, the draft wins.
+    bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}"
+    cloe = scena["p"]["cloe"]
+    membro = AppartenenzaSquadriglia.objects.attive().get(persona=cloe)
+    _json(capo, "post", f"/api/v1/membri-squadriglia/{membro.pk}/termina")
+    _json(
+        capo,
+        "post",
+        f"/api/v1/squadriglie/{scena['sq']['Volpi'].pk}/membri",
+        {"persona_id": cloe.pk},
+    )
+    differenze = _client(capo).get(url).json()["differenze"]
+    assert any(
+        "Cloe" in d and "da Sq. Gazze a Sq. Volpi" in d and "andrà in Sq. Gazze" in d
+        for d in differenze
+    ), differenze
+    assert _json(capo, "post", f"{url}/applica").status_code == 200
+    assert AppartenenzaSquadriglia.objects.attive().get(persona=cloe).squadriglia.nome == "Gazze"

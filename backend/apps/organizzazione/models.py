@@ -885,6 +885,10 @@ class MembroInBozza(ModelloTracciato):
     squadriglia = models.ForeignKey(
         SquadrigliaInBozza, null=True, blank=True, on_delete=models.SET_NULL, related_name="membri"
     )
+    # Their real patrol when they entered the draft: a real move since is reported.
+    squadriglia_di_partenza = models.ForeignKey(
+        Squadriglia, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
 
     class Meta:
         verbose_name = "membro in una bozza"

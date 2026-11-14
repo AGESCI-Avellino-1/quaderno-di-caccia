@@ -115,7 +115,7 @@ def test_chi_crea(capo, staff, capogruppo, csq, genitore, estraneo, reparto, cla
 
 def test_titolo_e_una_sola_alla_volta(capogruppo, reparto):
     evento = _crea(capogruppo, unita=[reparto.pk])
-    assert evento.titolo == f"Riunione dei genitori di {reparto.nome}"
+    assert evento.titolo == f"Riunione dei genitori di {reparto}"
     assert evento.convocata_il is None
     assert _crea(capogruppo, di_gruppo=True).titolo == "Riunione dei genitori"
     serie = {

@@ -292,8 +292,13 @@ class RagazzoSenzaSquadriglia(PersonaBreve):
 
 class RepartoBreve(Schema):
     id: int
+    # Type, name and code, as everywhere (DEC-128): parallel reparti may share a name.
     nome: str
     composizione: str
+
+    @staticmethod
+    def resolve_nome(obj: Unita) -> str:
+        return str(obj)
 
 
 class UnitaDettaglio(Schema):
@@ -1372,7 +1377,7 @@ def deroghe_squadriglia(request, persona_id: int):
     return {
         "deroghe": [_deroga_out(d, valide) for d in deroghe],
         "puo_gestire": policy.puo_gestire_deroghe_squadriglia(request.auth),
-        "reparti": [{"valore": str(u.pk), "etichetta": u.nome} for u in reparti],
+        "reparti": [{"valore": str(u.pk), "etichetta": str(u)} for u in reparti],
     }
 
 

@@ -268,8 +268,7 @@ def _chi_e_in_rubrica(persona: Persona) -> str:
         .first()
     )
     if ragazzo is not None:
-        unita = ragazzo.unita
-        return f"{unita.nome_tipo} {unita.nome.strip() or unita.codice}".strip()
+        return str(ragazzo.unita)  # type, name and code (DEC-128)
     return "Genitore" if persona.tutele.exists() else "Socio"
 
 

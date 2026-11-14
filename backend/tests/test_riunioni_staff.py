@@ -87,7 +87,7 @@ def _staff_congiunti(capo, reparto, branco, **altro) -> dict:
 
 def test_staff_congiunti_di_unita_non_collegate(capo, akela, capogruppo, reparto, branco):
     riunione = _staff_congiunti(capo, reparto, branco)
-    assert riunione["titolo"] == "Riunione degli staff di Reparto Prova e Branco Prova"
+    assert riunione["titolo"] == f"Riunione degli staff di {reparto} e {branco}"
     assert riunione["cerchia"] == "STAFF"
     evento = Evento.objects.get(pk=riunione["id"])
     invitati = set(evento.partecipazioni.values_list("persona_id", flat=True))
@@ -103,7 +103,7 @@ def test_chi_crea_una_riunione_di_staff(
         assert _post(chi, "/api/v1/riunioni", corpo).status_code == 403
     assert _post(akela, "/api/v1/riunioni", corpo).status_code == 403  # not their unit
     singola = _post(capogruppo, "/api/v1/riunioni", corpo).json()[0]
-    assert singola["titolo"] == "Riunione di staff di Reparto Prova"
+    assert singola["titolo"] == f"Riunione di staff di {reparto}"
     # One staff serving one of the two units creates the joint meeting.
     assert (
         _post(akela, "/api/v1/riunioni", _singola([reparto, branco], cerchia="STAFF")).status_code

@@ -287,12 +287,12 @@ def annulla(evento: Evento, motivo: str) -> None:
 def titolo_riunione_genitori(unita: list[Unita]) -> str:
     if not unita:
         return "Riunione dei genitori"
-    nomi = " e ".join(u.nome or u.get_tipo_display() for u in unita)
+    nomi = " e ".join(str(u) for u in unita)  # type, name and code (DEC-128)
     return f"Riunione dei genitori di {nomi}"
 
 
 def titolo_riunione_staff(unita: list[Unita]) -> str:
-    nomi = " e ".join(u.nome or u.get_tipo_display() for u in unita)
+    nomi = " e ".join(str(u) for u in unita)
     return f"Riunione di staff di {nomi}" if len(unita) == 1 else f"Riunione degli staff di {nomi}"
 
 
@@ -307,7 +307,7 @@ def titolo_riunione(serie: RiunioneRicorrente, unita: list[Unita] | None = None)
         return f"Riunione di squadriglia {serie.squadriglia.nome}"
     if serie.cerchia != Cerchia.TUTTI:
         return serie.get_cerchia_display()
-    return f"Riunione di {serie.unita.nome or serie.unita.get_tipo_display()}"
+    return f"Riunione di {serie.unita}"
 
 
 def unita_della_serie(serie: RiunioneRicorrente) -> list[Unita]:

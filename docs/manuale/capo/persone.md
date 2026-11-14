@@ -30,7 +30,7 @@ Per avere i numeri dei soci o dei genitori nella rubrica del telefono, con la re
    rubrica.
 
 Nel file ci sono nome, numeri e, come azienda, il gruppo con il ruolo o l'unità (per esempio
-«AGESCI {{ esempio_gruppo }} - Reparto Aquile»). Resta sul telefono, fuori dalla protezione con il PIN:
+«AGESCI {{ esempio_gruppo }} - Reparto Aquile (E1)»). Resta sul telefono, fuori dalla protezione con il PIN:
 quando hai salvato i contatti, cancellalo dai download.
 
 ## Correggere un dato di BuonaStrada

@@ -512,7 +512,7 @@ def mie_squadriglie(request):
                 "id": sq.pk,
                 "nome": sq.nome,
                 "animale": breve(sq.animale),
-                "reparto": sq.unita.nome,
+                "reparto": str(sq.unita),
                 "sono_capo": capo,
                 "membri": membri,
                 "genitori": genitori,

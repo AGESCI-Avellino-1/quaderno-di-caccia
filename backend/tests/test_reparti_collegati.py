@@ -98,3 +98,23 @@ def test_gli_altri_non_compongono(request, ruolo, lupi, marco):
         content_type="application/json",
     )
     assert risposta.status_code == 403
+
+
+def test_stesso_nome_distinti_dal_codice(capo, gruppo, reparto):
+    # Parallel reparti may share a name: the code tells them apart (DEC-408).
+    reparto.nome, reparto.codice_unita, reparto.progressivo = "Millenium", "M", 1
+    reparto.save()
+    gemello = Unita.objects.create(
+        gruppo=gruppo,
+        nome="Millenium",
+        tipo=TipoUnita.REPARTO,
+        composizione=Composizione.MISTA,
+        codice_unita="N",
+        progressivo=1,
+    )
+    servizi.collega(reparto, gemello, "")
+    dettaglio = _client(capo).get(f"/api/v1/unita/{reparto.pk}").json()
+    assert [r["nome"] for r in dettaglio["reparti"]] == [
+        "Reparto Millenium (M1)",
+        "Reparto Millenium (N1)",
+    ]

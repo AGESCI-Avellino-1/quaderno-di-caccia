@@ -7,8 +7,9 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue | Titolo | Tipo | Impatto | Difficoltà | Status |
-| ----- | ------ | ---- | ------- | ---------- | ------ |
+| Issue                                                                    | Titolo                                         | Tipo       | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ---------------------------------------------- | ---------- | ------- | ---------- | ------ |
+| [#72](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/72) | Unità sempre con tipo, nome e codice (DEC-408) | Correzione | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

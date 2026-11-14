@@ -1,5 +1,6 @@
 """Group structure: group, units, patrols, roles (DEC-10..DEC-18, DEC-34..DEC-37)."""
 
+import calendar
 from datetime import date
 
 from django.conf import settings
@@ -347,6 +348,10 @@ class Squadriglia(ModelloTracciato):
     # False once archived: for good, kept only as a memory (DEC-403).
     attiva = models.BooleanField(default=True)
     archiviata_il = models.DateField(null=True, blank=True)
+    # Created without an animal, under "Nuova Squadriglia N", until its CSQ chooses one; the
+    # day of that choice opens a month for the staff to correct it (DEC-409).
+    provvisoria = models.BooleanField(default=False)
+    animale_scelto_il = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "squadriglia"
@@ -362,6 +367,17 @@ class Squadriglia(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"Sq. {self.nome}"
+
+    def correggibile_fino(self) -> date | None:
+        """Last day the staff may correct the animal its CSQ chose (DEC-409)."""
+        if self.animale_scelto_il is None:
+            return None
+        g = self.animale_scelto_il
+        mese = g.month % 12 + 1
+        anno = g.year + (g.month == 12)
+        # The same day next month, or its last day (31 January → 28/29 February).
+        ultimo = calendar.monthrange(anno, mese)[1]
+        return date(anno, mese, min(g.day, ultimo))
 
     def clean(self) -> None:
         if self.unita_id and self.unita.tipo != TipoUnita.REPARTO:

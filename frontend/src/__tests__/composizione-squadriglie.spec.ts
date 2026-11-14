@@ -196,7 +196,7 @@ describe('choosing the animal', () => {
     const scelta = pagina.find('select[aria-label="Animale della squadriglia"]')
     // «Aquile» is taken in this reparto, Lupo is switched off.
     expect(scelta.findAll('option').map((o) => o.text())).toEqual([
-      'Scegli l’animale…'.replace('’', "'"),
+      'Senza animale: lo sceglie il capo squadriglia',
       'Pantere',
       'Orche',
     ])
@@ -211,6 +211,20 @@ describe('choosing the animal', () => {
       url: '/api/v1/unita/5/squadriglie',
       corpo: { animale_id: 8, sesso: 'F' },
     })
+  })
+
+  it('creates a patrol without an animal, for its capo squadriglia', async () => {
+    // DEC-409
+    const chiamate: { url: string; corpo: unknown }[] = []
+    const pagina = await montaConAnimali(dettaglio(true), chiamate)
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Nuova squadriglia')!
+      .trigger('click')
+    await flushPromises()
+    await pagina.find('form').trigger('submit')
+    await flushPromises()
+    expect(chiamate[0]).toEqual({ url: '/api/v1/unita/5/squadriglie', corpo: { sesso: 'F' } })
   })
 
   it('asks a patrol from before the animals to choose one', async () => {

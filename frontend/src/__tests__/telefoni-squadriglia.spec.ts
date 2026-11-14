@@ -129,3 +129,53 @@ describe('TelefonoSquadriglia', () => {
     ])
   })
 })
+
+describe('the animal of a new patrol', () => {
+  // DEC-409
+  it('its capo squadriglia chooses it, once', async () => {
+    const chiamate: Chiamata[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, opzioni?: RequestInit) => {
+        const metodo = opzioni?.method ?? 'GET'
+        if (metodo !== 'GET') {
+          chiamate.push({ url, metodo, corpo: JSON.parse((opzioni?.body as string) ?? 'null') })
+          return risposta(200, { id: 1 })
+        }
+        if (url.endsWith('/incarichi')) {
+          return risposta(200, { id: 1, nome: 'Aquile', incarichi: [], nomina: [] })
+        }
+        if (url.endsWith('/animali')) {
+          return risposta(200, {
+            animali: [
+              { id: 8, nome: 'Pantera', plurale: 'Pantere', tipo: 'GENERALE', attivo: true },
+            ],
+            colori: [],
+            puo_modificare: false,
+          })
+        }
+        return risposta(200, [
+          { ...squadriglia(true), nome: 'Nuova Squadriglia 1', provvisoria: true },
+        ])
+      }),
+    )
+    const pagina = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
+    await flushPromises()
+    const scelta = pagina.get('select[aria-label="Animale della squadriglia"]')
+    await scelta.trigger('focus')
+    await flushPromises()
+    await scelta.setValue(8)
+    await pagina.get('form').trigger('submit')
+    await flushPromises()
+    expect(chiamate).toEqual([
+      { url: '/api/v1/squadriglie/1/animale', metodo: 'POST', corpo: { animale_id: 8 } },
+    ])
+  })
+
+  it('is not asked to a member who is not the capo squadriglia', async () => {
+    stubFetch([{ ...squadriglia(false), provvisoria: true }])
+    const pagina = mount(SquadrigliaView, { global: { stubs: { RouterLink: RouterLinkStub } } })
+    await flushPromises()
+    expect(pagina.find('select[aria-label="Animale della squadriglia"]').exists()).toBe(false)
+  })
+})

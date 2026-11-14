@@ -273,6 +273,10 @@ class MembroOut(Schema):
 
 class SquadrigliaOut(Schema):
     id: int
+    # Created without an animal, waiting for its CSQ (DEC-409).
+    provvisoria: bool = False
+    # Last day the staff may correct the animal its CSQ chose.
+    correggibile_fino: date | None = None
     # Its reparto: with two linked reparti both are on one page (DEC-405).
     unita_id: int
     unita_nome: str = ""
@@ -491,6 +495,12 @@ def dettaglio_unita(request, unita_id: int):
             "unita_id": s.unita_id,
             "unita_nome": str(s.unita) if len(reparti) > 1 else "",
             "nome": s.nome,
+            "provvisoria": s.provvisoria,
+            "correggibile_fino": (
+                s.correggibile_fino()
+                if s.correggibile_fino() and s.correggibile_fino() >= timezone.localdate()
+                else None
+            ),
             "animale": breve(s.animale),
             "sesso": s.sesso,
             "attiva": s.attiva,
@@ -1055,29 +1065,47 @@ def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squad
             f"Il reparto è {Composizione(composizione).label.lower()}: le sue squadriglie sono solo {genere}.",
         )
     if dati.animale_id is None and squadriglia.pk is None:
-        raise HttpError(400, "Scegli l'animale della squadriglia.")
+        # Its CSQ will choose the animal (DEC-409).
+        squadriglia.provvisoria = True
+        squadriglia.nome = _nome_provvisorio(squadriglia.unita)
     if dati.animale_id is not None and dati.animale_id != squadriglia.animale_id:
-        if squadriglia.animale_id is not None:
+        fino = squadriglia.correggibile_fino()
+        if squadriglia.animale_id is not None and not (fino and timezone.localdate() <= fino):
             raise HttpError(
                 400,
                 "L'animale di una squadriglia non si cambia: aprine una nuova, spostaci i "
                 "membri e archivia questa.",
             )
-        animale = get_object_or_404(AnimaleSquadriglia, pk=dati.animale_id)
-        if not animale.attivo:
-            raise HttpError(400, f"{animale} è disattivato: scegline un altro.")
-        # An archived one leaves the name free (DEC-403).
-        if (
-            Squadriglia.objects.filter(unita=squadriglia.unita, nome=animale.plurale, attiva=True)
-            .exclude(pk=squadriglia.pk)
-            .exists()
-        ):
-            raise HttpError(400, f"In questo reparto c'è già la squadriglia {animale.plurale}.")
-        squadriglia.animale = animale
-        squadriglia.nome = animale.plurale
+        _dai_animale(squadriglia, dati.animale_id)
     squadriglia.sesso = dati.sesso
     _salva(squadriglia)
     return squadriglia
+
+
+def _nome_provvisorio(unita: Unita) -> str:
+    """ "Nuova Squadriglia" with the first number free among the active patrols (DEC-409)."""
+    presi = set(unita.squadriglie.filter(attiva=True).values_list("nome", flat=True))
+    n = 1
+    while f"Nuova Squadriglia {n}" in presi:
+        n += 1
+    return f"Nuova Squadriglia {n}"
+
+
+def _dai_animale(squadriglia: Squadriglia, animale_id: int) -> None:
+    """The animal and its plural as the name; a provisional name is forgotten (DEC-409)."""
+    animale = get_object_or_404(AnimaleSquadriglia, pk=animale_id)
+    if not animale.attivo:
+        raise HttpError(400, f"{animale} è disattivato: scegline un altro.")
+    # An archived one leaves the name free (DEC-403).
+    if (
+        Squadriglia.objects.filter(unita=squadriglia.unita, nome=animale.plurale, attiva=True)
+        .exclude(pk=squadriglia.pk)
+        .exists()
+    ):
+        raise HttpError(400, f"In questo reparto c'è già la squadriglia {animale.plurale}.")
+    squadriglia.animale = animale
+    squadriglia.nome = animale.plurale
+    squadriglia.provvisoria = False
 
 
 @router.post("/unita/{unita_id}/squadriglie", response={201: SquadrigliaBreve})
@@ -1094,6 +1122,29 @@ def modifica_squadriglia(request, squadriglia_id: int, dati: SquadrigliaIn):
     if not policy.puo_gestire_squadriglie(request.auth, squadriglia.unita):
         raise HttpError(403, "Non puoi gestire le squadriglie di questa unità.")
     return _applica_squadriglia(squadriglia, dati)
+
+
+class SceltaAnimale(Schema):
+    animale_id: int
+
+
+@router.post("/squadriglie/{squadriglia_id}/animale", response=SquadrigliaBreve)
+def scegli_animale(request, squadriglia_id: int, dati: SceltaAnimale):
+    """The animal of a patrol created without one, chosen by its CSQ, once (DEC-409): the
+    staff is told and may correct it for a month. The staff may choose it too."""
+    squadriglia = get_object_or_404(Squadriglia.objects.select_related("unita"), pk=squadriglia_id)
+    if squadriglia.animale_id == dati.animale_id and not squadriglia.provvisoria:
+        return squadriglia  # an offline replay (DEC-96)
+    if not policy.puo_scegliere_animale(request.auth, squadriglia):
+        raise HttpError(403, "L'animale di questa squadriglia è già stato scelto.")
+    dallo_staff = policy.puo_gestire_squadriglie(request.auth, squadriglia.unita)
+    _dai_animale(squadriglia, dati.animale_id)
+    if not dallo_staff:
+        squadriglia.animale_scelto_il = timezone.localdate()
+    _salva(squadriglia)
+    if not dallo_staff:
+        transaction.on_commit(lambda: servizi.avvisa_animale_scelto(squadriglia))
+    return squadriglia
 
 
 @router.post("/squadriglie/{squadriglia_id}/archivia", response=SquadrigliaBreve)

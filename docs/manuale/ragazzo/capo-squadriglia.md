@@ -37,6 +37,11 @@ In cima alla pagina trovi l'immagine dell'animale della squadriglia e i suoi col
 significati. In **Amministrazione**, **Animali di squadriglia** elenca tutti gli animali, con colori e richiamo:
 lo leggono tutti gli esploratori e le guide, ma l'animale di una squadriglia lo sceglie lo staff.
 
+Se lo staff ha creato la squadriglia senza animale, si chiama «Nuova Squadriglia» con un numero e
+l'animale lo scegli tu: in **Scegli l'animale della squadriglia** scegli l'animale e tocca
+**Scegli**. Il nome della squadriglia diventa il plurale dell'animale. Puoi sceglierlo una volta
+sola: lo staff riceve un avviso e, se c'è un errore, lo corregge.
+
 ## Gli incarichi
 
 Nella stessa pagina, in **Incarichi**, assegni gli incarichi di squadriglia: cassiere, cicala,

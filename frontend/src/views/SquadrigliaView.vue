@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { api, type MiaSquadriglia } from '@/api/qdc'
+import { api, type AnimaleSquadriglia, type MiaSquadriglia } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
 import BarraRubrica from '@/components/BarraRubrica.vue'
 import ColoriAnimale from '@/components/ColoriAnimale.vue'
@@ -27,11 +27,29 @@ const sessione = useSessioneStore()
 // The member whose personal link the CSQ is generating (DEC-309).
 const linkPer = ref<number | null>(null)
 
-onMounted(async () => {
+async function carica() {
   const letto = await esegui(() => leggiConCache('mia-squadriglia', () => api.miaSquadriglia()))
   squadriglie.value = letto?.dati ?? []
   copiaDel.value = letto?.copiaDel ?? null
-})
+}
+onMounted(carica)
+
+// A new patrol without an animal: its capo squadriglia chooses it, once; the staff is told
+// and may correct it for a month (DEC-409). Online only.
+const animali = ref<AnimaleSquadriglia[]>([])
+const scelto = ref<number | null>(null)
+async function caricaAnimali() {
+  if (animali.value.length) return
+  animali.value = ((await esegui(() => api.animali()))?.animali ?? []).filter((a) => a.attivo)
+}
+async function scegli(s: MiaSquadriglia) {
+  const animale = scelto.value
+  if (animale === null) return
+  if (await esegui(() => api.scegliAnimaleSquadriglia(s.id, animale))) {
+    scelto.value = null
+    await carica()
+  }
+}
 
 const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g.figlio_id === id)
 </script>
@@ -53,6 +71,35 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
           <ColoriAnimale v-if="s.animale" :colori="s.animale.colori" />
         </div>
       </div>
+      <form
+        v-if="s.sono_capo && s.provvisoria"
+        class="card card-body mb-5"
+        @submit.prevent="scegli(s)"
+      >
+        <h3 class="h6">Scegli l'animale della squadriglia</h3>
+        <p class="small fg-2">
+          Il nome della squadriglia sarà il plurale dell'animale. Puoi sceglierlo una volta sola: lo
+          staff riceve un avviso e, se c'è un errore, lo corregge.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <select
+            v-model="scelto"
+            class="form-control form-control-sm w-auto"
+            aria-label="Animale della squadriglia"
+            @focus="caricaAnimali"
+          >
+            <option :value="null" disabled>Scegli l'animale…</option>
+            <option v-for="a in animali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+          </select>
+          <button
+            type="submit"
+            class="btn btn-sm btn-solid theme-primary"
+            :disabled="inCorso || scelto === null"
+          >
+            Scegli
+          </button>
+        </div>
+      </form>
       <BarraRubrica
         v-if="s.sono_capo"
         :rubrica="rubrica"

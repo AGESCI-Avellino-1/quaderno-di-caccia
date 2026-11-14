@@ -415,6 +415,24 @@ _TIPI = [
             _link("la pagina delle spese da rimborsare"),
         ),
     ),
+    # --- Patrols ----------------------------------------------------------------------------
+    TipoEmail(
+        "animale_squadriglia",
+        "Animale scelto dal capo squadriglia",
+        "Allo staff del reparto, quando il capo squadriglia sceglie l'animale di una squadriglia "
+        "nuova.",
+        "[Nome sito]: la squadriglia [Squadriglia]",
+        "<p>Ciao,</p><p>il capo squadriglia ha scelto l'animale di una squadriglia nuova di "
+        "[Unità]: ora si chiama [Squadriglia].</p><p>Se c'è un errore, lo staff può correggerlo "
+        "fino al [Fino al]:<br>[Link]</p>",
+        (
+            Segnaposto("Squadriglia", "il nuovo nome della squadriglia", "Pantere", True),
+            UNITA,
+            Segnaposto("Fino al", "l'ultimo giorno per correggere", "14/12/2026"),
+            _link("la pagina dell'unità"),
+        ),
+        facoltativa=True,
+    ),
     # --- Notice board ----------------------------------------------------------------------
     TipoEmail(
         "avviso_bacheca",

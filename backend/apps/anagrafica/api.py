@@ -434,6 +434,8 @@ class MiaSquadriglia(Schema):
     animale: AnimaleBreve | None = None
     reparto: str
     sono_capo: bool
+    # Waiting for its CSQ to choose the animal (DEC-409).
+    provvisoria: bool = False
     membri: list[TelefonoMembro]
     genitori: list[TelefonoGenitore]  # for the CSQ only
 
@@ -514,6 +516,7 @@ def mie_squadriglie(request):
                 "animale": breve(sq.animale),
                 "reparto": str(sq.unita),
                 "sono_capo": capo,
+                "provvisoria": sq.provvisoria,
                 "membri": membri,
                 "genitori": genitori,
             }

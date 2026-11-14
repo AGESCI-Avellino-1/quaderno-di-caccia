@@ -40,7 +40,11 @@ Scegli il ruolo in **Assegna un incarico…**, poi la persona in **Chi**, e tocc
 Le squadriglie le compongono lo staff del reparto e i capigruppo.
 
 - **Nuova squadriglia**: scegli l'animale, poi **Femminile** o **Maschile**, e tocca **Crea**. Il
-  nome è il plurale dell'animale. Se manca, aggiungilo all'elenco degli animali (qui sotto). In
+  nome è il plurale dell'animale. Se manca, aggiungilo all'elenco degli animali (qui sotto). Con
+  **Senza animale: lo sceglie il capo squadriglia** la squadriglia si chiama «Nuova Squadriglia 1»
+  (2, 3…) finché il suo capo squadriglia non sceglie l'animale, una volta sola, dalla sua pagina:
+  lo staff riceve un'email e una notifica e, se c'è un errore, lo corregge entro un mese con
+  **Correggi l'animale scelto dal capo squadriglia** sotto il nome della squadriglia. In
   un reparto maschile o femminile il sesso non si sceglie: la squadriglia è dello stesso sesso
   del reparto, e una dell'altro sesso rimasta da prima è segnalata in **Da controllare**, da
   correggere o, una volta vuota, archiviare.
@@ -54,7 +58,7 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   reparto, dalla squadriglia in questa pagina, e il capo squadriglia, dalla sua pagina. Un
   capogruppo lo fa solo se è nello staff di quel reparto. Non danno permessi e si chiudono da soli
   quando il ragazzo/a lascia la squadriglia.
-- L'animale di una squadriglia non si cambia. Per cambiarlo apri una squadriglia nuova con
+- Fuori da quel mese, l'animale di una squadriglia non si cambia. Per cambiarlo apri una squadriglia nuova con
   l'animale che vuoi, spostaci i membri e archivia la vecchia.
 - Una squadriglia vuota si archivia: tocca **archivia** accanto al nome e conferma con
   **Archivia**. È per sempre: non si riattiva più e resta solo per memoria, in **Squadriglie

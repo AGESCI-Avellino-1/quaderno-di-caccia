@@ -10,6 +10,7 @@ one of them returns (DEC-275).
 
 from datetime import date
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
@@ -19,8 +20,12 @@ from apps.anagrafica.models import (
     DerogaSquadriglia,
     Persona,
 )
+from apps.anagrafica.preferenze import accetta
+from apps.impostazioni.email import invia
+from apps.notifiche.servizi import notifica
+from apps.permessi import policy
 
-from .models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico, TipoUnita, Unita
+from .models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico, Squadriglia, TipoUnita, Unita
 
 
 def _chiudi(periodo, giorno: date) -> None:
@@ -167,6 +172,24 @@ def cancella_unita(unita: Unita) -> None:
 
 
 # --- Linked units (DEC-36, DEC-279) ---------------------------------------------------------
+
+
+def avvisa_animale_scelto(squadriglia: Squadriglia) -> None:
+    """Its CSQ chose the animal of a new patrol (DEC-409): an optional email and a
+    notification to the reparto staff, who may correct it for a month."""
+    staff = policy.staff_del_reparto(squadriglia.unita)
+    percorso = f"/unita/{squadriglia.unita_id}"
+    notifica("riepiloghi", staff, "Una squadriglia ha scelto il suo animale", percorso)
+    invia(
+        "animale_squadriglia",
+        {
+            "Squadriglia": squadriglia.nome,
+            "Unità": str(squadriglia.unita),
+            "Fino al": squadriglia.correggibile_fino().strftime("%d/%m/%Y"),
+            "Link": f"{settings.FRONTEND_URL}{percorso}",
+        },
+        [p.utente.email for p in staff if p.utente_id and accetta(p, "riepiloghi")],
+    )
 
 
 def collega(unita: Unita, altra: Unita | None, nota: str = "") -> None:

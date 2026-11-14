@@ -764,6 +764,29 @@ def puo_gestire_squadriglie(user, unita: Unita) -> bool:
     return e_capogruppo(user) or e_staff(user, unita)
 
 
+def puo_scegliere_animale(user, squadriglia: Squadriglia) -> bool:
+    """The animal of a patrol created without one (DEC-409): its CSQ, once, and the reparto
+    staff and the capigruppo, while it still has its provisional name."""
+    if not (squadriglia.attiva and squadriglia.provvisoria):
+        return False
+    return (
+        puo_gestire_squadriglie(user, squadriglia.unita)
+        or squadriglie_guidate(user).filter(pk=squadriglia.pk).exists()
+    )
+
+
+def staff_del_reparto(unita: Unita) -> list[Persona]:
+    """The reparto staff, also of the reparto linked to it (DEC-279): told when a CSQ names
+    the patrol (DEC-409)."""
+    return list(
+        Persona.objects.filter(
+            pk__in=Incarico.objects.attivi()
+            .filter(ruolo__in=STAFF_DI_UNITA, unita_id__in=_con_collegate({unita.pk}))
+            .values("persona_id")
+        ).select_related("utente")
+    )
+
+
 def puo_vedere_deroghe_squadriglia(user) -> bool:
     """Exceptions to single-sex patrols (special-category data): the Co.Ca. only, never
     ragazzi, CSQ or parents. DEC-132."""

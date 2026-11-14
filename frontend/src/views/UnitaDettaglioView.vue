@@ -180,8 +180,8 @@ async function apriNuovaSquadriglia() {
 }
 
 async function creaSquadriglia() {
-  const animale_id = nuovaSquadriglia.animale
-  if (animale_id === null) return
+  // Without an animal: "Nuova Squadriglia N" until its CSQ chooses one (DEC-409).
+  const animale_id = nuovaSquadriglia.animale ?? undefined
   const sesso = sessoDelReparto.value ?? nuovaSquadriglia.sesso
   const reparto = nuovaSquadriglia.reparto || props.id
   if (await esegui(() => api.creaSquadriglia(reparto, { animale_id, sesso }))) {
@@ -190,7 +190,9 @@ async function creaSquadriglia() {
   }
 }
 
-// A patrol from before the animals (DEC-351).
+// A patrol from before the animals (DEC-351), one still waiting for its CSQ, or the CSQ's
+// choice corrected within a month (DEC-409).
+const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 async function scegliAnimale(evento: Event, s: Squadriglia) {
   const scelta = evento.target as HTMLSelectElement
   const animale_id = Number(scelta.value)
@@ -434,9 +436,8 @@ const iniziale = (u: Unita): UnitaIn => ({
               v-model="nuovaSquadriglia.animale"
               class="form-control form-control-sm"
               aria-label="Animale della squadriglia"
-              required
             >
-              <option :value="null" disabled>Scegli l'animale…</option>
+              <option :value="null">Senza animale: lo sceglie il capo squadriglia</option>
               <optgroup label="Generali">
                 <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
               </optgroup>
@@ -506,15 +507,24 @@ const iniziale = (u: Unita): UnitaIn => ({
             </span>
           </template>
         </div>
+        <p v-if="s.provvisoria" class="small fg-2 mb-1">
+          Senza animale: lo sceglie il capo squadriglia.
+        </p>
         <select
-          v-if="dettaglio.puo_gestire_squadriglie && !s.animale"
+          v-if="dettaglio.puo_gestire_squadriglie && (!s.animale || s.correggibile_fino)"
           class="form-control form-control-sm mb-3"
-          aria-label="Scegli l'animale"
+          :aria-label="s.animale ? `Correggi l'animale di Sq. ${s.nome}` : 'Scegli l\'animale'"
           :disabled="inCorso"
           @focus="caricaAnimali"
           @change="scegliAnimale($event, s)"
         >
-          <option value="">Scegli l'animale…</option>
+          <option value="">
+            {{
+              s.correggibile_fino
+                ? `Correggi l'animale scelto dal capo squadriglia (fino al ${data(s.correggibile_fino)})…`
+                : "Scegli l'animale…"
+            }}
+          </option>
           <optgroup label="Generali">
             <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
           </optgroup>

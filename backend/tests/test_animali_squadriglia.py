@@ -230,13 +230,13 @@ def test_il_nome_e_il_plurale_dell_animale(reparto, capo):
     assert squadriglia.animale == _animale()
 
 
-def test_senza_animale_non_si_crea(reparto, capo):
-    risposta = _post(capo, f"/api/v1/unita/{reparto.pk}/squadriglie", {"sesso": "F"})
-    assert risposta.status_code == 400
-    assert "Scegli l'animale" in risposta.json()["detail"]
-    # A name written by hand counts for nothing.
-    risposta = _post(capo, f"/api/v1/unita/{reparto.pk}/squadriglie", {"nome": "X", "sesso": "F"})
-    assert risposta.status_code == 400
+def test_senza_animale_un_nome_provvisorio(reparto, capo):
+    # DEC-409: its CSQ will choose; a name written by hand counts for nothing.
+    url = f"/api/v1/unita/{reparto.pk}/squadriglie"
+    prima = _post(capo, url, {"nome": "X", "sesso": "F"})
+    assert prima.status_code == 201
+    assert prima.json()["nome"] == "Nuova Squadriglia 1"
+    assert _post(capo, url, {"sesso": "F"}).json()["nome"] == "Nuova Squadriglia 2"
 
 
 def test_disattivato_non_si_sceglie(reparto, capo):

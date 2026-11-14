@@ -910,6 +910,10 @@ export interface Squadriglia {
   id: number
   /** Its reparto, and its name when two linked reparti share the page (DEC-405). */
   unita_id: number
+  /** Created without an animal, waiting for its CSQ (DEC-409). */
+  provvisoria?: boolean
+  /** Last day the staff may correct the animal its CSQ chose. */
+  correggibile_fino?: string | null
   unita_nome?: string
   nome: string
   animale?: AnimaleBreve | null
@@ -1068,6 +1072,8 @@ export interface MiaSquadriglia {
   animale?: AnimaleBreve | null
   reparto: string
   sono_capo: boolean
+  /** Waiting for its CSQ to choose the animal (DEC-409). */
+  provvisoria?: boolean
   membri: TelefonoMembro[]
   /** Parents' phones: for the capo squadriglia only. */
   genitori: { figlio_id: number; id: number; nome: string; cognome: string; telefono: string }[]
@@ -3318,10 +3324,15 @@ export const api = {
     richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'POST' }),
   dividiCasse: (id: number) =>
     richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'DELETE' }),
-  creaSquadriglia: (unita: number, dati: { animale_id: number; sesso: string }) =>
+  creaSquadriglia: (unita: number, dati: { animale_id?: number; sesso: string }) =>
     richiesta<Squadriglia>(`/api/v1/unita/${unita}/squadriglie`, { metodo: 'POST', corpo: dati }),
   modificaSquadriglia: (id: number, dati: { animale_id?: number; sesso: string }) =>
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
+  scegliAnimaleSquadriglia: (id: number, animale_id: number) =>
+    richiesta<Squadriglia>(`/api/v1/squadriglie/${id}/animale`, {
+      metodo: 'POST',
+      corpo: { animale_id },
+    }),
   archiviaSquadriglia: (id: number) =>
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}/archivia`, { metodo: 'POST' }),
   storiaSquadriglie: () => richiesta<StoriaReparto[]>('/api/v1/storia-squadriglie'),

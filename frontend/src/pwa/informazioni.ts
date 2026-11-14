@@ -59,7 +59,14 @@ export function browserDa(agente: string): string {
 
 function sistemaDa(agente: string, puntiTocco: number): string {
   const ios = /(iPhone|iPad)[^)]*OS (\d+(?:_\d+)*)/.exec(agente)
-  if (ios) return `${ios[1]}, iOS ${ios[2]!.replace(/_/g, '.')}`
+  if (ios) {
+    // Since iOS 26, numbered by the year, Safari writes an old iOS in the agent (18_7 on
+    // iOS 27.2); its own version follows the real one (#76).
+    const safari = /Version\/(\d+(?:\.\d+)*)/.exec(agente)
+    const versione =
+      safari && Number(safari[1]!.split('.')[0]) >= 26 ? safari[1] : ios[2]!.replace(/_/g, '.')
+    return `${ios[1]}, iOS ${versione}`
+  }
   // Since iPadOS 13 an iPad says it is a Mac; a Mac has no touch screen.
   if (/Macintosh/.test(agente)) return puntiTocco > 1 ? 'iPad' : 'Mac'
   const android = /Android (\d+(?:\.\d+)*)/.exec(agente)

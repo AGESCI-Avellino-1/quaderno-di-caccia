@@ -12,7 +12,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#73](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/73) | Squadriglia creata senza animale, lo sceglie il capo squadriglia (DEC-409)          | Miglioramento | Medio   | Media      | VER    |
 | [#74](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/74) | Notifica: dopo lo sblocco si torna all'ultima pagina, non a quella della notifica   | Correzione    | Medio   | Media      | VER    |
 | [#75](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/75) | Riorganizzazione delle squadriglie in bozza, applicata a mano dallo staff (DEC-410) | Miglioramento | Alto    | Alta       | VER    |
-| [#76](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/76) | Informazioni: versione di iOS sbagliata da iOS 26 in poi                            | Correzione    | Basso   | Bassa      |        |
+| [#76](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/76) | Informazioni: versione di iOS sbagliata da iOS 26 in poi                            | Correzione    | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

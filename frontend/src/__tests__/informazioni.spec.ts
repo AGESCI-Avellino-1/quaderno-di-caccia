@@ -47,6 +47,15 @@ describe('informazioni', () => {
     expect(valore({ ...BASE, agente: ANDROID }, 'Dispositivo')).toContain('Android 14')
   })
 
+  it('since iOS 26 the version of iOS comes from Safari, the agent says an old one', () => {
+    // #76: an iPhone on iOS 27.2.1.
+    const nuovo =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1'
+    expect(valore({ ...BASE, agente: nuovo }, 'Dispositivo')).toBe(
+      'iPhone, iOS 27.2, schermo 393×852 (×3)',
+    )
+  })
+
   it('tells an iPad, which says it is a Mac, from a Mac', () => {
     expect(valore({ ...BASE, agente: MAC, puntiTocco: 5 }, 'Dispositivo')).toContain('iPad')
     expect(valore({ ...BASE, agente: MAC, puntiTocco: 0 }, 'Dispositivo')).toContain('Mac')

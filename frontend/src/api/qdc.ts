@@ -2038,6 +2038,8 @@ export interface Evento {
   turni?: TurnoRiunione[]
   /** The groups a turn may be given to, for who manages the turns. */
   gruppi_turni?: GruppoTurni[]
+  /** The group's turns that fall on this meeting's unit (DEC-406). */
+  turni_gruppo?: { turno: string; unita: string }[]
   annullato: boolean
   motivo_annullamento: string
   mie: MiaPartecipazione[]
@@ -2133,6 +2135,40 @@ export interface GruppoTurni {
 }
 
 export type Rotazione = 'SETTIMANALE' | 'MENSILE'
+
+/** A turn of the group that goes round the units (DEC-406). */
+export type PeriodoTurno = 'SETTIMANA' | 'MESE' | 'TRIMESTRE'
+
+export interface TurnoGruppo {
+  id: number
+  nome: string
+  periodo: PeriodoTurno
+  dal: string
+  unita: { id: number; nome: string }[]
+  /** The current period and the next ones. */
+  prossimi: {
+    indice: number
+    dal: string
+    al: string
+    unita_id: number | null
+    unita: string
+    cambiato: boolean
+  }[]
+}
+
+export interface TurniGruppo {
+  turni: TurnoGruppo[]
+  /** The units to choose from; empty for who may not change the turns. */
+  unita: { id: number; nome: string }[]
+  puo_gestire: boolean
+}
+
+export interface TurnoGruppoIn {
+  nome: string
+  unita: number[]
+  periodo: PeriodoTurno
+  dal: string
+}
 
 export interface TurniUnita {
   nomi: string[]
@@ -3923,6 +3959,18 @@ export const api = {
   modificaRiunione: (id: number, dati: ModificaRiunione) =>
     richiesta<Evento>(`/api/v1/riunioni/${id}`, { metodo: 'PUT', corpo: dati }),
   turniUnita: (unita: number) => richiesta<TurniUnita>(`/api/v1/unita/${unita}/turni`),
+  turniGruppo: () => richiesta<TurniGruppo>('/api/v1/turni-gruppo'),
+  creaTurnoGruppo: (dati: TurnoGruppoIn) =>
+    richiesta<TurniGruppo>('/api/v1/turni-gruppo', { metodo: 'POST', corpo: dati }),
+  modificaTurnoGruppo: (id: number, dati: TurnoGruppoIn) =>
+    richiesta<TurniGruppo>(`/api/v1/turni-gruppo/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaTurnoGruppo: (id: number) =>
+    richiesta<TurniGruppo>(`/api/v1/turni-gruppo/${id}`, { metodo: 'DELETE' }),
+  cambiaPeriodo: (id: number, indice: number, unita_id: number | null) =>
+    richiesta<TurniGruppo>(`/api/v1/turni-gruppo/${id}/periodi/${indice}`, {
+      metodo: 'PUT',
+      corpo: { unita_id },
+    }),
   impostaTurni: (
     unita: number,
     dati: { nomi: string[]; rotazione: Rotazione; dal: string; con_collegata: boolean },

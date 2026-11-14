@@ -127,6 +127,24 @@ turni, senza capo sestiglia. Nella pagina dell'unità, in **Sestiglie**, scrivi 
 bambino è in una sestiglia alla volta: metterlo in un'altra lo toglie dalla prima. **togli** lo
 toglie, **chiudi** chiude la sestiglia. Chi lascia l'unità esce anche dalla sestiglia.
 
+### I turni del gruppo
+
+Ci sono anche turni che passano da un'unità all'altra, per esempio la pulizia dei locali della
+sede: li trovi nella Home, in **Il mio gruppo**, alla voce **Turni del gruppo**. Li vedono tutti i
+capi; li stabiliscono e li cambiano i capigruppo e i capi della Comunità capi.
+
+1. Tocca **Nuovo turno** e scrivi il nome.
+2. Scegli ogni quanto cambia (**Ogni settimana**, **Ogni mese**, **Ogni tre mesi**) e da quando.
+3. Spunta le unità nell'ordine in cui toccano il turno; **↑** sposta un'unità più su.
+4. Tocca **Salva**.
+
+Il primo periodo comincia dal giorno scelto; con «ogni mese» e «ogni tre mesi» i periodi dopo
+cominciano il primo del mese. Sotto ogni turno vedi i prossimi periodi con l'unità a cui toccano:
+con **Cambia…** dai un periodo a un'altra unità, e la rotazione riprende poi dall'ordine previsto
+(**Come da rotazione** annulla il cambio). Se cambi le unità, il loro ordine o la data d'inizio, i
+cambi fatti a mano si perdono. Capi, ragazzi/e e genitori vedono il turno sulle riunioni
+dell'unità a cui tocca, nell'app (non nel calendario del telefono).
+
 :::{note}
 Le squadriglie sono maschili o femminili. Un ragazzo/a può entrare in una squadriglia
 dell'altro sesso solo con un'eccezione decisa dalla Comunità capi e registrata da un

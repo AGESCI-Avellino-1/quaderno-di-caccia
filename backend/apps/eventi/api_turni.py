@@ -1,4 +1,5 @@
-"""Turns of the patrols and of the sestiglie, and the sestiglie themselves (DEC-312)."""
+"""Turns of the patrols and of the sestiglie, and the sestiglie themselves (DEC-312); turns
+of the group round the units (DEC-406)."""
 
 from datetime import date, datetime
 
@@ -10,18 +11,21 @@ from ninja.errors import HttpError
 from ninja.responses import Status
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
-from apps.organizzazione.models import Squadriglia, Unita
+from apps.organizzazione.models import Squadriglia, TipoUnita, Unita
 from apps.permessi import policy
 
-from . import turni
+from . import turni, turni_gruppo
 from .api import EventoOut, _evento_out
 from .models import (
     MembroSestiglia,
+    PeriodoCambiato,
+    PeriodoTurno,
     Rotazione,
     Sestiglia,
     TipoEvento,
     TurniUnita,
     TurnoCambiato,
+    TurnoGruppo,
 )
 
 router = Router(tags=["turni"])
@@ -297,3 +301,144 @@ def togli_da_sestiglia(request, membro_id: int):
     unita = _branco(request, membro.sestiglia.unita_id)
     _chiudi_membro(membro, timezone.localdate())
     return _sestiglie_out(unita)
+
+
+# --- Turns of the group, round the units (DEC-406) --------------------------------------------
+
+
+class UnitaTurno(Schema):
+    id: int
+    nome: str
+
+
+class PeriodoOut(Schema):
+    indice: int
+    dal: date
+    al: date
+    unita_id: int | None
+    unita: str
+    cambiato: bool
+
+
+class TurnoGruppoOut(Schema):
+    id: int
+    nome: str
+    periodo: PeriodoTurno
+    dal: date
+    unita: list[UnitaTurno]
+    prossimi: list[PeriodoOut]
+
+
+class TurniGruppoOut(Schema):
+    turni: list[TurnoGruppoOut]
+    # The units to choose from, in branch order; empty for who may not change them.
+    unita: list[UnitaTurno]
+    puo_gestire: bool
+
+
+class TurnoGruppoIn(Schema):
+    nome: str
+    unita: list[int]
+    periodo: PeriodoTurno = PeriodoTurno.MESE
+    dal: date
+
+
+class CambioPeriodo(Schema):
+    # None: back to the rotation.
+    unita_id: int | None = None
+
+
+def _sceglibili():
+    # In branch order, as everywhere (the model's default ordering).
+    return Unita.objects.filter(attiva=True, archiviata_il__isnull=True).exclude(
+        tipo=TipoUnita.COMUNITA_CAPI
+    )
+
+
+def _turno_gruppo_out(turno: TurnoGruppo) -> dict:
+    return {
+        "id": turno.pk,
+        "nome": turno.nome,
+        "periodo": turno.periodo,
+        "dal": turno.dal,
+        "unita": [{"id": u.pk, "nome": str(u)} for u in turni_gruppo.unita_del_turno(turno)],
+        "prossimi": turni_gruppo.prossimi(turno),
+    }
+
+
+def _turni_gruppo_out(user) -> dict:
+    puo = policy.puo_gestire_turni_gruppo(user)
+    return {
+        "turni": [_turno_gruppo_out(t) for t in TurnoGruppo.objects.all()],
+        "unita": [{"id": u.pk, "nome": str(u)} for u in _sceglibili()] if puo else [],
+        "puo_gestire": puo,
+    }
+
+
+def _gestisce_turni_gruppo(request) -> None:
+    if not policy.puo_gestire_turni_gruppo(request.auth):
+        raise HttpError(403, "I turni del gruppo li stabiliscono i capi della Comunità capi.")
+
+
+def _applica_turno_gruppo(turno: TurnoGruppo, dati: TurnoGruppoIn) -> None:
+    nome = dati.nome.strip()[:80]
+    if not nome:
+        raise HttpError(400, "Scrivi il nome del turno.")
+    ammesse = {u.pk for u in _sceglibili()}
+    unita = list(dict.fromkeys(dati.unita))
+    if len(unita) < 2:
+        raise HttpError(400, "Scegli almeno due unità.")
+    if any(i not in ammesse for i in unita):
+        raise HttpError(400, "Scegli solo unità attive del gruppo.")
+    turno.nome, turno.unita, turno.periodo, turno.dal = nome, unita, dati.periodo, dati.dal
+    turno.save()
+
+
+@router.get("/turni-gruppo", response=TurniGruppoOut)
+def turni_del_gruppo(request):
+    """Every capo reads them; the ragazzi and families see them on their meetings."""
+    if not policy.e_capo(request.auth):
+        raise HttpError(403, "Riservato ai capi.")
+    return _turni_gruppo_out(request.auth)
+
+
+@router.post("/turni-gruppo", response={201: TurniGruppoOut})
+def crea_turno_gruppo(request, dati: TurnoGruppoIn):
+    _gestisce_turni_gruppo(request)
+    _applica_turno_gruppo(TurnoGruppo(), dati)
+    return Status(201, _turni_gruppo_out(request.auth))
+
+
+@router.put("/turni-gruppo/{turno_id}", response=TurniGruppoOut)
+def modifica_turno_gruppo(request, turno_id: int, dati: TurnoGruppoIn):
+    _gestisce_turni_gruppo(request)
+    turno = get_object_or_404(TurnoGruppo, pk=turno_id)
+    with transaction.atomic():
+        # Another order or start makes the hand changes meaningless.
+        if (turno.unita, turno.periodo, turno.dal) != (dati.unita, dati.periodo, dati.dal):
+            turno.cambi.all().delete()
+        _applica_turno_gruppo(turno, dati)
+    return _turni_gruppo_out(request.auth)
+
+
+@router.delete("/turni-gruppo/{turno_id}", response=TurniGruppoOut)
+def elimina_turno_gruppo(request, turno_id: int):
+    _gestisce_turni_gruppo(request)
+    TurnoGruppo.objects.filter(pk=turno_id).delete()
+    return _turni_gruppo_out(request.auth)
+
+
+@router.put("/turni-gruppo/{turno_id}/periodi/{indice}", response=TurniGruppoOut)
+def cambia_periodo(request, turno_id: int, indice: int, dati: CambioPeriodo):
+    """One period to another unit; the rotation goes on as planned afterwards."""
+    _gestisce_turni_gruppo(request)
+    turno = get_object_or_404(TurnoGruppo, pk=turno_id)
+    if indice < 0:
+        raise HttpError(400, "Periodo non valido.")
+    with transaction.atomic():
+        PeriodoCambiato.objects.filter(turno=turno, indice=indice).delete()
+        if dati.unita_id is not None:
+            if dati.unita_id not in turno.unita:
+                raise HttpError(400, "Scegli una delle unità del turno.")
+            PeriodoCambiato.objects.create(turno=turno, indice=indice, unita_id=dati.unita_id)
+    return _turni_gruppo_out(request.auth)

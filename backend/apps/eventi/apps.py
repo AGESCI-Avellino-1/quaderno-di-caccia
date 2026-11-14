@@ -17,6 +17,8 @@ class EventiConfig(AppConfig):
         auditlog.register(models.MembroSestiglia)
         auditlog.register(models.TurniUnita)
         auditlog.register(models.TurnoCambiato)
+        auditlog.register(models.TurnoGruppo)
+        auditlog.register(models.PeriodoCambiato)
         auditlog.register(models.Partecipazione)
         auditlog.register(models.Presenza)
         auditlog.register(models.DelegaSquadriglia)

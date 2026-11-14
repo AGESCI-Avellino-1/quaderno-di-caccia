@@ -565,3 +565,49 @@ class TurnoCambiato(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.turno} ({self.evento})"
+
+
+class PeriodoTurno(models.TextChoices):
+    SETTIMANA = "SETTIMANA", "Ogni settimana"
+    MESE = "MESE", "Ogni mese"
+    TRIMESTRE = "TRIMESTRE", "Ogni tre mesi"
+
+
+class TurnoGruppo(ModelloTracciato):
+    """A turn that goes round the units (DEC-406), e.g. cleaning the shared rooms of the
+    sede: from `dal`, one period each to the next unit of `unita` (their ids, in order).
+    A week counts from `dal`; a month or a quarter from the first day of `dal`'s month."""
+
+    nome = models.CharField(max_length=80)
+    unita = models.JSONField(default=list)
+    periodo = models.CharField(
+        max_length=10, choices=PeriodoTurno.choices, default=PeriodoTurno.MESE
+    )
+    dal = models.DateField()
+
+    class Meta:
+        verbose_name = "turno del gruppo"
+        verbose_name_plural = "turni del gruppo"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+
+class PeriodoCambiato(ModelloTracciato):
+    """One period of a group turn given by hand to another unit (DEC-406); the rotation
+    goes on as planned afterwards. `indice` counts the periods from the first (0)."""
+
+    turno = models.ForeignKey(TurnoGruppo, on_delete=models.CASCADE, related_name="cambi")
+    indice = models.PositiveIntegerField()
+    unita = models.ForeignKey("organizzazione.Unita", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "periodo cambiato"
+        verbose_name_plural = "periodi cambiati"
+        constraints = [
+            models.UniqueConstraint(fields=["turno", "indice"], name="periodo_cambiato_unico")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.turno}, periodo {self.indice + 1}"

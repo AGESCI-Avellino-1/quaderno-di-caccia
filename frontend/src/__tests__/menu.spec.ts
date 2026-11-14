@@ -81,6 +81,7 @@ describe('menu', () => {
     expect(voci(capogruppo, 'gruppo')).toEqual([
       'Organigramma',
       'Unità',
+      'Turni del gruppo',
       'Genitori',
       'Soci',
       'Richieste di iscrizione',
@@ -200,6 +201,7 @@ describe('menu', () => {
     expect(voci(capo, 'gruppo')).toEqual([
       'Organigramma',
       'Unità',
+      'Turni del gruppo',
       'Genitori',
       'Soci',
       'Richieste di iscrizione',

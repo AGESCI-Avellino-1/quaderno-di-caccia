@@ -1291,6 +1291,12 @@ def puo_gestire_turni(user, unita: Unita) -> bool:
     return e_capogruppo(user) or e_staff(user, unita)
 
 
+def puo_gestire_turni_gruppo(user) -> bool:
+    """The turns that go round the units (DEC-406): the capigruppo and the capi of the
+    Co.Ca. (not one still waiting for BuonaStrada, DEC-120)."""
+    return e_capogruppo(user) or e_capo_censito(user)
+
+
 def _segna_le_presenze(user, evento) -> bool:
     persona = persona_di(user)
     return persona is not None and evento.presenze_da_id == persona.pk

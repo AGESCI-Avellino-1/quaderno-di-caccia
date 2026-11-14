@@ -208,6 +208,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/unita',
           descrizione: 'Branchi, cerchi, reparti, clan e Comunità capi',
         },
+        // DEC-406
+        p.capo && {
+          nome: 'Turni del gruppo',
+          icona: 'calendar-week',
+          to: '/turni-gruppo',
+          descrizione: 'A quale unità tocca, per esempio, la pulizia della sede',
+        },
         p.capo && {
           nome: 'Genitori',
           icona: 'people',

@@ -628,6 +628,10 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         <div v-for="t in (r.turni ?? []).filter((x) => x.mio)" :key="t.turno" class="small">
           Turno di {{ t.gruppo }}: <strong>{{ t.turno }}</strong>
         </div>
+        <!-- DEC-406 -->
+        <div v-for="t in r.turni_gruppo ?? []" :key="`gruppo-${t.turno}`" class="small">
+          Turno di {{ t.unita }}: <strong>{{ t.turno }}</strong>
+        </div>
       </li>
     </ul>
 

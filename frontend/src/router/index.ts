@@ -119,6 +119,14 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      // Turns that go round the units (DEC-406): every capo reads them, the API decides who
+      // changes them.
+      path: '/turni-gruppo',
+      name: 'turni-gruppo',
+      component: () => import('@/views/TurniGruppoView.vue'),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Kept as a memory, reached only from the unit's page (DEC-403).
       path: '/unita/:id(\\d+)/squadriglie-archiviate',
       name: 'squadriglie-archiviate',

@@ -316,6 +316,17 @@ const STATI: [StatoPresenza, string][] = [
     <VerbaleRiunione v-if="riunione" :key="evento.id" :evento="evento.id" />
     <VerbaliCollegati v-if="riunione" :key="`collegati-${evento.id}`" :evento="evento.id" />
 
+    <!-- The group's turns that fall on this unit (DEC-406). -->
+    <section v-if="riunione && evento.turni_gruppo?.length" class="card card-body mb-5">
+      <h2 class="h5">Turni del gruppo</h2>
+      <ul class="list-unstyled mb-0">
+        <li v-for="t in evento.turni_gruppo" :key="t.turno" class="py-1">
+          <strong>{{ t.turno }}</strong
+          >: {{ t.unita }}
+        </li>
+      </ul>
+    </section>
+
     <section v-if="riunione && evento.turni?.length" class="card card-body mb-5">
       <h2 class="h5">Turni</h2>
       <ul class="list-unstyled mb-0">

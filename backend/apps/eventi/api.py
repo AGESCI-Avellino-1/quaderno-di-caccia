@@ -19,7 +19,7 @@ from apps.organizzazione.animali import AnimaleBreve, breve
 from apps.organizzazione.models import Branca, Squadriglia, Unita
 from apps.permessi import policy
 
-from . import avvisi, servizi
+from . import avvisi, servizi, turni_gruppo
 from .models import (
     Cerchia,
     Evento,
@@ -89,6 +89,11 @@ class LocalitaOut(Schema):
     mappa: str
 
 
+class TurnoGruppoRiunione(Schema):
+    turno: str
+    unita: str
+
+
 class TurnoOut(Schema):
     turno: str
     gruppo: str
@@ -146,6 +151,8 @@ class EventoOut(Schema):
     turni: list[TurnoOut] = []
     # The groups a turn may be given to, for who manages the turns.
     gruppi_turni: list[GruppoTurni] = []
+    # The group's turns that fall on this meeting's unit (DEC-406): seen by all who see it.
+    turni_gruppo: list[TurnoGruppoRiunione] = []
     annullato: bool
     motivo_annullamento: str
     # The user's own and their children's participation (families).
@@ -217,6 +224,7 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "con_ordine_del_giorno": ha_ordine_del_giorno(evento),
         "turni": _turni_out(user, evento, cache),
         "gruppi_turni": _gruppi_turni(user, evento, cache),
+        "turni_gruppo": turni_gruppo.turni_della_riunione(evento, cache),
         "annullato": evento.annullato_il is not None,
         "motivo_annullamento": evento.motivo_annullamento,
         "mie": _mie(user, evento),

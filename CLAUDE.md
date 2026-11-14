@@ -439,7 +439,11 @@ implements them:
   or change one (`api_riunioni.py` does). A series (`RiunioneRicorrente`) has its circle
   (also the Consiglio degli Anziani), the linked unit, its `Localita` and the uniform, which a
   meeting may override (`Evento.uniforme`, None = as the series). Turns of patrols and
-  sestiglie go round the unit's meetings (`eventi/turni.py`, DEC-312).
+  sestiglie go round the unit's meetings (`eventi/turni.py`, DEC-312); turns of the group go round the
+  units by week, month or quarter and show on the meetings of the unit that has them
+  (`eventi/turni_gruppo.py`, `TurnoGruppo`, DEC-406). Two linked reparti show both reparti's
+  patrols on each page (`organizzazione.api.reparti_insieme`, DEC-405); a patrol is archived only
+  when empty, for good, and its animal never changes (`Squadriglia.archiviata_il`, DEC-403).
   Staff meetings (`Cerchia.STAFF`, DEC-401) join the staffs of units chosen freely, linked or not;
   only who is invited, the staffs of those units and the capigruppo see them (`policy.eventi_visibili`,
   `puo_leggere_verbale`). Co.Ca., staff and parents' meetings may be online or mixed with a link

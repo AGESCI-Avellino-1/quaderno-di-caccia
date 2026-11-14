@@ -7,8 +7,9 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue | Titolo | Tipo | Impatto | Difficoltà | Status |
-| ----- | ------ | ---- | ------- | ---------- | ------ |
+| Issue                                                                    | Titolo                                        | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | --------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77) | Bozza delle squadriglie in PDF da condividere | Miglioramento | Basso   | Bassa      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

@@ -75,7 +75,7 @@ onMounted(async () => {
   // From the calendar's «+»: one meeting on that day; its kind is chosen in the form (DEC-412).
   const giorno = giornoDaQuery(route.query.giorno)
   if (giorno) {
-    modulo.value = { ...vuoto(), ripeti: false, giorno }
+    modulo.value = { ...vuoto(), ripeti: false, giorno, ...serieDal(giorno) }
     void router.replace({ query: {} })
   }
   await caricaSerie()
@@ -188,6 +188,20 @@ const cerchie = computed(() => {
   if (LC.includes(tipo)) scelte.push({ valore: 'CDA', nome: 'Consiglio degli Anziani' })
   return scelte
 })
+// The series from a day: that day on, on its weekday (Monday 0, as GIORNI).
+const serieDal = (giorno: string) => ({
+  dal: giorno,
+  giorno_settimana: (new Date(`${giorno}T12:00:00`).getDay() + 6) % 7,
+})
+// One meeting turned into a series: from the day chosen, not from today (#78).
+watch(
+  () => modulo.value?.ripeti,
+  (ripeti, prima) => {
+    if (modulo.value && ripeti && prima === false && modulo.value.giorno) {
+      Object.assign(modulo.value, serieDal(modulo.value.giorno))
+    }
+  },
+)
 watch(
   () => modulo.value?.unita,
   () => {

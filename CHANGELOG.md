@@ -5,6 +5,27 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.34.0 — 14 novembre 2026
+
+### Correzioni
+
+**Invitati sempre allineati ai membri delle unità** ([#80](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/80)): gli invitati di riunioni ed eventi ancora da fare seguono chi è oggi nelle unità. Chi entra (nuovo socio, passaggio, spostamento) è invitato subito, senza aspettare che qualcuno apra la riunione; chi esce non lo è più, a meno che abbia già presenze o quote; chi è stato escluso a mano resta escluso. Con un passaggio preparato, dal giorno dopo la sua data il ragazzo/a esce dagli inviti dell'unità di partenza ed entra in quelli dell'unità di arrivo. Il passato resta com'è.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.34.0
+docker compose exec -T web python manage.py allinea_inviti
+```
+
+Il secondo comando allinea una volta le riunioni e gli eventi già creati; aggiungi anche la riga di `allinea_inviti` di `deploy/cron/qdc.crontab` al cron, che lo ripete ogni notte come rete di sicurezza.
+
+### Documentazione
+
+Il capitolo sugli eventi spiega come cambiano gli invitati.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.33.0 — 14 novembre 2026
 
 ### Novità

@@ -19,7 +19,9 @@ riunioni hanno una pagina loro: vedi [Riunioni](riunioni).
 Puoi creare eventi per le unità in cui fai servizio; un evento di tutto il gruppo lo creano
 i capigruppo. Sono invitati tutti i soci delle unità scelte, e gli invitati di eventi e riunioni
 ancora da fare seguono sempre chi è nell'unità: chi entra viene aggiunto da solo, chi esce viene
-tolto (a meno che abbia già presenze o quote), chi hai escluso tu resta escluso. Con un passaggio
+tolto (a meno che abbia già presenze), chi hai escluso tu resta escluso. Una sua quota dell'evento non
+ancora pagata si annulla da sola («Non è più nell'unità»); se ha già pagato, anche in parte, resta
+invitato e decidi tu (rimborso o partecipazione). Con un passaggio
 preparato, dal giorno dopo la sua data il ragazzo/a esce dagli inviti dell'unità di partenza ed
 entra in quelli dell'unità di arrivo, anche prima che il passaggio sia eseguito.
 

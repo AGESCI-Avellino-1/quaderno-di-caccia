@@ -21,10 +21,31 @@ from .models import Evento, Livello, StatoPartecipazione
 _in_attesa = threading.local()
 
 
+MOTIVO_USCITA = "Non è più nell'unità"
+
+
+def _quote_da_annullare(evento: Evento, persona_id: int):
+    """The fees of the event for who left: all of them, if none has a payment or a payment
+    reported and waiting to be checked; None when one has, and they stay invited."""
+    from apps.quote.models import Quota, StatoSegnalazione
+
+    quote = list(
+        Quota.objects.filter(tipo__evento=evento, persona_id=persona_id, annullata_il__isnull=True)
+    )
+    for quota in quote:
+        if quota.pagato or quota.segnalazioni.filter(stato=StatoSegnalazione.IN_VERIFICA).exists():
+            return None
+    return quote
+
+
 def riallinea(unita_ids: set[int] | None = None) -> tuple[int, int]:
     """The events to come of these units (all of them with None), and the group's and
-    branch's; returns how many invitations were added and removed."""
-    from apps.quote.models import Quota
+    branch's; returns how many invitations were added and removed. Who left loses an unpaid
+    fee of the event with the invitation; with a payment, even partial, they stay invited
+    and the staff decides (DEC-414)."""
+    from django.core.exceptions import ValidationError
+
+    from apps.quote.servizi import annulla_quota
 
     from . import servizi
 
@@ -42,13 +63,23 @@ def riallinea(unita_ids: set[int] | None = None) -> tuple[int, int]:
         prima = evento.partecipazioni.count()
         servizi.allinea_partecipanti(evento)
         aggiunti += evento.partecipazioni.count() - prima
-        tolti += (
+        uscite = (
             evento.partecipazioni.exclude(persona__in=servizi.previsti(evento))
             .exclude(persona__in=evento.presenze.values("persona_id"))
-            .exclude(persona__in=Quota.objects.filter(tipo__evento=evento).values("persona_id"))
             .filter(stato__in=(StatoPartecipazione.INVITATO, StatoPartecipazione.NON_PARTECIPA))
-            .delete()[0]
         )
+        for partecipazione in uscite:
+            quote = _quote_da_annullare(evento, partecipazione.persona_id)
+            if quote is None:
+                continue
+            try:
+                with transaction.atomic():
+                    for quota in quote:
+                        annulla_quota(quota, None, MOTIVO_USCITA)
+                    partecipazione.delete()
+            except ValidationError:
+                continue  # a closed year: it stays as it is
+            tolti += 1
     return aggiunti, tolti
 
 

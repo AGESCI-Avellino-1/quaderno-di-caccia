@@ -17,6 +17,7 @@ from apps.eventi.models import (
 )
 from apps.organizzazione.models import Squadriglia
 from tests.conftest import INIZIO_ANNO, crea_persona, nato_anni_fa
+from tests.test_cassa import contanti  # noqa: F401
 
 pytestmark = pytest.mark.django_db
 
@@ -178,3 +179,101 @@ def test_il_comando_allinea_quelli_gia_creati(capo, reparto, ragazza):
     call_command("allinea_inviti", stdout=uscita)
     assert "Inviti aggiunti: 1, tolti: 1" in uscita.getvalue()
     assert _invitati(futura) == {nuova.pk}
+
+
+def test_vale_anche_per_gli_eventi_di_unita(
+    capo, reparto, ragazza, django_capture_on_commit_callbacks
+):
+    inizio = timezone.now() + timedelta(days=7)
+    uscita = servizi.crea(
+        Evento(
+            titolo="Uscita", tipo=TipoEvento.USCITA, livello=Livello.UNITA,
+            inizio=inizio, fine=inizio + timedelta(days=1),
+        ),
+        [reparto],
+        capo.utente,
+    )  # fmt: skip
+    nuova = crea_persona("Nina", "Nuova", data_nascita=nato_anni_fa(12))
+    with django_capture_on_commit_callbacks(execute=True):
+        Appartenenza.objects.create(
+            persona=nuova, unita=reparto, ruolo=RuoloAppartenenza.RAGAZZO, data_inizio=INIZIO_ANNO
+        )
+        uscente = Appartenenza.objects.get(persona=ragazza, unita=reparto)
+        uscente.data_fine = timezone.localdate()
+        uscente.save()
+    assert _invitati(uscita) == {nuova.pk}
+
+
+# --- Fees of the event for who left (DEC-414) ------------------------------------------------
+
+
+def _campo_con_quota(reparto, capo):
+    from decimal import Decimal
+
+    from apps.quote import servizi as quote
+    from apps.quote.models import CategoriaQuota, Destinatari, TipoQuota
+
+    inizio = timezone.now() + timedelta(days=30)
+    campo = servizi.crea(
+        Evento(
+            titolo="Campo", tipo=TipoEvento.CAMPO, livello=Livello.UNITA,
+            inizio=inizio, fine=inizio + timedelta(days=3),
+        ),
+        [reparto],
+        capo.utente,
+    )  # fmt: skip
+    tipo = TipoQuota.objects.create(
+        nome="Campo",
+        categoria=CategoriaQuota.EVENTO,
+        anno=timezone.localdate().year,
+        importo=Decimal("150"),
+        destinatari=Destinatari.TUTTI,
+        evento=campo,
+        rate=[{"descrizione": "", "importo": "150", "scadenza": inizio.date().isoformat()}],
+    )
+    quote.emetti_evento(tipo)
+    return campo
+
+
+def _esce(persona, reparto, cattura):
+    with cattura(execute=True):
+        appartenenza = Appartenenza.objects.get(persona=persona, unita=reparto)
+        appartenenza.data_fine = timezone.localdate()
+        appartenenza.save()
+
+
+def test_quota_non_pagata_annullata_con_l_invito(
+    capo, reparto, ragazza, django_capture_on_commit_callbacks
+):
+    from apps.quote.models import Quota
+
+    campo = _campo_con_quota(reparto, capo)
+    sua = Quota.objects.get(tipo__evento=campo, persona=ragazza)
+    _esce(ragazza, reparto, django_capture_on_commit_callbacks)
+    sua.refresh_from_db()
+    assert sua.annullata_il is not None
+    assert sua.motivo_annullamento == "Non è più nell'unità"
+    assert ragazza.pk not in _invitati(campo)
+
+
+def test_quota_pagata_in_parte_resta_invitata(
+    capo, reparto, ragazza, contanti, django_capture_on_commit_callbacks  # noqa: F811
+):  # noqa: F811
+    from decimal import Decimal
+
+    from apps.quote import servizi as quote
+    from apps.quote.models import MetodoPagamento, Quota
+
+    campo = _campo_con_quota(reparto, capo)
+    sua = Quota.objects.get(tipo__evento=campo, persona=ragazza)
+    quote.registra_pagamento(
+        data=timezone.localdate(),
+        metodo=MetodoPagamento.CONTANTI,
+        versato_da="Mario",
+        righe=[quote.Riga(sua, Decimal("50"))],
+        utente=capo.utente,
+    )
+    _esce(ragazza, reparto, django_capture_on_commit_callbacks)
+    sua.refresh_from_db()
+    assert sua.annullata_il is None
+    assert ragazza.pk in _invitati(campo)

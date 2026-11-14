@@ -23,3 +23,8 @@ class EventiConfig(AppConfig):
         auditlog.register(models.Presenza)
         auditlog.register(models.DelegaSquadriglia)
         auditlog.register(models.MembroAltaSquadriglia)
+
+        # The invitees of what is to come follow who is in the units (DEC-414).
+        from . import allineamento
+
+        allineamento.collega()

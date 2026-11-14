@@ -12,6 +12,7 @@
 #   promemoria_verbali     minutes still to write; names kept for five years; broken uploads
 #   promemoria_fine_anno   the year to close and who is due for archiving, to the capigruppo
 #   pulisci_documenti      documents past their last day go, from the server too
+#   allinea_inviti         invitees of what is to come follow who is in the units (a safety net)
 #   backup-db.sh           database and uploaded files, kept 30 days (copy them elsewhere,
 #                          encrypted: a backup on the same server is lost with it)
 #
@@ -27,4 +28,5 @@
 45 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_verbali
 50 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_fine_anno
 10 3 * * *  cd /srv/qdc && docker compose exec -T web python manage.py pulisci_documenti
+50 3 * * *  cd /srv/qdc && docker compose exec -T web python manage.py allinea_inviti
 30 2 * * *  cd /srv/qdc && KEEP_DAYS=30 scripts/backup-db.sh > /dev/null

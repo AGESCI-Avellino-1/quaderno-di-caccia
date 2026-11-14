@@ -62,6 +62,36 @@ def unita_coinvolte(evento: Evento) -> QuerySet[Unita]:
 
 
 def previsti(evento: Evento) -> QuerySet[Persona]:
+    """Who is invited by default, and a passage prepared but not executed yet: from the day
+    after its date its ragazzi leave the invitees of the unit they leave and join those of
+    the unit they go to (DEC-414). An executed passage already changed the units."""
+    from apps.progressione.models import PassaggioPersona, StatoPassaggio
+
+    base = _previsti_base(evento)
+    if evento.livello == Livello.ESTERNO or evento.cerchia in (
+        Cerchia.GENITORI,
+        Cerchia.SOCI,
+        Cerchia.STAFF,
+    ):
+        return base
+    giorno = giorno_evento(evento)
+    unita = list(unita_coinvolte(evento).values_list("pk", flat=True))
+    in_corso = PassaggioPersona.objects.filter(
+        passaggio__stato=StatoPassaggio.PREPARATO, passaggio__data__lt=giorno
+    )
+    escono = in_corso.filter(passaggio__unita_origine__in=unita).values("persona_id")
+    ids = set(base.exclude(pk__in=escono).values_list("pk", flat=True))
+    # Only into the whole unit: councils and patrols are made after the passage.
+    if evento.livello != Livello.SQUADRIGLIA and evento.cerchia == Cerchia.TUTTI:
+        ids |= set(
+            in_corso.filter(passaggio__unita_destinazione__in=unita)
+            .exclude(passaggio__unita_origine__in=unita)
+            .values_list("persona_id", flat=True)
+        )
+    return Persona.objects.filter(pk__in=ids)
+
+
+def _previsti_base(evento: Evento) -> QuerySet[Persona]:
     """By default the members of the units involved on the day the event starts (the
     whole group for a group event; the patrol for a patrol event; the CSQ, CSQ and VCSQ
     or the Alta Squadriglia of the reparti for their councils)."""

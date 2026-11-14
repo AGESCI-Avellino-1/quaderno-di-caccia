@@ -20,6 +20,7 @@ import { useBloccoAutomatico } from '@/composables/useBloccoAutomatico'
 import { useFinestraVisibile } from '@/composables/useFinestraVisibile'
 import { EVENTO_CANCELLAZIONE, stato, type MotivoCancellazione } from '@/sicurezza/cassaforte'
 import { scaricaAnimaliInUso } from '@/pwa/animali'
+import { ascoltaAperture } from '@/pwa/aperturaNotifica'
 import { useNavigazioneStore } from '@/stores/navigazione'
 import { useSessioneStore } from '@/stores/sessione'
 import { useSitoStore } from '@/stores/sito'
@@ -39,6 +40,8 @@ const router = useRouter()
 
 useBloccoAutomatico()
 useFinestraVisibile()
+// A tapped notification with the app open: to its page, after unlocking if locked (#74).
+ascoltaAperture(router)
 
 // Maintenance (DEC-268): everyone but the technical administrators sees the message
 // instead of the page. Open: privacy and terms, and the way in of an administrator

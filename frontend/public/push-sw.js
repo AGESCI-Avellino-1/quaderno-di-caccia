@@ -26,8 +26,12 @@ self.addEventListener('notificationclick', (evento) => {
   evento.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((aperte) => {
       const aperta = aperte.find((c) => 'focus' in c)
-      if (aperta) return aperta.focus().then((c) => c.navigate(destinazione.href))
-      return self.clients.openWindow(destinazione.href)
+      if (!aperta) return self.clients.openWindow(destinazione.href)
+      // The app goes there itself (pwa/aperturaNotifica.ts): navigate() fails on a window this
+      // worker does not control, e.g. after an update, and on some iPhones.
+      const percorso = destinazione.pathname + destinazione.search + destinazione.hash
+      aperta.postMessage({ tipo: 'qdc-apri', percorso })
+      return aperta.focus()
     }),
   )
 })

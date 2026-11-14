@@ -6,7 +6,8 @@ import { useErrore } from '@/composables/useErrore'
 
 // The sestiglie of a branco or cerchio (DEC-312): only groups of children for the turns,
 // made by the staff, one at a time for each child, without a capo sestiglia. Online only.
-const props = defineProps<{ unita: number }>()
+// `nome`: the unit's name, with a linked unit's on the same page (DEC-405).
+const props = defineProps<{ unita: number; nome?: string }>()
 const { errore, inCorso, esegui } = useErrore()
 const dati = ref<Sestiglie | null>(null)
 const nuova = ref('')
@@ -43,7 +44,9 @@ async function chiudi(sestiglia: number) {
 
 <template>
   <section v-if="dati" class="card card-body mb-5">
-    <h2 class="h5">Sestiglie</h2>
+    <h2 class="h5">
+      Sestiglie<template v-if="nome"> · {{ nome }}</template>
+    </h2>
     <p class="small fg-2">
       Gruppi di bambini per i turni delle riunioni: ogni bambino è in una sestiglia alla volta.
     </p>

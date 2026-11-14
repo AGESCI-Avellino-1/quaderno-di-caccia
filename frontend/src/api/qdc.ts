@@ -459,6 +459,8 @@ export interface Unita {
   collegata_a: number | null
   /** The linked unit as "type name (code)"; links are two-way (DEC-279). */
   collegata_nome?: string
+  /** Its type: a linked branco's sestiglie and turns are on this page too (DEC-405). */
+  collegata_tipo?: string
   nota_collegamento: string
   /** Shared cash with the linked unit since this day (DEC-288). */
   cassa_comune_dal?: string | null
@@ -904,6 +906,9 @@ export interface Membro {
 
 export interface Squadriglia {
   id: number
+  /** Its reparto, and its name when two linked reparti share the page (DEC-405). */
+  unita_id: number
+  unita_nome?: string
   nome: string
   animale?: AnimaleBreve | null
   sesso: 'M' | 'F'
@@ -919,8 +924,10 @@ export interface UnitaDettaglio {
   incarichi: Incarico[]
   squadriglie: Squadriglia[]
   puo_modificare: boolean
-  /** Ragazzi of a reparto who are in no patrol today. */
-  senza_squadriglia: PersonaBreve[]
+  /** Ragazzi of a reparto who are in no patrol today, with their reparto. */
+  senza_squadriglia: (PersonaBreve & { reparto_id: number })[]
+  /** The two linked reparti whose patrols are on this page (DEC-405); empty for one. */
+  reparti?: { id: number; nome: string; composizione: string }[]
   /** Single-sex check: members without a sex, or of the other sex without an exception. */
   avvisi: string[]
   puo_gestire_squadriglie: boolean

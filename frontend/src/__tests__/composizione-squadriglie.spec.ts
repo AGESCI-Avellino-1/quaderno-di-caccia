@@ -9,8 +9,9 @@ import { nuovoDatabase, risposta } from './aiuti'
 beforeEach(() => setActivePinia(createPinia())) // the page reads the profile
 
 const persona = (id: number, nome: string) => ({ id, nome, cognome: 'Prova' })
-const squadriglia = (id: number, nome: string, membri: object[]) => ({
+const squadriglia = (id: number, nome: string, membri: object[], unita_id = 5) => ({
   id,
+  unita_id,
   nome,
   sesso: 'F',
   attiva: true,
@@ -38,7 +39,7 @@ const dettaglio = (puo_gestire_squadriglie: boolean) => ({
     ]),
     squadriglia(2, 'Volpi', []),
   ],
-  senza_squadriglia: [persona(200, 'Marta')],
+  senza_squadriglia: [{ ...persona(200, 'Marta'), reparto_id: 5 }],
   avvisi: [],
   puo_modificare: false,
   puo_gestire_squadriglie,
@@ -107,6 +108,50 @@ describe('patrol composition', () => {
     const pagina = await monta(false)
     expect(pagina.text()).toContain('Giulia Prova')
     expect(pagina.find('select[aria-label="Sposta Giulia Prova"]').exists()).toBe(false)
+  })
+})
+
+describe('two linked reparti', () => {
+  // DEC-405
+  it('moves each ragazzo only among the patrols of their own reparto', async () => {
+    const dati = {
+      ...dettaglio(true),
+      reparti: [
+        { id: 5, nome: 'Reparto Prova', composizione: 'F' },
+        { id: 6, nome: 'Reparto Parallelo', composizione: 'M' },
+      ],
+      squadriglie: [
+        { ...squadriglia(1, 'Aquile', []), unita_nome: 'Reparto Prova' },
+        { ...squadriglia(2, 'Volpi', []), unita_nome: 'Reparto Prova' },
+        { ...squadriglia(3, 'Lupi', [], 6), unita_nome: 'Reparto Parallelo' },
+      ],
+      senza_squadriglia: [
+        { ...persona(200, 'Marta'), reparto_id: 5 },
+        { ...persona(300, 'Marco'), reparto_id: 6 },
+      ],
+    }
+    await nuovoDatabase()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => risposta(200, dati)),
+    )
+    const pagina = mount(UnitaDettaglioView, {
+      props: { id: 5 },
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
+    await flushPromises()
+    expect(pagina.text()).toContain('Reparto Parallelo')
+    const opzioni = (etichetta: string) =>
+      pagina
+        .get(`select[aria-label="${etichetta}"]`)
+        .findAll('option')
+        .map((o) => o.text())
+    expect(opzioni('Metti Marta Prova in una squadriglia')).toEqual([
+      'Metti in…',
+      'Sq. Aquile',
+      'Sq. Volpi',
+    ])
+    expect(opzioni('Metti Marco Prova in una squadriglia')).toEqual(['Metti in…', 'Sq. Lupi'])
   })
 })
 

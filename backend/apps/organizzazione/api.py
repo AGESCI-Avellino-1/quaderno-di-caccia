@@ -83,6 +83,8 @@ class UnitaOut(Schema):
     archiviata_il: date | None = None
     collegata_a: int | None
     collegata_nome: str = ""
+    # Its type: the sestiglie and turns of a linked branco are on this page too (DEC-405).
+    collegata_tipo: str = ""
     nota_collegamento: str
     # Shared cash with the linked unit since this day (DEC-288).
     cassa_comune_dal: date | None = None
@@ -109,6 +111,10 @@ class UnitaOut(Schema):
     @staticmethod
     def resolve_collegata_nome(obj: Unita) -> str:
         return str(obj.collegata_a) if obj.collegata_a_id else ""
+
+    @staticmethod
+    def resolve_collegata_tipo(obj: Unita) -> str:
+        return obj.collegata_a.tipo if obj.collegata_a_id else ""
 
 
 class UnitaIn(Schema):
@@ -266,6 +272,9 @@ class MembroOut(Schema):
 
 class SquadrigliaOut(Schema):
     id: int
+    # Its reparto: with two linked reparti both are on one page (DEC-405).
+    unita_id: int
+    unita_nome: str = ""
     nome: str
     animale: AnimaleBreve | None = None
     sesso: str
@@ -276,12 +285,25 @@ class SquadrigliaOut(Schema):
     nomina: list[Scelta]
 
 
+class RagazzoSenzaSquadriglia(PersonaBreve):
+    reparto_id: int
+
+
+class RepartoBreve(Schema):
+    id: int
+    nome: str
+    composizione: str
+
+
 class UnitaDettaglio(Schema):
     unita: UnitaOut
     incarichi: list[IncaricoOut]
     squadriglie: list[SquadrigliaOut]
     # Ragazzi of a reparto who are in no patrol today.
-    senza_squadriglia: list[PersonaBreve]
+    senza_squadriglia: list[RagazzoSenzaSquadriglia]
+    # The reparti whose patrols are on this page: itself and the linked one, when both are
+    # reparti (DEC-405); empty for one alone.
+    reparti: list[RepartoBreve] = []
     # Patrol members the single-sex check cannot vouch for.
     avvisi: list[str]
     puo_modificare: bool
@@ -449,6 +471,22 @@ def _incarichi_della_squadriglia(squadriglia: Squadriglia) -> list[Incarico]:
     )
 
 
+def reparti_insieme(unita: Unita) -> list[Unita]:
+    """The reparti whose patrols a unit's page shows: a reparto and the reparto linked to it
+    both ways, which share one staff (DEC-279, DEC-405); none for another unit."""
+    if unita.tipo != TipoUnita.REPARTO:
+        return []
+    altra = unita.collegata_a
+    if (
+        altra is not None
+        and altra.collegata_a_id == unita.pk
+        and altra.tipo == TipoUnita.REPARTO
+        and altra.attiva
+    ):
+        return [unita, altra]
+    return [unita]
+
+
 @router.get("/unita/{unita_id}", response=UnitaDettaglio)
 def dettaglio_unita(request, unita_id: int):
     """Staff, roles and patrols of a unit (DEC-09: any capo reads them)."""
@@ -456,9 +494,12 @@ def dettaglio_unita(request, unita_id: int):
         raise HttpError(403, "Riservato ai capi.")
     unita = get_object_or_404(Unita, pk=unita_id)
     utente = request.auth
+    reparti = reparti_insieme(unita)
     squadriglie = [
         {
             "id": s.pk,
+            "unita_id": s.unita_id,
+            "unita_nome": str(s.unita) if len(reparti) > 1 else "",
             "nome": s.nome,
             "animale": breve(s.animale),
             "sesso": s.sesso,
@@ -472,22 +513,29 @@ def dettaglio_unita(request, unita_id: int):
             "incarichi": _incarichi_della_squadriglia(s),
             "nomina": _nomina(utente, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=s),
         }
-        for s in unita.squadriglie.filter(attiva=True).select_related("animale").order_by("nome")
+        for r in reparti
+        for s in r.squadriglie.filter(attiva=True)
+        .select_related("animale", "unita")
+        .order_by("nome")
     ]
-    senza_squadriglia = Persona.objects.none()
-    if unita.tipo == TipoUnita.REPARTO:
-        ragazzi = Appartenenza.objects.attive().filter(unita=unita, ruolo=RuoloAppartenenza.RAGAZZO)
-        in_squadriglia = AppartenenzaSquadriglia.objects.attive().values("persona_id")
-        senza_squadriglia = (
-            Persona.objects.filter(pk__in=ragazzi.values("persona_id"))
-            .exclude(pk__in=in_squadriglia)
-            .order_by("cognome", "nome")
-        )
+    senza_squadriglia = []
+    in_squadriglia = set(
+        AppartenenzaSquadriglia.objects.attive().values_list("persona_id", flat=True)
+    )
+    for r in reparti:
+        ragazzi = Appartenenza.objects.attive().filter(unita=r, ruolo=RuoloAppartenenza.RAGAZZO)
+        for persona in Persona.objects.filter(pk__in=ragazzi.values("persona_id")).order_by(
+            "cognome", "nome"
+        ):
+            if persona.pk not in in_squadriglia:
+                persona.reparto_id = r.pk
+                senza_squadriglia.append(persona)
     return {
         "unita": unita,
         "incarichi": list(_incarichi(unita=unita)),
         "squadriglie": squadriglie,
-        "senza_squadriglia": list(senza_squadriglia),
+        "senza_squadriglia": senza_squadriglia,
+        "reparti": reparti if len(reparti) > 1 else [],
         "avvisi": (
             ["L'unità non ha ancora un nome: daglielo con «Modifica»."] if unita.senza_nome else []
         )

@@ -41,7 +41,12 @@ const altre = ref<Unita[]>([])
 const modifica = ref(false)
 const sessione = useSessioneStore()
 const rubrica = useRubrica()
-const nuovaSquadriglia = reactive({ aperta: false, animale: null as number | null, sesso: 'F' })
+const nuovaSquadriglia = reactive({
+  aperta: false,
+  animale: null as number | null,
+  sesso: 'F',
+  reparto: 0,
+})
 
 async function carica(id = props.id) {
   const letto = await esegui(() => leggiConCache(`unita:${id}`, () => api.dettaglioUnita(id)))
@@ -57,6 +62,18 @@ watch(
 const unita = computed(() => dettaglio.value?.unita)
 useNomePagina(() => unita.value && nomeUnita(unita.value))
 const rs = computed(() => unita.value?.branca === 'RS')
+const LC = ['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO']
+const CON_TURNI = ['REPARTO', ...LC]
+const turniCollegata = computed(
+  () =>
+    !!unita.value?.collegata_a &&
+    CON_TURNI.includes(unita.value.tipo) &&
+    CON_TURNI.includes(unita.value.collegata_tipo ?? ''),
+)
+const linkataLC = computed(
+  () =>
+    !!unita.value && LC.includes(unita.value.collegata_tipo ?? '') && LC.includes(unita.value.tipo),
+)
 
 const breve = (p: PersonaBreve): PersonaBreve => ({ id: p.id, nome: p.nome, cognome: p.cognome })
 const ragazziDi = async (unitaId: number) => (await api.persone(unitaId)).map(breve)
@@ -74,11 +91,16 @@ async function candidatiUnita(ruolo: string) {
 const candidatiDi = (s: Squadriglia) => async () => s.membri.map((m) => m.persona)
 // The ragazzi of a reparto: patrol members and who is in no patrol yet.
 const ragazziDelReparto = computed(() => [
-  ...(dettaglio.value?.squadriglie.flatMap((s) => s.membri.map((m) => m.persona)) ?? []),
-  ...(dettaglio.value?.senza_squadriglia ?? []),
+  ...squadriglieDi(props.id).flatMap((s) => s.membri.map((m) => m.persona)),
+  ...(dettaglio.value?.senza_squadriglia.filter((p) => p.reparto_id === props.id) ?? []),
 ])
 
-const squadriglieAttive = computed(() => dettaglio.value?.squadriglie.filter((s) => s.attiva) ?? [])
+// With two linked reparti both are here (DEC-405): a ragazzo moves only among the patrols
+// of their own reparto.
+const squadriglieDi = (reparto: number) =>
+  dettaglio.value?.squadriglie.filter((s) => s.unita_id === reparto) ?? []
+const insieme = computed(() => (dettaglio.value?.reparti?.length ?? 0) > 1)
+const nomeReparto = (id: number) => dettaglio.value?.reparti?.find((r) => r.id === id)?.nome ?? ''
 
 // Patrol composition (DEC-65): moving a ragazzo closes the previous membership from today.
 // `verso` is a patrol id, or "fuori" to take them out of their patrol.
@@ -124,13 +146,21 @@ async function elimina() {
 }
 
 // A single-sex reparto has patrols of its own sex only (DEC-280): no choice to make.
+const repartoNuova = computed(
+  () =>
+    dettaglio.value?.reparti?.find((r) => r.id === nuovaSquadriglia.reparto) ?? unita.value ?? null,
+)
 const sessoDelReparto = computed(() =>
-  unita.value && unita.value.composizione !== 'X' ? unita.value.composizione : null,
+  repartoNuova.value && repartoNuova.value.composizione !== 'X'
+    ? repartoNuova.value.composizione
+    : null,
 )
 
 // The animals to choose from (DEC-351): not the switched off ones, nor those of this reparto.
 const animali = ref<AnimaleSquadriglia[]>([])
-const nomiPresi = computed(() => new Set(dettaglio.value?.squadriglie.map((s) => s.nome) ?? []))
+const nomiPresi = computed(
+  () => new Set(squadriglieDi(nuovaSquadriglia.reparto || props.id).map((s) => s.nome)),
+)
 const liberi = computed(() =>
   animali.value.filter((a) => a.attivo && !nomiPresi.value.has(a.plurale)),
 )
@@ -145,6 +175,7 @@ async function caricaAnimali() {
 
 async function apriNuovaSquadriglia() {
   nuovaSquadriglia.aperta = true
+  nuovaSquadriglia.reparto = props.id
   await caricaAnimali()
 }
 
@@ -152,7 +183,8 @@ async function creaSquadriglia() {
   const animale_id = nuovaSquadriglia.animale
   if (animale_id === null) return
   const sesso = sessoDelReparto.value ?? nuovaSquadriglia.sesso
-  if (await esegui(() => api.creaSquadriglia(props.id, { animale_id, sesso }))) {
+  const reparto = nuovaSquadriglia.reparto || props.id
+  if (await esegui(() => api.creaSquadriglia(reparto, { animale_id, sesso }))) {
     Object.assign(nuovaSquadriglia, { aperta: false, animale: null })
     await carica()
   }
@@ -386,6 +418,15 @@ const iniziale = (u: Unita): UnitaIn => ({
         </button>
       </div>
       <form v-if="nuovaSquadriglia.aperta" class="row g-3 mb-5" @submit.prevent="creaSquadriglia">
+        <div v-if="insieme" class="col-12">
+          <select
+            v-model="nuovaSquadriglia.reparto"
+            class="form-control form-control-sm"
+            aria-label="Reparto della squadriglia"
+          >
+            <option v-for="r in dettaglio.reparti" :key="r.id" :value="r.id">{{ r.nome }}</option>
+          </select>
+        </div>
         <div class="col-12 sm:col-6">
           <div class="d-flex align-items-center gap-3">
             <ImmagineAnimale :animale="animaleScelto" />
@@ -438,6 +479,7 @@ const iniziale = (u: Unita): UnitaIn => ({
           <ImmagineAnimale :animale="s.animale" />
           <strong>Sq. {{ s.nome }}</strong>
           <span class="fg-2 small">{{ s.sesso === 'F' ? 'femminile' : 'maschile' }}</span>
+          <span v-if="s.unita_nome" class="badge theme-secondary">{{ s.unita_nome }}</span>
           <template v-if="dettaglio.puo_gestire_squadriglie && !s.membri.length">
             <button
               v-if="archiviando !== s.id"
@@ -505,7 +547,7 @@ const iniziale = (u: Unita): UnitaIn => ({
             >
               <option value="">Sposta in…</option>
               <option
-                v-for="altra in squadriglieAttive.filter((a) => a.id !== s.id)"
+                v-for="altra in squadriglieDi(s.unita_id).filter((a) => a.id !== s.id)"
                 :key="altra.id"
                 :value="altra.id"
               >
@@ -557,15 +599,16 @@ const iniziale = (u: Unita): UnitaIn => ({
             <RouterLink :to="{ name: 'persona', params: { id: p.id } }">
               {{ p.nome }} {{ p.cognome }}
             </RouterLink>
+            <span v-if="insieme" class="fg-2">{{ nomeReparto(p.reparto_id) }}</span>
             <select
-              v-if="dettaglio.puo_gestire_squadriglie && squadriglieAttive.length"
+              v-if="dettaglio.puo_gestire_squadriglie && squadriglieDi(p.reparto_id).length"
               class="form-control form-control-sm w-auto ms-auto"
               :aria-label="`Metti ${p.nome} ${p.cognome} in una squadriglia`"
               :disabled="inCorso"
               @change="sposta($event, p.id)"
             >
               <option value="">Metti in…</option>
-              <option v-for="a in squadriglieAttive" :key="a.id" :value="a.id">
+              <option v-for="a in squadriglieDi(p.reparto_id)" :key="a.id" :value="a.id">
                 Sq. {{ a.nome }}
               </option>
             </select>
@@ -585,14 +628,30 @@ const iniziale = (u: Unita): UnitaIn => ({
     />
     <!-- Turns and sestiglie (DEC-312): hidden to who may not manage them. -->
     <SestiglieUnita
-      v-if="['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO'].includes(unita.tipo)"
+      v-if="LC.includes(unita.tipo)"
       :key="`sestiglie-${unita.id}`"
       :unita="unita.id"
+      :nome="linkataLC ? nomeUnita(unita) : undefined"
+    />
+    <!-- A linked branco or cerchio: its sestiglie here too, one staff for both (DEC-405). -->
+    <SestiglieUnita
+      v-if="linkataLC && unita.collegata_a"
+      :key="`sestiglie-${unita.collegata_a}`"
+      :unita="unita.collegata_a"
+      :nome="unita.collegata_nome"
     />
     <TurniUnita
-      v-if="['REPARTO', 'BRANCO', 'CERCHIO', 'BRANCO_CERCHIO'].includes(unita.tipo)"
+      v-if="CON_TURNI.includes(unita.tipo)"
       :key="`turni-${unita.id}`"
       :unita="unita.id"
+      :nome="turniCollegata ? nomeUnita(unita) : undefined"
+    />
+    <!-- And the linked unit's turns, which may go round the groups of both (DEC-405). -->
+    <TurniUnita
+      v-if="turniCollegata && unita.collegata_a"
+      :key="`turni-${unita.collegata_a}`"
+      :unita="unita.collegata_a"
+      :nome="unita.collegata_nome"
     />
   </section>
   <div v-else-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>

@@ -12,6 +12,10 @@ Se la tua unità è **collegata** a un'altra (per esempio il reparto parallelo),
 altri collegamenti c'è **Collegata a** con il suo nome. Lo staff delle due unità conta come
 uno solo: nell'altra unità puoi fare tutto quello che fai nella tua (progressione, dati
 sanitari, squadriglie, eventi e presenze), tranne la cassa, che resta di ogni unità.
+Le gestisci tutte e due da una pagina sola: in quella di ciascuna trovi anche le squadriglie
+dell'altro reparto, con il suo nome accanto, o le sestiglie e i turni dell'altro branco o cerchio.
+Un ragazzo/a si sposta solo tra le squadriglie del suo reparto; per una squadriglia nuova scegli
+prima in quale reparto.
 
 :::{container} schermate
 ![La pagina del reparto sul telefono](../img/capo/unita-telefono.png){.telefono width="30%"}

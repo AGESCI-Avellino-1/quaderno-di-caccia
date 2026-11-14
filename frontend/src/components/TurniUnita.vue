@@ -7,7 +7,8 @@ import { useErrore } from '@/composables/useErrore'
 // The turns of a reparto (to its patrols) or of a branco/cerchio (to its sestiglie),
 // DEC-312: the staff writes them, one per line, and chooses how often they change. Hidden
 // to who may not manage them (the server answers 403). Online only.
-const props = defineProps<{ unita: number }>()
+// `nome`: the unit's name, with a linked unit's on the same page (DEC-405).
+const props = defineProps<{ unita: number; nome?: string }>()
 const { errore, inCorso, esegui } = useErrore()
 const visibile = ref(false)
 const turni = ref<TurniUnita | null>(null)
@@ -62,7 +63,9 @@ const giorno = (iso: string) =>
 
 <template>
   <section v-if="visibile && turni" class="card card-body mb-5">
-    <h2 class="h5">Turni</h2>
+    <h2 class="h5">
+      Turni<template v-if="nome"> · {{ nome }}</template>
+    </h2>
     <p class="small fg-2">
       I turni (per esempio pulizia, preghiera, cassa) passano a rotazione tra
       {{ turni.gruppi.length ? turni.gruppi.join(', ') : 'le squadriglie o le sestiglie' }}. Con

@@ -2,13 +2,17 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 10/11/2026 (ultima versione: v1.28.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 14/11/2026 (ultima versione: v1.28.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue | Titolo | Tipo | Impatto | Difficoltà | Status |
-| ----- | ------ | ---- | ------- | ---------- | ------ |
+| Issue                                                                    | Titolo                                                              | Tipo                       | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------- | -------------------------- | ------- | ---------- | ------ |
+| [#69](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/69) | Squadriglie e unità: correzioni (raggruppa #68, #70, #71)           | Correzione e miglioramento | —       | —          |        |
+| [#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68) | Rinominare squadriglie, archiviarle se vuote                        | Correzione                 | Basso   | Bassa      |        |
+| [#70](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/70) | Dalla progressione personale alla pagina dell'unità, con «Indietro» | Miglioramento              | Basso   | Bassa      |        |
+| [#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71) | Unità collegate e parallele gestite insieme (squadriglie, turni)    | Miglioramento              | Medio   | Alta       |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

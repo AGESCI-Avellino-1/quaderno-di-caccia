@@ -253,13 +253,14 @@ def test_lo_stesso_animale_due_volte_nel_reparto(gruppo, reparto, capo):
     assert "c'è già la squadriglia Pantere" in risposta.json()["detail"]
 
 
-def test_una_chiusa_si_puo_riaprire(reparto, capo):
+def test_l_animale_di_un_archiviata_si_riusa(reparto, capo):
+    # DEC-403: a new patrol, not the archived one back.
     creata = _nuova(capo, reparto, _animale()).json()
-    url = f"/api/v1/squadriglie/{creata['id']}"
-    assert _put(capo, url, {"sesso": "F", "attiva": False}).json()["attiva"] is False
-    risposta = _nuova(capo, reparto, _animale())
-    assert "puoi riaprirla" in risposta.json()["detail"]
-    assert _put(capo, url, {"sesso": "F", "attiva": True}).json()["attiva"] is True
+    archiviata = _post(capo, f"/api/v1/squadriglie/{creata['id']}/archivia", {})
+    assert archiviata.json()["attiva"] is False
+    nuova = _nuova(capo, reparto, _animale())
+    assert nuova.status_code == 201
+    assert nuova.json()["id"] != creata["id"]
 
 
 def test_due_reparti_scelgono_lo_stesso_animale(gruppo, reparto, capogruppo):
@@ -281,9 +282,9 @@ def test_una_vecchia_sceglie_l_animale(reparto, capo):
     assert not any("non ha ancora un animale" in a for a in avvisi)
 
 
-def test_una_vecchia_puo_chiudersi_senza_animale(reparto, capo):
+def test_una_vecchia_si_archivia_senza_animale(reparto, capo):
     vecchia = Squadriglia.objects.create(unita=reparto, nome="Stelle", sesso="F")
-    risposta = _put(capo, f"/api/v1/squadriglie/{vecchia.pk}", {"sesso": "F", "attiva": False})
+    risposta = _post(capo, f"/api/v1/squadriglie/{vecchia.pk}/archivia", {})
     assert risposta.status_code == 200
     assert risposta.json()["nome"] == "Stelle"
 

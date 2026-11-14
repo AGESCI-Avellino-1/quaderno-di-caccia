@@ -317,12 +317,8 @@ def test_squadriglie(staff, capogruppo, capo_semplice, reparto, coca):
             {"animale_id": lupo.pk, "sesso": "M"},
         )
     ).status_code == 400
-    chiusa = _client(staff).put(
-        f"/api/v1/squadriglie/{nuova.json()['id']}",
-        {"sesso": "M", "attiva": False},
-        content_type="application/json",
-    )
-    assert chiusa.json()["attiva"] is False
+    archiviata = _post(staff, f"/api/v1/squadriglie/{nuova.json()['id']}/archivia", {})
+    assert archiviata.json()["attiva"] is False
 
 
 # --- patrol members (DEC-30, DEC-65) -----------------------------------------------------
@@ -787,19 +783,15 @@ def test_squadriglia_del_sesso_del_reparto(capogruppo, gruppo):
     assert cambio.status_code == 400
 
 
-def test_squadriglia_dell_altro_sesso_segnalata_e_chiudibile(capogruppo, gruppo, reparto):
+def test_squadriglia_dell_altro_sesso_segnalata_e_archiviabile(capogruppo, gruppo, reparto):
     from apps.organizzazione.models import Squadriglia
 
     femminile = _unita(gruppo, "Femminile", composizione=Composizione.FEMMINILE)
     vecchia = Squadriglia.objects.create(unita=femminile, nome="Volpi", sesso="M")
     avvisi = _client(capogruppo).get(f"/api/v1/unita/{femminile.pk}").json()["avvisi"]
-    assert any("Volpi" in a and "correggila o chiudila" in a for a in avvisi)
-    chiusa = _client(capogruppo).put(
-        f"/api/v1/squadriglie/{vecchia.pk}",
-        {"sesso": "M", "attiva": False},
-        content_type="application/json",
-    )
-    assert chiusa.status_code == 200
+    assert any("Volpi" in a and "archiviala" in a for a in avvisi)
+    archiviata = _post(capogruppo, f"/api/v1/squadriglie/{vecchia.pk}/archivia", {})
+    assert archiviata.status_code == 200
     # A mixed reparto keeps both.
     assert (
         _post(

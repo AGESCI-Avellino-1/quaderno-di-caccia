@@ -36,6 +36,7 @@ export const PAGINE: Record<string, Pagina> = {
   'carta-clan': { titolo: 'Carta di clan', sopra: 'unita-dettaglio' },
   'sentiero-unita': { titolo: "Progressione dell'unità", sopra: 'unita-dettaglio' },
   imprese: { titolo: 'Imprese', sopra: 'unita-dettaglio' },
+  'squadriglie-archiviate': { titolo: 'Squadriglie archiviate', sopra: 'unita-dettaglio' },
   passaggi: { titolo: 'Passaggi', sopra: 'unita-dettaglio' },
   informazioni: { titolo: 'Informazioni' },
   'altre-unita': { titolo: 'Altre unità', soloCapi: true },

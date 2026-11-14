@@ -356,7 +356,7 @@ class AppartenenzaSquadriglia(ModelloTracciato):
             return  # closing stays possible after the person left the reparto
         squadriglia = self.squadriglia
         if not squadriglia.attiva:
-            raise ValidationError(f"{squadriglia} è chiusa.")
+            raise ValidationError(f"{squadriglia} è archiviata.")
         if (
             not Appartenenza.objects.attive(self.data_inizio)
             .filter(persona=self.persona_id, unita=squadriglia.unita_id)

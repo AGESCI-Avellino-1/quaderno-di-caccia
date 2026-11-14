@@ -163,13 +163,15 @@ async function scegliAnimale(evento: Event, s: Squadriglia) {
   const scelta = evento.target as HTMLSelectElement
   const animale_id = Number(scelta.value)
   if (!animale_id) return
-  const dati = { animale_id, sesso: s.sesso, attiva: s.attiva }
+  const dati = { animale_id, sesso: s.sesso }
   if (await esegui(() => api.modificaSquadriglia(s.id, dati))) await carica()
 }
 
-async function attivaSquadriglia(s: Squadriglia, attiva: boolean) {
-  const dati = { sesso: s.sesso, attiva }
-  if (await esegui(() => api.modificaSquadriglia(s.id, dati))) await carica()
+// Only an empty patrol, for good (DEC-403): the page of the archived ones keeps it.
+const archiviando = ref<number | null>(null)
+async function archiviaSquadriglia(s: Squadriglia) {
+  archiviando.value = null
+  if (await esegui(() => api.archiviaSquadriglia(s.id))) await carica()
 }
 
 const iniziale = (u: Unita): UnitaIn => ({
@@ -431,29 +433,39 @@ const iniziale = (u: Unita): UnitaIn => ({
         </div>
       </form>
       <p v-if="!dettaglio.squadriglie.length" class="fg-2 small mb-0">Nessuna squadriglia.</p>
-      <div
-        v-for="s in dettaglio.squadriglie"
-        :key="s.id"
-        class="border-top pt-3 mt-3"
-        :class="{ 'opacity-75': !s.attiva }"
-      >
-        <div class="d-flex align-items-center gap-3 mb-1">
+      <div v-for="s in dettaglio.squadriglie" :key="s.id" class="border-top pt-3 mt-3">
+        <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
           <ImmagineAnimale :animale="s.animale" />
           <strong>Sq. {{ s.nome }}</strong>
           <span class="fg-2 small">{{ s.sesso === 'F' ? 'femminile' : 'maschile' }}</span>
-          <span v-if="!s.attiva" class="badge theme-secondary">Chiusa</span>
-          <button
-            v-if="dettaglio.puo_gestire_squadriglie"
-            type="button"
-            class="btn btn-link btn-sm p-0 ms-auto"
-            :disabled="inCorso"
-            @click="attivaSquadriglia(s, !s.attiva)"
-          >
-            {{ s.attiva ? 'chiudi' : 'riapri' }}
-          </button>
+          <template v-if="dettaglio.puo_gestire_squadriglie && !s.membri.length">
+            <button
+              v-if="archiviando !== s.id"
+              type="button"
+              class="btn btn-link btn-sm p-0 ms-auto"
+              :disabled="inCorso"
+              @click="archiviando = s.id"
+            >
+              archivia
+            </button>
+            <span v-else class="ms-auto d-flex align-items-center gap-1 small">
+              Archiviarla per sempre?
+              <button
+                type="button"
+                class="btn btn-sm btn-solid theme-danger"
+                :disabled="inCorso"
+                @click="archiviaSquadriglia(s)"
+              >
+                Archivia
+              </button>
+              <button type="button" class="btn btn-sm btn-link" @click="archiviando = null">
+                No
+              </button>
+            </span>
+          </template>
         </div>
         <select
-          v-if="dettaglio.puo_gestire_squadriglie && !s.animale && s.attiva"
+          v-if="dettaglio.puo_gestire_squadriglie && !s.animale"
           class="form-control form-control-sm mb-3"
           aria-label="Scegli l'animale"
           :disabled="inCorso"
@@ -520,6 +532,13 @@ const iniziale = (u: Unita): UnitaIn => ({
           :membri="s.membri.map((m) => m.persona)"
         />
       </div>
+      <p
+        v-if="dettaglio.puo_gestire_squadriglie && dettaglio.squadriglie.length"
+        class="form-text mt-3 mb-0"
+      >
+        L'animale di una squadriglia non si cambia: per cambiarlo aprine una nuova, spostaci i
+        membri e archivia la vecchia. Si archivia solo una squadriglia vuota.
+      </p>
       <div v-if="dettaglio.senza_squadriglia.length" class="border-top pt-3 mt-3">
         <strong>Senza squadriglia</strong>
         <ul class="list-unstyled small mb-0">
@@ -553,6 +572,11 @@ const iniziale = (u: Unita): UnitaIn => ({
           </li>
         </ul>
       </div>
+      <p v-if="dettaglio.squadriglie_archiviate" class="small mt-3 mb-0">
+        <RouterLink :to="{ name: 'squadriglie-archiviate', params: { id: unita.id } }">
+          Squadriglie archiviate ({{ dettaglio.squadriglie_archiviate }})
+        </RouterLink>
+      </p>
     </section>
     <AltaSquadriglia
       v-if="unita.tipo === 'REPARTO'"

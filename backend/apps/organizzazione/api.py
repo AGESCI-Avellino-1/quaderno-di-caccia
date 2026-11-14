@@ -2,7 +2,7 @@ from datetime import date
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Min, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -295,6 +295,8 @@ class UnitaDettaglio(Schema):
     # Shared cash with the linked unit (DEC-288): may unite, may split now.
     puo_unire_casse: bool = False
     puo_dividere_casse: bool = False
+    # Archived patrols, on a page of their own (DEC-403).
+    squadriglie_archiviate: int = 0
 
 
 def _casse_unite(utente, unita: Unita) -> dict:
@@ -421,7 +423,7 @@ def _avvisi_sesso_squadriglie(unita: Unita) -> list[str]:
         return []
     return [
         f"La squadriglia {s.nome} è {s.get_sesso_display().lower()}, ma il reparto è "
-        f"{unita.get_composizione_display().lower()}: correggila o chiudila."
+        f"{unita.get_composizione_display().lower()}: correggila, o svuotala e archiviala."
         for s in unita.squadriglie.filter(attiva=True).exclude(sesso=unita.composizione)
     ]
 
@@ -470,7 +472,7 @@ def dettaglio_unita(request, unita_id: int):
             "incarichi": _incarichi_della_squadriglia(s),
             "nomina": _nomina(utente, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=s),
         }
-        for s in unita.squadriglie.select_related("animale").order_by("-attiva", "nome")
+        for s in unita.squadriglie.filter(attiva=True).select_related("animale").order_by("nome")
     ]
     senza_squadriglia = Persona.objects.none()
     if unita.tipo == TipoUnita.REPARTO:
@@ -511,6 +513,7 @@ def dettaglio_unita(request, unita_id: int):
         "puo_modificare_eta": unita.eta is not None
         and policy.puo_modificare_eta_unita(utente, unita),
         **_casse_unite(utente, unita),
+        "squadriglie_archiviate": unita.squadriglie.filter(attiva=False).count(),
         "nomina": _nomina(
             utente,
             (
@@ -979,10 +982,10 @@ def elimina_tipo_incarico(request, tipo_id: int):
 
 
 class SquadrigliaIn(Schema):
-    # Its plural is the patrol's name: required for a new patrol (DEC-351).
+    # Its plural is the patrol's name: required for a new patrol (DEC-351). Chosen once:
+    # changing animal means a new patrol (DEC-403).
     animale_id: int | None = None
     sesso: str
-    attiva: bool = True
 
 
 class SquadrigliaBreve(Schema):
@@ -998,8 +1001,10 @@ class SquadrigliaBreve(Schema):
 
 
 def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squadriglia:
+    if not squadriglia.attiva:
+        raise HttpError(400, f"{squadriglia} è archiviata: non si modifica più.")
     # A single-sex reparto has patrols of its own sex only (DEC-280). One of the other sex
-    # left from before may still be renamed or closed, not created or turned into one.
+    # left from before may still be corrected or archived, not created or turned into one.
     composizione = squadriglia.unita.composizione
     if (
         composizione != Composizione.MISTA
@@ -1014,24 +1019,25 @@ def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squad
     if dati.animale_id is None and squadriglia.pk is None:
         raise HttpError(400, "Scegli l'animale della squadriglia.")
     if dati.animale_id is not None and dati.animale_id != squadriglia.animale_id:
+        if squadriglia.animale_id is not None:
+            raise HttpError(
+                400,
+                "L'animale di una squadriglia non si cambia: aprine una nuova, spostaci i "
+                "membri e archivia questa.",
+            )
         animale = get_object_or_404(AnimaleSquadriglia, pk=dati.animale_id)
         if not animale.attivo:
             raise HttpError(400, f"{animale} è disattivato: scegline un altro.")
-        giusta = (
-            Squadriglia.objects.filter(unita=squadriglia.unita, nome=animale.plurale)
+        # An archived one leaves the name free (DEC-403).
+        if (
+            Squadriglia.objects.filter(unita=squadriglia.unita, nome=animale.plurale, attiva=True)
             .exclude(pk=squadriglia.pk)
-            .first()
-        )
-        if giusta is not None:
-            raise HttpError(
-                400,
-                f"In questo reparto c'è già la squadriglia {giusta.nome}"
-                f"{'' if giusta.attiva else ' (chiusa: puoi riaprirla)'}.",
-            )
+            .exists()
+        ):
+            raise HttpError(400, f"In questo reparto c'è già la squadriglia {animale.plurale}.")
         squadriglia.animale = animale
         squadriglia.nome = animale.plurale
     squadriglia.sesso = dati.sesso
-    squadriglia.attiva = dati.attiva
     _salva(squadriglia)
     return squadriglia
 
@@ -1050,6 +1056,60 @@ def modifica_squadriglia(request, squadriglia_id: int, dati: SquadrigliaIn):
     if not policy.puo_gestire_squadriglie(request.auth, squadriglia.unita):
         raise HttpError(403, "Non puoi gestire le squadriglie di questa unità.")
     return _applica_squadriglia(squadriglia, dati)
+
+
+@router.post("/squadriglie/{squadriglia_id}/archivia", response=SquadrigliaBreve)
+def archivia_squadriglia(request, squadriglia_id: int):
+    """Archive an empty patrol, for good (DEC-403)."""
+    squadriglia = get_object_or_404(Squadriglia.objects.select_related("unita"), pk=squadriglia_id)
+    if not policy.puo_gestire_squadriglie(request.auth, squadriglia.unita):
+        raise HttpError(403, "Non puoi gestire le squadriglie di questa unità.")
+    if not squadriglia.attiva:
+        return squadriglia  # an offline replay (DEC-96)
+    if AppartenenzaSquadriglia.objects.attive().filter(squadriglia=squadriglia).exists():
+        raise HttpError(
+            400,
+            f"{squadriglia} ha ancora dei membri: spostali o falli uscire, poi archiviala.",
+        )
+    squadriglia.attiva = False
+    squadriglia.archiviata_il = timezone.localdate()
+    _salva(squadriglia)
+    return squadriglia
+
+
+class SquadrigliaArchiviata(Schema):
+    id: int
+    nome: str
+    animale: AnimaleBreve | None = None
+    sesso: str
+    # Its first member's start, or when it was created in the app.
+    dal: date
+    al: date | None = None
+
+
+@router.get("/unita/{unita_id}/squadriglie-archiviate", response=list[SquadrigliaArchiviata])
+def squadriglie_archiviate(request, unita_id: int):
+    """The archived patrols of a unit, kept as a memory (DEC-403): who sees the unit."""
+    if not policy.puo_vedere_organizzazione(request.auth):
+        raise HttpError(403, "Riservato ai capi.")
+    unita = get_object_or_404(Unita, pk=unita_id)
+    archiviate = (
+        unita.squadriglie.filter(attiva=False)
+        .select_related("animale")
+        .annotate(primo=Min("membri__data_inizio"))
+        .order_by("-archiviata_il", "nome")
+    )
+    return [
+        {
+            "id": s.pk,
+            "nome": s.nome,
+            "animale": breve(s.animale),
+            "sesso": s.sesso,
+            "dal": min(d for d in (s.primo, s.creato_il.date()) if d is not None),
+            "al": s.archiviata_il,
+        }
+        for s in archiviate
+    ]
 
 
 # --- Patrol members (DEC-30, DEC-65) ------------------------------------------------------

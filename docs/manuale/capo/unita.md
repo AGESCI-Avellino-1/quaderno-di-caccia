@@ -39,7 +39,7 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   nome è il plurale dell'animale. Se manca, aggiungilo all'elenco degli animali (qui sotto). In
   un reparto maschile o femminile il sesso non si sceglie: la squadriglia è dello stesso sesso
   del reparto, e una dell'altro sesso rimasta da prima è segnalata in **Da controllare**, da
-  correggere o chiudere.
+  correggere o, una volta vuota, archiviare.
 - Una squadriglia nata prima degli animali, con un nome che non corrisponde a nessuno, è
   segnalata in **Da controllare**: sotto il suo nome scegli l'animale.
 - Per spostare un ragazzo/a, accanto al suo nome scegli **Sposta in…** e la squadriglia (o
@@ -50,7 +50,12 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   reparto, dalla squadriglia in questa pagina, e il capo squadriglia, dalla sua pagina. Un
   capogruppo lo fa solo se è nello staff di quel reparto. Non danno permessi e si chiudono da soli
   quando il ragazzo/a lascia la squadriglia.
-- Per chiudere una squadriglia tocca **chiudi** (e **riapri** per riaprirla).
+- L'animale di una squadriglia non si cambia. Per cambiarlo apri una squadriglia nuova con
+  l'animale che vuoi, spostaci i membri e archivia la vecchia.
+- Una squadriglia vuota si archivia: tocca **archivia** accanto al nome e conferma con
+  **Archivia**. È per sempre: non si riattiva più e resta solo per memoria, in **Squadriglie
+  archiviate** in fondo alle squadriglie, con il periodo in cui è stata attiva. Una squadriglia
+  nuova può avere lo stesso animale e lo stesso nome, ma è un'altra squadriglia.
 - **Riunioni di squadriglia**: le inseriscono, dalla pagina **Riunioni**, il capo squadriglia e
   lo staff. Puoi delegare un membro della squadriglia a inserirle anche lui (solo a inserirle, non a segnare le
   presenze): scegli chi in **Delega a** e tocca **Delega**; **Togli la delega** la toglie.

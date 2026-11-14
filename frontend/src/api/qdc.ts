@@ -932,6 +932,18 @@ export interface UnitaDettaglio {
   /** Shared cash with the linked unit (DEC-288): may unite, may split now. */
   puo_unire_casse?: boolean
   puo_dividere_casse?: boolean
+  /** How many patrols are archived, on a page of their own (DEC-403). */
+  squadriglie_archiviate?: number
+}
+
+/** An archived patrol, kept as a memory (DEC-403). */
+export interface SquadrigliaArchiviata {
+  id: number
+  nome: string
+  animale?: AnimaleBreve | null
+  sesso: 'M' | 'F'
+  dal: string
+  al: string | null
 }
 
 /** Exception to single-sex patrols decided by the Co.Ca. Special-category data: capi
@@ -3256,10 +3268,12 @@ export const api = {
     richiesta<Unita>(`/api/v1/unita/${id}/casse-unite`, { metodo: 'DELETE' }),
   creaSquadriglia: (unita: number, dati: { animale_id: number; sesso: string }) =>
     richiesta<Squadriglia>(`/api/v1/unita/${unita}/squadriglie`, { metodo: 'POST', corpo: dati }),
-  modificaSquadriglia: (
-    id: number,
-    dati: { animale_id?: number; sesso: string; attiva: boolean },
-  ) => richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
+  modificaSquadriglia: (id: number, dati: { animale_id?: number; sesso: string }) =>
+    richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
+  archiviaSquadriglia: (id: number) =>
+    richiesta<Squadriglia>(`/api/v1/squadriglie/${id}/archivia`, { metodo: 'POST' }),
+  squadriglieArchiviate: (unita: number) =>
+    richiesta<SquadrigliaArchiviata[]>(`/api/v1/unita/${unita}/squadriglie-archiviate`),
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),
   criteriPubblici: () => richiesta<CriteriPubblici>('/api/v1/criteri-ammissione/pubblici'),
   gestioneCriteri: () => richiesta<GestioneCriteri>('/api/v1/criteri-ammissione'),

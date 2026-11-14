@@ -119,6 +119,14 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      // Kept as a memory, reached only from the unit's page (DEC-403).
+      path: '/unita/:id(\\d+)/squadriglie-archiviate',
+      name: 'squadriglie-archiviate',
+      component: () => import('@/views/SquadriglieArchiviateView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+      meta: { richiede: 'capo' },
+    },
+    {
       // Capi, and the technical administrator for the first capogruppo: the API decides.
       path: '/gruppo',
       name: 'gruppo',

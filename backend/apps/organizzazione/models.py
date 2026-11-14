@@ -328,13 +328,20 @@ class Squadriglia(ModelloTracciato):
         related_name="squadriglie",
     )
     sesso = models.CharField(max_length=1, choices=[("M", "Maschile"), ("F", "Femminile")])
+    # False once archived: for good, kept only as a memory (DEC-403).
     attiva = models.BooleanField(default=True)
+    archiviata_il = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "squadriglia"
         verbose_name_plural = "squadriglie"
         constraints = [
-            models.UniqueConstraint(fields=["unita", "nome"], name="squadriglia_nome_unico"),
+            # An archived patrol leaves its name free for a new one (DEC-403).
+            models.UniqueConstraint(
+                fields=["unita", "nome"],
+                condition=models.Q(attiva=True),
+                name="squadriglia_nome_unico",
+            ),
         ]
 
     def __str__(self) -> str:

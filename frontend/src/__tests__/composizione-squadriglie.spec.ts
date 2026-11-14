@@ -87,6 +87,22 @@ describe('patrol composition', () => {
     ])
   })
 
+  // DEC-403
+  it('archives only an empty patrol, after asking', async () => {
+    const chiamate: { url: string; corpo: unknown }[] = []
+    const pagina = await monta(true, chiamate)
+    const archivia = pagina.findAll('button').filter((b) => b.text() === 'archivia')
+    expect(archivia).toHaveLength(1) // the Volpi, the Aquile have a member
+    await archivia[0].trigger('click')
+    expect(pagina.text()).toContain('Archiviarla per sempre?')
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Archivia')!
+      .trigger('click')
+    await flushPromises()
+    expect(chiamate).toEqual([{ url: '/api/v1/squadriglie/2/archivia', corpo: null }])
+  })
+
   it('shows members read-only to whoever may not change them', async () => {
     const pagina = await monta(false)
     expect(pagina.text()).toContain('Giulia Prova')
@@ -164,7 +180,7 @@ describe('choosing the animal', () => {
     await flushPromises()
     expect(chiamate[0]).toEqual({
       url: '/api/v1/squadriglie/1',
-      corpo: { animale_id: 8, sesso: 'F', attiva: true },
+      corpo: { animale_id: 8, sesso: 'F' },
     })
   })
 

@@ -124,8 +124,10 @@ cambiare una riga in un punto da cui dipende tutta l'app è facile, ma ha un imp
 | NO     | Non fattibile o si decide di non procedere: passa alla tabella «Non fatte»           |
 
 - **Analisi:** ogni decisione presa su una issue va nei documenti di analisi, con il suo codice.
-- **Chiusura con soluzione:** dopo lo sviluppo la issue passa a VER. Quando il maintainer dà l'ok e
-  la release è pubblicata, si chiude su GitHub indicando la release nel commento di chiusura.
+- **Chiusura con soluzione:** dopo lo sviluppo la issue passa a VER e si pubblica subito la release;
+  la issue resta VER e aperta su GitHub. Quando il maintainer ha aggiornato la produzione, sulla
+  issue si scrive come verificarla. Quando il maintainer conferma che funziona, passa a CLSD e si
+  chiude su GitHub indicando la release nel commento di chiusura.
 - **Non si procede:** la issue passa a NO e si chiude su GitHub.
 - **Segnalazioni di sicurezza non ancora pubbliche:** questo file è pubblico, quindi finché la
   segnalazione non è pubblicata si scrive solo il suo codice GHSA, senza titolo né valutazioni. I

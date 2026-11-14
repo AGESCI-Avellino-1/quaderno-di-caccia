@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.33.0 — 14 novembre 2026
+
+### Novità
+
+**Eliminare una riunione** ([#79](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/79)): oltre ad annullarla, una riunione si può eliminare del tutto, per esempio quella di una serie che cade in un giorno festivo. In fondo alla sua pagina, **Elimina la riunione…** chiede conferma e dice che cosa si perde con lei (presenze, verbale, ordine del giorno, allegati); con **Avvisa gli invitati** parte l'email dell'annullamento. Una riunione senza presenze né verbale la elimina chi la gestisce; con presenze o verbale solo un capogruppo. Una riunione con movimenti di cassa si può solo annullare.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.33.0
+```
+
+### Documentazione
+
+Il capitolo sulle riunioni spiega come eliminarne una.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.32.2 — 14 novembre 2026
 
 ### Correzioni

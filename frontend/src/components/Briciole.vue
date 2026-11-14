@@ -43,11 +43,35 @@ const briciole = computed(() => {
     percorsoDi(v.to),
   )
 })
+
+// "Indietro" on every detail page, one with a page above it (DEC-404): back to the page of
+// the app it came from; opened from outside (a link, a notification), to the page above.
+const dettaglio = computed(() => !!PAGINE[String(rotta.name)]?.sopra)
+function indietro() {
+  if (router.options.history.state.back) {
+    router.back()
+    return
+  }
+  const sopra = briciole.value.filter((b) => b.percorso).pop()
+  void router.push(sopra?.percorso ?? '/')
+}
 </script>
 
 <template>
-  <nav v-if="briciole.length" aria-label="Percorso" class="container pt-3">
-    <ol class="breadcrumb mb-0 small">
+  <nav
+    v-if="briciole.length"
+    aria-label="Percorso"
+    class="container pt-3 d-flex align-items-center gap-3"
+  >
+    <button
+      v-if="dettaglio"
+      type="button"
+      class="btn btn-link btn-sm p-0 d-flex align-items-center gap-1 flex-shrink-0"
+      @click="indietro"
+    >
+      <Icona nome="chevron-left" />Indietro
+    </button>
+    <ol class="breadcrumb mb-0 small min-w-0">
       <li class="breadcrumb-item">
         <RouterLink to="/" class="breadcrumb-link" title="Home">
           <Icona nome="tenda" /><span class="visually-hidden">Home</span>

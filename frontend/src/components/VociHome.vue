@@ -39,7 +39,14 @@ const chiave = (v: Voce) => `${v.nome}-${JSON.stringify(v.to)}`
       <div v-if="'sezione' in b" class="card card-body h-100">
         <strong class="d-flex align-items-center gap-3 mb-1">
           <Icona :nome="b.voci[0]!.icona" />
-          {{ b.sezione }}
+          <RouterLink
+            v-if="b.voci[0]!.sezioneTo"
+            :to="b.voci[0]!.sezioneTo"
+            class="qdc-titolo-sezione"
+          >
+            {{ b.sezione }}
+          </RouterLink>
+          <template v-else>{{ b.sezione }}</template>
         </strong>
         <nav class="d-flex flex-wrap column-gap-5 row-gap-1" :aria-label="b.sezione">
           <RouterLink v-for="v in b.voci" :key="chiave(v)" :to="v.to">

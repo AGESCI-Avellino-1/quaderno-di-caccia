@@ -192,11 +192,17 @@ defineExpose({ apri })
           :key="`${g.chiave}-${v.nome}-${JSON.stringify(v.to)}`"
         >
           <!-- A unit served: its name over its entries (DEC-303). -->
-          <span
-            v-if="v.sezione && primaDellaSezione(g, v)"
-            class="ag-sidebar__label qdc-titoletto-menu text-truncate"
-            >{{ v.sezione }}</span
-          >
+          <template v-if="v.sezione && primaDellaSezione(g, v)">
+            <RouterLink
+              v-if="v.sezioneTo"
+              :to="v.sezioneTo"
+              class="ag-sidebar__label qdc-titoletto-menu text-truncate"
+              >{{ v.sezione }}</RouterLink
+            >
+            <span v-else class="ag-sidebar__label qdc-titoletto-menu text-truncate">{{
+              v.sezione
+            }}</span>
+          </template>
           <a
             v-if="v.esterna"
             :href="String(v.to)"

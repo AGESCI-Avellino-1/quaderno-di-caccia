@@ -193,6 +193,10 @@ describe('menu', () => {
       'Clan/Fuoco Hirpinia (T1)',
     ])
     expect(progressione[0]!.nomeInSezione).toBe('Progressione')
+    // The block's title leads to the unit's page, which the capi open (DEC-404).
+    expect(progressione[0]!.sezioneTo).toEqual({ name: 'unita-dettaglio', params: { id: 7 } })
+    const inAttesa = gruppiMenu({ ...capo, capo: false }).find((g) => g.chiave === 'progressione')
+    expect(inAttesa?.voci[0]?.sezioneTo).toBeUndefined()
     expect(voci(capo, 'gruppo')).toEqual([
       'Organigramma',
       'Unità',

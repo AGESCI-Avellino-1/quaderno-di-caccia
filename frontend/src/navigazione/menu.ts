@@ -29,6 +29,8 @@ export interface Voce {
   sezione?: string
   /** The name shown inside its block, when it differs (the unit's own entry). */
   nomeInSezione?: string
+  /** Where the block's title leads (the unit's page, DEC-404); none = plain text. */
+  sezioneTo?: RouteLocationRaw
 }
 
 export interface Gruppo {
@@ -109,6 +111,8 @@ function progressione(p: Profilo): Voce[] {
       to: { name: 'sentiero-unita', params: { id: u.id } },
       descrizione: "La progressione dell'unità",
       sezione,
+      // The unit's page is for the capi: the server says who is one (DEC-404).
+      sezioneTo: p.capo ? { name: 'unita-dettaglio', params: { id: u.id } } : undefined,
     })
     if (u.tipo === 'REPARTO') {
       voci.push({

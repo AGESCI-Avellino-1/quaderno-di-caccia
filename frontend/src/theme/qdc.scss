@@ -255,6 +255,22 @@ body {
   opacity: 0.82;
 }
 
+// The same, as a link to the unit's page (DEC-404): the menu's colour, underlined on hover.
+a.qdc-titoletto-menu {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+// The title of a unit's card on the Home, linking to its page (DEC-404).
+.qdc-titolo-sezione {
+  color: inherit;
+}
+
 .ag-sidebar--collapsed .ag-sidebar__nav-link.qdc-nel-gruppo {
   padding-left: 1rem;
 }

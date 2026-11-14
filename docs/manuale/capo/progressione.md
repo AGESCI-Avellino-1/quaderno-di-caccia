@@ -5,7 +5,8 @@ Promessa, verifiche, specialità. Tutti i capi la leggono.
 
 ## La pagina dell'unità
 
-Nella Home, in **Progressione personale**, tocca la tua unità. Vedi tutti i ragazzi/e, in
+Nella Home, in **Progressione personale**, tocca **Progressione** sotto la tua unità (il nome
+dell'unità apre invece la sua pagina, con staff e squadriglie). Vedi tutti i ragazzi/e, in
 ordine di cognome, con la tappa (o il momento, o il passo) in cui sono e cosa c'è da fare:
 **Promessa da registrare**, **distintivo da consegnare**, quante cose sono **da verificare**
 e **da concordare**. Tocca un nome per aprire la sua pagina.

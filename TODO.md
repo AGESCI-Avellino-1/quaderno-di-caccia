@@ -7,9 +7,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                                    | Tipo          | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77) | Bozza delle squadriglie in PDF da condividere; chi passa in R/S (DEC-411) | Miglioramento | Basso   | Media      | VER    |
+| Issue | Titolo | Tipo | Impatto | Difficoltà | Status |
+| ----- | ------ | ---- | ------- | ---------- | ------ |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -33,6 +32,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                              | Release                                                                                 |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77) | Bozza delle squadriglie in PDF da condividere; chi passa in R/S (DEC-411)           | [v1.31.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.31.0) |
 | [#76](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/76) | Informazioni: versione di iOS sbagliata da iOS 26 in poi                            | [v1.30.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.30.0) |
 | [#75](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/75) | Riorganizzazione delle squadriglie in bozza, applicata a mano dallo staff (DEC-410) | [v1.30.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.30.0) |
 | [#74](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/74) | Notifica: dopo lo sblocco si torna all'ultima pagina, non a quella della notifica   | [v1.30.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.30.0) |

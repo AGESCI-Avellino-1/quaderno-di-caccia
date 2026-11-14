@@ -7,9 +7,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                         | Tipo       | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ---------------------------------------------- | ---------- | ------- | ---------- | ------ |
-| [#72](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/72) | Unità sempre con tipo, nome e codice (DEC-408) | Correzione | Basso   | Bassa      | VER    |
+| Issue | Titolo | Tipo | Impatto | Difficoltà | Status |
+| ----- | ------ | ---- | ------- | ---------- | ------ |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -33,6 +32,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                        | Release                                                                                 |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#72](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/72) | Unità sempre con tipo, nome e codice (DEC-408)                                | [v1.29.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.29.1) |
 | [#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71) | Unità collegate in una pagina sola, turni del gruppo (DEC-405, DEC-406)       | [v1.29.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.29.0) |
 | [#70](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/70) | Dalla progressione all'unità; «Indietro» nelle pagine di dettaglio (DEC-404)  | [v1.29.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.29.0) |
 | [#69](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/69) | Squadriglie e unità: correzioni (raggruppa #68, #70, #71)                     | [v1.29.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.29.0) |

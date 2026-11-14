@@ -5,6 +5,23 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.34.1 — 14 novembre 2026
+
+### Correzioni
+
+**Inviti e quote di chi esce dall'unità** ([#80](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/80)): chi esce dall'unità (anche con un passaggio preparato) e ha una quota dell'evento non ancora pagata la vede annullata da sola, con il motivo «Non è più nell'unità», e non è più invitato; prima restava invitato. Se ha già pagato, anche in parte, o ha segnalato un pagamento ancora da verificare, resta invitato e decide lo staff.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.34.1
+docker compose exec -T web python manage.py allinea_inviti
+```
+
+Il secondo comando applica subito la correzione a quello che c'è già; altrimenti lo fa il cron della notte.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.34.0 — 14 novembre 2026
 
 ### Correzioni

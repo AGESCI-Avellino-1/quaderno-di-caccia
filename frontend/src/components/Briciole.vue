@@ -61,7 +61,7 @@ function indietro() {
   <nav
     v-if="briciole.length"
     aria-label="Percorso"
-    class="container pt-3 d-flex align-items-center gap-3"
+    class="container pt-3 d-flex flex-wrap align-items-center column-gap-3 row-gap-1"
   >
     <button
       v-if="dettaglio"
@@ -71,7 +71,8 @@ function indietro() {
     >
       <Icona nome="chevron-left" />Indietro
     </button>
-    <ol class="breadcrumb mb-0 small min-w-0">
+    <!-- Too long for one line with Indietro: the whole breadcrumb goes below it. -->
+    <ol class="breadcrumb mb-0 small">
       <li class="breadcrumb-item">
         <RouterLink to="/" class="breadcrumb-link" title="Home">
           <Icona nome="tenda" /><span class="visually-hidden">Home</span>

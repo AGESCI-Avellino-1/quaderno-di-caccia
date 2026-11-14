@@ -5,6 +5,34 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.29.0 — 14 novembre 2026
+
+### Novità
+
+**Squadriglie archiviate** ([#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68)): una squadriglia non si chiude più, si archivia, e solo quando è vuota. È per sempre: resta per memoria nella pagina **Squadriglie archiviate**, che si apre dalla pagina del reparto, con il periodo in cui è stata attiva. Una squadriglia nuova può avere lo stesso animale e lo stesso nome, ma è un'altra squadriglia. L'animale di una squadriglia non si cambia: per cambiarlo se ne apre una nuova, ci si spostano i membri e si archivia la vecchia.
+
+**Storia delle squadriglie** ([#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68)): esploratori e guide hanno una pagina con tutte le squadriglie del loro reparto, di oggi e del passato, con l'animale e gli anni in cui sono state attive, senza nomi di persone. Ci si arriva da **Attività** e da **La mia squadriglia**.
+
+**Dalla progressione alla pagina dell'unità** ([#70](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/70)): nella Home e nel menu, in **Progressione personale**, il nome dell'unità apre la sua pagina. Nelle pagine di dettaglio (una persona, un'unità, un evento, una progressione) c'è **Indietro**, che riporta alla pagina da cui si arriva.
+
+**Unità collegate in una pagina sola** ([#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71)): la pagina di un reparto collegato a un altro mostra le squadriglie di tutti e due, ognuna con il nome del suo reparto, e da lì lo staff le gestisce tutte. Con un branco o un cerchio collegato ci sono anche le sue sestiglie e i suoi turni.
+
+**Turni del gruppo** ([#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71)): in **Il mio gruppo**, **Turni del gruppo** stabilisce turni che passano da un'unità all'altra, per esempio la pulizia della sede, ogni settimana, ogni mese o ogni tre mesi. Un periodo si può dare a mano a un'altra unità. Li stabiliscono i capigruppo e i capi della Comunità capi; capi, ragazzi/e e genitori li vedono sulle riunioni dell'unità a cui tocca.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.29.0
+```
+
+L'aggiornamento migra il database: le squadriglie chiuse diventano archiviate.
+
+### Documentazione
+
+Il manuale spiega l'archiviazione delle squadriglie, la loro storia per i ragazzi/e, le unità collegate, i turni del gruppo e il pulsante **Indietro**. Rifatte le schermate della pagina del reparto, dei turni, della Home e della squadriglia del ragazzo/a.
+
+Provata con i test; non ancora in un browser con dati veri né su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.28.0 — 10 novembre 2026
 
 ### Novità

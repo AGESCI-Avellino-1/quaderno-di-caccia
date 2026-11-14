@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.31.0 — 14 novembre 2026
+
+### Novità
+
+**La bozza delle squadriglie in PDF** ([#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77)): finché la bozza delle squadriglie future non è applicata, nella pagina del reparto c'è **Bozza delle squadriglie future (PDF)**, da condividere. Ha l'intestazione del gruppo, la scritta «Bozza» con la data di stampa, le squadriglie con capo, vice e membri, chi resta senza squadriglia e chi passa in R/S. Lo scaricano i capi della Comunità capi e i capigruppo, non i capi squadriglia.
+
+**Chi passa in R/S** ([#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77)): nella bozza, per chi è senza squadriglia, lo staff può spuntare **passa in R/S**; la bozza e il PDF lo mostrano a parte da chi resta nel reparto. È solo un'indicazione: il passaggio vero si prepara in **Passaggi**.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.31.0
+```
+
+L'aggiornamento migra il database; le bozze già preparate restano come sono.
+
+### Documentazione
+
+Il capitolo sull'unità spiega il PDF della bozza e la spunta «passa in R/S».
+
+Provata con i test e guardando un PDF generato con dati inventati; non ancora in un browser con dati veri. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.30.0 — 14 novembre 2026
 
 ### Novità

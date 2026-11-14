@@ -12,6 +12,11 @@ Nel calendario del mese, ogni giorno da oggi in poi ha in alto a destra un picco
 **Nuova riunione** o **Nuovo evento** con quel giorno già scelto (il tipo di riunione lo scegli nel
 modulo). Se puoi creare solo riunioni, come un capo squadriglia, il **+** apre subito il modulo.
 
+:::{container} schermate
+![Il menu del + nel calendario sul telefono](../img/capo/calendario-crea-telefono.png){.telefono width="30%"}
+![Il menu del + nel calendario sul computer](../img/capo/calendario-crea-computer.png){.computer width="65%"}
+:::
+
 Nel calendario del telefono le riunioni dei genitori e l'assemblea portano nelle note l'ordine
 del giorno; quelle della Comunità capi e di staff solo il link alla riunione nell'app, perché il
 loro ordine del giorno resta riservato.

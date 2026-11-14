@@ -564,6 +564,17 @@ const SCENE: Scena[] = [
     mostra: 'Titolo',
   },
   { nome: 'capo/riunioni', chi: 'capoReparto', percorso: '/riunioni', intera: true },
+  // The «+» of a day in the month (DEC-412): its menu open on the second day from today.
+  {
+    nome: 'capo/calendario-crea',
+    chi: 'capoReparto',
+    percorso: '/calendario',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Mese', exact: true }).click()
+      await pagina.locator('.qdc-piu').nth(1).click()
+      await pagina.getByRole('menuitem', { name: 'Nuova riunione' }).waitFor()
+    },
+  },
   {
     nome: 'gruppo/assemblea',
     chi: 'capogruppo',

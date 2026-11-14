@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.32.0 — 14 novembre 2026
+
+### Novità
+
+**Creare dal calendario** ([#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78)): nel calendario del mese ogni giorno da oggi in poi ha in alto a destra un piccolo **+**, che apre **Nuova riunione** o **Nuovo evento** con quel giorno già scelto. Lo vede chi può creare riunioni o eventi, anche il capo squadriglia; chi può creare solo riunioni va dritto al modulo.
+
+**Ordine del giorno nel calendario del telefono** ([#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78)): nelle riunioni dei genitori e nell'assemblea, l'ordine del giorno è nelle note dell'evento, come nella convocazione. Le riunioni della Comunità capi e di staff portano solo il link alla riunione nell'app: il loro ordine del giorno resta riservato.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.32.0
+```
+
+I calendari del telefono già collegati prendono le note nuove al loro prossimo aggiornamento.
+
+### Documentazione
+
+Il capitolo sulle riunioni spiega il **+** del calendario e cosa arriva nel calendario del telefono; quello del genitore cosa c'è nelle note degli eventi.
+
+Provata con i test; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.31.0 — 14 novembre 2026
 
 ### Novità

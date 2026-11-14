@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 14/11/2026 (ultima versione: v1.31.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 14/11/2026 (ultima versione: v1.32.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte

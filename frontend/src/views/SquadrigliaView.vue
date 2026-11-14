@@ -181,6 +181,12 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
       <IncarichiSquadriglia :squadriglia="s.id" :membri="s.membri" class="mt-5" />
       <DelegaSquadriglia :squadriglia="s.id" :membri="s.membri" />
     </section>
+    <p v-if="sessione.profilo?.bozza_squadriglie" class="small">
+      <!-- DEC-410 -->
+      <RouterLink :to="`/bozze-squadriglie/${sessione.profilo.bozza_squadriglie}`">
+        Le squadriglie future
+      </RouterLink>
+    </p>
     <p v-if="sessione.profilo?.storia_squadriglie" class="small">
       <RouterLink :to="{ name: 'storia-squadriglie' }">Storia delle squadriglie</RouterLink>
     </p>

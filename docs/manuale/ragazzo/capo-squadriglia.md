@@ -42,6 +42,10 @@ l'animale lo scegli tu: in **Scegli l'animale della squadriglia** scegli l'anima
 **Scegli**. Il nome della squadriglia diventa il plurale dell'animale. Puoi sceglierlo una volta
 sola: lo staff riceve un avviso e, se c'è un errore, lo corregge.
 
+Quando lo staff prepara le squadriglie dell'anno dopo e ti indica come capo o vice, può mostrartele
+prima che valgano: le trovi in **Le squadriglie future**, in **Attività** e in fondo a **La mia
+squadriglia**. Le vedi soltanto: le decide lo staff.
+
 ## Gli incarichi
 
 Nella stessa pagina, in **Incarichi**, assegni gli incarichi di squadriglia: cassiere, cicala,

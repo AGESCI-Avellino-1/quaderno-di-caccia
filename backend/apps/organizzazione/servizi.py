@@ -174,6 +174,15 @@ def cancella_unita(unita: Unita) -> None:
 # --- Linked units (DEC-36, DEC-279) ---------------------------------------------------------
 
 
+def nome_provvisorio(unita: Unita) -> str:
+    """ "Nuova Squadriglia" with the first number free among the active patrols (DEC-409)."""
+    presi = set(unita.squadriglie.filter(attiva=True).values_list("nome", flat=True))
+    n = 1
+    while f"Nuova Squadriglia {n}" in presi:
+        n += 1
+    return f"Nuova Squadriglia {n}"
+
+
 def avvisa_animale_scelto(squadriglia: Squadriglia) -> None:
     """Its CSQ chose the animal of a new patrol (DEC-409): an optional email and a
     notification to the reparto staff, who may correct it for a month."""

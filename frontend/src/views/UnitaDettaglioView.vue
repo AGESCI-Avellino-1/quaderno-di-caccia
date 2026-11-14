@@ -625,6 +625,12 @@ const iniziale = (u: Unita): UnitaIn => ({
           </li>
         </ul>
       </div>
+      <p v-if="dettaglio.puo_gestire_squadriglie" class="small mt-3 mb-0">
+        <!-- DEC-410 -->
+        <RouterLink :to="{ name: 'riorganizzazione', params: { id: unita.id } }">
+          Riorganizza le squadriglie da una data
+        </RouterLink>
+      </p>
       <p v-if="dettaglio.squadriglie_archiviate" class="small mt-3 mb-0">
         <RouterLink :to="{ name: 'squadriglie-archiviate', params: { id: unita.id } }">
           Squadriglie archiviate ({{ dettaglio.squadriglie_archiviate }})

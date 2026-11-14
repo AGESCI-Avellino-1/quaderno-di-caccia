@@ -118,6 +118,8 @@ export interface Profilo {
   unita_servizio?: { id: number; nome: string; tipo: string; branca: string }[]
   /** The patrols' history of one's reparto (DEC-407): esploratori and guide. */
   storia_squadriglie?: boolean
+  /** The future patrols the staff shows to the future CSQ and VCSQ (DEC-410). */
+  bozza_squadriglie?: number | null
   /** Units the capo does not serve, whose progression they read (DEC-381). */
   altre_unita?: { id: number; nome: string; tipo: string; branca: string }[]
   /** L/C setting of the child's unit, which names their Progressione personale. */
@@ -954,6 +956,37 @@ export interface StoriaReparto {
   id: number
   nome: string
   squadriglie: (SquadrigliaArchiviata & { attiva: boolean })[]
+}
+
+/** A draft of the future patrols of a reparto, or of two linked ones (DEC-410). */
+export interface BozzaSquadriglie {
+  id: number
+  data_inizio: string
+  stato: 'APERTA' | 'APPLICATA'
+  visibile_ai_capi_squadriglia: boolean
+  /** From its first day on. */
+  si_applica: boolean
+  annullabile: boolean
+  applicata_il: string | null
+  applicata_da: string
+  reparti: { id: number; nome: string; composizione: string }[]
+  squadriglie: {
+    id: number
+    nome: string
+    /** Does not exist yet. */
+    nuova: boolean
+    unita_id: number
+    unita_nome: string
+    animale?: AnimaleBreve | null
+    sesso: 'M' | 'F'
+    capo_id: number | null
+    vice_id: number | null
+    membri: { id: number; nome: string; cognome: string }[]
+  }[]
+  senza_squadriglia: { id: number; nome: string; cognome: string; reparto_id: number | null }[]
+  /** Changes in reality since the draft, for who prepares it. */
+  differenze: string[]
+  puo_gestire: boolean
 }
 
 /** An archived patrol, kept as a memory (DEC-403). */
@@ -3335,6 +3368,53 @@ export const api = {
     }),
   archiviaSquadriglia: (id: number) =>
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}/archivia`, { metodo: 'POST' }),
+  bozzeSquadriglie: (unita: number) =>
+    richiesta<{ aperta: BozzaSquadriglie | null; applicata: BozzaSquadriglie | null }>(
+      `/api/v1/unita/${unita}/bozza-squadriglie`,
+    ),
+  creaBozzaSquadriglie: (unita: number, data_inizio: string) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/unita/${unita}/bozza-squadriglie`, {
+      metodo: 'POST',
+      corpo: { data_inizio },
+    }),
+  bozzaSquadriglie: (id: number) => richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}`),
+  impostaBozza: (
+    id: number,
+    dati: { data_inizio: string; visibile_ai_capi_squadriglia: boolean },
+  ) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
+  scartaBozza: (id: number) =>
+    richiesta<void>(`/api/v1/bozze-squadriglie/${id}`, { metodo: 'DELETE' }),
+  nuovaSquadrigliaInBozza: (
+    id: number,
+    dati: { unita_id: number; animale_id: number | null; sesso: string },
+  ) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/squadriglie`, {
+      metodo: 'POST',
+      corpo: dati,
+    }),
+  togliSquadrigliaDaBozza: (id: number, posto: number) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/squadriglie/${posto}`, {
+      metodo: 'DELETE',
+    }),
+  guideInBozza: (
+    id: number,
+    posto: number,
+    dati: { capo_id: number | null; vice_id: number | null },
+  ) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/squadriglie/${posto}/guide`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
+  spostaInBozza: (id: number, persona: number, squadriglia_id: number | null) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/membri/${persona}`, {
+      metodo: 'PUT',
+      corpo: { squadriglia_id },
+    }),
+  applicaBozza: (id: number) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/applica`, { metodo: 'POST' }),
+  annullaBozza: (id: number) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/annulla`, { metodo: 'POST' }),
   storiaSquadriglie: () => richiesta<StoriaReparto[]>('/api/v1/storia-squadriglie'),
   squadriglieArchiviate: (unita: number) =>
     richiesta<SquadrigliaArchiviata[]>(`/api/v1/unita/${unita}/squadriglie-archiviate`),

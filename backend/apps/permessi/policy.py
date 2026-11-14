@@ -775,6 +775,30 @@ def puo_scegliere_animale(user, squadriglia: Squadriglia) -> bool:
     )
 
 
+def bozze_dei_capi_squadriglia(user):
+    """The open drafts of the patrols (DEC-410) the staff shows to their future CSQ and VCSQ,
+    where the user is one of them: read only."""
+    from apps.organizzazione.models import BozzaSquadriglie, StatoBozza
+
+    persona = persona_di(user)
+    if persona is None:
+        return BozzaSquadriglie.objects.none()
+    return (
+        BozzaSquadriglie.objects.filter(stato=StatoBozza.APERTA, visibile_ai_capi_squadriglia=True)
+        .filter(Q(squadriglie__capo=persona) | Q(squadriglie__vice=persona))
+        .distinct()
+    )
+
+
+def puo_leggere_bozza_squadriglie(user, bozza) -> bool:
+    """Who prepares it (the reparto staff and the capigruppo) and, when the staff shows it,
+    its future CSQ and VCSQ (DEC-410)."""
+    return (
+        puo_gestire_squadriglie(user, bozza.unita)
+        or bozze_dei_capi_squadriglia(user).filter(pk=bozza.pk).exists()
+    )
+
+
 def staff_del_reparto(unita: Unita) -> list[Persona]:
     """The reparto staff, also of the reparto linked to it (DEC-279): told when a CSQ names
     the patrol (DEC-409)."""

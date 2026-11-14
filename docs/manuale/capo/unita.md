@@ -97,6 +97,33 @@ i capigruppo.
 Accanto al nome della squadriglia compare la sua immagine, anche ai genitori. Senza rete restano
 visibili le immagini degli animali usati dalle squadriglie; l'elenco completo serve la rete.
 
+### Riorganizzare le squadriglie da una data
+
+Quando lo staff decide come cambiano le squadriglie da un certo giorno (per esempio
+dall'apertura), puoi prepararlo subito senza toccare quelle di oggi. Sotto le squadriglie tocca
+**Riorganizza le squadriglie da una data**, scegli il giorno e tocca **Prepara la bozza**: la
+bozza parte dalle squadriglie, dai membri e dai capi di oggi, di tutti e due i reparti se sono
+collegati.
+
+- **Sposta in…** sposta un ragazzo/a, anche in una squadriglia del reparto collegato; valgono i
+  sessi del reparto e delle squadriglie, salvo le eccezioni della Comunità capi.
+- **Nuova squadriglia nella bozza** aggiunge una squadriglia, con l'animale o senza (lo sceglierà il
+  capo squadriglia); **togli** la toglie.
+- Per ogni squadriglia scegli **Capo squadriglia** e **Vice capo squadriglia** tra i suoi membri.
+- Una squadriglia che resta senza membri porta **sarà archiviata**.
+- Con **Mostra ai futuri capi squadriglia** i capi e vice della bozza la vedono, senza poterla
+  cambiare, in **Le squadriglie future**.
+- **Da controllare** dice chi ha lasciato il reparto (sarà ignorato) e chi è arrivato dopo (resta
+  dov'è, a meno che tu non lo sposti nella bozza).
+
+Dal giorno scelto in poi tocca **Applica la bozza…** e conferma: gli spostamenti valgono da quel
+giorno, i capi e vice di prima lasciano l'incarico, partono i nuovi e le squadriglie vuote vengono
+archiviate. Se è stato un errore, **Annulla l'applicazione…** rimette tutto come prima, finché
+nessuno ha cambiato squadriglie, membri o incarichi. **Scarta la bozza…** la butta via. Lo può fare
+chiunque sia nello staff, anche di un reparto collegato, e i capigruppo. Lo spostamento in un altro
+reparto vale nell'app: alla prossima importazione da BuonaStrada comparirà come differenza da
+scegliere, finché non lo aggiorni anche lì.
+
 ## I turni
 
 In fondo alla pagina di un reparto, di un branco o di un cerchio, lo staff trova **Turni**:

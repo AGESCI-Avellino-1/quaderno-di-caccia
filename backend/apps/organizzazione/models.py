@@ -803,3 +803,95 @@ class AnnoChiuso(ModelloTracciato):
         from django.utils import timezone
 
         return self.riaperto_fino_al is not None and self.riaperto_fino_al > timezone.now()
+
+
+# --- Draft reorganisation of the patrols (DEC-410) --------------------------------------------
+
+
+class StatoBozza(models.TextChoices):
+    APERTA = "APERTA", "Da applicare"
+    APPLICATA = "APPLICATA", "Applicata"
+
+
+class BozzaSquadriglie(ModelloTracciato):
+    """The future patrols of a reparto, or of two linked reparti (DEC-410): the current ones
+    stay in force until a staff member applies it, from `data_inizio` on. One open at a time;
+    discarding it deletes it. `chiusure` records what applying did, to undo it exactly."""
+
+    unita = models.ForeignKey(Unita, on_delete=models.CASCADE, related_name="bozze_squadriglie")
+    data_inizio = models.DateField()
+    stato = models.CharField(max_length=10, choices=StatoBozza.choices, default=StatoBozza.APERTA)
+    # The future CSQ and VCSQ see it, read only.
+    visibile_ai_capi_squadriglia = models.BooleanField(default=False)
+    applicata_il = models.DateTimeField(null=True, blank=True)
+    applicata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    chiusure = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        verbose_name = "bozza delle squadriglie"
+        verbose_name_plural = "bozze delle squadriglie"
+
+    def __str__(self) -> str:
+        return f"Squadriglie di {self.unita} dal {self.data_inizio:%d/%m/%Y}"
+
+
+class SquadrigliaInBozza(ModelloTracciato):
+    """A patrol of the draft: an existing one (`squadriglia`) or a new one, of one reparto."""
+
+    bozza = models.ForeignKey(
+        BozzaSquadriglie, on_delete=models.CASCADE, related_name="squadriglie"
+    )
+    squadriglia = models.ForeignKey(
+        Squadriglia, null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
+    # For a new one: its reparto, animal (None: its CSQ chooses, DEC-409) and sex.
+    unita = models.ForeignKey(Unita, on_delete=models.CASCADE, related_name="+")
+    animale = models.ForeignKey(
+        AnimaleSquadriglia, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    sesso = models.CharField(max_length=1, choices=[("M", "Maschile"), ("F", "Femminile")])
+    capo = models.ForeignKey(
+        "anagrafica.Persona", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    vice = models.ForeignKey(
+        "anagrafica.Persona", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "squadriglia in una bozza"
+        verbose_name_plural = "squadriglie in una bozza"
+
+    def __str__(self) -> str:
+        return self.nome
+
+    @property
+    def nome(self) -> str:
+        if self.squadriglia_id:
+            return self.squadriglia.nome
+        return self.animale.plurale if self.animale_id else "Nuova squadriglia"
+
+
+class MembroInBozza(ModelloTracciato):
+    """Where a ragazzo/a will be: a patrol of the draft, or none."""
+
+    bozza = models.ForeignKey(BozzaSquadriglie, on_delete=models.CASCADE, related_name="membri")
+    persona = models.ForeignKey("anagrafica.Persona", on_delete=models.CASCADE, related_name="+")
+    squadriglia = models.ForeignKey(
+        SquadrigliaInBozza, null=True, blank=True, on_delete=models.SET_NULL, related_name="membri"
+    )
+
+    class Meta:
+        verbose_name = "membro in una bozza"
+        verbose_name_plural = "membri in una bozza"
+        constraints = [
+            models.UniqueConstraint(fields=["bozza", "persona"], name="membro_in_bozza_unico")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.persona} in {self.bozza}"

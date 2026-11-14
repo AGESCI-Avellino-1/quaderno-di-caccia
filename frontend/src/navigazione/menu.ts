@@ -293,6 +293,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/squadriglia',
           descrizione: 'I numeri di telefono della squadriglia',
         },
+        // DEC-410
+        !!p.bozza_squadriglie && {
+          nome: 'Le squadriglie future',
+          icona: 'flag',
+          to: `/bozze-squadriglie/${p.bozza_squadriglie}`,
+          descrizione: 'Come saranno le squadriglie, decise dallo staff',
+        },
         // DEC-407
         p.storia_squadriglie && {
           nome: 'Storia delle squadriglie',

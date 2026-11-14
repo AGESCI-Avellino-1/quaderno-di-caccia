@@ -1067,7 +1067,7 @@ def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squad
     if dati.animale_id is None and squadriglia.pk is None:
         # Its CSQ will choose the animal (DEC-409).
         squadriglia.provvisoria = True
-        squadriglia.nome = _nome_provvisorio(squadriglia.unita)
+        squadriglia.nome = servizi.nome_provvisorio(squadriglia.unita)
     if dati.animale_id is not None and dati.animale_id != squadriglia.animale_id:
         fino = squadriglia.correggibile_fino()
         if squadriglia.animale_id is not None and not (fino and timezone.localdate() <= fino):
@@ -1080,15 +1080,6 @@ def _applica_squadriglia(squadriglia: Squadriglia, dati: SquadrigliaIn) -> Squad
     squadriglia.sesso = dati.sesso
     _salva(squadriglia)
     return squadriglia
-
-
-def _nome_provvisorio(unita: Unita) -> str:
-    """ "Nuova Squadriglia" with the first number free among the active patrols (DEC-409)."""
-    presi = set(unita.squadriglie.filter(attiva=True).values_list("nome", flat=True))
-    n = 1
-    while f"Nuova Squadriglia {n}" in presi:
-        n += 1
-    return f"Nuova Squadriglia {n}"
 
 
 def _dai_animale(squadriglia: Squadriglia, animale_id: int) -> None:

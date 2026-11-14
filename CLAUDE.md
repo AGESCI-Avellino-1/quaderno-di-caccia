@@ -443,7 +443,11 @@ implements them:
   units by week, month or quarter and show on the meetings of the unit that has them
   (`eventi/turni_gruppo.py`, `TurnoGruppo`, DEC-406). Two linked reparti show both reparti's
   patrols on each page (`organizzazione.api.reparti_insieme`, DEC-405); a patrol is archived only
-  when empty, for good, and its animal never changes (`Squadriglia.archiviata_il`, DEC-403).
+  when empty, for good, and its animal never changes (`Squadriglia.archiviata_il`, DEC-403),
+  but a patrol created without one gets it from its CSQ, correctable by the staff for a month
+  (`Squadriglia.provvisoria`, `animale_scelto_il`, DEC-409). A draft of the future patrols
+  (`organizzazione/riorganizzazione.py`, `BozzaSquadriglie`, DEC-410) is applied by hand from its
+  first day and undone exactly from `chiusure`, like the passages.
   Staff meetings (`Cerchia.STAFF`, DEC-401) join the staffs of units chosen freely, linked or not;
   only who is invited, the staffs of those units and the capigruppo see them (`policy.eventi_visibili`,
   `puo_leggere_verbale`). Co.Ca., staff and parents' meetings may be online or mixed with a link

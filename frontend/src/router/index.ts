@@ -127,6 +127,21 @@ const router = createRouter({
       meta: { richiede: 'capo' },
     },
     {
+      // The draft of the future patrols (DEC-410): the reparto staff and the capigruppo.
+      path: '/unita/:id(\\d+)/riorganizzazione',
+      name: 'riorganizzazione',
+      component: () => import('@/views/RiorganizzazioneView.vue'),
+      props: (rotta) => ({ unita: Number(rotta.params.id) }),
+      meta: { richiede: 'capo' },
+    },
+    {
+      // The same draft, read only, for the future CSQ and VCSQ: the API decides (DEC-410).
+      path: '/bozze-squadriglie/:id(\\d+)',
+      name: 'bozza-squadriglie',
+      component: () => import('@/views/RiorganizzazioneView.vue'),
+      props: (rotta) => ({ bozza: Number(rotta.params.id) }),
+    },
+    {
       // Kept as a memory, reached only from the unit's page (DEC-403).
       path: '/unita/:id(\\d+)/squadriglie-archiviate',
       name: 'squadriglie-archiviate',

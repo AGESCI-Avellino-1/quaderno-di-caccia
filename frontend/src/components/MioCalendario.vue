@@ -47,7 +47,8 @@ const indirizzi = computed(() =>
     <h2 class="h5 mb-1">Il mio calendario</h2>
     <p class="form-text mb-3">
       Aggiungi una volta i tuoi eventi (e quelli dei tuoi figli) a Google Calendar o al Calendario
-      dell'iPhone: si aggiornano da soli. Ci sono solo titolo, date e luogo.
+      dell'iPhone: si aggiornano da soli. Ci sono titolo, date e luogo; per le riunioni dei genitori
+      e l'assemblea anche l'ordine del giorno.
     </p>
     <button
       v-if="!aperto"

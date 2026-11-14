@@ -302,3 +302,40 @@ def test_assemblea_regolamento_non_spuntato_e_punti_nell_email(capogruppo):
     assert "1. approvazione del bilancio" in corpo
     assert "2. varie ed eventuali." in corpo
     assert "Regolamento" not in corpo
+
+
+# --- In the calendar feed (DEC-412) --------------------------------------------------------
+
+
+def _descrizione(evento) -> str:
+    from apps.eventi.calendario import ics
+
+    righe = ics([evento]).replace("\r\n ", "").split("\r\n")
+    return next((r for r in righe if r.startswith("DESCRIPTION:")), "")
+
+
+def test_nel_feed_il_testo_dei_genitori(di_genitori, settings):
+    di_genitori.ordine_del_giorno = AGENDA
+    di_genitori.save()
+    descrizione = _descrizione(di_genitori)
+    assert "Ordine del giorno:" in descrizione
+    assert "Programma dell'anno" in descrizione
+
+
+def test_nel_feed_i_punti_dell_assemblea(gruppo):
+    assemblea = _nuova(Cerchia.SOCI, livello=Livello.GRUPPO)
+    descrizione = _descrizione(assemblea)
+    assert descrizione.startswith("DESCRIPTION:Ordine del giorno:")
+
+
+@pytest.mark.parametrize("cerchia", [Cerchia.TUTTI, Cerchia.STAFF])
+def test_nel_feed_solo_il_link_per_coca_e_staff(cerchia, coca, reparto, settings):
+    settings.FRONTEND_URL = "https://qdc.example"
+    unita = [coca] if cerchia == Cerchia.TUTTI else [reparto]
+    riunione = _nuova(cerchia, unita=unita)
+    assert _descrizione(riunione) == ""  # no agenda, nothing
+    riunione.ordine_del_giorno = AGENDA
+    riunione.save()
+    descrizione = _descrizione(riunione)
+    assert "Programma dell" not in descrizione
+    assert f"https://qdc.example/riunioni/{riunione.pk}" in descrizione.replace("\\", "")

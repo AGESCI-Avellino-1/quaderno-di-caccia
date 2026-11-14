@@ -55,7 +55,8 @@ Nella Home, accanto alla **Bacheca**, tocca **Calendario** (nel menu è nel grup
 ## Gli eventi nel calendario del telefono
 
 Puoi avere gli eventi anche nel calendario del telefono (Google Calendar o il Calendario
-dell'iPhone), in due modi.
+dell'iPhone), in due modi. Ci sono titolo, date e luogo; nelle riunioni dei genitori e
+nell'assemblea, nelle note, anche l'ordine del giorno.
 
 **Abbonarti**, una volta sola: da allora il calendario del telefono si aggiorna da solo.
 

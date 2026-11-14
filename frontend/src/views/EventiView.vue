@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { api, nomeUnita, type Evento, type EventoIn, type Squadriglia, type Unita } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
+import { giornoDaQuery, puoCreareEventi } from '@/eventi/creazione'
 import { quandoEvento } from '@/eventi/orario'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -20,9 +21,10 @@ const passati = ref(false)
 const unita = ref<Unita[]>([])
 const squadriglie = ref<(Squadriglia & { reparto: string })[]>([])
 const oggi = () => new Date().toLocaleDateString('sv')
+const route = useRoute()
+const router = useRouter()
 
-const csq = computed(() => (sessione.profilo?.squadriglie_guidate.length ?? 0) > 0)
-const creaEventi = computed(() => sessione.capo || csq.value)
+const creaEventi = computed(() => puoCreareEventi(sessione.profilo))
 
 async function carica() {
   const filtri = passati.value ? { al: oggi() } : { dal: oggi() }
@@ -37,6 +39,12 @@ watch(passati, carica, { immediate: true })
 
 onMounted(async () => {
   if (!creaEventi.value) return
+  // From the calendar's «+»: the form open on that day (DEC-412).
+  const giorno = giornoDaQuery(route.query.giorno)
+  if (giorno) {
+    modulo.value = { ...vuoto(), inizio: `${giorno}T09:00` }
+    void router.replace({ query: {} })
+  }
   try {
     unita.value = (await leggiConCache('unita', () => api.unita())).dati
   } catch {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { api, calendarioIcs, type Calendario, type EventoCalendario } from '@/api/qdc'
 import Icona from '@/components/Icona.vue'
@@ -16,7 +16,9 @@ import {
   settimaneDelMese,
   type ModoCalendario,
 } from '@/eventi/calendario'
+import { puoCreareEventi, puoCreareRiunioni } from '@/eventi/creazione'
 import { quandoEvento } from '@/eventi/orario'
+import { useSessioneStore } from '@/stores/sessione'
 
 // The user's and their children's events as a month or as a list of the next ones; a
 // capo chooses among the views, «Tutti i miei eventi» first (DEC-143, DEC-286, DEC-334). Files to download and the
@@ -37,6 +39,35 @@ const titoloMese = computed(() =>
   mese.value.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' }),
 )
 const giorniSettimana = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom']
+
+// A «+» on every day from today, to create a meeting or an event on it (DEC-412): a small
+// menu with what the user may create, straight to the form when only one.
+const router = useRouter()
+const sessione = useSessioneStore()
+const creabili = computed(() =>
+  [
+    puoCreareRiunioni(sessione.profilo) && { nome: 'Nuova riunione', percorso: '/riunioni' },
+    puoCreareEventi(sessione.profilo) && { nome: 'Nuovo evento', percorso: '/eventi' },
+  ].filter((v): v is { nome: string; percorso: string } => !!v),
+)
+const menuDi = ref<string | null>(null)
+const conPiu = (giorno: Date) =>
+  creabili.value.length > 0 &&
+  giorno.getMonth() === mese.value.getMonth() &&
+  chiaveGiorno(giorno) >= chiaveGiorno(oggi)
+function piu(giorno: Date) {
+  const chiave = chiaveGiorno(giorno)
+  if (creabili.value.length === 1) {
+    void router.push({ path: creabili.value[0]!.percorso, query: { giorno: chiave } })
+    return
+  }
+  menuDi.value = menuDi.value === chiave ? null : chiave
+}
+const chiudiMenu = (evento: Event) => {
+  if (!(evento.target as HTMLElement).closest?.('.qdc-piu, .qdc-menu-piu')) menuDi.value = null
+}
+onMounted(() => document.addEventListener('click', chiudiMenu))
+onBeforeUnmount(() => document.removeEventListener('click', chiudiMenu))
 
 async function carica() {
   let dal: string, al: string | undefined
@@ -181,6 +212,30 @@ const quando = (e: EventoCalendario) => quandoEvento(e, true)
                   >{{ e.titolo }}</span
                 >
               </button>
+              <button
+                v-if="conPiu(giorno)"
+                type="button"
+                class="qdc-piu"
+                :aria-label="`Crea il ${giorno.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })}`"
+                :aria-expanded="creabili.length > 1 ? menuDi === chiaveGiorno(giorno) : undefined"
+                @click="piu(giorno)"
+              >
+                <Icona nome="plus-lg" />
+              </button>
+              <div
+                v-if="menuDi === chiaveGiorno(giorno)"
+                class="qdc-menu-piu"
+                :class="{ 'qdc-menu-sinistra': [1, 2].includes(giorno.getDay()) }"
+                role="menu"
+              >
+                <RouterLink
+                  v-for="c in creabili"
+                  :key="c.percorso"
+                  :to="{ path: c.percorso, query: { giorno: chiaveGiorno(giorno) } }"
+                  role="menuitem"
+                  >{{ c.nome }}</RouterLink
+                >
+              </div>
             </td>
           </tr>
         </tbody>

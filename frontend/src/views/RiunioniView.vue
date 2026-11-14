@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import {
   api,
@@ -18,6 +18,7 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
 import SceltaModalita from '@/components/SceltaModalita.vue'
 import { useErrore } from '@/composables/useErrore'
+import { giornoDaQuery, puoCreareRiunioni } from '@/eventi/creazione'
 import { leggiConCache } from '@/offline/cache'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -38,10 +39,10 @@ const squadriglie = ref<{ id: number; nome: string; reparto: string }[]>([])
 const localita = ref<Localita[]>([])
 const esito = ref('')
 const oggi = () => new Date().toLocaleDateString('sv')
+const route = useRoute()
+const router = useRouter()
 
-const csq = computed(() => (sessione.profilo?.squadriglie_guidate.length ?? 0) > 0)
-const delegato = computed(() => (sessione.profilo?.squadriglie_delegate.length ?? 0) > 0)
-const creaRiunioni = computed(() => sessione.capo || csq.value || delegato.value)
+const creaRiunioni = computed(() => puoCreareRiunioni(sessione.profilo))
 
 async function carica() {
   const filtri = passate.value ? { al: oggi() } : { dal: oggi() }
@@ -71,6 +72,12 @@ onMounted(async () => {
     }
   }
   if (!creaRiunioni.value) return
+  // From the calendar's «+»: one meeting on that day; its kind is chosen in the form (DEC-412).
+  const giorno = giornoDaQuery(route.query.giorno)
+  if (giorno) {
+    modulo.value = { ...vuoto(), ripeti: false, giorno }
+    void router.replace({ query: {} })
+  }
   await caricaSerie()
   try {
     localita.value = await api.localita()

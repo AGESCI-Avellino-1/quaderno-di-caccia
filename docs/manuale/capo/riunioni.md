@@ -8,6 +8,14 @@ Nel **Calendario** la voce **Tutti i miei eventi**, già scelta all'apertura, mo
 sei invitato, quelli delle tue unità e quelli della Comunità capi. Gli altri eventi di gruppo sono
 in **Tutto il gruppo**.
 
+Nel calendario del mese, ogni giorno da oggi in poi ha in alto a destra un piccolo **+**: apre
+**Nuova riunione** o **Nuovo evento** con quel giorno già scelto (il tipo di riunione lo scegli nel
+modulo). Se puoi creare solo riunioni, come un capo squadriglia, il **+** apre subito il modulo.
+
+Nel calendario del telefono le riunioni dei genitori e l'assemblea portano nelle note l'ordine
+del giorno; quelle della Comunità capi e di staff solo il link alla riunione nell'app, perché il
+loro ordine del giorno resta riservato.
+
 :::{container} schermate
 ![Le riunioni sul telefono](../img/capo/riunioni-telefono.png){.telefono width="30%"}
 ![Le riunioni sul computer](../img/capo/riunioni-computer.png){.computer width="65%"}

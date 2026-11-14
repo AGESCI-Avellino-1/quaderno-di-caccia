@@ -1,6 +1,8 @@
 """The personal calendar feed (DEC-79), RFC 5545 written by hand: title, dates and place
 of the user's and their children's events, nothing else (no names, no notes); the link of a
-meeting online (DEC-402)."""
+meeting online (DEC-402); the agenda of the parents' meetings and of the assembly, which
+their convocation already emails, and for the Co.Ca. and the staffs only the link to the
+meeting in the app: their agenda never leaves it (DEC-412)."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -104,6 +106,22 @@ def _estremi(evento) -> list[str]:
     return [f"DTSTART:{_utc(evento.inizio)}", f"DTEND:{_utc(evento.fine)}"]
 
 
+def _descrizione(evento) -> str:
+    from apps.verbali.convocazione import testo_ordine_del_giorno
+    from apps.verbali.models import TipoVerbale
+    from apps.verbali.servizi import tipo_di
+
+    parti = []
+    if evento.modalita != Modalita.PRESENZA and evento.link:
+        parti.append(f"Link della riunione: {evento.link}")
+    tipo = tipo_di(evento)
+    if tipo in (TipoVerbale.GENITORI, TipoVerbale.ASSEMBLEA):
+        parti.append(testo_ordine_del_giorno(evento))
+    elif tipo in (TipoVerbale.COCA, TipoVerbale.STAFF) and evento.ordine_del_giorno.strip():
+        parti.append(f"Ordine del giorno nell'app: {settings.FRONTEND_URL}/riunioni/{evento.pk}")
+    return "\n\n".join(p for p in parti if p)
+
+
 def ics(eventi) -> str:
     dominio = settings.FRONTEND_URL.split("//", 1)[-1].split("/", 1)[0]
     righe = [
@@ -128,8 +146,9 @@ def ics(eventi) -> str:
             righe.append(f"LOCATION:{_testo(evento.link)}")
         elif evento.luogo:
             righe.append(f"LOCATION:{_testo(evento.luogo)}")
-        if evento.modalita != Modalita.PRESENZA and evento.link:
-            righe.append(f"DESCRIPTION:{_testo('Link della riunione: ' + evento.link)}")
+        descrizione = _descrizione(evento)
+        if descrizione:
+            righe.append(f"DESCRIPTION:{_testo(descrizione)}")
         righe.append(f"URL:{settings.FRONTEND_URL}/eventi/{evento.pk}")
         righe.append("STATUS:CANCELLED" if evento.annullato_il else "STATUS:CONFIRMED")
         righe.append("END:VEVENT")

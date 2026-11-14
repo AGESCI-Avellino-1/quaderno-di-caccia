@@ -10,7 +10,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | Issue                                                                    | Titolo                                                                                        | Tipo                       | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------- | ------- | ---------- | ------ |
 | [#69](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/69) | Squadriglie e unità: correzioni (raggruppa #68, #70, #71)                                     | Correzione e miglioramento | Medio   | Alta       | VER    |
-| [#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68) | Squadriglie archiviate solo se vuote, senza rinomina; storia per i ragazzi (DEC-403, DEC-407) | Correzione                 | Basso   | Media      | WIP    |
+| [#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68) | Squadriglie archiviate solo se vuote, senza rinomina; storia per i ragazzi (DEC-403, DEC-407) | Correzione                 | Basso   | Media      | VER    |
 | [#70](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/70) | Dalla progressione all'unità; «Indietro» nelle pagine di dettaglio (DEC-404)                  | Miglioramento              | Basso   | Media      | VER    |
 | [#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71) | Unità collegate in una pagina sola, turni del gruppo tra le unità (DEC-405, DEC-406)          | Miglioramento              | Medio   | Alta       | VER    |
 

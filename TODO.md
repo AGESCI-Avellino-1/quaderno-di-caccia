@@ -9,10 +9,10 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                                               | Tipo                       | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------- | ------- | ---------- | ------ |
-| [#69](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/69) | Squadriglie e unità: correzioni (raggruppa #68, #70, #71)                            | Correzione e miglioramento | Medio   | Alta       | WIP    |
-| [#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68) | Squadriglie archiviate solo se vuote, senza rinomina (DEC-403)                       | Correzione                 | Basso   | Media      | WIP    |
-| [#70](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/70) | Dalla progressione all'unità; «Indietro» nelle pagine di dettaglio (DEC-404)         | Miglioramento              | Basso   | Media      | WIP    |
-| [#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71) | Unità collegate in una pagina sola, turni del gruppo tra le unità (DEC-405, DEC-406) | Miglioramento              | Medio   | Alta       | WIP    |
+| [#69](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/69) | Squadriglie e unità: correzioni (raggruppa #68, #70, #71)                            | Correzione e miglioramento | Medio   | Alta       | VER    |
+| [#68](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/68) | Squadriglie archiviate solo se vuote, senza rinomina (DEC-403)                       | Correzione                 | Basso   | Media      | VER    |
+| [#70](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/70) | Dalla progressione all'unità; «Indietro» nelle pagine di dettaglio (DEC-404)         | Miglioramento              | Basso   | Media      | VER    |
+| [#71](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/71) | Unità collegate in una pagina sola, turni del gruppo tra le unità (DEC-405, DEC-406) | Miglioramento              | Medio   | Alta       | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

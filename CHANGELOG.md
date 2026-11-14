@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.32.1 — 14 novembre 2026
+
+### Correzioni
+
+**Il menu del + nel calendario** ([#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78)): era trasparente e non si leggeva, perché si vedeva il calendario sotto. Ora ha lo sfondo delle schede.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.32.1
+```
+
+### Documentazione
+
+Nuova schermata del menu del **+** nel capitolo sulle riunioni.
+
+Provata con i test e guardando la schermata con dati inventati. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.32.0 — 14 novembre 2026
 
 ### Novità

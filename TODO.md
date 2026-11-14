@@ -9,7 +9,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 | Issue                                                                    | Titolo                                                                    | Tipo          | Impatto | Difficoltà | Status |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77) | Bozza delle squadriglie in PDF da condividere; chi passa in R/S (DEC-411) | Miglioramento | Basso   | Media      | VAL    |
+| [#77](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/77) | Bozza delle squadriglie in PDF da condividere; chi passa in R/S (DEC-411) | Miglioramento | Basso   | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 

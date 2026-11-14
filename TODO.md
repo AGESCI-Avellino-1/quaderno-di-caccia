@@ -11,7 +11,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78) | Calendario: ordine del giorno nel calendario del telefono, «+» per creare dal giorno (DEC-412) | Miglioramento | Medio   | Media      | VER    |
 | [#79](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/79) | Eliminare una riunione, non solo annullarla (DEC-413)                                          | Miglioramento | Medio   | Media      | VER    |
-| [#80](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/80) | Invitati di riunioni ed eventi futuri sempre allineati ai membri (DEC-414)                     | Correzione    | Alto    | Media      | VAL    |
+| [#80](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/80) | Invitati di riunioni ed eventi futuri sempre allineati ai membri (DEC-414)                     | Correzione    | Alto    | Media      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 

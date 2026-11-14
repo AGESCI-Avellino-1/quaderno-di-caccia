@@ -4,6 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import {
   api,
+  bozzaSquadrigliePdf,
   nomeUnita,
   temaDellaBranca,
   type AnimaleSquadriglia,
@@ -630,6 +631,12 @@ const iniziale = (u: Unita): UnitaIn => ({
         <RouterLink :to="{ name: 'riorganizzazione', params: { id: unita.id } }">
           Riorganizza le squadriglie da una data
         </RouterLink>
+      </p>
+      <p v-if="dettaglio.bozza_squadriglie_pdf" class="small mt-3 mb-0">
+        <!-- DEC-411 -->
+        <a :href="bozzaSquadrigliePdf(dettaglio.bozza_squadriglie_pdf)" download
+          >Bozza delle squadriglie future (PDF)</a
+        >
       </p>
       <p v-if="dettaglio.squadriglie_archiviate" class="small mt-3 mb-0">
         <RouterLink :to="{ name: 'squadriglie-archiviate', params: { id: unita.id } }">

@@ -949,6 +949,8 @@ export interface UnitaDettaglio {
   puo_dividere_casse?: boolean
   /** How many patrols are archived, on a page of their own (DEC-403). */
   squadriglie_archiviate?: number
+  /** The open draft of the patrols whose PDF the user may download (DEC-411). */
+  bozza_squadriglie_pdf?: number | null
 }
 
 /** One reparto in the patrols' history for the ragazzi (DEC-407): no names of people. */
@@ -983,7 +985,14 @@ export interface BozzaSquadriglie {
     vice_id: number | null
     membri: { id: number; nome: string; cognome: string }[]
   }[]
-  senza_squadriglia: { id: number; nome: string; cognome: string; reparto_id: number | null }[]
+  senza_squadriglia: {
+    id: number
+    nome: string
+    cognome: string
+    reparto_id: number | null
+    /** Goes to R/S: shown apart, nothing more (DEC-411). */
+    passa_in_rs?: boolean
+  }[]
   /** Changes in reality since the draft, for who prepares it. */
   differenze: string[]
   puo_gestire: boolean
@@ -2885,6 +2894,9 @@ export const trasferimentoJson = (persona: number) =>
 export const fotoProfilo = (persona: number) => `/api/v1/persone/${persona}/foto`
 export const fascicoloAnnoPdf = (persona: number, anno: number) =>
   `/api/v1/persone/${persona}/fascicolo-anno.pdf?anno=${anno}`
+/** The open draft of the patrols as a PDF, for the Co.Ca. (DEC-411). */
+export const bozzaSquadrigliePdf = (bozza: number) => `/api/v1/bozze-squadriglie/${bozza}/bozza.pdf`
+
 export const reportPassaggioPdf = (passaggio: number, persona: number) =>
   `/api/v1/passaggi/${passaggio}/report/${persona}.pdf`
 
@@ -3410,6 +3422,11 @@ export const api = {
     richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/membri/${persona}`, {
       metodo: 'PUT',
       corpo: { squadriglia_id },
+    }),
+  segnaRsInBozza: (id: number, persona: number, passa: boolean) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/membri/${persona}/rs`, {
+      metodo: 'PUT',
+      corpo: { passa },
     }),
   applicaBozza: (id: number) =>
     richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/applica`, { metodo: 'POST' }),

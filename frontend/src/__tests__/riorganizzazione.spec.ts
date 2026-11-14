@@ -94,6 +94,29 @@ describe('draft of the patrols', () => {
     ])
   })
 
+  it('shows apart who goes to R/S, and the staff marks it', async () => {
+    // DEC-411
+    const chiamate: Chiamata[] = []
+    const dati = {
+      ...bozza(true),
+      senza_squadriglia: [
+        { ...persona(200, 'Dora'), reparto_id: 5, passa_in_rs: false },
+        { ...persona(300, 'Cloe'), reparto_id: 5, passa_in_rs: true },
+      ],
+    }
+    const pagina = await monta({ aperta: dati, applicata: null }, { unita: 5 }, chiamate)
+    const titoli = pagina.findAll('h2').map((h) => h.text())
+    expect(titoli).toContain('Senza squadriglia, restano nel reparto')
+    expect(titoli).toContain('Passano in R/S')
+    await pagina.get('#rs-200').setValue(true)
+    await flushPromises()
+    expect(chiamate[0]).toEqual({
+      metodo: 'PUT',
+      url: '/api/v1/bozze-squadriglie/9/membri/200/rs',
+      corpo: { passa: true },
+    })
+  })
+
   it('cannot be applied before its first day', async () => {
     const pagina = await monta({ aperta: bozza(true, false), applicata: null }, { unita: 5 })
     const applica = pagina.findAll('button').find((b) => b.text() === 'Applica la bozza…')!

@@ -799,6 +799,14 @@ def puo_leggere_bozza_squadriglie(user, bozza) -> bool:
     )
 
 
+def puo_scaricare_bozza_squadriglie(user, bozza) -> bool:
+    """The PDF of an open draft (DEC-411): the capi of the Co.Ca. in BuonaStrada, or let in as
+    such by a capogruppo (DEC-400), and the capigruppo; never the CSQ."""
+    from apps.organizzazione.models import StatoBozza
+
+    return bozza.stato == StatoBozza.APERTA and (e_capogruppo(user) or e_capo_censito(user))
+
+
 def staff_del_reparto(unita: Unita) -> list[Persona]:
     """The reparto staff, also of the reparto linked to it (DEC-279): told when a CSQ names
     the patrol (DEC-409)."""

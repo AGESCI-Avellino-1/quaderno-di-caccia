@@ -76,6 +76,22 @@ async function sposta(persona: number, evento: Event) {
   aggiorna(await esegui(() => api.spostaInBozza(aperta.value!.id, persona, posto)))
 }
 
+// Without a patrol: who stays in the reparto and who goes to R/S, shown apart and nothing
+// more: the passage itself is in the Passaggi (DEC-411).
+const senzaSquadriglia = computed(() => {
+  const senza = aperta.value?.senza_squadriglia ?? []
+  return [
+    {
+      titolo: 'Senza squadriglia, restano nel reparto',
+      persone: senza.filter((p) => !p.passa_in_rs),
+    },
+    { titolo: 'Passano in R/S', persone: senza.filter((p) => p.passa_in_rs) },
+  ].filter((g) => g.persone.length)
+})
+async function segnaRs(persona: number, passa: boolean) {
+  aggiorna(await esegui(() => api.segnaRsInBozza(aperta.value!.id, persona, passa)))
+}
+
 // A ragazzo/a stays among the reparti of the draft; the server checks the sexes.
 const posti = computed(() => aperta.value?.squadriglie ?? [])
 
@@ -334,15 +350,27 @@ async function annulla() {
         </p>
       </section>
 
-      <section v-if="aperta.senza_squadriglia.length" class="card card-body mb-5">
-        <h2 class="h6">Senza squadriglia</h2>
+      <!-- Who stays in the reparto without a patrol, and who goes to R/S (DEC-411). -->
+      <section v-for="gruppo in senzaSquadriglia" :key="gruppo.titolo" class="card card-body mb-5">
+        <h2 class="h6">{{ gruppo.titolo }}</h2>
         <ul class="list-unstyled small mb-0">
           <li
-            v-for="p in aperta.senza_squadriglia"
+            v-for="p in gruppo.persone"
             :key="p.id"
             class="d-flex align-items-center flex-wrap gap-3 py-1"
           >
             <span>{{ p.nome }} {{ p.cognome }}</span>
+            <div v-if="gestisce" class="form-field mb-0 d-flex align-items-center gap-1">
+              <input
+                :id="`rs-${p.id}`"
+                type="checkbox"
+                class="check"
+                :checked="p.passa_in_rs"
+                :disabled="inCorso"
+                @change="segnaRs(p.id, ($event.target as HTMLInputElement).checked)"
+              />
+              <label :for="`rs-${p.id}`">passa in R/S</label>
+            </div>
             <select
               v-if="gestisce"
               class="form-control form-control-sm w-auto ms-auto"

@@ -294,3 +294,89 @@ def test_uno_spostamento_vero_dopo_la_bozza_e_segnalato(capo, scena):
     ), differenze
     assert _json(capo, "post", f"{url}/applica").status_code == 200
     assert AppartenenzaSquadriglia.objects.attive().get(persona=cloe).squadriglia.nome == "Gazze"
+
+
+# --- The PDF and who goes to R/S (DEC-411) ------------------------------------------------
+
+
+def test_passa_in_rs_solo_senza_squadriglia(capo, scena):
+    bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}"
+    anna = scena["p"]["anna"]
+    rs = f"{url}/membri/{anna.pk}/rs"
+    assert _json(capo, "put", rs, {"passa": True}).status_code == 400  # still in a patrol
+    _json(capo, "put", f"{url}/membri/{anna.pk}", {"squadriglia_id": None})
+    letta = _json(capo, "put", rs, {"passa": True}).json()
+    [senza] = [p for p in letta["senza_squadriglia"] if p["id"] == anna.pk]
+    assert senza["passa_in_rs"] is True
+    # Back into a patrol: no more.
+    volpi = _posto(letta, "Volpi")["id"]
+    letta = _json(capo, "put", f"{url}/membri/{anna.pk}", {"squadriglia_id": volpi}).json()
+    _json(capo, "put", f"{url}/membri/{anna.pk}", {"squadriglia_id": None})
+    letta = _client(capo).get(url).json()
+    assert [p["passa_in_rs"] for p in letta["senza_squadriglia"] if p["id"] == anna.pk] == [False]
+
+
+def test_il_pdf_della_bozza(capo, scena):
+    from apps.organizzazione import riorganizzazione
+
+    bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}/bozza.pdf"
+    risposta = _client(capo).get(url)
+    assert risposta.status_code == 200
+    assert risposta["Content-Type"] == "application/pdf"
+    assert risposta.content.startswith(b"%PDF")
+    assert risposta["Cache-Control"] == "no-store"
+    # The link on the unit page.
+    dettaglio = _client(capo).get(f"/api/v1/unita/{scena['reparto'].pk}").json()
+    assert dettaglio["bozza_squadriglie_pdf"] == bozza["id"]
+    # Applied: no more.
+    _json(capo, "post", f"/api/v1/bozze-squadriglie/{bozza['id']}/applica")
+    assert _client(capo).get(url).status_code == 404
+    assert riorganizzazione  # the module builds it without the network
+
+
+def test_il_pdf_lo_scarica_la_coca(capo, capogruppo, scena):
+    from tests.conftest import crea_capo
+
+    altro = crea_capo("Carlo", "Altro", "altro@example.invalid")  # in no staff
+    bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}/bozza.pdf"
+    for chi in (altro, capogruppo):
+        assert _client(chi).get(url).status_code == 200
+
+
+@pytest.mark.parametrize("ruolo", ["csq", "ragazza", "genitore", "estraneo"])
+def test_il_pdf_non_per_gli_altri(request, ruolo, capo, scena):
+    bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
+    anna = scena["p"]["anna"]
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}"
+    # Even a future CSQ who reads the draft.
+    _json(
+        capo,
+        "put",
+        f"{url}/squadriglie/{_posto(bozza, 'Civette')['id']}/guide",
+        {"capo_id": anna.pk},
+    )
+    _json(
+        capo,
+        "put",
+        url,
+        {"data_inizio": bozza["data_inizio"], "visibile_ai_capi_squadriglia": True},
+    )
+    for chi in (request.getfixturevalue(ruolo), anna):
+        assert _client(chi).get(f"{url}/bozza.pdf").status_code == 404
+
+
+def test_il_pdf_non_per_il_capo_in_attesa(capo, scena):
+    from tests.conftest import crea_capo
+
+    nuovo = crea_capo("Nino", "Nuovo", "nuovo@example.invalid")
+    nuovo.codice_socio = "9000000001"  # provisional
+    nuovo.save()
+    bozza = _crea(capo, scena["reparto"], timezone.localdate()).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}/bozza.pdf"
+    assert _client(nuovo).get(url).status_code == 404
+    nuovo.abilitato_come_censito_il = timezone.now()  # let in by a capogruppo (DEC-400)
+    nuovo.save()
+    assert _client(nuovo).get(url).status_code == 200

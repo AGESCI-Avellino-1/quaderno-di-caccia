@@ -3,6 +3,7 @@
 from datetime import date, datetime
 
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Schema, Status
@@ -33,6 +34,8 @@ class Ragazzo(Schema):
 
 class RagazzoSenza(Ragazzo):
     reparto_id: int | None
+    # Shown apart: goes to R/S (DEC-411).
+    passa_in_rs: bool = False
 
 
 class PostoOut(Schema):
@@ -125,7 +128,11 @@ def _bozza_out(user, bozza: BozzaSquadriglie) -> dict:
         "reparti": [{"id": r.pk, "nome": str(r), "composizione": r.composizione} for r in reparti],
         "squadriglie": squadriglie,
         "senza_squadriglia": [
-            {**_persona(m.persona), "reparto_id": getattr(oggi.get(m.persona_id), "pk", None)}
+            {
+                **_persona(m.persona),
+                "reparto_id": getattr(oggi.get(m.persona_id), "pk", None),
+                "passa_in_rs": m.passa_in_rs,
+            }
             for m in membri
             if m.squadriglia_id is None
         ],
@@ -290,6 +297,32 @@ def sposta(request, bozza_id: int, persona_id: int, dati: PostoIn):
     except ValidationError as errore:
         raise _errore(errore) from errore
     return _bozza_out(request.auth, bozza)
+
+
+class PassaInRS(Schema):
+    passa: bool
+
+
+@router.put("/bozze-squadriglie/{bozza_id}/membri/{persona_id}/rs", response=BozzaOut)
+def segna_rs(request, bozza_id: int, persona_id: int, dati: PassaInRS):
+    bozza = _bozza(request, bozza_id)
+    try:
+        rio.segna_rs(bozza, get_object_or_404(Persona, pk=persona_id), dati.passa)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return _bozza_out(request.auth, bozza)
+
+
+@router.get("/bozze-squadriglie/{bozza_id}/bozza.pdf")
+def bozza_pdf(request, bozza_id: int):
+    """The open draft on the letterhead, for the Co.Ca. (DEC-411); never stored."""
+    bozza = get_object_or_404(BozzaSquadriglie.objects.select_related("unita"), pk=bozza_id)
+    if not policy.puo_scaricare_bozza_squadriglie(request.auth, bozza):
+        raise HttpError(404, "Bozza non trovata.")
+    risposta = HttpResponse(rio.pdf(bozza), content_type="application/pdf")
+    risposta["Content-Disposition"] = 'attachment; filename="bozza-squadriglie.pdf"'
+    risposta["Cache-Control"] = "no-store"
+    return risposta
 
 
 @router.post("/bozze-squadriglie/{bozza_id}/applica", response=BozzaOut)

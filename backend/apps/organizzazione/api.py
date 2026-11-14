@@ -329,6 +329,8 @@ class UnitaDettaglio(Schema):
     puo_dividere_casse: bool = False
     # Archived patrols, on a page of their own (DEC-403).
     squadriglie_archiviate: int = 0
+    # The open draft of the patrols whose PDF the user may download (DEC-411).
+    bozza_squadriglie_pdf: int | None = None
 
 
 def _casse_unite(utente, unita: Unita) -> dict:
@@ -481,6 +483,15 @@ def _incarichi_della_squadriglia(squadriglia: Squadriglia) -> list[Incarico]:
     )
 
 
+def _bozza_scaricabile(utente, unita: Unita) -> int | None:
+    from . import riorganizzazione
+
+    bozza = riorganizzazione.aperta(unita) if unita.tipo == TipoUnita.REPARTO else None
+    if bozza is None or not policy.puo_scaricare_bozza_squadriglie(utente, bozza):
+        return None
+    return bozza.pk
+
+
 @router.get("/unita/{unita_id}", response=UnitaDettaglio)
 def dettaglio_unita(request, unita_id: int):
     """Staff, roles and patrols of a unit (DEC-09: any capo reads them)."""
@@ -562,6 +573,7 @@ def dettaglio_unita(request, unita_id: int):
         and policy.puo_modificare_eta_unita(utente, unita),
         **_casse_unite(utente, unita),
         "squadriglie_archiviate": unita.squadriglie.filter(attiva=False).count(),
+        "bozza_squadriglie_pdf": _bozza_scaricabile(utente, unita),
         "nomina": _nomina(
             utente,
             (

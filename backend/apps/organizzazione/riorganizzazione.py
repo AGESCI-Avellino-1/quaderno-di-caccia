@@ -9,12 +9,18 @@ a mistake can be undone exactly while nobody has changed patrols, members or rol
 (an exception to DEC-403, as DEC-178 for the passages).
 """
 
+import io
 from datetime import date
+from xml.sax.saxutils import escape
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.utils import timezone
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from apps.anagrafica.models import (
     Appartenenza,
@@ -25,6 +31,7 @@ from apps.anagrafica.models import (
 )
 from apps.core.chiusura import controlla_anno_aperto
 from apps.core.models import FonteDato
+from apps.core.stampa import decora_pagina, intestazione
 
 from . import servizi
 from .models import (
@@ -32,6 +39,7 @@ from .models import (
     AnimaleSquadriglia,
     BozzaSquadriglie,
     Composizione,
+    Gruppo,
     Incarico,
     MembroInBozza,
     RuoloIncarico,
@@ -223,6 +231,21 @@ def sposta(bozza: BozzaSquadriglie, persona: Persona, posto: SquadrigliaInBozza 
             vecchio.vice = None
         vecchio.save()
     membro.squadriglia = posto
+    if posto is not None:
+        membro.passa_in_rs = False  # only who has no patrol (DEC-411)
+    membro.save()
+
+
+def segna_rs(bozza: BozzaSquadriglie, persona: Persona, passa: bool) -> None:
+    """Who goes to R/S, among those without a patrol: shown apart in the draft and its PDF,
+    nothing else; the passage itself is in the Passaggi (DEC-411)."""
+    _aperta_o_errore(bozza)
+    membro = MembroInBozza.objects.filter(bozza=bozza, persona=persona).first()
+    if membro is None:
+        raise ValidationError(f"{persona} non è nella bozza.")
+    if passa and membro.squadriglia_id is not None:
+        raise ValidationError(f"{persona} è in una squadriglia della bozza.")
+    membro.passa_in_rs = passa
     membro.save()
 
 
@@ -268,6 +291,87 @@ def guide(posto: SquadrigliaInBozza, capo: Persona | None, vice: Persona | None)
         raise ValidationError("Capo e vice capo squadriglia sono due persone diverse.")
     posto.capo, posto.vice = capo, vice
     posto.save()
+
+
+# --- The PDF (DEC-411) -------------------------------------------------------------------
+
+
+def pdf(bozza: BozzaSquadriglie, oggi: date | None = None) -> bytes:
+    """The draft on the group's letterhead, marked as such, never stored."""
+    oggi = oggi or timezone.localdate()
+    testo = ParagraphStyle("testo", fontName="Helvetica", fontSize=10, leading=13)
+    titolo = ParagraphStyle(
+        "titolo", parent=testo, fontName="Helvetica-Bold", fontSize=14, leading=18
+    )
+    bozza_stile = ParagraphStyle(
+        "bozza", parent=titolo, fontSize=20, leading=24, textColor="#b02a37"
+    )
+    sezione = ParagraphStyle(
+        "sezione", parent=testo, fontName="Helvetica-Bold", fontSize=11, leading=14, spaceBefore=8
+    )
+    gruppo = Gruppo.objects.first()
+    uscita = io.BytesIO()
+    larghezza = A4[0] - 36 * mm
+    documento = SimpleDocTemplate(
+        uscita,
+        pagesize=A4,
+        title="Bozza delle squadriglie",
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=14 * mm,
+        bottomMargin=18 * mm,
+    )
+    reparti_ = reparti(bozza)
+    elementi = [
+        intestazione(gruppo, larghezza),
+        Spacer(1, 4 * mm),
+        Paragraph("BOZZA", bozza_stile),
+        Paragraph(escape(f"Può ancora cambiare: stampata il {oggi:%d/%m/%Y}."), testo),
+        Spacer(1, 3 * mm),
+        Paragraph(escape(" e ".join(str(r) for r in reparti_)), titolo),
+        Paragraph(escape(f"Squadriglie dal {bozza.data_inizio:%d/%m/%Y}"), testo),
+    ]
+    membri = list(
+        bozza.membri.select_related("persona").order_by("persona__cognome", "persona__nome")
+    )
+    posti = list(bozza.squadriglie.select_related("squadriglia", "animale", "unita").order_by("pk"))
+    senza_animale = 0
+    for posto in posti:
+        dentro = [m for m in membri if m.squadriglia_id == posto.pk]
+        if posto.squadriglia_id and not dentro:
+            continue  # left empty: it will not exist from that day
+        nome = posto.nome
+        if not posto.squadriglia_id and not posto.animale_id:
+            senza_animale += 1
+            nome = f"Nuova squadriglia {senza_animale} (animale da scegliere)"
+        intesta = f"Sq. {nome}"
+        if len(reparti_) > 1:
+            intesta += f" — {posto.unita}"
+        elementi.append(Paragraph(escape(intesta), sezione))
+        if posto.animale_id:
+            elementi.append(Paragraph(escape(f"Animale: {posto.animale.nome}"), testo))
+        guide = {posto.capo_id: "capo squadriglia", posto.vice_id: "vice capo squadriglia"}
+        for m in dentro:
+            ruolo = guide.get(m.persona_id)
+            riga = f"{m.persona.cognome} {m.persona.nome}" + (f" ({ruolo})" if ruolo else "")
+            elementi.append(Paragraph(escape(riga), testo))
+        if not dentro:
+            elementi.append(Paragraph("Nessun membro.", testo))
+    for titolo_, scelti in (
+        (
+            "Senza squadriglia, restano nel reparto",
+            [m for m in membri if m.squadriglia_id is None and not m.passa_in_rs],
+        ),
+        ("Passano in R/S", [m for m in membri if m.squadriglia_id is None and m.passa_in_rs]),
+    ):
+        if scelti:
+            elementi.append(Paragraph(escape(titolo_), sezione))
+            elementi += [
+                Paragraph(escape(f"{m.persona.cognome} {m.persona.nome}"), testo) for m in scelti
+            ]
+    pagina = decora_pagina(gruppo)
+    documento.build(elementi, onFirstPage=pagina, onLaterPages=pagina)
+    return uscita.getvalue()
 
 
 # --- Applying and undoing ----------------------------------------------------------------

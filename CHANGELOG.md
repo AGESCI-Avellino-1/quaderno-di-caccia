@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.29.1 — 14 novembre 2026
+
+### Correzioni
+
+**Unità sempre con tipo, nome e codice** ([#72](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/72)): due reparti paralleli possono avere lo stesso nome, e in alcuni punti non si distinguevano. Ora l'unità compare con il suo codice, per esempio «Reparto Millenium (M1)», anche nella scelta del reparto di una squadriglia nuova, in **La mia squadriglia**, nelle eccezioni sulla squadriglia e nel titolo proposto per le riunioni nuove. Le riunioni già create tengono il loro titolo; i contatti salvati nella rubrica del telefono restano senza codice.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.29.1
+```
+
+### Documentazione
+
+Rifatta la schermata della squadriglia del ragazzo/a.
+
+Provata con i test; non ancora su un telefono vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.29.0 — 14 novembre 2026
 
 ### Novità

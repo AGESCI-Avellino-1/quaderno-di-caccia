@@ -120,7 +120,7 @@ def test_azienda_con_il_codice_se_l_unita_non_ha_nome(capo, gruppo, ragazza):
         data_inizio=date.today(),
     )
     testo = _scarica(capo, ragazza).content.decode()
-    assert _azienda(testo, "Giulia Esploratrice").endswith(" - Clan/Fuoco (T7)")
+    assert _azienda(testo, "Giulia Esploratrice").endswith(" - Clan/Fuoco T7")
 
 
 def test_azienda_il_capo_viene_prima_del_genitore(capo, capogruppo, ragazza):

@@ -7,9 +7,9 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                                                       | Tipo          | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78) | Calendario: ordine del giorno nel calendario del telefono, «Nuovo evento» e «Nuova riunione» | Miglioramento | Medio   | Media      |        |
+| Issue                                                                    | Titolo                                                                                         | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78) | Calendario: ordine del giorno nel calendario del telefono, «+» per creare dal giorno (DEC-412) | Miglioramento | Medio   | Media      | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 

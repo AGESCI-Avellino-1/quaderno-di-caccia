@@ -5,6 +5,34 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.30.0 — 14 novembre 2026
+
+### Novità
+
+**Riorganizzazione delle squadriglie da una data** ([#75](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/75)): dalla pagina del reparto, **Riorganizza le squadriglie da una data** prepara una bozza di come saranno le squadriglie, per esempio dall'apertura, senza toccare quelle di oggi: squadriglie nuove, spostamenti (anche nel reparto collegato, nel rispetto dei sessi), capo e vice di ogni squadriglia. **Da controllare** dice cosa è cambiato nel frattempo. Dal giorno scelto uno dello staff, o un capogruppo, la applica: gli spostamenti valgono da quel giorno, cambiano capi e vice, le squadriglie rimaste vuote vengono archiviate. Un'applicazione per errore si annulla, finché nessuno ha cambiato squadriglie, membri o incarichi. Lo staff può mostrarla ai futuri capi squadriglia, che la leggono in **Le squadriglie future**.
+
+**Squadriglia senza animale, lo sceglie il capo squadriglia** ([#73](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/73)): una squadriglia nuova si può creare senza animale: si chiama «Nuova Squadriglia 1» finché il suo capo squadriglia non sceglie l'animale da **La mia squadriglia**, una volta sola. Lo staff riceve un'email e una notifica e, se c'è un errore, lo corregge entro un mese.
+
+### Correzioni
+
+**Notifiche** ([#74](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/74)): toccando una notifica con l'app aperta in background, dopo lo sblocco con PIN o Face ID si va alla pagina della notifica e non più all'ultima pagina vista.
+
+**Pagina Informazioni** ([#76](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/76)): su iPhone con iOS 26 o successivo mostrava una versione di iOS sbagliata (per esempio 18.7 invece di 27.2).
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.30.0
+```
+
+L'aggiornamento migra il database; le squadriglie di oggi non cambiano.
+
+### Documentazione
+
+Il capitolo sull'unità spiega la riorganizzazione delle squadriglie e le squadriglie senza animale; quello del capo squadriglia la scelta dell'animale e le squadriglie future. Rifatta la schermata della pagina del reparto.
+
+Provata con i test; non ancora in un browser con dati veri né su un telefono vero (la correzione delle notifiche va provata su iPhone). Se qualcosa non va, segnalalo con una issue.
+
 ## 1.29.1 — 14 novembre 2026
 
 ### Correzioni

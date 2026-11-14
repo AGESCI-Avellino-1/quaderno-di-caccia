@@ -1,5 +1,6 @@
 """Events: who is involved, recurring meetings, participants, attendance (see models)."""
 
+import logging
 from datetime import date, datetime, timedelta
 
 from django.core.exceptions import ValidationError
@@ -38,6 +39,8 @@ from .models import (
 )
 
 # How long the detail of attendance stays (DEC-78): two associative years.
+logger = logging.getLogger(__name__)
+
 ANNI_DETTAGLIO = 2
 
 
@@ -279,6 +282,79 @@ def annulla(evento: Evento, motivo: str) -> None:
     evento.annullato_il = timezone.now()
     evento.motivo_annullamento = motivo.strip()
     evento.save()
+
+
+def cosa_si_perde(evento: Evento) -> list[str]:
+    """What deleting a meeting takes away with it, for the confirmation (DEC-413)."""
+    from apps.verbali.models import Verbale, VerbaleCollegato
+
+    perdite = []
+    presenze = evento.presenze.count()
+    if presenze:
+        perdite.append(f"le presenze segnate ({presenze})")
+    verbale = Verbale.objects.filter(evento=evento).first()
+    if verbale is not None and (verbale.testo.strip() or verbale.definitivo):
+        perdite.append("il verbale" + (" definitivo" if verbale.definitivo else ""))
+    if VerbaleCollegato.objects.filter(evento=evento).exists():
+        perdite.append("i verbali collegati")
+    if verbale is not None and verbale.allegati.exists():
+        perdite.append(f"gli allegati del verbale ({verbale.allegati.count()})")
+    if evento.ordine_del_giorno.strip():
+        perdite.append("l'ordine del giorno")
+    return perdite
+
+
+def ha_dati(evento: Evento) -> bool:
+    """Attendance or minutes: deleted only by a capogruppo (DEC-413)."""
+    from apps.verbali.models import Verbale, VerbaleCollegato
+
+    return (
+        evento.presenze.exists()
+        or Verbale.objects.filter(evento=evento).exists()
+        or VerbaleCollegato.objects.filter(evento=evento).exists()
+    )
+
+
+@transaction.atomic
+def elimina_riunione(evento: Evento, avvisa: bool) -> None:
+    """For good, with what hangs on it (DEC-413); the audit log keeps the trace. The files
+    of the minutes leave the Drive after the commit, so a failure keeps them."""
+    from apps.archivio import drive
+    from apps.cassa.models import Movimento
+    from apps.verbali.models import Verbale, VerbaleCollegato
+
+    from . import avvisi
+
+    if evento.tipo != TipoEvento.RIUNIONE:
+        raise ValidationError("Si eliminano solo le riunioni.")
+    controlla_anno_aperto(evento.inizio)
+    if Movimento.objects.filter(evento=evento).exists():
+        raise ValidationError(
+            "La riunione ha dei movimenti di cassa, che non si cancellano mai: si può solo "
+            "annullare."
+        )
+    if avvisa:
+        avvisi.eliminata(evento)
+    da_togliere = []
+    for verbale in Verbale.objects.filter(evento=evento):
+        for allegato in verbale.allegati.all():
+            if allegato.drive_id:
+                da_togliere.append(allegato.drive_id)
+            if allegato.file:
+                allegato.file.delete(save=False)
+        verbale.delete()
+    for collegato in VerbaleCollegato.objects.filter(evento=evento):
+        collegato.delete()
+    evento.delete()
+
+    def dal_drive():
+        for file_id in da_togliere:
+            try:
+                drive.cancella(file_id)
+            except drive.ErroreDrive:
+                logger.warning("Allegato di un verbale rimasto sul Drive: %s", file_id)
+
+    transaction.on_commit(dal_drive)
 
 
 # --- Recurring meetings (DEC-78) -------------------------------------------------------------

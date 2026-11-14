@@ -96,6 +96,13 @@ Per annullare una riunione tocca **Annulla la riunione** e scrivi il motivo: le 
 leggono nell'email. Le presenze si segnano come per gli eventi (vedi [Segnare le
 presenze](eventi.md#segnare-le-presenze)).
 
+Una riunione creata per errore, per esempio di una serie che cade in un giorno festivo, si può
+anche eliminare del tutto: in fondo alla sua pagina tocca **Elimina la riunione…**. La conferma
+dice che cosa si perde con lei (presenze, verbale, ordine del giorno, allegati); con **Avvisa gli
+invitati** parte la stessa email dell'annullamento. Non si recupera. Una riunione senza presenze né
+verbale la elimina chi la gestisce; con presenze o verbale solo un capogruppo. Una riunione con
+movimenti di cassa si può solo annullare.
+
 ## Le riunioni dei genitori
 
 Le creano lo staff, per la sua unità, e i capigruppo, anche per più unità o per tutto il gruppo.

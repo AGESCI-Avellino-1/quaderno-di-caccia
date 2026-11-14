@@ -182,3 +182,68 @@ describe('EventoView for a meeting', () => {
     expect(vista.text()).toContain('Annulla la riunione')
   })
 })
+
+describe('deleting a meeting', () => {
+  // DEC-413
+  it('says what goes with it, tells the invitees if asked, then goes to the meetings', async () => {
+    const { createMemoryHistory, createRouter } = await import('vue-router')
+    const chiamate: { metodo: string; url: string }[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, opzioni?: RequestInit) => {
+        const metodo = opzioni?.method ?? 'GET'
+        if (metodo === 'DELETE') {
+          chiamate.push({ metodo, url })
+          return new Response(null, { status: 204 })
+        }
+        return risposta(
+          200,
+          evento({
+            tipo: 'RIUNIONE',
+            riunione: true,
+            titolo: 'Riunione di reparto',
+            puo_gestire: true,
+            puo_eliminare: true,
+            si_perde: ['le presenze segnate (3)'],
+          }),
+        )
+      }),
+    )
+    const Vuota = { template: '<div />' }
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/riunioni', name: 'riunioni', component: Vuota },
+        { path: '/riunioni/:id', name: 'riunione', component: Vuota },
+      ],
+    })
+    await router.push('/riunioni/5')
+    const vista = mount(EventoView, { props: { id: 5 }, global: { plugins: [router] } })
+    await flushPromises()
+    await vista
+      .findAll('button')
+      .find((b) => b.text() === 'Elimina la riunione…')!
+      .trigger('click')
+    expect(vista.text()).toContain('le presenze segnate (3)')
+    await vista.get('#elimina-avvisa').setValue(true)
+    await vista
+      .findAll('button')
+      .find((b) => b.text() === 'Elimina per sempre')!
+      .trigger('click')
+    await flushPromises()
+    expect(chiamate).toEqual([{ metodo: 'DELETE', url: '/api/v1/riunioni/5?avvisa=true' }])
+    expect(router.currentRoute.value.name).toBe('riunioni')
+  })
+
+  it('is not offered to who may not', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        risposta(200, evento({ tipo: 'RIUNIONE', riunione: true, puo_gestire: true })),
+      ),
+    )
+    const vista = mount(EventoView, { props: { id: 5 } })
+    await flushPromises()
+    expect(vista.text()).not.toContain('Elimina la riunione')
+  })
+})

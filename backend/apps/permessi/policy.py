@@ -1489,6 +1489,22 @@ def puo_gestire_tipologie_buonacaccia(user) -> bool:
     return e_capo(user)
 
 
+def puo_eliminare_riunione(user, evento) -> bool:
+    """For good (DEC-413): who manages the meeting; with attendance or minutes only a
+    capogruppo."""
+    from apps.eventi.models import TipoEvento
+    from apps.verbali.models import Verbale, VerbaleCollegato
+
+    if evento.tipo != TipoEvento.RIUNIONE or not puo_gestire_evento(user, evento):
+        return False
+    con_dati = (
+        evento.presenze.exists()
+        or Verbale.objects.filter(evento=evento).exists()
+        or VerbaleCollegato.objects.filter(evento=evento).exists()
+    )
+    return not con_dati or e_capogruppo(user)
+
+
 def puo_gestire_evento_buonacaccia(user, evento) -> bool:
     """Title, dates, the event form: the capigruppo, who created the event, who manages
     one of its participants."""

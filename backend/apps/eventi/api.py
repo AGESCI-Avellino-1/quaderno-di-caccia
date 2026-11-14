@@ -450,6 +450,9 @@ class DettaglioOut(EventoOut):
     # The participants' medical forms (DEC-195).
     puo_stampare_schede: bool = False
     puo_non_invitare: bool
+    # A meeting deleted for good, and what goes with it (DEC-413).
+    puo_eliminare: bool = False
+    si_perde: list[str] = []
 
 
 def _dettaglio(utente, evento: Evento) -> dict:
@@ -476,6 +479,11 @@ def _dettaglio(utente, evento: Evento) -> dict:
         "puo_presenze": policy.puo_segnare_presenze(utente, evento),
         "puo_stampare_schede": policy.puo_stampare_schede_evento(utente, evento),
         "puo_non_invitare": policy.puo_non_invitare(utente, evento),
+        **(
+            {"puo_eliminare": True, "si_perde": servizi.cosa_si_perde(evento)}
+            if policy.puo_eliminare_riunione(utente, evento)
+            else {}
+        ),
     }
 
 

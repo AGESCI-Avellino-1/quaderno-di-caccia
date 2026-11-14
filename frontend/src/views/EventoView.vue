@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
   api,
@@ -35,6 +36,7 @@ import { scrivi } from '@/offline/outbox'
 // registrations instead (DEC-158…DEC-164), online only. A meeting (DEC-310) shows here
 // too: its place, the uniform, the staff's notes; no fee.
 const props = defineProps<{ id: number }>()
+const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
 const evento = ref<DettaglioEvento | null>(null)
 useNomePagina(() => evento.value?.titolo)
@@ -214,6 +216,15 @@ async function nonInvitare(p: Partecipante) {
 async function reinvita(p: Partecipante) {
   const dati = await esegui(() => api.reinvita(props.id, p.persona_id))
   if (dati) mostra(dati)
+}
+
+// A meeting deleted for good, with what hangs on it; who deletes it chooses to tell the
+// invitees (DEC-413). Online only.
+const eliminazione = reactive({ aperta: false, avvisa: false })
+async function elimina() {
+  const fatto = await esegui(() => api.eliminaRiunione(props.id, eliminazione.avvisa))
+  if (fatto === undefined) return
+  await router.push({ name: 'riunioni' })
 }
 
 async function annulla() {
@@ -674,6 +685,41 @@ const STATI: [StatoPresenza, string][] = [
           Lascia stare
         </button>
       </form>
+    </section>
+    <section v-if="riunione && evento.puo_eliminare" class="mt-5">
+      <button
+        v-if="!eliminazione.aperta"
+        type="button"
+        class="btn btn-sm btn-outline theme-danger"
+        @click="eliminazione.aperta = true"
+      >
+        Elimina la riunione…
+      </button>
+      <div v-else class="card card-body">
+        <p class="mb-3">
+          La riunione sparisce del tutto, dall'app e dai calendari; non si recupera.
+          <template v-if="evento.si_perde?.length">
+            Con lei si perdono: {{ evento.si_perde.join(', ') }}.
+          </template>
+        </p>
+        <div class="form-field mb-3">
+          <input id="elimina-avvisa" v-model="eliminazione.avvisa" type="checkbox" class="check" />
+          <label for="elimina-avvisa">Avvisa gli invitati</label>
+        </div>
+        <div class="d-flex gap-3">
+          <button
+            type="button"
+            class="btn btn-sm btn-solid theme-danger"
+            :disabled="inCorso"
+            @click="elimina"
+          >
+            Elimina per sempre
+          </button>
+          <button type="button" class="btn btn-sm btn-link" @click="eliminazione.aperta = false">
+            Lascia stare
+          </button>
+        </div>
+      </div>
     </section>
   </section>
 </template>

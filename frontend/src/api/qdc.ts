@@ -2171,6 +2171,9 @@ export interface DettaglioEvento extends Evento {
   partecipanti: Partecipante[]
   puo_presenze: boolean
   puo_non_invitare: boolean
+  /** A meeting deleted for good, and what goes with it (DEC-413). */
+  puo_eliminare?: boolean
+  si_perde?: string[]
   /** The participants' medical forms (DEC-195). */
   puo_stampare_schede?: boolean
 }
@@ -4035,6 +4038,8 @@ export const api = {
     richiesta<Evento>('/api/v1/eventi', { metodo: 'POST', corpo: dati }),
   modificaEvento: (id: number, dati: EventoIn) =>
     richiesta<Evento>(`/api/v1/eventi/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaRiunione: (id: number, avvisa: boolean) =>
+    richiesta<void>(`/api/v1/riunioni/${id}${avvisa ? '?avvisa=true' : ''}`, { metodo: 'DELETE' }),
   annullaEvento: (id: number, motivo: string) =>
     richiesta<Evento>(`/api/v1/eventi/${id}/annulla`, { metodo: 'POST', corpo: { motivo } }),
   partecipa: (evento: number, persona: number, partecipa: boolean) =>

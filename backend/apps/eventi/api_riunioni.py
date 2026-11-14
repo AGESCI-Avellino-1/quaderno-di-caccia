@@ -528,3 +528,20 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
     if (evento.inizio, evento.fine, evento.luogo, evento.modalita, evento.link) != prima:
         transaction.on_commit(lambda: avvisi.modificato(evento))
     return _evento_out(request.auth, evento)
+
+
+@router.delete("/riunioni/{evento_id}", response={204: None})
+def elimina_riunione(request, evento_id: int, avvisa: bool = False):
+    """For good, with what hangs on it; who deletes it chooses to tell the invitees (DEC-413)."""
+    evento = get_object_or_404(policy.eventi_visibili(request.auth), pk=evento_id)
+    if not policy.puo_eliminare_riunione(request.auth, evento):
+        raise HttpError(
+            403,
+            "Non puoi eliminare questa riunione: con presenze o verbale la elimina un "
+            "capogruppo.",
+        )
+    try:
+        servizi.elimina_riunione(evento, avvisa)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return Status(204, None)

@@ -89,7 +89,9 @@ def _quando(evento: Evento) -> str:
     return f"dal {dal} al {al}"
 
 
-def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
+def _invia(
+    evento: Evento, modello: str, valori: dict[str, str], percorso: str | None = None
+) -> int:
     partecipanti = Persona.objects.filter(
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
@@ -100,7 +102,7 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
         if diretti
         else indirizzi_famiglia(partecipanti, "eventi")
     )
-    percorso = f"/{'riunioni' if _riunione(evento) else 'eventi'}/{evento.pk}"
+    percorso = percorso or f"/{'riunioni' if _riunione(evento) else 'eventi'}/{evento.pk}"
     inviate = invia(
         modello,
         {"Evento": evento.titolo, "Link": f"{settings.FRONTEND_URL}{percorso}", **valori},
@@ -113,6 +115,18 @@ def _invia(evento: Evento, modello: str, valori: dict[str, str]) -> int:
         percorso,
     )
     return inviate
+
+
+def eliminata(evento: Evento) -> int:
+    """A meeting deleted, when who deletes it chooses to tell (DEC-413): the email of a
+    cancelled one, its link to the meetings, as the meeting's page is gone. Sent before
+    deleting, while its invitees can still be read."""
+    if not _da_annunciare(evento):
+        return 0
+    motivo = evento.motivo_annullamento or "è stata tolta dal calendario."
+    return _invia(
+        evento, "riunione_annullata", {"Quando": _quando(evento), "Motivo": motivo}, "/riunioni"
+    )
 
 
 def _da_annunciare(evento: Evento) -> bool:

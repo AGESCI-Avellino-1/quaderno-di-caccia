@@ -5,6 +5,20 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.32.2 — 14 novembre 2026
+
+### Correzioni
+
+**Riunione dal + del calendario** ([#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78)): passando a **Ogni settimana**, le riunioni partivano da oggi e non dal giorno scelto. Ora partono da quel giorno, con il suo giorno della settimana.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.32.2
+```
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.32.1 — 14 novembre 2026
 
 ### Correzioni

@@ -314,6 +314,22 @@ class AnimaleSquadriglia(ModelloTracciato):
                 raise ValidationError(f"«{colore}» non è tra i colori proposti.")
 
 
+def reparti_insieme(unita: Unita) -> list[Unita]:
+    """The reparti whose patrols a unit's page shows: a reparto and the reparto linked to it
+    both ways, which share one staff (DEC-279, DEC-405); none for another unit."""
+    if unita.tipo != TipoUnita.REPARTO:
+        return []
+    altra = unita.collegata_a
+    if (
+        altra is not None
+        and altra.collegata_a_id == unita.pk
+        and altra.tipo == TipoUnita.REPARTO
+        and altra.attiva
+    ):
+        return [unita, altra]
+    return [unita]
+
+
 class Squadriglia(ModelloTracciato):
     """Single-sex patrol inside a Reparto (no diarchy)."""
 

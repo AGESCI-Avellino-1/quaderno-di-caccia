@@ -60,6 +60,7 @@ export const PAGINE: Record<string, Pagina> = {
   iscrizioni: { titolo: 'Richieste di iscrizione' },
   diritti: { titolo: 'Richieste privacy' },
   squadriglia: { titolo: 'La mia squadriglia' },
+  'storia-squadriglie': { titolo: 'Storia delle squadriglie' },
   correzioni: { titolo: 'Correzioni da inoltrare' },
   quote: { titolo: 'Quote' },
   banca: { titolo: 'Estratto conto' },

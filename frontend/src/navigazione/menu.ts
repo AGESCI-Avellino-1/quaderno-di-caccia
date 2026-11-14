@@ -293,6 +293,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/squadriglia',
           descrizione: 'I numeri di telefono della squadriglia',
         },
+        // DEC-407
+        p.storia_squadriglie && {
+          nome: 'Storia delle squadriglie',
+          icona: 'journal-text',
+          to: '/storia-squadriglie',
+          descrizione: 'Le squadriglie del reparto, di oggi e del passato',
+        },
       ]),
     },
     {

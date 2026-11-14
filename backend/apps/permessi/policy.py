@@ -29,6 +29,7 @@ from apps.organizzazione.models import (
     Squadriglia,
     TipoUnita,
     Unita,
+    reparti_insieme,
 )
 
 
@@ -470,6 +471,22 @@ def squadriglie_di(user) -> QuerySet[Squadriglia]:
         & Q(membri__data_inizio__lte=oggi)
         & (Q(membri__data_fine__isnull=True) | Q(membri__data_fine__gt=oggi))
     ).distinct()
+
+
+def reparti_storia_squadriglie(user) -> list[Unita]:
+    """The reparti whose patrols' history an esploratore or guida reads: their own and the
+    one linked to it (DEC-407). Not the parents, not the capi (they have the unit's page)."""
+    persona = persona_di(user)
+    if persona is None:
+        return []
+    reparti: list[Unita] = []
+    for appartenenza in (
+        Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.RAGAZZO, unita__tipo=TipoUnita.REPARTO)
+        .select_related("unita__collegata_a")
+    ):
+        reparti += [r for r in reparti_insieme(appartenenza.unita) if r not in reparti]
+    return reparti
 
 
 def _serve_un_reparto(user) -> bool:

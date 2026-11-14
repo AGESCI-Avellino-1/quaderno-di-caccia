@@ -142,3 +142,36 @@ def test_le_archiviate_le_vede_chi_vede_l_unita(request, ruolo, capo, reparto, p
     url = f"/api/v1/unita/{reparto.pk}/squadriglie-archiviate"
     assert _client(chi).get(url).status_code == 403
     assert _client(chi).get(f"/api/v1/unita/{reparto.pk}").status_code == 403
+
+
+# --- The patrols' history for esploratori and guide (DEC-407) ------------------------------
+
+
+def test_storia_per_esploratori_e_guide(capo, gruppo, reparto, squadriglia, pantere, ragazza):
+    from apps.organizzazione import servizi
+    from apps.organizzazione.models import Composizione, TipoUnita, Unita
+
+    _archivia(capo, pantere)
+    parallelo = Unita.objects.create(
+        gruppo=gruppo, nome="Parallelo", tipo=TipoUnita.REPARTO, composizione=Composizione.MISTA
+    )
+    servizi.collega(reparto, parallelo, "")
+    Squadriglia.objects.create(unita=parallelo, nome="Lupi", sesso="M")
+    risposta = _client(ragazza).get("/api/v1/storia-squadriglie")
+    assert risposta.status_code == 200
+    storia = {r["id"]: r for r in risposta.json()}
+    assert set(storia) == {reparto.pk, parallelo.pk}
+    nostre = storia[reparto.pk]["squadriglie"]
+    # The active ones first, then the archived.
+    assert [(s["nome"], s["attiva"]) for s in nostre] == [("Aquile", True), ("Pantere", False)]
+    assert nostre[1]["al"] == timezone.localdate().isoformat()
+    # No names of people anywhere.
+    assert "Giulia" not in risposta.content.decode()
+    assert _client(ragazza).get("/api/v1/io").json()["storia_squadriglie"] is True
+
+
+@pytest.mark.parametrize("ruolo", ["capo", "capogruppo", "genitore", "estraneo"])
+def test_storia_non_per_gli_altri(request, ruolo):
+    chi = request.getfixturevalue(ruolo)
+    assert _client(chi).get("/api/v1/storia-squadriglie").status_code == 403
+    assert _client(chi).get("/api/v1/io").json()["storia_squadriglie"] is False

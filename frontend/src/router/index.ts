@@ -266,6 +266,12 @@ const router = createRouter({
       component: () => import('@/views/SquadrigliaView.vue'),
     },
     {
+      // Esploratori and guide: the API decides (DEC-407).
+      path: '/storia-squadriglie',
+      name: 'storia-squadriglie',
+      component: () => import('@/views/StoriaSquadriglieView.vue'),
+    },
+    {
       // Capigruppo: the API decides (DEC-31).
       path: '/correzioni',
       name: 'correzioni',

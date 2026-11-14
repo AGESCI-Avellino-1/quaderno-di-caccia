@@ -15,7 +15,10 @@ vedete solo i numeri di telefono gli uni degli altri.
 :::
 
 Quando entri, la Home ti mostra quello che puoi fare: la **Bacheca**, gli **Eventi** e, se
-sei in una squadriglia, **La mia squadriglia**, in **Attività**; il tuo cammino (per
+sei in una squadriglia, **La mia squadriglia**, in **Attività**; se sei in reparto, sempre lì,
+**Storia delle squadriglie**: tutte le squadriglie del reparto (e di quello collegato), di oggi e
+del passato, con l'animale e gli anni in cui sono state attive. Ci arrivi anche dal link in fondo
+a **La mia squadriglia**. Poi il tuo cammino (per
 esempio **Il mio Sentiero**); e in **Profilo** la tua scheda, la privacy e la sicurezza.
 Le stesse voci sono nel menu (vedi [Come ci si muove](../introduzione.md#come-ci-si-muove)).
 

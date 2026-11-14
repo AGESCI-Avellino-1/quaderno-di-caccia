@@ -94,6 +94,8 @@ class Profilo(Schema):
     # Menu (DEC-242, DEC-243): units the capo serves, and the L/C setting of a child's
     # unit (GIUNGLA, BOSCO or None) that names their Progressione personale.
     unita_servizio: list[UnitaBreve]
+    # The patrols' history of one's reparto (DEC-407): esploratori and guide.
+    storia_squadriglie: bool = False
     ambiente: str | None
     # The units the capo does not serve, whose progression they read (DEC-381).
     altre_unita: list[UnitaBreve] = []
@@ -127,6 +129,7 @@ def profilo(request):
         "amministratore_tecnico": policy.e_amministratore(user),
         "squadriglie_guidate": list(policy.squadriglie_guidate(user).values_list("id", flat=True)),
         "squadriglie": list(policy.squadriglie_di(user).values_list("id", flat=True)),
+        "storia_squadriglie": bool(policy.reparti_storia_squadriglie(user)),
         "vede_animali": policy.puo_vedere_animali(user),
         "mie_iscrizioni": RichiestaIscrizione.objects.filter(utente=user).count(),
         "iscrizioni_da_decidere": RichiestaIscrizione.objects.filter(

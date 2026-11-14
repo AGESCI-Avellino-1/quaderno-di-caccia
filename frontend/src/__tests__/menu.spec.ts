@@ -146,6 +146,14 @@ describe('menu', () => {
     expect(voce.to).toBe('/spese-da-rimborsare')
   })
 
+  it('esploratori and guide reach the patrols history', () => {
+    // DEC-407
+    const tutti = (p: Profilo) => gruppiMenu(p).flatMap((g) => g.voci.map((v) => v.nome))
+    const guida = { ...BASE, persona: io, branca: 'eg' as const, storia_squadriglie: true }
+    expect(tutti(guida)).toContain('Storia delle squadriglie')
+    expect(tutti({ ...guida, storia_squadriglie: false })).not.toContain('Storia delle squadriglie')
+  })
+
   it('a capo reaches the other units from one entry, after their own', () => {
     const capo = {
       ...BASE,

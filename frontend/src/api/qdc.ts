@@ -116,6 +116,8 @@ export interface Profilo {
   vede_impostazioni?: boolean
   /** Units the capo serves: their Progressione personale entries in the menu. */
   unita_servizio?: { id: number; nome: string; tipo: string; branca: string }[]
+  /** The patrols' history of one's reparto (DEC-407): esploratori and guide. */
+  storia_squadriglie?: boolean
   /** Units the capo does not serve, whose progression they read (DEC-381). */
   altre_unita?: { id: number; nome: string; tipo: string; branca: string }[]
   /** L/C setting of the child's unit, which names their Progressione personale. */
@@ -941,6 +943,13 @@ export interface UnitaDettaglio {
   puo_dividere_casse?: boolean
   /** How many patrols are archived, on a page of their own (DEC-403). */
   squadriglie_archiviate?: number
+}
+
+/** One reparto in the patrols' history for the ragazzi (DEC-407): no names of people. */
+export interface StoriaReparto {
+  id: number
+  nome: string
+  squadriglie: (SquadrigliaArchiviata & { attiva: boolean })[]
 }
 
 /** An archived patrol, kept as a memory (DEC-403). */
@@ -3315,6 +3324,7 @@ export const api = {
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}`, { metodo: 'PUT', corpo: dati }),
   archiviaSquadriglia: (id: number) =>
     richiesta<Squadriglia>(`/api/v1/squadriglie/${id}/archivia`, { metodo: 'POST' }),
+  storiaSquadriglie: () => richiesta<StoriaReparto[]>('/api/v1/storia-squadriglie'),
   squadriglieArchiviate: (unita: number) =>
     richiesta<SquadrigliaArchiviata[]>(`/api/v1/unita/${unita}/squadriglie-archiviate`),
   incarichiDiGruppo: () => richiesta<IncarichiGruppo>('/api/v1/gruppo/incarichi'),

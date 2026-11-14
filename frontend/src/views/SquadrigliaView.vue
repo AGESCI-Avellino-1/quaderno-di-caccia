@@ -15,6 +15,7 @@ import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useRubrica } from '@/composables/useRubrica'
 import { leggiConCache } from '@/offline/cache'
+import { useSessioneStore } from '@/stores/sessione'
 
 // Phones of the patrol (DEC-13): the members see each other's phone, the capo
 // squadriglia also the parents'. Kept as an encrypted copy for outings without network.
@@ -22,6 +23,7 @@ const { errore, inCorso, esegui } = useErrore()
 const squadriglie = ref<MiaSquadriglia[]>([])
 const copiaDel = ref<string | null>(null)
 const rubrica = useRubrica()
+const sessione = useSessioneStore()
 // The member whose personal link the CSQ is generating (DEC-309).
 const linkPer = ref<number | null>(null)
 
@@ -132,5 +134,8 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
       <IncarichiSquadriglia :squadriglia="s.id" :membri="s.membri" class="mt-5" />
       <DelegaSquadriglia :squadriglia="s.id" :membri="s.membri" />
     </section>
+    <p v-if="sessione.profilo?.storia_squadriglie" class="small">
+      <RouterLink :to="{ name: 'storia-squadriglie' }">Storia delle squadriglie</RouterLink>
+    </p>
   </section>
 </template>

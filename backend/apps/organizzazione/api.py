@@ -46,6 +46,7 @@ from .models import (
     TipoIncarico,
     TipoUnita,
     Unita,
+    reparti_insieme,
 )
 
 router = Router(tags=["organizzazione"])
@@ -469,22 +470,6 @@ def _incarichi_della_squadriglia(squadriglia: Squadriglia) -> list[Incarico]:
         _incarichi(squadriglia=squadriglia),
         key=lambda i: RUOLI_DI_SQUADRIGLIA_IN_ORDINE.index(RuoloIncarico(i.ruolo)),
     )
-
-
-def reparti_insieme(unita: Unita) -> list[Unita]:
-    """The reparti whose patrols a unit's page shows: a reparto and the reparto linked to it
-    both ways, which share one staff (DEC-279, DEC-405); none for another unit."""
-    if unita.tipo != TipoUnita.REPARTO:
-        return []
-    altra = unita.collegata_a
-    if (
-        altra is not None
-        and altra.collegata_a_id == unita.pk
-        and altra.tipo == TipoUnita.REPARTO
-        and altra.attiva
-    ):
-        return [unita, altra]
-    return [unita]
 
 
 @router.get("/unita/{unita_id}", response=UnitaDettaglio)
@@ -1141,22 +1126,55 @@ def squadriglie_archiviate(request, unita_id: int):
     if not policy.puo_vedere_organizzazione(request.auth):
         raise HttpError(403, "Riservato ai capi.")
     unita = get_object_or_404(Unita, pk=unita_id)
-    archiviate = (
-        unita.squadriglie.filter(attiva=False)
-        .select_related("animale")
-        .annotate(primo=Min("membri__data_inizio"))
-        .order_by("-archiviata_il", "nome")
-    )
+    return [
+        _con_periodo(s)
+        for s in _storia(unita.squadriglie.filter(attiva=False)).order_by("-archiviata_il", "nome")
+    ]
+
+
+def _storia(squadriglie):
+    return squadriglie.select_related("animale").annotate(primo=Min("membri__data_inizio"))
+
+
+def _con_periodo(s: Squadriglia) -> dict:
+    return {
+        "id": s.pk,
+        "nome": s.nome,
+        "animale": breve(s.animale),
+        "sesso": s.sesso,
+        "attiva": s.attiva,
+        "dal": min(d for d in (s.primo, s.creato_il.date()) if d is not None),
+        "al": s.archiviata_il,
+    }
+
+
+class SquadrigliaNellaStoria(SquadrigliaArchiviata):
+    attiva: bool
+
+
+class StoriaReparto(Schema):
+    id: int
+    nome: str
+    squadriglie: list[SquadrigliaNellaStoria]
+
+
+@router.get("/storia-squadriglie", response=list[StoriaReparto])
+def storia_squadriglie(request):
+    """Every patrol of one's reparto and of the linked one, active and archived, with no
+    names of people: esploratori and guide only (DEC-407)."""
+    reparti = policy.reparti_storia_squadriglie(request.auth)
+    if not reparti:
+        raise HttpError(403, "La storia delle squadriglie è per esploratori e guide.")
     return [
         {
-            "id": s.pk,
-            "nome": s.nome,
-            "animale": breve(s.animale),
-            "sesso": s.sesso,
-            "dal": min(d for d in (s.primo, s.creato_il.date()) if d is not None),
-            "al": s.archiviata_il,
+            "id": r.pk,
+            "nome": str(r),
+            "squadriglie": [
+                _con_periodo(s)
+                for s in _storia(r.squadriglie.all()).order_by("-attiva", "-archiviata_il", "nome")
+            ],
         }
-        for s in archiviate
+        for r in reparti
     ]
 
 

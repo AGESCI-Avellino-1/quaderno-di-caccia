@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { api, type DatiAttesa, type ListaAttesa, type VoceAttesa } from '@/api/qdc'
+import Icona from '@/components/Icona.vue'
 import ModuloAttesa from '@/components/ModuloAttesa.vue'
 import Telefono from '@/components/Telefono.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -108,14 +110,20 @@ async function inserisci() {
   <section>
     <div class="d-flex flex-wrap align-items-baseline gap-3 mb-1">
       <h1 class="h4 mb-0">Lista d'attesa</h1>
-      <button
-        v-if="lista?.puo_inserire && !nuovo"
-        type="button"
-        class="btn btn-sm btn-outline theme-primary ms-auto"
-        @click="nuovoInLista"
-      >
-        Metti in lista
-      </button>
+      <div class="d-flex flex-wrap gap-3 ms-auto">
+        <!-- The link, QR code and leaflet, also from here for the capi (DEC-415). -->
+        <RouterLink to="/invita" class="btn btn-sm btn-outline theme-primary">
+          <Icona nome="qr-code" /> Invita nel gruppo
+        </RouterLink>
+        <button
+          v-if="lista?.puo_inserire && !nuovo"
+          type="button"
+          class="btn btn-sm btn-outline theme-primary"
+          @click="nuovoInLista"
+        >
+          Metti in lista
+        </button>
+      </div>
     </div>
     <p class="small fg-2">
       Divisa per età nell'anno scout {{ lista?.anno }} (tra parentesi nel

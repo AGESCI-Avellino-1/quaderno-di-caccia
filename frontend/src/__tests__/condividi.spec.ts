@@ -2,11 +2,12 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Profilo } from '@/api/qdc'
+import { api, type ListaAttesa, type Profilo } from '@/api/qdc'
 import CondividiLink from '@/components/CondividiLink.vue'
 import QrCode from '@/components/QrCode.vue'
 import { indirizzoListaAttesa, moduliQr, percorsoQr } from '@/navigazione/condividi'
 import { useSessioneStore } from '@/stores/sessione'
+import AttesaView from '@/views/AttesaView.vue'
 import InvitaView from '@/views/InvitaView.vue'
 
 describe('lista d’attesa da condividere', () => {
@@ -86,5 +87,26 @@ describe('InvitaView', () => {
     expect(pagina.text()).not.toContain('Impostazioni')
     useSessioneStore().profilo = { capogruppo: true } as Profilo
     expect(monta().text()).toContain('Impostazioni')
+  })
+})
+
+describe('AttesaView', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('takes the capi to the link and QR code from the top of the list', async () => {
+    vi.spyOn(api, 'listaAttesa').mockResolvedValue({
+      anno: '2026/27',
+      anno_prossimo: '2027/28',
+      voci: [],
+      unita: [],
+      puo_inserire: true,
+    } as ListaAttesa)
+    const pagina = mount(AttesaView, {
+      global: { stubs: { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } },
+    })
+    await flushPromises()
+    const invita = pagina.find('a[href="/invita"]')
+    expect(invita.text()).toContain('Invita nel gruppo')
+    expect(pagina.text()).toContain('Metti in lista')
   })
 })

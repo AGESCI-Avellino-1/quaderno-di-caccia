@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.35.0 — 20 novembre 2026
+
+### Novità
+
+**Invita nel gruppo dalla lista d'attesa** ([#83](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/83)): nella lista d'attesa dei capi, in alto accanto al titolo, **Invita nel gruppo** porta al link, al QR code e al volantino della lista d'attesa. Resta anche nel menu del profilo.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.35.0
+```
+
+### Documentazione
+
+Il capitolo sulle iscrizioni dei capi dice dove trovare **Invita nel gruppo** nella lista d'attesa.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.34.1 — 14 novembre 2026
 
 ### Correzioni

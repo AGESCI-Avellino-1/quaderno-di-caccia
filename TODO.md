@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 14/11/2026 (ultima versione: v1.34.1). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 20/11/2026 (ultima versione: v1.34.1). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -12,6 +12,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#78](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/78) | Calendario: ordine del giorno nel calendario del telefono, «+» per creare dal giorno (DEC-412) | Miglioramento | Medio   | Media      | VER    |
 | [#79](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/79) | Eliminare una riunione, non solo annullarla (DEC-413)                                          | Miglioramento | Medio   | Media      | VER    |
 | [#80](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/80) | Invitati di riunioni ed eventi futuri sempre allineati ai membri (DEC-414)                     | Correzione    | Alto    | Media      | VER    |
+| [#83](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/83) | Lista d'attesa: collegamento a «Invita nel gruppo» per i capi                                  | Miglioramento | Basso   | Bassa      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

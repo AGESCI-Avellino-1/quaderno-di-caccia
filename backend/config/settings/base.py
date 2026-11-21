@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "apps.banca",
     "apps.impostazioni",
     "apps.attesa",
+    "apps.tribu",
 ]
 
 MIDDLEWARE = [

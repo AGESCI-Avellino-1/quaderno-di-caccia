@@ -1,0 +1,79 @@
+# Nomi di totem e «La mia tribù»
+
+Nel gioco della tribù, chi dal reparto in su ha ricevuto il suo **nome di totem** (il nome di
+un animale o di una pianta con un aggettivo, come «Castoro Operoso») lo ritrova nell'app,
+con un'immagine che lo rappresenta. I nomi di totem li vedono solo i capi e chi ne ha già
+uno: i genitori no.
+
+## Se hai un nome di totem
+
+Il tuo nome di totem è in **Il mio profilo** (nella Home, in **Profilo**). Lì puoi
+aggiungere o cambiare l'**immagine** del tuo totem: tocca **Aggiungi un'immagine**, sposta e
+ingrandisci l'immagine nel riquadro e tocca **Salva l'immagine**.
+
+:::{container} schermate
+![Il nome di totem di Giulia sul telefono](img/tribu/profilo-telefono.png){.telefono width="30%"}
+![Il nome di totem di Giulia sul computer](img/tribu/profilo-computer.png){.computer width="65%"}
+:::
+
+L'immagine la vedono gli altri solo dopo che un capo l'ha approvata: intanto è segnata «in
+attesa di approvazione» e resta quella di prima. Se un capo la rifiuta, o la toglie perché
+non è adatta, nel profilo leggi il motivo e puoi caricarne un'altra.
+
+In **Attività** trovi **La mia tribù**: la descrizione della tribù, il tuo nome di totem in
+cima e quelli di tutti gli altri del gruppo. Per i soci della tua unità e per i capi vedi
+anche di chi è il nome; per gli altri solo il nome di totem.
+
+:::{container} schermate
+![La mia tribù sul telefono](img/tribu/ragazzo-telefono.png){.telefono width="30%"}
+![La mia tribù sul computer](img/tribu/ragazzo-computer.png){.computer width="65%"}
+:::
+
+## Se sei un capo
+
+Tutti i capi vedono **La mia tribù**, anche senza un nome di totem, e sanno sempre di chi è
+ogni nome. Accanto alla voce un numero dice quante immagini aspettano un capo.
+
+:::{container} schermate
+![La mia tribù di un capo sul telefono](img/tribu/capo-telefono.png){.telefono width="30%"}
+![La mia tribù di un capo sul computer](img/tribu/capo-computer.png){.computer width="65%"}
+:::
+
+- **Approvare un'immagine:** in **Immagini da approvare** tocca **Approva**; con
+  **Rifiuta…** scrivi il motivo, che legge chi ha il totem.
+- **Togliere un'immagine non adatta:** apri la scheda della persona, nel riquadro **Nome di
+  totem** tocca **Togli l'immagine perché non è adatta** e scrivi il motivo. Resta traccia
+  nel registro delle modifiche.
+- **La cerimonia del totem:** se il gruppo l'ha scritta, in **La mia tribù** la leggi con
+  **Leggi la cerimonia del totem** e la scarichi con **Scarica in PDF**. La vedono solo i
+  capi.
+
+### Assegnare un nome di totem
+
+Il nome di totem lo assegnano lo staff dell'unità del ragazzo/a e i capigruppo; quello di un
+capo i capigruppo.
+
+1. Apri la scheda della persona (in **Soci**).
+2. Nel riquadro **Nome di totem** tocca **Assegna** (o **Cambia**).
+3. Scrivi il nome e tocca **Salva**. Con **Togli il nome di totem** lo togli, con la sua
+   immagine.
+
+:::{container} schermate
+![Il nome di totem nella scheda sul telefono](img/tribu/assegna-telefono.png){.telefono width="30%"}
+![Il nome di totem nella scheda sul computer](img/tribu/assegna-computer.png){.computer width="65%"}
+:::
+
+Chi assegna il nome può caricare anche l'immagine, per esempio un disegno fatto al campo:
+quella di un capo non aspetta l'approvazione.
+
+## Se sei capogruppo
+
+In **Impostazioni**, nella parte **La mia tribù**, scrivi la **descrizione della tribù** che
+compare in cima alla pagina (**Torna alla descrizione di base** rimette quella proposta
+dall'app) e la **cerimonia del totem**, con l'editor di testo. Se lasci vuota la cerimonia,
+nella pagina non compare niente. Tocca **Salva**.
+
+:::{container} schermate
+![La mia tribù nelle impostazioni sul telefono](img/tribu/impostazioni-telefono.png){.telefono width="30%"}
+![La mia tribù nelle impostazioni sul computer](img/tribu/impostazioni-computer.png){.computer width="65%"}
+:::

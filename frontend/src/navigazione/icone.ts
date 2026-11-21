@@ -78,6 +78,7 @@ import xLg from 'bootstrap-icons/icons/x-lg.svg?raw'
 import clipboard from 'bootstrap-icons/icons/clipboard.svg?raw'
 import infoCircle from 'bootstrap-icons/icons/info-circle.svg?raw'
 import download from 'bootstrap-icons/icons/download.svg?raw'
+import fire from 'bootstrap-icons/icons/fire.svg?raw'
 import printer from 'bootstrap-icons/icons/printer.svg?raw'
 import qrCode from 'bootstrap-icons/icons/qr-code.svg?raw'
 import share from 'bootstrap-icons/icons/share.svg?raw'
@@ -117,6 +118,7 @@ export const ICONE = {
   'credit-card': creditCard,
   'diagram-3': diagram3,
   download: download,
+  fire: fire,
   'envelope-open': envelopeOpen,
   'envelope-paper': envelopePaper,
   eye: eye,

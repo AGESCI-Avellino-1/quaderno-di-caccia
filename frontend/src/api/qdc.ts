@@ -133,6 +133,10 @@ export interface Profilo {
   vede_lista_attesa?: boolean
   /** The buttons next to phone numbers, one's own choice (DEC-301). */
   pulsanti_telefono?: PulsanteTelefono[]
+  /** «La mia tribù» (DEC-416): the capi and who has a totem name. */
+  tribu?: boolean
+  /** The capi: totem images uploaded by ragazzi, waiting for one of them. */
+  immagini_totem_da_approvare?: number
 }
 
 /** Someone on the waiting list, as the family writes it (DEC-256). */
@@ -331,6 +335,48 @@ export interface Impostazioni extends ImpostazioniSito {
   volantino_attesa?: string
   volantino_attesa_base?: string
   puo_modificare_volantino?: boolean
+  /** «La mia tribù» (DEC-416): only for who may change them, the capigruppo. */
+  descrizione_tribu?: string
+  descrizione_tribu_base?: string
+  cerimonia_totem?: string
+  puo_modificare_tribu?: boolean
+}
+
+/** A totem name in «La mia tribù» (DEC-416); `persona` only for who may know whose. */
+export interface TotemTribu {
+  id: number
+  nome: string
+  persona: { id: number; nome: string; cognome: string } | null
+  immagine: boolean
+  /** The owner and the capi: an image waiting for a capo. */
+  in_attesa: boolean
+  versione: string
+}
+
+export interface Tribu {
+  descrizione: string
+  /** The capi, when the group wrote the ceremony. */
+  cerimonia: boolean
+  mio: TotemTribu | null
+  totem: TotemTribu[]
+  /** The capi: images waiting for approval. */
+  da_approvare: TotemTribu[]
+}
+
+/** The totem on the person's page: the capi and the person themself. */
+export interface TotemPersona {
+  id: number | null
+  nome: string
+  immagine: boolean
+  in_attesa: boolean
+  /** Why a capo refused or took away the image. */
+  avviso: string
+  versione: string
+  puo_assegnare: boolean
+  puo_caricare: boolean
+  /** An image uploaded now waits for a capo. */
+  da_approvare: boolean
+  puo_moderare: boolean
 }
 
 export interface SmtpIn {
@@ -3271,6 +3317,11 @@ export function elencoIncarichiPdf(
   return `/api/v1/gruppo/incarichi/elenco.pdf?${parametri}`
 }
 
+/** A totem's image; the one waiting for a capo with `inAttesa` (DEC-416). */
+export const immagineTotem = (totem: number, versione: string, inAttesa = false) =>
+  `/api/v1/tribu/${totem}/immagine?v=${encodeURIComponent(versione)}${inAttesa ? '&in_attesa=true' : ''}`
+export const cerimoniaTotemPdf = '/api/v1/tribu/cerimonia.pdf'
+
 /** The waiting list flyer to print (DEC-304): anyone with an account, online. */
 export const volantinoListaAttesa = '/api/v1/volantino-lista-attesa.pdf'
 export const ricevutaPdf = (pagamento: number) => `/api/v1/pagamenti/${pagamento}/ricevuta.pdf`
@@ -3302,6 +3353,39 @@ export const api = {
       metodo: 'PUT',
       corpo: { testo },
     }),
+  salvaTribu: (descrizione: string, cerimonia: string) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/tribu', {
+      metodo: 'PUT',
+      corpo: { descrizione, cerimonia },
+    }),
+  tribu: () => richiesta<Tribu>('/api/v1/tribu'),
+  cerimoniaTotem: () => richiesta<{ html: string }>('/api/v1/tribu/cerimonia'),
+  approvaImmagineTotem: (totem: number) =>
+    richiesta<TotemTribu>(`/api/v1/tribu/${totem}/immagine/approva`, { metodo: 'POST' }),
+  rifiutaImmagineTotem: (totem: number, motivo: string) =>
+    richiesta<TotemTribu>(`/api/v1/tribu/${totem}/immagine/rifiuta`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
+  togliImmagineTotem: (totem: number, motivo: string) =>
+    richiesta<TotemTribu>(`/api/v1/tribu/${totem}/immagine/togli`, {
+      metodo: 'POST',
+      corpo: { motivo },
+    }),
+  totemPersona: (persona: number) => richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem`),
+  assegnaTotem: (persona: number, nome: string) =>
+    richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem`, {
+      metodo: 'PUT',
+      corpo: { nome },
+    }),
+  caricaImmagineTotem: (persona: number, file: Blob) => {
+    const corpo = new FormData()
+    corpo.append('file', file, 'totem.jpg')
+    return richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem/immagine`, {
+      metodo: 'POST',
+      corpo,
+    })
+  },
   modelliEmail: () => richiesta<ModelloEmailBreve[]>('/api/v1/impostazioni/email'),
   modelloEmail: (chiave: string) =>
     richiesta<ModelloEmail>(`/api/v1/impostazioni/email/${encodeURIComponent(chiave)}`),

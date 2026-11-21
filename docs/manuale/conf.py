@@ -38,6 +38,11 @@ extensions = [
 
 source_suffix = {".md": "markdown"}
 exclude_patterns = ["Thumbs.db", ".DS_Store"]
+# The totem names (DEC-416) are described only here: Avellino 1's manual, read by the ragazzi
+# too, leaves the chapter out, and its entry in the index with it.
+if not GENERICO:
+    exclude_patterns.append("tribu.md")
+    suppress_warnings = ["toc.excluded"]
 
 html_theme = "furo"
 html_title = "Quaderno di Caccia"

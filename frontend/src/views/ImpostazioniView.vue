@@ -13,6 +13,7 @@ import CodaEmail from '@/components/CodaEmail.vue'
 import ServerPosta from '@/components/ServerPosta.vue'
 import SezioneApribile from '@/components/SezioneApribile.vue'
 import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
+import TestiTribu from '@/components/TestiTribu.vue'
 import TestoVolantino from '@/components/TestoVolantino.vue'
 import { useErrore } from '@/composables/useErrore'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
@@ -220,6 +221,11 @@ async function salva() {
       />
       <TestoVolantino
         v-if="dati.puo_modificare_volantino"
+        :impostazioni="dati"
+        @aggiornate="dati = $event"
+      />
+      <TestiTribu
+        v-if="dati.puo_modificare_tribu"
         :impostazioni="dati"
         @aggiornate="dati = $event"
       />

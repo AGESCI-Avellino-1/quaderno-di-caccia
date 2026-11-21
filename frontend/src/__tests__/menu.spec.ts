@@ -154,6 +154,17 @@ describe('menu', () => {
     expect(tutti({ ...guida, storia_squadriglie: false })).not.toContain('Storia delle squadriglie')
   })
 
+  it('who has a totem and the capi reach the tribe; the capi count the images', () => {
+    const voce = (p: Profilo) =>
+      gruppiMenu(p)
+        .flatMap((g) => g.voci)
+        .find((v) => v.nome === 'La mia tribù')
+    expect(voce({ ...BASE, persona: io, branca: 'eg' as const })).toBeUndefined()
+    expect(voce({ ...BASE, persona: io, branca: 'eg' as const, tribu: true })?.to).toBe('/tribu')
+    const capo = { ...BASE, persona: io, capo: true, tribu: true, immagini_totem_da_approvare: 3 }
+    expect(voce(capo)?.contatore).toBe(3)
+  })
+
   it('a capo reaches the other units from one entry, after their own', () => {
     const capo = {
       ...BASE,

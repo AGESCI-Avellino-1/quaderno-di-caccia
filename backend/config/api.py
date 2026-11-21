@@ -34,6 +34,7 @@ from apps.organizzazione.api_riorganizzazione import router as riorganizzazione_
 from apps.progressione.api import router as progressione_router
 from apps.quote.api import router as quote_router
 from apps.sanitaria.api import router as sanitaria_router
+from apps.tribu.api import router as tribu_router
 from apps.verbali.api import router as verbali_router
 
 # Browser client: session cookie + CSRF. Store app (Capacitor): X-Session-Token.
@@ -77,3 +78,4 @@ api.add_router("/", verbali_router)
 api.add_router("/", banca_router)
 api.add_router("/", impostazioni_router)
 api.add_router("/", attesa_router)
+api.add_router("/", tribu_router)

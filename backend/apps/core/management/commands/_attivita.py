@@ -738,3 +738,27 @@ def crea_attivita(email) -> None:
         {"tipo": "SPECIALITA_LC", "codice": "LCSP023", "carta": "", "maestro": "Elena Conti"},
     )
     capo_cerchio("post", f"/competenze/{scheda['competenze'][-1]['id']}/avvia", {})
+
+    # Totem names (DEC-416), shown only in the generic manual (Giulia's image waiting for a
+    # capo is added by those scenes alone, `schermate.ts`); description and ceremony are invented, never the group's own.
+    capo_reparto("put", f"/persone/{giulia}/totem", {"nome": "Castoro Operoso"})
+    capo_reparto("put", f"/persone/{persona['Luca Rossi'].pk}/totem", {"nome": "Scoiattolo Agile"})
+    capo_clan("put", f"/persone/{persona['Chiara Russo'].pk}/totem", {"nome": "Volpe Astuta"})
+    for nome, totem, colore in (
+        ("Marco Ferri", "Aquila Saggia", "#8a5a2b"),
+        ("Laura Bianchi", "Quercia Paziente", "#2f8f4e"),
+    ):
+        capogruppo("put", f"/persone/{persona[nome].pk}/totem", {"nome": totem})
+        capogruppo.carica(f"/persone/{persona[nome].pk}/totem/immagine", _foto_di_prova(colore, ""))
+    capogruppo(
+        "put",
+        "/impostazioni/tribu",
+        {
+            # Neutral: the generic manual never shows Avellino 1's tribe.
+            "descrizione": "Attorno al fuoco della tribù ogni guerriero porta il nome del suo "
+            "spirito animale.\n\nQui trovi i fratelli e le sorelle che lo portano con te: "
+            "custodisci il tuo nome con orgoglio.",
+            "cerimonia": "<h2>Il fuoco</h2><p>Un testo di prova: qui il gruppo scrive la "
+            "sua cerimonia del totem.</p>",
+        },
+    )

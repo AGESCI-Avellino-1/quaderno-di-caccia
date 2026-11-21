@@ -83,8 +83,52 @@ interface Scena {
   mostra?: string
   /** Keep the cookie notice, closed in every other scene. */
   cookie?: boolean
+  /** On the server before the page opens (a reload would lock the app). */
+  prima?: () => Promise<void>
   /** Put back what `prepara` changed on the server, after the screenshot. */
   dopo?: () => Promise<void>
+  /** A scene of the totem names: every other one hides them (below). */
+  totem?: boolean
+}
+
+// The totem names (DEC-416) are described only in the generic manual: the screenshots are
+// the same for both, so every other scene hides them (the menu entry, the person's card,
+// the settings).
+const NASCONDI_TOTEM = `
+  li:has(> a[href="/tribu"]), .col-12:has(> a[href="/tribu"]), a[href="/tribu"], [data-totem] {
+    display: none !important;
+  }`
+
+// Giulia's totem image waiting for a capo: only during the totem scenes, as it counts in the
+// capi's menu, which every other scene shows.
+const IMMAGINE_TOTEM = `
+from apps.tribu.models import Totem
+t = Totem.objects.get(persona__nome="Giulia", persona__cognome="Rossi")
+`
+const immagineInAttesa = () =>
+  django(`${IMMAGINE_TOTEM}
+if not t.immagine_in_attesa:
+    import io
+    from PIL import Image
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from apps.tribu import servizi
+    b = io.BytesIO()
+    Image.new("RGB", (600, 600), "#a0522d").save(b, "JPEG")
+    servizi.carica_immagine(t, SimpleUploadedFile("t.jpg", b.getvalue(), "image/jpeg"), True)
+`)
+const senzaImmagineInAttesa = () =>
+  django(`${IMMAGINE_TOTEM}
+if t.immagine_in_attesa:
+    t.immagine_in_attesa.delete(save=True)
+`)
+
+/** Scroll so that the element is at the top of the screen, as `mostra` does. */
+const scorriA = (selettore: string) => async (pagina: Page) => {
+  await pagina.locator(selettore).evaluate((el) => {
+    el.scrollIntoView({ block: 'start' })
+    el.closest('.qdc-scorrevole')?.scrollBy(0, -24)
+    window.scrollBy(0, -80)
+  })
 }
 
 /** The side menu with the profile menu open: on the phone it opens from the top button. */
@@ -1112,6 +1156,54 @@ const SCENE: Scena[] = [
     },
     mostra: 'Codice socio',
   },
+  // Totem names (DEC-416): only in the generic manual. Giulia's image waits for a capo.
+  {
+    nome: 'tribu/ragazzo',
+    chi: 'capoSquadriglia',
+    percorso: '/tribu',
+    prima: immagineInAttesa,
+    dopo: senzaImmagineInAttesa,
+    intera: true,
+    totem: true,
+  },
+  {
+    nome: 'tribu/profilo',
+    chi: 'capoSquadriglia',
+    percorso: '/',
+    prima: immagineInAttesa,
+    prepara: async (pagina) => {
+      await apri('Il mio profilo')(pagina)
+      await scorriA('[data-totem]')(pagina)
+    },
+    dopo: senzaImmagineInAttesa,
+    totem: true,
+  },
+  {
+    nome: 'tribu/capo',
+    chi: 'capoReparto',
+    percorso: '/tribu',
+    prima: immagineInAttesa,
+    dopo: senzaImmagineInAttesa,
+    intera: true,
+    totem: true,
+  },
+  {
+    nome: 'tribu/assegna',
+    chi: 'capoReparto',
+    percorso: '/soci',
+    prepara: async (pagina) => {
+      await apri('Rossi Luca')(pagina)
+      await scorriA('[data-totem]')(pagina)
+    },
+    totem: true,
+  },
+  {
+    nome: 'tribu/impostazioni',
+    chi: 'capogruppo',
+    percorso: '/impostazioni',
+    prepara: scorriA('#tribu'),
+    totem: true,
+  },
 ]
 
 interface Formato {
@@ -1285,6 +1377,7 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
       if (scena.chi) await entra(contesto.pages()[0]!, scena.chi, !scena.senzaProtezione)
     }
     const pagina = contesto.pages()[0] ?? (await contesto.newPage())
+    await scena.prima?.()
     await pagina.goto(`${APP}${scena.percorso}`)
     await pagina.waitForLoadState('networkidle')
     // A reload locks the app (the key lives only in memory): unlock, back to the page.
@@ -1302,6 +1395,7 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
       const cookie = pagina.getByRole('button', { name: 'Ho capito' })
       if (await cookie.isVisible()) await cookie.click()
     }
+    if (!scena.totem) await pagina.addStyleTag({ content: NASCONDI_TOTEM })
     await scena.prepara?.(pagina)
     if (scena.mostra) {
       await pagina

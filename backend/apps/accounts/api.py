@@ -110,6 +110,10 @@ class Profilo(Schema):
     spese_da_rimborsare: int = 0
     # The waiting list (DEC-259): every capo sees it.
     vede_lista_attesa: bool = False
+    # «La mia tribù» (DEC-416): the capi and who has a totem; for the capi, the images
+    # waiting for one of them.
+    tribu: bool = False
+    immagini_totem_da_approvare: int = 0
     # The buttons next to phone numbers (DEC-301): "chiama", "whatsapp", "sms".
     pulsanti_telefono: list[str] = ["chiama", "whatsapp"]
 
@@ -181,7 +185,21 @@ def profilo(request):
         "spese_da_rimborsare": _spese_da_rimborsare(user),
         "vede_lista_attesa": policy.vede_lista_attesa(user),
         "pulsanti_telefono": _pulsanti_telefono(user),
+        "tribu": policy.vede_tribu(user),
+        "immagini_totem_da_approvare": _immagini_totem_da_approvare(user),
     }
+
+
+def _immagini_totem_da_approvare(user) -> int:
+    from apps.tribu.models import Totem
+
+    if not policy.puo_moderare_immagini_totem(user):
+        return 0
+    return (
+        Totem.objects.filter(persona__in=policy.nella_tribu())
+        .exclude(immagine_in_attesa="")
+        .count()
+    )
 
 
 def _pulsanti_telefono(user) -> list[str]:

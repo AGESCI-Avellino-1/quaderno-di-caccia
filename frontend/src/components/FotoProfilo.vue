@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { ref } from 'vue'
 
 import { api, fotoProfilo, type FotoStorica, type PersonaDettaglio } from '@/api/qdc'
+import RitaglioFoto from '@/components/RitaglioFoto.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -15,8 +16,6 @@ const emit = defineEmits<{ cambiata: [persona: PersonaDettaglio] }>()
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 
-const LATO = 280 // the square on screen
-const USCITA = 800 // the square uploaded
 const versione = ref(Date.now())
 // The earlier photos, newest first; null until asked for.
 const precedenti = ref<FotoStorica[] | null>(null)
@@ -31,108 +30,20 @@ async function mostraPrecedenti() {
   // The first one is the current photo, already shown.
   if (tutte) precedenti.value = tutte.slice(1)
 }
-const sorgente = ref<HTMLImageElement | null>(null)
-const url = ref('')
-const stato = reactive({ zoom: 1, x: 0, y: 0 })
-let trascina: { x: number; y: number; ox: number; oy: number } | null = null
-
-// The smallest scale that still covers the square.
-const minimo = computed(() =>
-  sorgente.value
-    ? Math.max(LATO / sorgente.value.naturalWidth, LATO / sorgente.value.naturalHeight)
-    : 1,
-)
-const scala = computed(() => minimo.value * stato.zoom)
-const larghezza = computed(() => (sorgente.value?.naturalWidth ?? 0) * scala.value)
-const altezza = computed(() => (sorgente.value?.naturalHeight ?? 0) * scala.value)
-
-function limita() {
-  stato.x = Math.min(0, Math.max(LATO - larghezza.value, stato.x))
-  stato.y = Math.min(0, Math.max(LATO - altezza.value, stato.y))
-}
+// The photo chosen, being cropped.
+const scelta = ref<File | null>(null)
 
 function scegli(evento: Event) {
-  const file = (evento.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  if (url.value) URL.revokeObjectURL(url.value)
-  url.value = URL.createObjectURL(file)
-  const immagine = new Image()
-  immagine.onload = () => {
-    sorgente.value = immagine
-    stato.zoom = 1
-    // Centred.
-    stato.x = (LATO - immagine.naturalWidth * minimo.value) / 2
-    stato.y = (LATO - immagine.naturalHeight * minimo.value) / 2
-  }
-  immagine.onerror = () => (errore.value = 'Questo file non è una foto.')
-  immagine.src = url.value
-}
-
-function ingrandisci(valore: number) {
-  // Zoom around the centre of the square.
-  const centroX = (LATO / 2 - stato.x) / scala.value
-  const centroY = (LATO / 2 - stato.y) / scala.value
-  stato.zoom = valore
-  stato.x = LATO / 2 - centroX * scala.value
-  stato.y = LATO / 2 - centroY * scala.value
-  limita()
-}
-
-function inizio(e: PointerEvent) {
-  ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-  trascina = { x: e.clientX, y: e.clientY, ox: stato.x, oy: stato.y }
-}
-function muovi(e: PointerEvent) {
-  if (!trascina) return
-  stato.x = trascina.ox + e.clientX - trascina.x
-  stato.y = trascina.oy + e.clientY - trascina.y
-  limita()
-}
-function fine() {
-  trascina = null
-}
-function tasto(e: KeyboardEvent) {
-  const passo = { ArrowLeft: [10, 0], ArrowRight: [-10, 0], ArrowUp: [0, 10], ArrowDown: [0, -10] }[
-    e.key
-  ]
-  if (!passo) return
-  e.preventDefault()
-  stato.x += passo[0]
-  stato.y += passo[1]
-  limita()
+  const input = evento.target as HTMLInputElement
+  scelta.value = input.files?.[0] ?? null
+  input.value = ''
 }
 
 function annulla() {
-  sorgente.value = null
-  if (url.value) URL.revokeObjectURL(url.value)
-  url.value = ''
+  scelta.value = null
 }
 
-async function salva() {
-  const immagine = sorgente.value
-  if (!immagine) return
-  const tela = document.createElement('canvas')
-  tela.width = USCITA
-  tela.height = USCITA
-  const lato = LATO / scala.value
-  tela
-    .getContext('2d')!
-    .drawImage(
-      immagine,
-      -stato.x / scala.value,
-      -stato.y / scala.value,
-      lato,
-      lato,
-      0,
-      0,
-      USCITA,
-      USCITA,
-    )
-  const blob = await new Promise<Blob | null>((ok) => tela.toBlob(ok, 'image/jpeg', 0.9))
-  if (!blob) {
-    errore.value = 'Non riesco a preparare la foto: provane un’altra.'
-    return
-  }
+async function salva(blob: Blob) {
   const nuova = await esegui(() => api.caricaFotoProfilo(props.persona.id, blob))
   if (!nuova) return
   annulla()
@@ -141,21 +52,19 @@ async function salva() {
   // One's own photo: the avatar of the side menu changes too (DEC-297).
   if (props.persona.id === sessione.profilo?.persona?.id) await sessione.carica()
 }
-
-onBeforeUnmount(annulla)
 </script>
 
 <template>
   <div class="d-flex flex-wrap align-items-start gap-3 mb-3">
     <img
-      v-if="persona.foto && !sorgente"
+      v-if="persona.foto && !scelta"
       :src="`${fotoProfilo(persona.id)}?v=${versione}`"
       :alt="`Foto di ${persona.nome} ${persona.cognome}`"
       width="96"
       height="96"
       class="rounded"
     />
-    <div v-if="persona.puo_caricare_foto && !sorgente">
+    <div v-if="persona.puo_caricare_foto && !scelta">
       <label class="btn btn-sm btn-outline theme-primary mb-0" :for="`foto-${persona.id}`">
         {{ persona.foto ? 'Cambia la foto' : 'Aggiungi una foto' }}
       </label>
@@ -170,7 +79,7 @@ onBeforeUnmount(annulla)
         Serve ai capi per riconoscere {{ persona.nome }}; non viene pubblicata.
       </p>
     </div>
-    <div v-if="persona.vede_storico_foto && persona.foto && !sorgente" class="w-100">
+    <div v-if="persona.vede_storico_foto && persona.foto && !scelta" class="w-100">
       <button type="button" class="btn btn-sm btn-link px-0" @click="mostraPrecedenti">
         {{ precedenti ? 'Nascondi le foto precedenti' : 'Foto precedenti' }}
       </button>
@@ -191,81 +100,21 @@ onBeforeUnmount(annulla)
       </template>
     </div>
 
-    <div v-if="sorgente" class="w-100">
+    <div v-if="scelta" class="w-100">
       <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
-      <p class="small mb-1">
-        Sposta la foto e ingrandiscila finché nel riquadro c'è solo
-        {{ persona.nome }}: le altre persone non vengono caricate.
-      </p>
-      <div
-        class="ritaglio"
-        :style="{ width: `${LATO}px`, height: `${LATO}px` }"
-        tabindex="0"
-        role="application"
-        aria-label="Riquadro della foto: trascina o usa le frecce per spostarla"
-        @pointerdown="inizio"
-        @pointermove="muovi"
-        @pointerup="fine"
-        @pointercancel="fine"
-        @keydown="tasto"
+      <RitaglioFoto
+        :id="`foto-${persona.id}`"
+        :file="scelta"
+        :in-corso="inCorso"
+        @pronta="salva"
+        @annulla="annulla"
+        @errore="(m) => (errore = m)"
       >
-        <img
-          :src="url"
-          alt=""
-          draggable="false"
-          :style="{
-            width: `${larghezza}px`,
-            height: `${altezza}px`,
-            transform: `translate(${stato.x}px, ${stato.y}px)`,
-          }"
-        />
-      </div>
-      <label class="form-label small mt-1" :for="`zoom-${persona.id}`">Ingrandisci</label>
-      <input
-        :id="`zoom-${persona.id}`"
-        type="range"
-        min="1"
-        max="5"
-        step="0.05"
-        :value="stato.zoom"
-        class="d-block mb-3"
-        :style="{ width: `${LATO}px` }"
-        @input="ingrandisci(Number(($event.target as HTMLInputElement).value))"
-      />
-      <div class="d-flex gap-3">
-        <button
-          type="button"
-          class="btn btn-sm btn-solid theme-primary"
-          :disabled="inCorso"
-          @click="salva"
-        >
-          Salva la foto
-        </button>
-        <button type="button" class="btn btn-sm btn-link" @click="annulla">Annulla</button>
-      </div>
+        <p class="small mb-1">
+          Sposta la foto e ingrandiscila finché nel riquadro c'è solo
+          {{ persona.nome }}: le altre persone non vengono caricate.
+        </p>
+      </RitaglioFoto>
     </div>
   </div>
 </template>
-
-<style scoped>
-.ritaglio {
-  position: relative;
-  overflow: hidden;
-  touch-action: none;
-  cursor: grab;
-  border-radius: 0.5rem;
-  outline: 2px solid var(--ag-primary);
-  background: var(--ag-primary-subtle);
-}
-.ritaglio:focus-visible {
-  outline-width: 4px;
-}
-.ritaglio img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  max-width: none;
-  user-select: none;
-  pointer-events: none;
-}
-</style>

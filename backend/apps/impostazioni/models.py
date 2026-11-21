@@ -78,6 +78,10 @@ class Impostazioni(ModelloTracciato):
     # The text of the waiting list flyer (DEC-304), with placeholders; empty: the base
     # text in attesa.volantino.
     volantino_attesa = models.TextField(blank=True)
+    # «La mia tribù» (DEC-416): its description, empty = the base text in tribu.testi, and
+    # the totem ceremony, the editor's cleaned HTML, read only by the capi; empty = none.
+    descrizione_tribu = models.TextField(blank=True)
+    cerimonia_totem = models.TextField(blank=True)
     # Maintenance (DEC-268): only the technical administrators get in
     # (`manutenzione.ManutenzioneMiddleware`); the message is shown to everybody else.
     manutenzione = models.BooleanField(default=False)

@@ -300,6 +300,14 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: `/bozze-squadriglie/${p.bozza_squadriglie}`,
           descrizione: 'Come saranno le squadriglie, decise dallo staff',
         },
+        // DEC-416: the capi and who has a totem name; the capi count the images to approve.
+        p.tribu && {
+          nome: 'La mia tribù',
+          icona: 'fire',
+          to: '/tribu',
+          descrizione: 'I nomi di totem del gruppo',
+          contatore: p.immagini_totem_da_approvare || undefined,
+        },
         // DEC-407
         p.storia_squadriglie && {
           nome: 'Storia delle squadriglie',

@@ -13,6 +13,12 @@ class ImpostazioniConfig(AppConfig):
         # The SMTP password stays out of the audit log, even encrypted (DEC-277).
         auditlog.register(
             models.Impostazioni,
-            exclude_fields=["smtp_password", "gmail_client_secret", "gmail_refresh_token"],
+            # The totem ceremony: a long text for the capi only, like the PEG's (DEC-416).
+            exclude_fields=[
+                "smtp_password",
+                "gmail_client_secret",
+                "gmail_refresh_token",
+                "cerimonia_totem",
+            ],
         )
         auditlog.register(models.ModelloEmail)

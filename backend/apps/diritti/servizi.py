@@ -37,6 +37,7 @@ from apps.organizzazione.models import Incarico
 from apps.permessi.models import AccessoDatoSensibile
 from apps.quote.models import Quota
 from apps.sanitaria.models import AllegatoSanitario, InformazioniSanitarie, ReperibilitaEvento
+from apps.tribu.models import Totem
 from apps.verbali.models import Verbale
 from apps.verbali.servizi import alla_cancellazione, verbali_col_nome
 
@@ -258,6 +259,7 @@ def fascicolo(persona: Persona) -> dict:
             for p in ProgettoCapo.objects.filter(persona=persona)
         ],
         "foto_profilo": [_giorno(f.creato_il) for f in FotoProfilo.objects.filter(persona=persona)],
+        "nome_di_totem": [t.nome for t in Totem.objects.filter(persona=persona)],
         "reperibilita_per_evento": [
             {"Evento": r.evento.titolo, "Chi": r.nome, "Telefono": r.telefono}
             for r in ReperibilitaEvento.objects.filter(persona=persona).select_related("evento")
@@ -630,6 +632,12 @@ def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
         for f in foto:
             f.file.delete(save=False)
             f.delete()
+        totem = list(Totem.objects.filter(persona=persona))
+        _cancella_storico(totem)
+        for t in totem:
+            t.immagine.delete(save=False)
+            t.immagine_in_attesa.delete(save=False)
+            t.delete()
         progetti = list(ProgettoCapo.objects.filter(persona=persona))
         _cancella_storico(progetti)
         for p in progetti:

@@ -2216,3 +2216,107 @@ def puo_condividere_lista_attesa(user) -> bool:
 def puo_modificare_volantino_attesa(user) -> bool:
     """The text of the waiting list flyer (DEC-304): the capigruppo."""
     return e_capogruppo(user)
+
+
+# --- Totem names and the tribe (DEC-416) ------------------------------------------------
+
+# From the reparto up, capi included.
+TIPI_CON_TOTEM = (
+    TipoUnita.REPARTO,
+    TipoUnita.NOVIZIATO,
+    TipoUnita.CLAN_FUOCO,
+    TipoUnita.COMUNITA_CAPI,
+)
+
+
+def nella_tribu() -> QuerySet[Persona]:
+    """The members who may carry a totem name: today in a reparto, noviziato, clan or the
+    Co.Ca. Who left the group leaves the tribe too."""
+    attive = Appartenenza.objects.attive().filter(unita__tipo__in=TIPI_CON_TOTEM)
+    return Persona.objects.filter(pk__in=attive.values("persona_id"))
+
+
+def puo_avere_totem(persona: Persona) -> bool:
+    return nella_tribu().filter(pk=persona.pk).exists()
+
+
+def _ha_totem(persona: Persona | None) -> bool:
+    from apps.tribu.models import Totem
+
+    return (
+        persona is not None
+        and Totem.objects.filter(persona=persona).exists()
+        and puo_avere_totem(persona)
+    )
+
+
+def vede_tribu(user) -> bool:
+    """«La mia tribù» and every totem name: all the capi, even without one, and the
+    members who have one."""
+    return e_capo(user) or _ha_totem(persona_di(user))
+
+
+def vede_di_chi_e_totem(user, persona: Persona) -> bool:
+    """Whose totem it is: the capi always; who has a totem only for the capi, for oneself
+    and for the members of one's own unit (with the unit linked to it)."""
+    if e_capo(user):
+        return True
+    propria = persona_di(user)
+    if propria is None or not _ha_totem(propria):
+        return False
+    if propria.pk == persona.pk:
+        return True
+    attive = Appartenenza.objects.attive()
+    if attive.filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exists():
+        return True
+    mie = _con_collegate(attive.filter(persona=propria).values_list("unita_id", flat=True))
+    return attive.filter(persona=persona, unita_id__in=mie).exists()
+
+
+def vede_totem_persona(user, persona: Persona) -> bool:
+    """The totem on the person's page: the capi, for whoever may have one; the person
+    themself once they have one. Never the parents."""
+    if e_capo(user):
+        return puo_avere_totem(persona)
+    propria = persona_di(user)
+    return propria is not None and propria.pk == persona.pk and _ha_totem(persona)
+
+
+def puo_assegnare_totem(user, persona: Persona) -> bool:
+    """The staff of the ragazzo's unit and the capigruppo; a capo's, the capigruppo."""
+    if not puo_avere_totem(persona):
+        return False
+    if e_capogruppo(user):
+        return True
+    capo = (
+        Appartenenza.objects.attive().filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exists()
+    )
+    return not capo and _staff_della_persona(user, persona)
+
+
+def puo_caricare_immagine_totem(user, persona: Persona) -> bool:
+    """Who has the totem, and who may assign it."""
+    if not _ha_totem(persona):
+        return False
+    propria = persona_di(user)
+    return (propria is not None and propria.pk == persona.pk) or puo_assegnare_totem(user, persona)
+
+
+def immagine_totem_da_approvare(user) -> bool:
+    """A ragazzo's image waits for a capo; a capo's does not."""
+    return not e_capo(user)
+
+
+def puo_moderare_immagini_totem(user) -> bool:
+    """Approve, refuse or take away an image: any capo."""
+    return e_capo(user)
+
+
+def vede_cerimonia_totem(user) -> bool:
+    """The group's totem ceremony: the capi only."""
+    return e_capo(user)
+
+
+def puo_modificare_tribu(user) -> bool:
+    """The description of the tribe and the ceremony, in the settings: the capigruppo."""
+    return e_capogruppo(user)

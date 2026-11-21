@@ -281,6 +281,12 @@ const router = createRouter({
       component: () => import('@/views/SquadrigliaView.vue'),
     },
     {
+      // The totem names (DEC-416): the API decides who sees them.
+      path: '/tribu',
+      name: 'tribu',
+      component: () => import('@/views/TribuView.vue'),
+    },
+    {
       // Esploratori and guide: the API decides (DEC-407).
       path: '/storia-squadriglie',
       name: 'storia-squadriglie',

@@ -23,6 +23,7 @@ import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useRete } from '@/composables/useRete'
 import Telefono from '@/components/Telefono.vue'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
+import TotemPersona from '@/components/TotemPersona.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
@@ -168,6 +169,7 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
         </template>
       </dl>
       <PercorsoScout v-if="online" :persona="persona.id" />
+      <TotemPersona v-if="online" :persona="persona.id" :nome="persona.nome" />
       <RegoleRapporto :persona="persona.id" />
       <section v-if="sanitarie" class="card card-body mb-5">
         <div class="d-flex align-items-center">

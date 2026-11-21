@@ -5,6 +5,20 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.36.2 — 21 novembre 2026
+
+### Correzioni
+
+**Aggiornamenti delle librerie**: l'editor di testo e la libreria che mostra i PDF dentro l'app (pdf.js 6.5) sono aggiornati, con piccole correzioni. Per chi usa l'app non cambia niente.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.36.2
+```
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.36.1 — 21 novembre 2026
 
 ### Correzioni

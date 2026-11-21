@@ -5,6 +5,20 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.36.1 — 21 novembre 2026
+
+### Correzioni
+
+**Aggiornamenti di sicurezza**: Django passa alla 6.1.3, che corregge sette problemi di sicurezza (tra cui gli hash delle password visibili a chi nell'amministrazione ha solo il permesso di vedere gli utenti), e django-ninja alla 1.7.3, che non manda più nelle risposte campi oltre a quelli previsti. Per chi usa l'app non cambia niente.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.36.1
+```
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.36.0 — 21 novembre 2026
 
 ### Novità

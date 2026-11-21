@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.36.0 — 21 novembre 2026
+
+### Novità
+
+**Nomi di totem** ([#85](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/85)): ogni socio dal reparto in su, capi compresi, può avere un nome di totem, assegnato dallo staff della sua unità o dai capigruppo (quello di un capo dai capigruppo), con un'immagine che lo rappresenta. Le immagini caricate dai ragazzi/e le vedono gli altri dopo l'approvazione di un capo; un capo può togliere un'immagine non adatta scrivendo il motivo. La pagina **La mia tribù** (in **Attività**) la vedono i capi e chi ha un nome di totem: la descrizione della tribù e tutti i nomi di totem del gruppo; di chi è ogni nome lo sanno i capi, i ragazzi/e solo per la propria unità e per i capi. I genitori non vedono i nomi di totem. Nelle **Impostazioni** i capigruppo cambiano la descrizione e possono scrivere la cerimonia del totem, che leggono e scaricano in PDF solo i capi.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.36.0
+```
+
+### Documentazione
+
+I nomi di totem sono descritti solo nel [manuale generico](https://qdc-manuale.readthedocs.io), non in quello di Avellino 1.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.35.0 — 20 novembre 2026
 
 ### Novità

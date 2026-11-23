@@ -5,6 +5,32 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.40.0 — 23 novembre 2026
+
+### Novità
+
+**Uscita dal gruppo registrata nell'app** ([#90](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/90)): nella scheda di un socio, il riquadro **Uscita dal gruppo** permette allo staff dell'unità (per i suoi ragazzi/e) e ai capigruppo (per tutti, capi compresi) di registrare che ha lasciato il gruppo, da un giorno scelto, senza aspettare BuonaStrada. Da quel giorno esce dalle unità, dalla squadriglia e dagli incarichi; si scelgono le quote non pagate da annullare. L'account del socio e dei genitori resta. L'uscita va tra le correzioni da inoltrare alla segreteria; l'importazione la chiude quando BuonaStrada dà il socio uscito, e la mostra tra le differenze finché lo dà ancora attivo. Si annulla dalla scheda, o scartando la correzione.
+
+**Come capo squadriglia nella bozza delle squadriglie** ([#88](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/88)): nella bozza lo staff segna chi sarà «come capo squadriglia». Applicandola, dal suo primo giorno lo è solo chi è segnato, fino al 30 settembre; annullandola torna tutto come prima. Chi è segnato vede la bozza come i futuri capi squadriglia, senza il segno; il PDF per i capi lo riporta.
+
+### Correzioni
+
+- **Soci** ([#89](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/89)): tornando indietro dalla scheda di un socio restano l'unità scelta e la ricerca.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.40.0
+```
+
+Due migrazioni del database, applicate dallo script.
+
+### Documentazione
+
+Il capitolo sui soci spiega l'uscita dal gruppo, quello su BuonaStrada la correzione da inoltrare, quello sull'unità il segno nella bozza delle squadriglie.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.39.0 — 23 novembre 2026
 
 ### Novità

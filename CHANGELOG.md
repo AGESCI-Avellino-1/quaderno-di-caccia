@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.38.0 — 23 novembre 2026
+
+### Novità
+
+**Nome di totem scritto da sé** ([#87](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/87)): nella scheda di una persona, il riquadro **Nome di totem** ha l'interruttore **Modifica totem**: chi lo accende permette alla persona di scrivere o cambiare da sé il proprio nome di totem, una volta sola. Lo vede e lo accende qualsiasi capo che ha già un nome di totem, mai per sé stesso; finché nessun capo ne ha uno, i capigruppo. Dopo ogni modifica del nome, chiunque la faccia, l'interruttore si spegne. Il ragazzo/a lo scrive in **Il mio profilo**, dove un messaggio gli dice che può farlo una volta sola; finché non l'ha scritto, **La mia tribù** non mostra niente, e senza nome di totem e con l'interruttore spento non vede alcun riferimento al totem. Lo staff dell'unità e i capigruppo continuano ad assegnarlo come prima.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.38.0
+```
+
+### Documentazione
+
+Il capitolo sui nomi di totem del manuale generico spiega come scrivere il proprio nome di totem e come permetterlo con **Modifica totem**.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.37.0 — 23 novembre 2026
 
 ### Novità

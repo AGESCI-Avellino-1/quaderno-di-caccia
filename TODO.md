@@ -12,6 +12,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#83](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/83) | Lista d'attesa: collegamento a «Invita nel gruppo» per i capi     | Miglioramento | Basso   | Bassa      | VER    |
 | [#85](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/85) | Nome di totem dei soci e pagina «La mia tribù» (DEC-416)          | Funzione      | Basso   | Media      | VER    |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417) | Funzione      | Basso   | Media      | VER    |
+| [#87](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/87) | Nome di totem: ognuno si imposta il proprio («Modifica totem»)    | Miglioramento | Basso   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

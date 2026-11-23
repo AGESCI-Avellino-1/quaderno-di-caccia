@@ -21,7 +21,10 @@ const scelte = reactive<PreferenzePush>({
   promemoria_quote: true,
   riepiloghi: true,
   avvisi: true,
+  compleanni: true,
 })
+// Birthdays: only for who gets them, ragazzi/e and capi (DEC-417).
+const conCompleanni = ref(false)
 const VOCI = [
   { chiave: 'eventi', etichetta: 'Riunioni ed eventi: novità, cambi, annullamenti, convocazioni' },
   { chiave: 'promemoria_quote', etichetta: 'Scadenze delle quote e di BuonaCaccia' },
@@ -34,6 +37,7 @@ onMounted(async () => {
   disponibili.value = stato.disponibili
   chiave.value = stato.chiave_pubblica
   Object.assign(scelte, stato.preferenze)
+  conCompleanni.value = stato.compleanni
   qui.value = await attiveQui().catch(() => false)
 })
 
@@ -99,6 +103,14 @@ async function salva() {
             />
           </div>
           <label :for="`push-${v.chiave}`">{{ v.etichetta }}</label>
+        </div>
+        <div v-if="conCompleanni" class="form-field">
+          <div class="switch">
+            <input id="push-compleanni" v-model="scelte.compleanni" type="checkbox" role="switch" />
+          </div>
+          <label for="push-compleanni">
+            Compleanni del giorno, al mattino (solo qui, nessuna email)
+          </label>
         </div>
         <div v-if="sessione.capo" class="form-field">
           <div class="switch">

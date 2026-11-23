@@ -2,7 +2,7 @@
 
 L'app può avvisarti con una notifica anche quando è chiusa: riunioni ed eventi annullati o spostati,
 convocazioni, scadenze delle quote e di BuonaCaccia, avvisi della bacheca e documenti quando chi li pubblica
-sceglie di avvisare.
+sceglie di avvisare. Ragazzi/e e capi ricevono anche, alle 8 del mattino, i compleanni del giorno.
 
 ## Attivarle
 
@@ -27,6 +27,10 @@ entrambe. Le email che servono per usare l'app arrivano sempre.
 Le notifiche si leggono anche a telefono bloccato, quindi dicono solo di cosa si tratta, per esempio
 «Riunione annullata: Consiglio Capi» o «Hai una quota in scadenza». Mai nomi di persone, importi o dati sulla
 salute: i dettagli sono nell'app, che si apre toccando la notifica.
+
+L'unica eccezione sono i compleanni del giorno, che arrivano solo a ragazzi/e e capi: dicono il nome di
+battesimo di chi festeggia, senza cognome né età, per esempio «Oggi compiono gli anni Marco e Giulia». Si
+spengono con **Compleanni del giorno** e non hanno un'email.
 
 ## Disattivarle
 

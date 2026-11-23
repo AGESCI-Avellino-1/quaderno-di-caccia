@@ -42,7 +42,7 @@ class IscrizionePush(ModelloTracciato):
 class PreferenzePush(ModelloTracciato):
     """Which notifications a person wants, the same on all their devices. On the same kinds as
     the emails: «promemoria_quote» covers fees and BuonaCaccia, «riepiloghi» what the capi are
-    reminded of."""
+    reminded of; «compleanni» has no email at all (DEC-417)."""
 
     persona = models.OneToOneField(
         Persona, on_delete=models.CASCADE, related_name="preferenze_push"
@@ -51,6 +51,7 @@ class PreferenzePush(ModelloTracciato):
     promemoria_quote = models.BooleanField(default=True)
     riepiloghi = models.BooleanField(default=True)
     avvisi = models.BooleanField(default=True)
+    compleanni = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "preferenze delle notifiche"

@@ -18,6 +18,7 @@ promemoria e riepiloghi, riassumono le presenze vecchie. L'esempio pronto è in
 | `promemoria_verbali` | i verbali di Comunità capi da scrivere, ai capigruppo e a chi è indicato; toglie i nomi conservati quando i 5 anni sono finiti e i caricamenti interrotti | 07:45 |
 | `pulisci_documenti` | avvisa una settimana prima chi ha caricato un documento in scadenza, e cancella anche dal server quelli scaduti |
 | `promemoria_fine_anno` | ai capigruppo, l'anno da chiudere e chi è da archiviare | 07:50 |
+| `avvisa_compleanni` | la notifica sul telefono dei compleanni del giorno, a ragazzi/e e capi | 08:00 |
 
 Per installarli, come l'utente che usa Docker:
 

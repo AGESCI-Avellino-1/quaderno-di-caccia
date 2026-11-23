@@ -21,6 +21,23 @@ Nel calendario del telefono le riunioni dei genitori e l'assemblea portano nelle
 del giorno; quelle della Comunità capi e di staff solo il link alla riunione nell'app, perché il
 loro ordine del giorno resta riservato.
 
+## Compleanni
+
+Nel **Calendario** tocca **Prossimi compleanni**: i compleanni dei prossimi 30 giorni di tutto il
+gruppo, ragazzi/e e capi, con il giorno, gli anni che compie e l'unità; quelli della Comunità capi
+hanno il segno **Co.Ca.** e una riga colorata a sinistra. Nel calendario del mese una piccola torta
+segna i giorni dei compleanni: tocca il giorno per vedere chi festeggia. I genitori non vedono i
+compleanni.
+
+:::{container} schermate
+![I prossimi compleanni sul telefono](../img/capo/calendario-compleanni-telefono.png){.telefono width="30%"}
+![I prossimi compleanni sul computer](../img/capo/calendario-compleanni-computer.png){.computer width="65%"}
+:::
+
+Con le [notifiche](../genitore/notifiche.md) attive, alle 8 del mattino ne arriva una con i
+compleanni del giorno, ma solo quelli delle unità in cui sei in servizio (anche collegate) e della
+Comunità capi. Se non la vuoi, spegni **Compleanni del giorno** in **Privacy e preferenze**.
+
 :::{container} schermate
 ![Le riunioni sul telefono](../img/capo/riunioni-telefono.png){.telefono width="30%"}
 ![Le riunioni sul computer](../img/capo/riunioni-computer.png){.computer width="65%"}

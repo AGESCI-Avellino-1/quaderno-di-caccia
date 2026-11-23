@@ -619,6 +619,15 @@ const SCENE: Scena[] = [
       await pagina.getByRole('menuitem', { name: 'Nuova riunione' }).waitFor()
     },
   },
+  // The next birthdays of the whole group, the Co.Ca. marked (DEC-417).
+  {
+    nome: 'capo/calendario-compleanni',
+    chi: 'capoReparto',
+    percorso: '/calendario?mostra=compleanni',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Prossimi compleanni' }).waitFor()
+    },
+  },
   {
     nome: 'gruppo/assemblea',
     chi: 'capogruppo',

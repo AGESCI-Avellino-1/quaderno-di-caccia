@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
-import { api, calendarioIcs, type Calendario, type EventoCalendario } from '@/api/qdc'
+import {
+  api,
+  calendarioIcs,
+  type Calendario,
+  type Compleanno,
+  type EventoCalendario,
+} from '@/api/qdc'
 import Icona from '@/components/Icona.vue'
 import MioCalendario from '@/components/MioCalendario.vue'
 import { useErrore } from '@/composables/useErrore'
 import {
   chiaveGiorno,
+  compleanniDelGiorno,
   eventiDelGiorno,
   leggiModo,
   leggiVista,
@@ -22,13 +29,16 @@ import { useSessioneStore } from '@/stores/sessione'
 
 // The user's and their children's events as a month or as a list of the next ones; a
 // capo chooses among the views, «Tutti i miei eventi» first (DEC-143, DEC-286, DEC-334). Files to download and the
-// personal link to subscribe. Online only for now.
+// personal link to subscribe. Online only for now. Ragazzi/e and capi also see the birthdays:
+// the next ones as a list, and a sign on the days of the month (DEC-417).
 const { errore, esegui } = useErrore()
 const modo = ref<ModoCalendario>(leggiModo())
 const viste = ref<Calendario['viste']>([])
 const vista = ref(leggiVista())
 const eventi = ref<EventoCalendario[]>([])
 const caricato = ref(false)
+const conCompleanni = ref(false)
+const compleanni = ref<Compleanno[]>([])
 
 const oggi = new Date()
 const mese = ref(new Date(oggi.getFullYear(), oggi.getMonth(), 1))
@@ -43,6 +53,7 @@ const giorniSettimana = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom']
 // A «+» on every day from today, to create a meeting or an event on it (DEC-412): a small
 // menu with what the user may create, straight to the form when only one.
 const router = useRouter()
+const route = useRoute()
 const sessione = useSessioneStore()
 const creabili = computed(() =>
   [
@@ -70,6 +81,11 @@ onMounted(() => document.addEventListener('click', chiudiMenu))
 onBeforeUnmount(() => document.removeEventListener('click', chiudiMenu))
 
 async function carica() {
+  if (modo.value === 'compleanni') {
+    compleanni.value = (await esegui(() => api.compleanniDelCalendario())) ?? []
+    caricato.value = true
+    return
+  }
   let dal: string, al: string | undefined
   if (modo.value === 'mese') {
     const giorni = settimane.value.flat()
@@ -78,7 +94,14 @@ async function carica() {
   } else {
     dal = chiaveGiorno(new Date())
   }
-  eventi.value = (await esegui(() => api.eventiDelCalendario(vista.value, dal, al))) ?? []
+  const [trovati, delMese] = await Promise.all([
+    esegui(() => api.eventiDelCalendario(vista.value, dal, al)),
+    modo.value === 'mese' && conCompleanni.value
+      ? esegui(() => api.compleanniDelCalendario(dal, al))
+      : null,
+  ])
+  eventi.value = trovati ?? []
+  compleanni.value = delMese ?? []
   caricato.value = true
 }
 
@@ -87,6 +110,15 @@ onMounted(async () => {
   viste.value = calendario?.viste ?? []
   // A remembered view that no longer applies (no longer a capo): the default.
   if (!viste.value.some((v) => v.vista === vista.value)) vista.value = viste.value[0]?.vista ?? ''
+  conCompleanni.value = calendario?.compleanni ?? false
+  // From the morning notification; a remembered mode that no longer applies: the month.
+  let iniziale = modo.value
+  if (route.query.mostra === 'compleanni') iniziale = 'compleanni'
+  if (iniziale === 'compleanni' && !conCompleanni.value) iniziale = 'mese'
+  if (iniziale !== modo.value) {
+    modo.value = iniziale // the watcher loads
+    return
+  }
   await carica()
 })
 
@@ -115,6 +147,28 @@ const delGiornoScelto = computed(() =>
 )
 
 const quando = (e: EventoCalendario) => quandoEvento(e, true)
+
+const compleanniDelGiornoScelto = computed(() =>
+  compleanniDelGiorno(compleanni.value, new Date(`${scelto.value}T12:00:00`)),
+)
+
+function giornoCompleanno(c: Compleanno): string {
+  const giorno = new Date(`${c.giorno}T12:00:00`)
+  const domani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 1)
+  if (c.giorno === chiaveGiorno(oggi)) return 'oggi'
+  if (c.giorno === chiaveGiorno(domani)) return 'domani'
+  return giorno.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+function descriviGiorno(giorno: Date): string {
+  const nEventi = eventiDelGiorno(eventi.value, giorno).length
+  const nCompleanni = compleanniDelGiorno(compleanni.value, giorno).length
+  return (
+    giorno.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }) +
+    (nEventi ? `, ${nEventi} eventi` : '') +
+    (nCompleanni ? `, ${nCompleanni === 1 ? 'un compleanno' : `${nCompleanni} compleanni`}` : '')
+  )
+}
 </script>
 
 <template>
@@ -142,16 +196,28 @@ const quando = (e: EventoCalendario) => quandoEvento(e, true)
         >
           Prossimi eventi
         </button>
+        <button
+          v-if="conCompleanni"
+          type="button"
+          class="btn btn-sm"
+          :class="modo === 'compleanni' ? 'btn-solid theme-primary' : 'btn-outline theme-primary'"
+          :aria-pressed="modo === 'compleanni'"
+          @click="modo = 'compleanni'"
+        >
+          Prossimi compleanni
+        </button>
       </div>
       <select
-        v-if="viste.length"
+        v-if="viste.length && modo !== 'compleanni'"
         v-model="vista"
         class="form-control w-auto"
         aria-label="Quali eventi vedere"
       >
         <option v-for="v in viste" :key="v.vista" :value="v.vista">{{ v.nome }}</option>
       </select>
-      <a :href="calendarioIcs(vista)" class="small" download>Scarica il calendario</a>
+      <a v-if="modo !== 'compleanni'" :href="calendarioIcs(vista)" class="small" download
+        >Scarica il calendario</a
+      >
     </div>
 
     <template v-if="modo === 'mese'">
@@ -195,15 +261,16 @@ const quando = (e: EventoCalendario) => quandoEvento(e, true)
               <button
                 type="button"
                 class="qdc-giorno"
-                :aria-label="
-                  giorno.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }) +
-                  (eventiDelGiorno(eventi, giorno).length
-                    ? `, ${eventiDelGiorno(eventi, giorno).length} eventi`
-                    : '')
-                "
+                :aria-label="descriviGiorno(giorno)"
                 @click="scelto = chiaveGiorno(giorno)"
               >
-                <span class="small">{{ giorno.getDate() }}</span>
+                <span class="small"
+                  >{{ giorno.getDate() }}
+                  <Icona
+                    v-if="compleanniDelGiorno(compleanni, giorno).length"
+                    nome="cake2"
+                    class="qdc-compleanno-giorno"
+                /></span>
                 <span
                   v-for="e in eventiDelGiorno(eventi, giorno)"
                   :key="e.id"
@@ -249,11 +316,47 @@ const quando = (e: EventoCalendario) => quandoEvento(e, true)
           })
         }}
       </h2>
+      <ul
+        v-if="compleanniDelGiornoScelto.length"
+        class="list-unstyled mb-3"
+        aria-label="Compleanni"
+      >
+        <li v-for="c in compleanniDelGiornoScelto" :key="c.persona_id" class="small">
+          <Icona nome="cake2" class="qdc-compleanno-giorno" />
+          <RouterLink v-if="c.scheda" :to="`/persone/${c.persona_id}`"
+            >{{ c.nome }} {{ c.cognome }}</RouterLink
+          ><template v-else>{{ c.nome }} {{ c.cognome }}</template> compie {{ c.anni }} anni
+          <span v-if="c.coca" class="badge theme-primary ms-1">Co.Ca.</span>
+        </li>
+      </ul>
       <p v-if="!delGiornoScelto.length" class="small fg-2">Nessun evento in questo giorno.</p>
     </template>
 
+    <template v-if="modo === 'compleanni'">
+      <ul v-if="compleanni.length" class="list-group mb-5" aria-label="Prossimi compleanni">
+        <li
+          v-for="c in compleanni"
+          :key="`${c.persona_id}-${c.giorno}`"
+          class="list-group-item"
+          :class="{ 'qdc-compleanno-coca': c.coca }"
+        >
+          <RouterLink v-if="c.scheda" :to="`/persone/${c.persona_id}`" class="fw-bold"
+            >{{ c.nome }} {{ c.cognome }}</RouterLink
+          >
+          <span v-else class="fw-bold">{{ c.nome }} {{ c.cognome }}</span>
+          <span v-if="c.coca" class="badge theme-primary ms-3">Co.Ca.</span>
+          <div class="small fg-2">
+            {{ giornoCompleanno(c) }} · compie {{ c.anni }} anni<template v-if="c.unita">
+              · {{ c.unita }}</template
+            >
+          </div>
+        </li>
+      </ul>
+      <p v-else-if="caricato" class="small fg-2">Nessun compleanno nei prossimi 30 giorni.</p>
+    </template>
+
     <ul
-      v-if="modo === 'elenco' || delGiornoScelto.length"
+      v-if="modo === 'elenco' || (modo === 'mese' && delGiornoScelto.length)"
       class="list-group mb-5"
       aria-label="Eventi"
     >

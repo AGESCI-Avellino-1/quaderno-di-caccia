@@ -150,7 +150,8 @@ def test_preferenze_per_persona(genitore):
     corpo = {"eventi": False, "promemoria_quote": True, "riepiloghi": True, "avvisi": False}
     risposta = client.put("/api/v1/push/preferenze", corpo, content_type="application/json")
     assert risposta.status_code == 200
-    assert client.get("/api/v1/push").json()["preferenze"] == corpo
+    # A copy of the app from before the birthdays (DEC-417) does not send them: on by default.
+    assert client.get("/api/v1/push").json()["preferenze"] == {**corpo, "compleanni": True}
 
 
 def test_finisce_con_la_sessione(genitore, spediti):

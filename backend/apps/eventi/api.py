@@ -833,6 +833,8 @@ class CalendarioOut(Schema):
     url: str
     # A capo's three views (DEC-143); empty for everyone else.
     viste: list[VistaCalendario]
+    # Whether the page shows the birthdays: ragazzi/e and capi (DEC-417).
+    compleanni: bool
 
 
 def _calendario_out(request, calendario) -> dict:
@@ -846,7 +848,7 @@ def _calendario_out(request, calendario) -> dict:
         if policy.e_capo(request.auth)
         else []
     )
-    return {"url": base, "viste": viste}
+    return {"url": base, "viste": viste, "compleanni": policy.riceve_compleanni(request.auth)}
 
 
 @router.get("/calendario", response=CalendarioOut)
@@ -914,6 +916,54 @@ def eventi_del_mio_calendario(
             "annullato": e.annullato_il is not None,
         }
         for e in elenco
+    ]
+
+
+class CompleannoOut(Schema):
+    persona_id: int
+    nome: str
+    cognome: str
+    giorno: date
+    anni: int
+    unita: str
+    # In the Co.Ca.: shown apart to the capi.
+    coca: bool
+    # Whether the name may link to the personal file (DEC-314).
+    scheda: bool
+
+
+GIORNI_COMPLEANNI = 30
+# A month's grid is six weeks at most.
+MASSIMO_GIORNI_COMPLEANNI = 42
+
+
+@router.get("/calendario/compleanni", response=list[CompleannoOut])
+def compleanni_del_calendario(request, dal: date | None = None, al: date | None = None):
+    """The next birthdays (DEC-417): from today for 30 days by default, or a month's grid.
+    Not in the iCal feed."""
+    from datetime import timedelta
+
+    from apps.anagrafica.compleanni import compleanni_tra, unita_e_coca
+
+    dal = dal or timezone.localdate()
+    al = al or dal + timedelta(days=GIORNI_COMPLEANNI - 1)
+    if al < dal or (al - dal).days >= MASSIMO_GIORNI_COMPLEANNI:
+        raise HttpError(400, "Scegli al massimo sei settimane di compleanni.")
+    elenco = compleanni_tra(policy.compleanni_visibili(request.auth), dal, al)
+    unita, coca = unita_e_coca({c.persona.pk for c in elenco})
+    capo = policy.e_capo(request.auth)
+    return [
+        {
+            "persona_id": c.persona.pk,
+            "nome": c.persona.nome,
+            "cognome": c.persona.cognome,
+            "giorno": c.giorno,
+            "anni": c.anni,
+            "unita": unita.get(c.persona.pk, ""),
+            "coca": capo and c.persona.pk in coca,
+            "scheda": policy.scheda_apribile(request, c.persona.pk),
+        }
+        for c in elenco
     ]
 
 

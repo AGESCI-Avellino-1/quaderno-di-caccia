@@ -13,6 +13,7 @@
 #   promemoria_fine_anno   the year to close and who is due for archiving, to the capigruppo
 #   pulisci_documenti      documents past their last day go, from the server too
 #   allinea_inviti         invitees of what is to come follow who is in the units (a safety net)
+#   avvisa_compleanni      the day's birthdays as a push notification, to ragazzi/e and capi
 #   backup-db.sh           database and uploaded files, kept 30 days (copy them elsewhere,
 #                          encrypted: a backup on the same server is lost with it)
 #
@@ -29,4 +30,5 @@
 50 7 * * *  cd /srv/qdc && docker compose exec -T web python manage.py promemoria_fine_anno
 10 3 * * *  cd /srv/qdc && docker compose exec -T web python manage.py pulisci_documenti
 50 3 * * *  cd /srv/qdc && docker compose exec -T web python manage.py allinea_inviti
+0 8 * * *   cd /srv/qdc && docker compose exec -T web python manage.py avvisa_compleanni
 30 2 * * *  cd /srv/qdc && KEEP_DAYS=30 scripts/backup-db.sh > /dev/null

@@ -17,6 +17,7 @@ class PreferenzeIO(Schema):
     promemoria_quote: bool = True
     riepiloghi: bool = True
     avvisi: bool = True
+    compleanni: bool = True
 
 
 class PushOut(Schema):
@@ -25,6 +26,8 @@ class PushOut(Schema):
     # The browser may keep its yes after the session is over.
     questo_browser: bool
     preferenze: PreferenzeIO
+    # Whether the person gets the day's birthdays at all: ragazzi/e and capi (DEC-417).
+    compleanni: bool
 
 
 class IscrizioneIn(Schema):
@@ -57,6 +60,7 @@ def stato(request, endpoint: str = ""):
         "questo_browser": bool(endpoint)
         and IscrizionePush.objects.filter(utente=request.auth, endpoint=endpoint).exists(),
         "preferenze": preferenze or PreferenzeIO(),
+        "compleanni": policy.riceve_compleanni(request.auth),
     }
 
 

@@ -10,6 +10,7 @@ import bank from 'bootstrap-icons/icons/bank.svg?raw'
 import bank2 from 'bootstrap-icons/icons/bank2.svg?raw'
 import boxArrowRight from 'bootstrap-icons/icons/box-arrow-right.svg?raw'
 import boxArrowUp from 'bootstrap-icons/icons/box-arrow-up.svg?raw'
+import cake2 from 'bootstrap-icons/icons/cake2.svg?raw'
 import calendarEvent from 'bootstrap-icons/icons/calendar-event.svg?raw'
 import calendarWeek from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import calendar3 from 'bootstrap-icons/icons/calendar3.svg?raw'
@@ -97,6 +98,7 @@ export const ICONE = {
   bank2: bank2,
   'box-arrow-right': boxArrowRight,
   'box-arrow-up': boxArrowUp,
+  cake2: cake2,
   'calendar-event': calendarEvent,
   'calendar-week': calendarWeek,
   calendar3: calendar3,

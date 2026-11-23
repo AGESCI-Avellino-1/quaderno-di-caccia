@@ -2320,3 +2320,66 @@ def vede_cerimonia_totem(user) -> bool:
 def puo_modificare_tribu(user) -> bool:
     """The description of the tribe and the ceremony, in the settings: the capigruppo."""
     return e_capogruppo(user)
+
+
+# --- Birthdays (DEC-417) --------------------------------------------------------------------
+
+
+def _unita_del_ragazzo(persona: Persona | None) -> set[int]:
+    """The units a ragazzo/a is in today, with the units linked to them (DEC-279)."""
+    if persona is None:
+        return set()
+    attive = Appartenenza.objects.attive().filter(persona=persona, ruolo=RuoloAppartenenza.RAGAZZO)
+    return _con_collegate(attive.values_list("unita_id", flat=True))
+
+
+def _nelle_unita(unita_ids) -> QuerySet[Persona]:
+    """Who is in these units: their members and the capi of their staff."""
+    membri = Appartenenza.objects.attive().filter(unita_id__in=unita_ids).values("persona_id")
+    staff = (
+        Incarico.objects.attivi()
+        .filter(ruolo__in=STAFF_DI_UNITA, unita_id__in=unita_ids)
+        .values("persona_id")
+    )
+    return Persona.objects.filter(Q(pk__in=membri) | Q(pk__in=staff))
+
+
+def riceve_compleanni(user) -> bool:
+    """Birthdays are for the ragazzi/e and the capi, never for the parents as such."""
+    from apps.anagrafica.compleanni import soci_attivi
+
+    if e_capo(user):
+        return True
+    persona = persona_di(user)
+    return bool(_unita_del_ragazzo(persona)) and soci_attivi().filter(pk=persona.pk).exists()
+
+
+def compleanni_visibili(user) -> QuerySet[Persona]:
+    """The calendar's birthdays: every capo, with a provisional code too, sees the whole group;
+    a ragazzo/a who is in their units, staff included."""
+    from apps.anagrafica.compleanni import soci_attivi
+
+    if not riceve_compleanni(user):
+        return Persona.objects.none()
+    if e_capo(user):
+        return soci_attivi()
+    unita = _unita_del_ragazzo(persona_di(user))
+    return soci_attivi().filter(pk__in=_nelle_unita(unita).values("pk"))
+
+
+def compleanni_notificati(user) -> QuerySet[Persona]:
+    """The day's notification: a capo only for the units they serve (linked ones too) and the
+    Co.Ca.; a ragazzo/a as in the calendar. Never one's own birthday."""
+    from apps.anagrafica.compleanni import soci_attivi
+
+    if not riceve_compleanni(user):
+        return Persona.objects.none()
+    if e_capo(user):
+        coca = (
+            Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO).values("persona_id")
+        )
+        unita = _nelle_unita(_unita_servite(user)).values("pk")
+        elenco = soci_attivi().filter(Q(pk__in=coca) | Q(pk__in=unita))
+    else:
+        elenco = compleanni_visibili(user)
+    return elenco.exclude(utente=user)

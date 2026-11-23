@@ -182,6 +182,15 @@ body {
   }
 }
 
+// Birthdays (DEC-417): a cake on the day, the Co.Ca. marked in the list for the capi.
+.qdc-compleanno-giorno {
+  color: var(--ag-primary);
+}
+
+.qdc-compleanno-coca {
+  border-inline-start: 0.25rem solid var(--ag-primary);
+}
+
 .qdc-evento-giorno {
   overflow: hidden;
   font-size: 0.7rem;

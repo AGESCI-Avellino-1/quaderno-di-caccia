@@ -904,6 +904,7 @@ export interface PreferenzePush {
   promemoria_quote: boolean
   riepiloghi: boolean
   avvisi: boolean
+  compleanni: boolean
 }
 
 export interface StatoPush {
@@ -911,6 +912,8 @@ export interface StatoPush {
   chiave_pubblica: string
   questo_browser: boolean
   preferenze: PreferenzePush
+  /** Whether the person gets the day's birthdays: ragazzi/e and capi (DEC-417). */
+  compleanni: boolean
 }
 
 /** The capo's project (DEC-335). */
@@ -2466,6 +2469,20 @@ export const pdfCartaClan = (id: number) => `/api/v1/carta-clan/${id}/pdf`
 export interface Calendario {
   url: string
   viste: { vista: string; nome: string; url: string }[]
+  /** Whether the page shows the birthdays: ragazzi/e and capi (DEC-417). */
+  compleanni: boolean
+}
+
+/** A birthday on the calendar page (DEC-417); `coca` only for the capi. */
+export interface Compleanno {
+  persona_id: number
+  nome: string
+  cognome: string
+  giorno: string
+  anni: number
+  unita: string
+  coca: boolean
+  scheda: boolean
 }
 
 /** An event on the calendar page (DEC-286): only title, kind, dates and place. */
@@ -4276,6 +4293,12 @@ export const api = {
     if (dal) parametri.set('dal', dal)
     if (al) parametri.set('al', al)
     return richiesta<EventoCalendario[]>(`/api/v1/calendario/eventi?${parametri}`)
+  },
+  compleanniDelCalendario: (dal?: string, al?: string) => {
+    const parametri = new URLSearchParams()
+    if (dal) parametri.set('dal', dal)
+    if (al) parametri.set('al', al)
+    return richiesta<Compleanno[]>(`/api/v1/calendario/compleanni?${parametri}`)
   },
   rigeneraCalendario: () =>
     richiesta<Calendario>('/api/v1/calendario/rigenera', { metodo: 'POST' }),

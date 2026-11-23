@@ -3,9 +3,10 @@
  * remembered in the browser (month or list, a capo's view: no personal data, like the
  * Home's open group).
  */
-import type { EventoCalendario } from '@/api/qdc'
+import type { Compleanno, EventoCalendario } from '@/api/qdc'
 
-export type ModoCalendario = 'mese' | 'elenco'
+// «compleanni» only for ragazzi/e and capi (DEC-417).
+export type ModoCalendario = 'mese' | 'elenco' | 'compleanni'
 
 const CHIAVE_MODO = 'qdc-calendario-modo'
 // A new name with «Tutti i miei eventi»: every capo moves to it once, then their choice is
@@ -49,7 +50,8 @@ export function eventiDelGiorno(eventi: EventoCalendario[], giorno: Date): Event
 
 export function leggiModo(): ModoCalendario {
   try {
-    return localStorage.getItem(CHIAVE_MODO) === 'elenco' ? 'elenco' : 'mese'
+    const modo = localStorage.getItem(CHIAVE_MODO)
+    return modo === 'elenco' || modo === 'compleanni' ? modo : 'mese'
   } catch {
     return 'mese'
   }
@@ -74,3 +76,9 @@ function salva(chiave: string, valore: string): void {
 
 export const salvaModo = (modo: ModoCalendario) => salva(CHIAVE_MODO, modo)
 export const salvaVista = (vista: string) => salva(CHIAVE_VISTA, vista)
+
+/** The birthdays on a local day (DEC-417). */
+export function compleanniDelGiorno(compleanni: Compleanno[], giorno: Date): Compleanno[] {
+  const chiave = chiaveGiorno(giorno)
+  return compleanni.filter((c) => c.giorno === chiave)
+}

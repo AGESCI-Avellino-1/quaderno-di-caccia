@@ -1,5 +1,6 @@
 """Sending push notifications (DEC-345). The text is read on a locked phone: what it says is the
-kind and a title, never names of people, amounts or health data. Callers pass only those."""
+kind and a title, never names of people, amounts or health data. Callers pass only those. The one
+exception is the day's birthdays, with first names only (DEC-417)."""
 
 import base64
 import json
@@ -24,7 +25,7 @@ from .models import ChiaviPush, IscrizionePush, PreferenzePush, PushInCoda
 
 logger = logging.getLogger(__name__)
 
-CATEGORIE = ("eventi", "promemoria_quote", "riepiloghi", "avvisi")
+CATEGORIE = ("eventi", "promemoria_quote", "riepiloghi", "avvisi", "compleanni")
 # The browsers' push services. The server calls the address a browser gives it: anything else
 # would let an account make it call inside its own network.
 SERVIZI_PUSH = (

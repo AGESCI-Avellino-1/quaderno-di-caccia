@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 23/11/2026 (ultima versione: v1.38.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 23/11/2026 (ultima versione: v1.39.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -13,7 +13,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#85](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/85) | Nome di totem dei soci e pagina «La mia tribù» (DEC-416)          | Funzione      | Basso   | Media      | VER    |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417) | Funzione      | Basso   | Media      | VER    |
 | [#87](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/87) | Nome di totem: ognuno si imposta il proprio (DEC-418)             | Miglioramento | Basso   | Media      | VER    |
-| [#88](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/88) | Reparto: vice equiparato al capo squadriglia (DEC-419)            | Miglioramento | Medio   | Media      | WIP    |
+| [#88](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/88) | Reparto: vice equiparato al capo squadriglia (DEC-419)            | Miglioramento | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

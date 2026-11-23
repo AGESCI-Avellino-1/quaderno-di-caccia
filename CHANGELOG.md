@@ -5,6 +5,24 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.39.0 — 23 novembre 2026
+
+### Novità
+
+**Come capo squadriglia** ([#88](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/88)): un vice capo squadriglia, o uno squadrigliere, che fa parte del Consiglio capi può avere nell'app gli stessi compiti del capo squadriglia, nella sua squadriglia e insieme al capo squadriglia, compreso l'invito alle riunioni del Consiglio capi. Lo staff del reparto accende l'interruttore **Come capo squadriglia** accanto al suo nome, nella pagina del reparto. Il suo incarico non cambia e lo sanno solo i capi, lui/lei (con un messaggio in **La mia squadriglia**) e i suoi genitori. Vale fino al 30 settembre, poi va riacceso; finisce prima se lo staff lo spegne o se cambia squadriglia.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.39.0
+```
+
+### Documentazione
+
+I capitoli sull'unità (capi) e sul capo squadriglia (ragazzi/e) spiegano l'interruttore.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.38.0 — 23 novembre 2026
 
 ### Novità

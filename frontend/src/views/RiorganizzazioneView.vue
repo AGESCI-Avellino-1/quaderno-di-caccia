@@ -88,6 +88,11 @@ const senzaSquadriglia = computed(() => {
     { titolo: 'Passano in R/S', persone: senza.filter((p) => p.passa_in_rs) },
   ].filter((g) => g.persone.length)
 })
+// «Come capo squadriglia» from the draft's first day (DEC-419): never the CSQ.
+async function equipara(persona: number, si: boolean) {
+  aggiorna(await esegui(() => api.equiparaInBozza(aperta.value!.id, persona, si)))
+}
+
 async function segnaRs(persona: number, passa: boolean) {
   aggiorna(await esegui(() => api.segnaRsInBozza(aperta.value!.id, persona, passa)))
 }
@@ -302,6 +307,21 @@ async function annulla() {
             <span>{{ m.nome }} {{ m.cognome }}</span>
             <span v-if="s.capo_id === m.id" class="badge theme-primary">capo squadriglia</span>
             <span v-if="s.vice_id === m.id" class="badge theme-secondary">vice</span>
+            <div
+              v-if="gestisce && s.capo_id !== m.id"
+              class="form-field mb-0 d-flex align-items-center gap-1"
+              data-equiparato
+            >
+              <input
+                :id="`equiparato-${m.id}`"
+                type="checkbox"
+                class="check"
+                :checked="s.equiparati?.includes(m.id)"
+                :disabled="inCorso"
+                @change="equipara(m.id, ($event.target as HTMLInputElement).checked)"
+              />
+              <label :for="`equiparato-${m.id}`">come capo squadriglia</label>
+            </div>
             <select
               v-if="gestisce"
               class="form-control form-control-sm w-auto ms-auto"

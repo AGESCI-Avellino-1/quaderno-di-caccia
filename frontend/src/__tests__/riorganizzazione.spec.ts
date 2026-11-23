@@ -117,6 +117,24 @@ describe('draft of the patrols', () => {
     })
   })
 
+  it('marks a member as treated as the capo squadriglia, never the capo', async () => {
+    const dati = bozza(true)
+    dati.squadriglie[0]!.membri = [persona(100, 'Anna'), persona(101, 'Bea')]
+    const chiamate: Chiamata[] = []
+    const pagina = await monta({ aperta: dati, applicata: null }, { unita: 5 }, chiamate)
+    const caselle = pagina.findAll('[data-equiparato] input')
+    expect(caselle).toHaveLength(1)
+    await caselle[0]!.setValue(true)
+    await flushPromises()
+    expect(chiamate).toEqual([
+      {
+        metodo: 'PUT',
+        url: '/api/v1/bozze-squadriglie/9/membri/101/equiparato',
+        corpo: { equiparato: true },
+      },
+    ])
+  })
+
   it('cannot be applied before its first day', async () => {
     const pagina = await monta({ aperta: bozza(true, false), applicata: null }, { unita: 5 })
     const applica = pagina.findAll('button').find((b) => b.text() === 'Applica la bozza…')!

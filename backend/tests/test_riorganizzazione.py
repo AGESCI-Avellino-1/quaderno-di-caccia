@@ -380,3 +380,69 @@ def test_il_pdf_non_per_il_capo_in_attesa(capo, scena):
     nuovo.abilitato_come_censito_il = timezone.now()  # let in by a capogruppo (DEC-400)
     nuovo.save()
     assert _client(nuovo).get(url).status_code == 200
+
+
+# --- «Come capo squadriglia» in the draft (DEC-419) --------------------------------------
+
+
+def _equipara(chi, url, persona, si=True):
+    return _json(chi, "put", f"{url}/membri/{persona.pk}/equiparato", {"equiparato": si})
+
+
+def test_come_capo_squadriglia_nella_bozza(capo, scena):
+    from apps.core.anno import AnnoAssociativo
+    from apps.organizzazione.models import EquiparazioneCsq
+
+    FINE = AnnoAssociativo.corrente().fine + timedelta(days=1)
+    p = scena["p"]
+    giorno = timezone.localdate() - timedelta(days=2)
+    # Cloe is treated as CSQ of Gazze today; Anna will be, in Civette.
+    cloe = AppartenenzaSquadriglia.objects.get(persona=p["cloe"])
+    oggi = EquiparazioneCsq.objects.create(
+        appartenenza=cloe, data_inizio=INIZIO_ANNO, data_fine=FINE
+    )
+    bozza = _crea(capo, scena["reparto"], giorno).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}"
+    # Never the CSQ of the draft; never out of a patrol.
+    assert _equipara(capo, url, p["bea"]).status_code == 400
+    anna_client = p["anna"]
+    assert _equipara(anna_client, url, p["anna"]).status_code in (403, 404)
+    letta = _equipara(capo, url, p["anna"])
+    assert letta.status_code == 200
+    assert _posto(letta.json(), "Civette")["equiparati"] == [p["anna"].pk]
+
+    # She reads the draft like the future CSQ, without the mark.
+    _json(
+        capo, "put", url, {"data_inizio": giorno.isoformat(), "visibile_ai_capi_squadriglia": True}
+    )
+    sua = _client(anna_client).get(url)
+    assert sua.status_code == 200
+    assert all(s["equiparati"] == [] for s in sua.json()["squadriglie"])
+
+    assert _json(capo, "post", f"{url}/applica").status_code == 200
+    anna = AppartenenzaSquadriglia.objects.attive().get(persona=p["anna"])
+    nuova = EquiparazioneCsq.objects.attive().get(appartenenza=anna)
+    assert nuova.data_inizio == giorno
+    # Cloe stays in Gazze but is not marked: she loses it from the draft's first day.
+    oggi.refresh_from_db()
+    assert oggi.data_fine == giorno
+    assert not EquiparazioneCsq.objects.attive().filter(appartenenza=cloe).exists()
+
+    # Undo: as before.
+    assert _json(capo, "post", f"{url}/annulla").status_code == 200
+    oggi.refresh_from_db()
+    assert oggi.data_fine == FINE
+    assert not EquiparazioneCsq.objects.filter(pk=nuova.pk).exists()
+
+
+def test_spostato_o_nominato_capo_perde_il_segno(capo, scena):
+    p = scena["p"]
+    bozza = _crea(capo, scena["reparto"], timezone.localdate() + timedelta(days=3)).json()
+    url = f"/api/v1/bozze-squadriglie/{bozza['id']}"
+    civette = _posto(bozza, "Civette")["id"]
+    _equipara(capo, url, p["anna"])
+    letta = _json(capo, "put", f"{url}/squadriglie/{civette}/guide", {"capo_id": p["anna"].pk})
+    assert _posto(letta.json(), "Civette")["equiparati"] == []
+    _equipara(capo, url, p["cloe"])
+    letta = _json(capo, "put", f"{url}/membri/{p['cloe'].pk}", {"squadriglia_id": civette})
+    assert all(s["equiparati"] == [] for s in letta.json()["squadriglie"])

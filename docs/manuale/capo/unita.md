@@ -116,15 +116,19 @@ collegati.
 - **Nuova squadriglia nella bozza** aggiunge una squadriglia, con l'animale o senza (lo sceglierà il
   capo squadriglia); **togli** la toglie.
 - Per ogni squadriglia scegli **Capo squadriglia** e **Vice capo squadriglia** tra i suoi membri.
+- **come capo squadriglia** accanto a un membro (non al capo squadriglia) lo rende «come capo
+  squadriglia» dal giorno della bozza al 30 settembre (vedi sopra). Applicando la bozza, chi oggi
+  lo è e nella bozza non è segnato smette di esserlo, anche se resta nella stessa squadriglia.
 - Una squadriglia che resta senza membri porta **sarà archiviata**.
 - Chi resta senza squadriglia perché passa in R/S lo segni con **passa in R/S**: compare a parte,
   in **Passano in R/S**. È solo un'indicazione: il passaggio vero si prepara in **Passaggi**.
 - Finché la bozza non è applicata, nella pagina del reparto c'è **Bozza delle squadriglie future
   (PDF)**, da condividere: con la scritta «Bozza» e la data di stampa, le squadriglie con capo,
-  vice e membri, chi resta senza squadriglia e chi passa in R/S. Lo scaricano tutti i capi della
+  vice, chi è come capo squadriglia e membri, chi resta senza squadriglia e chi passa in R/S. Lo scaricano tutti i capi della
   Comunità capi, non i capi squadriglia. Contiene nomi di ragazzi/e: condividilo solo con chi serve.
-- Con **Mostra ai futuri capi squadriglia** i capi e vice della bozza la vedono, senza poterla
-  cambiare, in **Le squadriglie future**.
+- Con **Mostra ai futuri capi squadriglia** i capi e vice della bozza, e chi è segnato come capo
+  squadriglia, la vedono senza poterla cambiare, in **Le squadriglie future**; lì il segno «come
+  capo squadriglia» non compare.
 - **Da controllare** dice chi ha lasciato il reparto (sarà ignorato), chi è arrivato dopo (resta
   dov'è, a meno che tu non lo sposti nella bozza) e chi ha cambiato squadriglia davvero dopo la
   bozza: applicandola andrà dove dice la bozza, quindi se serve correggi la bozza.

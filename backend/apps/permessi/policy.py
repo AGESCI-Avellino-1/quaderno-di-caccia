@@ -800,7 +800,8 @@ def puo_scegliere_animale(user, squadriglia: Squadriglia) -> bool:
 
 def bozze_dei_capi_squadriglia(user):
     """The open drafts of the patrols (DEC-410) the staff shows to their future CSQ and VCSQ,
-    where the user is one of them: read only."""
+    and to who is marked there as treated as CSQ (DEC-419), where the user is one of them:
+    read only."""
     from apps.organizzazione.models import BozzaSquadriglie, StatoBozza
 
     persona = persona_di(user)
@@ -808,7 +809,11 @@ def bozze_dei_capi_squadriglia(user):
         return BozzaSquadriglie.objects.none()
     return (
         BozzaSquadriglie.objects.filter(stato=StatoBozza.APERTA, visibile_ai_capi_squadriglia=True)
-        .filter(Q(squadriglie__capo=persona) | Q(squadriglie__vice=persona))
+        .filter(
+            Q(squadriglie__capo=persona)
+            | Q(squadriglie__vice=persona)
+            | Q(membri__persona=persona, membri__equiparato=True)
+        )
         .distinct()
     )
 

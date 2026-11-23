@@ -1047,6 +1047,8 @@ export interface BozzaSquadriglie {
     capo_id: number | null
     vice_id: number | null
     membri: { id: number; nome: string; cognome: string }[]
+    /** «Come capo squadriglia» (DEC-419): for who prepares the draft only. */
+    equiparati?: number[]
   }[]
   senza_squadriglia: {
     id: number
@@ -3547,6 +3549,11 @@ export const api = {
     richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/membri/${persona}`, {
       metodo: 'PUT',
       corpo: { squadriglia_id },
+    }),
+  equiparaInBozza: (id: number, persona: number, equiparato: boolean) =>
+    richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/membri/${persona}/equiparato`, {
+      metodo: 'PUT',
+      corpo: { equiparato },
     }),
   segnaRsInBozza: (id: number, persona: number, passa: boolean) =>
     richiesta<BozzaSquadriglie>(`/api/v1/bozze-squadriglie/${id}/membri/${persona}/rs`, {

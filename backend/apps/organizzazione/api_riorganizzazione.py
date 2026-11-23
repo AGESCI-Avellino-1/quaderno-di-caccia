@@ -50,6 +50,9 @@ class PostoOut(Schema):
     capo_id: int | None
     vice_id: int | None
     membri: list[Ragazzo]
+    # Marked as treated as CSQ (DEC-419): for who prepares the draft only, never shown to
+    # the ragazzi who read it.
+    equiparati: list[int] = []
 
 
 class RepartoBozza(Schema):
@@ -113,6 +116,11 @@ def _bozza_out(user, bozza: BozzaSquadriglie) -> dict:
                 "capo_id": posto.capo_id,
                 "vice_id": posto.vice_id,
                 "membri": [_persona(m.persona) for m in membri if m.squadriglia_id == posto.pk],
+                "equiparati": (
+                    [m.persona_id for m in membri if m.squadriglia_id == posto.pk and m.equiparato]
+                    if gestisce
+                    else []
+                ),
             }
         )
     applicata_da = bozza.applicata_da
@@ -294,6 +302,21 @@ def sposta(request, bozza_id: int, persona_id: int, dati: PostoIn):
     posto = _posto(bozza, dati.squadriglia_id) if dati.squadriglia_id is not None else None
     try:
         rio.sposta(bozza, get_object_or_404(Persona, pk=persona_id), posto)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return _bozza_out(request.auth, bozza)
+
+
+class EquiparatoIn(Schema):
+    equiparato: bool
+
+
+@router.put("/bozze-squadriglie/{bozza_id}/membri/{persona_id}/equiparato", response=BozzaOut)
+def equipara(request, bozza_id: int, persona_id: int, dati: EquiparatoIn):
+    """«Come capo squadriglia» in the draft (DEC-419)."""
+    bozza = _bozza(request, bozza_id)
+    try:
+        rio.equipara(bozza, get_object_or_404(Persona, pk=persona_id), dati.equiparato)
     except ValidationError as errore:
         raise _errore(errore) from errore
     return _bozza_out(request.auth, bozza)

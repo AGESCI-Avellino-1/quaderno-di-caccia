@@ -29,6 +29,7 @@ from apps.anagrafica.models import (
     Persona,
     RuoloAppartenenza,
 )
+from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
 from apps.core.models import FonteDato
 from apps.core.stampa import decora_pagina, intestazione
@@ -39,6 +40,7 @@ from .models import (
     AnimaleSquadriglia,
     BozzaSquadriglie,
     Composizione,
+    EquiparazioneCsq,
     Gruppo,
     Incarico,
     MembroInBozza,
@@ -224,6 +226,8 @@ def sposta(bozza: BozzaSquadriglie, persona: Persona, posto: SquadrigliaInBozza 
             raise ValidationError("Scegli una squadriglia della bozza.")
         _controlla_sesso(persona, posto)
     vecchio = membro.squadriglia
+    if vecchio != posto:
+        membro.equiparato = False  # marked for one patrol (DEC-419)
     if vecchio is not None and vecchio != posto:
         if vecchio.capo_id == persona.pk:
             vecchio.capo = None
@@ -246,6 +250,18 @@ def segna_rs(bozza: BozzaSquadriglie, persona: Persona, passa: bool) -> None:
     if passa and membro.squadriglia_id is not None:
         raise ValidationError(f"{persona} è in una squadriglia della bozza.")
     membro.passa_in_rs = passa
+    membro.save()
+
+
+def equipara(bozza: BozzaSquadriglie, persona: Persona, si: bool) -> None:
+    """Mark a member as treated as the CSQ of their patrol of the draft (DEC-419)."""
+    _aperta_o_errore(bozza)
+    membro = MembroInBozza.objects.filter(bozza=bozza, persona=persona).first()
+    if membro is None or (si and membro.squadriglia_id is None):
+        raise ValidationError(f"{persona} non è in una squadriglia della bozza.")
+    if si and membro.squadriglia.capo_id == persona.pk:
+        raise ValidationError(f"{persona} è il capo squadriglia nella bozza.")
+    membro.equiparato = si
     membro.save()
 
 
@@ -291,6 +307,9 @@ def guide(posto: SquadrigliaInBozza, capo: Persona | None, vice: Persona | None)
         raise ValidationError("Capo e vice capo squadriglia sono due persone diverse.")
     posto.capo, posto.vice = capo, vice
     posto.save()
+    if capo is not None:
+        # The CSQ is not treated as one (DEC-419).
+        posto.membri.filter(persona=capo).update(equiparato=False)
 
 
 # --- The PDF (DEC-411) -------------------------------------------------------------------
@@ -353,6 +372,8 @@ def pdf(bozza: BozzaSquadriglie, oggi: date | None = None) -> bytes:
         guide = {posto.capo_id: "capo squadriglia", posto.vice_id: "vice capo squadriglia"}
         for m in dentro:
             ruolo = guide.get(m.persona_id)
+            if m.equiparato:  # the PDF is for the capi only (DEC-419)
+                ruolo = f"{ruolo}, come capo squadriglia" if ruolo else "come capo squadriglia"
             riga = f"{m.persona.cognome} {m.persona.nome}" + (f" ({ruolo})" if ruolo else "")
             elementi.append(Paragraph(escape(riga), testo))
         if not dentro:
@@ -410,6 +431,58 @@ def _lascia_squadriglia(c: dict, persona_id: int, squadriglia_id: int, giorno: d
         persona_id=persona_id, squadriglia_id=squadriglia_id, ruolo__in=RUOLI_DI_SQUADRIGLIA
     ):
         _chiudi(c, "incarico", incarico, giorno)
+
+
+def _chiudi_equiparazione(c: dict, equiparazione: EquiparazioneCsq, giorno: date) -> None:
+    """As `_chiudi`, keeping the end it had: an equiparazione always has one (DEC-419)."""
+    if equiparazione.data_inizio >= giorno:
+        c["equiparazioni_eliminate"].append(
+            {
+                "appartenenza_id": equiparazione.appartenenza_id,
+                "data_inizio": equiparazione.data_inizio.isoformat(),
+                "data_fine": equiparazione.data_fine.isoformat(),
+            }
+        )
+        equiparazione.delete()
+    else:
+        c["equiparazioni_chiuse"].append([equiparazione.pk, equiparazione.data_fine.isoformat()])
+        equiparazione.data_fine = giorno
+        equiparazione.save(update_fields=["data_fine", "aggiornato_il"])
+
+
+def _applica_equiparazioni(
+    c: dict, bozza: BozzaSquadriglie, vere: dict, oggi: dict, giorno: date
+) -> None:
+    """From the draft's first day only who is marked there is treated as CSQ, until the 30
+    September of that year; the others lose it, even in the same patrol (DEC-419)."""
+    c.setdefault("equiparazioni_chiuse", [])
+    c.setdefault("equiparazioni_eliminate", [])
+    fine = date.fromordinal(AnnoAssociativo.da_data(giorno).fine.toordinal() + 1)
+    volute: set[int] = set()
+    for membro in bozza.membri.filter(equiparato=True, squadriglia__isnull=False).select_related(
+        "squadriglia"
+    ):
+        if membro.persona_id not in oggi or membro.squadriglia.capo_id == membro.persona_id:
+            continue
+        appartenenza = (
+            AppartenenzaSquadriglia.objects.attive(giorno)
+            .filter(persona_id=membro.persona_id, squadriglia=vere[membro.squadriglia_id])
+            .first()
+        )
+        if appartenenza is not None:
+            volute.add(appartenenza.pk)
+    for equiparazione in EquiparazioneCsq.objects.attive(giorno).filter(
+        appartenenza__squadriglia__unita__in=reparti(bozza)
+    ):
+        if equiparazione.appartenenza_id in volute and equiparazione.data_fine == fine:
+            volute.discard(equiparazione.appartenenza_id)
+        else:
+            _chiudi_equiparazione(c, equiparazione, giorno)
+    for appartenenza_id in volute:
+        nuova = EquiparazioneCsq.objects.create(
+            appartenenza_id=appartenenza_id, data_inizio=giorno, data_fine=fine
+        )
+        c["creati"].setdefault("equiparazione", []).append(nuova.pk)
 
 
 @transaction.atomic
@@ -508,6 +581,7 @@ def applica(bozza: BozzaSquadriglie, utente) -> BozzaSquadriglie:
                 incarico.full_clean()
                 incarico.save()
                 _registra_creato(c, "incarico", incarico)
+    _applica_equiparazioni(c, bozza, vere, oggi, giorno)
     # The patrols left empty are archived (DEC-403).
     creati = set(c["creati"].get("squadriglie", []))
     for squadriglia in Squadriglia.objects.filter(unita__in=reparti_, attiva=True).exclude(
@@ -543,6 +617,12 @@ def annullabile(bozza: BozzaSquadriglie) -> bool:
         .exists()
         or Incarico.objects.filter(squadriglia__unita__in=reparti_, **dopo)
         .exclude(pk__in=nostri["incarico"])
+        .exists()
+        or EquiparazioneCsq.objects.filter(appartenenza__squadriglia__unita__in=reparti_, **dopo)
+        .exclude(
+            pk__in=set(c.get("creati", {}).get("equiparazione", []))
+            | {pk for pk, _ in c.get("equiparazioni_chiuse", [])}
+        )
         .exists()
         or Squadriglia.objects.filter(unita__in=reparti_, **dopo)
         .exclude(
@@ -580,6 +660,9 @@ def annulla(bozza: BozzaSquadriglie) -> BozzaSquadriglie:
         )
     c = bozza.chiusure
     try:
+        EquiparazioneCsq.objects.filter(pk__in=c["creati"].get("equiparazione", [])).delete()
+        for pk, fine in c.get("equiparazioni_chiuse", []):
+            _imposta(EquiparazioneCsq.objects.filter(pk=pk), data_fine=date.fromisoformat(fine))
         for chiave in ("incarico", "squadriglia", "appartenenza"):
             for creato in MODELLI[chiave].objects.filter(pk__in=c["creati"].get(chiave, [])):
                 creato.delete()
@@ -591,6 +674,13 @@ def annulla(bozza: BozzaSquadriglie) -> BozzaSquadriglie:
                 for k, v in eliminato["campi"].items()
             }
             MODELLI[eliminato["modello"]].objects.create(**campi)
+        for eliminata in c.get("equiparazioni_eliminate", []):
+            if AppartenenzaSquadriglia.objects.filter(pk=eliminata["appartenenza_id"]).exists():
+                EquiparazioneCsq.objects.create(
+                    appartenenza_id=eliminata["appartenenza_id"],
+                    data_inizio=date.fromisoformat(eliminata["data_inizio"]),
+                    data_fine=date.fromisoformat(eliminata["data_fine"]),
+                )
         _imposta(DerogaSquadriglia.objects.filter(pk__in=c["deroghe"]), revocata_il=None)
         _imposta(
             Squadriglia.objects.filter(pk__in=c["archiviate"]), attiva=True, archiviata_il=None

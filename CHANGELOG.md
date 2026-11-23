@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.37.0 — 23 novembre 2026
+
+### Novità
+
+**Compleanni** ([#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86)): nel **Calendario** ragazzi/e e capi trovano **Prossimi compleanni**, con chi compie gli anni nei prossimi 30 giorni, il giorno, gli anni e l'unità; nel calendario del mese una piccola torta segna i giorni dei compleanni. I ragazzi/e vedono la propria unità, capi compresi; i capi tutto il gruppo, con la Comunità capi in evidenza. Chi ha le notifiche sul telefono riceve alle 8 quelle dei compleanni del giorno, con il solo nome di battesimo: i ragazzi/e per la propria unità, i capi per le unità in cui sono in servizio e per la Comunità capi. Si spengono in **Privacy e preferenze** con **Compleanni del giorno**; non c'è un'email. I genitori non vedono i compleanni.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.37.0
+```
+
+Aggiungi al cron la riga di `avvisa_compleanni` di `deploy/cron/qdc.crontab` (alle 8, manda le notifiche dei compleanni).
+
+### Documentazione
+
+I capitoli sul calendario dei capi e dei ragazzi/e e quello sulle notifiche descrivono i compleanni; la guida d'installazione elenca il nuovo lavoro giornaliero.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.36.2 — 21 novembre 2026
 
 ### Correzioni

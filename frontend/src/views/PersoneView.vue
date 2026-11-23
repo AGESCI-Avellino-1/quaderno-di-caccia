@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { api, nomeUnita, type PersonaElenco, type Unita } from '@/api/qdc'
 import Avatar from '@/components/Avatar.vue'
@@ -19,6 +19,7 @@ const props = defineProps<{ tipo: 'soci' | 'genitori' }>()
 const sessione = useSessioneStore()
 const navigazione = useNavigazioneStore()
 const route = useRoute()
+const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
 
 const persone = ref<PersonaElenco[]>([])
@@ -26,7 +27,7 @@ const unita = ref<Unita[]>([])
 const unitaScelta = ref<number | undefined>(
   route.query.unita ? Number(route.query.unita) : undefined,
 )
-const filtro = ref('')
+const filtro = ref(typeof route.query.cerca === 'string' ? route.query.cerca : '')
 // From the unit page, «Aggiungi alla rubrica» opens this list ready to choose (DEC-302).
 const rubrica = useRubrica()
 rubrica.attiva.value = route.query.rubrica === '1'
@@ -60,6 +61,12 @@ onMounted(async () => {
   await caricaPersone()
 })
 watch(unitaScelta, caricaPersone)
+// The unit and the search stay in the address: back from a person, the list is as it was.
+watch([unitaScelta, filtro], ([u, testo]) => {
+  const query = { ...route.query, unita: u?.toString(), cerca: testo || undefined }
+  if (query.unita !== route.query.unita || query.cerca !== route.query.cerca)
+    router.replace({ query })
+})
 watch(
   () => props.tipo,
   () => {

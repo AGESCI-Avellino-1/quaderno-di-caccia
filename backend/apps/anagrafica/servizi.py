@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from .models import (
     CAMPI_BUONASTRADA,
+    CAMPO_USCITA,
     STATI_APERTI,
     Appartenenza,
     ContatoreCodiceProvvisorio,
@@ -158,6 +159,14 @@ def scarta_correzione(correzione: CorrezioneAnagrafica, utente, motivo: str) -> 
     correzione.full_clean()
     correzione.save()
     persona = correzione.persona
+    if correzione.campo == CAMPO_USCITA:
+        # Discarding an exit recorded in the app undoes it (DEC-420).
+        from .uscita import annulla
+
+        uscita = getattr(correzione, "uscita", None)
+        if uscita is not None and uscita.annullata_il is None:
+            annulla(uscita, utente, dalla_correzione=True)
+        return
     setattr(persona, correzione.campo, da_testo(correzione.campo, correzione.valore_precedente))
     persona.save(update_fields=[correzione.campo, "aggiornato_il"])
 

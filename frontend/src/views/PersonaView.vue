@@ -24,6 +24,7 @@ import { useRete } from '@/composables/useRete'
 import Telefono from '@/components/Telefono.vue'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
 import TotemPersona from '@/components/TotemPersona.vue'
+import UscitaGruppo from '@/components/UscitaGruppo.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache } from '@/offline/cache'
@@ -197,6 +198,12 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
       <IncarichiSquadriglia :persona="persona.id" />
       <DerogheSquadriglia :id="persona.id" />
       <AccountPersona :id="persona.id" />
+      <UscitaGruppo
+        v-if="online"
+        :persona="persona.id"
+        :nome="persona.nome"
+        @cambiato="carica(persona.id)"
+      />
       <LinkPersonale
         v-if="online && persona.puo_link_attivazione"
         :persona="persona.id"

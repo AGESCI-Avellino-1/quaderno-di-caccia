@@ -214,7 +214,12 @@ ETICHETTE_CAMPI = {
     "anno_ingresso_coca": "Anno di ingresso in Co.Ca.",
     "numero_nomina": "Numero di nomina a capo",
     "data_nomina": "Data di nomina a capo",
+    "uscita": "Uscita dal gruppo",
 }
+
+# Not a field: the exit from the group recorded in the app, forwarded like a correction
+# (DEC-420, UscitaDalGruppo).
+CAMPO_USCITA = "uscita"
 
 
 class TipoTutela(models.TextChoices):
@@ -538,10 +543,45 @@ class CorrezioneAnagrafica(ModelloTracciato):
         return self.stato in STATI_APERTI
 
     def clean(self) -> None:
-        if self.campo not in CAMPI_BUONASTRADA:
+        if self.campo not in CAMPI_BUONASTRADA and self.campo != CAMPO_USCITA:
             raise ValidationError(f"Il campo {self.campo} non è gestito da BuonaStrada.")
         if self.stato == StatoCorrezione.SCARTATA and not self.motivo_scarto.strip():
             raise ValidationError("Scrivi il motivo dello scarto.")
+
+
+class UscitaDalGruppo(ModelloTracciato):
+    """Who left the group, recorded in the app without waiting for BuonaStrada (DEC-420).
+
+    From `data` the periods in the units, the patrol, the roles and the patrol exceptions
+    end; `chiusure` keeps what was closed, removed and cancelled (fees) so that an undo puts
+    everything back. It goes to the capigruppo as a correction to forward (campo
+    «uscita»); the import closes it when BuonaStrada has the person out, and reports it as a
+    difference while BuonaStrada still has them active (DEC-130)."""
+
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="uscite")
+    data = models.DateField()
+    registrata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    correzione = models.OneToOneField(
+        CorrezioneAnagrafica,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="uscita",
+    )
+    chiusure = models.JSONField(default=dict, blank=True)
+    annullata_il = models.DateTimeField(null=True, blank=True)
+    annullata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "uscita dal gruppo"
+        verbose_name_plural = "uscite dal gruppo"
+
+    def __str__(self) -> str:
+        return f"{self.persona} uscito/a il {self.data:%d/%m/%Y}"
 
 
 class VisibilitaGenitori(ModelloTracciato):

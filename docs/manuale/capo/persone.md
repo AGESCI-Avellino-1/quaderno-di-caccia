@@ -44,6 +44,24 @@ li correggono solo i capigruppo.
 La **professione**, che arriva da BuonaStrada, la vedono solo la persona stessa e i capi; si
 corregge scegliendola dall'elenco di BuonaStrada.
 
+## Chi lascia il gruppo
+
+Se un ragazzo/a della tua unità lascia il gruppo, non serve aspettare BuonaStrada. Apri la sua
+scheda e, nel riquadro **Uscita dal gruppo**, tocca **Ha lasciato il gruppo…**:
+
+1. Scegli **Dal giorno** (oggi o un giorno passato).
+2. Tra le **quote non pagate**, lascia spuntate quelle da annullare (con il motivo «Ha lasciato il
+   gruppo»); quelle che togli restano da pagare. Una quota con dei pagamenti non si annulla.
+3. Tocca **Registra l'uscita**.
+
+Da quel giorno esce dalle unità, dalla squadriglia e dagli incarichi, e non è più invitato alle
+attività che verranno. Il suo account e quelli dei genitori restano: vedono i propri dati, i
+pagamenti e le quote da pagare, ma niente dell'unità. L'uscita di un capo la registrano i
+capigruppo, che la registrano anche per chiunque altro.
+
+L'uscita arriva ai capigruppo tra le correzioni da inoltrare alla segreteria. Se è stato un
+errore, **Annulla l'uscita…** rimette unità, squadriglia, incarichi e quote com'erano.
+
 ## Il percorso scout
 
 Il riquadro **Percorso scout** elenca tutti i periodi della persona, da ragazzo/a e da capo,

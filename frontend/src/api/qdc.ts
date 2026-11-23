@@ -365,6 +365,21 @@ export interface Tribu {
   scrivi_il_tuo: boolean
 }
 
+/** Leaving the group, recorded in the app (DEC-420). */
+export interface UscitaGruppo {
+  puo_registrare: boolean
+  /** Unpaid fees that may be cancelled with the exit. */
+  quote: { id: number; descrizione: string; importo: string }[]
+  uscita: {
+    data: string
+    registrata_il: string
+    registrata_da: string
+    /** Where the correction to forward to the office stands. */
+    stato: string
+    puo_annullare: boolean
+  } | null
+}
+
 /** The totem on the person's page: the capi and the person themself. */
 export interface TotemPersona {
   id: number | null
@@ -3407,6 +3422,14 @@ export const api = {
       metodo: 'POST',
       corpo: { motivo },
     }),
+  uscita: (persona: number) => richiesta<UscitaGruppo>(`/api/v1/persone/${persona}/uscita`),
+  registraUscita: (persona: number, data: string, quote: number[]) =>
+    richiesta<UscitaGruppo>(`/api/v1/persone/${persona}/uscita`, {
+      metodo: 'POST',
+      corpo: { data, quote },
+    }),
+  annullaUscita: (persona: number) =>
+    richiesta<UscitaGruppo>(`/api/v1/persone/${persona}/uscita/annulla`, { metodo: 'POST' }),
   totemPersona: (persona: number) => richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem`),
   assegnaTotem: (persona: number, nome: string) =>
     richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem`, {

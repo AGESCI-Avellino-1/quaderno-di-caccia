@@ -12,6 +12,7 @@ class AnagraficaConfig(AppConfig):
 
         for modello in (
             models.Persona,
+            models.UscitaDalGruppo,
             models.RelazioneTutela,
             models.Appartenenza,
             models.AppartenenzaSquadriglia,

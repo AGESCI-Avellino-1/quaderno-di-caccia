@@ -616,3 +616,46 @@ def test_dato_non_valido_non_ferma_l_importazione():
     assert giulia.cellulare == ""
     assert not Persona.objects.filter(cognome="Grigi").exists()
     assert sum(a["codice_socio"] == "9000001" for a in riepilogo.avvisi) == 2
+
+
+# --- Exit recorded in the app (DEC-420) ----------------------------------------------
+
+
+def _giulia_uscita():
+    from apps.anagrafica import uscita
+
+    applica(_risultato(), oggi=OGGI)
+    giulia = Persona.objects.get(codice_socio="9000001")
+    uscita.registra(giulia, OGGI, None, [])
+    return giulia
+
+
+def test_uscita_nell_app_resta_e_diventa_differenza():
+    giulia = _giulia_uscita()
+    riepilogo = applica(_risultato(), oggi=OGGI)
+    assert not Appartenenza.objects.attive(OGGI).filter(persona=giulia).exists()
+    [differenza] = riepilogo.differenze
+    assert differenza.campo == "Uscita dal gruppo"
+    assert differenza.chiave == f"{giulia.pk}:uscita"
+    assert differenza.scelta == "APP"
+    assert CorrezioneAnagrafica.objects.get(campo="uscita").stato == "IN_ATTESA"
+
+
+def test_uscita_superata_da_buonastrada():
+    from apps.anagrafica.models import UscitaDalGruppo
+
+    giulia = _giulia_uscita()
+    applica(_risultato(), oggi=OGGI, scelte={f"{giulia.pk}:uscita": "BUONASTRADA"})
+    assert Appartenenza.objects.attive(OGGI).filter(persona=giulia).exists()
+    assert CorrezioneAnagrafica.objects.get(campo="uscita").stato == "SUPERATA"
+    assert UscitaDalGruppo.objects.get().annullata_il is not None
+
+
+def test_uscita_recepita_quando_buonastrada_la_da_uscita():
+    giulia = _giulia_uscita()
+    righe = righe_standard()
+    righe[0]["CODICE STATUS SOCIO"] = "D"
+    riepilogo = applica(_risultato(righe), oggi=OGGI)
+    assert CorrezioneAnagrafica.objects.get(campo="uscita").stato == "RECEPITA"
+    assert f"{giulia}: Uscita dal gruppo" in riepilogo.correzioni_recepite
+    assert riepilogo.differenze == []

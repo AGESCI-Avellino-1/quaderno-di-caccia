@@ -66,6 +66,12 @@ Si chiudono da sole quando l'importazione le ritrova in BuonaStrada. Se una corr
 sbagliata, **Scarta**, con il motivo (lo vede chi l'ha fatta): torna il valore di prima. Ogni
 mattina, se ce ne sono di nuove, i capigruppo ricevono un riepilogo per email.
 
+Tra le correzioni c'è anche l'**Uscita dal gruppo** registrata nell'app (vedi [Soci e
+genitori](../capo/persone)): chiedi alla segreteria di registrarla. Si chiude quando
+l'importazione trova il socio uscito; finché BuonaStrada lo dà ancora attivo, l'importazione la
+mostra tra le differenze e scegli tu se tenerlo fuori o farlo rientrare. Scartarla annulla
+l'uscita.
+
 ## Iscrizioni da inserire
 
 Le iscrizioni fatte dall'app, quando la famiglia ha completato dati e moduli, vanno inserite a

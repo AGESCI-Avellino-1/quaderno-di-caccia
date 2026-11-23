@@ -33,11 +33,13 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
 from apps.anagrafica.models import (
     CAMPI_BUONASTRADA,
+    CAMPO_USCITA,
     ETICHETTE_CAMPI,
     STATI_APERTI,
     Appartenenza,
@@ -303,6 +305,7 @@ def _esegui_storico(
         )
         periodi = _periodi(nostre)
         if appena_uscito:
+            _recepisci_uscita(persona, r)
             # Just left: every period is closed, the person stays suspended (DEC-274).
             for periodo in periodi:
                 unita = _unita(gruppo, periodo[0], r, attiva=_attuale(periodo[0]))
@@ -602,6 +605,8 @@ def _appartenenza(
     dal_anno: int | None = None,
 ) -> None:
     """`dal_anno`: from the history, the first year of the current period (DEC-271)."""
+    if _resta_uscito(persona, unita, riga, r):
+        return
     ruolo = _ruolo(unita)
     attive = Appartenenza.objects.attive(oggi).filter(persona=persona, ruolo=ruolo)
     if attive.filter(unita=unita).exists():
@@ -642,6 +647,57 @@ def _appartenenza(
     r.appartenenze_aperte.append(f"{persona} — {unita}")
 
 
+def _resta_uscito(persona: Persona, unita: Unita, riga: RigaSocio, r: Riepilogo) -> bool:
+    """Recorded as out of the group in the app and still active in BuonaStrada: a difference
+    (DEC-420, DEC-130). With the app the person stays out; with BuonaStrada the exit is
+    undone and the import goes on."""
+    from apps.anagrafica import uscita as uscite
+
+    uscita = uscite.attiva(persona) if persona.pk else None
+    correzione = uscita.correzione if uscita is not None else None
+    if correzione is None or not correzione.aperta:
+        return False
+    chiave = f"{persona.pk}:{CAMPO_USCITA}"
+    modificata = correzione.aggiornato_il.date()
+    proposta, scelta = r.decidi(chiave, modificata)
+    if scelta != APP:
+        try:
+            uscite.annulla(uscita, None, dalla_correzione=True)
+        except ValidationError:
+            scelta = APP  # e.g. a closed year: it stays as the app has it
+        else:
+            supera_correzione(correzione)
+    r.differenze.append(
+        Differenza(
+            riga.codice_socio,
+            str(persona),
+            ETICHETTE_CAMPI[CAMPO_USCITA],
+            correzione.valore_corretto,
+            f"Nel gruppo, {unita}",
+            (
+                "Uscita registrata nell'app: resta fuori dal gruppo."
+                if scelta == APP
+                else "Vince BuonaStrada: l'uscita registrata nell'app è annullata."
+            ),
+            chiave=chiave,
+            data_app=modificata.isoformat(),
+            proposta=proposta,
+            scelta=scelta,
+        )
+    )
+    return scelta == APP
+
+
+def _recepisci_uscita(persona: Persona, r: Riepilogo) -> None:
+    """BuonaStrada has the person out too: the exit recorded in the app is done (DEC-420)."""
+    correzione = CorrezioneAnagrafica.objects.filter(
+        persona=persona, campo=CAMPO_USCITA, stato__in=STATI_APERTI
+    ).first()
+    if correzione is not None:
+        recepisci_correzione(correzione)
+        r.correzioni_recepite.append(f"{persona}: {ETICHETTE_CAMPI[CAMPO_USCITA]}")
+
+
 def _chiudi_appartenenza(appartenenza: Appartenenza, r: Riepilogo, oggi: date) -> None:
     """Leaving a unit; leaving a reparto also means leaving its patrol (DEC-65)."""
     appartenenza.data_fine = oggi
@@ -654,6 +710,7 @@ def _chiudi_decaduto(riga: RigaSocio, r: Riepilogo, oggi: date) -> None:
     persona = Persona.objects.filter(codice_socio=riga.codice_socio).first()
     if persona is None:
         return  # ex members are not imported (DEC-28)
+    _recepisci_uscita(persona, r)
     for appartenenza in Appartenenza.objects.attive(oggi).filter(persona=persona):
         _chiudi_appartenenza(appartenenza, r, oggi)
     if persona.stato_socio != "D":

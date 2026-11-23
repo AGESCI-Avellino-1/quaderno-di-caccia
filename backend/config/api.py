@@ -7,6 +7,7 @@ from ninja.security import django_auth
 
 from apps.accounts.api import router as accounts_router
 from apps.anagrafica.api import router as anagrafica_router
+from apps.anagrafica.api_uscita import router as uscita_router
 from apps.archivio.api import router as archivio_router
 from apps.attesa.api import router as attesa_router
 from apps.bacheca.api import router as bacheca_router
@@ -54,6 +55,7 @@ api.add_router("/", organizzazione_router)
 api.add_router("/", animali_router)
 api.add_router("/", riorganizzazione_router)
 api.add_router("/", anagrafica_router)
+api.add_router("/", uscita_router)
 api.add_router("/", importazione_router)
 api.add_router("/", dispositivi_router)
 api.add_router("/", sanitaria_router)

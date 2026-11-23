@@ -720,6 +720,36 @@ def puo_gestire_diritti(user) -> bool:
     return e_capogruppo(user)
 
 
+def puo_registrare_uscita(user, persona: Persona) -> bool:
+    """Record that someone left the group (DEC-420): the staff of the unit for its ragazzi,
+    the capigruppo for everyone, capi included."""
+    if e_capogruppo(user):
+        return True
+    attive = Appartenenza.objects.attive().filter(persona=persona)
+    if attive.filter(ruolo=RuoloAppartenenza.CAPO).exists():
+        return False
+    return _staff_della_persona(user, persona)
+
+
+def puo_annullare_uscita(user, uscita) -> bool:
+    """Undo it: who could record it, for the units the person was in that day (DEC-420)."""
+    if e_capogruppo(user):
+        return True
+    if e_capo_in_attesa(user):
+        return False
+    c = uscita.chiusure or {}
+    ids = {x["pk"] for x in c.get("chiusi", []) if x["modello"] == "appartenenza"}
+    periodi = list(Appartenenza.objects.filter(pk__in=ids))
+    periodi += [
+        Appartenenza(**{k: v for k, v in x["campi"].items() if k in ("unita_id", "ruolo")})
+        for x in c.get("eliminati", [])
+        if x["modello"] == "appartenenza"
+    ]
+    if any(p.ruolo == RuoloAppartenenza.CAPO for p in periodi):
+        return False
+    return bool({p.unita_id for p in periodi} & _unita_servite(user))
+
+
 def puo_gestire_correzioni(user) -> bool:
     """The capigruppo, and the technical administrator, forward corrections to the
     regional office or discard them (DEC-31, DEC-129)."""

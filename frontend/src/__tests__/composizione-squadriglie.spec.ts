@@ -248,3 +248,72 @@ describe('choosing the animal', () => {
     expect(pagina.findAll('select[aria-label="Scegli l\'animale"]')).toHaveLength(0)
   })
 })
+
+// DEC-419
+describe('member treated as the CSQ', () => {
+  async function montaCon(squadriglie: object[], chiamate: { url: string; corpo: unknown }[]) {
+    await nuovoDatabase()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, opzioni?: RequestInit) => {
+        if (opzioni?.method === 'PUT') {
+          chiamate.push({ url, corpo: JSON.parse(opzioni.body as string) })
+          return risposta(200, { id: 11, equiparato: true })
+        }
+        return risposta(200, { ...dettaglio(true), squadriglie })
+      }),
+    )
+    const pagina = mount(UnitaDettaglioView, {
+      props: { id: 5 },
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
+    await flushPromises()
+    return pagina
+  }
+
+  it('gives the reparto staff a switch, never on the CSQ', async () => {
+    const chiamate: { url: string; corpo: unknown }[] = []
+    const pagina = await montaCon(
+      [
+        {
+          ...squadriglia(1, 'Aquile', [
+            { id: 11, persona: persona(100, 'Giulia'), data_inizio: '2025-10-01' },
+            { id: 12, persona: persona(101, 'Sara'), data_inizio: '2025-10-01' },
+          ]),
+          incarichi: [
+            {
+              id: 7,
+              ruolo: 'CSQ',
+              ruolo_nome: 'Capo squadriglia',
+              persona: persona(101, 'Sara'),
+              data_inizio: '2025-10-01',
+              data_fine: null,
+            },
+          ],
+          puo_equiparare: true,
+        },
+      ],
+      chiamate,
+    )
+    const interruttori = pagina.findAll('[data-equiparazione] input')
+    expect(interruttori).toHaveLength(1)
+    await interruttori[0]!.setValue(true)
+    await flushPromises()
+    expect(chiamate).toEqual([
+      { url: '/api/v1/membri-squadriglia/11/equiparazione', corpo: { attiva: true } },
+    ])
+  })
+
+  it('shows the other capi a badge only', async () => {
+    const pagina = await montaCon(
+      [
+        squadriglia(1, 'Aquile', [
+          { id: 11, persona: persona(100, 'Giulia'), data_inizio: '2025-10-01', equiparato: true },
+        ]),
+      ],
+      [],
+    )
+    expect(pagina.find('[data-equiparazione]').exists()).toBe(false)
+    expect(pagina.text()).toContain('come capo squadriglia')
+  })
+})

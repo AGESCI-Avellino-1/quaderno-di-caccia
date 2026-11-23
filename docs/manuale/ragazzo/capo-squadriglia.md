@@ -2,6 +2,10 @@
 
 Se sei capo squadriglia, oltre al tuo Sentiero hai qualcosa in più.
 
+Questo capitolo vale anche se sei vice, o non hai un incarico, ma fai parte del Consiglio capi e
+lo staff ti ha dato gli stessi compiti del capo squadriglia: in **La mia squadriglia** te lo dice
+un messaggio. Vale fino al 30 settembre e il tuo incarico non cambia.
+
 ## La tua squadriglia
 
 Nella Home, in **Attività**, tocca **La mia squadriglia**. Vedi gli squadriglieri con il

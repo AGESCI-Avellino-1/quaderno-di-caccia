@@ -71,6 +71,13 @@ const genitoriDi = (s: MiaSquadriglia, id: number) => s.genitori.filter((g) => g
           <ColoriAnimale v-if="s.animale" :colori="s.animale.colori" />
         </div>
       </div>
+      <!-- Only the person learns it here (DEC-419): the others see the role assigned. -->
+      <div v-if="s.equiparato_fino_al" class="alert theme-info small" role="status" data-equiparato>
+        <div>
+          Fai parte del Consiglio capi: fino al 30 settembre lo staff ti ha dato nell'app gli stessi
+          compiti del capo squadriglia. Il tuo incarico non cambia.
+        </div>
+      </div>
       <form
         v-if="s.sono_capo && s.provvisoria"
         class="card card-body mb-5"

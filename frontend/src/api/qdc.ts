@@ -955,6 +955,9 @@ export interface IncarichiDiSquadriglia {
   animale?: AnimaleBreve | null
   incarichi: Incarico[]
   nomina: Scelta[]
+  /** From a person's file: the last day they are treated as CSQ (DEC-419); only for the
+   * capi, the person and their parents. */
+  equiparato_fino_al?: string | null
 }
 
 /** An active patrol membership (DEC-65). */
@@ -962,6 +965,8 @@ export interface Membro {
   id: number
   persona: PersonaBreve
   data_inizio: string
+  /** Treated as the patrol's CSQ by the reparto staff (DEC-419). */
+  equiparato?: boolean
 }
 
 export interface Squadriglia {
@@ -981,6 +986,8 @@ export interface Squadriglia {
   incarichi: Incarico[]
   /** Roles the user may assign (and close) here: the backend policy decides. */
   nomina: Scelta[]
+  /** The reparto staff may treat a member as the CSQ (DEC-419). */
+  puo_equiparare?: boolean
 }
 
 export interface UnitaDettaglio {
@@ -1172,6 +1179,8 @@ export interface MiaSquadriglia {
   sono_capo: boolean
   /** Waiting for its CSQ to choose the animal (DEC-409). */
   provvisoria?: boolean
+  /** The user is treated as its CSQ until that day (DEC-419). */
+  equiparato_fino_al?: string | null
   membri: TelefonoMembro[]
   /** Parents' phones: for the capo squadriglia only. */
   genitori: { figlio_id: number; id: number; nome: string; cognome: string; telefono: string }[]
@@ -3589,6 +3598,11 @@ export const api = {
     richiesta<Membro>(`/api/v1/squadriglie/${squadriglia}/membri`, {
       metodo: 'POST',
       corpo: { persona_id: persona },
+    }),
+  equiparaCsq: (membro: number, attiva: boolean) =>
+    richiesta<Membro>(`/api/v1/membri-squadriglia/${membro}/equiparazione`, {
+      metodo: 'PUT',
+      corpo: { attiva },
     }),
   togliMembro: (id: number) =>
     richiesta<{ id: number; rimosso: boolean }>(`/api/v1/membri-squadriglia/${id}/termina`, {

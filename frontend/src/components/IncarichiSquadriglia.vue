@@ -39,6 +39,11 @@ watch(() => [props.squadriglia, props.persona], carica, { immediate: true })
       Incarichi nella squadriglia {{ dati.nome }}
     </h2>
     <h3 v-else class="h6 mb-3">Incarichi</h3>
+    <!-- Only for the capi, the person and their parents (DEC-419). -->
+    <p v-if="dati.equiparato_fino_al" class="small mb-3" data-equiparato>
+      Fa parte del Consiglio capi: fino al 30 settembre ha nell'app gli stessi compiti del capo
+      squadriglia, per decisione dello staff.
+    </p>
     <ElencoIncarichi
       :incarichi="dati.incarichi"
       :nomina="membri ? dati.nomina : []"

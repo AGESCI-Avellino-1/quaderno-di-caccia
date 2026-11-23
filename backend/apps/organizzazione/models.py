@@ -901,3 +901,39 @@ class MembroInBozza(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.persona} in {self.bozza}"
+
+
+class EquiparazioneQuerySet(models.QuerySet):
+    def attive(self, al_giorno: date | None = None):
+        """In force that day, while the person is still in the patrol."""
+        giorno = al_giorno or date.today()
+        return (
+            self.filter(data_inizio__lte=giorno, data_fine__gt=giorno)
+            .filter(appartenenza__data_inizio__lte=giorno)
+            .filter(Q(appartenenza__data_fine__isnull=True) | Q(appartenenza__data_fine__gt=giorno))
+        )
+
+
+class EquiparazioneCsq(ModelloTracciato):
+    """A member of a patrol (VCSQ or with no patrol role) who sits in the Consiglio capi,
+    treated as its CSQ in everything the app lets the CSQ see and do (DEC-419). Not a
+    role: the assigned one stays, and only the capi, the person and their parents know.
+    Turned on and off by the reparto staff; it ends with the associative year (`data_fine`
+    exclusive, 1 October) or earlier with the patrol membership it belongs to."""
+
+    appartenenza = models.ForeignKey(
+        "anagrafica.AppartenenzaSquadriglia",
+        on_delete=models.CASCADE,
+        related_name="equiparazioni",
+    )
+    data_inizio = models.DateField()
+    data_fine = models.DateField()
+
+    objects = EquiparazioneQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "equiparazione al capo squadriglia"
+        verbose_name_plural = "equiparazioni al capo squadriglia"
+
+    def __str__(self) -> str:
+        return f"{self.appartenenza} come capo squadriglia"

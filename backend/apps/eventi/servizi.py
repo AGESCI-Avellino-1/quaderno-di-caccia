@@ -18,7 +18,14 @@ from apps.anagrafica.models import (
 )
 from apps.core.anno import AnnoAssociativo
 from apps.core.chiusura import controlla_anno_aperto
-from apps.organizzazione.models import BRANCA_DEL_TIPO, Incarico, RuoloIncarico, TipoUnita, Unita
+from apps.organizzazione.models import (
+    BRANCA_DEL_TIPO,
+    EquiparazioneCsq,
+    Incarico,
+    RuoloIncarico,
+    TipoUnita,
+    Unita,
+)
 from apps.permessi.policy import STAFF_DI_UNITA
 
 from .models import (
@@ -93,8 +100,8 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
 
 def _previsti_base(evento: Evento) -> QuerySet[Persona]:
     """By default the members of the units involved on the day the event starts (the
-    whole group for a group event; the patrol for a patrol event; the CSQ, CSQ and VCSQ
-    or the Alta Squadriglia of the reparti for their councils)."""
+    whole group for a group event; the patrol for a patrol event; the CSQ (and who is treated
+    as one, DEC-419), CSQ and VCSQ or the Alta Squadriglia of the reparti for their councils)."""
     giorno = giorno_evento(evento)
     if evento.livello == Livello.ESTERNO:
         return Persona.objects.none()  # who registered on BuonaCaccia, one by one
@@ -116,10 +123,17 @@ def _previsti_base(evento: Evento) -> QuerySet[Persona]:
         ruoli = {RuoloIncarico.CSQ}
         if evento.cerchia == Cerchia.CONSIGLIO_CAPI_VICE:
             ruoli.add(RuoloIncarico.VCSQ)
-        ids = (
-            Incarico.objects.attivi(giorno)
-            .filter(ruolo__in=ruoli, squadriglia__unita__in=unita_coinvolte(evento))
-            .values("persona_id")
+        reparti = unita_coinvolte(evento)
+        guide = Incarico.objects.attivi(giorno).filter(
+            ruolo__in=ruoli, squadriglia__unita__in=reparti
+        )
+        # Members the staff treats as CSQ sit in the Consiglio capi (DEC-419).
+        equiparati = EquiparazioneCsq.objects.attive(giorno).filter(
+            appartenenza__squadriglia__unita__in=reparti
+        )
+        return Persona.objects.filter(
+            Q(pk__in=guide.values("persona_id"))
+            | Q(pk__in=equiparati.values("appartenenza__persona_id"))
         )
     elif evento.cerchia == Cerchia.CONSIGLIO_ANZIANI:
         ids = (

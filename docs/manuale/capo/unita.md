@@ -54,6 +54,12 @@ Le squadriglie le compongono lo staff del reparto e i capigruppo.
   **Nessuna squadriglia**): vale da oggi. Chi non è in nessuna squadriglia è in **Senza
   squadriglia**, con **Metti in…**.
 - Prima di spostare un capo o vice capo squadriglia, chiudi il suo incarico.
+- **Come capo squadriglia**: un vice, o uno squadrigliere, che fa parte del Consiglio capi può
+  avere nell'app gli stessi compiti del capo squadriglia, nella sua squadriglia e insieme al capo
+  squadriglia, compreso l'invito alle riunioni del Consiglio capi. Lo staff del reparto accende
+  l'interruttore **Come capo squadriglia** accanto al suo nome. Il suo incarico non cambia; lo
+  sanno solo i capi, lui/lei e i suoi genitori. Vale fino al 30 settembre, poi va riacceso;
+  finisce prima se lo spegni o se cambia squadriglia.
 - **Incarichi di squadriglia** (cassiere, cicala, cronista e gli altri): li assegnano lo staff del
   reparto, dalla squadriglia in questa pagina, e il capo squadriglia, dalla sua pagina. Un
   capogruppo lo fa solo se è nello staff di quel reparto. Non danno permessi e si chiudono da soli

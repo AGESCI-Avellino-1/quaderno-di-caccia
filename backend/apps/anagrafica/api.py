@@ -10,6 +10,7 @@ from ninja.errors import HttpError
 
 from apps.organizzazione.animali import AnimaleBreve, breve
 from apps.organizzazione.models import Incarico, RuoloIncarico, Squadriglia
+from apps.organizzazione.servizi import fine_equiparazione
 from apps.permessi import policy
 from apps.permessi.policy import LivelloAccesso
 
@@ -436,6 +437,8 @@ class MiaSquadriglia(Schema):
     sono_capo: bool
     # Waiting for its CSQ to choose the animal (DEC-409).
     provvisoria: bool = False
+    # The caller is treated as its CSQ until that day (DEC-419): only they learn it here.
+    equiparato_fino_al: date | None = None
     membri: list[TelefonoMembro]
     genitori: list[TelefonoGenitore]  # for the CSQ only
 
@@ -506,6 +509,7 @@ def mie_squadriglie(request):
     guidate = set(policy.squadriglie_guidate(request.auth).values_list("pk", flat=True))
     risultato = []
     squadriglie = policy.squadriglie_di(request.auth).select_related("unita", "animale")
+    propria = policy.persona_di(request.auth)
     for sq in squadriglie.order_by("nome"):
         capo = sq.pk in guidate
         membri, genitori = _membri(sq, capo, request.auth)
@@ -517,6 +521,9 @@ def mie_squadriglie(request):
                 "reparto": str(sq.unita),
                 "sono_capo": capo,
                 "provvisoria": sq.provvisoria,
+                "equiparato_fino_al": (
+                    fine_equiparazione(propria, sq) if propria is not None else None
+                ),
                 "membri": membri,
                 "genitori": genitori,
             }

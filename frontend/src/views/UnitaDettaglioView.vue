@@ -116,6 +116,16 @@ async function sposta(evento: Event, persona: number, membro?: number) {
   if (fatto) await carica()
 }
 
+// A member who sits in the Consiglio capi treated as the CSQ until 30 September (DEC-419):
+// the reparto staff turns it on and off; the role assigned stays.
+const eCsq = (s: Squadriglia, persona: number) =>
+  s.incarichi.some((i) => i.ruolo === 'CSQ' && i.persona.id === persona)
+async function equipara(evento: Event, membro: number) {
+  const attiva = (evento.target as HTMLInputElement).checked
+  if (await esegui(() => api.equiparaCsq(membro, attiva))) await carica()
+  else (evento.target as HTMLInputElement).checked = !attiva
+}
+
 async function apriModifica() {
   altre.value = ((await esegui(() => api.unita(true))) ?? []).filter((u) => u.id !== props.id)
   modifica.value = true
@@ -549,6 +559,26 @@ const iniziale = (u: Unita): UnitaIn => ({
             <RouterLink :to="{ name: 'persona', params: { id: m.persona.id } }">
               {{ m.persona.nome }} {{ m.persona.cognome }}
             </RouterLink>
+            <span v-if="m.equiparato && !s.puo_equiparare" class="badge theme-primary">
+              come capo squadriglia
+            </span>
+            <div
+              v-if="s.puo_equiparare && !eCsq(s, m.persona.id)"
+              class="form-field mb-0"
+              data-equiparazione
+            >
+              <div class="switch">
+                <input
+                  :id="`equipara-${m.id}`"
+                  type="checkbox"
+                  role="switch"
+                  :checked="m.equiparato"
+                  :disabled="inCorso"
+                  @change="equipara($event, m.id)"
+                />
+              </div>
+              <label :for="`equipara-${m.id}`">Come capo squadriglia</label>
+            </div>
             <select
               v-if="dettaglio.puo_gestire_squadriglie"
               class="form-control form-control-sm w-auto ms-auto"
@@ -589,6 +619,11 @@ const iniziale = (u: Unita): UnitaIn => ({
         v-if="dettaglio.puo_gestire_squadriglie && dettaglio.squadriglie.length"
         class="form-text mt-3 mb-0"
       >
+        <template v-if="dettaglio.squadriglie.some((s) => s.puo_equiparare)">
+          «Come capo squadriglia»: chi è nel Consiglio capi senza esserne capo vede e fa nell'app
+          quello che fa il capo squadriglia, fino al 30 settembre; il suo incarico non cambia e gli
+          altri ragazzi/e non lo sanno.
+        </template>
         L'animale di una squadriglia non si cambia: per cambiarlo aprine una nuova, spostaci i
         membri e archivia la vecchia. Si archivia solo una squadriglia vuota.
       </p>

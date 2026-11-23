@@ -21,5 +21,6 @@ class OrganizzazioneConfig(AppConfig):
             models.BozzaSquadriglie,
             models.SquadrigliaInBozza,
             models.MembroInBozza,
+            models.EquiparazioneCsq,
         ):
             auditlog.register(modello)

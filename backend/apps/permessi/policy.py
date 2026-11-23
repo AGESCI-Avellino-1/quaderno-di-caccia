@@ -24,6 +24,7 @@ from apps.anagrafica.models import (
 from apps.organizzazione.models import (
     INCARICHI_DI_SQUADRIGLIA,
     Branca,
+    EquiparazioneCsq,
     Incarico,
     RuoloIncarico,
     Squadriglia,
@@ -183,12 +184,34 @@ def e_tesoriere(user) -> bool:
 
 
 def squadriglie_guidate(user) -> QuerySet[Squadriglia]:
-    """Patrols in which the user is currently CSQ (DEC-13)."""
+    """Patrols in which the user is currently CSQ (DEC-13), or treated as their CSQ by the
+    reparto staff (DEC-419): every CSQ permission goes through here."""
     persona = persona_di(user)
     if persona is None:
         return Squadriglia.objects.none()
     ids = Incarico.objects.attivi().filter(persona=persona, ruolo=RuoloIncarico.CSQ)
-    return Squadriglia.objects.filter(pk__in=ids.values("squadriglia_id"))
+    equiparate = EquiparazioneCsq.objects.attive().filter(appartenenza__persona=persona)
+    return Squadriglia.objects.filter(
+        Q(pk__in=ids.values("squadriglia_id"))
+        | Q(pk__in=equiparate.values("appartenenza__squadriglia_id"))
+    )
+
+
+def puo_equiparare_csq(user, squadriglia: Squadriglia) -> bool:
+    """Treat a member as the patrol's CSQ, and stop it (DEC-419): the reparto staff, as
+    for appointing CSQ and VCSQ (DEC-14); a capogruppo only as part of that staff."""
+    return e_staff(user, squadriglia.unita)
+
+
+def vede_equiparazione_csq(user, persona: Persona) -> bool:
+    """That a member is treated as CSQ (DEC-419): the capi, the person and their parents;
+    the other ragazzi see only the assigned role."""
+    if e_capo(user):
+        return True
+    propria = persona_di(user)
+    if propria is not None and propria.pk == persona.pk:
+        return True
+    return tutelati(user).filter(pk=persona.pk).exists()
 
 
 def tutelati(user) -> QuerySet[Persona]:

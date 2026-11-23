@@ -17,7 +17,7 @@ from apps.anagrafica.models import (
     RuoloAppartenenza,
 )
 from apps.anagrafica.servizi import con_unita
-from apps.core.anno import compie_anni
+from apps.core.anno import AnnoAssociativo, compie_anni
 from apps.permessi import policy
 from apps.permessi.models import Azione, Categoria, registra_accessi
 
@@ -39,6 +39,7 @@ from .models import (
     AmbitoIncarico,
     AnimaleSquadriglia,
     Composizione,
+    EquiparazioneCsq,
     Gruppo,
     Incarico,
     RuoloIncarico,
@@ -269,6 +270,12 @@ class MembroOut(Schema):
     id: int
     persona: PersonaBreve
     data_inizio: date
+    # Treated as the patrol's CSQ by the reparto staff (DEC-419); this list is for capi only.
+    equiparato: bool = False
+
+    @staticmethod
+    def resolve_equiparato(obj) -> bool:
+        return EquiparazioneCsq.objects.attive().filter(appartenenza=obj).exists()
 
 
 class SquadrigliaOut(Schema):
@@ -288,6 +295,8 @@ class SquadrigliaOut(Schema):
     incarichi: list[IncaricoOut]
     # Roles the caller may assign in this patrol.
     nomina: list[Scelta]
+    # The caller may treat a member as the CSQ, and stop it (DEC-419).
+    puo_equiparare: bool = False
 
 
 class RagazzoSenzaSquadriglia(PersonaBreve):
@@ -523,6 +532,7 @@ def dettaglio_unita(request, unita_id: int):
             ),
             "incarichi": _incarichi_della_squadriglia(s),
             "nomina": _nomina(utente, RUOLI_DI_SQUADRIGLIA_IN_ORDINE, squadriglia=s),
+            "puo_equiparare": policy.puo_equiparare_csq(utente, s),
         }
         for r in reparti
         for s in r.squadriglie.filter(attiva=True)
@@ -1319,12 +1329,58 @@ def togli_membro(request, appartenenza_id: int):
     return {"id": appartenenza_id, "rimosso": _chiudi_periodo(appartenenza, oggi)}
 
 
+class EquiparazioneIn(Schema):
+    attiva: bool
+
+
+@router.put("/membri-squadriglia/{appartenenza_id}/equiparazione", response=MembroOut)
+@transaction.atomic
+def equipara(request, appartenenza_id: int, dati: EquiparazioneIn):
+    """Treat a member who sits in the Consiglio capi as the patrol's CSQ until 30 September,
+    or stop it (DEC-419). The assigned role does not change."""
+    appartenenza = get_object_or_404(
+        AppartenenzaSquadriglia.objects.select_related("squadriglia__unita", "persona"),
+        pk=appartenenza_id,
+    )
+    squadriglia = appartenenza.squadriglia
+    if not policy.puo_equiparare_csq(request.auth, squadriglia):
+        raise HttpError(403, "Lo decide lo staff del reparto.")
+    oggi = timezone.localdate()
+    if appartenenza.data_inizio > oggi or (
+        appartenenza.data_fine is not None and appartenenza.data_fine <= oggi
+    ):
+        raise HttpError(409, "Non fa più parte della squadriglia.")
+    attiva = EquiparazioneCsq.objects.attive(oggi).filter(appartenenza=appartenenza).first()
+    if dati.attiva and attiva is None:
+        if (
+            Incarico.objects.attivi(oggi)
+            .filter(persona=appartenenza.persona, squadriglia=squadriglia, ruolo=RuoloIncarico.CSQ)
+            .exists()
+        ):
+            raise HttpError(400, f"{appartenenza.persona} è già capo di {squadriglia}.")
+        # 30 September included: the period ends with the associative year.
+        fine = AnnoAssociativo.da_data(oggi).fine
+        _salva(
+            EquiparazioneCsq(
+                appartenenza=appartenenza,
+                data_inizio=oggi,
+                data_fine=date.fromordinal(fine.toordinal() + 1),
+            )
+        )
+    elif not dati.attiva and attiva is not None:
+        _chiudi_periodo(attiva, oggi)
+    return appartenenza
+
+
 class IncarichiDiSquadriglia(Schema):
     id: int
     nome: str
     animale: AnimaleBreve | None = None
     incarichi: list[IncaricoOut]
     nomina: list[Scelta]
+    # From a person's file: the last day they are treated as CSQ (DEC-419), only for the
+    # capi, the person and their parents.
+    equiparato_fino_al: date | None = None
 
 
 def _incarichi_di_squadriglia(request, squadriglia: Squadriglia) -> dict:
@@ -1357,7 +1413,12 @@ def incarichi_della_squadriglia_di(request, persona_id: int):
     )
     if membro is None:
         raise HttpError(404, "Non trovato.")
-    return _incarichi_di_squadriglia(request, membro.squadriglia)
+    risposta = _incarichi_di_squadriglia(request, membro.squadriglia)
+    if policy.vede_equiparazione_csq(request.auth, membro.persona):
+        risposta["equiparato_fino_al"] = servizi.fine_equiparazione(
+            membro.persona, membro.squadriglia
+        )
+    return risposta
 
 
 # --- Exceptions to single-sex patrols ------------------------------------------------------

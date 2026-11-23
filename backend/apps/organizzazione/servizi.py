@@ -25,7 +25,15 @@ from apps.impostazioni.email import invia
 from apps.notifiche.servizi import notifica
 from apps.permessi import policy
 
-from .models import RUOLI_DI_SQUADRIGLIA, Incarico, RuoloIncarico, Squadriglia, TipoUnita, Unita
+from .models import (
+    RUOLI_DI_SQUADRIGLIA,
+    EquiparazioneCsq,
+    Incarico,
+    RuoloIncarico,
+    Squadriglia,
+    TipoUnita,
+    Unita,
+)
 
 
 def _chiudi(periodo, giorno: date) -> None:
@@ -240,3 +248,15 @@ def collega(unita: Unita, altra: Unita | None, nota: str = "") -> None:
             altra.save(update_fields=["collegata_a", "nota_collegamento", "aggiornato_il"])
             unita.collegata_a, unita.nota_collegamento = altra, nota
         unita.save(update_fields=["collegata_a", "nota_collegamento", "aggiornato_il"])
+
+
+def fine_equiparazione(persona, squadriglia: Squadriglia) -> date | None:
+    """The last day (30 September) a member is treated as the patrol's CSQ (DEC-419)."""
+    equiparazione = (
+        EquiparazioneCsq.objects.attive()
+        .filter(appartenenza__persona=persona, appartenenza__squadriglia=squadriglia)
+        .first()
+    )
+    if equiparazione is None:
+        return None
+    return date.fromordinal(equiparazione.data_fine.toordinal() - 1)

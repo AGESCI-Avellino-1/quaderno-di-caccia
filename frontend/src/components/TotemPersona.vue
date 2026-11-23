@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { ErroreApi } from '@/api/http'
 import { api, immagineTotem, type TotemPersona } from '@/api/qdc'
@@ -11,6 +11,8 @@ import { useSessioneStore } from '@/stores/sessione'
 // (from the reparto up), the person themself once they have one; never the parents. The
 // staff of the unit and the capigruppo assign it. The image is cropped on the device like
 // the profile photo; a ragazzo's waits for a capo. Online only.
+// «Modifica totem» (DEC-418): a capo with a totem name lets the person write their own,
+// once; any change turns it off. Only who may turn it on or off sees the switch.
 const props = defineProps<{ persona: number; nome: string }>()
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
@@ -21,6 +23,8 @@ const scelta = ref<File | null>(null)
 // Taking away an inappropriate image: the reason, shown to the owner.
 const togliendo = ref(false)
 const motivo = ref('')
+// Writing one's own name through «Modifica totem», not assigning it.
+const proprio = computed(() => !!totem.value?.puo_scrivere && !totem.value.puo_assegnare)
 
 onMounted(async () => {
   try {
@@ -57,6 +61,13 @@ async function carica(blob: Blob) {
   await sessione.carica()
 }
 
+async function cambiaModifica(evento: Event) {
+  const attiva = (evento.target as HTMLInputElement).checked
+  const esito = await esegui(() => api.modificaTotem(props.persona, attiva))
+  if (esito) totem.value = esito
+  else (evento.target as HTMLInputElement).checked = !attiva
+}
+
 async function togli() {
   const id = totem.value?.id
   if (!id) return
@@ -72,6 +83,13 @@ async function togli() {
   <section v-if="totem" class="card card-body mb-5" data-totem>
     <h2 class="h5">Nome di totem</h2>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
+
+    <div v-if="totem.puo_scrivere" class="alert theme-info small" role="status" data-una-volta>
+      <div>
+        Puoi {{ totem.id ? 'cambiare' : 'scrivere' }} il tuo nome di totem una volta sola: dopo, per
+        cambiarlo ancora, dovrà permettertelo un capo.
+      </div>
+    </div>
 
     <form v-if="modifica" class="mb-3" @submit.prevent="salvaNome(nuovoNome)">
       <label class="form-label small" :for="`totem-${persona}`">
@@ -89,7 +107,7 @@ async function togli() {
           Salva
         </button>
         <button
-          v-if="totem.id"
+          v-if="totem.id && !proprio"
           type="button"
           class="btn btn-sm btn-outline theme-danger"
           :disabled="inCorso"
@@ -112,15 +130,33 @@ async function togli() {
           class="rounded"
         />
         <strong v-if="totem.id" class="h5 mb-0">{{ totem.nome }}</strong>
-        <span v-else class="fg-2">{{ nome }} non ha ancora un nome di totem.</span>
+        <span v-else-if="!proprio" class="fg-2">{{ nome }} non ha ancora un nome di totem.</span>
         <button
-          v-if="totem.puo_assegnare"
+          v-if="totem.puo_assegnare || totem.puo_scrivere"
           type="button"
           class="btn btn-sm btn-outline theme-primary ms-auto"
           @click="apri"
         >
-          {{ totem.id ? 'Cambia' : 'Assegna' }}
+          {{ totem.id ? 'Cambia' : proprio ? 'Scrivi il tuo nome di totem' : 'Assegna' }}
         </button>
+      </div>
+
+      <div v-if="totem.puo_attivare_modifica" class="form-field mt-3">
+        <div class="switch">
+          <input
+            :id="`totem-modifica-${persona}`"
+            type="checkbox"
+            role="switch"
+            :checked="totem.modifica_attiva"
+            :disabled="inCorso"
+            @change="cambiaModifica"
+          />
+        </div>
+        <label :for="`totem-modifica-${persona}`">Modifica totem</label>
+        <p class="small fg-2 mb-0">
+          {{ nome }} può {{ totem.id ? 'cambiare' : 'scrivere' }} da sé il nome di totem, una volta
+          sola: dopo ogni modifica si spegne.
+        </p>
       </div>
 
       <div v-if="totem.avviso" class="alert theme-warning small mt-3" role="status">

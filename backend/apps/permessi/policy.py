@@ -2250,9 +2250,26 @@ def _ha_totem(persona: Persona | None) -> bool:
     )
 
 
+def modifica_totem_attiva(persona: Persona | None) -> bool:
+    """«Modifica totem» is on (DEC-418): the person may write their own totem name once."""
+    from apps.tribu.models import ModificaTotem
+
+    return (
+        persona is not None
+        and ModificaTotem.objects.filter(persona=persona).exists()
+        and puo_avere_totem(persona)
+    )
+
+
 def vede_tribu(user) -> bool:
-    """«La mia tribù» and every totem name: all the capi, even without one, and the
-    members who have one."""
+    """The «La mia tribù» entry: all the capi, even without a totem, the members who have
+    one and who may write their own (DEC-418), who sees nothing in it until they have."""
+    propria = persona_di(user)
+    return e_capo(user) or _ha_totem(propria) or modifica_totem_attiva(propria)
+
+
+def vede_totem_altrui(user) -> bool:
+    """The totem names of the tribe and their images: the capi and who has a totem."""
     return e_capo(user) or _ha_totem(persona_di(user))
 
 
@@ -2279,7 +2296,11 @@ def vede_totem_persona(user, persona: Persona) -> bool:
     if e_capo(user):
         return puo_avere_totem(persona)
     propria = persona_di(user)
-    return propria is not None and propria.pk == persona.pk and _ha_totem(persona)
+    return (
+        propria is not None
+        and propria.pk == persona.pk
+        and (_ha_totem(persona) or modifica_totem_attiva(persona))
+    )
 
 
 def puo_assegnare_totem(user, persona: Persona) -> bool:
@@ -2292,6 +2313,45 @@ def puo_assegnare_totem(user, persona: Persona) -> bool:
         Appartenenza.objects.attive().filter(persona=persona, ruolo=RuoloAppartenenza.CAPO).exists()
     )
     return not capo and _staff_della_persona(user, persona)
+
+
+def puo_scrivere_proprio_totem(user, persona: Persona) -> bool:
+    """One's own totem name, once, while «Modifica totem» is on (DEC-418)."""
+    propria = persona_di(user)
+    return propria is not None and propria.pk == persona.pk and modifica_totem_attiva(persona)
+
+
+def _capo_con_totem(persona: Persona | None) -> bool:
+    return (
+        persona is not None
+        and _ha_totem(persona)
+        and Appartenenza.objects.attive()
+        .filter(persona=persona, ruolo=RuoloAppartenenza.CAPO)
+        .exists()
+    )
+
+
+def capi_con_totem() -> bool:
+    """Some capo of the group already has a totem name."""
+    from apps.tribu.models import Totem
+
+    capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
+    return Totem.objects.filter(
+        persona__in=nella_tribu().filter(pk__in=capi.values("persona_id"))
+    ).exists()
+
+
+def puo_attivare_modifica_totem(user, persona: Persona) -> bool:
+    """Who turns «Modifica totem» on and off, and alone sees it (DEC-418): any capo with a
+    totem name, never for themself; while no capo has one, the capigruppo."""
+    if not puo_avere_totem(persona):
+        return False
+    propria = persona_di(user)
+    if propria is None or propria.pk == persona.pk or not e_capo(user):
+        return False
+    if _capo_con_totem(propria):
+        return True
+    return e_capogruppo(user) and not capi_con_totem()
 
 
 def puo_caricare_immagine_totem(user, persona: Persona) -> bool:

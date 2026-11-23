@@ -1,4 +1,4 @@
-"""«La mia tribù» and the totem names (DEC-416). Online only: nothing is kept on the
+"""«La mia tribù» and the totem names (DEC-416, DEC-418). Online only: nothing is kept on the
 devices. Who sees what is decided in `policy`."""
 
 from django.core.exceptions import ValidationError
@@ -54,6 +54,9 @@ class TribuOut(Schema):
     totem: list[TotemOut]
     # The capi: images uploaded by ragazzi, waiting for one of them.
     da_approvare: list[TotemOut]
+    # Who may write their own totem name and has none yet: the tribe stays empty until
+    # they write it (DEC-418).
+    scrivi_il_tuo: bool = False
 
 
 def _totem_out(user, totem: Totem, *, attesa: bool = False) -> dict:
@@ -73,6 +76,15 @@ def tribu(request):
     utente = request.auth
     if not policy.vede_tribu(utente):
         raise HttpError(404, "Pagina non trovata.")
+    if not policy.vede_totem_altrui(utente):
+        return {
+            "descrizione": "",
+            "cerimonia": False,
+            "mio": None,
+            "totem": [],
+            "da_approvare": [],
+            "scrivi_il_tuo": True,
+        }
     capo = policy.puo_moderare_immagini_totem(utente)
     propria = policy.persona_di(utente)
     tutti = list(
@@ -100,7 +112,7 @@ def immagine(request, totem_id: int, in_attesa: bool = False):
     """The image; the one waiting only for its owner and the capi."""
     totem = get_object_or_404(Totem, pk=totem_id)
     utente = request.auth
-    if not policy.vede_tribu(utente) or not policy.puo_avere_totem(totem.persona):
+    if not policy.vede_totem_altrui(utente) or not policy.puo_avere_totem(totem.persona):
         raise HttpError(404, NON_TROVATO)
     if in_attesa:
         propria = policy.persona_di(utente)
@@ -183,6 +195,11 @@ class TotemPersonaOut(Schema):
     avviso: str
     versione: str
     puo_assegnare: bool
+    # One's own totem name, once, while «Modifica totem» is on (DEC-418).
+    puo_scrivere: bool
+    # The switch, only for who may turn it on or off.
+    puo_attivare_modifica: bool
+    modifica_attiva: bool
     puo_caricare: bool
     # A new image waits for a capo.
     da_approvare: bool
@@ -199,6 +216,7 @@ def _persona_totem(request, persona_id: int) -> Persona:
 def _totem_persona(request, persona: Persona) -> dict:
     utente = request.auth
     totem = Totem.objects.filter(persona=persona).first()
+    attivare = policy.puo_attivare_modifica_totem(utente, persona)
     return {
         "id": totem.pk if totem else None,
         "nome": totem.nome if totem else "",
@@ -207,6 +225,9 @@ def _totem_persona(request, persona: Persona) -> dict:
         "avviso": totem.avviso_immagine if totem else "",
         "versione": f"{totem.aggiornato_il:%Y%m%d%H%M%S%f}" if totem else "",
         "puo_assegnare": policy.puo_assegnare_totem(utente, persona),
+        "puo_scrivere": policy.puo_scrivere_proprio_totem(utente, persona),
+        "puo_attivare_modifica": attivare,
+        "modifica_attiva": attivare and policy.modifica_totem_attiva(persona),
         "puo_caricare": policy.puo_caricare_immagine_totem(utente, persona),
         "da_approvare": policy.immagine_totem_da_approvare(utente),
         "puo_moderare": policy.puo_moderare_immagini_totem(utente),
@@ -226,9 +247,34 @@ class NomeIn(Schema):
 @router.put("/persone/{persona_id}/totem", response=TotemPersonaOut)
 def assegna(request, persona_id: int, dati: NomeIn):
     persona = _persona_totem(request, persona_id)
-    if not policy.puo_assegnare_totem(request.auth, persona):
-        raise HttpError(403, "Il nome di totem lo assegnano lo staff dell'unità e i capigruppo.")
+    utente = request.auth
+    if not policy.puo_assegnare_totem(utente, persona):
+        if not policy.puo_scrivere_proprio_totem(utente, persona):
+            raise HttpError(
+                403,
+                "Il nome di totem lo assegnano lo staff dell'unità e i capigruppo; "
+                "il tuo puoi scriverlo quando un capo te lo permette.",
+            )
+        if not dati.nome.strip():
+            raise HttpError(400, "Scrivi il tuo nome di totem.")
     _o_errore(servizi.assegna, persona, dati.nome)
+    return _totem_persona(request, persona)
+
+
+class ModificaIn(Schema):
+    attiva: bool
+
+
+@router.put("/persone/{persona_id}/totem/modifica", response=TotemPersonaOut)
+def modifica(request, persona_id: int, dati: ModificaIn):
+    """«Modifica totem» (DEC-418): the person may write their own totem name once."""
+    persona = _persona_totem(request, persona_id)
+    if not policy.puo_attivare_modifica_totem(request.auth, persona):
+        raise HttpError(
+            403,
+            "Il permesso di scrivere il nome di totem lo dà un capo che ha già il suo.",
+        )
+    servizi.attiva_modifica(persona, dati.attiva)
     return _totem_persona(request, persona)
 
 

@@ -14,3 +14,4 @@ class TribuConfig(AppConfig):
 
         # The images and why a capo took one away stay in the history (DEC-416).
         auditlog.register(models.Totem)
+        auditlog.register(models.ModificaTotem)

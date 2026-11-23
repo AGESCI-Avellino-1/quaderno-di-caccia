@@ -40,6 +40,7 @@ const TRIBU: Tribu = {
     },
   ],
   da_approvare: [],
+  scrivi_il_tuo: false,
 }
 
 describe('La mia tribù', () => {
@@ -92,6 +93,22 @@ describe('La mia tribù', () => {
     await flushPromises()
     expect(approva).toHaveBeenCalledWith(1)
   })
+
+  it('shows nothing of the tribe until one writes one’s own totem name', async () => {
+    useSessioneStore().profilo = { capo: false, persona: { id: 10 } } as Profilo
+    vi.spyOn(api, 'tribu').mockResolvedValue({
+      ...TRIBU,
+      descrizione: '',
+      mio: null,
+      totem: [],
+      scrivi_il_tuo: true,
+    })
+    const pagina = mount(TribuView, { global: { stubs: collegamento } })
+    await flushPromises()
+    expect(pagina.find('[data-scrivi-il-tuo]').text()).toContain('nel tuo profilo')
+    expect(pagina.find('.descrizione').exists()).toBe(false)
+    expect(pagina.text()).not.toContain('Nessuno ha ancora')
+  })
 })
 
 describe('Nome di totem sulla scheda', () => {
@@ -106,6 +123,9 @@ describe('Nome di totem sulla scheda', () => {
     avviso: 'Immagine tolta da un capo: non adatta',
     versione: 'a',
     puo_assegnare: false,
+    puo_scrivere: false,
+    puo_attivare_modifica: false,
+    modifica_attiva: false,
     puo_caricare: true,
     da_approvare: true,
     puo_moderare: false,
@@ -142,6 +162,47 @@ describe('Nome di totem sulla scheda', () => {
     await flushPromises()
     expect(assegna).toHaveBeenCalledWith(10, 'Castoro Operoso')
     expect(scheda.text()).toContain('Castoro Operoso')
+  })
+
+  it('lets the owner write it once, with the message, and never take it away', async () => {
+    vi.spyOn(api, 'totemPersona').mockResolvedValue({
+      ...TOTEM,
+      id: null,
+      nome: '',
+      in_attesa: false,
+      avviso: '',
+      puo_scrivere: true,
+      puo_caricare: false,
+    })
+    const assegna = vi.spyOn(api, 'assegnaTotem').mockResolvedValue(TOTEM)
+    const scheda = mount(TotemPersonaCard, { props: { persona: 10, nome: 'Giulia' } })
+    await flushPromises()
+    expect(scheda.find('[data-una-volta]').text()).toContain('una volta sola')
+    expect(scheda.text()).not.toContain('non ha ancora')
+    // Only who may change it sees the switch.
+    expect(scheda.find('[role="switch"]').exists()).toBe(false)
+    await scheda.find('button').trigger('click')
+    expect(scheda.findAll('button').map((b) => b.text())).not.toContain('Togli il nome di totem')
+    await scheda.find('input').setValue('Castoro Operoso')
+    await scheda.find('form').trigger('submit')
+    await flushPromises()
+    expect(assegna).toHaveBeenCalledWith(10, 'Castoro Operoso')
+    expect(scheda.find('[data-una-volta]').exists()).toBe(false)
+  })
+
+  it('gives the switch to who may turn it on', async () => {
+    vi.spyOn(api, 'totemPersona').mockResolvedValue({ ...TOTEM, puo_attivare_modifica: true })
+    const modifica = vi
+      .spyOn(api, 'modificaTotem')
+      .mockResolvedValue({ ...TOTEM, puo_attivare_modifica: true, modifica_attiva: true })
+    const scheda = mount(TotemPersonaCard, { props: { persona: 10, nome: 'Giulia' } })
+    await flushPromises()
+    const interruttore = scheda.find<HTMLInputElement>('[role="switch"]')
+    expect(interruttore.element.checked).toBe(false)
+    await interruttore.setValue(true)
+    await flushPromises()
+    expect(modifica).toHaveBeenCalledWith(10, true)
+    expect(interruttore.element.checked).toBe(true)
   })
 
   it('shows nothing to who may not see it', async () => {

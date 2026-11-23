@@ -260,3 +260,123 @@ def test_diritti_esporta_e_cancella_il_totem(ragazza):
     assert diritti.fascicolo(ragazza)["nome_di_totem"] == ["Castoro Operoso"]
     diritti.cancella(ragazza)
     assert not Totem.objects.filter(persona=ragazza).exists()
+
+
+# --- «Modifica totem» (DEC-418) ------------------------------------------------------
+
+
+def _modifica(chi, persona, attiva: bool):
+    return _client(chi).put(
+        f"/api/v1/persone/{persona.pk}/totem/modifica", {"attiva": attiva}, "application/json"
+    )
+
+
+@pytest.fixture
+def altro_capo(coca) -> Persona:
+    persona = crea_persona("Carla", "Capo", "carla@example.invalid")
+    Appartenenza.objects.create(
+        persona=persona, unita=coca, ruolo=RuoloAppartenenza.CAPO, data_inizio=INIZIO_ANNO
+    )
+    return persona
+
+
+def test_chi_accende_modifica_totem(
+    capo, capogruppo, altro_capo, csq, ragazza, rover, genitore, estraneo
+):
+    # No capo has a totem: the capigruppo turn it on, the other capi not.
+    assert not policy.capi_con_totem()
+    assert policy.puo_attivare_modifica_totem(capogruppo.utente, altro_capo)
+    assert policy.puo_attivare_modifica_totem(capogruppo.utente, ragazza)
+    assert not policy.puo_attivare_modifica_totem(capogruppo.utente, capogruppo)
+    assert not policy.puo_attivare_modifica_totem(capo.utente, ragazza)
+    assert _modifica(capogruppo, altro_capo, True).status_code == 200
+
+    # A capo with a totem: from now on only the capi with one, for anyone but themself,
+    # even outside their unit.
+    servizi.assegna(capo, "Aquila Saggia")
+    assert policy.capi_con_totem()
+    assert policy.puo_attivare_modifica_totem(capo.utente, rover)
+    assert policy.puo_attivare_modifica_totem(capo.utente, altro_capo)
+    assert not policy.puo_attivare_modifica_totem(capo.utente, capo)
+    assert not policy.puo_attivare_modifica_totem(capogruppo.utente, ragazza)
+    assert _modifica(capogruppo, ragazza, True).status_code == 403
+    # A ragazzo with a totem is not a capo.
+    servizi.assegna(csq, "Quercia Paziente")
+    for chi in (csq, genitore, estraneo):
+        assert not policy.puo_attivare_modifica_totem(chi.utente, ragazza)
+        assert _modifica(chi, ragazza, True).status_code in (403, 404)
+
+    # Only who may change the switch sees it.
+    risposta = _modifica(capo, ragazza, True).json()
+    assert risposta["puo_attivare_modifica"] and risposta["modifica_attiva"]
+    vista = _client(capogruppo).get(f"/api/v1/persone/{ragazza.pk}/totem").json()
+    assert not vista["puo_attivare_modifica"] and not vista["modifica_attiva"]
+    vista = _client(ragazza).get(f"/api/v1/persone/{ragazza.pk}/totem").json()
+    assert not vista["puo_attivare_modifica"] and not vista["modifica_attiva"]
+    assert vista["puo_scrivere"]
+    assert _modifica(capo, ragazza, False).json()["modifica_attiva"] is False
+
+
+def test_ragazzo_senza_totem_scrive_il_suo_una_volta(capo, rover, ragazza):
+    servizi.assegna(capo, "Aquila Saggia")
+    servizi.assegna(rover, "Volpe Astuta")
+    url = f"/api/v1/persone/{ragazza.pk}/totem"
+    # Switch off: nothing about totems or the tribe.
+    assert not policy.vede_tribu(ragazza.utente)
+    assert not _client(ragazza).get("/api/v1/io").json()["tribu"]
+    assert _client(ragazza).get(url).status_code == 404
+    assert _client(ragazza).get("/api/v1/tribu").status_code == 404
+
+    _modifica(capo, ragazza, True)
+    # Switch on: her card and the tribe's entry, empty until she writes her own.
+    assert _client(ragazza).get("/api/v1/io").json()["tribu"]
+    tribu = _client(ragazza).get("/api/v1/tribu").json()
+    assert tribu["scrivi_il_tuo"]
+    assert tribu["totem"] == [] and tribu["mio"] is None and tribu["descrizione"] == ""
+    volpe = Totem.objects.get(persona=rover)
+    servizi.carica_immagine(volpe, _jpeg(), False)
+    assert _client(ragazza).get(f"/api/v1/tribu/{volpe.pk}/immagine").status_code == 404
+    vista = _client(ragazza).get(url).json()
+    assert vista["id"] is None and vista["puo_scrivere"] and not vista["puo_assegnare"]
+    # She cannot take it away nor leave it empty.
+    assert _client(ragazza).put(url, {"nome": " "}, "application/json").status_code == 400
+
+    vista = _client(ragazza).put(url, {"nome": "Castoro Operoso"}, "application/json").json()
+    assert vista["nome"] == "Castoro Operoso" and not vista["puo_scrivere"]
+    assert not policy.modifica_totem_attiva(ragazza)
+    tribu = _client(ragazza).get("/api/v1/tribu").json()
+    assert not tribu["scrivi_il_tuo"] and tribu["mio"]["nome"] == "Castoro Operoso"
+    assert [t["nome"] for t in tribu["totem"]] == ["Aquila Saggia", "Volpe Astuta"]
+    # Once only.
+    assert _client(ragazza).put(url, {"nome": "Altro"}, "application/json").status_code == 403
+
+
+def test_capo_scrive_il_suo_con_modifica_totem(capo, altro_capo):
+    servizi.assegna(capo, "Aquila Saggia")
+    url = f"/api/v1/persone/{altro_capo.pk}/totem"
+    # A capo sees the tribe and her own card anyway, but writes only when allowed.
+    assert _client(altro_capo).get("/api/v1/tribu").json()["scrivi_il_tuo"] is False
+    assert not _client(altro_capo).get(url).json()["puo_scrivere"]
+    assert _client(altro_capo).put(url, {"nome": "Lince"}, "application/json").status_code == 403
+    _modifica(capo, altro_capo, True)
+    assert _client(altro_capo).put(url, {"nome": "Lince"}, "application/json").status_code == 200
+    assert not policy.modifica_totem_attiva(altro_capo)
+
+
+def test_modifica_totem_si_spegne_dopo_ogni_modifica(capo, ragazza):
+    servizi.assegna(capo, "Aquila Saggia")
+    servizi.assegna(ragazza, "Castoro Operoso")
+    _modifica(capo, ragazza, True)
+    # Saving the same name changes nothing.
+    servizi.assegna(ragazza, "Castoro  Operoso")
+    assert policy.modifica_totem_attiva(ragazza)
+    # The staff changing it turns it off as well.
+    url = f"/api/v1/persone/{ragazza.pk}/totem"
+    assert _client(capo).put(url, {"nome": "Castoro Saggio"}, "application/json").status_code == 200
+    assert not policy.modifica_totem_attiva(ragazza)
+    # With a totem and the switch off she sees, without changing.
+    vista = _client(ragazza).get(url).json()
+    assert vista["nome"] == "Castoro Saggio" and not vista["puo_scrivere"]
+    _modifica(capo, ragazza, True)
+    servizi.assegna(ragazza, "")
+    assert not policy.modifica_totem_attiva(ragazza)

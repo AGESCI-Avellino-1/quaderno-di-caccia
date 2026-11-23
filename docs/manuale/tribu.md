@@ -5,6 +5,15 @@ un animale o di una pianta con un aggettivo, come «Castoro Operoso») lo ritrov
 con un'immagine che lo rappresenta. I nomi di totem li vedono solo i capi e chi ne ha già
 uno: i genitori no.
 
+## Scrivere il tuo nome di totem
+
+Il tuo nome di totem puoi scriverlo tu, quando un capo te lo permette: in **Il mio profilo**
+compare il riquadro **Nome di totem** con un messaggio che lo dice. Tocca **Scrivi il tuo
+nome di totem** (o **Cambia**, se ne hai già uno), scrivilo e tocca **Salva**.
+
+Puoi farlo **una volta sola**: dopo, per cambiarlo ancora, dovrà permettertelo di nuovo un
+capo. Finché non l'hai scritto, **La mia tribù** non mostra niente.
+
 ## Se hai un nome di totem
 
 Il tuo nome di totem è in **Il mio profilo** (nella Home, in **Profilo**). Lì puoi
@@ -51,7 +60,7 @@ ogni nome. Accanto alla voce un numero dice quante immagini aspettano un capo.
 ### Assegnare un nome di totem
 
 Il nome di totem lo assegnano lo staff dell'unità del ragazzo/a e i capigruppo; quello di un
-capo i capigruppo.
+capo i capigruppo. Oppure lo scrive da sé il diretto interessato, se glielo permetti (sotto).
 
 1. Apri la scheda della persona (in **Soci**).
 2. Nel riquadro **Nome di totem** tocca **Assegna** (o **Cambia**).
@@ -65,6 +74,16 @@ capo i capigruppo.
 
 Chi assegna il nome può caricare anche l'immagine, per esempio un disegno fatto al campo:
 quella di un capo non aspetta l'approvazione.
+
+### Permettere di scrivere il proprio nome di totem
+
+Se hai un nome di totem, nella scheda di un ragazzo/a o di un altro capo trovi, nel riquadro
+**Nome di totem**, l'interruttore **Modifica totem**: accendilo e la persona potrà scrivere
+(o cambiare) da sé il proprio nome di totem, una volta sola. Dopo ogni modifica del nome,
+chiunque la faccia, l'interruttore si spegne da solo. Il tuo non puoi accenderlo: serve un
+altro capo con il totem. L'interruttore lo vedono solo i capi che possono usarlo.
+
+Finché nessun capo del gruppo ha un nome di totem, l'interruttore lo accendono i capigruppo.
 
 ## Se sei capogruppo
 

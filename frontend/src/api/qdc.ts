@@ -361,6 +361,8 @@ export interface Tribu {
   totem: TotemTribu[]
   /** The capi: images waiting for approval. */
   da_approvare: TotemTribu[]
+  /** Who may write their own totem name and has none yet: the tribe stays empty (DEC-418). */
+  scrivi_il_tuo: boolean
 }
 
 /** The totem on the person's page: the capi and the person themself. */
@@ -373,6 +375,11 @@ export interface TotemPersona {
   avviso: string
   versione: string
   puo_assegnare: boolean
+  /** One's own totem name, once, while «Modifica totem» is on (DEC-418). */
+  puo_scrivere: boolean
+  /** The switch, only for who may turn it on or off. */
+  puo_attivare_modifica: boolean
+  modifica_attiva: boolean
   puo_caricare: boolean
   /** An image uploaded now waits for a capo. */
   da_approvare: boolean
@@ -3394,6 +3401,11 @@ export const api = {
     richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem`, {
       metodo: 'PUT',
       corpo: { nome },
+    }),
+  modificaTotem: (persona: number, attiva: boolean) =>
+    richiesta<TotemPersona>(`/api/v1/persone/${persona}/totem/modifica`, {
+      metodo: 'PUT',
+      corpo: { attiva },
     }),
   caricaImmagineTotem: (persona: number, file: Blob) => {
     const corpo = new FormData()

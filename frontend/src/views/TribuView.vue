@@ -10,7 +10,9 @@ import { useSessioneStore } from '@/stores/sessione'
 // «La mia tribù» (DEC-416): the description of the tribe, one's own totem first, then
 // every totem name of the members in the group today. Whose a totem is: the capi always,
 // a ragazzo only for the capi and the members of their own unit. The capi approve the
-// images uploaded by ragazzi and read the ceremony, when the group wrote one. Online only.
+// images uploaded by ragazzi and read the ceremony, when the group wrote one. Who may write
+// their own totem name and has none yet sees nothing here until they write it (DEC-418).
+// Online only.
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const tribu = ref<Tribu | null>(null)
@@ -52,7 +54,18 @@ function rifiuta() {
     <h1 class="h4 mb-3">La mia tribù</h1>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
 
-    <template v-if="tribu">
+    <p v-if="tribu?.scrivi_il_tuo" class="card card-body" data-scrivi-il-tuo>
+      <span>
+        Scrivi prima il tuo nome di totem
+        <RouterLink
+          v-if="sessione.profilo?.persona"
+          :to="{ name: 'persona', params: { id: sessione.profilo.persona.id } }"
+          >nel tuo profilo</RouterLink
+        ><template v-else>nel tuo profilo</template>: poi qui troverai la tribù.
+      </span>
+    </p>
+
+    <template v-else-if="tribu">
       <div class="card card-body mb-5 descrizione">
         <p v-for="(p, i) in paragrafi" :key="i" :class="{ 'mb-0': i === paragrafi.length - 1 }">
           {{ p }}

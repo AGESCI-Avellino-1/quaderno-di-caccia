@@ -9,14 +9,15 @@ from django.db import transaction
 from apps.anagrafica.models import Persona
 from apps.core.file_caricati import togli_file_dopo
 
-from .models import Totem
+from .models import ModificaTotem, Totem
 
 LUNGHEZZA_MOTIVO = 200
 
 
 @transaction.atomic
 def assegna(persona: Persona, nome: str) -> Totem | None:
-    """The totem name; empty takes it away, with its images."""
+    """The totem name; empty takes it away, with its images. Any change turns «Modifica
+    totem» off, whoever makes it (DEC-418)."""
     nome = " ".join(nome.split())
     totem = Totem.objects.filter(persona=persona).first()
     if not nome:
@@ -24,14 +25,28 @@ def assegna(persona: Persona, nome: str) -> Totem | None:
             togli_file_dopo(totem.immagine)
             togli_file_dopo(totem.immagine_in_attesa)
             totem.delete()
+            attiva_modifica(persona, False)
         return None
     if len(nome) > Totem._meta.get_field("nome").max_length:
         raise ValidationError("Il nome di totem va scritto in breve: al massimo 80 caratteri.")
     if totem is None:
         totem = Totem(persona=persona)
+    elif totem.nome == nome:
+        return totem
     totem.nome = nome
     totem.save()
+    attiva_modifica(persona, False)
     return totem
+
+
+def attiva_modifica(persona: Persona, attiva: bool) -> None:
+    """The «Modifica totem» switch (DEC-418)."""
+    if attiva:
+        ModificaTotem.objects.get_or_create(persona=persona)
+    else:
+        # One by one, so the audit log records who turned it off.
+        for modifica in ModificaTotem.objects.filter(persona=persona):
+            modifica.delete()
 
 
 def _salva(campo, jpeg: bytes) -> None:

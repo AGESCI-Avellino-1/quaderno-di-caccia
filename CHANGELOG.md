@@ -5,6 +5,22 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.41.1 — 24 novembre 2026
+
+### Correzioni
+
+- **Babbo Natale segreto** ([#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91)): le email dell'estrazione partono subito, senza aspettare nella coda delle email né il limite giornaliero, e sempre, anche se le email a capi, genitori o ragazzi sono spente nelle impostazioni.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.41.1
+```
+
+Nessuna migrazione del database.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.41.0 — 24 novembre 2026
 
 ### Novità

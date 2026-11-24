@@ -5,6 +5,22 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.43.3 — 24 novembre 2026
+
+### Correzioni
+
+- **Aggiornamento** ([#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93)): con le versioni recenti di Docker le immagini della versione precedente le cancella Docker stesso appena si avvia la nuova; lo script ora le conta come tolte, invece di dire «Non riesco a togliere l'immagine… No such image».
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.43.3
+```
+
+Nessuna migrazione del database.
+
+Provata con Podman su immagini di prova. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.43.2 — 24 novembre 2026
 
 ### Correzioni

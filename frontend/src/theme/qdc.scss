@@ -361,6 +361,18 @@ a.qdc-titoletto-menu {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+// --- Drop-down menus ------------------------------------------------------------------------
+// With .w-auto a select is as wide as its longest option and, as a flex item, never shrinks:
+// on a phone it went past its card and the page scrolled sideways (patrol reorganisation of
+// two linked reparti). Never wider than its container: the browser shortens the text.
+select.form-control {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 // --- Email templates (DEC-250) ------------------------------------------------------------
 .qdc-editor-testo {
   // Bootstrap 6's .form-control is a flex row: the paragraphs must stack.

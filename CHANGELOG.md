@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.41.0 — 24 novembre 2026
+
+### Novità
+
+**Funzioni facoltative** ([#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91)): in **Impostazioni** il riquadro **Funzioni facoltative** permette ai capigruppo e all'amministratore tecnico di accendere e spegnere le funzioni che il gruppo può scegliere di non usare. Una funzione nuova arriva spenta. Spenta, sparisce per tutti con le sue email e notifiche; quello che contiene resta e torna riaccendendola.
+
+**Babbo Natale segreto** ([#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91)), la prima funzione facoltativa: lo staff di un'unità e i capigruppo creano uno scambio di regali, scelgono i partecipanti (un'unità o una squadriglia intera, poi le singole persone) e fanno l'estrazione. Ognuno fa il regalo a un altro, in un unico giro, e se possibile fratelli e sorelle non si estraggono tra loro. Chi ha un account riceve una notifica e lo vede nell'app; chi non ce l'ha riceve un'email con l'invito ad attivarlo; per i più piccoli l'email va ai genitori. Nessuno vede gli abbinamenti, neanche chi organizza. Dopo l'estrazione si può ritirare o aggiungere qualcuno (cambia solo chi è toccato) e rimandare l'avviso a chi si sceglie. Il testo delle due email si cambia nei modelli delle email.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.41.0
+```
+
+Due migrazioni del database, applicate dallo script. Il Babbo Natale segreto è spento: per usarlo accendilo in **Impostazioni** → **Funzioni facoltative**.
+
+### Documentazione
+
+Un capitolo nuovo, «Babbo Natale segreto», e nel capitolo sulle impostazioni le funzioni facoltative.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.40.0 — 23 novembre 2026
 
 ### Novità

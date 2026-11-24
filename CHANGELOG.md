@@ -5,6 +5,25 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.43.1 — 24 novembre 2026
+
+### Correzioni
+
+- **Aggiornamento** ([#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93)): con le versioni recenti di Docker lo script non toglieva le immagini della versione precedente («tolte: 0»). Ora le trova per nome e, se una non si può togliere, dice perché.
+
+### Aggiornare
+
+Lo script che gira è quello della versione installata: per usare già quello corretto, dalla cartella dell'app:
+
+```bash
+git fetch --tags && git show v1.43.1:scripts/aggiorna.sh > /tmp/aggiorna.sh
+QDC_RADICE="$PWD" bash /tmp/aggiorna.sh v1.43.1
+```
+
+Nessuna migrazione del database. Le immagini senza nome lasciate dagli aggiornamenti precedenti si tolgono una volta a mano con `docker image prune -f` (solo quelle che nessun container usa).
+
+Provata con Podman su immagini di prova. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.43.0 — 24 novembre 2026
 
 ### Novità

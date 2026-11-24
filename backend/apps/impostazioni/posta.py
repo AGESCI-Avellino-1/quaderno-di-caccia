@@ -54,6 +54,7 @@ SEMPRE = {
     "documento_riunione",
     "spesa_da_rimborsare",
     # Everyone gives and receives a gift, without exceptions (DEC-422).
+    "babbo_natale_account",
     "babbo_natale_partecipante",
     "babbo_natale_genitori",
 }
@@ -70,6 +71,7 @@ SUBITO = {
     "account_modificato",
     "attivazione_account",
     # Right after the draw: whoever has no account learns it only from here (DEC-422).
+    "babbo_natale_account",
     "babbo_natale_partecipante",
     "babbo_natale_genitori",
 }

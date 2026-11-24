@@ -331,7 +331,16 @@ def test_avvisi_email_invito_e_genitori(capo, reparto, genitore, genitrice_senza
         esito = servizi.estrai(scambio, capo.utente)
     assert esito.avvisati == {"app": 1, "email": 1, "genitori": 1, "nessuno": 1}
     destinatari = sorted(m.to[0] for m in mail.outbox)
-    assert destinatari == ["adulto@example.invalid", "genitore@example.invalid"]
+    # Everyone gets an email: who has an account too, with the notification.
+    assert destinatari == [
+        "adulto@example.invalid",
+        "conto@example.invalid",
+        "genitore@example.invalid",
+    ]
+    al_conto = next(m for m in mail.outbox if m.to == ["conto@example.invalid"])
+    a_chi_conto = Persona.objects.get(pk=_giro(scambio)[con_account.pk])
+    assert f"{a_chi_conto.nome} {a_chi_conto.cognome}" in al_conto.body
+    assert "/babbo-natale" in al_conto.body and "/invito/" not in al_conto.body
     invito = Invito.objects.get(persona=adulto)
     all_adulto = next(m for m in mail.outbox if m.to == ["adulto@example.invalid"])
     assert invito.token in all_adulto.body

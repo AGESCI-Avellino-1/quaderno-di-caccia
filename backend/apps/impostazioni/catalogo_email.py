@@ -688,6 +688,24 @@ _TIPI = [
     ),
     # --- Babbo Natale segreto (DEC-422): hidden while the feature is off (DEC-421) ------
     TipoEmail(
+        "babbo_natale_account",
+        "Babbo Natale segreto (con account)",
+        "A chi partecipa a uno scambio di regali e ha un account, quando viene estratto a chi "
+        "fa il regalo, insieme alla notifica. Arriva sempre.",
+        "Babbo Natale segreto: [Scambio]",
+        "<p>Ciao [Nome],</p><p>partecipi allo scambio di regali <strong>[Scambio]</strong>. "
+        "Farai il regalo a:</p><p><strong>[A chi]</strong></p><p>Consegna: [Consegna].</p>"
+        "<p>Non dirlo a nessuno: chi riceve il regalo scoprirà chi è stato solo alla "
+        "consegna.</p><p>Lo trovi anche nell'app:<br>[Link]</p>",
+        (
+            NOME,
+            Segnaposto("Scambio", "il nome dello scambio", "Natale in reparto", True),
+            Segnaposto("A chi", "nome e cognome di chi riceve il regalo", "Marco Bianchi", True),
+            Segnaposto("Consegna", "giorno e luogo della consegna", "20/12/2026, in sede", True),
+            _link("la pagina dell'app"),
+        ),
+    ),
+    TipoEmail(
         "babbo_natale_partecipante",
         "Babbo Natale segreto",
         "A chi partecipa a uno scambio di regali e non ha ancora un account, quando viene "

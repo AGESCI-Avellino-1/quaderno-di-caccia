@@ -34,7 +34,7 @@ _FUNZIONI = (
         "Babbo Natale segreto",
         "Scambi di regali anonimi: lo staff e i capigruppo scelgono i partecipanti, l'app "
         "estrae a caso a chi ognuno fa il regalo e lo dice solo a lui.",
-        ("babbo_natale_partecipante", "babbo_natale_genitori"),
+        ("babbo_natale_account", "babbo_natale_partecipante", "babbo_natale_genitori"),
     ),
 )
 FUNZIONI: dict[str, Funzione] = {f.chiave: f for f in _FUNZIONI}

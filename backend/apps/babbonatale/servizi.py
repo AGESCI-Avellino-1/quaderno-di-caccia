@@ -30,7 +30,7 @@ _caso = secrets.SystemRandom()
 class Avviso(StrEnum):
     """How a participant learns who they give a gift to; says nothing about the draw."""
 
-    APP = "app"  # has an account: notification and the entry in the app
+    APP = "app"  # has an account: email, notification and the entry in the app
     EMAIL = "email"  # an email of their own, from 14: email with the invitation
     GENITORI = "genitori"  # a minor without either: email to the parents
     NESSUNO = "nessuno"  # nobody can be told: the organiser sees it before the draw
@@ -108,6 +108,12 @@ def avvisa(partecipante: Partecipante, da=None) -> Avviso:
     valori = {"Scambio": scambio.nome, "A chi": _nome(partecipante.a_chi)}
     valori["Consegna"] = _consegna(scambio)
     if modo == Avviso.APP:
+        # Everyone gets an email, who has an account the notification too (maintainer, 24/11).
+        invia(
+            "babbo_natale_account",
+            {**valori, "Nome": persona.nome, "Link": f"{settings.FRONTEND_URL}{PERCORSO}"},
+            [persona.utente.email],
+        )
         notifica("babbo_natale", [persona], titolo, PERCORSO, testo)
     elif modo == Avviso.EMAIL:
         email = _email_propria(persona)

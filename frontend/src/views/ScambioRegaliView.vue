@@ -34,7 +34,7 @@ useNomePagina(() => scambio.value?.nome)
 
 const data = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('it-IT')
 const AVVISI: Record<AvvisoScambio, string> = {
-  app: 'Notifica e app',
+  app: 'Email e notifica',
   email: "Email con invito ad attivare l'account",
   genitori: 'Email ai genitori',
   nessuno: 'Nessuno da avvisare',

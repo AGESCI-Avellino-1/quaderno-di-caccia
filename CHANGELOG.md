@@ -5,6 +5,28 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.42.0 — 24 novembre 2026
+
+### Novità
+
+**Modelli delle email divisi per argomento** ([#92](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/92)): in **Impostazioni** → **Modelli delle email** i modelli sono raggruppati (account e accesso, iscrizioni, lista d'attesa, eventi e riunioni, quote e spese, bacheca, BuonaCaccia, maggiore età, squadriglie, riepiloghi per i capigruppo, Babbo Natale segreto), tutti chiusi; se ne apre uno alla volta. Accanto a ogni gruppo: quanti modelli, quanti personalizzati e quanti da correggere.
+
+**Babbo Natale segreto: chi non si può avvisare** ([#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91)): per un partecipante senza account né email, e senza genitori con un'email, chi gestisce lo scambio vede dopo l'estrazione a chi fa il regalo, per dirglielo a voce. Gli altri abbinamenti restano segreti.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.42.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Il capitolo sulle impostazioni descrive i gruppi dei modelli; quello sul Babbo Natale segreto chi va avvisato a voce.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.41.2 — 24 novembre 2026
 
 ### Correzioni

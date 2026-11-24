@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 24/11/2026 (ultima versione: v1.43.0). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 24/11/2026 (ultima versione: v1.44.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -11,8 +11,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
-| [#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96) | Pagine lunghe divise in gruppi che si aprono e si chiudono (DEC-426)            | Miglioramento | Medio   | Media      | VER    |
-| [#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97) | Soci: ordinare per nome, cognome o codice socio (DEC-427)                       | Miglioramento | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -41,6 +39,8 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                                         | Release                                                                                 |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97) | Soci: ordinare per nome, cognome o codice socio (DEC-427)                                      | [v1.44.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.44.0) |
+| [#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96) | Pagine lunghe divise in gruppi che si aprono e si chiudono (DEC-426)                           | [v1.44.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.44.0) |
 | [#95](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/95) | Menu a tendina che escono dal riquadro sul telefono                                            | [v1.43.2](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.43.2) |
 | [#94](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/94) | Aggiornamento dell'app: due avvisi insieme (DEC-424)                                           | [v1.42.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.1) |
 | [#92](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/92) | Modelli delle email raggruppati per funzionalità (DEC-423)                                     | [v1.42.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.0) |

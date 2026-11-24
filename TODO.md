@@ -11,6 +11,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
+| [#98](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/98) | Eventi: quota diversa o nessuna per i capi                                      | Miglioramento | Medio   | Media      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

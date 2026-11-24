@@ -5,6 +5,35 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.43.0 — 24 novembre 2026
+
+### Novità
+
+**Aggiornamenti con meno manutenzione** ([#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93)): `scripts/aggiorna.sh` costruisce la nuova versione mentre l'app è ancora in linea; la manutenzione dura solo backup, migrazioni e avvio. Se la costruzione non riesce, l'app non va mai in manutenzione. Se la nuova versione non risponde, si torna a quella di prima senza ricostruirla. Dopo un aggiornamento riuscito si cancellano le immagini della versione precedente (solo quelle dell'app) e, con Docker, la cache di costruzione più vecchia di quattro settimane.
+
+### Aggiornare
+
+Lo script che gira è quello della versione installata: per usare già il nuovo ordine in questo aggiornamento, dalla cartella dell'app:
+
+```bash
+git fetch --tags && git show v1.43.0:scripts/aggiorna.sh > /tmp/aggiorna.sh
+QDC_RADICE="$PWD" bash /tmp/aggiorna.sh v1.43.0
+```
+
+Altrimenti, come sempre (il nuovo ordine varrà dal prossimo aggiornamento):
+
+```bash
+scripts/aggiorna.sh v1.43.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+La guida d'installazione, in «Aggiornamenti», descrive il nuovo ordine.
+
+Provata con Podman su immagini di prova. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.42.1 — 24 novembre 2026
 
 ### Correzioni

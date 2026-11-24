@@ -2,8 +2,8 @@
 
 The default texts are the ones the app sent before the templates existed. Indispensable
 placeholders are what makes the email useful: links, codes, dates to respect, the data
-or the text being communicated. A new email = a new entry here, then `email.messaggio()`
-where it is sent.
+or the text being communicated. A new email = a new entry here and in `GRUPPI` (the group of
+the templates page, DEC-423), then `email.messaggio()` where it is sent.
 """
 
 from .email import Segnaposto, TipoEmail
@@ -746,3 +746,79 @@ _TIPI = [
 ]
 
 TIPI: dict[str, TipoEmail] = {t.chiave: t for t in _TIPI}
+
+# The groups of the templates page, in order (DEC-423): every type is in exactly one.
+GRUPPI: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "Account e accesso",
+        (
+            "codice_accesso",
+            "invito",
+            "account_modificato",
+            "attivazione_account",
+            "account_figlio",
+            "reimposta_password",
+            "verifica_email_registrazione",
+            "verifica_email",
+            "account_esistente",
+            "account_sconosciuto",
+        ),
+    ),
+    (
+        "Iscrizioni dall'app",
+        (
+            "nuova_richiesta_iscrizione",
+            "iscrizione_accolta",
+            "iscrizione_rifiutata",
+            "iscrizione_da_decidere",
+            "iscrizione_da_completare",
+            "iscrizione_sospesa",
+        ),
+    ),
+    (
+        "Lista d'attesa",
+        (
+            "attesa_conferma",
+            "attesa_link",
+            "attesa_interesse",
+            "attesa_uscita",
+            "attesa_iscrizione",
+        ),
+    ),
+    (
+        "Eventi e riunioni",
+        (
+            "evento_nuovo",
+            "evento_modificato",
+            "riunione_spostata",
+            "riunione_annullata",
+            "evento_annullato",
+            "convocazione_riunione",
+            "documento_riunione",
+            "promemoria_verbale",
+        ),
+    ),
+    (
+        "Quote e spese",
+        ("ricevuta", "promemoria_quote", "pagamento_non_confermato", "spesa_da_rimborsare"),
+    ),
+    ("Bacheca e documenti", ("avviso_bacheca", "documento_nuovo", "documento_in_scadenza")),
+    (
+        "BuonaCaccia",
+        (
+            "buonacaccia_iscrizione",
+            "liberatoria_da_firmare",
+            "liberatoria_rigettata",
+            "promemoria_liberatoria",
+            "buonacaccia_scadenze",
+        ),
+    ),
+    ("Maggiore età", ("maggiore_eta_mese_prima", "maggiore_eta", "maggiore_eta_genitori")),
+    ("Squadriglie", ("animale_squadriglia",)),
+    ("Riepiloghi per i capigruppo", ("correzioni_da_inoltrare", "promemoria_fine_anno")),
+    (
+        "Babbo Natale segreto",
+        ("babbo_natale_account", "babbo_natale_partecipante", "babbo_natale_genitori"),
+    ),
+)
+GRUPPO_DI: dict[str, str] = {c: nome for nome, chiavi in GRUPPI for c in chiavi}

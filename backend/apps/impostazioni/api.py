@@ -15,6 +15,7 @@ from apps.organizzazione.models import Gruppo
 from apps.permessi import policy
 
 from . import blocchi, gmail, segreti
+from .catalogo_email import GRUPPO_DI
 from .models import (
     MESSAGGIO_MANUTENZIONE,
     Impostazioni,
@@ -709,6 +710,8 @@ class ModelloEmailBreve(Schema):
     personalizzato: bool
     # A personalised template that lacks something indispensable: the default is used.
     da_correggere: bool
+    # The group of the templates page (DEC-423).
+    gruppo: str = ""
 
 
 class ModelloEmailOut(ModelloEmailBreve):
@@ -759,6 +762,7 @@ def _breve(t, salvato) -> dict:
         "descrizione": t.descrizione,
         "personalizzato": salvato is not None,
         "da_correggere": bool(salvato and email.mancanti(t, salvato.oggetto, salvato.corpo)),
+        "gruppo": GRUPPO_DI.get(t.chiave, "Altre"),
     }
 
 
@@ -788,7 +792,10 @@ def modelli_email(request):
     _gestore_modelli(request)
     salvati = {m.chiave: m for m in ModelloEmail.objects.all()}
     nascoste = funzioni.email_nascoste()
-    return [_breve(t, salvati.get(t.chiave)) for t in email.tutti() if t.chiave not in nascoste]
+    # In the order of the groups (DEC-423), then of the catalog.
+    ordine = {c: i for i, c in enumerate(GRUPPO_DI)}
+    tipi = sorted(email.tutti(), key=lambda t: ordine.get(t.chiave, len(ordine)))
+    return [_breve(t, salvati.get(t.chiave)) for t in tipi if t.chiave not in nascoste]
 
 
 @router.get("/impostazioni/email/{chiave}", response=ModelloEmailOut)

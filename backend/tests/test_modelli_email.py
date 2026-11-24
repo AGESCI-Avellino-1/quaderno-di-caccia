@@ -246,3 +246,20 @@ def test_tabelle_nel_testo():
         "<tr><td><p>Giulia</p></td><td><p>35</p></td></tr></tbody></table>"
     )
     assert in_testo(html) == "Nome | Quota\nGiulia | 35\n"
+
+
+def test_ogni_modello_ha_il_suo_gruppo():
+    # DEC-423: one group each, the page lists them in this order.
+    from apps.impostazioni.catalogo_email import GRUPPI
+
+    chiavi = [c for _, gruppo in GRUPPI for c in gruppo]
+    assert sorted(chiavi) == sorted(TIPI)
+
+
+def test_elenco_nell_ordine_dei_gruppi(capogruppo):
+    from apps.impostazioni.catalogo_email import GRUPPI
+
+    elenco = _client(capogruppo.utente).get(URL).json()
+    gruppi = list(dict.fromkeys(m["gruppo"] for m in elenco))
+    # Babbo Natale segreto is off: its group is not there (DEC-421).
+    assert gruppi == [nome for nome, _ in GRUPPI if nome != "Babbo Natale segreto"]

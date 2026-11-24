@@ -254,6 +254,8 @@ export interface ModelloEmailBreve {
   personalizzato: boolean
   /** Personalised but lacking something indispensable: the default text is sent. */
   da_correggere: boolean
+  /** The group of the templates page (DEC-423), in the order of the list. */
+  gruppo: string
 }
 
 export interface ModelloEmail extends ModelloEmailBreve {

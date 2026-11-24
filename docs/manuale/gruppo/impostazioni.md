@@ -85,7 +85,10 @@ l'app crea in prima nota il conto PayPal, con saldo zero da oggi.
 ## Modelli delle email
 
 Ogni email che l'app manda ha un modello. Nelle Impostazioni tocca **Modelli delle email**: si
-apre la pagina con l'elenco; tocca quello da cambiare.
+apre la pagina con i modelli divisi per argomento (account e accesso, iscrizioni, eventi e
+riunioni, quote e spese…), tutti chiusi. Tocca un argomento per aprirlo (quello aperto prima si
+chiude): accanto al nome vedi quanti modelli contiene e quanti hai personalizzato o sono da
+correggere. Tocca il modello da cambiare.
 
 1. Cambia l'**Oggetto** e il **Testo** con l'editor (grassetto, elenchi, link, tabelle,
    immagini).

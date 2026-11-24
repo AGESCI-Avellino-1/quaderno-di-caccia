@@ -21,6 +21,8 @@ const modulo = reactive({
   aperto: false,
   nome: '',
   sconto_famiglia: '0',
+  // What the capi pay (DEC-428): empty = nothing, the usual case.
+  importo_capi: '',
   rate: [] as RataEvento[],
 })
 const modifica = reactive({ quota: 0, importo: '' })
@@ -39,6 +41,7 @@ function apri() {
     aperto: true,
     nome: props.quota?.nome ?? '',
     sconto_famiglia: props.quota?.sconto_famiglia ?? '0',
+    importo_capi: props.quota?.importo_capi ?? '',
     rate: props.quota
       ? props.quota.rate.map((r) => ({ ...r }))
       : [{ descrizione: '', importo: '', scadenza: '' }],
@@ -51,6 +54,7 @@ async function salva() {
   const dati = {
     nome: modulo.nome,
     sconto_famiglia: Number(modulo.sconto_famiglia || 0).toFixed(2),
+    importo_capi: Number(modulo.importo_capi) > 0 ? Number(modulo.importo_capi).toFixed(2) : null,
     rate: modulo.rate.map((r) => ({ ...r, importo: Number(r.importo).toFixed(2) })),
   }
   if (!(await esegui(() => api.fissaQuotaEvento(props.evento, dati)))) return
@@ -84,6 +88,12 @@ const pagate = (r: SituazioneQuoteEvento) =>
           (sconto famiglia {{ euro(quota.sconto_famiglia) }} sul saldo)</template
         >
       </p>
+      <p class="small mb-1" data-quota-capi>
+        <template v-if="quota.importo_capi"
+          >I capi pagano {{ euro(quota.importo_capi) }}, con il saldo.</template
+        >
+        <template v-else>I capi non pagano.</template>
+      </p>
       <ul v-if="quota.rate.length > 1" class="list-unstyled small mb-1">
         <li v-for="r in quota.rate" :key="r.scadenza">
           {{ r.descrizione || 'Rata' }}: {{ euro(r.importo) }} entro il {{ data(r.scadenza) }}
@@ -109,7 +119,9 @@ const pagate = (r: SituazioneQuoteEvento) =>
       <form v-else class="border rounded p-5 mt-3" @submit.prevent="salva">
         <p class="form-text">
           Arriva a tutti i partecipanti, rata per rata; chi non partecipa non la paga. Le quote già
-          emesse non cambiano importo: si correggono persona per persona.
+          emesse non cambiano importo: si correggono persona per persona. I capi pagano solo la
+          quota per i capi, in una volta con il saldo; se la lasci vuota non pagano, e le loro quote
+          non ancora pagate si annullano.
         </p>
         <div class="row g-3 mb-3">
           <div class="md:col-8">
@@ -124,6 +136,15 @@ const pagate = (r: SituazioneQuoteEvento) =>
           <div class="md:col-4">
             <label class="form-label small" for="quota-sconto">Sconto famiglia sul saldo</label>
             <CampoImporto id="quota-sconto" v-model="modulo.sconto_famiglia" min="0" />
+          </div>
+          <div class="md:col-4">
+            <label class="form-label small" for="quota-capi">Quota per i capi</label>
+            <CampoImporto
+              id="quota-capi"
+              v-model="modulo.importo_capi"
+              min="0"
+              placeholder="Nessuna"
+            />
           </div>
         </div>
         <div v-for="(r, i) in modulo.rate" :key="i" class="row g-3 mb-3 align-items-end">

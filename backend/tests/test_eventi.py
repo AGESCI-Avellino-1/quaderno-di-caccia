@@ -611,3 +611,116 @@ def test_ora_senza_fuso_e_quella_del_gruppo(reparto, staff):
     assert risposta.status_code == 201, risposta.content
     evento = Evento.objects.get(pk=risposta.json()["id"])
     assert timezone.localtime(evento.inizio).hour == 15
+
+
+# --- The capi's fee of an event (DEC-428) ---------------------------------------------------
+
+
+def _quota_capi(evento, capo, rate, importo_capi=None):
+    return _client(capo).put(
+        f"/api/v1/eventi/{evento.pk}/quota",
+        {"nome": "Campo estivo", "rate": rate, "importo_capi": importo_capi},
+        content_type="application/json",
+    )
+
+
+def _invita(evento, persona):
+    from apps.eventi.models import Partecipazione, StatoPartecipazione
+
+    Partecipazione.objects.update_or_create(
+        evento=evento, persona=persona, defaults={"stato": StatoPartecipazione.INVITATO}
+    )
+
+
+def test_capi_senza_quota_di_norma(uscita, staff, csq):
+    from apps.quote.models import Quota
+
+    _invita(uscita, staff)
+    risposta = _quota_capi(uscita, staff, RATE)
+    assert risposta.status_code == 200, risposta.content
+    assert risposta.json()["quota"]["importo_capi"] is None
+    assert not Quota.objects.filter(persona=staff).exists()
+    assert Quota.objects.valide().filter(persona=csq).count() == 3
+
+
+def test_quota_dei_capi_una_volta_con_il_saldo(uscita, staff, csq):
+    from apps.quote.models import Quota
+
+    _invita(uscita, staff)
+    risposta = _quota_capi(uscita, staff, RATE, "30.00")
+    assert risposta.json()["quota"]["importo_capi"] == "30.00"
+    (quota,) = Quota.objects.valide().filter(persona=staff)
+    assert (quota.periodo, quota.importo, quota.sconto) == (date(2026, 7, 15), 30, 0)
+    # Never more than the ragazzi's.
+    assert _quota_capi(uscita, staff, RATE, "180.00").status_code == 400
+
+
+def test_quote_dei_capi_emesse_per_errore_si_tolgono(uscita, staff, csq):
+    """The Apertura in production: fees issued to the capi as to everyone, then the
+    capi's amount saved empty."""
+    from decimal import Decimal
+
+    from apps.quote.models import Quota
+    from apps.quote.servizi import MOTIVO_CAPI
+
+    _invita(uscita, staff)
+    _quota_capi(uscita, staff, RATE)
+    uscita.refresh_from_db()
+    tipo = uscita.quota
+    # As before DEC-428: the three instalments issued to the capo too.
+    for rata in RATE:
+        Quota.objects.create(
+            tipo=tipo,
+            persona=staff,
+            periodo=date.fromisoformat(rata["scadenza"]),
+            scadenza=date.fromisoformat(rata["scadenza"]),
+            importo=Decimal(rata["importo"]),
+        )
+    _quota_capi(uscita, staff, RATE)
+    assert not Quota.objects.valide().filter(persona=staff).exists()
+    assert set(
+        Quota.objects.filter(persona=staff).values_list("motivo_annullamento", flat=True)
+    ) == {MOTIVO_CAPI}
+    # A lower amount later: only the balance comes back, at that amount.
+    _quota_capi(uscita, staff, RATE, "25.00")
+    (saldo,) = Quota.objects.valide().filter(persona=staff)
+    assert (saldo.periodo, saldo.importo) == (date(2026, 7, 15), 25)
+    # Changed again: the balance follows, unless the staff changed it by hand.
+    _quota_capi(uscita, staff, RATE, "20.00")
+    saldo.refresh_from_db()
+    assert saldo.importo == 20
+    _client(staff).put(
+        f"/api/v1/eventi/{uscita.pk}/quote/{saldo.pk}",
+        {"importo": "5"},
+        content_type="application/json",
+    )
+    _quota_capi(uscita, staff, RATE, "15.00")
+    saldo.refresh_from_db()
+    assert saldo.importo == 5
+    # The ragazzi's fees never change.
+    assert sorted(Quota.objects.valide().filter(persona=csq).values_list("importo", flat=True)) == [
+        50,
+        50,
+        80,
+    ]
+
+
+def test_quota_di_un_capo_gia_pagata_resta(uscita, staff):
+    from decimal import Decimal
+
+    from apps.quote import servizi as quote
+    from apps.quote.models import MetodoPagamento, Quota
+
+    _invita(uscita, staff)
+    _quota_capi(uscita, staff, RATE, "30.00")
+    saldo = Quota.objects.get(persona=staff)
+    quote.registra_pagamento(
+        data=date(2026, 4, 20),
+        metodo=MetodoPagamento.CONTANTI,
+        versato_da="Elena Staff",
+        righe=[quote.Riga(saldo, Decimal("10"))],
+        utente=staff.utente,
+    )
+    # Back to nothing for the capi: what she paid stays, the staff decides.
+    _quota_capi(uscita, staff, RATE)
+    assert Quota.objects.valide().filter(persona=staff).count() == 1

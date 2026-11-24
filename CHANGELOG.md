@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.45.0 — 24 novembre 2026
+
+### Novità
+
+**Quota per i capi negli eventi** ([#98](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/98)): la quota di un evento ha il campo **Quota per i capi**. Vuoto, il caso normale, i capi non pagano; con un importo, più basso di quello dei ragazzi/e, lo pagano in una volta con il saldo, senza sconto famiglia. Conta come capo chi è nella Comunità capi il primo giorno dell'evento. Salvando la quota, quelle dei capi non ancora pagate seguono il campo: con il campo vuoto si annullano (così si tolgono quelle emesse per errore, come all'Apertura); quelle già pagate restano.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.45.0
+```
+
+Una migrazione del database, applicata dallo script. Per togliere le quote dei capi emesse per errore, apri l'evento, **Cambia la quota** e salvala con **Quota per i capi** vuota.
+
+### Documentazione
+
+Il capitolo sugli eventi spiega la quota per i capi.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.44.0 — 24 novembre 2026
 
 ### Novità

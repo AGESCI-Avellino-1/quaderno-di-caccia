@@ -130,12 +130,26 @@ def emetti(tipo: TipoQuota, oggi: date | None = None) -> list[Quota]:
 # The reason written on the fees withdrawn by the app: only those come back by themselves
 # when the member takes part again.
 MOTIVO_ASSENZA = "Non partecipa all'evento"
+# The capi pay their own amount, or nothing (DEC-428).
+MOTIVO_CAPI = "Quota dei capi dell'evento"
+
+
+def capi_dell_evento(evento) -> set[int]:
+    """Who counts as a capo for an event's fee (DEC-428): in the Co.Ca. on its first day,
+    whatever they take part as; trainees and capi waiting for BuonaStrada included."""
+    giorno = timezone.localdate(evento.inizio)
+    return set(
+        Appartenenza.objects.attive(giorno)
+        .filter(ruolo=RuoloAppartenenza.CAPO)
+        .values_list("persona_id", flat=True)
+    )
 
 
 def emetti_evento(tipo: TipoQuota) -> list[Quota]:
     """Every instalment at once, to every participant (invited, not "not taking part",
     not excluded): families see all the due dates from the start. The family discount,
-    if any, goes on the last instalment (the balance) (confirmed 2026-10-29)."""
+    if any, goes on the last instalment (the balance) (confirmed 2026-10-29). The capi pay
+    only their own amount, once with the balance, or nothing (DEC-428)."""
     from apps.eventi.models import StatoPartecipazione
 
     evento = tipo.evento
@@ -143,22 +157,33 @@ def emetti_evento(tipo: TipoQuota) -> list[Quota]:
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
     periodi = tipo.periodi()
-    ultimo = periodi[-1][0] if periodi else None
+    ultimo = periodi[-1] if periodi else None
+    capi = capi_dell_evento(evento)
     giorno = timezone.localdate(evento.inizio)
     nuove = []
     for persona in partecipanti:
-        famiglia = tipo.sconto_famiglia and soci_della_famiglia(persona, giorno) >= 2
-        for periodo, scadenza in periodi:
+        capo = persona.pk in capi
+        if capo and (tipo.importo_capi is None or ultimo is None):
+            continue
+        famiglia = not capo and tipo.sconto_famiglia and soci_della_famiglia(persona, giorno) >= 2
+        for periodo, scadenza in [ultimo] if capo else periodi:
+            importo = tipo.importo_capi if capo else tipo.importo_del_periodo(periodo)
             esistente = Quota.objects.filter(tipo=tipo, persona=persona, periodo=periodo).first()
             if esistente is not None:
-                if esistente.annullata_il and esistente.motivo_annullamento == MOTIVO_ASSENZA:
+                if esistente.annullata_il and esistente.motivo_annullamento in (
+                    MOTIVO_ASSENZA,
+                    MOTIVO_CAPI,
+                ):
                     esistente.annullata_il = None
                     esistente.annullata_da = None
                     esistente.motivo_annullamento = ""
+                    if capo:
+                        esistente.importo, esistente.sconto = importo, ZERO
                     esistente.save()
                 continue
-            importo = tipo.importo_del_periodo(periodo)
-            sconto = min(tipo.sconto_famiglia, importo) if famiglia and periodo == ultimo else ZERO
+            sconto = (
+                min(tipo.sconto_famiglia, importo) if famiglia and periodo == ultimo[0] else ZERO
+            )
             nuove.append(
                 Quota.objects.create(
                     tipo=tipo,
@@ -170,6 +195,29 @@ def emetti_evento(tipo: TipoQuota) -> list[Quota]:
                 )
             )
     return nuove
+
+
+def allinea_quote_capi(tipo: TipoQuota, utente, importo_prima: Decimal | None) -> None:
+    """After the capi's amount was set (DEC-428): their unpaid fees follow it. With none,
+    they are withdrawn; with an amount, only the balance stays, at that amount, unless the
+    staff had changed it by hand for that person. Fees paid, even in part, stay."""
+    periodi = tipo.periodi()
+    if not periodi:
+        return
+    ultimo = periodi[-1][0]
+    importo_ragazzi = tipo.importo_del_periodo(ultimo)
+    capi = capi_dell_evento(tipo.evento)
+    for quota in Quota.objects.valide().filter(tipo=tipo, persona_id__in=capi):
+        if quota.pagato:
+            continue
+        if tipo.importo_capi is None or quota.periodo != ultimo:
+            annulla_quota(quota, utente, MOTIVO_CAPI)
+        elif quota.importo != tipo.importo_capi and quota.importo in (
+            importo_prima,
+            importo_ragazzi,
+        ):
+            quota.importo, quota.sconto = tipo.importo_capi, ZERO
+            quota.save()
 
 
 def allinea_quote_evento(evento) -> None:

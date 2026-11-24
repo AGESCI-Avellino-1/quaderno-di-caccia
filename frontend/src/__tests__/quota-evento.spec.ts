@@ -60,8 +60,37 @@ describe('QuotaEvento', () => {
       {
         nome: 'Uscita',
         sconto_famiglia: '0.00',
+        importo_capi: null,
         rate: [{ descrizione: '', importo: '25.00', scadenza: '2026-04-01' }],
       },
     ])
+  })
+
+  // DEC-428
+  it('says what the capi pay, and sends their amount', async () => {
+    const corpi: unknown[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, opzioni?: RequestInit) => {
+        if (opzioni?.method === 'PUT') corpi.push(JSON.parse(opzioni.body as string))
+        return risposta(200, [])
+      }),
+    )
+    const pannello = mount(QuotaEvento, {
+      props: { evento: 5, quota, puoGestire: true, inFamiglia: false },
+      global: { stubs: { RouterLink: true } },
+    })
+    await flushPromises()
+    expect(pannello.get('[data-quota-capi]').text()).toBe('I capi non pagano.')
+    await pannello.setProps({ quota: { ...quota, importo_capi: '30.00' } })
+    expect(pannello.get('[data-quota-capi]').text()).toBe('I capi pagano 30,00 €, con il saldo.')
+    await pannello
+      .findAll('button')
+      .find((b) => b.text() === 'Cambia la quota')!
+      .trigger('click')
+    await pannello.get('#quota-capi').setValue('')
+    await pannello.get('form').trigger('submit')
+    await flushPromises()
+    expect(corpi).toMatchObject([{ importo_capi: null }])
   })
 })

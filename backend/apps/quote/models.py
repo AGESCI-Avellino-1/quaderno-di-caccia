@@ -92,6 +92,9 @@ class TipoQuota(ModelloTracciato):
         "eventi.Evento", null=True, blank=True, on_delete=models.CASCADE, related_name="quota"
     )
     rate = models.JSONField(default=list, blank=True)
+    # What the capi pay for the event (DEC-428): None = nothing, the usual case; otherwise less
+    # than the ragazzi, once, with the last instalment, no family discount.
+    importo_capi = _euro(null=True, blank=True, validators=[MinValueValidator(CENTESIMO)])
 
     class Meta:
         verbose_name = "tipo di quota"
@@ -118,6 +121,12 @@ class TipoQuota(ModelloTracciato):
                 errori.append("Le quote degli eventi su BuonaCaccia non hanno lo sconto famiglia.")
         elif self.categoria == CategoriaQuota.EVENTO:
             errori += self._errori_rate()
+            if (
+                self.importo_capi is not None
+                and self.importo is not None
+                and self.importo_capi >= self.importo
+            ):
+                errori.append("La quota per i capi deve essere più bassa di quella dei ragazzi/e.")
         elif self.categoria == CategoriaQuota.MENSILE:
             if not self.mesi or any(m not in MESI_ANNO for m in self.mesi):
                 errori.append("Indica i mesi della quota mensile.")

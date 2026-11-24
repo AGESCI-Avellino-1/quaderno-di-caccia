@@ -84,9 +84,14 @@ Nel riquadro **Quota** tocca **Fissa una quota**:
    saldo**.
 2. Per ogni rata scrivi nome, **Importo** e **Entro il**; **Aggiungi una rata** per
    dividerla (acconto e saldo).
-3. Tocca **Salva la quota**.
+3. Se i capi pagano qualcosa, scrivilo in **Quota per i capi**: di solito resta vuota.
+4. Tocca **Salva la quota**.
 
-La quota arriva a tutti i partecipanti; chi non partecipa non la paga. In **Chi ha pagato**
+La quota arriva a tutti i partecipanti; chi non partecipa non la paga. I **capi** (chi è nella
+Comunità capi il primo giorno dell'evento) pagano solo la quota per i capi, in una volta con il
+saldo e senza sconto famiglia; se è vuota non pagano niente. Se avevi emesso per errore le quote
+anche ai capi, apri **Cambia la quota** e salvala con la quota per i capi vuota: le loro quote
+non ancora pagate si annullano. In **Chi ha pagato**
 vedi a che punto è ognuno e con **Cambia importo** la correggi per una persona (anche fino a
 zero).
 

@@ -77,6 +77,8 @@ class QuotaEvento(Schema):
     rate: list[RataIO]
     totale: Decimal
     sconto_famiglia: Decimal
+    # What the capi pay (DEC-428); None = nothing.
+    importo_capi: Decimal | None = None
 
 
 class LocalitaOut(Schema):
@@ -306,6 +308,7 @@ def _quota_evento(evento: Evento) -> dict | None:
         "rate": tipo.rate_ordinate(),
         "totale": tipo.importo,
         "sconto_famiglia": tipo.sconto_famiglia,
+        "importo_capi": tipo.importo_capi,
     }
 
 
@@ -684,6 +687,8 @@ class QuotaEventoIn(Schema):
     nome: str = ""
     rate: list[RataIO]
     sconto_famiglia: Decimal = Decimal("0")
+    # What the capi pay (DEC-428); None or 0 = nothing.
+    importo_capi: Decimal | None = None
 
 
 def _gestore_quote(request, evento: Evento) -> None:
@@ -722,6 +727,8 @@ def fissa_quota(request, evento_id: int, dati: QuotaEventoIn):
     ]
     tipo.importo = sum((r.importo for r in dati.rate), Decimal("0"))
     tipo.sconto_famiglia = dati.sconto_famiglia
+    importo_capi_prima = tipo.importo_capi
+    tipo.importo_capi = dati.importo_capi or None
     try:
         tipo.full_clean()
     except ValidationError as errore:
@@ -733,6 +740,7 @@ def fissa_quota(request, evento_id: int, dati: QuotaEventoIn):
             if not tolta.pagato:
                 quote.annulla_quota(tolta, request.auth, "Rata tolta dall'evento")
         quote.emetti_evento(tipo)
+        quote.allinea_quote_capi(tipo, request.auth, importo_capi_prima)
         quote.allinea_quote_evento(evento)
     evento.refresh_from_db()
     return _evento_out(request.auth, evento)

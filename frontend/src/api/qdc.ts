@@ -2278,6 +2278,8 @@ export interface QuotaEvento {
   rate: RataEvento[]
   totale: string
   sconto_famiglia: string
+  /** What the capi pay, once with the balance (DEC-428); null = nothing. */
+  importo_capi?: string | null
 }
 
 export interface QuotaPartecipante {
@@ -4396,7 +4398,12 @@ export const api = {
   togliLocalita: (id: number) => richiesta<null>(`/api/v1/localita/${id}`, { metodo: 'DELETE' }),
   fissaQuotaEvento: (
     evento: number,
-    dati: { nome: string; rate: RataEvento[]; sconto_famiglia: string },
+    dati: {
+      nome: string
+      rate: RataEvento[]
+      sconto_famiglia: string
+      importo_capi?: string | null
+    },
   ) => richiesta<Evento>(`/api/v1/eventi/${evento}/quota`, { metodo: 'PUT', corpo: dati }),
   rendicontoEvento: (evento: number) =>
     richiesta<RendicontoEvento>(`/api/v1/eventi/${evento}/rendiconto`),

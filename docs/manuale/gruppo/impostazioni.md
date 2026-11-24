@@ -25,7 +25,9 @@ versione installata sul server. La riga si vede anche prima dell'accesso, quindi
 legge anche chi non ha un account.
 
 Se il telefono o il computer è rimasto indietro, nel piè di pagina compare a tutti il pulsante
-**Aggiorna**, anche se non usi questi segnaposto.
+**Aggiorna**, anche se non usi questi segnaposto. Quando il browser ha già scaricato la nuova
+versione, al suo posto compare un riquadro in basso con **Aggiorna** e **Più tardi**: uno solo
+alla volta. Se tocchi **Più tardi**, torna il pulsante nel piè di pagina.
 
 Il **Link per le segnalazioni** è dove porta **Apri una segnalazione** nella pagina
 [Informazioni](../introduzione.md#se-qualcosa-non-va): un modulo o una pagina del gruppo, con un

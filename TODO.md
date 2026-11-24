@@ -7,16 +7,16 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                            | Tipo          | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
-| [#83](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/83) | Lista d'attesa: collegamento a «Invita nel gruppo» per i capi     | Miglioramento | Basso   | Bassa      | VER    |
-| [#85](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/85) | Nome di totem dei soci e pagina «La mia tribù» (DEC-416)          | Funzione      | Basso   | Media      | VER    |
-| [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417) | Funzione      | Basso   | Media      | VER    |
-| [#87](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/87) | Nome di totem: ognuno si imposta il proprio (DEC-418)             | Miglioramento | Basso   | Media      | VER    |
-| [#88](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/88) | Reparto: vice equiparato al capo squadriglia (DEC-419)            | Miglioramento | Medio   | Media      | VER    |
-| [#89](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/89) | Soci: tornando indietro si perde il filtro dell'unità             | Bug           | Basso   | Bassa      | VER    |
-| [#90](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/90) | Soci: far uscire dall'app chi ha lasciato il gruppo (DEC-420)     | Funzione      | Medio   | Media      | VER    |
-| [#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91) | Secret Santa, prima funzione che si può disattivare               | Funzione      | Medio   | Alta       |        |
+| Issue                                                                    | Titolo                                                                | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#83](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/83) | Lista d'attesa: collegamento a «Invita nel gruppo» per i capi         | Miglioramento | Basso   | Bassa      | VER    |
+| [#85](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/85) | Nome di totem dei soci e pagina «La mia tribù» (DEC-416)              | Funzione      | Basso   | Media      | VER    |
+| [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)     | Funzione      | Basso   | Media      | VER    |
+| [#87](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/87) | Nome di totem: ognuno si imposta il proprio (DEC-418)                 | Miglioramento | Basso   | Media      | VER    |
+| [#88](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/88) | Reparto: vice equiparato al capo squadriglia (DEC-419)                | Miglioramento | Medio   | Media      | VER    |
+| [#89](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/89) | Soci: tornando indietro si perde il filtro dell'unità                 | Bug           | Basso   | Bassa      | VER    |
+| [#90](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/90) | Soci: far uscire dall'app chi ha lasciato il gruppo (DEC-420)         | Funzione      | Medio   | Media      | VER    |
+| [#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91) | Babbo Natale segreto, funzione che si può spegnere (DEC-421, DEC-422) | Funzione      | Medio   | Alta       | VAL    |
 
 Nessuna segnalazione di sicurezza aperta.
 

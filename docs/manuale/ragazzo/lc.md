@@ -52,4 +52,5 @@ ti aiuta (il maestro). Anche qui, quando sei pronta, tocca **Pronto per la verif
 
 ## Le Piccole Orme
 
-Se partecipi a delle Piccole Orme, le trovi in fondo alla pagina.
+Se partecipi a delle Piccole Orme, le trovi nel gruppo **Piccole Orme e imprese**, in fondo
+alla pagina.

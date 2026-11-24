@@ -75,7 +75,9 @@ async function scaricaQr() {
 
     <p v-if="sessione.profilo?.capogruppo" class="small fg-2">
       Il testo del volantino si cambia nelle
-      <RouterLink :to="{ name: 'impostazioni', hash: '#volantino' }">Impostazioni</RouterLink>.
+      <RouterLink :to="{ name: 'impostazioni', query: { gruppo: 'testi' }, hash: '#volantino' }"
+        >Impostazioni</RouterLink
+      >.
     </p>
   </section>
 </template>

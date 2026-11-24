@@ -361,6 +361,12 @@ a.qdc-titoletto-menu {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+// --- Long pages in groups (DEC-426) --------------------------------------------------------
+// A group whose parts all hid themselves (who may not use them) does not show.
+.accordion-item[data-gruppo]:not(:has(> .accordion-body > *)) {
+  display: none;
+}
+
 // --- Drop-down menus ------------------------------------------------------------------------
 // With .w-auto a select is as wide as its longest option and, as a flex item, never shrinks:
 // on a phone it went past its card and the page scrolled sideways (patrol reorganisation of

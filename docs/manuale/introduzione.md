@@ -52,6 +52,11 @@ Le stesse funzioni sono nel **menu laterale**. Sul computer è sempre a sinistra
 telefono lo apri con il pulsante con le tre righe, in alto a sinistra. Tocca il nome di
 un gruppo per vedere le sue voci; la **tenda**, in cima, riporta alla Home.
 
+Le pagine più lunghe (la scheda di un socio, la pagina dell'unità e quella di un evento, la
+Progressione personale, le Impostazioni) sono divise in **gruppi**: all'apertura è aperto il
+principale; tocca il titolo di un altro gruppo per aprirlo, e quello aperto prima si chiude.
+Tornando indietro da un'altra pagina ritrovi aperto il gruppo che avevi scelto.
+
 In fondo al menu c'è il tuo nome: toccalo per aprire il **menu del profilo** (le stesse
 voci sono anche nella Home, nel gruppo **Profilo**):
 

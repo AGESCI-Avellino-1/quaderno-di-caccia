@@ -21,11 +21,13 @@ import CopiaLocale from '@/components/CopiaLocale.vue'
 import EtaUnita from '@/components/EtaUnita.vue'
 import DelegaSquadriglia from '@/components/DelegaSquadriglia.vue'
 import ElencoIncarichi from '@/components/ElencoIncarichi.vue'
+import GruppoPagina from '@/components/GruppoPagina.vue'
 import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import ModuloUnita from '@/components/ModuloUnita.vue'
 import SestiglieUnita from '@/components/SestiglieUnita.vue'
 import TurniUnita from '@/components/TurniUnita.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useGruppiPagina } from '@/composables/useGruppiPagina'
 import { useNomePagina } from '@/composables/useNomePagina'
 import { useRubrica } from '@/composables/useRubrica'
 import { leggiConCache } from '@/offline/cache'
@@ -228,6 +230,14 @@ const iniziale = (u: Unita): UnitaIn => ({
   nota_collegamento: u.nota_collegamento,
   attiva: u.attiva,
 })
+
+// The page in groups (DEC-426): a reparto opens on its patrols, the other units on their staff.
+// A group whose parts all hide themselves (turns, joining codes) does not show.
+useGruppiPagina('unita', () =>
+  unita.value?.tipo === 'REPARTO'
+    ? ['squadriglie', 'staff', 'turni', 'iscrizioni']
+    : ['staff', 'turni', 'iscrizioni'],
+)
 </script>
 
 <template>
@@ -383,72 +393,133 @@ const iniziale = (u: Unita): UnitaIn => ({
       />
     </div>
 
-    <section class="card card-body mb-5">
-      <h2 class="h5">Staff e incarichi</h2>
-      <ElencoIncarichi
-        :incarichi="dettaglio.incarichi"
-        :nomina="dettaglio.nomina"
-        :dove="{ unita_id: unita.id }"
-        :candidati="candidatiUnita"
-        vuoto="Nessuno staff registrato."
-        @cambiato="carica()"
-      />
-    </section>
-
-    <!-- The unit's numbers into the phone's contacts (DEC-302): the list, ready to choose. -->
-    <section v-if="rubrica.disponibile.value && sessione.capo" class="card card-body mb-5">
-      <h2 class="h5">Numeri nella rubrica del telefono</h2>
-      <p class="small fg-2">
-        Scegli chi aggiungere alla rubrica: il telefono ti propone di salvare i contatti, con nome e
-        numeri.
-      </p>
-      <div class="d-flex flex-wrap gap-3">
-        <RouterLink
-          :to="{ name: 'persone', query: { unita: unita.id, rubrica: '1' } }"
-          class="btn btn-sm btn-outline theme-primary"
-          >Soci dell'unità</RouterLink
-        >
-        <RouterLink
-          :to="{ name: 'genitori', query: { unita: unita.id, rubrica: '1' } }"
-          class="btn btn-sm btn-outline theme-primary"
-          >Genitori</RouterLink
-        >
-      </div>
-    </section>
-
-    <CodiciIscrizione :unita="unita.id" />
-
-    <section v-if="unita.tipo === 'REPARTO'" class="card card-body mb-5">
-      <div class="d-flex align-items-center mb-3">
-        <h2 class="h5 mb-0">Squadriglie</h2>
-        <button
-          v-if="dettaglio.puo_gestire_squadriglie && !nuovaSquadriglia.aperta"
-          type="button"
-          class="btn btn-sm btn-outline theme-primary ms-auto"
-          @click="apriNuovaSquadriglia"
-        >
-          Nuova squadriglia
-        </button>
-      </div>
-      <form v-if="nuovaSquadriglia.aperta" class="row g-3 mb-5" @submit.prevent="creaSquadriglia">
-        <div v-if="insieme" class="col-12">
-          <select
-            v-model="nuovaSquadriglia.reparto"
-            class="form-control form-control-sm"
-            aria-label="Reparto della squadriglia"
-          >
-            <option v-for="r in dettaglio.reparti" :key="r.id" :value="r.id">{{ r.nome }}</option>
-          </select>
-        </div>
-        <div class="col-12 sm:col-6">
-          <div class="d-flex align-items-center gap-3">
-            <ImmagineAnimale :animale="animaleScelto" />
-            <select
-              v-model="nuovaSquadriglia.animale"
-              class="form-control form-control-sm"
-              aria-label="Animale della squadriglia"
+    <div class="accordion" data-gruppi>
+      <GruppoPagina v-if="unita.tipo === 'REPARTO'" chiave="squadriglie" titolo="Squadriglie">
+        <section class="card card-body mb-5">
+          <div class="d-flex align-items-center mb-3">
+            <h2 class="h5 mb-0">Squadriglie</h2>
+            <button
+              v-if="dettaglio.puo_gestire_squadriglie && !nuovaSquadriglia.aperta"
+              type="button"
+              class="btn btn-sm btn-outline theme-primary ms-auto"
+              @click="apriNuovaSquadriglia"
             >
-              <option :value="null">Senza animale: lo sceglie il capo squadriglia</option>
+              Nuova squadriglia
+            </button>
+          </div>
+          <form
+            v-if="nuovaSquadriglia.aperta"
+            class="row g-3 mb-5"
+            @submit.prevent="creaSquadriglia"
+          >
+            <div v-if="insieme" class="col-12">
+              <select
+                v-model="nuovaSquadriglia.reparto"
+                class="form-control form-control-sm"
+                aria-label="Reparto della squadriglia"
+              >
+                <option v-for="r in dettaglio.reparti" :key="r.id" :value="r.id">
+                  {{ r.nome }}
+                </option>
+              </select>
+            </div>
+            <div class="col-12 sm:col-6">
+              <div class="d-flex align-items-center gap-3">
+                <ImmagineAnimale :animale="animaleScelto" />
+                <select
+                  v-model="nuovaSquadriglia.animale"
+                  class="form-control form-control-sm"
+                  aria-label="Animale della squadriglia"
+                >
+                  <option :value="null">Senza animale: lo sceglie il capo squadriglia</option>
+                  <optgroup label="Generali">
+                    <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+                  </optgroup>
+                  <optgroup label="Nautici">
+                    <option v-for="a in nautici" :key="a.id" :value="a.id">{{ a.plurale }}</option>
+                  </optgroup>
+                </select>
+              </div>
+              <p class="form-text mb-0">
+                Manca?
+                <RouterLink :to="{ name: 'animali-squadriglia' }">Aggiungilo all'elenco</RouterLink
+                >.
+              </p>
+            </div>
+            <div v-if="!sessoDelReparto" class="col-6 sm:col-3">
+              <select
+                v-model="nuovaSquadriglia.sesso"
+                class="form-control form-control-sm"
+                aria-label="Maschile o femminile"
+              >
+                <option value="F">Femminile</option>
+                <option value="M">Maschile</option>
+              </select>
+            </div>
+            <div class="col-6 sm:col-3 d-flex gap-1">
+              <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+                Crea
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-link"
+                @click="nuovaSquadriglia.aperta = false"
+              >
+                Annulla
+              </button>
+            </div>
+          </form>
+          <p v-if="!dettaglio.squadriglie.length" class="fg-2 small mb-0">Nessuna squadriglia.</p>
+          <div v-for="s in dettaglio.squadriglie" :key="s.id" class="border-top pt-3 mt-3">
+            <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
+              <ImmagineAnimale :animale="s.animale" />
+              <strong>Sq. {{ s.nome }}</strong>
+              <span class="fg-2 small">{{ s.sesso === 'F' ? 'femminile' : 'maschile' }}</span>
+              <span v-if="s.unita_nome" class="badge theme-secondary">{{ s.unita_nome }}</span>
+              <template v-if="dettaglio.puo_gestire_squadriglie && !s.membri.length">
+                <button
+                  v-if="archiviando !== s.id"
+                  type="button"
+                  class="btn btn-link btn-sm p-0 ms-auto"
+                  :disabled="inCorso"
+                  @click="archiviando = s.id"
+                >
+                  archivia
+                </button>
+                <span v-else class="ms-auto d-flex align-items-center gap-1 small">
+                  Archiviarla per sempre?
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-solid theme-danger"
+                    :disabled="inCorso"
+                    @click="archiviaSquadriglia(s)"
+                  >
+                    Archivia
+                  </button>
+                  <button type="button" class="btn btn-sm btn-link" @click="archiviando = null">
+                    No
+                  </button>
+                </span>
+              </template>
+            </div>
+            <p v-if="s.provvisoria" class="small fg-2 mb-1">
+              Senza animale: lo sceglie il capo squadriglia.
+            </p>
+            <select
+              v-if="dettaglio.puo_gestire_squadriglie && (!s.animale || s.correggibile_fino)"
+              class="form-control form-control-sm mb-3"
+              :aria-label="s.animale ? `Correggi l'animale di Sq. ${s.nome}` : 'Scegli l\'animale'"
+              :disabled="inCorso"
+              @focus="caricaAnimali"
+              @change="scegliAnimale($event, s)"
+            >
+              <option value="">
+                {{
+                  s.correggibile_fino
+                    ? `Correggi l'animale scelto dal capo squadriglia (fino al ${data(s.correggibile_fino)})…`
+                    : "Scegli l'animale…"
+                }}
+              </option>
               <optgroup label="Generali">
                 <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
               </optgroup>
@@ -456,261 +527,217 @@ const iniziale = (u: Unita): UnitaIn => ({
                 <option v-for="a in nautici" :key="a.id" :value="a.id">{{ a.plurale }}</option>
               </optgroup>
             </select>
-          </div>
-          <p class="form-text mb-0">
-            Manca?
-            <RouterLink :to="{ name: 'animali-squadriglia' }">Aggiungilo all'elenco</RouterLink>.
-          </p>
-        </div>
-        <div v-if="!sessoDelReparto" class="col-6 sm:col-3">
-          <select
-            v-model="nuovaSquadriglia.sesso"
-            class="form-control form-control-sm"
-            aria-label="Maschile o femminile"
-          >
-            <option value="F">Femminile</option>
-            <option value="M">Maschile</option>
-          </select>
-        </div>
-        <div class="col-6 sm:col-3 d-flex gap-1">
-          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-            Crea
-          </button>
-          <button
-            type="button"
-            class="btn btn-sm btn-link"
-            @click="nuovaSquadriglia.aperta = false"
-          >
-            Annulla
-          </button>
-        </div>
-      </form>
-      <p v-if="!dettaglio.squadriglie.length" class="fg-2 small mb-0">Nessuna squadriglia.</p>
-      <div v-for="s in dettaglio.squadriglie" :key="s.id" class="border-top pt-3 mt-3">
-        <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
-          <ImmagineAnimale :animale="s.animale" />
-          <strong>Sq. {{ s.nome }}</strong>
-          <span class="fg-2 small">{{ s.sesso === 'F' ? 'femminile' : 'maschile' }}</span>
-          <span v-if="s.unita_nome" class="badge theme-secondary">{{ s.unita_nome }}</span>
-          <template v-if="dettaglio.puo_gestire_squadriglie && !s.membri.length">
-            <button
-              v-if="archiviando !== s.id"
-              type="button"
-              class="btn btn-link btn-sm p-0 ms-auto"
-              :disabled="inCorso"
-              @click="archiviando = s.id"
-            >
-              archivia
-            </button>
-            <span v-else class="ms-auto d-flex align-items-center gap-1 small">
-              Archiviarla per sempre?
-              <button
-                type="button"
-                class="btn btn-sm btn-solid theme-danger"
-                :disabled="inCorso"
-                @click="archiviaSquadriglia(s)"
+            <ul v-if="s.attiva" class="list-unstyled small mb-3">
+              <li
+                v-for="m in s.membri"
+                :key="m.id"
+                class="d-flex align-items-center flex-wrap gap-3 py-1"
               >
-                Archivia
-              </button>
-              <button type="button" class="btn btn-sm btn-link" @click="archiviando = null">
-                No
-              </button>
-            </span>
-          </template>
-        </div>
-        <p v-if="s.provvisoria" class="small fg-2 mb-1">
-          Senza animale: lo sceglie il capo squadriglia.
-        </p>
-        <select
-          v-if="dettaglio.puo_gestire_squadriglie && (!s.animale || s.correggibile_fino)"
-          class="form-control form-control-sm mb-3"
-          :aria-label="s.animale ? `Correggi l'animale di Sq. ${s.nome}` : 'Scegli l\'animale'"
-          :disabled="inCorso"
-          @focus="caricaAnimali"
-          @change="scegliAnimale($event, s)"
-        >
-          <option value="">
-            {{
-              s.correggibile_fino
-                ? `Correggi l'animale scelto dal capo squadriglia (fino al ${data(s.correggibile_fino)})…`
-                : "Scegli l'animale…"
-            }}
-          </option>
-          <optgroup label="Generali">
-            <option v-for="a in generali" :key="a.id" :value="a.id">{{ a.plurale }}</option>
-          </optgroup>
-          <optgroup label="Nautici">
-            <option v-for="a in nautici" :key="a.id" :value="a.id">{{ a.plurale }}</option>
-          </optgroup>
-        </select>
-        <ul v-if="s.attiva" class="list-unstyled small mb-3">
-          <li
-            v-for="m in s.membri"
-            :key="m.id"
-            class="d-flex align-items-center flex-wrap gap-3 py-1"
-          >
-            <Avatar
-              :nome="`${m.persona.nome} ${m.persona.cognome}`"
-              :scheda="m.persona.scheda ? m.persona.id : null"
-              dimensione="xs"
-              tenue
-              aria-hidden="true"
-            />
-            <RouterLink :to="{ name: 'persona', params: { id: m.persona.id } }">
-              {{ m.persona.nome }} {{ m.persona.cognome }}
-            </RouterLink>
-            <span v-if="m.equiparato && !s.puo_equiparare" class="badge theme-primary">
-              come capo squadriglia
-            </span>
-            <div
-              v-if="s.puo_equiparare && !eCsq(s, m.persona.id)"
-              class="form-field mb-0"
-              data-equiparazione
-            >
-              <div class="switch">
-                <input
-                  :id="`equipara-${m.id}`"
-                  type="checkbox"
-                  role="switch"
-                  :checked="m.equiparato"
-                  :disabled="inCorso"
-                  @change="equipara($event, m.id)"
+                <Avatar
+                  :nome="`${m.persona.nome} ${m.persona.cognome}`"
+                  :scheda="m.persona.scheda ? m.persona.id : null"
+                  dimensione="xs"
+                  tenue
+                  aria-hidden="true"
                 />
-              </div>
-              <label :for="`equipara-${m.id}`">Come capo squadriglia</label>
-            </div>
-            <select
-              v-if="dettaglio.puo_gestire_squadriglie"
-              class="form-control form-control-sm w-auto ms-auto"
-              :aria-label="`Sposta ${m.persona.nome} ${m.persona.cognome}`"
-              :disabled="inCorso"
-              @change="sposta($event, m.persona.id, m.id)"
-            >
-              <option value="">Sposta in…</option>
-              <option
-                v-for="altra in squadriglieDi(s.unita_id).filter((a) => a.id !== s.id)"
-                :key="altra.id"
-                :value="altra.id"
-              >
-                Sq. {{ altra.nome }}
-              </option>
-              <option value="fuori">Nessuna squadriglia</option>
-            </select>
-          </li>
-          <li v-if="!s.membri.length" class="fg-2">Nessun membro.</li>
-        </ul>
-        <ElencoIncarichi
-          v-if="s.attiva"
-          :incarichi="s.incarichi"
-          :nomina="s.nomina"
-          :dove="{ squadriglia_id: s.id }"
-          :candidati="candidatiDi(s)"
-          vuoto="Nessun incarico."
-          @cambiato="carica()"
-        />
-        <!-- The reparto staff may delegate too (DEC-267); hidden to who may not. -->
-        <DelegaSquadriglia
-          v-if="s.attiva && s.membri.length"
-          :squadriglia="s.id"
-          :membri="s.membri.map((m) => m.persona)"
-        />
-      </div>
-      <p
-        v-if="dettaglio.puo_gestire_squadriglie && dettaglio.squadriglie.length"
-        class="form-text mt-3 mb-0"
-      >
-        <template v-if="dettaglio.squadriglie.some((s) => s.puo_equiparare)">
-          «Come capo squadriglia»: chi è nel Consiglio capi senza esserne capo vede e fa nell'app
-          quello che fa il capo squadriglia, fino al 30 settembre; il suo incarico non cambia e gli
-          altri ragazzi/e non lo sanno.
-        </template>
-        L'animale di una squadriglia non si cambia: per cambiarlo aprine una nuova, spostaci i
-        membri e archivia la vecchia. Si archivia solo una squadriglia vuota.
-      </p>
-      <div v-if="dettaglio.senza_squadriglia.length" class="border-top pt-3 mt-3">
-        <strong>Senza squadriglia</strong>
-        <ul class="list-unstyled small mb-0">
-          <li
-            v-for="p in dettaglio.senza_squadriglia"
-            :key="p.id"
-            class="d-flex align-items-center flex-wrap gap-3 py-1"
-          >
-            <Avatar
-              :nome="`${p.nome} ${p.cognome}`"
-              :scheda="p.scheda ? p.id : null"
-              dimensione="xs"
-              tenue
-              aria-hidden="true"
+                <RouterLink :to="{ name: 'persona', params: { id: m.persona.id } }">
+                  {{ m.persona.nome }} {{ m.persona.cognome }}
+                </RouterLink>
+                <span v-if="m.equiparato && !s.puo_equiparare" class="badge theme-primary">
+                  come capo squadriglia
+                </span>
+                <div
+                  v-if="s.puo_equiparare && !eCsq(s, m.persona.id)"
+                  class="form-field mb-0"
+                  data-equiparazione
+                >
+                  <div class="switch">
+                    <input
+                      :id="`equipara-${m.id}`"
+                      type="checkbox"
+                      role="switch"
+                      :checked="m.equiparato"
+                      :disabled="inCorso"
+                      @change="equipara($event, m.id)"
+                    />
+                  </div>
+                  <label :for="`equipara-${m.id}`">Come capo squadriglia</label>
+                </div>
+                <select
+                  v-if="dettaglio.puo_gestire_squadriglie"
+                  class="form-control form-control-sm w-auto ms-auto"
+                  :aria-label="`Sposta ${m.persona.nome} ${m.persona.cognome}`"
+                  :disabled="inCorso"
+                  @change="sposta($event, m.persona.id, m.id)"
+                >
+                  <option value="">Sposta in…</option>
+                  <option
+                    v-for="altra in squadriglieDi(s.unita_id).filter((a) => a.id !== s.id)"
+                    :key="altra.id"
+                    :value="altra.id"
+                  >
+                    Sq. {{ altra.nome }}
+                  </option>
+                  <option value="fuori">Nessuna squadriglia</option>
+                </select>
+              </li>
+              <li v-if="!s.membri.length" class="fg-2">Nessun membro.</li>
+            </ul>
+            <ElencoIncarichi
+              v-if="s.attiva"
+              :incarichi="s.incarichi"
+              :nomina="s.nomina"
+              :dove="{ squadriglia_id: s.id }"
+              :candidati="candidatiDi(s)"
+              vuoto="Nessun incarico."
+              @cambiato="carica()"
             />
-            <RouterLink :to="{ name: 'persona', params: { id: p.id } }">
-              {{ p.nome }} {{ p.cognome }}
+            <!-- The reparto staff may delegate too (DEC-267); hidden to who may not. -->
+            <DelegaSquadriglia
+              v-if="s.attiva && s.membri.length"
+              :squadriglia="s.id"
+              :membri="s.membri.map((m) => m.persona)"
+            />
+          </div>
+          <p
+            v-if="dettaglio.puo_gestire_squadriglie && dettaglio.squadriglie.length"
+            class="form-text mt-3 mb-0"
+          >
+            <template v-if="dettaglio.squadriglie.some((s) => s.puo_equiparare)">
+              «Come capo squadriglia»: chi è nel Consiglio capi senza esserne capo vede e fa
+              nell'app quello che fa il capo squadriglia, fino al 30 settembre; il suo incarico non
+              cambia e gli altri ragazzi/e non lo sanno.
+            </template>
+            L'animale di una squadriglia non si cambia: per cambiarlo aprine una nuova, spostaci i
+            membri e archivia la vecchia. Si archivia solo una squadriglia vuota.
+          </p>
+          <div v-if="dettaglio.senza_squadriglia.length" class="border-top pt-3 mt-3">
+            <strong>Senza squadriglia</strong>
+            <ul class="list-unstyled small mb-0">
+              <li
+                v-for="p in dettaglio.senza_squadriglia"
+                :key="p.id"
+                class="d-flex align-items-center flex-wrap gap-3 py-1"
+              >
+                <Avatar
+                  :nome="`${p.nome} ${p.cognome}`"
+                  :scheda="p.scheda ? p.id : null"
+                  dimensione="xs"
+                  tenue
+                  aria-hidden="true"
+                />
+                <RouterLink :to="{ name: 'persona', params: { id: p.id } }">
+                  {{ p.nome }} {{ p.cognome }}
+                </RouterLink>
+                <span v-if="insieme" class="fg-2">{{ nomeReparto(p.reparto_id) }}</span>
+                <select
+                  v-if="dettaglio.puo_gestire_squadriglie && squadriglieDi(p.reparto_id).length"
+                  class="form-control form-control-sm w-auto ms-auto"
+                  :aria-label="`Metti ${p.nome} ${p.cognome} in una squadriglia`"
+                  :disabled="inCorso"
+                  @change="sposta($event, p.id)"
+                >
+                  <option value="">Metti in…</option>
+                  <option v-for="a in squadriglieDi(p.reparto_id)" :key="a.id" :value="a.id">
+                    Sq. {{ a.nome }}
+                  </option>
+                </select>
+              </li>
+            </ul>
+          </div>
+          <p v-if="dettaglio.puo_gestire_squadriglie" class="small mt-3 mb-0">
+            <!-- DEC-410 -->
+            <RouterLink :to="{ name: 'riorganizzazione', params: { id: unita.id } }">
+              Riorganizza le squadriglie da una data
             </RouterLink>
-            <span v-if="insieme" class="fg-2">{{ nomeReparto(p.reparto_id) }}</span>
-            <select
-              v-if="dettaglio.puo_gestire_squadriglie && squadriglieDi(p.reparto_id).length"
-              class="form-control form-control-sm w-auto ms-auto"
-              :aria-label="`Metti ${p.nome} ${p.cognome} in una squadriglia`"
-              :disabled="inCorso"
-              @change="sposta($event, p.id)"
+          </p>
+          <p v-if="dettaglio.bozza_squadriglie_pdf" class="small mt-3 mb-0">
+            <!-- DEC-411 -->
+            <a :href="bozzaSquadrigliePdf(dettaglio.bozza_squadriglie_pdf)" download
+              >Bozza delle squadriglie future (PDF)</a
             >
-              <option value="">Metti in…</option>
-              <option v-for="a in squadriglieDi(p.reparto_id)" :key="a.id" :value="a.id">
-                Sq. {{ a.nome }}
-              </option>
-            </select>
-          </li>
-        </ul>
-      </div>
-      <p v-if="dettaglio.puo_gestire_squadriglie" class="small mt-3 mb-0">
-        <!-- DEC-410 -->
-        <RouterLink :to="{ name: 'riorganizzazione', params: { id: unita.id } }">
-          Riorganizza le squadriglie da una data
-        </RouterLink>
-      </p>
-      <p v-if="dettaglio.bozza_squadriglie_pdf" class="small mt-3 mb-0">
-        <!-- DEC-411 -->
-        <a :href="bozzaSquadrigliePdf(dettaglio.bozza_squadriglie_pdf)" download
-          >Bozza delle squadriglie future (PDF)</a
-        >
-      </p>
-      <p v-if="dettaglio.squadriglie_archiviate" class="small mt-3 mb-0">
-        <RouterLink :to="{ name: 'squadriglie-archiviate', params: { id: unita.id } }">
-          Squadriglie archiviate ({{ dettaglio.squadriglie_archiviate }})
-        </RouterLink>
-      </p>
-    </section>
-    <AltaSquadriglia
-      v-if="unita.tipo === 'REPARTO'"
-      :reparto="unita.id"
-      :ragazzi="ragazziDelReparto"
-    />
-    <!-- Turns and sestiglie (DEC-312): hidden to who may not manage them. -->
-    <SestiglieUnita
-      v-if="LC.includes(unita.tipo)"
-      :key="`sestiglie-${unita.id}`"
-      :unita="unita.id"
-      :nome="linkataLC ? nomeUnita(unita) : undefined"
-    />
-    <!-- A linked branco or cerchio: its sestiglie here too, one staff for both (DEC-405). -->
-    <SestiglieUnita
-      v-if="linkataLC && unita.collegata_a"
-      :key="`sestiglie-${unita.collegata_a}`"
-      :unita="unita.collegata_a"
-      :nome="unita.collegata_nome"
-    />
-    <TurniUnita
-      v-if="CON_TURNI.includes(unita.tipo)"
-      :key="`turni-${unita.id}`"
-      :unita="unita.id"
-      :nome="turniCollegata ? nomeUnita(unita) : undefined"
-    />
-    <!-- And the linked unit's turns, which may go round the groups of both (DEC-405). -->
-    <TurniUnita
-      v-if="turniCollegata && unita.collegata_a"
-      :key="`turni-${unita.collegata_a}`"
-      :unita="unita.collegata_a"
-      :nome="unita.collegata_nome"
-    />
+          </p>
+          <p v-if="dettaglio.squadriglie_archiviate" class="small mt-3 mb-0">
+            <RouterLink :to="{ name: 'squadriglie-archiviate', params: { id: unita.id } }">
+              Squadriglie archiviate ({{ dettaglio.squadriglie_archiviate }})
+            </RouterLink>
+          </p>
+        </section>
+        <AltaSquadriglia
+          v-if="unita.tipo === 'REPARTO'"
+          :reparto="unita.id"
+          :ragazzi="ragazziDelReparto"
+        />
+      </GruppoPagina>
+      <GruppoPagina chiave="staff" titolo="Staff e incarichi">
+        <section class="card card-body mb-5">
+          <h2 class="h5">Staff e incarichi</h2>
+          <ElencoIncarichi
+            :incarichi="dettaglio.incarichi"
+            :nomina="dettaglio.nomina"
+            :dove="{ unita_id: unita.id }"
+            :candidati="candidatiUnita"
+            vuoto="Nessuno staff registrato."
+            @cambiato="carica()"
+          />
+        </section>
+        <!-- The unit's numbers into the phone's contacts (DEC-302): the list, ready to choose. -->
+        <section v-if="rubrica.disponibile.value && sessione.capo" class="card card-body mb-5">
+          <h2 class="h5">Numeri nella rubrica del telefono</h2>
+          <p class="small fg-2">
+            Scegli chi aggiungere alla rubrica: il telefono ti propone di salvare i contatti, con
+            nome e numeri.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <RouterLink
+              :to="{ name: 'persone', query: { unita: unita.id, rubrica: '1' } }"
+              class="btn btn-sm btn-outline theme-primary"
+              >Soci dell'unità</RouterLink
+            >
+            <RouterLink
+              :to="{ name: 'genitori', query: { unita: unita.id, rubrica: '1' } }"
+              class="btn btn-sm btn-outline theme-primary"
+              >Genitori</RouterLink
+            >
+          </div>
+        </section>
+      </GruppoPagina>
+      <GruppoPagina
+        chiave="turni"
+        :titolo="LC.includes(unita.tipo) ? 'Sestiglie e turni' : 'Turni'"
+      >
+        <!-- Turns and sestiglie (DEC-312): hidden to who may not manage them. -->
+        <SestiglieUnita
+          v-if="LC.includes(unita.tipo)"
+          :key="`sestiglie-${unita.id}`"
+          :unita="unita.id"
+          :nome="linkataLC ? nomeUnita(unita) : undefined"
+        />
+        <!-- A linked branco or cerchio: its sestiglie here too, one staff for both (DEC-405). -->
+        <SestiglieUnita
+          v-if="linkataLC && unita.collegata_a"
+          :key="`sestiglie-${unita.collegata_a}`"
+          :unita="unita.collegata_a"
+          :nome="unita.collegata_nome"
+        />
+        <TurniUnita
+          v-if="CON_TURNI.includes(unita.tipo)"
+          :key="`turni-${unita.id}`"
+          :unita="unita.id"
+          :nome="turniCollegata ? nomeUnita(unita) : undefined"
+        />
+        <!-- And the linked unit's turns, which may go round the groups of both (DEC-405). -->
+        <TurniUnita
+          v-if="turniCollegata && unita.collegata_a"
+          :key="`turni-${unita.collegata_a}`"
+          :unita="unita.collegata_a"
+          :nome="unita.collegata_nome"
+        />
+      </GruppoPagina>
+      <GruppoPagina chiave="iscrizioni" titolo="Codici di iscrizione">
+        <CodiciIscrizione :unita="unita.id" />
+      </GruppoPagina>
+    </div>
   </section>
   <div v-else-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
 </template>

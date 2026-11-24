@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 import { api, trasferimentoJson, type PersonaDettaglio, type Sanitarie } from '@/api/qdc'
 import AccountPersona from '@/components/AccountPersona.vue'
+import GruppoPagina from '@/components/GruppoPagina.vue'
 import LinkPersonale from '@/components/LinkPersonale.vue'
 import AvviaImpersonazione from '@/components/AvviaImpersonazione.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
@@ -21,6 +22,7 @@ import RegistroAccessi from '@/components/RegistroAccessi.vue'
 import RegoleRapporto from '@/components/RegoleRapporto.vue'
 import SchedaSanitaria from '@/components/SchedaSanitaria.vue'
 import { useRete } from '@/composables/useRete'
+import { useGruppiPagina } from '@/composables/useGruppiPagina'
 import Telefono from '@/components/Telefono.vue'
 import TelefonoSquadriglia from '@/components/TelefonoSquadriglia.vue'
 import TotemPersona from '@/components/TotemPersona.vue'
@@ -84,6 +86,10 @@ async function carica(id: number) {
 watch(() => props.id, carica, { immediate: true })
 
 const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
+
+// The page in groups (DEC-426): the person's data first. Each group shows only what this user
+// may see: a group whose parts all hide themselves does not show.
+useGruppiPagina('persona', () => ['dati', 'sanitaria', 'note', 'squadriglia', 'quote', 'gestione'])
 </script>
 
 <template>
@@ -119,122 +125,136 @@ const formattaData = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
           </RouterLink>
         </template>
       </p>
-      <FotoProfilo v-if="online" :persona="persona" @cambiata="(nuova) => (persona = nuova)" />
       <CopiaLocale :del="copiaDel" />
-      <dl class="row">
-        <template v-if="persona.codice_socio">
-          <dt class="col-5 md:col-3">Codice socio</dt>
-          <dd class="col-7 md:col-9">
-            {{ persona.codice_socio }}
-            <span v-if="persona.codice_provvisorio" class="badge theme-warning ms-1">
-              provvisorio, in attesa di BuonaStrada
-            </span>
-            <span v-if="persona.abilitato_come_censito_il" class="badge theme-success ms-1">
-              abilitato come censito dal {{ formattaData(persona.abilitato_come_censito_il)
-              }}<template v-if="persona.abilitato_come_censito_da">
-                da {{ persona.abilitato_come_censito_da }}</template
+      <div class="accordion" data-gruppi>
+        <GruppoPagina chiave="dati" titolo="Dati">
+          <FotoProfilo v-if="online" :persona="persona" @cambiata="(nuova) => (persona = nuova)" />
+          <dl class="row">
+            <template v-if="persona.codice_socio">
+              <dt class="col-5 md:col-3">Codice socio</dt>
+              <dd class="col-7 md:col-9">
+                {{ persona.codice_socio }}
+                <span v-if="persona.codice_provvisorio" class="badge theme-warning ms-1">
+                  provvisorio, in attesa di BuonaStrada
+                </span>
+                <span v-if="persona.abilitato_come_censito_il" class="badge theme-success ms-1">
+                  abilitato come censito dal {{ formattaData(persona.abilitato_come_censito_il)
+                  }}<template v-if="persona.abilitato_come_censito_da">
+                    da {{ persona.abilitato_come_censito_da }}</template
+                  >
+                </span>
+                <span v-if="persona.iscrizione_sospesa" class="badge theme-danger ms-1">
+                  iscrizione sospesa: scaduto il termine per completarla
+                </span>
+              </dd>
+            </template>
+            <template v-if="persona.data_nascita">
+              <dt class="col-5 md:col-3">Data di nascita</dt>
+              <dd class="col-7 md:col-9">{{ formattaData(persona.data_nascita) }}</dd>
+            </template>
+            <template v-if="persona.email">
+              <dt class="col-5 md:col-3">Email</dt>
+              <dd class="col-7 md:col-9">
+                <a :href="`mailto:${persona.email}`">{{ persona.email }}</a>
+              </dd>
+            </template>
+            <template v-if="persona.cellulare">
+              <dt class="col-5 md:col-3">Cellulare</dt>
+              <dd class="col-7 md:col-9">
+                <Telefono :numero="persona.cellulare" :di="`${persona.nome} ${persona.cognome}`" />
+              </dd>
+            </template>
+            <template v-if="persona.professione">
+              <dt class="col-5 md:col-3">Professione</dt>
+              <dd class="col-7 md:col-9">{{ professione(persona.professione) }}</dd>
+            </template>
+            <template v-if="persona.indirizzo">
+              <dt class="col-5 md:col-3">Indirizzo</dt>
+              <dd class="col-7 md:col-9">{{ persona.indirizzo }} {{ persona.comune }}</dd>
+            </template>
+            <template v-if="persona.consenso_foto !== null">
+              <dt class="col-5 md:col-3">Consenso foto</dt>
+              <dd class="col-7 md:col-9">{{ persona.consenso_foto ? 'Sì' : 'No' }}</dd>
+            </template>
+          </dl>
+          <PercorsoScout v-if="online" :persona="persona.id" />
+          <TotemPersona v-if="online" :persona="persona.id" :nome="persona.nome" />
+        </GruppoPagina>
+        <GruppoPagina chiave="sanitaria" titolo="Scheda sanitaria">
+          <section v-if="sanitarie" class="card card-body mb-5">
+            <div class="d-flex align-items-center">
+              <h2 class="h5 mb-0">Scheda sanitaria</h2>
+              <RouterLink
+                v-if="sanitarie.puo_modificare"
+                :to="{ name: 'sanitarie', params: { id: persona.id } }"
+                class="btn btn-sm btn-outline theme-primary ms-auto"
+                >{{ sanitarie.compilate ? 'Modifica' : 'Compila' }}</RouterLink
               >
-            </span>
-            <span v-if="persona.iscrizione_sospesa" class="badge theme-danger ms-1">
-              iscrizione sospesa: scaduto il termine per completarla
-            </span>
-          </dd>
-        </template>
-        <template v-if="persona.data_nascita">
-          <dt class="col-5 md:col-3">Data di nascita</dt>
-          <dd class="col-7 md:col-9">{{ formattaData(persona.data_nascita) }}</dd>
-        </template>
-        <template v-if="persona.email">
-          <dt class="col-5 md:col-3">Email</dt>
-          <dd class="col-7 md:col-9">
-            <a :href="`mailto:${persona.email}`">{{ persona.email }}</a>
-          </dd>
-        </template>
-        <template v-if="persona.cellulare">
-          <dt class="col-5 md:col-3">Cellulare</dt>
-          <dd class="col-7 md:col-9">
-            <Telefono :numero="persona.cellulare" :di="`${persona.nome} ${persona.cognome}`" />
-          </dd>
-        </template>
-        <template v-if="persona.professione">
-          <dt class="col-5 md:col-3">Professione</dt>
-          <dd class="col-7 md:col-9">{{ professione(persona.professione) }}</dd>
-        </template>
-        <template v-if="persona.indirizzo">
-          <dt class="col-5 md:col-3">Indirizzo</dt>
-          <dd class="col-7 md:col-9">{{ persona.indirizzo }} {{ persona.comune }}</dd>
-        </template>
-        <template v-if="persona.consenso_foto !== null">
-          <dt class="col-5 md:col-3">Consenso foto</dt>
-          <dd class="col-7 md:col-9">{{ persona.consenso_foto ? 'Sì' : 'No' }}</dd>
-        </template>
-      </dl>
-      <PercorsoScout v-if="online" :persona="persona.id" />
-      <TotemPersona v-if="online" :persona="persona.id" :nome="persona.nome" />
-      <RegoleRapporto :persona="persona.id" />
-      <section v-if="sanitarie" class="card card-body mb-5">
-        <div class="d-flex align-items-center">
-          <h2 class="h5 mb-0">Scheda sanitaria</h2>
-          <RouterLink
-            v-if="sanitarie.puo_modificare"
-            :to="{ name: 'sanitarie', params: { id: persona.id } }"
-            class="btn btn-sm btn-outline theme-primary ms-auto"
-            >{{ sanitarie.compilate ? 'Modifica' : 'Compila' }}</RouterLink
-          >
-        </div>
-        <SchedaSanitaria :dati="sanitarie" />
-        <CartaSanitaria
-          v-if="online"
-          :persona="persona.id"
-          :dati="sanitarie"
-          @cambiata="(nuovi) => (sanitarie = nuovi)"
-        />
-        <AllegatiSanitari v-if="online" :persona="persona.id" @cambiati="ricaricaSanitarie" />
-      </section>
-      <NotePersona :persona="persona.id" />
-      <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
-      <QuotePersona :id="persona.id" />
-      <TelefonoSquadriglia :id="persona.id" />
-      <IncarichiSquadriglia :persona="persona.id" />
-      <DerogheSquadriglia :id="persona.id" />
-      <AccountPersona :id="persona.id" />
-      <UscitaGruppo
-        v-if="online"
-        :persona="persona.id"
-        :nome="persona.nome"
-        @cambiato="carica(persona.id)"
-      />
-      <LinkPersonale
-        v-if="online && persona.puo_link_attivazione"
-        :persona="persona.id"
-        :nome="persona.nome"
-      />
-      <PassaggioInCoca
-        v-if="online && (persona.puo_portare_in_coca || persona.puo_annullare_coca)"
-        :persona="persona.id"
-        :nome="persona.nome"
-        :annullabile="!!persona.puo_annullare_coca"
-        @cambiato="carica(persona.id)"
-      />
-      <AbilitaCensito
-        v-if="online && persona.puo_abilitare_come_censito"
-        :persona="persona.id"
-        :nome="persona.nome"
-        :abilitato="!!persona.abilitato_come_censito_il"
-        @cambiato="carica(persona.id)"
-      />
-      <RegistroAccessi v-if="online && persona.vede_registro_accessi" :id="persona.id" />
-      <AvviaImpersonazione
-        v-if="impersonabile"
-        class="mb-5"
-        :persona="persona.id"
-        :nome="`${persona.nome} ${persona.cognome}`"
-      />
-      <p v-if="sessione.capogruppo" class="small">
-        <RouterLink :to="{ name: 'fascicolo', params: { id: persona.id } }">
-          Fascicolo completo e cancellazione (richieste dell'interessato)
-        </RouterLink>
-      </p>
+            </div>
+            <SchedaSanitaria :dati="sanitarie" />
+            <CartaSanitaria
+              v-if="online"
+              :persona="persona.id"
+              :dati="sanitarie"
+              @cambiata="(nuovi) => (sanitarie = nuovi)"
+            />
+            <AllegatiSanitari v-if="online" :persona="persona.id" @cambiati="ricaricaSanitarie" />
+          </section>
+        </GruppoPagina>
+        <GruppoPagina chiave="note" titolo="Note">
+          <NotePersona :persona="persona.id" />
+          <RegoleRapporto :persona="persona.id" />
+        </GruppoPagina>
+        <GruppoPagina chiave="squadriglia" titolo="Squadriglia">
+          <TelefonoSquadriglia :id="persona.id" />
+          <IncarichiSquadriglia :persona="persona.id" />
+          <DerogheSquadriglia :id="persona.id" />
+        </GruppoPagina>
+        <GruppoPagina chiave="quote" titolo="Quote">
+          <QuotePersona :id="persona.id" />
+        </GruppoPagina>
+        <GruppoPagina chiave="gestione" titolo="Account e gestione">
+          <CorrezioniPersona :id="persona.id" @cambiato="carica(persona.id)" />
+          <AccountPersona :id="persona.id" />
+          <UscitaGruppo
+            v-if="online"
+            :persona="persona.id"
+            :nome="persona.nome"
+            @cambiato="carica(persona.id)"
+          />
+          <LinkPersonale
+            v-if="online && persona.puo_link_attivazione"
+            :persona="persona.id"
+            :nome="persona.nome"
+          />
+          <PassaggioInCoca
+            v-if="online && (persona.puo_portare_in_coca || persona.puo_annullare_coca)"
+            :persona="persona.id"
+            :nome="persona.nome"
+            :annullabile="!!persona.puo_annullare_coca"
+            @cambiato="carica(persona.id)"
+          />
+          <AbilitaCensito
+            v-if="online && persona.puo_abilitare_come_censito"
+            :persona="persona.id"
+            :nome="persona.nome"
+            :abilitato="!!persona.abilitato_come_censito_il"
+            @cambiato="carica(persona.id)"
+          />
+          <RegistroAccessi v-if="online && persona.vede_registro_accessi" :id="persona.id" />
+          <AvviaImpersonazione
+            v-if="impersonabile"
+            class="mb-5"
+            :persona="persona.id"
+            :nome="`${persona.nome} ${persona.cognome}`"
+          />
+          <p v-if="sessione.capogruppo" class="small">
+            <RouterLink :to="{ name: 'fascicolo', params: { id: persona.id } }">
+              Fascicolo completo e cancellazione (richieste dell'interessato)
+            </RouterLink>
+          </p>
+        </GruppoPagina>
+      </div>
     </template>
   </section>
 </template>

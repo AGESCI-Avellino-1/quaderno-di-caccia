@@ -21,11 +21,13 @@ import ReperibilitaEvento from '@/components/ReperibilitaEvento.vue'
 import VerbaleRiunione from '@/components/VerbaleRiunione.vue'
 import VerbaliCollegati from '@/components/VerbaliCollegati.vue'
 import EventoBC from '@/components/EventoBC.vue'
+import GruppoPagina from '@/components/GruppoPagina.vue'
 import { dataEOra } from '@/eventi/orario'
 import ModificaRiunione from '@/components/ModificaRiunione.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useGruppiPagina } from '@/composables/useGruppiPagina'
 import { useNomePagina } from '@/composables/useNomePagina'
 import { leggiConCache, salvaInCache } from '@/offline/cache'
 import { scrivi } from '@/offline/outbox'
@@ -238,6 +240,17 @@ const STATI: [StatoPresenza, string][] = [
   ['ASSENTE', 'Assente'],
   ['GIUSTIFICATO', 'Giustificato'],
 ]
+
+// The page in groups (DEC-426): the event's details first, then minutes, BuonaCaccia, fee and
+// accounts, participants, as they apply; cancelling and removing stay below, outside.
+useGruppiPagina('evento', () => {
+  const e = evento.value
+  if (!e) return []
+  if (e.livello === 'ESTERNO') return ['dettagli', 'buonacaccia']
+  return riunione.value
+    ? ['dettagli', 'verbale', 'partecipanti']
+    : ['dettagli', 'quote', 'partecipanti']
+})
 </script>
 
 <template>
@@ -271,393 +284,426 @@ const STATI: [StatoPresenza, string][] = [
       <div>Annullato: {{ evento.motivo_annullamento }}</div>
     </div>
 
-    <div class="card card-body mb-5">
-      <div>
-        <strong>Inizio</strong> {{ dataEOra(evento.inizio, evento.senza_ora_inizio) }}<br />
-        <strong>Fine</strong> {{ dataEOra(evento.fine, evento.senza_ora_fine) }}
-      </div>
-      <div v-if="evento.luogo">
-        <strong>Luogo</strong> {{ evento.luogo }}
-        <template v-if="evento.localita?.indirizzo_completo">
-          · {{ evento.localita.indirizzo_completo }}</template
-        >
-        <a v-if="linkMappa" :href="linkMappa" target="_blank" rel="noopener" class="small ms-1"
-          >mappa</a
-        >
-      </div>
-      <!-- Online or mixed: the platform's link (DEC-402). -->
-      <div v-if="evento.modalita && evento.modalita !== 'PRESENZA' && evento.link">
-        <strong>{{ evento.modalita === 'ONLINE' ? 'Online' : 'Anche online' }}</strong>
-        <a :href="evento.link" target="_blank" rel="noopener" class="ms-1">Entra nella riunione</a>
-      </div>
-      <div
-        v-if="
-          riunione &&
-          !convocata &&
-          evento.cerchia !== 'STAFF' &&
-          evento.uniforme !== null &&
-          evento.uniforme !== undefined
-        "
-      >
-        <strong>Uniforme</strong> {{ evento.uniforme ? 'sì' : 'no' }}
-      </div>
-      <div v-if="!evento.annullato" class="mt-1">
-        <a :href="eventoIcs(evento.id)" class="small" download>Aggiungi al calendario</a>
-      </div>
-      <p v-if="evento.descrizione" class="mb-0 mt-3 testo-a-capo">{{ evento.descrizione }}</p>
-      <!-- eslint-disable-next-line vue/no-v-html -- HTML cleaned by the server (DEC-310) -->
-      <div v-if="evento.informazioni" class="mt-3" v-html="evento.informazioni"></div>
-      <div v-if="evento.note_genitori" class="mt-3">
-        <strong>Note per i genitori</strong>
-        <span class="small fg-2">(non le vedono i ragazzi/e)</span>
-        <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
-      </div>
-    </div>
-
-    <OrdineDelGiorno
-      v-if="riunione && evento.con_ordine_del_giorno"
-      :key="`ordine-${evento.id}`"
-      :evento="evento.id"
-    />
-    <ConvocazioneRiunione
-      v-if="riunione && convocata"
-      :key="`convocazione-${evento.id}`"
-      :evento="evento.id"
-    />
-    <VerbaleRiunione v-if="riunione" :key="evento.id" :evento="evento.id" />
-    <VerbaliCollegati v-if="riunione" :key="`collegati-${evento.id}`" :evento="evento.id" />
-
-    <!-- The group's turns that fall on this unit (DEC-406). -->
-    <section v-if="riunione && evento.turni_gruppo?.length" class="card card-body mb-5">
-      <h2 class="h5">Turni del gruppo</h2>
-      <ul class="list-unstyled mb-0">
-        <li v-for="t in evento.turni_gruppo" :key="t.turno" class="py-1">
-          <strong>{{ t.turno }}</strong
-          >: {{ t.unita }}
-        </li>
-      </ul>
-    </section>
-
-    <section v-if="riunione && evento.turni?.length" class="card card-body mb-5">
-      <h2 class="h5">Turni</h2>
-      <ul class="list-unstyled mb-0">
-        <li
-          v-for="t in evento.turni"
-          :key="t.turno"
-          class="d-flex flex-wrap align-items-center gap-3 py-1"
-        >
-          <strong>{{ t.turno }}</strong>
-          <span>{{ t.gruppo }}</span>
-          <span v-if="t.mio" class="badge theme-primary">il tuo</span>
-          <span v-if="t.cambiato" class="small fg-2">cambiato a mano</span>
-          <select
-            v-if="evento.gruppi_turni?.length && !evento.annullato"
-            class="form-control form-control-sm w-auto ms-auto"
-            :aria-label="`Chi ha il turno ${t.turno}`"
-            :disabled="inCorso"
-            @change="cambiaTurno(t.turno, ($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">Cambia…</option>
-            <option v-for="g in evento.gruppi_turni" :key="g.nome" :value="chiaveGruppo(g)">
-              {{ g.nome }}
-            </option>
-            <option v-if="t.cambiato" value="rotazione">Come da rotazione</option>
-          </select>
-        </li>
-      </ul>
-    </section>
-
-    <section v-if="riunione && evento.puo_gestire && !evento.annullato" class="mb-5">
-      <button
-        v-if="!modificaRiunione"
-        type="button"
-        class="btn btn-sm btn-outline theme-primary"
-        @click="modificaRiunione = true"
-      >
-        Modifica la riunione
-      </button>
-      <ModificaRiunione
-        v-else
-        :riunione="evento"
-        @salvata="riunioneSalvata"
-        @chiusa="modificaRiunione = false"
-      />
-    </section>
-    <section
-      v-else-if="evento.puo_gestire && !evento.annullato && evento.livello !== 'ESTERNO'"
-      class="mb-5"
-    >
-      <button
-        v-if="!modifica"
-        type="button"
-        class="btn btn-sm btn-outline theme-primary"
-        @click="apriModifica"
-      >
-        Modifica
-      </button>
-      <form v-else class="card card-body" @submit.prevent="salvaModifica">
-        <div class="row g-3">
-          <div class="md:col-8">
-            <label class="form-label small" for="mod-titolo">Titolo</label>
-            <input
-              id="mod-titolo"
-              v-model="modifica.titolo"
-              class="form-control form-control-sm"
-              required
-            />
+    <div class="accordion" data-gruppi>
+      <GruppoPagina chiave="dettagli" titolo="Dettagli">
+        <div class="card card-body mb-5">
+          <div>
+            <strong>Inizio</strong> {{ dataEOra(evento.inizio, evento.senza_ora_inizio) }}<br />
+            <strong>Fine</strong> {{ dataEOra(evento.fine, evento.senza_ora_fine) }}
           </div>
-          <div class="md:col-4">
-            <label class="form-label small" for="mod-tipo">Tipo</label>
-            <select
-              id="mod-tipo"
-              v-model="modifica.tipo"
-              class="form-control form-control-sm"
-              :disabled="evento.tipo === 'MISSIONE'"
+          <div v-if="evento.luogo">
+            <strong>Luogo</strong> {{ evento.luogo }}
+            <template v-if="evento.localita?.indirizzo_completo">
+              · {{ evento.localita.indirizzo_completo }}</template
             >
-              <option value="RIUNIONE">Riunione</option>
-              <option value="USCITA">Uscita</option>
-              <option value="CAMPO">Campo</option>
-              <option v-if="evento.tipo === 'MISSIONE'" value="MISSIONE">
-                Missione di squadriglia
-              </option>
-              <option value="AUTOFINANZIAMENTO">Autofinanziamento</option>
-              <option value="ALTRO">Altro evento</option>
-            </select>
-          </div>
-          <div class="md:col-6">
-            <label class="form-label small" for="mod-inizio">Inizio</label>
-            <input
-              id="mod-inizio"
-              v-model="modifica.inizio"
-              type="datetime-local"
-              class="form-control form-control-sm"
-              required
-            />
-          </div>
-          <div class="md:col-6">
-            <label class="form-label small" for="mod-fine">Fine</label>
-            <input
-              id="mod-fine"
-              v-model="modifica.fine"
-              type="datetime-local"
-              class="form-control form-control-sm"
-              required
-            />
-          </div>
-          <div class="col-12">
-            <label class="form-label small" for="mod-luogo">Luogo</label>
-            <input id="mod-luogo" v-model="modifica.luogo" class="form-control form-control-sm" />
-          </div>
-          <div class="col-12">
-            <label class="form-label small" for="mod-descrizione">Descrizione</label>
-            <textarea
-              id="mod-descrizione"
-              v-model="modifica.descrizione"
-              rows="3"
-              class="form-control form-control-sm"
-            />
-          </div>
-          <div v-if="modifica.tipo === 'MISSIONE'" class="col-12">
-            <label class="form-label small" for="mod-note"
-              >Note per i genitori (le leggono i genitori e i capi, non i ragazzi/e)</label
+            <a v-if="linkMappa" :href="linkMappa" target="_blank" rel="noopener" class="small ms-1"
+              >mappa</a
             >
-            <textarea
-              id="mod-note"
-              v-model="modifica.note_genitori"
-              rows="3"
-              class="form-control form-control-sm"
-            />
+          </div>
+          <!-- Online or mixed: the platform's link (DEC-402). -->
+          <div v-if="evento.modalita && evento.modalita !== 'PRESENZA' && evento.link">
+            <strong>{{ evento.modalita === 'ONLINE' ? 'Online' : 'Anche online' }}</strong>
+            <a :href="evento.link" target="_blank" rel="noopener" class="ms-1"
+              >Entra nella riunione</a
+            >
+          </div>
+          <div
+            v-if="
+              riunione &&
+              !convocata &&
+              evento.cerchia !== 'STAFF' &&
+              evento.uniforme !== null &&
+              evento.uniforme !== undefined
+            "
+          >
+            <strong>Uniforme</strong> {{ evento.uniforme ? 'sì' : 'no' }}
+          </div>
+          <div v-if="!evento.annullato" class="mt-1">
+            <a :href="eventoIcs(evento.id)" class="small" download>Aggiungi al calendario</a>
+          </div>
+          <p v-if="evento.descrizione" class="mb-0 mt-3 testo-a-capo">{{ evento.descrizione }}</p>
+          <!-- eslint-disable-next-line vue/no-v-html -- HTML cleaned by the server (DEC-310) -->
+          <div v-if="evento.informazioni" class="mt-3" v-html="evento.informazioni"></div>
+          <div v-if="evento.note_genitori" class="mt-3">
+            <strong>Note per i genitori</strong>
+            <span class="small fg-2">(non le vedono i ragazzi/e)</span>
+            <p class="mb-0 testo-a-capo">{{ evento.note_genitori }}</p>
           </div>
         </div>
-        <p class="form-text mt-3 mb-0">
-          Chi è invitato non cambia: per altre unità o un'altra squadriglia crea un evento nuovo. Se
-          cambiano date o luogo, gli invitati ricevono un'email.
-        </p>
-        <div class="d-flex gap-3 mt-3">
-          <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-            Salva
-          </button>
-          <button type="button" class="btn btn-sm btn-link" @click="modifica = null">
-            Annulla
-          </button>
-        </div>
-      </form>
-    </section>
 
-    <EventoBC v-if="evento.livello === 'ESTERNO'" :evento="evento.id" @cambiato="carica" />
+        <!-- The group's turns that fall on this unit (DEC-406). -->
+        <section v-if="riunione && evento.turni_gruppo?.length" class="card card-body mb-5">
+          <h2 class="h5">Turni del gruppo</h2>
+          <ul class="list-unstyled mb-0">
+            <li v-for="t in evento.turni_gruppo" :key="t.turno" class="py-1">
+              <strong>{{ t.turno }}</strong
+              >: {{ t.unita }}
+            </li>
+          </ul>
+        </section>
 
-    <template v-else>
-      <QuotaEvento
-        v-if="!riunione"
-        :evento="evento.id"
-        :quota="evento.quota"
-        :puo-gestire="evento.puo_gestire && !evento.annullato"
-        :in-famiglia="evento.mie.length > 0"
-        @cambiata="carica"
-      />
+        <section v-if="riunione && evento.turni?.length" class="card card-body mb-5">
+          <h2 class="h5">Turni</h2>
+          <ul class="list-unstyled mb-0">
+            <li
+              v-for="t in evento.turni"
+              :key="t.turno"
+              class="d-flex flex-wrap align-items-center gap-3 py-1"
+            >
+              <strong>{{ t.turno }}</strong>
+              <span>{{ t.gruppo }}</span>
+              <span v-if="t.mio" class="badge theme-primary">il tuo</span>
+              <span v-if="t.cambiato" class="small fg-2">cambiato a mano</span>
+              <select
+                v-if="evento.gruppi_turni?.length && !evento.annullato"
+                class="form-control form-control-sm w-auto ms-auto"
+                :aria-label="`Chi ha il turno ${t.turno}`"
+                :disabled="inCorso"
+                @change="cambiaTurno(t.turno, ($event.target as HTMLSelectElement).value)"
+              >
+                <option value="">Cambia…</option>
+                <option v-for="g in evento.gruppi_turni" :key="g.nome" :value="chiaveGruppo(g)">
+                  {{ g.nome }}
+                </option>
+                <option v-if="t.cambiato" value="rotazione">Come da rotazione</option>
+              </select>
+            </li>
+          </ul>
+        </section>
 
-      <RendicontoEvento
-        v-if="!riunione && (evento.puo_gestire || evento.partecipanti.length)"
-        :evento="evento.id"
-        :campo="evento.tipo === 'CAMPO'"
-      />
-
-      <!-- The family -->
-      <section v-if="evento.mie.length" class="mb-5">
-        <h2 class="h5">Partecipazione</h2>
-        <ul class="list-group">
-          <li v-for="m in evento.mie" :key="m.persona_id" class="list-group-item">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <strong>{{ m.persona }}</strong>
-              <span v-if="m.stato === 'NON_INVITATO'" class="badge theme-danger">Non invitato</span>
-              <template v-else-if="m.puo_segnalare && !evento.annullato">
-                <div class="form-field mb-0">
-                  <div class="switch">
-                    <input
-                      :id="`partecipa-${m.persona_id}`"
-                      type="checkbox"
-                      role="switch"
-                      :checked="m.stato === 'INVITATO'"
-                      :disabled="inCorso"
-                      @change="partecipa(m.persona_id, ($event.target as HTMLInputElement).checked)"
-                    />
-                  </div>
-                  <label :for="`partecipa-${m.persona_id}`">
-                    {{ m.stato === 'INVITATO' ? 'Partecipa' : 'Non partecipa' }}
-                  </label>
-                </div>
-              </template>
-            </div>
-            <div v-if="m.stato === 'NON_INVITATO'" class="small">
-              Lo staff ha deciso di non invitarlo: {{ m.motivo }}
-            </div>
-            <ReperibilitaEvento
-              v-else-if="m.stato === 'INVITATO' && !evento.annullato"
-              :evento="evento.id"
-              :persona="m.persona_id"
-            />
-          </li>
-        </ul>
-      </section>
-
-      <!-- The staff -->
-      <section v-if="evento.partecipanti.length" class="mb-5">
-        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-          <h2 class="h5 mb-0">Partecipanti</h2>
-          <span class="small fg-2">
-            {{ conteggio.presenti }} {{ conteggio.presenti === 1 ? 'presente' : 'presenti' }} ·
-            {{ conteggio.assenti }} {{ conteggio.assenti === 1 ? 'assente' : 'assenti' }} ·
-            {{ conteggio.giustificati }}
-            {{ conteggio.giustificati === 1 ? 'giustificato' : 'giustificati' }}
-          </span>
-          <a v-if="evento.puo_presenze" :href="foglioPresenze(evento.id)" class="small">
-            Foglio da stampare
-          </a>
-          <a
-            v-if="evento.puo_stampare_schede"
-            :href="schedeSanitarieEventoPdf(evento.id)"
-            class="small"
-          >
-            Schede sanitarie dei partecipanti
-          </a>
-        </div>
-        <div v-if="evento.puo_presenze && !evento.annullato" class="d-flex gap-3 mb-3">
-          <button type="button" class="btn btn-sm btn-outline theme-primary" @click="tuttiPresenti">
-            Segna gli altri presenti
-          </button>
+        <section v-if="riunione && evento.puo_gestire && !evento.annullato" class="mb-5">
           <button
+            v-if="!modificaRiunione"
             type="button"
-            class="btn btn-sm btn-solid theme-primary"
-            :disabled="inCorso || !modificate.length"
-            @click="salvaPresenze"
+            class="btn btn-sm btn-outline theme-primary"
+            @click="modificaRiunione = true"
           >
-            Salva le presenze
+            Modifica la riunione
           </button>
-        </div>
-        <ul class="list-group">
-          <li v-for="p in evento.partecipanti" :key="p.persona_id" class="list-group-item">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <span>
-                {{ p.cognome }} {{ p.nome }}
-                <span v-if="p.stato === 'NON_PARTECIPA'" class="badge theme-warning ms-1">
-                  Non partecipa
-                </span>
-                <span v-if="p.stato === 'NON_INVITATO'" class="badge theme-danger ms-1">
-                  Non invitato
-                </span>
-              </span>
-              <div
-                v-if="evento.puo_presenze && p.stato !== 'NON_INVITATO' && !evento.annullato"
-                class="d-flex gap-1"
-                role="group"
-                :aria-label="`Presenza di ${p.nome} ${p.cognome}`"
-              >
-                <button
-                  v-for="[stato, etichetta] in STATI"
-                  :key="stato"
-                  type="button"
-                  class="btn btn-sm"
-                  :class="
-                    presenze[p.persona_id] === stato
-                      ? 'btn-solid theme-primary'
-                      : 'btn-outline theme-secondary'
-                  "
-                  :aria-pressed="presenze[p.persona_id] === stato"
-                  @click="presenze[p.persona_id] = stato"
-                >
-                  {{ etichetta }}
-                </button>
+          <ModificaRiunione
+            v-else
+            :riunione="evento"
+            @salvata="riunioneSalvata"
+            @chiusa="modificaRiunione = false"
+          />
+        </section>
+        <section
+          v-else-if="evento.puo_gestire && !evento.annullato && evento.livello !== 'ESTERNO'"
+          class="mb-5"
+        >
+          <button
+            v-if="!modifica"
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            @click="apriModifica"
+          >
+            Modifica
+          </button>
+          <form v-else class="card card-body" @submit.prevent="salvaModifica">
+            <div class="row g-3">
+              <div class="md:col-8">
+                <label class="form-label small" for="mod-titolo">Titolo</label>
+                <input
+                  id="mod-titolo"
+                  v-model="modifica.titolo"
+                  class="form-control form-control-sm"
+                  required
+                />
               </div>
-              <span v-else-if="p.presenza" class="small">
-                {{ STATI.find(([s]) => s === p.presenza)?.[1] }}
-              </span>
+              <div class="md:col-4">
+                <label class="form-label small" for="mod-tipo">Tipo</label>
+                <select
+                  id="mod-tipo"
+                  v-model="modifica.tipo"
+                  class="form-control form-control-sm"
+                  :disabled="evento.tipo === 'MISSIONE'"
+                >
+                  <option value="RIUNIONE">Riunione</option>
+                  <option value="USCITA">Uscita</option>
+                  <option value="CAMPO">Campo</option>
+                  <option v-if="evento.tipo === 'MISSIONE'" value="MISSIONE">
+                    Missione di squadriglia
+                  </option>
+                  <option value="AUTOFINANZIAMENTO">Autofinanziamento</option>
+                  <option value="ALTRO">Altro evento</option>
+                </select>
+              </div>
+              <div class="md:col-6">
+                <label class="form-label small" for="mod-inizio">Inizio</label>
+                <input
+                  id="mod-inizio"
+                  v-model="modifica.inizio"
+                  type="datetime-local"
+                  class="form-control form-control-sm"
+                  required
+                />
+              </div>
+              <div class="md:col-6">
+                <label class="form-label small" for="mod-fine">Fine</label>
+                <input
+                  id="mod-fine"
+                  v-model="modifica.fine"
+                  type="datetime-local"
+                  class="form-control form-control-sm"
+                  required
+                />
+              </div>
+              <div class="col-12">
+                <label class="form-label small" for="mod-luogo">Luogo</label>
+                <input
+                  id="mod-luogo"
+                  v-model="modifica.luogo"
+                  class="form-control form-control-sm"
+                />
+              </div>
+              <div class="col-12">
+                <label class="form-label small" for="mod-descrizione">Descrizione</label>
+                <textarea
+                  id="mod-descrizione"
+                  v-model="modifica.descrizione"
+                  rows="3"
+                  class="form-control form-control-sm"
+                />
+              </div>
+              <div v-if="modifica.tipo === 'MISSIONE'" class="col-12">
+                <label class="form-label small" for="mod-note"
+                  >Note per i genitori (le leggono i genitori e i capi, non i ragazzi/e)</label
+                >
+                <textarea
+                  id="mod-note"
+                  v-model="modifica.note_genitori"
+                  rows="3"
+                  class="form-control form-control-sm"
+                />
+              </div>
             </div>
-            <div v-if="p.stato === 'NON_INVITATO'" class="small fg-2">{{ p.motivo }}</div>
-            <div v-if="evento.puo_non_invitare && !evento.annullato" class="small">
-              <button
-                v-if="p.stato === 'NON_INVITATO'"
-                type="button"
-                class="btn btn-sm btn-link"
-                @click="reinvita(p)"
-              >
-                Invita di nuovo
+            <p class="form-text mt-3 mb-0">
+              Chi è invitato non cambia: per altre unità o un'altra squadriglia crea un evento
+              nuovo. Se cambiano date o luogo, gli invitati ricevono un'email.
+            </p>
+            <div class="d-flex gap-3 mt-3">
+              <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+                Salva
               </button>
-              <button
-                v-else-if="esclusione.persona !== p.persona_id"
-                type="button"
-                class="btn btn-sm btn-link"
-                @click="Object.assign(esclusione, { persona: p.persona_id, motivo: '' })"
-              >
-                Non invitare…
+              <button type="button" class="btn btn-sm btn-link" @click="modifica = null">
+                Annulla
               </button>
-              <form
-                v-else
-                class="d-flex flex-wrap align-items-end gap-3 mt-1"
-                @submit.prevent="nonInvitare(p)"
-              >
-                <div class="flex-grow-1">
-                  <label class="form-label small" :for="`motivo-${p.persona_id}`">
-                    Motivo (la famiglia lo legge)
-                  </label>
-                  <input
-                    :id="`motivo-${p.persona_id}`"
-                    v-model="esclusione.motivo"
-                    class="form-control form-control-sm"
-                    required
-                  />
+            </div>
+          </form>
+        </section>
+      </GruppoPagina>
+      <GruppoPagina v-if="riunione" chiave="verbale" titolo="Ordine del giorno e verbale">
+        <OrdineDelGiorno
+          v-if="riunione && evento.con_ordine_del_giorno"
+          :key="`ordine-${evento.id}`"
+          :evento="evento.id"
+        />
+        <ConvocazioneRiunione
+          v-if="riunione && convocata"
+          :key="`convocazione-${evento.id}`"
+          :evento="evento.id"
+        />
+        <VerbaleRiunione v-if="riunione" :key="evento.id" :evento="evento.id" />
+        <VerbaliCollegati v-if="riunione" :key="`collegati-${evento.id}`" :evento="evento.id" />
+      </GruppoPagina>
+      <GruppoPagina v-if="evento.livello === 'ESTERNO'" chiave="buonacaccia" titolo="BuonaCaccia">
+        <EventoBC v-if="evento.livello === 'ESTERNO'" :evento="evento.id" @cambiato="carica" />
+      </GruppoPagina>
+      <template v-else>
+        <GruppoPagina v-if="!riunione" chiave="quote" titolo="Quota e rendiconto">
+          <QuotaEvento
+            v-if="!riunione"
+            :evento="evento.id"
+            :quota="evento.quota"
+            :puo-gestire="evento.puo_gestire && !evento.annullato"
+            :in-famiglia="evento.mie.length > 0"
+            @cambiata="carica"
+          />
+
+          <RendicontoEvento
+            v-if="!riunione && (evento.puo_gestire || evento.partecipanti.length)"
+            :evento="evento.id"
+            :campo="evento.tipo === 'CAMPO'"
+          />
+        </GruppoPagina>
+        <GruppoPagina
+          chiave="partecipanti"
+          :titolo="evento.partecipanti.length ? 'Partecipanti' : 'Partecipazione'"
+        >
+          <!-- The family -->
+          <section v-if="evento.mie.length" class="mb-5">
+            <h2 class="h5">Partecipazione</h2>
+            <ul class="list-group">
+              <li v-for="m in evento.mie" :key="m.persona_id" class="list-group-item">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                  <strong>{{ m.persona }}</strong>
+                  <span v-if="m.stato === 'NON_INVITATO'" class="badge theme-danger"
+                    >Non invitato</span
+                  >
+                  <template v-else-if="m.puo_segnalare && !evento.annullato">
+                    <div class="form-field mb-0">
+                      <div class="switch">
+                        <input
+                          :id="`partecipa-${m.persona_id}`"
+                          type="checkbox"
+                          role="switch"
+                          :checked="m.stato === 'INVITATO'"
+                          :disabled="inCorso"
+                          @change="
+                            partecipa(m.persona_id, ($event.target as HTMLInputElement).checked)
+                          "
+                        />
+                      </div>
+                      <label :for="`partecipa-${m.persona_id}`">
+                        {{ m.stato === 'INVITATO' ? 'Partecipa' : 'Non partecipa' }}
+                      </label>
+                    </div>
+                  </template>
                 </div>
-                <button type="submit" class="btn btn-sm btn-solid theme-danger" :disabled="inCorso">
-                  Non invitare
-                </button>
-                <button type="button" class="btn btn-sm btn-link" @click="esclusione.persona = 0">
-                  Annulla
-                </button>
-              </form>
+                <div v-if="m.stato === 'NON_INVITATO'" class="small">
+                  Lo staff ha deciso di non invitarlo: {{ m.motivo }}
+                </div>
+                <ReperibilitaEvento
+                  v-else-if="m.stato === 'INVITATO' && !evento.annullato"
+                  :evento="evento.id"
+                  :persona="m.persona_id"
+                />
+              </li>
+            </ul>
+          </section>
+
+          <!-- The staff -->
+          <section v-if="evento.partecipanti.length" class="mb-5">
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+              <h2 class="h5 mb-0">Partecipanti</h2>
+              <span class="small fg-2">
+                {{ conteggio.presenti }} {{ conteggio.presenti === 1 ? 'presente' : 'presenti' }} ·
+                {{ conteggio.assenti }} {{ conteggio.assenti === 1 ? 'assente' : 'assenti' }} ·
+                {{ conteggio.giustificati }}
+                {{ conteggio.giustificati === 1 ? 'giustificato' : 'giustificati' }}
+              </span>
+              <a v-if="evento.puo_presenze" :href="foglioPresenze(evento.id)" class="small">
+                Foglio da stampare
+              </a>
+              <a
+                v-if="evento.puo_stampare_schede"
+                :href="schedeSanitarieEventoPdf(evento.id)"
+                class="small"
+              >
+                Schede sanitarie dei partecipanti
+              </a>
             </div>
-          </li>
-        </ul>
-      </section>
-    </template>
+            <div v-if="evento.puo_presenze && !evento.annullato" class="d-flex gap-3 mb-3">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline theme-primary"
+                @click="tuttiPresenti"
+              >
+                Segna gli altri presenti
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-solid theme-primary"
+                :disabled="inCorso || !modificate.length"
+                @click="salvaPresenze"
+              >
+                Salva le presenze
+              </button>
+            </div>
+            <ul class="list-group">
+              <li v-for="p in evento.partecipanti" :key="p.persona_id" class="list-group-item">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                  <span>
+                    {{ p.cognome }} {{ p.nome }}
+                    <span v-if="p.stato === 'NON_PARTECIPA'" class="badge theme-warning ms-1">
+                      Non partecipa
+                    </span>
+                    <span v-if="p.stato === 'NON_INVITATO'" class="badge theme-danger ms-1">
+                      Non invitato
+                    </span>
+                  </span>
+                  <div
+                    v-if="evento.puo_presenze && p.stato !== 'NON_INVITATO' && !evento.annullato"
+                    class="d-flex gap-1"
+                    role="group"
+                    :aria-label="`Presenza di ${p.nome} ${p.cognome}`"
+                  >
+                    <button
+                      v-for="[stato, etichetta] in STATI"
+                      :key="stato"
+                      type="button"
+                      class="btn btn-sm"
+                      :class="
+                        presenze[p.persona_id] === stato
+                          ? 'btn-solid theme-primary'
+                          : 'btn-outline theme-secondary'
+                      "
+                      :aria-pressed="presenze[p.persona_id] === stato"
+                      @click="presenze[p.persona_id] = stato"
+                    >
+                      {{ etichetta }}
+                    </button>
+                  </div>
+                  <span v-else-if="p.presenza" class="small">
+                    {{ STATI.find(([s]) => s === p.presenza)?.[1] }}
+                  </span>
+                </div>
+                <div v-if="p.stato === 'NON_INVITATO'" class="small fg-2">{{ p.motivo }}</div>
+                <div v-if="evento.puo_non_invitare && !evento.annullato" class="small">
+                  <button
+                    v-if="p.stato === 'NON_INVITATO'"
+                    type="button"
+                    class="btn btn-sm btn-link"
+                    @click="reinvita(p)"
+                  >
+                    Invita di nuovo
+                  </button>
+                  <button
+                    v-else-if="esclusione.persona !== p.persona_id"
+                    type="button"
+                    class="btn btn-sm btn-link"
+                    @click="Object.assign(esclusione, { persona: p.persona_id, motivo: '' })"
+                  >
+                    Non invitare…
+                  </button>
+                  <form
+                    v-else
+                    class="d-flex flex-wrap align-items-end gap-3 mt-1"
+                    @submit.prevent="nonInvitare(p)"
+                  >
+                    <div class="flex-grow-1">
+                      <label class="form-label small" :for="`motivo-${p.persona_id}`">
+                        Motivo (la famiglia lo legge)
+                      </label>
+                      <input
+                        :id="`motivo-${p.persona_id}`"
+                        v-model="esclusione.motivo"
+                        class="form-control form-control-sm"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-solid theme-danger"
+                      :disabled="inCorso"
+                    >
+                      Non invitare
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-link"
+                      @click="esclusione.persona = 0"
+                    >
+                      Annulla
+                    </button>
+                  </form>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </GruppoPagina>
+      </template>
+    </div>
 
     <section v-if="evento.puo_gestire && !evento.annullato">
       <button

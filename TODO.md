@@ -11,8 +11,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
-| [#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96) | Pagine lunghe divise in gruppi che si aprono e si chiudono (DEC-426)            | Miglioramento | Medio   | Media      | VAL    |
-| [#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97) | Soci: ordinare per nome, cognome o codice socio (DEC-427)                       | Miglioramento | Basso   | Bassa      | VAL    |
+| [#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96) | Pagine lunghe divise in gruppi che si aprono e si chiudono (DEC-426)            | Miglioramento | Medio   | Media      | VER    |
+| [#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97) | Soci: ordinare per nome, cognome o codice socio (DEC-427)                       | Miglioramento | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

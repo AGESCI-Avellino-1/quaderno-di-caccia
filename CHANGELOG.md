@@ -5,6 +5,41 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.44.0 — 24 novembre 2026
+
+### Novità
+
+**Pagine lunghe divise in gruppi** ([#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96)): la scheda di un socio, la pagina dell'unità e quella di un evento, la Progressione personale e le Impostazioni sono divise in gruppi che si aprono e si chiudono. All'apertura è aperto il gruppo principale (i dati del socio, le squadriglie del reparto o lo staff delle altre unità, i dettagli dell'evento, le tappe, il sito); se ne apre uno alla volta. Tornando indietro da un'altra pagina si ritrova il gruppo che era aperto.
+
+**Soci: ordine dell'elenco** ([#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97)): sopra l'elenco dei soci e dei genitori, **Ordina per** cognome, nome (allora si legge «Nome Cognome») o codice socio; la scelta resta tornando indietro.
+
+### Correzioni
+
+- **Aggiornamento** ([#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93)): prima di costruire la nuova versione lo script mette da parte le immagini di quella installata con un nome di riserva. Con le versioni recenti di Docker, senza nome venivano cancellate appena partiva la nuova versione, e il ritorno indietro avrebbe dovuto ricostruirle, con l'app in manutenzione per minuti. I nomi di riserva si tolgono alla fine di un aggiornamento riuscito.
+
+### Aggiornare
+
+Per usare già lo script con i nomi di riserva in questo aggiornamento, dalla cartella dell'app:
+
+```bash
+git fetch --tags && git show v1.44.0:scripts/aggiorna.sh > /tmp/aggiorna.sh
+QDC_RADICE="$PWD" bash /tmp/aggiorna.sh v1.44.0
+```
+
+Altrimenti, come sempre:
+
+```bash
+scripts/aggiorna.sh v1.44.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+L'introduzione spiega i gruppi delle pagine lunghe; il capitolo sui soci l'ordine dell'elenco e i gruppi della scheda. Rifatte le schermate delle pagine divise in gruppi.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.43.3 — 24 novembre 2026
 
 ### Correzioni

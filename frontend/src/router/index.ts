@@ -603,7 +603,9 @@ router.beforeEach(async (verso) => {
 })
 
 // The page name for the [Pagina corrente] placeholder of the title (DEC-246).
-router.afterEach((verso) => {
+router.afterEach((verso, da) => {
+  // Only the query changed (a group opened, DEC-426; a filter): the same page keeps its name.
+  if (verso.path === da.path && da.name) return
   useSitoStore().pagina = PAGINE[String(verso.name)]?.titolo ?? ''
 })
 

@@ -143,7 +143,8 @@ scegliere, finché non lo aggiorni anche lì.
 
 ## I turni
 
-In fondo alla pagina di un reparto, di un branco o di un cerchio, lo staff trova **Turni**:
+Nella pagina di un reparto, di un branco o di un cerchio, lo staff trova **Turni** nel gruppo
+**Turni** (**Sestiglie e turni** in branco e cerchio):
 
 1. Scrivi i turni, uno per riga (per esempio «Pulizia della sede», «Preghiera»).
 2. In **Cambiano** scegli **Ogni settimana** o **Ogni mese**, e da quando (**Dal**). Se l'unità

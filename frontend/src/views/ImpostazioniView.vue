@@ -6,6 +6,7 @@ import { api, type Impostazioni, type Sito } from '@/api/qdc'
 import BlocchiAccesso from '@/components/BlocchiAccesso.vue'
 import DestinatariEmail from '@/components/DestinatariEmail.vue'
 import FunzioniFacoltative from '@/components/FunzioniFacoltative.vue'
+import GruppoPagina from '@/components/GruppoPagina.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import LocalitaGruppo from '@/components/LocalitaGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
@@ -17,6 +18,7 @@ import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
 import TestiTribu from '@/components/TestiTribu.vue'
 import TestoVolantino from '@/components/TestoVolantino.vue'
 import { useErrore } from '@/composables/useErrore'
+import { useGruppiPagina } from '@/composables/useGruppiPagina'
 import { riempi, SEGNAPOSTO_TITOLO } from '@/sito/segnaposto'
 import { useSitoStore } from '@/stores/sito'
 
@@ -61,6 +63,22 @@ async function salva() {
   esito.value = 'Impostazioni salvate.'
   await sito.carica()
 }
+
+// The page in groups (DEC-426): each shows only to who may change something in it.
+const GRUPPI = {
+  sito: (d: Impostazioni) => d.puo_modificare || !!d.funzioni?.length,
+  email: (d: Impostazioni) =>
+    d.puo_modificare || d.puo_destinatari_email || d.puo_smtp || d.puo_email_di_prova,
+  gruppo: (d: Impostazioni) => d.puo_modificare_intestazione || d.puo_modificare_pagamenti,
+  testi: (d: Impostazioni) =>
+    !!(d.puo_modificare_scheda || d.puo_modificare_volantino || d.puo_modificare_tribu),
+  manutenzione: (d: Impostazioni) => d.puo_manutenzione || d.puo_sbloccare_accessi,
+}
+type ChiaveGruppo = keyof typeof GRUPPI
+const mostra = (chiave: ChiaveGruppo) => !!dati.value && GRUPPI[chiave](dati.value)
+useGruppiPagina('impostazioni', () =>
+  (Object.keys(GRUPPI) as ChiaveGruppo[]).filter((c) => mostra(c)),
+)
 </script>
 
 <template>
@@ -68,218 +86,248 @@ async function salva() {
     <h1 class="h4 mb-5">Impostazioni</h1>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <template v-if="dati">
-      <section v-if="dati.puo_modificare" class="mb-7">
-        <h2 class="h5">Nome e titolo del sito</h2>
-        <p class="small fg-2">
-          Questi nomi servono solo per il titolo e il piè di pagina: i dati ufficiali del gruppo per
-          le stampe sono più sotto. L'app installata sul telefono si chiama sempre Quaderno di
-          Caccia.
-        </p>
-        <div v-if="esito" class="alert theme-success small" role="status">
-          <div>{{ esito }}</div>
-        </div>
-        <form class="card card-body" @submit.prevent="salva">
-          <div class="row g-3">
-            <div class="col-12 md:col-6">
-              <label class="form-label small mb-0" for="imp-nome-sito">Nome del sito</label>
-              <input
-                id="imp-nome-sito"
-                v-model="dati.nome_sito"
-                class="form-control form-control-sm"
-                required
-              />
+      <div class="accordion" data-gruppi>
+        <GruppoPagina v-if="mostra('sito')" chiave="sito" titolo="Sito">
+          <section v-if="dati.puo_modificare" class="mb-7">
+            <h2 class="h5">Nome e titolo del sito</h2>
+            <p class="small fg-2">
+              Questi nomi servono solo per il titolo e il piè di pagina: i dati ufficiali del gruppo
+              per le stampe sono nel gruppo «Gruppo». L'app installata sul telefono si chiama sempre
+              Quaderno di Caccia.
+            </p>
+            <div v-if="esito" class="alert theme-success small" role="status">
+              <div>{{ esito }}</div>
             </div>
-            <div class="col-12 md:col-6">
-              <label class="form-label small mb-0" for="imp-sigla-sito">Sigla del sito</label>
-              <input
-                id="imp-sigla-sito"
-                v-model="dati.sigla_sito"
-                class="form-control form-control-sm"
-                placeholder="QdC"
-              />
+            <form class="card card-body" @submit.prevent="salva">
+              <div class="row g-3">
+                <div class="col-12 md:col-6">
+                  <label class="form-label small mb-0" for="imp-nome-sito">Nome del sito</label>
+                  <input
+                    id="imp-nome-sito"
+                    v-model="dati.nome_sito"
+                    class="form-control form-control-sm"
+                    required
+                  />
+                </div>
+                <div class="col-12 md:col-6">
+                  <label class="form-label small mb-0" for="imp-sigla-sito">Sigla del sito</label>
+                  <input
+                    id="imp-sigla-sito"
+                    v-model="dati.sigla_sito"
+                    class="form-control form-control-sm"
+                    placeholder="QdC"
+                  />
+                </div>
+                <div class="col-12 md:col-6">
+                  <label class="form-label small mb-0" for="imp-nome-gruppo">Nome del gruppo</label>
+                  <input
+                    id="imp-nome-gruppo"
+                    v-model="dati.nome_gruppo"
+                    class="form-control form-control-sm"
+                    :placeholder="dati.gruppo_predefinito"
+                  />
+                  <div class="form-text">Se lo lasci vuoto: {{ dati.gruppo_predefinito }}</div>
+                </div>
+                <div class="col-12 md:col-6">
+                  <label class="form-label small mb-0" for="imp-sigla-gruppo"
+                    >Sigla del gruppo</label
+                  >
+                  <input
+                    id="imp-sigla-gruppo"
+                    v-model="dati.sigla_gruppo"
+                    class="form-control form-control-sm"
+                    placeholder="AV1"
+                  />
+                  <div class="form-text">Se la lasci vuota si usa il nome del gruppo.</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small mb-0" for="imp-titolo">
+                    Titolo completo, nella barra in alto
+                  </label>
+                  <input
+                    id="imp-titolo"
+                    v-model="dati.titolo_completo"
+                    class="form-control form-control-sm"
+                    required
+                  />
+                  <div class="form-text">Diventa: {{ esempio(dati.titolo_completo) }}</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small mb-0" for="imp-titolo-breve">
+                    Titolo breve, nella scheda del browser
+                  </label>
+                  <input
+                    id="imp-titolo-breve"
+                    v-model="dati.titolo_breve"
+                    class="form-control form-control-sm"
+                    required
+                  />
+                  <div class="form-text">Diventa: {{ esempio(dati.titolo_breve) }}</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small mb-0" for="imp-piede">
+                    Riga del piè di pagina (facoltativa)
+                  </label>
+                  <input
+                    id="imp-piede"
+                    v-model="dati.riga_piede"
+                    class="form-control form-control-sm"
+                  />
+                  <div class="form-text">
+                    Compare sopra la riga fissa «Sviluppato da Andrea Bruno e distribuito con
+                    licenza MIT».
+                    <template v-if="dati.riga_piede"
+                      >Diventa: {{ esempio(dati.riga_piede) }}</template
+                    >
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small mb-0" for="imp-segnalazioni">
+                    Link per le segnalazioni (facoltativo)
+                  </label>
+                  <input
+                    id="imp-segnalazioni"
+                    v-model="dati.link_segnalazioni"
+                    class="form-control form-control-sm"
+                    type="url"
+                    placeholder="https://…"
+                  />
+                  <div class="form-text">
+                    Dove porta «Apri una segnalazione» nella pagina Informazioni. Se lo lasci vuoto,
+                    alle segnalazioni pubbliche del progetto su GitHub.
+                  </div>
+                </div>
+              </div>
+              <SezioneApribile titolo="Cosa puoi scrivere tra parentesi quadre" class="mt-3">
+                <ul class="mb-0">
+                  <li v-for="[nome, spiegazione] in SEGNAPOSTO_TITOLO" :key="nome">
+                    <code>[{{ nome }}]</code>: {{ spiegazione }}
+                  </li>
+                </ul>
+              </SezioneApribile>
+              <div class="mt-3">
+                <button
+                  type="submit"
+                  class="btn btn-sm btn-solid theme-primary"
+                  :disabled="inCorso"
+                >
+                  Salva
+                </button>
+              </div>
+            </form>
+          </section>
+          <section v-if="dati.puo_modificare" class="mb-7">
+            <h2 class="h5">Privacy policy e termini</h2>
+            <p class="small fg-2">
+              Le pagine pubbliche linkate nel piè di pagina, nell'iscrizione e nella lista d'attesa.
+            </p>
+            <div class="list-group">
+              <RouterLink
+                :to="{ name: 'pagina-legale-modifica', params: { chiave: 'privacy' } }"
+                class="list-group-item list-group-item-action"
+                >Privacy policy</RouterLink
+              >
+              <RouterLink
+                :to="{ name: 'pagina-legale-modifica', params: { chiave: 'termini' } }"
+                class="list-group-item list-group-item-action"
+                >Termini e condizioni</RouterLink
+              >
             </div>
-            <div class="col-12 md:col-6">
-              <label class="form-label small mb-0" for="imp-nome-gruppo">Nome del gruppo</label>
-              <input
-                id="imp-nome-gruppo"
-                v-model="dati.nome_gruppo"
-                class="form-control form-control-sm"
-                :placeholder="dati.gruppo_predefinito"
-              />
-              <div class="form-text">Se lo lasci vuoto: {{ dati.gruppo_predefinito }}</div>
-            </div>
-            <div class="col-12 md:col-6">
-              <label class="form-label small mb-0" for="imp-sigla-gruppo">Sigla del gruppo</label>
-              <input
-                id="imp-sigla-gruppo"
-                v-model="dati.sigla_gruppo"
-                class="form-control form-control-sm"
-                placeholder="AV1"
-              />
-              <div class="form-text">Se la lasci vuota si usa il nome del gruppo.</div>
-            </div>
-            <div class="col-12">
-              <label class="form-label small mb-0" for="imp-titolo">
-                Titolo completo, nella barra in alto
-              </label>
-              <input
-                id="imp-titolo"
-                v-model="dati.titolo_completo"
-                class="form-control form-control-sm"
-                required
-              />
-              <div class="form-text">Diventa: {{ esempio(dati.titolo_completo) }}</div>
-            </div>
-            <div class="col-12">
-              <label class="form-label small mb-0" for="imp-titolo-breve">
-                Titolo breve, nella scheda del browser
-              </label>
-              <input
-                id="imp-titolo-breve"
-                v-model="dati.titolo_breve"
-                class="form-control form-control-sm"
-                required
-              />
-              <div class="form-text">Diventa: {{ esempio(dati.titolo_breve) }}</div>
-            </div>
-            <div class="col-12">
-              <label class="form-label small mb-0" for="imp-piede">
-                Riga del piè di pagina (facoltativa)
-              </label>
-              <input
-                id="imp-piede"
-                v-model="dati.riga_piede"
-                class="form-control form-control-sm"
-              />
-              <div class="form-text">
-                Compare sopra la riga fissa «Sviluppato da Andrea Bruno e distribuito con licenza
-                MIT».
-                <template v-if="dati.riga_piede">Diventa: {{ esempio(dati.riga_piede) }}</template>
+          </section>
+          <FunzioniFacoltative
+            v-if="dati.funzioni?.length"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+        </GruppoPagina>
+        <GruppoPagina v-if="mostra('email')" chiave="email" titolo="Email">
+          <section v-if="dati.puo_modificare" class="mb-7">
+            <h2 class="h5">Modelli delle email</h2>
+            <p class="small fg-2">
+              Il testo di ogni email che l'app manda e il piè di pagina comune, in una pagina a
+              parte.
+            </p>
+            <RouterLink :to="{ name: 'modelli-email' }" class="btn btn-sm btn-outline theme-primary"
+              >Modelli delle email</RouterLink
+            >
+          </section>
+          <DestinatariEmail
+            v-if="dati.puo_destinatari_email"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+          <ServerPosta v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
+          <CodaEmail v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
+          <section v-if="dati.puo_email_di_prova" class="mb-7">
+            <h2 class="h5">Email di prova</h2>
+            <p class="small fg-2">
+              Per provare l'app senza disturbare nessuno: le email non partono e restano in Mailpit,
+              che puoi aprire solo tu dal menu Amministrazione. Tutti vedono un avviso finché è
+              attiva. Attenzione: in Mailpit trovi anche i codici di accesso e gli inviti degli
+              altri.
+            </p>
+            <div
+              v-if="!dati.email_di_prova_consentita"
+              class="alert theme-info small"
+              role="status"
+            >
+              <div>
+                Su questo server non è permessa: la può attivare solo chi lo installa, ed è pensata
+                per un server di prova, non per quello con i dati veri.
               </div>
             </div>
-            <div class="col-12">
-              <label class="form-label small mb-0" for="imp-segnalazioni">
-                Link per le segnalazioni (facoltativo)
-              </label>
-              <input
-                id="imp-segnalazioni"
-                v-model="dati.link_segnalazioni"
-                class="form-control form-control-sm"
-                type="url"
-                placeholder="https://…"
-              />
-              <div class="form-text">
-                Dove porta «Apri una segnalazione» nella pagina Informazioni. Se lo lasci vuoto,
-                alle segnalazioni pubbliche del progetto su GitHub.
+            <div v-else class="card card-body">
+              <div class="form-field">
+                <div class="switch">
+                  <input
+                    id="imp-email-prova"
+                    type="checkbox"
+                    role="switch"
+                    :checked="dati.email_di_prova"
+                    :disabled="inCorso"
+                    @change="emailDiProva(($event.target as HTMLInputElement).checked)"
+                  />
+                </div>
+                <label for="imp-email-prova">Trattieni le email in Mailpit</label>
               </div>
             </div>
-          </div>
-          <SezioneApribile titolo="Cosa puoi scrivere tra parentesi quadre" class="mt-3">
-            <ul class="mb-0">
-              <li v-for="[nome, spiegazione] in SEGNAPOSTO_TITOLO" :key="nome">
-                <code>[{{ nome }}]</code>: {{ spiegazione }}
-              </li>
-            </ul>
-          </SezioneApribile>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-              Salva
-            </button>
-          </div>
-        </form>
-      </section>
-      <section v-if="dati.puo_modificare" class="mb-7">
-        <h2 class="h5">Modelli delle email</h2>
-        <p class="small fg-2">
-          Il testo di ogni email che l'app manda e il piè di pagina comune, in una pagina a parte.
-        </p>
-        <RouterLink :to="{ name: 'modelli-email' }" class="btn btn-sm btn-outline theme-primary"
-          >Modelli delle email</RouterLink
+          </section>
+        </GruppoPagina>
+        <GruppoPagina v-if="mostra('gruppo')" chiave="gruppo" titolo="Gruppo">
+          <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
+          <LocalitaGruppo v-if="dati.puo_modificare_intestazione" />
+          <PagamentiGruppo v-if="dati.puo_modificare_pagamenti" />
+        </GruppoPagina>
+        <GruppoPagina v-if="mostra('testi')" chiave="testi" titolo="Testi">
+          <TestiSchedaSanitaria
+            v-if="dati.puo_modificare_scheda"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+          <TestoVolantino
+            v-if="dati.puo_modificare_volantino"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+          <TestiTribu
+            v-if="dati.puo_modificare_tribu"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+        </GruppoPagina>
+        <GruppoPagina
+          v-if="mostra('manutenzione')"
+          chiave="manutenzione"
+          titolo="Manutenzione e accessi"
         >
-      </section>
-      <section v-if="dati.puo_modificare" class="mb-7">
-        <h2 class="h5">Privacy policy e termini</h2>
-        <p class="small fg-2">
-          Le pagine pubbliche linkate nel piè di pagina, nell'iscrizione e nella lista d'attesa.
-        </p>
-        <div class="list-group">
-          <RouterLink
-            :to="{ name: 'pagina-legale-modifica', params: { chiave: 'privacy' } }"
-            class="list-group-item list-group-item-action"
-            >Privacy policy</RouterLink
-          >
-          <RouterLink
-            :to="{ name: 'pagina-legale-modifica', params: { chiave: 'termini' } }"
-            class="list-group-item list-group-item-action"
-            >Termini e condizioni</RouterLink
-          >
-        </div>
-      </section>
-      <TestiSchedaSanitaria
-        v-if="dati.puo_modificare_scheda"
-        :impostazioni="dati"
-        @aggiornate="dati = $event"
-      />
-      <TestoVolantino
-        v-if="dati.puo_modificare_volantino"
-        :impostazioni="dati"
-        @aggiornate="dati = $event"
-      />
-      <TestiTribu
-        v-if="dati.puo_modificare_tribu"
-        :impostazioni="dati"
-        @aggiornate="dati = $event"
-      />
-      <FunzioniFacoltative
-        v-if="dati.funzioni?.length"
-        :impostazioni="dati"
-        @aggiornate="dati = $event"
-      />
-      <IntestazioneGruppo v-if="dati.puo_modificare_intestazione" />
-      <LocalitaGruppo v-if="dati.puo_modificare_intestazione" />
-      <PagamentiGruppo v-if="dati.puo_modificare_pagamenti" />
-      <ManutenzioneSito
-        v-if="dati.puo_manutenzione"
-        :impostazioni="dati"
-        @aggiornate="dati = $event"
-      />
-      <DestinatariEmail
-        v-if="dati.puo_destinatari_email"
-        :impostazioni="dati"
-        @aggiornate="dati = $event"
-      />
-      <ServerPosta v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
-      <CodaEmail v-if="dati.puo_smtp" :impostazioni="dati" @aggiornate="dati = $event" />
-      <BlocchiAccesso v-if="dati.puo_sbloccare_accessi" />
-      <section v-if="dati.puo_email_di_prova" class="mb-7">
-        <h2 class="h5">Email di prova</h2>
-        <p class="small fg-2">
-          Per provare l'app senza disturbare nessuno: le email non partono e restano in Mailpit, che
-          puoi aprire solo tu dal menu Amministrazione. Tutti vedono un avviso finché è attiva.
-          Attenzione: in Mailpit trovi anche i codici di accesso e gli inviti degli altri.
-        </p>
-        <div v-if="!dati.email_di_prova_consentita" class="alert theme-info small" role="status">
-          <div>
-            Su questo server non è permessa: la può attivare solo chi lo installa, ed è pensata per
-            un server di prova, non per quello con i dati veri.
-          </div>
-        </div>
-        <div v-else class="card card-body">
-          <div class="form-field">
-            <div class="switch">
-              <input
-                id="imp-email-prova"
-                type="checkbox"
-                role="switch"
-                :checked="dati.email_di_prova"
-                :disabled="inCorso"
-                @change="emailDiProva(($event.target as HTMLInputElement).checked)"
-              />
-            </div>
-            <label for="imp-email-prova">Trattieni le email in Mailpit</label>
-          </div>
-        </div>
-      </section>
+          <ManutenzioneSito
+            v-if="dati.puo_manutenzione"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+          <BlocchiAccesso v-if="dati.puo_sbloccare_accessi" />
+        </GruppoPagina>
+      </div>
     </template>
   </section>
 </template>

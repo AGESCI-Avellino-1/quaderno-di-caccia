@@ -4,14 +4,18 @@ Nella Home, in **Il mio gruppo**, tocca **Soci** per i capi e i ragazzi/e censit
 **Genitori** per chi ha la responsabilità genitoriale dei ragazzi/e. In tutte e due scegli
 un'unità (in **Genitori**: i genitori dei ragazzi/e di quell'unità) o cerca per nome, poi
 tocca una persona per aprire la sua scheda. Un capo che è anche genitore è in tutte e due.
+In **Ordina per** scegli l'ordine dell'elenco: per **Cognome**, per **Nome** (allora leggi
+«Nome Cognome») o, nei soci, per **Codice socio** (chi non ce l'ha va in fondo).
 
 Anche altrove (organigramma, staff e squadriglie nella pagina dell'unità, «La mia
 squadriglia») il cerchietto con le iniziali accanto a un nome apre la sua scheda: tocca il
 cerchietto, non il nome. Se non puoi vedere quella scheda, il cerchietto non si tocca.
 
-Nella scheda trovi, nell'ordine: i collegamenti alla Progressione e al fascicolo dell'anno,
-la foto, i dati di BuonaStrada, il percorso scout, le regole sul rapporto con il minore, la
-scheda sanitaria, le note, le quote, il telefono in squadriglia e l'accesso all'app.
+Nella scheda trovi in cima i collegamenti alla Progressione e al fascicolo dell'anno, poi i
+gruppi: **Dati** (la foto, i dati di BuonaStrada, il percorso scout), **Scheda sanitaria**,
+**Note** (con le regole sul rapporto con il minore), **Squadriglia** (il telefono in
+squadriglia), **Quote** e **Account e gestione** (l'accesso all'app, le correzioni, l'uscita
+dal gruppo). Vedi solo i gruppi che riguardano quello che puoi vedere.
 
 :::{container} schermate
 ![La scheda di Luca vista dal capo reparto, sul telefono](../img/capo/persona-telefono.png){.telefono width="30%"}
@@ -145,7 +149,7 @@ link personale.
 
 ## Chi ha visto i dati delicati
 
-In fondo alla scheda, **Chi ha visto i dati delicati** è il registro di ogni lettura, stampa
+Nel gruppo **Account e gestione** della scheda, **Chi ha visto i dati delicati** è il registro di ogni lettura, stampa
 o scaricamento dei suoi dati delicati: dati sanitari, regole sul rapporto con il minore,
 eccezioni sulle squadriglie, moduli firmati, fascicolo completo. Tocca **Mostra il
 registro**: per ognuno vedi quando, chi, cosa ha fatto e da quale dispositivo. Lo vedono i

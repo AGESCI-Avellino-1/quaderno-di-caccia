@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright'
+import { chromium, type Browser, type BrowserContext, type Locator, type Page } from 'playwright'
 
 const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const IMMAGINI = join(RADICE, 'docs', 'manuale', 'img')
@@ -63,7 +63,11 @@ const apri = (testo: string) => async (pagina: Page) => {
   if (!(await pagina.getByRole('link', { name: testo }).first().isVisible())) {
     if (await gruppo.count()) await gruppo.first().locator('summary').click()
   }
+  const prima = pagina.url()
   await pagina.getByRole('link', { name: testo }).first().click()
+  // The app changes page without loading one: wait for the address, then for its data, so the
+  // next step does not act on the page left behind.
+  await pagina.waitForURL((url) => url.href !== prima, { timeout: 5_000 }).catch(() => {})
   await pagina.waitForLoadState('networkidle')
 }
 
@@ -79,7 +83,7 @@ interface Scena {
   prepara?: (pagina: Page) => Promise<void>
   /** The whole page, not only what fits on the screen. */
   intera?: boolean
-  /** Scroll so that this text (a heading) is at the top of the screen. */
+  /** Scroll so that this text (a heading) is at the top of the screen; its group opens. */
   mostra?: string
   /** Keep the cookie notice, closed in every other scene. */
   cookie?: boolean
@@ -144,6 +148,13 @@ function django(codice: string): Promise<void> {
   return esegui('uv', ['run', 'python', 'manage.py', 'shell', '-c', codice], 'backend', ENV_DJANGO)
 }
 
+const CARLA_GENITRICE = `
+from apps.anagrafica.models import Persona
+from apps.iscrizioni.servizi import annulla_passaggio_in_coca, passaggio_annullabile
+carla = Persona.objects.get(nome="Carla", cognome="Verdi")
+if passaggio_annullabile(carla):
+    annulla_passaggio_in_coca(carla)
+`
 const MANUTENZIONE = (attiva: boolean) => `
 from apps.impostazioni.models import Impostazioni
 imp = Impostazioni.carica()
@@ -562,6 +573,8 @@ const SCENE: Scena[] = [
     nome: 'capo/genitore-in-coca',
     chi: 'capogruppo',
     percorso: '/genitori',
+    // On the computer, after the phone's «abilita-censito» brought her in: back a parent.
+    prima: () => django(CARLA_GENITRICE),
     prepara: async (pagina) => {
       await apri('Verdi Carla')(pagina)
       await pagina.getByRole('button', { name: 'Porta in Comunità capi…' }).click()
@@ -765,7 +778,7 @@ const SCENE: Scena[] = [
     chi: 'capoReparto',
     percorso: '/riunioni',
     prepara: async (pagina) => {
-      await apri('Riunione di Antares')(pagina)
+      await apri('Riunione di Reparto Antares')(pagina)
       await pagina.getByRole('button', { name: 'Modifica la riunione' }).click()
       await pagina.locator('.ProseMirror').first().waitFor()
     },
@@ -776,7 +789,7 @@ const SCENE: Scena[] = [
     chi: 'capoReparto',
     percorso: '/riunioni',
     prepara: async (pagina) => {
-      await apri('Riunione di Antares')(pagina)
+      await apri('Riunione di Reparto Antares')(pagina)
       await pagina.getByRole('button', { name: 'Presente', exact: true }).first().click()
     },
     mostra: 'Partecipanti',
@@ -1215,6 +1228,98 @@ const SCENE: Scena[] = [
   },
 ]
 
+// Long pages in groups (DEC-426): a scene touches what a person would see after opening its
+// group. Before each action on an element in a closed group, that group opens with a tap on its
+// title, so the scenes read as before.
+const AZIONI = new Set([
+  'click',
+  'fill',
+  'check',
+  'uncheck',
+  'selectOption',
+  'setInputFiles',
+  'press',
+  'waitFor',
+])
+const LOCATORI = new Set([
+  'first',
+  'last',
+  'nth',
+  'filter',
+  'locator',
+  'getByRole',
+  'getByText',
+  'getByLabel',
+  'getByPlaceholder',
+  'getByTitle',
+  'getByTestId',
+  'or',
+  'and',
+])
+
+async function apriGruppoDi(locatore: Locator): Promise<void> {
+  const primo = locatore.first()
+  // Visible, or about to be (after a save, a message appears): nothing to open.
+  try {
+    await primo.waitFor({ state: 'visible', timeout: 2_000 })
+    return
+  } catch {
+    // Hidden, maybe in a closed group.
+  }
+  const pagina = locatore.page()
+  await pagina.waitForLoadState('networkidle')
+  const chiusi = await pagina
+    .locator('details[data-gruppo]')
+    .evaluateAll((gruppi) =>
+      (gruppi as HTMLDetailsElement[])
+        .filter((g) => !g.open && getComputedStyle(g).display !== 'none')
+        .map((g) => g.dataset.gruppo!),
+    )
+  for (const chiave of chiusi) {
+    await pagina.locator(`details[data-gruppo="${chiave}"] > summary`).click()
+    await pagina.waitForTimeout(300)
+    if (await primo.isVisible()) return
+  }
+}
+
+function conGruppiLocatore(locatore: Locator): Locator {
+  return new Proxy(locatore, {
+    get(bersaglio, nome, ricevente) {
+      const valore = Reflect.get(bersaglio, nome, ricevente)
+      if (typeof valore !== 'function' || typeof nome !== 'string') return valore
+      if (AZIONI.has(nome))
+        return async (...argomenti: unknown[]) => {
+          await apriGruppoDi(bersaglio)
+          return valore.apply(bersaglio, argomenti)
+        }
+      if (LOCATORI.has(nome))
+        return (...argomenti: unknown[]) => conGruppiLocatore(valore.apply(bersaglio, argomenti))
+      return valore.bind(bersaglio)
+    },
+  })
+}
+
+function conGruppi(pagina: Page): Page {
+  return new Proxy(pagina, {
+    get(bersaglio, nome, ricevente) {
+      const valore = Reflect.get(bersaglio, nome, ricevente)
+      if (typeof valore !== 'function' || typeof nome !== 'string') return valore
+      if (LOCATORI.has(nome))
+        return (...argomenti: unknown[]) => conGruppiLocatore(valore.apply(bersaglio, argomenti))
+      return valore.bind(bersaglio)
+    },
+  })
+}
+
+/** Opens a group of a long page (DEC-426) the way a person does: a tap on its title. */
+async function apriGruppo(pagina: Page, chiave: string) {
+  const gruppo = pagina.locator(`details[data-gruppo="${chiave}"]`)
+  if (!(await gruppo.evaluate((d) => (d as HTMLDetailsElement).open))) {
+    await gruppo.locator('> summary').click()
+  }
+  await pagina.waitForTimeout(300)
+}
+
 interface Formato {
   suffisso: 'telefono' | 'computer'
   contesto: Parameters<Browser['newContext']>[0]
@@ -1405,8 +1510,25 @@ async function fotografa(browser: Browser, formato: Formato, scene: Scena[]): Pr
       if (await cookie.isVisible()) await cookie.click()
     }
     if (!scena.totem) await pagina.addStyleTag({ content: NASCONDI_TOTEM })
-    await scena.prepara?.(pagina)
+    try {
+      await scena.prepara?.(conGruppi(pagina))
+    } catch (errore) {
+      // What the page looked like when a step failed, to see why.
+      const file = join(tmpdir(), `schermate-errore-${scena.nome.replace('/', '-')}.png`)
+      await pagina.screenshot({ path: file, fullPage: true })
+      console.error(`Schermata del passo fallito: ${file}`)
+      throw errore
+    }
     if (scena.mostra) {
+      // A heading inside a closed group of a long page (DEC-426): open that group first.
+      const chiave = await pagina
+        .getByText(scena.mostra, { exact: true })
+        .first()
+        .evaluate((el) => {
+          const gruppo = el.closest('details[data-gruppo]') as HTMLDetailsElement | null
+          return gruppo && !gruppo.open ? gruppo.dataset.gruppo! : null
+        })
+      if (chiave) await apriGruppo(pagina, chiave)
       await pagina
         .getByText(scena.mostra, { exact: true })
         .first()

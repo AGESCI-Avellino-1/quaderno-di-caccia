@@ -137,6 +137,10 @@ export interface Profilo {
   tribu?: boolean
   /** The capi: totem images uploaded by ragazzi, waiting for one of them. */
   immagini_totem_da_approvare?: number
+  /** The features switched on in the settings (DEC-421). */
+  funzioni?: string[]
+  /** Babbo Natale segreto (DEC-422): who organises, who takes part or whose child does. */
+  babbo_natale?: boolean
 }
 
 /** Someone on the waiting list, as the family writes it (DEC-256). */
@@ -340,6 +344,73 @@ export interface Impostazioni extends ImpostazioniSito {
   descrizione_tribu_base?: string
   cerimonia_totem?: string
   puo_modificare_tribu?: boolean
+  /** The features the group may switch off (DEC-421): for who may switch them. */
+  funzioni?: FunzioneFacoltativa[]
+}
+
+/** A feature the group may switch off in the settings (DEC-421). */
+export interface FunzioneFacoltativa {
+  chiave: string
+  nome: string
+  descrizione: string
+  attiva: boolean
+}
+
+/** Babbo Natale segreto (DEC-422). `a_chi` empty while using the app as another user. */
+export interface RegaloSegreto {
+  scambio: string
+  consegna_il: string
+  luogo: string
+  chi: string
+  proprio: boolean
+  a_chi: string
+  chiuso: boolean
+}
+
+export interface ScambioBreve {
+  id: number
+  nome: string
+  unita: string
+  consegna_il: string
+  luogo: string
+  estratto: boolean
+  chiuso: boolean
+  partecipanti: number
+}
+
+export interface BabboNatale {
+  regali: RegaloSegreto[]
+  nascosti: boolean
+  puo_organizzare: boolean
+  scambi: ScambioBreve[]
+  unita: { id: number; nome: string }[]
+  puo_tutto_il_gruppo: boolean
+}
+
+/** How a participant is told: never to whom they give their gift. */
+export type AvvisoScambio = 'app' | 'email' | 'genitori' | 'nessuno'
+
+export interface ScambioRegali extends ScambioBreve {
+  unita_id: number | null
+  elenco: { id: number; nome: string; cognome: string; avviso: AvvisoScambio }[]
+  minimo: number
+  /** Only right after the draw: how many were told, by way. */
+  avvisati?: Partial<Record<AvvisoScambio, number>>
+}
+
+export interface CandidatoScambio {
+  id: number
+  nome: string
+  cognome: string
+  unita: { id: number; nome: string }[]
+  squadriglia: { id: number; nome: string } | null
+}
+
+export interface ScambioIn {
+  nome: string
+  unita_id: number | null
+  consegna_il: string
+  luogo: string
 }
 
 /** A totem name in «La mia tribù» (DEC-416); `persona` only for who may know whose. */
@@ -3409,6 +3480,43 @@ export const api = {
       corpo: { descrizione, cerimonia },
     }),
   tribu: () => richiesta<Tribu>('/api/v1/tribu'),
+  attivaFunzione: (chiave: string, attiva: boolean) =>
+    richiesta<Impostazioni>(`/api/v1/impostazioni/funzioni/${chiave}`, {
+      metodo: 'PUT',
+      corpo: { attiva },
+    }),
+  babboNatale: () => richiesta<BabboNatale>('/api/v1/babbo-natale'),
+  creaScambio: (dati: ScambioIn) =>
+    richiesta<ScambioRegali>('/api/v1/babbo-natale/scambi', { metodo: 'POST', corpo: dati }),
+  scambio: (id: number) => richiesta<ScambioRegali>(`/api/v1/babbo-natale/scambi/${id}`),
+  modificaScambio: (id: number, dati: ScambioIn) =>
+    richiesta<ScambioRegali>(`/api/v1/babbo-natale/scambi/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaScambio: (id: number) =>
+    richiesta<void>(`/api/v1/babbo-natale/scambi/${id}`, { metodo: 'DELETE' }),
+  candidatiScambio: (id: number) =>
+    richiesta<CandidatoScambio[]>(`/api/v1/babbo-natale/scambi/${id}/candidati`),
+  partecipantiScambio: (id: number, persone: number[]) =>
+    richiesta<ScambioRegali>(`/api/v1/babbo-natale/scambi/${id}/partecipanti`, {
+      metodo: 'PUT',
+      corpo: { persone },
+    }),
+  estraiScambio: (id: number) =>
+    richiesta<ScambioRegali>(`/api/v1/babbo-natale/scambi/${id}/estrai`, { metodo: 'POST' }),
+  aggiungiAlloScambio: (id: number, persona_id: number) =>
+    richiesta<ScambioRegali>(`/api/v1/babbo-natale/scambi/${id}/aggiungi`, {
+      metodo: 'POST',
+      corpo: { persona_id },
+    }),
+  ritiraDalloScambio: (id: number, persona_id: number) =>
+    richiesta<ScambioRegali>(`/api/v1/babbo-natale/scambi/${id}/ritira`, {
+      metodo: 'POST',
+      corpo: { persona_id },
+    }),
+  reinviaScambio: (id: number, persone: number[]) =>
+    richiesta<{ reinviati: number }>(`/api/v1/babbo-natale/scambi/${id}/reinvia`, {
+      metodo: 'POST',
+      corpo: { persone },
+    }),
   cerimoniaTotem: () => richiesta<{ html: string }>('/api/v1/tribu/cerimonia'),
   approvaImmagineTotem: (totem: number) =>
     richiesta<TotemTribu>(`/api/v1/tribu/${totem}/immagine/approva`, { metodo: 'POST' }),

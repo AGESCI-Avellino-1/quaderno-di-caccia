@@ -10,6 +10,7 @@ from apps.anagrafica.api import router as anagrafica_router
 from apps.anagrafica.api_uscita import router as uscita_router
 from apps.archivio.api import router as archivio_router
 from apps.attesa.api import router as attesa_router
+from apps.babbonatale.api import router as babbonatale_router
 from apps.bacheca.api import router as bacheca_router
 from apps.banca.api import router as banca_router
 from apps.buonacaccia.api import router as buonacaccia_router
@@ -78,6 +79,7 @@ api.add_router("/", criteri_router)
 api.add_router("/", notifiche_router)
 api.add_router("/", verbali_router)
 api.add_router("/", banca_router)
+api.add_router("/", babbonatale_router)
 api.add_router("/", impostazioni_router)
 api.add_router("/", attesa_router)
 api.add_router("/", tribu_router)

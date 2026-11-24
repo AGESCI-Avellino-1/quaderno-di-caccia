@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "apps.impostazioni",
     "apps.attesa",
     "apps.tribu",
+    "apps.babbonatale",
 ]
 
 MIDDLEWARE = [

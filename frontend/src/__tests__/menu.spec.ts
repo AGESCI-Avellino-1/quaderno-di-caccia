@@ -165,6 +165,17 @@ describe('menu', () => {
     expect(voce(capo)?.contatore).toBe(3)
   })
 
+  // DEC-421, DEC-422
+  it('Babbo Natale segreto shows only when the profile allows it', () => {
+    const voce = (p: Profilo) =>
+      gruppiMenu(p)
+        .flatMap((g) => g.voci)
+        .find((v) => v.nome === 'Babbo Natale segreto')
+    expect(voce({ ...BASE, persona: io, branca: 'eg' as const })).toBeUndefined()
+    const partecipa = { ...BASE, persona: io, branca: 'eg' as const, babbo_natale: true }
+    expect(voce(partecipa)?.to).toBe('/babbo-natale')
+  })
+
   it('a capo reaches the other units from one entry, after their own', () => {
     const capo = {
       ...BASE,

@@ -94,6 +94,13 @@ class ImpostazioniSitoIO(Schema):
     link_segnalazioni: str = ""
 
 
+class FunzioneOut(Schema):
+    chiave: str
+    nome: str
+    descrizione: str
+    attiva: bool
+
+
 class ImpostazioniOut(ImpostazioniSitoIO):
     # The group's name when `nome_gruppo` is empty.
     gruppo_predefinito: str
@@ -157,6 +164,8 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     descrizione_tribu_base: str = ""
     cerimonia_totem: str = ""
     puo_modificare_tribu: bool = False
+    # The features the group may switch off (DEC-421): for who may switch them.
+    funzioni: list[FunzioneOut] = []
 
 
 CAMPI_SITO = list(ImpostazioniSitoIO.model_fields)
@@ -188,7 +197,37 @@ def _impostazioni(request) -> dict:
         **_testi_scheda(request, imp),
         **_volantino(request, imp),
         **_tribu(request, imp),
+        "funzioni": _funzioni(request),
     }
+
+
+def _funzioni(request) -> list[dict]:
+    from . import funzioni
+
+    if not policy.puo_attivare_funzioni(request.auth):
+        return []
+    accese = funzioni.attive()
+    return [
+        {"chiave": f.chiave, "nome": f.nome, "descrizione": f.descrizione, "attiva": c in accese}
+        for c, f in funzioni.FUNZIONI.items()
+    ]
+
+
+class FunzioneIn(Schema):
+    attiva: bool
+
+
+@router.put("/impostazioni/funzioni/{chiave}", response=ImpostazioniOut)
+def attiva_funzione(request, chiave: str, dati: FunzioneIn):
+    """Switch a feature on or off (DEC-421): its data stay, hidden, while it is off."""
+    from . import funzioni
+
+    if not policy.puo_attivare_funzioni(request.auth):
+        raise HttpError(403, "Le funzioni le accendono e le spengono i capigruppo.")
+    if chiave not in funzioni.FUNZIONI:
+        raise HttpError(404, "Funzione non trovata.")
+    funzioni.imposta(chiave, dati.attiva)
+    return _impostazioni(request)
 
 
 def _testi_scheda(request, imp: Impostazioni) -> dict:
@@ -700,8 +739,11 @@ def _gestore_modelli(request) -> None:
 
 
 def _tipo(chiave: str):
-    from . import email
+    from . import email, funzioni
 
+    # The emails of a feature switched off do not exist (DEC-421).
+    if chiave in funzioni.email_nascoste():
+        raise HttpError(404, "Email non trovata.")
     try:
         return email.tipo(chiave)
     except KeyError as errore:
@@ -741,11 +783,12 @@ def _modello_out(t) -> dict:
 
 @router.get("/impostazioni/email", response=list[ModelloEmailBreve])
 def modelli_email(request):
-    from . import email
+    from . import email, funzioni
 
     _gestore_modelli(request)
     salvati = {m.chiave: m for m in ModelloEmail.objects.all()}
-    return [_breve(t, salvati.get(t.chiave)) for t in email.tutti()]
+    nascoste = funzioni.email_nascoste()
+    return [_breve(t, salvati.get(t.chiave)) for t in email.tutti() if t.chiave not in nascoste]
 
 
 @router.get("/impostazioni/email/{chiave}", response=ModelloEmailOut)

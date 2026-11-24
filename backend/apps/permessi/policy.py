@@ -2182,6 +2182,12 @@ def puo_modificare_impostazioni(user) -> bool:
     return e_capogruppo(user) or e_amministratore(user)
 
 
+def puo_attivare_funzioni(user) -> bool:
+    """Switching the optional features on and off: the capigruppo and the technical
+    administrator (DEC-421)."""
+    return e_capogruppo(user) or e_amministratore(user)
+
+
 def puo_scegliere_destinatari_email(user) -> bool:
     """Which groups receive the emails: the capigruppo and the technical administrator
     (DEC-276)."""
@@ -2501,3 +2507,70 @@ def compleanni_notificati(user) -> QuerySet[Persona]:
     else:
         elenco = compleanni_visibili(user)
     return elenco.exclude(utente=user)
+
+
+# --- Babbo Natale segreto (DEC-422) ---------------------------------------------------------
+# Every endpoint first asks `impostazioni.funzioni.richiedi` (DEC-421): off, nothing exists.
+
+
+def puo_organizzare_scambi(user) -> bool:
+    """Creating exchanges: the staff of a unit for their unit, the capigruppo for anyone."""
+    return e_capogruppo(user) or bool(_unita_servite(user))
+
+
+def unita_per_scambi(user) -> QuerySet[Unita]:
+    """The units an exchange may belong to: those the staff serves (linked ones too); every
+    active unit for the capigruppo, who may also make one for the whole group."""
+    unita = Unita.objects.filter(attiva=True, archiviata_il__isnull=True)
+    if e_capogruppo(user):
+        return unita
+    return unita.filter(pk__in=_unita_servite(user))
+
+
+def puo_gestire_scambio(user, scambio) -> bool:
+    """Changing an exchange, drawing, resending: the staff of its unit (or of the unit linked
+    to it) and the capigruppo; one of the whole group only the capigruppo. Never seeing who
+    gives a gift to whom (DEC-422)."""
+    if e_capogruppo(user):
+        return True
+    return scambio.unita_id is not None and scambio.unita_id in _unita_servite(user)
+
+
+def candidati_scambio(user, scambio) -> QuerySet[Persona]:
+    """Who may be added: members of the group, ragazzi and capi, never only parents. The staff
+    chooses among the members and the staff of the exchange's unit and the unit linked to it;
+    the capigruppo among everyone."""
+    attive = Appartenenza.objects.attive()
+    if e_capogruppo(user):
+        return Persona.objects.filter(pk__in=attive.values("persona_id"))
+    if scambio.unita_id is None or not puo_gestire_scambio(user, scambio):
+        return Persona.objects.none()
+    unita = _con_collegate({scambio.unita_id})
+    staff = Incarico.objects.attivi().filter(ruolo__in=STAFF_DI_UNITA, unita_id__in=unita)
+    return Persona.objects.filter(
+        Q(pk__in=attive.filter(unita_id__in=unita).values("persona_id"))
+        | Q(pk__in=staff.values("persona_id"), appartenenze__in=attive)
+    ).distinct()
+
+
+def regali_da_fare(user) -> QuerySet:
+    """The participants whose gift this user may read (DEC-422): oneself and, for a parent,
+    the children taking part; drawn exchanges only, until a month after the delivery. Never
+    to someone using the app as another user (DEC-167): the caller checks that."""
+    from apps.babbonatale.models import VISIBILE_DOPO, Partecipante
+
+    persona = persona_di(user)
+    if persona is None:
+        return Partecipante.objects.none()
+    persone = [persona.pk, *tutelati(user).values_list("pk", flat=True)]
+    return Partecipante.objects.filter(
+        persona_id__in=persone,
+        scambio__estratto_il__isnull=False,
+        scambio__consegna_il__gte=date.today() - VISIBILE_DOPO,
+    ).select_related("scambio", "persona", "a_chi")
+
+
+def vede_babbo_natale(user) -> bool:
+    """The menu entry: who may organise, and who takes part (or whose child does) while it
+    is shown (DEC-422). The caller checks the feature is on (DEC-421)."""
+    return puo_organizzare_scambi(user) or regali_da_fare(user).exists()

@@ -308,6 +308,13 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           descrizione: 'I nomi di totem del gruppo',
           contatore: p.immagini_totem_da_approvare || undefined,
         },
+        // DEC-422, only while the group keeps it switched on (DEC-421).
+        !!p.babbo_natale && {
+          nome: 'Babbo Natale segreto',
+          icona: 'gift',
+          to: '/babbo-natale',
+          descrizione: 'Gli scambi di regali: a chi fai il regalo',
+        },
         // DEC-407
         p.storia_squadriglie && {
           nome: 'Storia delle squadriglie',

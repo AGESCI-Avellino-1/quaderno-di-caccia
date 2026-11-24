@@ -686,6 +686,45 @@ _TIPI = [
         ),
         facoltativa=True,
     ),
+    # --- Babbo Natale segreto (DEC-422): hidden while the feature is off (DEC-421) ------
+    TipoEmail(
+        "babbo_natale_partecipante",
+        "Babbo Natale segreto",
+        "A chi partecipa a uno scambio di regali e non ha ancora un account, quando viene "
+        "estratto a chi fa il regalo. Arriva sempre.",
+        "Babbo Natale segreto: [Scambio]",
+        "<p>Ciao [Nome],</p><p>partecipi allo scambio di regali <strong>[Scambio]</strong>. "
+        "Farai il regalo a:</p><p><strong>[A chi]</strong></p><p>Consegna: [Consegna].</p>"
+        "<p>Non dirlo a nessuno: chi riceve il regalo scoprirà chi è stato solo alla "
+        "consegna.</p><p>Ti consigliamo di attivare il tuo account del [Nome sito]: lo "
+        "vedrai anche nell'app e riceverai le notifiche.<br>[Link]</p>",
+        (
+            NOME,
+            Segnaposto("Scambio", "il nome dello scambio", "Natale in reparto", True),
+            Segnaposto("A chi", "nome e cognome di chi riceve il regalo", "Marco Bianchi", True),
+            Segnaposto("Consegna", "giorno e luogo della consegna", "20/12/2026, in sede", True),
+            _link("il link per attivare l'account, o l'indirizzo dell'app"),
+        ),
+    ),
+    TipoEmail(
+        "babbo_natale_genitori",
+        "Babbo Natale segreto (genitori)",
+        "Ai genitori di un ragazzo/a che partecipa a uno scambio di regali senza un account e "
+        "un'email sua, quando viene estratto a chi fa il regalo. Arriva sempre.",
+        "Babbo Natale segreto: [Scambio]",
+        "<p>Ciao [Nome],</p><p>[Ragazzo] partecipa allo scambio di regali "
+        "<strong>[Scambio]</strong> e farà il regalo a:</p><p><strong>[A chi]</strong></p>"
+        "<p>Consegna: [Consegna].</p><p>Non dirlo a nessuno: chi riceve il regalo scoprirà "
+        "chi è stato solo alla consegna.</p><p>Lo trovi anche nell'app:<br>[Link]</p>",
+        (
+            NOME,
+            RAGAZZO,
+            Segnaposto("Scambio", "il nome dello scambio", "Natale in reparto", True),
+            Segnaposto("A chi", "nome e cognome di chi riceve il regalo", "Marco Bianchi", True),
+            Segnaposto("Consegna", "giorno e luogo della consegna", "20/12/2026, in sede", True),
+            _link("la pagina dell'app"),
+        ),
+    ),
 ]
 
 TIPI: dict[str, TipoEmail] = {t.chiave: t for t in _TIPI}

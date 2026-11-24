@@ -287,6 +287,19 @@ const router = createRouter({
       component: () => import('@/views/TribuView.vue'),
     },
     {
+      // Babbo Natale segreto (DEC-422): the API decides, and answers 404 while the feature is
+      // off (DEC-421).
+      path: '/babbo-natale',
+      name: 'babbo-natale',
+      component: () => import('@/views/BabboNataleView.vue'),
+    },
+    {
+      path: '/babbo-natale/:id(\\d+)',
+      name: 'scambio-regali',
+      component: () => import('@/views/ScambioRegaliView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // Esploratori and guide: the API decides (DEC-407).
       path: '/storia-squadriglie',
       name: 'storia-squadriglie',

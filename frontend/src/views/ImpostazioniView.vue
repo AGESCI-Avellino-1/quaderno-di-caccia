@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { api, type Impostazioni, type Sito } from '@/api/qdc'
 import BlocchiAccesso from '@/components/BlocchiAccesso.vue'
 import DestinatariEmail from '@/components/DestinatariEmail.vue'
+import FunzioniFacoltative from '@/components/FunzioniFacoltative.vue'
 import IntestazioneGruppo from '@/components/IntestazioneGruppo.vue'
 import LocalitaGruppo from '@/components/LocalitaGruppo.vue'
 import ManutenzioneSito from '@/components/ManutenzioneSito.vue'
@@ -226,6 +227,11 @@ async function salva() {
       />
       <TestiTribu
         v-if="dati.puo_modificare_tribu"
+        :impostazioni="dati"
+        @aggiornate="dati = $event"
+      />
+      <FunzioniFacoltative
+        v-if="dati.funzioni?.length"
         :impostazioni="dati"
         @aggiornate="dati = $event"
       />

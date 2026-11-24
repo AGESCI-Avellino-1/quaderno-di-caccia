@@ -6,7 +6,7 @@ from django.test import Client
 
 from apps.accounts.adapters import EMAIL_ALLAUTH, AccountAdapter
 from apps.accounts.models import User
-from apps.impostazioni import email
+from apps.impostazioni import email, funzioni
 from apps.impostazioni.catalogo_email import TIPI
 from apps.impostazioni.html import in_testo, pulisci
 from apps.impostazioni.models import ModelloEmail
@@ -100,7 +100,8 @@ def test_chi_cambia_i_modelli(
         assert _client(chi.utente).get(URL).status_code == 403
         assert _put(chi.utente, "invito", "Invito", INVITO).status_code == 403
     elenco = _client(capogruppo.utente).get(URL).json()
-    assert {m["chiave"] for m in elenco} == set(TIPI)
+    # The emails of a feature switched off are hidden (DEC-421).
+    assert {m["chiave"] for m in elenco} == set(TIPI) - funzioni.email_nascoste()
     assert _put(amministratore, "invito", "Invito a [Nome sito]", INVITO).status_code == 200
     assert _client(capogruppo.utente).get(f"{URL}/inesistente").status_code == 404
 

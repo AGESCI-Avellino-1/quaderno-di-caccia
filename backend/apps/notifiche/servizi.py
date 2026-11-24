@@ -26,6 +26,8 @@ from .models import ChiaviPush, IscrizionePush, PreferenzePush, PushInCoda
 logger = logging.getLogger(__name__)
 
 CATEGORIE = ("eventi", "promemoria_quote", "riepiloghi", "avvisi", "compleanni")
+# Sent whatever the person chose: there is nothing to choose (DEC-422).
+SEMPRE = ("babbo_natale",)
 # The browsers' push services. The server calls the address a browser gives it: anything else
 # would let an account make it call inside its own network.
 SERVIZI_PUSH = (
@@ -90,6 +92,8 @@ def togli_orfane() -> int:
 
 
 def vuole(persona: Persona, categoria: str) -> bool:
+    if categoria in SEMPRE:
+        return True
     if categoria not in CATEGORIE:
         raise ValueError(f"Categoria di notifica sconosciuta: {categoria}")
     preferenze = PreferenzePush.objects.filter(persona=persona).first()

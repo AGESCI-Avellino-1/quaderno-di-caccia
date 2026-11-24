@@ -64,6 +64,8 @@ export const PAGINE: Record<string, Pagina> = {
   squadriglia: { titolo: 'La mia squadriglia' },
   'storia-squadriglie': { titolo: 'Storia delle squadriglie' },
   tribu: { titolo: 'La mia tribù' },
+  'babbo-natale': { titolo: 'Babbo Natale segreto' },
+  'scambio-regali': { titolo: 'Scambio di regali', sopra: 'babbo-natale' },
   correzioni: { titolo: 'Correzioni da inoltrare' },
   quote: { titolo: 'Quote' },
   banca: { titolo: 'Estratto conto' },

@@ -41,7 +41,7 @@ async function imposta(gruppo: Gruppo, valore: boolean) {
       gruppo è spento, le email per lui non partono e non vengono tenute da parte. Chi è in più
       gruppi (per esempio un capo che è anche genitore) le riceve se almeno uno è acceso. Partono
       sempre, a chiunque, i codici per entrare, il cambio della password, gli inviti e le email
-      dell'iscrizione e della lista d'attesa.
+      dell'iscrizione, della lista d'attesa e del Babbo Natale segreto.
     </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <div class="card card-body">

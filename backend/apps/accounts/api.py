@@ -114,6 +114,10 @@ class Profilo(Schema):
     # waiting for one of them.
     tribu: bool = False
     immagini_totem_da_approvare: int = 0
+    # The features switched on in the settings (DEC-421): their entries show only then.
+    funzioni: list[str] = []
+    # Babbo Natale segreto (DEC-422): who organises, who takes part (or whose child does).
+    babbo_natale: bool = False
     # The buttons next to phone numbers (DEC-301): "chiama", "whatsapp", "sms".
     pulsanti_telefono: list[str] = ["chiama", "whatsapp"]
 
@@ -187,6 +191,17 @@ def profilo(request):
         "pulsanti_telefono": _pulsanti_telefono(user),
         "tribu": policy.vede_tribu(user),
         "immagini_totem_da_approvare": _immagini_totem_da_approvare(user),
+        **_funzioni(user),
+    }
+
+
+def _funzioni(user) -> dict:
+    from apps.impostazioni import funzioni
+
+    attive = funzioni.attive()
+    return {
+        "funzioni": sorted(attive),
+        "babbo_natale": funzioni.BABBO_NATALE in attive and policy.vede_babbo_natale(user),
     }
 
 

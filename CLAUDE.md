@@ -470,5 +470,10 @@ implements them:
   meetings and the assembly (DEC-325…DEC-327, `Cerchia.GENITORI`/`SOCI`) are one at a time, with
   a convocation (`verbali/convocazione.py`) that always goes; who is there is copied into the
   definitive minutes of the assembly and the Co.Ca. (five years, DEC-328).
+- Features the group may switch off (DEC-421): `impostazioni/funzioni.py` lists them, off until a
+  capogruppo or the technical administrator switches them on (`/impostazioni/funzioni/{chiave}`);
+  off, their API answers 404, their emails and menu entry disappear, their data stay. A new one =
+  an entry in `FUNZIONI` + `richiedi()` in each endpoint + its entry behind the profile's
+  `funzioni`. The first is Babbo Natale segreto (`apps/babbonatale`, DEC-422).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

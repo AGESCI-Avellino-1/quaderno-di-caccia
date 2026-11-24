@@ -129,7 +129,19 @@ gli hai presentato l'app: prima **Capi**, poi **Genitori** e **Ragazzi/e**.
   acceso.
 - Partono sempre, a chiunque: i codici per entrare, il cambio della password, gli **inviti**
   (puoi invitare i capi anche prima di accendere i loro avvisi) e le email dell'iscrizione
-  dall'app e della lista d'attesa.
+  dall'app, della lista d'attesa e del [Babbo Natale segreto](../babbo-natale).
+
+## Funzioni facoltative
+
+Alcune funzioni il gruppo può decidere di non usarle. In **Funzioni facoltative** i
+capigruppo e l'amministratore tecnico le accendono e le spengono con un interruttore; quando
+aggiorni l'app, una funzione nuova di questo tipo arriva **spenta**.
+
+- Spenta, la funzione sparisce per tutti: niente voce nel menu, niente email né notifiche, e
+  i suoi modelli di email non compaiono in **Modelli delle email**.
+- Quello che contiene non si perde: riaccendendola torna tutto com'era.
+
+Oggi c'è il [Babbo Natale segreto](../babbo-natale).
 
 ## Privacy policy e termini
 

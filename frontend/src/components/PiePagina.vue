@@ -2,13 +2,17 @@
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { aggiornaOra, versioneInferiore } from '@/pwa/aggiornamento'
+import { aggiornaOra, needRefresh, versioneInferiore } from '@/pwa/aggiornamento'
 import { useSitoStore } from '@/stores/sito'
 
 // The group's line (optional, with placeholders) above the fixed one (DEC-247). Above it, for
 // everyone and before the login too, the button when the server is ahead of this copy (DEC-380).
 const sito = useSitoStore()
-const daAggiornare = computed(() => versioneInferiore(__VERSIONE_APP__, sito.versioneServer))
+// One notice at a time (DEC-424): while the browser's own one is shown (AggiornamentoApp), this
+// line waits; after «Più tardi» it comes back, the way to update later.
+const daAggiornare = computed(
+  () => !needRefresh.value && versioneInferiore(__VERSIONE_APP__, sito.versioneServer),
+)
 const inCorso = ref(false)
 
 async function aggiorna() {

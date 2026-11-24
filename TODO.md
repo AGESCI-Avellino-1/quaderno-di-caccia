@@ -19,6 +19,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91) | Babbo Natale segreto, funzione che si può spegnere (DEC-421, DEC-422) | Funzione      | Medio   | Alta       | VER    |
 | [#92](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/92) | Modelli delle email raggruppati per funzionalità (DEC-423)            | Miglioramento | Basso   | Bassa      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini | Miglioramento | Medio   | Media      |        |
+| [#94](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/94) | Aggiornamento dell'app: due avvisi insieme (DEC-424)                  | Bug           | Basso   | Bassa      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 

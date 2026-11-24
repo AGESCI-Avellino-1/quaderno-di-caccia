@@ -7,9 +7,10 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
 
-| Issue                                                                    | Titolo                                                            | Tipo     | Impatto | Difficoltà | Status |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------- | ---------- | ------ |
-| [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417) | Funzione | Basso   | Media      | VER    |
+| Issue                                                                    | Titolo                                                                          | Tipo          | Impatto | Difficoltà | Status |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
+| [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
+| [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -21,7 +22,7 @@ immagini (si possono generare in un passo Docker a parte, rifatto solo se cambia
 gruppo o `scripts/avvio.ts`), `npm ci` rifatto a ogni versione perché cambia il numero in
 `package.json` e `package-lock.json`, l'immagine del backend.
 
-Primo aggiornamento con lo script della v1.43.0 (#93): «Immagini della versione precedente tolte: 0»,
+Primo aggiornamento con lo script della v1.43.0 ([#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93), riaperta): «Immagini della versione precedente tolte: 0»,
 invece delle tre attese (backend, email, app). Da capire con `docker compose ps -q`,
 `docker inspect --format '{{.Config.Image}} {{.Image}}' $(docker compose ps -q)` e
 `docker images --filter dangling=true` sul server.
@@ -39,7 +40,6 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 | Issue                                                                    | Titolo                                                                                         | Release                                                                                 |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | [#94](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/94) | Aggiornamento dell'app: due avvisi insieme (DEC-424)                                           | [v1.42.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.1) |
-| [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425)                | [v1.43.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.43.0) |
 | [#92](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/92) | Modelli delle email raggruppati per funzionalità (DEC-423)                                     | [v1.42.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.0) |
 | [#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91) | Babbo Natale segreto, funzione che si può spegnere (DEC-421, DEC-422)                          | [v1.42.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.0) |
 | [#90](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/90) | Soci: far uscire dall'app chi ha lasciato il gruppo (DEC-420)                                  | [v1.40.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.40.0) |

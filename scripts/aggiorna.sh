@@ -100,11 +100,16 @@ aspetta() {
   return 1
 }
 # The images of the running containers, one "name id" per line (DEC-425): the containers keep
-# their image while a build gives its name to a new one.
+# their image while a build gives its name to a new one. The id is the image's own, asked by
+# name: with Docker's containerd store the one a container reports may not be accepted by
+# `image rm` (first update to 1.43.0: nothing removed).
 immagini() {
-  local c
+  local c nome id
   for c in $($COMPOSE ps -q 2>/dev/null); do
-    $MOTORE inspect --format '{{.Config.Image}} {{.Image}}' "$c" 2>/dev/null || true
+    nome="$($MOTORE inspect --format '{{.Config.Image}}' "$c" 2>/dev/null)" || continue
+    id="$($MOTORE image inspect --format '{{.Id}}' "$nome" 2>/dev/null)" \
+      || id="$($MOTORE inspect --format '{{.Image}}' "$c" 2>/dev/null)" || continue
+    echo "$nome $id"
   done | sort -u
 }
 # The names back on the images of before: the next start uses them, nothing is built.
@@ -116,14 +121,19 @@ ripristina_immagini() {
   done <<<"$IMMAGINI_PRIMA"
 }
 # After an update that answers: the images no container uses any more, only ours; with Docker
-# also the build cache older than four weeks (Podman's cache is made of those images).
+# also the build cache older than four weeks (Podman's cache is made of those images). What
+# cannot be removed is said, with the engine's reason.
 pulisci_immagini() {
-  local dopo id liberate=0
+  local dopo id esito liberate=0
   dopo="$(immagini | awk '{print $2}')"
   # shellcheck disable=SC2013  # image ids, one word each
   for id in $(awk '{print $2}' <<<"$IMMAGINI_PRIMA" | sort -u); do
     grep -qxF "$id" <<<"$dopo" && continue
-    $MOTORE image rm "$id" >/dev/null 2>&1 && liberate=$((liberate + 1))
+    if esito="$($MOTORE image rm "$id" 2>&1)"; then
+      liberate=$((liberate + 1))
+    else
+      echo "Non riesco a togliere l'immagine ${id:0:19}: $esito" >&2
+    fi
   done
   echo "Immagini della versione precedente tolte: $liberate."
   if [[ "$MOTORE" == docker ]]; then

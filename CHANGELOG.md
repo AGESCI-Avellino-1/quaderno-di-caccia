@@ -5,6 +5,25 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.43.2 — 24 novembre 2026
+
+### Correzioni
+
+- **Menu a tendina sul telefono** ([#95](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/95)): non escono più dal loro riquadro (per esempio «Sposta in…» nella riorganizzazione delle squadriglie di due reparti collegati) e la pagina non scorre più di lato; una voce troppo lunga viene accorciata.
+
+### Aggiornare
+
+Per usare già lo script di aggiornamento corretto nella 1.43.1, dalla cartella dell'app:
+
+```bash
+git fetch --tags && git show v1.43.2:scripts/aggiorna.sh > /tmp/aggiorna.sh
+QDC_RADICE="$PWD" bash /tmp/aggiorna.sh v1.43.2
+```
+
+Nessuna migrazione del database.
+
+Provata con i test e nel browser a larghezza da telefono. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.43.1 — 24 novembre 2026
 
 ### Correzioni

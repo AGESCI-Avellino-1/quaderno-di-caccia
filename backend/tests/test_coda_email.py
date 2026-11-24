@@ -46,6 +46,14 @@ def test_chiesto_dalla_persona_parte_subito(con_coda):
     assert not EmailInCoda.objects.exists()
 
 
+def test_babbo_natale_segreto_parte_subito(con_coda):
+    # DEC-422: the participants without an account learn it only from the email.
+    _manda("babbo_natale_partecipante", *_indirizzi(7))
+    _manda("babbo_natale_genitori", "genitore@example.invalid")
+    assert len(mail.outbox) == 8
+    assert not EmailInCoda.objects.exists()
+
+
 def test_le_altre_aspettano_in_coda(con_coda):
     _manda("invito", *_indirizzi(4))
     assert mail.outbox == []

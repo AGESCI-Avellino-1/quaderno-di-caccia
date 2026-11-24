@@ -57,7 +57,8 @@ SEMPRE = {
     "babbo_natale_partecipante",
     "babbo_natale_genitori",
 }
-# What the person asks for themself: never waits in the queue (DEC-311).
+# What the person asks for themself, and the draw of Babbo Natale segreto: never waits in
+# the queue (DEC-311, DEC-422).
 SUBITO = {
     TIPO_ACCOUNT,
     "codice_accesso",
@@ -68,6 +69,9 @@ SUBITO = {
     "account_sconosciuto",
     "account_modificato",
     "attivazione_account",
+    # Right after the draw: whoever has no account learns it only from here (DEC-422).
+    "babbo_natale_partecipante",
+    "babbo_natale_genitori",
 }
 
 

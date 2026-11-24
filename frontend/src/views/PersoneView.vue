@@ -28,6 +28,13 @@ const unitaScelta = ref<number | undefined>(
   route.query.unita ? Number(route.query.unita) : undefined,
 )
 const filtro = ref(typeof route.query.cerca === 'string' ? route.query.cerca : '')
+// The order (DEC-427): surname (default), name, or codice socio (members only).
+type Ordine = 'cognome' | 'nome' | 'codice'
+const ORDINI: Ordine[] = ['cognome', 'nome', 'codice']
+const ordine = ref<Ordine>(
+  ORDINI.includes(route.query.ordine as Ordine) ? (route.query.ordine as Ordine) : 'cognome',
+)
+const confronta = new Intl.Collator('it', { sensitivity: 'base', numeric: true }).compare
 // From the unit page, «Aggiungi alla rubrica» opens this list ready to choose (DEC-302).
 const rubrica = useRubrica()
 rubrica.attiva.value = route.query.rubrica === '1'
@@ -37,9 +44,32 @@ const invitando = ref(false)
 
 const visibili = computed(() => {
   const testo = filtro.value.trim().toLowerCase()
-  if (!testo) return persone.value
-  return persone.value.filter((p) => `${p.cognome} ${p.nome}`.toLowerCase().includes(testo))
+  const trovate = testo
+    ? persone.value.filter((p) => `${p.cognome} ${p.nome}`.toLowerCase().includes(testo))
+    : persone.value
+  const perNome = (a: PersonaElenco, b: PersonaElenco) =>
+    confronta(a.nome, b.nome) || confronta(a.cognome, b.cognome)
+  const perCognome = (a: PersonaElenco, b: PersonaElenco) =>
+    confronta(a.cognome, b.cognome) || confronta(a.nome, b.nome)
+  const perCodice = (a: PersonaElenco, b: PersonaElenco) =>
+    // Who has no codice socio goes last.
+    !a.codice_socio !== !b.codice_socio
+      ? a.codice_socio
+        ? -1
+        : 1
+      : confronta(a.codice_socio ?? '', b.codice_socio ?? '') || perCognome(a, b)
+  const regola =
+    ordine.value === 'nome'
+      ? perNome
+      : ordine.value === 'codice' && props.tipo === 'soci'
+        ? perCodice
+        : perCognome
+  return [...trovate].sort(regola)
 })
+
+/** «Nome Cognome» when ordered by name, «Cognome Nome» otherwise (DEC-427). */
+const nomeIn = (p: PersonaElenco) =>
+  ordine.value === 'nome' ? `${p.nome} ${p.cognome}` : `${p.cognome} ${p.nome}`
 
 async function caricaPersone() {
   const letto = await esegui(() =>
@@ -61,10 +91,20 @@ onMounted(async () => {
   await caricaPersone()
 })
 watch(unitaScelta, caricaPersone)
-// The unit and the search stay in the address: back from a person, the list is as it was.
-watch([unitaScelta, filtro], ([u, testo]) => {
-  const query = { ...route.query, unita: u?.toString(), cerca: testo || undefined }
-  if (query.unita !== route.query.unita || query.cerca !== route.query.cerca)
+// The unit, the search and the order stay in the address: back from a person, the list is as
+// it was.
+watch([unitaScelta, filtro, ordine], ([u, testo, o]) => {
+  const query = {
+    ...route.query,
+    unita: u?.toString(),
+    cerca: testo || undefined,
+    ordine: o === 'cognome' ? undefined : o,
+  }
+  if (
+    query.unita !== route.query.unita ||
+    query.cerca !== route.query.cerca ||
+    query.ordine !== route.query.ordine
+  )
     router.replace({ query })
 })
 watch(
@@ -100,6 +140,18 @@ watch(
       <div class="col-12">
         <input v-model="filtro" class="form-control" type="search" placeholder="Cerca per nome" />
       </div>
+      <div class="col-12 d-flex align-items-center flex-wrap gap-3" data-ordine>
+        <span class="small fg-2">Ordina per</span>
+        <SceltaChip
+          v-model="ordine"
+          :scelte="[
+            { valore: 'cognome', nome: 'Cognome' },
+            { valore: 'nome', nome: 'Nome' },
+            ...(tipo === 'soci' ? [{ valore: 'codice' as Ordine, nome: 'Codice socio' }] : []),
+          ]"
+          etichetta="Ordina per"
+        />
+      </div>
     </div>
     <BarraRubrica v-if="!invitando" :rubrica="rubrica" :tutti="visibili.map((p) => p.id)" />
     <InvitiMultipli
@@ -130,7 +182,7 @@ watch(
             tenue
             aria-hidden="true"
           />
-          <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
+          <span class="me-auto">{{ nomeIn(p) }}</span>
         </label>
         <RouterLink
           v-else
@@ -138,7 +190,7 @@ watch(
           class="list-group-item list-group-item-action d-flex align-items-center gap-3"
         >
           <Avatar :nome="`${p.nome} ${p.cognome}`" dimensione="sm" tenue aria-hidden="true" />
-          <span class="me-auto">{{ p.cognome }} {{ p.nome }}</span>
+          <span class="me-auto">{{ nomeIn(p) }}</span>
           <span v-if="p.codice_socio" class="fg-2 small">{{ p.codice_socio }}</span>
         </RouterLink>
       </template>

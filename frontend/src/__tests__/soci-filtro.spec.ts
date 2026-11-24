@@ -13,11 +13,17 @@ const UNITA = [
   { id: 3, nome: 'Hirpinia', codice: 'T1', tipo: 'CLAN_FUOCO', branca: 'RS', attiva: true },
 ]
 
+const SOCI = [
+  { id: 1, nome: 'Zeno', cognome: 'Bianchi', codice_socio: '2000' },
+  { id: 2, nome: 'Anna', cognome: 'Verdi', codice_socio: null },
+  { id: 3, nome: 'Marco', cognome: 'Abate', codice_socio: '100' },
+]
+
 async function monta(percorso: string) {
   await nuovoDatabase()
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (url: string) => risposta(200, url.includes('/unita') ? UNITA : [])),
+    vi.fn(async (url: string) => risposta(200, url.includes('/unita') ? UNITA : SOCI)),
   )
   const Vuota = { template: '<div />' }
   const router = createRouter({
@@ -56,5 +62,20 @@ describe('Soci', () => {
     expect(pagina.find<HTMLInputElement>('input[type="search"]').element.value).toBe('ross')
     const scelto = pagina.findAll('button').find((b) => b.text().includes('Hirpinia'))!
     expect(scelto.attributes('aria-checked')).toBe('true')
+  })
+
+  // DEC-427
+  it('orders by surname, by name or by codice socio, and keeps it in the address', async () => {
+    const { pagina, router } = await monta('/soci')
+    const righe = () => pagina.findAll('.list-group-item .me-auto').map((r) => r.text())
+    expect(righe()).toEqual(['Abate Marco', 'Bianchi Zeno', 'Verdi Anna'])
+    const chip = (nome: string) => pagina.findAll('button').find((b) => b.text() === nome)!
+    await chip('Nome').trigger('click')
+    expect(righe()).toEqual(['Anna Verdi', 'Marco Abate', 'Zeno Bianchi'])
+    await chip('Codice socio').trigger('click')
+    await flushPromises()
+    // Numbers in order, who has none last.
+    expect(righe()).toEqual(['Abate Marco', 'Bianchi Zeno', 'Verdi Anna'])
+    expect(router.currentRoute.value.query.ordine).toBe('codice')
   })
 })

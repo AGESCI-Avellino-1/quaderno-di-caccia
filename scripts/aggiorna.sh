@@ -129,6 +129,12 @@ pulisci_immagini() {
   # shellcheck disable=SC2013  # image ids, one word each
   for id in $(awk '{print $2}' <<<"$IMMAGINI_PRIMA" | sort -u); do
     grep -qxF "$id" <<<"$dopo" && continue
+    # Docker 29's containerd store deletes an untagged image by itself once its last container
+    # is gone (the update to 1.43.2: "No such image" for all three): already removed.
+    if ! $MOTORE image inspect "$id" >/dev/null 2>&1; then
+      liberate=$((liberate + 1))
+      continue
+    fi
     if esito="$($MOTORE image rm "$id" 2>&1)"; then
       liberate=$((liberate + 1))
     else

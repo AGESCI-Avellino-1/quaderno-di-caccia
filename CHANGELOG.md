@@ -5,6 +5,22 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.42.1 — 24 novembre 2026
+
+### Correzioni
+
+- **Aggiornamento dell'app** ([#94](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/94)): quando c'è una nuova versione compare un solo avviso. Se il browser l'ha già scaricata c'è solo il riquadro in basso con **Aggiorna** e **Più tardi**; altrimenti, o dopo **Più tardi**, il pulsante **Aggiorna** nel piè di pagina.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.42.1
+```
+
+Nessuna migrazione del database.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.42.0 — 24 novembre 2026
 
 ### Novità

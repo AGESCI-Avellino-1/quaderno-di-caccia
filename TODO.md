@@ -11,7 +11,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
-| [#95](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/95) | Menu a tendina che escono dal riquadro sul telefono                             | Bug           | Basso   | Bassa      | VER    |
+| [#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96) | Pagine lunghe divise in gruppi che si aprono e si chiudono                      | Miglioramento | Medio   | Media      |        |
+| [#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97) | Soci: ordinare per nome, cognome o codice socio                                 | Miglioramento | Basso   | Bassa      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -40,6 +41,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                                         | Release                                                                                 |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#95](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/95) | Menu a tendina che escono dal riquadro sul telefono                                            | [v1.43.2](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.43.2) |
 | [#94](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/94) | Aggiornamento dell'app: due avvisi insieme (DEC-424)                                           | [v1.42.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.1) |
 | [#92](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/92) | Modelli delle email raggruppati per funzionalità (DEC-423)                                     | [v1.42.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.0) |
 | [#91](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/91) | Babbo Natale segreto, funzione che si può spegnere (DEC-421, DEC-422)                          | [v1.42.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.42.0) |

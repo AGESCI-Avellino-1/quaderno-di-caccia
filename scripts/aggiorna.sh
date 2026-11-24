@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Updates the app to a released version (DEC-292): what changes since the installed
-# version (from CHANGELOG.md), maintenance on, backup, the new
-# version built and started, a check that it answers, maintenance off. If it does not
-# answer, the previous version comes back by itself; if the database had already
+# version (from CHANGELOG.md), the new version built while the app still runs, then
+# maintenance on, backup, the new version started, a check that it answers, maintenance
+# off and the old images removed (DEC-425). If it does not answer, the previous images
+# come back by themselves, without building them again; if the database had already
 # changed, it says to restore the backup just made.
 #
 #   scripts/aggiorna.sh            # the latest version (the latest vX.Y.Z tag)
@@ -43,6 +44,11 @@ done
 
 if [[ -z "${COMPOSE:-}" ]]; then
   if command -v docker >/dev/null 2>&1; then COMPOSE="docker compose"; else COMPOSE="podman compose"; fi
+fi
+# The engine behind compose, for the images: docker or podman.
+MOTORE="${QDC_MOTORE:-}"
+if [[ -z "$MOTORE" ]]; then
+  case "$COMPOSE" in podman*) MOTORE=podman ;; *) MOTORE=docker ;; esac
 fi
 
 passo() { echo; echo "== $*"; }
@@ -92,6 +98,37 @@ aspetta() {
     sleep 5
   done
   return 1
+}
+# The images of the running containers, one "name id" per line (DEC-425): the containers keep
+# their image while a build gives its name to a new one.
+immagini() {
+  local c
+  for c in $($COMPOSE ps -q 2>/dev/null); do
+    $MOTORE inspect --format '{{.Config.Image}} {{.Image}}' "$c" 2>/dev/null || true
+  done | sort -u
+}
+# The names back on the images of before: the next start uses them, nothing is built.
+ripristina_immagini() {
+  local nome id
+  [[ -n "$IMMAGINI_PRIMA" ]] || return 1
+  while read -r nome id; do
+    $MOTORE tag "$id" "$nome" || return 1
+  done <<<"$IMMAGINI_PRIMA"
+}
+# After an update that answers: the images no container uses any more, only ours; with Docker
+# also the build cache older than four weeks (Podman's cache is made of those images).
+pulisci_immagini() {
+  local dopo id liberate=0
+  dopo="$(immagini | awk '{print $2}')"
+  # shellcheck disable=SC2013  # image ids, one word each
+  for id in $(awk '{print $2}' <<<"$IMMAGINI_PRIMA" | sort -u); do
+    grep -qxF "$id" <<<"$dopo" && continue
+    $MOTORE image rm "$id" >/dev/null 2>&1 && liberate=$((liberate + 1))
+  done
+  echo "Immagini della versione precedente tolte: $liberate."
+  if [[ "$MOTORE" == docker ]]; then
+    docker builder prune -f --filter until=672h >/dev/null 2>&1 || true
+  fi
 }
 avvia() {
   if systemctl cat "$SERVIZIO.service" >/dev/null 2>&1; then
@@ -143,6 +180,23 @@ if ! git diff --quiet "$PRIMA" "$VERSIONE" -- deploy/nginx-host deploy/apache-ho
 fi
 chiedi "Aggiornare ora a $VERSIONE?" || exit 1
 
+# --- The new version, built while the app still runs (DEC-425) ----------------------------
+
+passo "Versione $VERSIONE: costruzione (l'app resta in linea)"
+IMMAGINI_PRIMA="$(immagini)"
+git -c advice.detachedHead=false checkout --quiet "$VERSIONE"
+if ! $COMPOSE build; then
+  echo "La costruzione della versione $VERSIONE non è riuscita: resto alla $NOME_PRIMA." >&2
+  git -c advice.detachedHead=false checkout --quiet "$PRIMA"
+  ripristina_immagini || true
+  exit 1
+fi
+# Stopping before the start: the old code and its images, so a restart starts the old version.
+torna_indietro_senza_avviare() {
+  git -c advice.detachedHead=false checkout --quiet "$PRIMA"
+  ripristina_immagini || $COMPOSE build || true
+}
+
 # --- Maintenance and backup -----------------------------------------------------------------
 
 passo "Manutenzione"
@@ -153,7 +207,10 @@ if [[ "$(gestione manutenzione 2>/dev/null || true)" == "attiva" ]]; then
 elif ! gestione manutenzione attiva 2>/dev/null; then
   echo "Non riesco a mettere la manutenzione da qui (la versione in uso è la 1.4 o precedente?):"
   echo "se puoi, mettila dall'app, in Impostazioni, prima di proseguire."
-  chiedi "Proseguire senza?" || exit 1
+  if ! chiedi "Proseguire senza?"; then
+    torna_indietro_senza_avviare
+    exit 1
+  fi
 fi
 togli_manutenzione() {
   $GIA_IN_MANUTENZIONE && return 0
@@ -164,6 +221,7 @@ togli_manutenzione() {
 passo "Backup"
 if ! uscita="$(scripts/backup-db.sh)"; then
   echo "Il backup non è riuscito: non aggiorno." >&2
+  torna_indietro_senza_avviare
   togli_manutenzione
   exit 1
 fi
@@ -171,20 +229,14 @@ echo "$uscita"
 BACKUP="$(echo "$uscita" | sed -n 's/^Backup: \(.*\.sql\.gz\)$/\1/p')"
 MIGRAZIONI_PRIMA="$(migrazioni)"
 
-# --- The new version ------------------------------------------------------------------------
+# --- The new version started ----------------------------------------------------------------
 
-passo "Versione $VERSIONE"
-git -c advice.detachedHead=false checkout --quiet "$VERSIONE"
-if ! $COMPOSE build; then
-  echo "La costruzione della versione $VERSIONE non è riuscita: resto alla $NOME_PRIMA." >&2
-  git -c advice.detachedHead=false checkout --quiet "$PRIMA"
-  togli_manutenzione
-  exit 1
-fi
+passo "Avvio della versione $VERSIONE"
 avvia
 echo "Aspetto che l'app risponda (al massimo 5 minuti: all'avvio aggiorna il database)…"
 if aspetta; then
   togli_manutenzione
+  pulisci_immagini
   passo "Fatto: l'app è alla versione $VERSIONE."
   exit 0
 fi
@@ -196,7 +248,8 @@ $COMPOSE logs --tail 40 web || true
 CAMBIATO=false
 [[ "$(migrazioni)" != "$MIGRAZIONI_PRIMA" ]] && CAMBIATO=true
 git -c advice.detachedHead=false checkout --quiet "$PRIMA"
-if ! $COMPOSE build; then
+# The images of before are still here: their names back, nothing to build (DEC-425).
+if ! ripristina_immagini && ! $COMPOSE build; then
   echo "Non riesco a ricostruire la versione $NOME_PRIMA: segui i controlli della guida di" >&2
   echo "installazione. L'app resta in manutenzione; il backup appena fatto è $BACKUP." >&2
   exit 1

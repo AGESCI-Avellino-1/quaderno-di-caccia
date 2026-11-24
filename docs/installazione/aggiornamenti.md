@@ -26,20 +26,29 @@ Lo script:
 3. se cambia `.env.example`, ti mostra le differenze e chiede se proseguire: confrontale con il
    tuo `.env` e aggiungi le voci nuove che ti servono; se cambiano le configurazioni del
    reverse proxy sul server, ti dice di rilanciare `scripts/configure-prod.sh`;
-4. mette l'app in **manutenzione** (se c'era già, la lascia alla fine);
-5. fa il [backup](backup) del database e dei file;
-6. passa alla versione nuova, la ricostruisce e la riavvia (con `sudo systemctl restart`, se
-   hai installato il [servizio di sistema](installazione), e allora ti chiede la password di
-   sudo);
-7. aspetta fino a 5 minuti che l'app risponda: le migrazioni del database si applicano da
+4. passa alla versione nuova e la **costruisce mentre l'app è ancora in linea**: chi la usa non
+   si accorge di niente. Se la costruzione non riesce, torna alla versione di prima e si ferma;
+5. mette l'app in **manutenzione** (se c'era già, la lascia alla fine);
+6. fa il [backup](backup) del database e dei file;
+7. avvia la versione nuova (con `sudo systemctl restart`, se hai installato il
+   [servizio di sistema](installazione), e allora ti chiede la password di sudo);
+8. aspetta fino a 5 minuti che l'app risponda: le migrazioni del database si applicano da
    sole all'avvio;
-8. toglie la manutenzione.
+9. toglie la manutenzione e cancella le **immagini della versione di prima**, per liberare
+   spazio: solo quelle dell'app, non quelle di altri programmi sullo stesso server. Con Docker
+   toglie anche la cache di costruzione più vecchia di quattro settimane.
+
+La manutenzione dura così solo il backup, le migrazioni e l'avvio. Questo ordine vale dalla
+1.43.0: lo script che gira è quello della versione installata, quindi aggiornando da una
+versione precedente la costruzione avviene ancora in manutenzione e le immagini vecchie restano
+(si tolgono a mano con `docker image prune`, se sul server non ci sono altri programmi).
 
 Con `--si` non chiede conferme (le novità e le differenze le mostra comunque).
 
 ### Se l'app non risponde
 
-Lo script **torna da solo alla versione di prima**. Poi:
+Lo script **torna da solo alla versione di prima**, senza ricostruirla: le sue immagini sono
+ancora sul server. Poi:
 
 - se il database non era ancora cambiato, riavvia la versione di prima, controlla che
   risponda e toglie la manutenzione: l'app è come prima dell'aggiornamento. Guarda le righe di

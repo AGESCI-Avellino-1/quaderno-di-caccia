@@ -112,25 +112,46 @@ immagini() {
     echo "$nome $id"
   done | sort -u
 }
-# The names back on the images of before: the next start uses them, nothing is built.
+# The spare name of an image of before (DEC-425): Docker 29 deletes an image left without a
+# name as soon as its last container goes, that is when the new version starts; with a name it
+# stays, ready for going back without building anything.
+riserva() {
+  printf 'qdc-precedente:%s' "$(printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '-' | cut -c1-120)"
+}
+metti_da_parte() {
+  local nome id
+  [[ -n "$IMMAGINI_PRIMA" ]] || return 0
+  while read -r nome id; do
+    $MOTORE tag "$id" "$(riserva "$nome")" || return 1
+  done <<<"$IMMAGINI_PRIMA"
+}
+togli_riserva() {
+  local nome id
+  [[ -n "$IMMAGINI_PRIMA" ]] || return 0
+  while read -r nome id; do
+    $MOTORE image rm "$(riserva "$nome")" >/dev/null 2>&1 || true
+  done <<<"$IMMAGINI_PRIMA"
+}
+# The names back on the images of before, from their spare names: the next start uses them,
+# nothing is built.
 ripristina_immagini() {
   local nome id
   [[ -n "$IMMAGINI_PRIMA" ]] || return 1
   while read -r nome id; do
-    $MOTORE tag "$id" "$nome" || return 1
+    $MOTORE tag "$(riserva "$nome")" "$nome" 2>/dev/null || $MOTORE tag "$id" "$nome" || return 1
   done <<<"$IMMAGINI_PRIMA"
+  togli_riserva
 }
-# After an update that answers: the images no container uses any more, only ours; with Docker
-# also the build cache older than four weeks (Podman's cache is made of those images). What
-# cannot be removed is said, with the engine's reason.
+# After an update that answers: the spare names go, and with them the images of before that no
+# container uses any more, only ours; with Docker also the build cache older than four weeks
+# (Podman's cache is made of those images). What cannot be removed is said, with the reason.
 pulisci_immagini() {
   local dopo id esito liberate=0
   dopo="$(immagini | awk '{print $2}')"
+  togli_riserva
   # shellcheck disable=SC2013  # image ids, one word each
   for id in $(awk '{print $2}' <<<"$IMMAGINI_PRIMA" | sort -u); do
     grep -qxF "$id" <<<"$dopo" && continue
-    # Docker 29's containerd store deletes an untagged image by itself once its last container
-    # is gone (the update to 1.43.2: "No such image" for all three): already removed.
     if ! $MOTORE image inspect "$id" >/dev/null 2>&1; then
       liberate=$((liberate + 1))
       continue
@@ -200,6 +221,12 @@ chiedi "Aggiornare ora a $VERSIONE?" || exit 1
 
 passo "Versione $VERSIONE: costruzione (l'app resta in linea)"
 IMMAGINI_PRIMA="$(immagini)"
+if ! metti_da_parte; then
+  echo "Non riesco a mettere da parte le immagini in uso: senza, il ritorno indietro non è sicuro." >&2
+  echo "Non aggiorno; l'app non è stata toccata." >&2
+  togli_riserva
+  exit 1
+fi
 git -c advice.detachedHead=false checkout --quiet "$VERSIONE"
 if ! $COMPOSE build; then
   echo "La costruzione della versione $VERSIONE non è riuscita: resto alla $NOME_PRIMA." >&2

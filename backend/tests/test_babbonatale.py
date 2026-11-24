@@ -237,7 +237,7 @@ def test_estrazione_un_solo_cerchio(capo, reparto, ragazzi):
         risposta.content.decode()
         + client.get(f"/api/v1/babbo-natale/scambi/{scambio.pk}").content.decode()
     )
-    assert "a_chi" not in testo
+    assert '"a_chi": "' not in testo  # all four are told: no name for the organiser
     assert client.post(f"/api/v1/babbo-natale/scambi/{scambio.pk}/estrai").status_code == 400
 
 
@@ -352,6 +352,22 @@ def test_avvisi_email_invito_e_genitori(capo, reparto, genitore, genitrice_senza
     assert [con_account] in persone_avvisate
     for chiamata in notifica.call_args_list:
         assert a_chi.nome not in chiamata.args[2] + chiamata.args[4]
+
+
+def test_chi_non_si_puo_avvisare_lo_vede_l_organizzatore(capo, reparto, ragazzi):
+    # DEC-422: only for who nobody can tell, to say it aloud; nobody else's.
+    _accendi()
+    nessuno = _nel_reparto(reparto, "Nessuno", 12)
+    scambio = _scambio(reparto, [*ragazzi, nessuno])
+    url = f"/api/v1/babbo-natale/scambi/{scambio.pk}"
+    prima = _client(capo).get(url).json()["elenco"]
+    assert all(p["a_chi"] is None for p in prima)  # not drawn yet
+    servizi.estrai(scambio, capo.utente)
+    elenco = {p["id"]: p for p in _client(capo).get(url).json()["elenco"]}
+    a_chi = Persona.objects.get(pk=_giro(scambio)[nessuno.pk])
+    assert elenco[nessuno.pk]["avviso"] == "nessuno"
+    assert elenco[nessuno.pk]["a_chi"] == f"{a_chi.nome} {a_chi.cognome}"
+    assert [p["a_chi"] for k, p in elenco.items() if k != nessuno.pk] == [None] * 4
 
 
 # --- After the draw ---------------------------------------------------------------------------

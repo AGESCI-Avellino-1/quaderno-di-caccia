@@ -364,6 +364,9 @@ async function elimina() {
             </div>
             <span v-else>{{ p.cognome }} {{ p.nome }}</span>
             <span class="small fg-2">{{ AVVISI[p.avviso] }}</span>
+            <span v-if="p.a_chi" class="small" data-a-voce>
+              Diglielo a voce: fa il regalo a <strong>{{ p.a_chi }}</strong>
+            </span>
             <template v-if="!scambio.chiuso">
               <button
                 v-if="conferma !== `ritira-${p.id}`"

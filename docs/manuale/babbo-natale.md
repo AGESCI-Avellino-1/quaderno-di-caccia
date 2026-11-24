@@ -32,8 +32,9 @@ qualsiasi unità o per tutto il gruppo.
    **+**, poi togli o aggiungi le singole persone. Tocca **Salva partecipanti**. Ne servono
    almeno tre; i genitori non partecipano.
 3. Sotto vedi **come verrà avvisato** ciascuno: email e notifica, email con invito, email ai
-   genitori. Chi è segnato «senza account né email» non riceverà niente: avvisalo tu, oppure
-   completa prima i suoi contatti.
+   genitori. Chi è segnato «senza account né email» non riceverà niente: completa prima i suoi
+   contatti, oppure dopo l'estrazione diglielo tu a voce. Solo per queste persone, accanto al
+   nome vedi a chi fanno il regalo; gli altri abbinamenti restano segreti anche per te.
 4. Tocca **Estrai** e conferma. L'app forma un unico giro: nessuno fa il regalo a sé stesso
    né a chi lo fa a lui e, se possibile, fratelli e sorelle non si estraggono tra loro.
    Tutti vengono avvisati subito.

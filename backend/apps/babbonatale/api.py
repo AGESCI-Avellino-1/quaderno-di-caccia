@@ -172,8 +172,10 @@ class PartecipanteOut(Schema):
     id: int
     nome: str
     cognome: str
-    # How they will be told: app, email, genitori, nessuno. Never to whom they give a gift.
+    # How they will be told: app, email, genitori, nessuno.
     avviso: str
+    # Whom they give a gift to: only for who nobody can tell, after the draw (DEC-422).
+    a_chi: str | None = None
 
 
 class CandidatoOut(Schema):
@@ -190,23 +192,36 @@ class ScambioOut(ScambioBreve):
     minimo: int
 
 
-def _scambio_out(scambio: ScambioRegali) -> dict:
-    persone = sorted(
-        (p.persona for p in scambio.partecipanti.select_related("persona__utente")),
-        key=lambda p: (p.cognome.casefold(), p.nome.casefold()),
+def _scambio_out(request, scambio: ScambioRegali) -> dict:
+    partecipanti = sorted(
+        scambio.partecipanti.select_related("persona__utente", "a_chi"),
+        key=lambda p: (p.persona.cognome.casefold(), p.persona.nome.casefold()),
     )
+    # Never while using the app as another user (DEC-167).
+    nascosti = getattr(request, "impersonatore", None) is not None
+    elenco = []
+    for p in partecipanti:
+        avviso = servizi.come_avvisato(p.persona)
+        # Who nobody can tell: the organiser sees whom they give a gift to, to say it aloud
+        # (exception to the secrecy, maintainer 24/11, DEC-422). Nobody else's, ever.
+        a_chi = (
+            servizi._nome(p.a_chi)
+            if avviso == servizi.Avviso.NESSUNO and scambio.estratto and not nascosti
+            else None
+        )
+        elenco.append(
+            {
+                "id": p.persona_id,
+                "nome": p.persona.nome,
+                "cognome": p.persona.cognome,
+                "avviso": avviso.value,
+                "a_chi": a_chi,
+            }
+        )
     return {
         **_breve(scambio),
         "unita_id": scambio.unita_id,
-        "elenco": [
-            {
-                "id": p.pk,
-                "nome": p.nome,
-                "cognome": p.cognome,
-                "avviso": servizi.come_avvisato(p).value,
-            }
-            for p in persone
-        ],
+        "elenco": elenco,
         "minimo": MINIMO_PARTECIPANTI,
     }
 
@@ -221,12 +236,12 @@ def crea(request, dati: ScambioIn):
         raise HttpError(400, "Il giorno della consegna non può essere passato.")
     _dati(request, scambio, dati)
     scambio.save()
-    return Status(201, _scambio_out(scambio))
+    return Status(201, _scambio_out(request, scambio))
 
 
 @router.get("/babbo-natale/scambi/{scambio_id}", response=ScambioOut)
 def scambio(request, scambio_id: int):
-    return _scambio_out(_gestibile(request, scambio_id))
+    return _scambio_out(request, _gestibile(request, scambio_id))
 
 
 @router.put("/babbo-natale/scambi/{scambio_id}", response=ScambioOut)
@@ -236,7 +251,7 @@ def modifica(request, scambio_id: int, dati: ScambioIn):
         raise HttpError(400, "Il giorno della consegna è passato: lo scambio è chiuso.")
     _dati(request, scambio, dati)
     scambio.save()
-    return _scambio_out(scambio)
+    return _scambio_out(request, scambio)
 
 
 @router.delete("/babbo-natale/scambi/{scambio_id}", response={204: None})
@@ -294,7 +309,7 @@ def partecipanti(request, scambio_id: int, dati: PersoneIn):
     """Before the draw: the whole list at once."""
     scambio = _gestibile(request, scambio_id)
     _o_errore(servizi.imposta_partecipanti, scambio, _persone(request, scambio, dati.persone))
-    return _scambio_out(scambio)
+    return _scambio_out(request, scambio)
 
 
 class EstrazioneOut(ScambioOut):
@@ -306,7 +321,7 @@ def estrai(request, scambio_id: int):
     scambio = _gestibile(request, scambio_id)
     esito = _o_errore(servizi.estrai, scambio, request.auth)
     scambio.refresh_from_db()
-    return {**_scambio_out(scambio), "avvisati": esito.avvisati}
+    return {**_scambio_out(request, scambio), "avvisati": esito.avvisati}
 
 
 class PersonaIn(Schema):
@@ -319,7 +334,7 @@ def aggiungi(request, scambio_id: int, dati: PersonaIn):
     scambio = _gestibile(request, scambio_id)
     persona = _persone(request, scambio, [dati.persona_id])[0]
     _o_errore(servizi.aggiungi, scambio, persona, request.auth)
-    return _scambio_out(scambio)
+    return _scambio_out(request, scambio)
 
 
 @router.post("/babbo-natale/scambi/{scambio_id}/ritira", response=ScambioOut)
@@ -328,7 +343,7 @@ def ritira(request, scambio_id: int, dati: PersonaIn):
     scambio = _gestibile(request, scambio_id)
     persona = get_object_or_404(Persona, pk=dati.persona_id)
     _o_errore(servizi.ritira, scambio, persona, request.auth)
-    return _scambio_out(scambio)
+    return _scambio_out(request, scambio)
 
 
 class ReinviatiOut(Schema):

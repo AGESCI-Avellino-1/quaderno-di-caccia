@@ -78,6 +78,10 @@ describe('Babbo Natale segreto', () => {
       ...SCAMBIO,
       estratto: true,
       avvisati: { app: 1, genitori: 1, nessuno: 1 },
+      elenco: SCAMBIO.elenco.map((p) => ({
+        ...p,
+        a_chi: p.avviso === 'nessuno' ? 'Giulia Rossi' : null,
+      })),
     })
     const bottone = pagina.findAll('button').find((b) => b.text() === 'Estrai')!
     await bottone.trigger('click')
@@ -91,5 +95,9 @@ describe('Babbo Natale segreto', () => {
     expect(estrai).toHaveBeenCalledWith(4)
     expect(pagina.text()).toContain('Estrazione fatta.')
     expect(pagina.find('[data-partecipanti]').exists()).toBe(true)
+    // Only who nobody can tell: the organiser says it aloud.
+    expect(pagina.findAll('[data-a-voce]').map((x) => x.text())).toEqual([
+      'Diglielo a voce: fa il regalo a Giulia Rossi',
+    ])
   })
 })

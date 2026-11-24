@@ -394,7 +394,14 @@ export type AvvisoScambio = 'app' | 'email' | 'genitori' | 'nessuno'
 
 export interface ScambioRegali extends ScambioBreve {
   unita_id: number | null
-  elenco: { id: number; nome: string; cognome: string; avviso: AvvisoScambio }[]
+  elenco: {
+    id: number
+    nome: string
+    cognome: string
+    avviso: AvvisoScambio
+    /** Only for who nobody can tell, after the draw: to say it aloud (DEC-422). */
+    a_chi?: string | null
+  }[]
   minimo: number
   /** Only right after the draw: how many were told, by way. */
   avvisati?: Partial<Record<AvvisoScambio, number>>

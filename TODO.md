@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 25/11/2026 (ultima versione: v1.47.1). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 25/11/2026 (ultima versione: v1.48.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -11,8 +11,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
-| [#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103) | Tema 3.0.0a5 e Bootstrap 6.0.0-alpha.2                                          | Miglioramento | Alto    | Media      | VAL    |
-| [#104](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/104) | Riunioni di staff: le serie visibili a tutti i capi                             | Correzione    | Basso   | Bassa      | VER    |
+| [#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103) | Tema 3.0.0a5 e Bootstrap 6.0.0-alpha.2                                          | Miglioramento | Alto    | Media      | VER    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -41,6 +40,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                                         | Release                                                                                 |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#104](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/104) | Riunioni di staff: le serie visibili a tutti i capi | [v1.47.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.47.1) |
 | [#102](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/102) | Avviso nei browser troppo vecchi (DEC-433)                                                     | [v1.47.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.47.0) |
 | [#101](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/101) | Calendario: distinguere gli eventi a cui si partecipa dagli altri (DEC-432)                    | [v1.46.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.46.0) |
 | [#100](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/100) | Riunioni: nuovo tipo «Partecipanti selezionati» (DEC-430, DEC-431)                             | [v1.46.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.46.0) |

@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.48.0 — 25 novembre 2026
+
+### Novità
+
+**Bootstrap 6.0.0-alpha.2** ([#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103)): la grafica passa al tema AGESCI 3.0.0a5. Le funzioni non cambiano. Su computer sparisce la striscia vuota a destra della pagina, nei campi data e ora l'icona è in fondo al campo e le intestazioni sono più vicine ai campi. I browser che servono restano gli stessi.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.48.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Rifatte le schermate del manuale che cambiano.
+
+Provata con i test, confrontando tutte le schermate del manuale prima e dopo e provando le pagine principali con Chromium 130, Firefox 131 e 132 e WebKit 18.0 e 18.2 (il motore di Safari, non su un iPhone vero). Se qualcosa non va, segnalalo con una issue.
+
 ## 1.47.1 — 25 novembre 2026
 
 ### Correzioni

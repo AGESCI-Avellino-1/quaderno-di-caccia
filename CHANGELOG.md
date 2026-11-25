@@ -5,6 +5,22 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.47.1 — 25 novembre 2026
+
+### Correzioni
+
+- **Riunioni di staff** ([#104](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/104)): in **Riunioni di ogni settimana** le serie di staff si vedevano (titolo, orari e luogo) anche dagli altri capi. Ora le vedono solo i capi di quegli staff e i capigruppo, come le singole riunioni. Le serie con partecipanti selezionati le vedono anche i capi invitati.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.47.1
+```
+
+Nessuna migrazione del database.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.47.0 — 25 novembre 2026
 
 ### Novità

@@ -220,3 +220,22 @@ def test_serie_di_staff_online_cambiata(capo, reparto):
     assert [(e.modalita, e.link) for e in eventi] == [("PRESENZA", "")] + [("ONLINE", nuovo)] * (
         len(riunioni) - 1
     )
+
+
+def test_chi_vede_una_serie_di_staff(
+    capo, akela, capogruppo, altro_capo, csq, ragazza, genitore, estraneo, reparto, branco
+):
+    corpo = {**_singola([reparto, branco], cerchia="STAFF"), "giorno": None}
+    corpo |= {"giorno_settimana": 2, "dal": _sabato(1).isoformat(), "al": _sabato(4).isoformat()}
+    assert _post(capo, "/api/v1/riunioni", corpo).status_code == 201
+    unita = {**corpo, "unita": [reparto.pk], "cerchia": "TUTTI"}
+    assert _post(capo, "/api/v1/riunioni", unita).status_code == 201
+
+    def cerchie(chi):
+        return {s["cerchia"] for s in _client(chi).get("/api/v1/riunioni/serie").json()}
+
+    for chi in (capo, akela, capogruppo):
+        assert cerchie(chi) == {"STAFF", "TUTTI"}
+    assert cerchie(altro_capo) == {"TUTTI"}  # the unit's series stay for every capo
+    for chi in (csq, ragazza, genitore, estraneo):
+        assert cerchie(chi) == set()

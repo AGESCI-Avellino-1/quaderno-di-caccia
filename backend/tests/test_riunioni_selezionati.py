@@ -174,6 +174,8 @@ def test_serie_stesso_elenco(capo, akela, altro_capo, ragazza):
     (serie,) = _client(capo).get(f"{URL}/serie").json()
     assert serie["titolo"] == "Route" and serie["puo_gestire"] and serie["unita"] == []
     assert _client(altro_capo).get(f"{URL}/serie").json() == []
+    (vista,) = _client(akela).get(f"{URL}/serie").json()  # invited: seen, not managed
+    assert not vista["puo_gestire"]
     tolta = _client(capo).delete(f"{URL}/serie/{serie['id']}")
     assert tolta.status_code == 200, tolta.content
 

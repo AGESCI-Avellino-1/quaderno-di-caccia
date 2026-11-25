@@ -1461,6 +1461,16 @@ def _selezionati_visibili(user):
     return Evento.objects.filter(visibili, cerchia="SCELTI").values("pk")
 
 
+def puo_vedere_serie(user, serie) -> bool:
+    """A weekly series: every capo; of a staff or of people chosen, who sees one of its
+    meetings (DEC-401, DEC-430)."""
+    if not e_capo(user):
+        return False
+    if serie.cerchia not in ("STAFF", "SCELTI"):
+        return True
+    return eventi_visibili(user).filter(riunione_id=serie.pk).exists()
+
+
 def _riunioni_di_staff_visibili(user):
     from apps.eventi.models import Evento
 

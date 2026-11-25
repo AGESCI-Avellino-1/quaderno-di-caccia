@@ -473,7 +473,7 @@ def elenco_serie(request, unita: int | None = None):
         return [
             _serie_out(request.auth, s)
             for s in serie
-            if s.cerchia != Cerchia.SCELTI or _puo_gestire_serie(request.auth, s)
+            if policy.puo_vedere_serie(request.auth, s) or _puo_gestire_serie(request.auth, s)
         ]
     return [_serie_out(request.auth, s) for s in serie if _puo_gestire_serie(request.auth, s)]
 

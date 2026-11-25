@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.48.1 — 25 novembre 2026
+
+### Correzioni
+
+- **Testi lunghi sul telefono** ([#105](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/105)): nella pagina di un evento «Un altro recapito per le emergenze, solo per questo evento…» usciva dal riquadro. Ora va a capo, come altri tre testi lunghi: le regole sul rapporto con il minore, il verbale collegato da aggiungere e «Non sei tu?» nella pagina di sblocco.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.48.1
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Rifatte le schermate del manuale che cambiano.
+
+Provata con i test e nel browser in formato telefono. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.48.0 — 25 novembre 2026
 
 ### Novità

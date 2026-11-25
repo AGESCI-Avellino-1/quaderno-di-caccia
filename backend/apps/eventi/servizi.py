@@ -79,6 +79,7 @@ def previsti(evento: Evento) -> QuerySet[Persona]:
         Cerchia.GENITORI,
         Cerchia.SOCI,
         Cerchia.STAFF,
+        Cerchia.SCELTI,
     ):
         return base
     giorno = giorno_evento(evento)
@@ -111,6 +112,11 @@ def _previsti_base(evento: Evento) -> QuerySet[Persona]:
         return _invitati_assemblea(giorno)
     if evento.cerchia == Cerchia.STAFF:
         return _invitati_staff(evento, giorno)
+    if evento.cerchia == Cerchia.SCELTI:
+        # Who was chosen and is still a member, whatever the unit (DEC-430).
+        return Persona.objects.filter(pk__in=evento.partecipazioni.values("persona_id")).filter(
+            pk__in=Appartenenza.objects.attive(giorno).values("persona_id")
+        )
     if evento.livello == Livello.SQUADRIGLIA:
         ids = (
             AppartenenzaSquadriglia.objects.filter(
@@ -273,9 +279,18 @@ def _allinea_quote(evento: Evento) -> None:
 
 
 @transaction.atomic
-def crea(evento: Evento, unita: list[Unita], utente) -> Evento:
+def crea(evento: Evento, unita: list[Unita], utente, persone=()) -> Evento:
+    """`persone`: who is invited, when chosen one by one (DEC-430)."""
     evento.creato_da = utente
     evento.full_clean()
+    if evento.cerchia == Cerchia.SCELTI:
+        if not persone:
+            raise ValidationError("Scegli almeno un partecipante.")
+        evento.save()
+        Partecipazione.objects.bulk_create(
+            Partecipazione(evento=evento, persona=persona) for persona in persone
+        )
+        return evento
     if evento.livello == Livello.UNITA:
         if not unita:
             raise ValidationError("Scegli almeno un'unità.")
@@ -285,6 +300,64 @@ def crea(evento: Evento, unita: list[Unita], utente) -> Evento:
         evento.unita.set(unita)
     allinea_partecipanti(evento)
     return evento
+
+
+@transaction.atomic
+def cambia_scelti(evento: Evento, persone, utente) -> list[Persona]:
+    """Exactly these people are invited (DEC-430); returns the new ones. Who is taken away
+    leaves no trace, unless already marked present or absent."""
+    controlla_anno_aperto(evento.inizio)
+    persone = {p.pk: p for p in persone}
+    if not persone:
+        raise ValidationError("Scegli almeno un partecipante.")
+    prima = {p.persona_id: p for p in evento.partecipazioni.select_related("persona")}
+    tolti = [p for i, p in prima.items() if i not in persone]
+    segnati = set(evento.presenze.values_list("persona_id", flat=True))
+    for p in tolti:
+        if p.persona_id in segnati:
+            raise ValidationError(
+                f"{p.persona.nome} {p.persona.cognome} ha già una presenza segnata: "
+                "non si può togliere."
+            )
+        p.delete()
+    nuovi = [p for i, p in persone.items() if i not in prima]
+    for persona in nuovi:
+        Partecipazione.objects.create(evento=evento, persona=persona, cambiato_da=utente)
+    return nuovi
+
+
+def miei(utente, eventi) -> set[int]:
+    """Of these events, the user's own (DEC-432): they or a child of theirs are invited and did
+    not say they are not coming, or it is of a unit they serve, its patrols, its branch."""
+    from apps.permessi import policy
+
+    persone = [p.pk for p in policy.tutelati(utente) if policy.genitori_vedono(p, "scheda")]
+    propria = policy.persona_di(utente)
+    if propria is not None:
+        persone.append(propria.pk)
+    ids = [e.pk for e in eventi]
+    invitati = Partecipazione.objects.filter(
+        evento__in=ids, persona__in=persone, stato=StatoPartecipazione.INVITATO
+    )
+    trovati = set(invitati.values_list("evento_id", flat=True))
+    servite = policy._unita_servite(utente)
+    if not servite:
+        return trovati
+    tipi = Unita.objects.filter(pk__in=servite).values_list("tipo", flat=True)
+    branche = {BRANCA_DEL_TIPO[t] for t in tipi if t in BRANCA_DEL_TIPO}
+    non_viene = Partecipazione.objects.filter(persona=propria).exclude(
+        stato=StatoPartecipazione.INVITATO
+    )
+    delle_unita = (
+        Evento.objects.filter(pk__in=ids)
+        .filter(
+            Q(unita__in=servite)
+            | Q(squadriglia__unita__in=servite)
+            | Q(livello=Livello.BRANCA, branca__in=branche)
+        )
+        .exclude(pk__in=non_viene.values("evento_id"))
+    )
+    return trovati | set(delle_unita.values_list("pk", flat=True))
 
 
 LC = {TipoUnita.BRANCO, TipoUnita.CERCHIO, TipoUnita.BRANCO_CERCHIO}
@@ -300,9 +373,9 @@ def controlla_cerchia(cerchia: str, unita: list[Unita]) -> None:
 
 
 def puo_essere_online(cerchia: str, unita: list[Unita]) -> bool:
-    """The Co.Ca., the staffs and the parents (DEC-402); never the assembly, whose AGESCI
+    """The Co.Ca., the staffs, the parents (DEC-402) and people chosen (DEC-430); never the assembly, whose AGESCI
     templates want a place."""
-    if cerchia in (Cerchia.STAFF, Cerchia.GENITORI):
+    if cerchia in (Cerchia.STAFF, Cerchia.GENITORI, Cerchia.SCELTI):
         return True
     return (
         cerchia == Cerchia.TUTTI
@@ -314,7 +387,8 @@ def puo_essere_online(cerchia: str, unita: list[Unita]) -> bool:
 def controlla_modalita(modalita: str, cerchia: str, unita: list[Unita]) -> None:
     if modalita != Modalita.PRESENZA and not puo_essere_online(cerchia, unita):
         raise ValidationError(
-            "Online o mista può essere solo una riunione della Co.Ca., di staff o dei genitori."
+            "Online o mista può essere solo una riunione della Co.Ca., di staff, dei genitori "
+            "o con partecipanti selezionati."
         )
 
 
@@ -431,11 +505,13 @@ def titolo_riunione(serie: RiunioneRicorrente, unita: list[Unita] | None = None)
 
 
 def unita_della_serie(serie: RiunioneRicorrente) -> list[Unita]:
+    if serie.unita_id is None:
+        return []
     return [serie.unita, *serie.unita_insieme.exclude(pk=serie.unita_id)]
 
 
 @transaction.atomic
-def genera_riunioni(riunione: RiunioneRicorrente, utente) -> list[Evento]:
+def genera_riunioni(riunione: RiunioneRicorrente, utente, persone=()) -> list[Evento]:
     """One meeting per date, from `dal` to `al`, on the chosen weekday. Run again after a
     change: dates already there are kept (with their attendance)."""
     giorno = riunione.dal + timedelta(days=(riunione.giorno_settimana - riunione.dal.weekday()) % 7)
@@ -459,7 +535,7 @@ def genera_riunioni(riunione: RiunioneRicorrente, utente) -> list[Evento]:
                 modalita=riunione.modalita,
                 link=riunione.link,
             )
-            nuovi.append(crea(evento, [] if riunione.squadriglia_id else unita, utente))
+            nuovi.append(crea(evento, [] if riunione.squadriglia_id else unita, utente, persone))
         giorno += timedelta(days=7)
     return nuovi
 

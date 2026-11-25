@@ -2184,6 +2184,8 @@ export type Cerchia =
   | 'SOCI'
   /** The staff of one unit or of several (DEC-401). */
   | 'STAFF'
+  /** People chosen one by one (DEC-430). */
+  | 'SCELTI'
 /** Where a meeting is held (DEC-402): online it has only the link, mixed place and link. */
 export type ModalitaRiunione = 'PRESENZA' | 'ONLINE' | 'MISTA'
 export type LivelloEvento = 'GRUPPO' | 'BRANCA' | 'UNITA' | 'SQUADRIGLIA' | 'ESTERNO'
@@ -2262,6 +2264,8 @@ export interface Evento {
   annullato: boolean
   motivo_annullamento: string
   mie: MiaPartecipazione[]
+  /** The user's own, apart from what they only see (DEC-432). */
+  mio?: boolean
   puo_gestire: boolean
   /** The event's fee, also in instalments (DEC-77); null: no fee. */
   quota: QuotaEvento | null
@@ -2335,6 +2339,8 @@ export interface DettaglioEvento extends Evento {
   partecipanti: Partecipante[]
   puo_presenze: boolean
   puo_non_invitare: boolean
+  /** Of people chosen one by one, who is invited (DEC-430). */
+  puo_scegliere?: boolean
   /** A meeting deleted for good, and what goes with it (DEC-413). */
   puo_eliminare?: boolean
   si_perde?: string[]
@@ -2475,6 +2481,10 @@ export interface RiunioneIn {
   modalita?: ModalitaRiunione
   link?: string
   ordine_del_giorno?: string
+  /** Who is invited, one by one (DEC-430). */
+  persone?: number[]
+  /** An email to the invited (DEC-431). */
+  avvisa?: boolean
 }
 
 export interface SerieRiunioni {
@@ -2611,6 +2621,8 @@ export interface EventoCalendario {
   senza_ora_fine?: boolean
   luogo: string
   annullato: boolean
+  /** The user's own, apart from what they only see (DEC-432). */
+  mio?: boolean
 }
 
 /** The calendar as a file, for a capo in one of the views (DEC-286). */
@@ -4342,6 +4354,15 @@ export const api = {
     richiesta<PropostaIndirizzo[]>(`/api/v1/localita/cerca?testo=${encodeURIComponent(testo)}`),
   creaRiunioni: (dati: RiunioneIn) =>
     richiesta<Evento[]>('/api/v1/riunioni', { metodo: 'POST', corpo: dati }),
+  personeSelezionabili: () =>
+    richiesta<{ id: number; nome: string; cognome: string; unita: string }[]>(
+      '/api/v1/riunioni/selezionabili',
+    ),
+  scegliPartecipanti: (id: number, dati: { persone: number[]; avvisa: boolean }) =>
+    richiesta<DettaglioEvento>(`/api/v1/riunioni/${id}/partecipanti`, {
+      metodo: 'PUT',
+      corpo: dati,
+    }),
   serieRiunioni: () => richiesta<SerieRiunioni[]>('/api/v1/riunioni/serie'),
   modificaSerie: (
     id: number,

@@ -4,9 +4,12 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { api, nomeUnita, type Evento, type EventoIn, type Squadriglia, type Unita } from '@/api/qdc'
 import CopiaLocale from '@/components/CopiaLocale.vue'
+import LegendaMiei from '@/components/LegendaMiei.vue'
+import { MOMENTI, useFineCheSegue } from '@/composables/useFineCheSegue'
 import { useErrore } from '@/composables/useErrore'
 import { leggiConCache } from '@/offline/cache'
 import { giornoDaQuery, puoCreareEventi } from '@/eventi/creazione'
+import { conAltri } from '@/eventi/miei'
 import { quandoEvento } from '@/eventi/orario'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -98,6 +101,13 @@ const vuoto = (): EventoIn => ({
 })
 const modulo = ref<EventoIn | null>(null)
 
+useFineCheSegue({
+  inizio: () => modulo.value?.inizio,
+  fine: () => modulo.value?.fine,
+  imposta: (fine) => (modulo.value!.fine = fine),
+  ...MOMENTI,
+})
+
 const daLocale = (valore: string) => (valore ? new Date(valore).toISOString() : '')
 
 async function salva() {
@@ -114,6 +124,7 @@ async function salva() {
   await carica()
 }
 
+const distinti = computed(() => conAltri(eventi.value))
 const quando = (e: Evento) => quandoEvento(e)
 
 // Type, who it is for, circle and place: only the parts there are, never an empty one
@@ -313,8 +324,14 @@ const statoMio = {
     </form>
 
     <p v-if="!eventi.length && !inCorso" class="fg-2">Nessun evento.</p>
+    <LegendaMiei :eventi="eventi" />
     <ul class="list-group mb-7">
-      <li v-for="e in eventi" :key="e.id" class="list-group-item">
+      <li
+        v-for="e in eventi"
+        :key="e.id"
+        class="list-group-item"
+        :class="{ 'qdc-riga-mia': distinti && e.mio !== false }"
+      >
         <div class="d-flex flex-wrap align-items-baseline gap-3">
           <RouterLink
             :to="{ name: 'evento', params: { id: e.id } }"

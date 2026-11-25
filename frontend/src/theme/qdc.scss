@@ -200,6 +200,35 @@ body {
   text-overflow: ellipsis;
 }
 
+// One's own events apart from the others, where there are both (DEC-432).
+.qdc-evento-mio {
+  color: var(--ag-on-primary);
+  background: var(--ag-primary);
+  border: 1px solid var(--ag-primary);
+}
+
+.qdc-evento-altro {
+  color: var(--ag-primary);
+  background: var(--bs-bg-body);
+  border: 1px solid var(--ag-primary);
+}
+
+.qdc-evento-giorno.qdc-evento-mio,
+.qdc-evento-giorno.qdc-evento-altro {
+  padding: 0 0.15rem;
+  margin-bottom: 1px;
+  border-radius: 0.2rem;
+}
+
+.qdc-riga-mia {
+  border-inline-start: 0.25rem solid var(--ag-primary);
+}
+
+.qdc-scelta-persone {
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
 // The minutes in their preview window: the buttons stay in sight (DEC-373).
 .qdc-anteprima {
   max-height: 60dvh;

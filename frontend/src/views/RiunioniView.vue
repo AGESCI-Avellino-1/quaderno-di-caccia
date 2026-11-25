@@ -17,6 +17,11 @@ import ImmagineAnimale from '@/components/ImmagineAnimale.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
 import SceltaModalita from '@/components/SceltaModalita.vue'
+import { opzioniDa, type Opzione } from '@/components/sceltaDaElenco'
+import LegendaMiei from '@/components/LegendaMiei.vue'
+import SceltaPersone from '@/components/SceltaPersone.vue'
+import { ORE, useFineCheSegue } from '@/composables/useFineCheSegue'
+import { conAltri } from '@/eventi/miei'
 import { useErrore } from '@/composables/useErrore'
 import { giornoDaQuery, puoCreareRiunioni } from '@/eventi/creazione'
 import { leggiConCache } from '@/offline/cache'
@@ -26,7 +31,7 @@ import { useSessioneStore } from '@/stores/sessione'
 // (the CSQ), the councils of a unit and of the unit linked to it. Weekly series or a
 // single meeting, with the place and whether the uniform is worn; never a fee. Staff
 // meetings, of one unit or of several (DEC-401); Co.Ca., staff and parents also online or
-// mixed, with the link (DEC-402). The list
+// mixed, with the link (DEC-402); people chosen one by one, with a title (DEC-430). The list
 // is cached for offline use; creating needs the network. The API decides who may.
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
@@ -123,12 +128,15 @@ const LC = ['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO']
 const mancanti = ref<{ id: number; titolo: string; inizio: string }[]>([])
 const vuoto = () => ({
   perChi: (sessione.capo ? 'unita' : 'squadriglia') as
-    'unita' | 'squadriglia' | 'genitori' | 'assemblea' | 'staff',
+    'unita' | 'squadriglia' | 'genitori' | 'assemblea' | 'staff' | 'scelti',
   // A meeting of the parents (DEC-325): of the whole group, or of one or more units.
   diGruppo: false,
   unitaGenitori: [] as number[],
   // The staffs of one or more units, chosen freely (DEC-401).
   unitaStaff: [] as number[],
+  persone: [] as number[],
+  // Tell the invited (DEC-431); null: as proposed, until the user decides.
+  avvisa: null as boolean | null,
   unita: null as number | null,
   insieme: false,
   squadriglia: null as number | null,
@@ -162,13 +170,37 @@ const diCoca = computed(
   () => modulo.value?.perChi === 'unita' && unitaScelta.value?.tipo === 'COMUNITA_CAPI',
 )
 const diStaff = computed(() => modulo.value?.perChi === 'staff')
+const diScelti = computed(() => modulo.value?.perChi === 'scelti')
+// Who may be chosen (DEC-430), read when the form asks for it; the user is there already.
+const selezionabili = ref<Opzione[]>([])
+watch(diScelti, async (si) => {
+  if (!si) return
+  if (!selezionabili.value.length)
+    selezionabili.value = opzioniDa((await esegui(() => api.personeSelezionabili())) ?? [])
+  const io = sessione.profilo?.persona?.id
+  if (modulo.value && !modulo.value.persone.length && selezionabili.value.some((o) => o.id === io))
+    modulo.value.persone = [io!]
+})
+const avvisaProposto = computed(() => diScelti.value || !modulo.value?.ripeti)
+const avvisa = computed({
+  get: () => modulo.value?.avvisa ?? avvisaProposto.value,
+  set: (si: boolean) => {
+    if (modulo.value) modulo.value.avvisa = si
+  },
+})
+useFineCheSegue({
+  inizio: () => modulo.value?.ora_inizio,
+  fine: () => modulo.value?.ora_fine,
+  imposta: (fine) => (modulo.value!.ora_fine = fine),
+  ...ORE,
+})
 const conOrdineDelGiorno = computed(
   () =>
     modulo.value?.perChi === 'genitori' ||
-    ((diCoca.value || diStaff.value) && !modulo.value?.ripeti),
+    ((diCoca.value || diStaff.value || diScelti.value) && !modulo.value?.ripeti),
 )
 const puoEssereOnline = computed(
-  () => modulo.value?.perChi === 'genitori' || diCoca.value || diStaff.value,
+  () => modulo.value?.perChi === 'genitori' || diCoca.value || diStaff.value || diScelti.value,
 )
 const soloOnline = computed(
   () => puoEssereOnline.value && modulo.value?.online.modalita === 'ONLINE',
@@ -219,6 +251,7 @@ async function salva() {
   const assemblea = m.perChi === 'assemblea'
   const genitori = m.perChi === 'genitori' || assemblea
   const staff = m.perChi === 'staff'
+  const scelti = m.perChi === 'scelti'
   const online = puoEssereOnline.value ? m.online : { modalita: 'PRESENZA' as const, link: '' }
   const fatte = await esegui(() =>
     api.creaRiunioni({
@@ -229,9 +262,11 @@ async function salva() {
           ? 'GENITORI'
           : staff
             ? 'STAFF'
-            : perSquadriglia
-              ? 'TUTTI'
-              : m.cerchia,
+            : scelti
+              ? 'SCELTI'
+              : perSquadriglia
+                ? 'TUTTI'
+                : m.cerchia,
       di_gruppo: assemblea || (genitori && m.diGruppo),
       unita: genitori
         ? m.diGruppo || assemblea
@@ -239,7 +274,7 @@ async function salva() {
           : m.unitaGenitori
         : staff
           ? m.unitaStaff
-          : perSquadriglia
+          : perSquadriglia || scelti
             ? []
             : [m.unita!, ...(m.insieme && collegata.value ? [collegata.value.id] : [])],
       squadriglia_id: perSquadriglia ? m.squadriglia : null,
@@ -254,6 +289,8 @@ async function salva() {
       modalita: online.modalita,
       link: online.link,
       ordine_del_giorno: conOrdineDelGiorno.value ? m.ordine_del_giorno : '',
+      persone: scelti ? m.persone : [],
+      avvisa: !genitori && avvisa.value,
     }),
   )
   if (!fatte) return
@@ -335,6 +372,7 @@ const perChi = (e: Evento) =>
   ]
     .filter(Boolean)
     .join(' · ')
+const distinti = computed(() => conAltri(riunioni.value))
 const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
 </script>
 
@@ -381,6 +419,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             <option v-if="sessione.capo" value="unita">Di un'unità</option>
             <option v-if="squadriglie.length" value="squadriglia">Di una squadriglia</option>
             <option v-if="sessione.capo" value="staff">Di staff</option>
+            <option v-if="sessione.capo" value="scelti">Partecipanti selezionati</option>
             <option v-if="sessione.capo" value="genitori">Dei genitori</option>
             <option v-if="sessione.capogruppo" value="assemblea">Assemblea dei soci</option>
           </select>
@@ -448,6 +487,12 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             Sono invitati i capi degli staff scelti. La vedono solo loro e i capigruppo.
           </p>
         </fieldset>
+        <div v-else-if="modulo.perChi === 'scelti'" class="md:col-8">
+          <SceltaPersone id="riu-persone" v-model="modulo.persone" :opzioni="selezionabili" />
+          <p class="form-text mb-0">
+            La vedono solo loro, i genitori dei minorenni, tu e i capigruppo.
+          </p>
+        </div>
         <p v-else-if="modulo.perChi === 'assemblea'" class="form-text md:col-8 mb-0">
           Sono invitati i capi, i rover e le scolte maggiorenni e i genitori. Gli invitati ricevono
           l'email quando invii la convocazione dalla pagina dell'assemblea.
@@ -550,6 +595,7 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             id="riu-fine"
             v-model="modulo.ora_fine"
             type="time"
+            :min="modulo.ora_inizio"
             class="form-control form-control-sm"
             required
           />
@@ -591,25 +637,37 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             etichetta="Ordine del giorno (facoltativo)"
           />
         </div>
-        <p v-else-if="diCoca || diStaff" class="form-text col-12 mb-0">
+        <p v-else-if="diCoca || diStaff || diScelti" class="form-text col-12 mb-0">
           L'ordine del giorno lo scrivi poi sulla singola riunione.
         </p>
         <div class="col-12">
-          <label class="form-label small" for="riu-titolo">Titolo (facoltativo)</label>
+          <label class="form-label small" for="riu-titolo">{{
+            diScelti ? 'Titolo' : 'Titolo (facoltativo)'
+          }}</label>
           <input
             id="riu-titolo"
             v-model="modulo.titolo"
             class="form-control form-control-sm"
-            placeholder="Di base: «Riunione di…», «Consiglio Capi»…"
+            :required="diScelti"
+            :placeholder="diScelti ? '' : 'Di base: «Riunione di…», «Consiglio Capi»…'"
           />
         </div>
       </div>
-      <p v-if="!diStaff" class="form-text mt-3 mb-0">
-        Le riunioni non hanno quote e non si annunciano per email: le famiglie le vedono nell'app e
-        nel calendario. Un'email parte solo se sposti o annulli una singola riunione.
+      <div v-if="!unaAllaVolta" class="form-field mt-3 mb-0">
+        <input id="riu-avvisa" v-model="avvisa" type="checkbox" class="check" />
+        <label for="riu-avvisa">Avvisa gli invitati</label>
+      </div>
+      <p v-if="!unaAllaVolta" class="form-text mb-0">
+        Un'email agli invitati e ai genitori dei minorenni<template v-if="modulo.ripeti"
+          >, una sola per tutte le riunioni</template
+        >. Un'altra parte se sposti o annulli una singola riunione. Le riunioni non hanno quote.
       </p>
       <div class="d-flex gap-3 mt-3">
-        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
+        <button
+          type="submit"
+          class="btn btn-sm btn-solid theme-primary"
+          :disabled="inCorso || (diScelti && !modulo.persone.length)"
+        >
           Crea
         </button>
         <button type="button" class="btn btn-sm btn-link" @click="modulo = null">Annulla</button>
@@ -617,8 +675,14 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
     </form>
 
     <p v-if="!riunioni.length && !inCorso" class="fg-2">Nessuna riunione.</p>
+    <LegendaMiei :eventi="riunioni" />
     <ul class="list-group mb-7">
-      <li v-for="r in riunioni" :key="r.id" class="list-group-item">
+      <li
+        v-for="r in riunioni"
+        :key="r.id"
+        class="list-group-item"
+        :class="{ 'qdc-riga-mia': distinti && r.mio !== false }"
+      >
         <div class="d-flex flex-wrap align-items-baseline gap-3">
           <RouterLink
             :to="{ name: 'riunione', params: { id: r.id } }"

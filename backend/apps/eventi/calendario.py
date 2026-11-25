@@ -13,7 +13,7 @@ from django.utils import timezone
 from apps.organizzazione.models import Branca, TipoUnita
 from apps.permessi import policy
 
-from .models import Evento, Livello, Modalita, StatoPartecipazione
+from .models import Cerchia, Evento, Livello, Modalita, StatoPartecipazione
 
 # A capo chooses among these views, the first by default (DEC-143, DEC-334); everyone else
 # has one. A feed without a view keeps giving "unita": links people already subscribed to.
@@ -64,7 +64,10 @@ def eventi_del_calendario(utente, vista: str = "unita") -> QuerySet[Evento]:
                 | Q(unita__tipo=TipoUnita.COMUNITA_CAPI)
                 | Q(livello=Livello.BRANCA, branca=Branca.COCA)
             )
-    return Evento.objects.filter(filtro).distinct().order_by("inizio")
+    eventi = Evento.objects.filter(filtro).distinct().order_by("inizio")
+    # People chosen one by one: not for the parents of an adult (DEC-430).
+    riservate = policy.eventi_visibili(utente).filter(cerchia=Cerchia.SCELTI)
+    return eventi.exclude(Q(cerchia=Cerchia.SCELTI) & ~Q(pk__in=riservate.values("pk")))
 
 
 def _testo(valore: str) -> str:
@@ -117,7 +120,10 @@ def _descrizione(evento) -> str:
     tipo = tipo_di(evento)
     if tipo in (TipoVerbale.GENITORI, TipoVerbale.ASSEMBLEA):
         parti.append(testo_ordine_del_giorno(evento))
-    elif tipo in (TipoVerbale.COCA, TipoVerbale.STAFF) and evento.ordine_del_giorno.strip():
+    elif (
+        tipo in (TipoVerbale.COCA, TipoVerbale.STAFF, TipoVerbale.SCELTI)
+        and evento.ordine_del_giorno.strip()
+    ):
         parti.append(f"Ordine del giorno nell'app: {settings.FRONTEND_URL}/riunioni/{evento.pk}")
     return "\n\n".join(p for p in parti if p)
 

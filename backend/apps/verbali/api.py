@@ -130,7 +130,11 @@ def _gestibile(request, evento_id: int) -> Verbale:
 
 
 def _candidati(evento: Evento) -> list[Persona]:
-    """The invited and the capi (DEC-324)."""
+    """The invited and the capi (DEC-324); only the invited, of people chosen (DEC-430)."""
+    if servizi.tipo_di(evento) == TipoVerbale.SCELTI:
+        return list(
+            Persona.objects.filter(partecipazioni__evento=evento).order_by("cognome", "nome")
+        )
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
     return list(
         Persona.objects.filter(

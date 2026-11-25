@@ -9,6 +9,7 @@ import {
   type Compleanno,
   type EventoCalendario,
 } from '@/api/qdc'
+import LegendaMiei from '@/components/LegendaMiei.vue'
 import Icona from '@/components/Icona.vue'
 import MioCalendario from '@/components/MioCalendario.vue'
 import { useErrore } from '@/composables/useErrore'
@@ -24,6 +25,7 @@ import {
   type ModoCalendario,
 } from '@/eventi/calendario'
 import { puoCreareEventi, puoCreareRiunioni } from '@/eventi/creazione'
+import { conAltri } from '@/eventi/miei'
 import { quandoEvento } from '@/eventi/orario'
 import { useSessioneStore } from '@/stores/sessione'
 
@@ -80,9 +82,14 @@ const chiudiMenu = (evento: Event) => {
 onMounted(() => document.addEventListener('click', chiudiMenu))
 onBeforeUnmount(() => document.removeEventListener('click', chiudiMenu))
 
+// Only the last request counts: an older answer may come later.
+let richiesta = 0
 async function carica() {
+  const questa = ++richiesta
   if (modo.value === 'compleanni') {
-    compleanni.value = (await esegui(() => api.compleanniDelCalendario())) ?? []
+    const prossimi = await esegui(() => api.compleanniDelCalendario())
+    if (questa !== richiesta) return
+    compleanni.value = prossimi ?? []
     caricato.value = true
     return
   }
@@ -100,6 +107,7 @@ async function carica() {
       ? esegui(() => api.compleanniDelCalendario(dal, al))
       : null,
   ])
+  if (questa !== richiesta) return
   eventi.value = trovati ?? []
   compleanni.value = delMese ?? []
   caricato.value = true
@@ -145,6 +153,9 @@ function vaiAOggi() {
 const delGiornoScelto = computed(() =>
   eventiDelGiorno(eventi.value, new Date(`${scelto.value}T12:00:00`)),
 )
+
+// One's own apart from the others, in the month and in the list (DEC-432).
+const distinti = computed(() => conAltri(eventi.value))
 
 const quando = (e: EventoCalendario) => quandoEvento(e, true)
 
@@ -241,6 +252,7 @@ function descriviGiorno(giorno: Date): string {
         </button>
         <button type="button" class="btn btn-sm btn-link" @click="vaiAOggi">Oggi</button>
       </div>
+      <LegendaMiei :eventi="eventi" mese />
       <table class="qdc-calendario mb-5">
         <thead>
           <tr>
@@ -275,7 +287,11 @@ function descriviGiorno(giorno: Date): string {
                   v-for="e in eventiDelGiorno(eventi, giorno)"
                   :key="e.id"
                   class="qdc-evento-giorno"
-                  :class="{ 'text-decoration-line-through': e.annullato }"
+                  :class="{
+                    'text-decoration-line-through': e.annullato,
+                    'qdc-evento-mio': distinti && e.mio !== false,
+                    'qdc-evento-altro': distinti && e.mio === false,
+                  }"
                   >{{ e.titolo }}</span
                 >
               </button>
@@ -355,6 +371,7 @@ function descriviGiorno(giorno: Date): string {
       <p v-else-if="caricato" class="small fg-2">Nessun compleanno nei prossimi 30 giorni.</p>
     </template>
 
+    <LegendaMiei v-if="modo === 'elenco'" :eventi="eventi" />
     <ul
       v-if="modo === 'elenco' || (modo === 'mese' && delGiornoScelto.length)"
       class="list-group mb-5"
@@ -364,6 +381,7 @@ function descriviGiorno(giorno: Date): string {
         v-for="e in modo === 'elenco' ? eventi : delGiornoScelto"
         :key="e.id"
         class="list-group-item"
+        :class="{ 'qdc-riga-mia': distinti && e.mio !== false }"
       >
         <RouterLink :to="`/eventi/${e.id}`" class="fw-bold">
           <span :class="{ 'text-decoration-line-through': e.annullato }">{{ e.titolo }}</span>

@@ -463,6 +463,12 @@ implements them:
   copy of `public/`, out of the precache; the same page is inside `#app` in `index.html`; a new
   iPhone size goes in `SCHERMI`. `QDC_NOME_AVVIO` is a build argument, like `QDC_LOGO`. So is
   `QDC_DURATA_AVVIO` (DEC-333): `pwa/avvio.ts` keeps that page on top in the installed app only.
+- People chosen one by one (DEC-430, `Cerchia.SCELTI`): a meeting of level UNITA with no unit, its
+  participants are the list itself; who created it and the capigruppo manage it
+  (`policy.puo_gestire_selezionati`), only who is invited, the parents of the minors and they see
+  it, never the medical forms. The email at creation is a choice (`avvisi.riunioni_nuove`,
+  DEC-431). `mio` tells one's own events from the others (`eventi.servizi.miei`, DEC-432); the end
+  follows the start in the forms (`composables/useFineCheSegue.ts`, DEC-429).
 - Minutes (DEC-322…DEC-331, `apps/verbali`): online only, never cached. Attachments go to the
   Drive in 8 MB pieces through the app (the proxies stop at 20 MB, the session address stays on
   the server) and come back as a stream: this is why gunicorn runs with threads (a sync worker

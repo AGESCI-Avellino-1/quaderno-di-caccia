@@ -3,7 +3,8 @@
 Nella Home, in **Profilo** (o nel menu del profilo), tocca **Privacy e preferenze**. In **Le email che ricevi**
 scegli quali ricevere:
 
-- eventi: nuovi eventi, cambi di date o luogo, annullamenti;
+- eventi: nuovi eventi, nuove riunioni (se chi le crea avvisa gli invitati), cambi di date o luogo,
+  annullamenti;
 - promemoria delle quote in scadenza;
 - avvisi per i 18 anni (tuoi o dei tuoi figli);
 - avvisi della bacheca, quando chi li pubblica li manda anche per email.

@@ -5,6 +5,36 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.46.0 — 25 novembre 2026
+
+### Novità
+
+**Partecipanti selezionati** ([#100](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/100)): creando una riunione, in **Di chi** c'è **Partecipanti selezionati**: si scelgono direttamente le persone, e il titolo è obbligatorio. Lo staff sceglie tra i ragazzi/e delle sue unità (anche collegate) e tutti i capi, i capigruppo tra tutti i soci. La vedono solo gli invitati, i genitori dei minorenni invitati, chi l'ha creata e i capigruppo; la gestiscono chi l'ha creata e i capigruppo, che dalla pagina della riunione aggiungono e tolgono partecipanti. Singola o in serie, con ordine del giorno, verbale, uniforme, anche online o mista.
+
+**Avvisa gli invitati** ([#100](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/100)): creando una riunione si può mandare un'email agli invitati e ai genitori dei minorenni. La spunta è accesa per le riunioni singole e con partecipanti selezionati, spenta per le altre serie; per una serie parte una sola email. Riunioni dei genitori e assemblea hanno come prima la convocazione.
+
+**I miei eventi e gli altri** ([#101](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/101)): chi vede anche eventi a cui non è invitato, come i capigruppo, distingue i suoi (propri, dei figli e delle unità in cui è in servizio): fondo pieno nel mese, barra a lato in Prossimi eventi e nelle pagine Eventi e Riunioni.
+
+**Fine proposta dopo l'inizio** ([#99](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/99)): in riunioni ed eventi, cambiando l'inizio la fine si sposta e la durata resta la stessa; in un evento nuovo si propone due ore dopo.
+
+### Correzioni
+
+- **Calendario**: cambiando vista mentre il calendario si caricava potevano restare gli eventi della vista di prima.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.46.0
+```
+
+Una migrazione del database, applicata dallo script.
+
+### Documentazione
+
+Il capitolo sulle riunioni spiega i partecipanti selezionati, l'avviso agli invitati e i colori del calendario.
+
+Provata con i test e nel browser con i dati di prova. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.45.0 — 24 novembre 2026
 
 ### Novità

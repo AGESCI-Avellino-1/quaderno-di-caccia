@@ -13,12 +13,14 @@ from ninja.errors import HttpError
 from ninja.responses import Status
 from ninja.throttling import AuthRateThrottle
 
+from apps.anagrafica.models import Persona
+from apps.anagrafica.servizi import con_unita
 from apps.impostazioni.html import in_testo, pulisci
 from apps.organizzazione.models import Squadriglia, Unita
 from apps.permessi import policy
 
 from . import avvisi, indirizzi, servizi
-from .api import EventoOut, LocalitaOut, _errore, _evento_out
+from .api import DettaglioOut, EventoOut, LocalitaOut, _dettaglio, _errore, _evento_out
 from .models import (
     CERCHIE_CONVOCATE,
     Cerchia,
@@ -172,6 +174,10 @@ class RiunioneIn(Schema):
     # Of a single meeting of the Co.Ca. or of the parents (DEC-362); in a series, written later
     # on each meeting.
     ordine_del_giorno: str = ""
+    # Who is invited, one by one (DEC-430).
+    persone: list[int] = []
+    # An email to the invited (DEC-431).
+    avvisa: bool = False
 
 
 class SerieOut(Schema):
@@ -234,6 +240,8 @@ def _puo_creare(user, unita: list[Unita], squadriglia, cerchia: str, livello=Non
 
 
 def _puo_gestire_serie(user, serie: RiunioneRicorrente) -> bool:
+    if serie.cerchia == Cerchia.SCELTI:
+        return policy.puo_gestire_selezionati(user, serie.creata_da_id)
     return _puo_creare(user, servizi.unita_della_serie(serie), serie.squadriglia, serie.cerchia)
 
 
@@ -248,6 +256,8 @@ def _localita(request, dati: RiunioneIn) -> Localita | None:
 
 
 def _unita_e_squadriglia(dati: RiunioneIn) -> tuple[list[Unita], Squadriglia | None]:
+    if dati.cerchia == Cerchia.SCELTI:
+        return [], None
     if dati.squadriglia_id:
         squadriglia = get_object_or_404(Squadriglia, pk=dati.squadriglia_id)
         return [squadriglia.unita], squadriglia
@@ -283,6 +293,7 @@ def crea_riunioni(request, dati: RiunioneIn):
         raise HttpError(400, "Solo una riunione dei genitori è di tutto il gruppo.")
     unita, squadriglia = _unita_e_squadriglia(dati)
     cerchia = Cerchia.TUTTI if squadriglia else dati.cerchia
+    scelti = cerchia == Cerchia.SCELTI
     if not _puo_creare(request.auth, unita, squadriglia, cerchia):
         raise HttpError(403, "Non puoi creare questa riunione.")
     try:
@@ -291,6 +302,11 @@ def crea_riunioni(request, dati: RiunioneIn):
     except ValidationError as errore:
         raise _errore(errore) from errore
     link = _link(dati)
+    persone: list[Persona] = []
+    if scelti:
+        if not dati.titolo.strip():
+            raise HttpError(400, "Scrivi il titolo della riunione.")
+        persone = _selezionate(request.auth, dati.persone)
     with transaction.atomic():
         localita = _localita(request, dati)
         if dati.giorno is not None:
@@ -312,7 +328,7 @@ def crea_riunioni(request, dati: RiunioneIn):
             try:
                 if evento.fine <= evento.inizio:
                     raise ValidationError("L'ora di fine deve seguire quella di inizio.")
-                creati = [servizi.crea(evento, [] if squadriglia else unita, request.auth)]
+                creati = [servizi.crea(evento, [] if squadriglia else unita, request.auth, persone)]
                 _con_ordine_del_giorno(creati[0], dati)
             except ValidationError as errore:
                 raise _errore(errore) from errore
@@ -320,7 +336,7 @@ def crea_riunioni(request, dati: RiunioneIn):
             if dati.giorno_settimana is None or not dati.dal or not dati.al:
                 raise HttpError(400, "Scegli il giorno della settimana e le date.")
             serie = RiunioneRicorrente(
-                unita=unita[0],
+                unita=unita[0] if unita else None,
                 squadriglia=squadriglia,
                 cerchia=cerchia,
                 titolo=dati.titolo.strip(),
@@ -339,10 +355,60 @@ def crea_riunioni(request, dati: RiunioneIn):
                 serie.full_clean()
                 serie.save()
                 serie.unita_insieme.set(unita[1:])
-                creati = servizi.genera_riunioni(serie, request.auth)
+                creati = servizi.genera_riunioni(serie, request.auth, persone)
             except ValidationError as errore:
                 raise _errore(errore) from errore
+        if dati.avvisa:
+            transaction.on_commit(lambda: avvisi.riunioni_nuove(creati))
     return Status(201, [_evento_out(request.auth, e) for e in creati])
+
+
+# --- People chosen one by one (DEC-430) -------------------------------------------------------
+
+
+class Selezionabile(Schema):
+    id: int
+    nome: str
+    cognome: str
+    unita: str
+
+
+@router.get("/riunioni/selezionabili", response=list[Selezionabile])
+def selezionabili(request):
+    return con_unita(policy.persone_selezionabili(request.auth))
+
+
+def _selezionate(user, ids: list[int], gia=()) -> list[Persona]:
+    """`gia`: already invited, also by who may choose more people than this user."""
+    possibili = set(policy.persone_selezionabili(user).values_list("pk", flat=True)) | set(gia)
+    if not set(ids) <= possibili:
+        raise HttpError(400, "Non puoi scegliere una di queste persone.")
+    return list(Persona.objects.filter(pk__in=ids))
+
+
+class SceltiIn(Schema):
+    persone: list[int]
+    avvisa: bool = False
+
+
+@router.put("/riunioni/{evento_id}/partecipanti", response=DettaglioOut)
+def scegli_partecipanti(request, evento_id: int, dati: SceltiIn):
+    evento = get_object_or_404(
+        policy.eventi_visibili(request.auth), pk=evento_id, cerchia=Cerchia.SCELTI
+    )
+    if not policy.puo_gestire_evento(request.auth, evento):
+        raise HttpError(403, "Non puoi cambiare i partecipanti di questa riunione.")
+    if evento.annullato_il:
+        raise HttpError(400, "La riunione è annullata.")
+    gia = evento.partecipazioni.values_list("persona_id", flat=True)
+    persone = _selezionate(request.auth, dati.persone, gia)
+    try:
+        nuovi = servizi.cambia_scelti(evento, persone, request.auth)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    if dati.avvisa and nuovi:
+        transaction.on_commit(lambda: avvisi.riunioni_nuove([evento], nuovi))
+    return _dettaglio(request.auth, evento)
 
 
 def _crea_riunione_convocata(request, dati: RiunioneIn):
@@ -404,7 +470,11 @@ def elenco_serie(request, unita: int | None = None):
         serie = serie.filter(unita_id=unita)
     serie = serie.filter(al__gte=timezone.localdate()).order_by("giorno_settimana", "ora_inizio")
     if policy.e_capo(request.auth):
-        return [_serie_out(request.auth, s) for s in serie]
+        return [
+            _serie_out(request.auth, s)
+            for s in serie
+            if s.cerchia != Cerchia.SCELTI or _puo_gestire_serie(request.auth, s)
+        ]
     return [_serie_out(request.auth, s) for s in serie if _puo_gestire_serie(request.auth, s)]
 
 

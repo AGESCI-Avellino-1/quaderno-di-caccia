@@ -8,6 +8,16 @@ Nel **Calendario** la voce **Tutti i miei eventi**, già scelta all'apertura, mo
 sei invitato, quelli delle tue unità e quelli della Comunità capi. Gli altri eventi di gruppo sono
 in **Tutto il gruppo**.
 
+Dove vedi anche eventi e riunioni a cui non sei invitato, i tuoi (quelli a cui siete invitati tu o i
+tuoi figli, e quelli delle unità in cui sei in servizio) si distinguono: nel mese hanno il fondo
+pieno e gli altri solo il bordo; in **Prossimi eventi** e nelle pagine Eventi e Riunioni hanno una
+barra colorata a sinistra.
+
+:::{container} schermate
+![I miei eventi e gli altri sul telefono](../img/capo/calendario-miei-telefono.png){.telefono width="30%"}
+![I miei eventi e gli altri sul computer](../img/capo/calendario-miei-computer.png){.computer width="65%"}
+:::
+
 Nel calendario del mese, ogni giorno da oggi in poi ha in alto a destra un piccolo **+**: apre
 **Nuova riunione** o **Nuovo evento** con quel giorno già scelto (il tipo di riunione lo scegli nel
 modulo). Se puoi creare solo riunioni, come un capo squadriglia, il **+** apre subito il modulo.
@@ -46,13 +56,14 @@ Comunità capi. Se non la vuoi, spegni **Compleanni del giorno** in **Privacy e 
 ## Creare le riunioni
 
 1. Tocca **Nuove riunioni**.
-2. In **Di chi** scegli **Di un'unità** (anche la Comunità capi), **Di staff** o **Di una
-   squadriglia**.
+2. In **Di chi** scegli **Di un'unità** (anche la Comunità capi), **Di staff**, **Di una
+   squadriglia** o **Partecipanti selezionati**.
 3. Per un'unità scegli l'**Unità** e **Chi è invitato**: tutta l'unità oppure, per un reparto,
    l'Alta Squadriglia, il Consiglio Capi o il Con.Ca.Vi., per un branco o un cerchio il
    Consiglio degli Anziani. Se l'unità è collegata a un'altra, puoi spuntare **Insieme a…**.
 4. In **Quando** scegli **Ogni settimana** (il giorno, **Dal** e **Al**: per esempio ogni sabato
-   dal 1° ottobre al 31 maggio) oppure **Una volta** (il **Giorno**), poi **Dalle** e **Alle**.
+   dal 1° ottobre al 31 maggio) oppure **Una volta** (il **Giorno**), poi **Dalle** e **Alle**. Se
+   cambi l'inizio, la fine si sposta e la riunione dura lo stesso tempo; puoi sempre cambiarla.
 5. Scegli la **Località** tra quelle del gruppo, oppure **Nuova località…** e scrivine nome e
    indirizzo: entra nell'elenco del gruppo. Una riunione della Comunità capi o di staff può essere
    anche **Online** o **Mista**: in **Come** scegli come si tiene e scrivi il **Link della
@@ -60,7 +71,10 @@ Comunità capi. Se non la vuoi, spegni **Compleanni del giorno** in **Privacy e 
 6. Scegli **Con l'uniforme** o **Senza uniforme**. Il **Titolo** è facoltativo.
 7. Per una sola riunione della Comunità capi o di staff puoi scrivere subito l'**Ordine del giorno**. Se è una
    riunione di ogni settimana, lo scrivi poi sulla singola riunione.
-8. Tocca **Crea**.
+8. **Avvisa gli invitati** manda un'email agli invitati e ai genitori dei minorenni: è già
+   spuntata per una riunione sola, non per una serie. Per una serie parte una sola email con giorno,
+   orari e periodo.
+9. Tocca **Crea**.
 
 :::{container} schermate
 ![Nuove riunioni sul telefono](../img/capo/riunioni-nuove-telefono.png){.telefono width="30%"}
@@ -68,9 +82,30 @@ Comunità capi. Se non la vuoi, spegni **Compleanni del giorno** in **Privacy e 
 :::
 
 Le riunioni dell'unità le crea lo staff, quelle della Comunità capi i capigruppo, quelle di
-squadriglia il capo squadriglia (o chi ha delegato) e lo staff del reparto. Le riunioni non si
-annunciano per email: le famiglie ricevono un'email solo quando sposti o annulli una singola
-riunione.
+squadriglia il capo squadriglia (o chi ha delegato) e lo staff del reparto. Un'altra email parte
+quando sposti o annulli una singola riunione. Per le riunioni dei genitori e l'assemblea non c'è la
+spunta: gli invitati ricevono la convocazione.
+
+## Partecipanti selezionati
+
+In **Di chi** scegli **Partecipanti selezionati** quando vuoi invitare proprio alcune persone, per
+esempio un gruppo di lavoro. Le cerchi per nome e le spunti; tu sei già tra loro e puoi toglierti.
+Il **Titolo** è obbligatorio.
+
+Lo staff sceglie tra i ragazzi/e delle sue unità (anche collegate) e tutti i capi; i capigruppo tra
+tutti i soci. La riunione la vedono solo gli invitati, i genitori dei minorenni invitati, chi l'ha
+creata e i capigruppo, e sono loro a leggere ordine del giorno e verbale. La gestiscono, presenze
+comprese, chi l'ha creata e i capigruppo.
+
+Per aggiungere o togliere qualcuno apri la riunione e, in **Partecipanti**, tocca **Cambia i
+partecipanti**: **Avvisa chi aggiungi** manda l'email ai nuovi; chi togli non vede più la riunione.
+Non si toglie chi ha già una presenza segnata. In una serie l'elenco è lo stesso per tutte le
+riunioni, poi lo cambi su ognuna. Chi cambia unità resta invitato, chi lascia il gruppo no.
+
+:::{container} schermate
+![Partecipanti selezionati sul telefono](../img/capo/riunioni-selezionati-telefono.png){.telefono width="30%"}
+![Partecipanti selezionati sul computer](../img/capo/riunioni-selezionati-computer.png){.computer width="65%"}
+:::
 
 ## Le riunioni di staff
 

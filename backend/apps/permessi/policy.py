@@ -434,7 +434,10 @@ def puo_registrare_firma_sanitaria(user, persona: Persona) -> bool:
 
 def puo_stampare_schede_evento(user, evento) -> bool:
     """The medical forms of an event's participants, with the contacts given for it
-    (DEC-53): the capi who manage the event (DEC-195), never a CSQ."""
+    (DEC-53): the capi who manage the event (DEC-195), never a CSQ. Never of people chosen
+    one by one: inviting someone must not open their medical form (DEC-430)."""
+    if evento.cerchia == "SCELTI":
+        return False
     return e_capo_censito(user) and not e_capo_in_attesa(user) and puo_gestire_evento(user, evento)
 
 
@@ -562,6 +565,8 @@ def puo_indicare_redattore(user, evento) -> bool:
     tipo = tipo_di(evento)
     if tipo is None or e_capo_in_attesa(user):
         return False
+    if tipo == TipoVerbale.SCELTI:
+        return puo_gestire_evento(user, evento)
     if tipo in (TipoVerbale.COCA, TipoVerbale.ASSEMBLEA):
         return e_capogruppo(user)
     if tipo == TipoVerbale.GENITORI:
@@ -613,6 +618,13 @@ def puo_leggere_verbale(user, verbale) -> bool:
             and persona is not None
             and evento.partecipazioni.filter(persona=persona).exists()
         )
+    if tipo == TipoVerbale.SCELTI:
+        # Who sees the meeting, not every capo (DEC-430).
+        if e_capo_in_attesa(user):
+            return False
+        if puo_indicare_redattore(user, evento) or e_redattore(user, verbale):
+            return True
+        return verbale.definitivo and eventi_visibili(user).filter(pk=evento.pk).exists()
     if e_capo(user) and not e_capo_in_attesa(user):
         return True
     if puo_indicare_redattore(user, evento) or e_redattore(user, verbale):
@@ -1322,6 +1334,8 @@ def puo_creare_evento(
         if squadriglie_guidate(user).filter(pk=squadriglia.pk).exists():
             return True
         return tipo == "RIUNIONE" and _delegato(user, squadriglia)
+    if cerchia == "SCELTI":
+        return not e_capo_in_attesa(user) and bool(_unita_servite(user))
     if cerchia != "TUTTI":
         return any(_staff_di_tutte(user, [u]) for u in unita_ids)
     return _staff_di_tutte(user, unita_ids)
@@ -1338,6 +1352,8 @@ def puo_gestire_evento(user, evento) -> bool:
     CSQ is managed by the CSQ and the reparto staff."""
     if evento.livello == "ESTERNO":
         return puo_gestire_evento_buonacaccia(user, evento)
+    if evento.cerchia == "SCELTI":
+        return e_capogruppo(user) or puo_gestire_selezionati(user, evento.creato_da_id)
     return puo_creare_evento(
         user,
         evento.livello,
@@ -1349,12 +1365,35 @@ def puo_gestire_evento(user, evento) -> bool:
     )
 
 
+def puo_gestire_selezionati(user, creatore_id: int | None) -> bool:
+    """Who created the meeting, while a capo, and the capigruppo (DEC-430)."""
+    if e_capogruppo(user):
+        return True
+    return creatore_id is not None and creatore_id == user.pk and e_capo_censito(user)
+
+
+def persone_selezionabili(user):
+    """Who may be chosen for a meeting (DEC-430): by the capigruppo every member; by the staff
+    the ragazzi of their units, linked ones too, and every capo. Nobody else chooses."""
+    attive = Appartenenza.objects.attive()
+    if not e_capogruppo(user):
+        servite = _unita_servite(user)
+        if not servite or e_capo_in_attesa(user):
+            return Persona.objects.none()
+        attive = attive.filter(
+            Q(ruolo=RuoloAppartenenza.CAPO) | Q(ruolo=RuoloAppartenenza.RAGAZZO, unita__in=servite)
+        )
+    return Persona.objects.filter(pk__in=attive.values("persona_id")).order_by("cognome", "nome")
+
+
 def puo_segnare_presenze(user, evento) -> bool:
     """Capi only: the staff of the units involved; any capo at a group event. The CSQ
     marks the patrol's meetings (DEC-138). At the assembly the capigruppo or who they
     chose, whoever that is (DEC-326)."""
     if evento.cerchia == "SOCI":
         return e_capogruppo(user) or _segna_le_presenze(user, evento)
+    if evento.cerchia == "SCELTI":
+        return puo_gestire_evento(user, evento)
     if (
         evento.livello == "SQUADRIGLIA"
         and evento.tipo == "RIUNIONE"
@@ -1375,6 +1414,8 @@ def puo_non_invitare(user, evento) -> bool:
     records it."""
     if evento.livello == "ESTERNO":
         return False  # who takes part is decided on BuonaCaccia
+    if evento.cerchia == "SCELTI":
+        return False  # taken away from the list, with no reason (DEC-430)
     if evento.livello == "GRUPPO":
         return e_capogruppo(user)
     if evento.livello == "SQUADRIGLIA":
@@ -1385,7 +1426,9 @@ def puo_non_invitare(user, evento) -> bool:
 def eventi_visibili(user):
     """The capi see every event; everyone else the events they or their children are
     involved in (invited, not taking part or not invited, with the reason). A staff
-    meeting only who is invited, the staff of its units and the capigruppo (DEC-401)."""
+    meeting only who is invited, the staff of its units and the capigruppo (DEC-401); a
+    meeting of people chosen who is invited, the parents of the minors invited, who created it
+    and the capigruppo (DEC-430)."""
     from apps.eventi.models import Evento
 
     if e_capo(user):
@@ -1393,12 +1436,29 @@ def eventi_visibili(user):
             return Evento.objects.all()
         return Evento.objects.exclude(
             Q(cerchia="STAFF") & ~Q(pk__in=_riunioni_di_staff_visibili(user))
-        )
+        ).exclude(Q(cerchia="SCELTI") & ~Q(pk__in=_selezionati_visibili(user)))
     persone = [p.pk for p in tutelati(user) if genitori_vedono(p, "scheda")]
     propria = persona_di(user)
     if propria is not None:
         persone.append(propria.pk)
-    return Evento.objects.filter(partecipazioni__persona_id__in=persone).distinct()
+    return (
+        Evento.objects.filter(partecipazioni__persona_id__in=persone)
+        .exclude(Q(cerchia="SCELTI") & ~Q(pk__in=_selezionati_visibili(user)))
+        .distinct()
+    )
+
+
+def _selezionati_visibili(user):
+    from apps.eventi.models import Evento
+
+    persone = [p.pk for p in tutelati(user) if p.e_minorenne()]
+    propria = persona_di(user)
+    if propria is not None:
+        persone.append(propria.pk)
+    visibili = Q(partecipazioni__persona_id__in=persone)
+    if e_capo_censito(user):
+        visibili |= Q(creato_da_id=user.pk)
+    return Evento.objects.filter(visibili, cerchia="SCELTI").values("pk")
 
 
 def _riunioni_di_staff_visibili(user):

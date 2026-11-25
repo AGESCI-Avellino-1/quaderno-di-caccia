@@ -13,7 +13,8 @@ riunioni hanno una pagina loro: vedi [Riunioni](riunioni).
    - **Una branca**, per un evento di tutta la branca;
    - **Una squadriglia**, per un evento di squadriglia (anche la **Missione di squadriglia**,
      con le **Note per i genitori**, che non leggono i ragazzi/e).
-4. Scegli **Inizio** e **Fine**, scrivi **Luogo** e **Descrizione**.
+4. Scegli **Inizio** e **Fine** (l'app propone due ore dopo; se poi cambi l'inizio, la fine si
+   sposta con lui), scrivi **Luogo** e **Descrizione**.
 5. Tocca **Crea l'evento**.
 
 Puoi creare eventi per le unità in cui fai servizio; un evento di tutto il gruppo lo creano

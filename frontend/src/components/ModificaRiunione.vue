@@ -4,6 +4,7 @@ import { defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 import { api, type DettaglioEvento, type Localita, type NuovaLocalita } from '@/api/qdc'
 import SceltaLocalita from '@/components/SceltaLocalita.vue'
 import SceltaModalita from '@/components/SceltaModalita.vue'
+import { ORE, useFineCheSegue } from '@/composables/useFineCheSegue'
 import { useErrore } from '@/composables/useErrore'
 
 // One meeting (DEC-310): moved, another place, with the uniform or not, notes written
@@ -33,6 +34,13 @@ const dati = reactive({
   uniforme: (r.serie_id ? 'serie' : r.uniforme ? 'si' : 'no') as 'serie' | 'si' | 'no',
   informazioni: r.informazioni ?? '',
   online: { modalita: r.modalita ?? 'PRESENZA', link: r.link ?? '' },
+})
+
+useFineCheSegue({
+  inizio: () => dati.ora_inizio,
+  fine: () => dati.ora_fine,
+  imposta: (fine) => (dati.ora_fine = fine),
+  ...ORE,
 })
 
 onMounted(async () => {
@@ -92,6 +100,7 @@ async function salva() {
           id="mr-fine"
           v-model="dati.ora_fine"
           type="time"
+          :min="dati.ora_inizio"
           class="form-control form-control-sm"
           required
         />

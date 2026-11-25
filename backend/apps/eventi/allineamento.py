@@ -16,7 +16,7 @@ from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
 from django.utils import timezone
 
-from .models import Evento, Livello, StatoPartecipazione
+from .models import Cerchia, Evento, Livello, StatoPartecipazione
 
 _in_attesa = threading.local()
 
@@ -55,6 +55,7 @@ def riallinea(unita_ids: set[int] | None = None) -> tuple[int, int]:
     if unita_ids is not None:
         eventi = eventi.filter(
             Q(livello__in=(Livello.GRUPPO, Livello.BRANCA))
+            | Q(cerchia=Cerchia.SCELTI)  # who left the group (DEC-430)
             | Q(unita__in=unita_ids)
             | Q(squadriglia__unita__in=unita_ids)
         ).distinct()

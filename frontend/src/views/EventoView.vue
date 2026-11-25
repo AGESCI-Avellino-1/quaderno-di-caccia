@@ -26,6 +26,8 @@ import { dataEOra } from '@/eventi/orario'
 import ModificaRiunione from '@/components/ModificaRiunione.vue'
 import QuotaEvento from '@/components/QuotaEvento.vue'
 import RendicontoEvento from '@/components/RendicontoEvento.vue'
+import PartecipantiRiunione from '@/components/PartecipantiRiunione.vue'
+import { MOMENTI, useFineCheSegue } from '@/composables/useFineCheSegue'
 import { useErrore } from '@/composables/useErrore'
 import { useGruppiPagina } from '@/composables/useGruppiPagina'
 import { useNomePagina } from '@/composables/useNomePagina'
@@ -113,6 +115,13 @@ function apriModifica() {
   }
 }
 
+useFineCheSegue({
+  inizio: () => modifica.value?.inizio,
+  fine: () => modifica.value?.fine,
+  imposta: (fine) => (modifica.value!.fine = fine),
+  ...MOMENTI,
+})
+
 async function salvaModifica() {
   const e = evento.value!
   const m = modifica.value!
@@ -148,6 +157,15 @@ async function carica() {
   copiaDel.value = letto.copiaDel
 }
 watch(() => props.id, carica, { immediate: true })
+
+// People chosen one by one (DEC-430).
+const scegliPartecipanti = ref(false)
+async function partecipantiSalvati(dati: DettaglioEvento) {
+  scegliPartecipanti.value = false
+  mostra(dati)
+  esito.value = 'Partecipanti salvati.'
+  await salvaInCache(chiave(), dati)
+}
 
 const invitati = computed(
   () => evento.value?.partecipanti.filter((p) => p.stato !== 'NON_INVITATO') ?? [],
@@ -265,7 +283,8 @@ useGruppiPagina('evento', () => {
     <p class="fg-2 small mb-3">
       <ImmagineAnimale :animale="evento.animale" />
       {{ evento.tipo_nome }}
-      <template v-if="evento.cerchia !== 'TUTTI'"> · {{ evento.cerchia_nome }}</template> ·
+      <template v-if="evento.cerchia !== 'TUTTI'"> · {{ evento.cerchia_nome }}</template
+      ><template v-if="evento.cerchia !== 'SCELTI'"> · </template>
       {{
         evento.livello === 'GRUPPO'
           ? 'tutto il gruppo'
@@ -444,6 +463,7 @@ useGruppiPagina('evento', () => {
                   id="mod-fine"
                   v-model="modifica.fine"
                   type="datetime-local"
+                  :min="modifica.inizio"
                   class="form-control form-control-sm"
                   required
                 />
@@ -610,6 +630,22 @@ useGruppiPagina('evento', () => {
                 Salva le presenze
               </button>
             </div>
+            <template v-if="evento.puo_scegliere && !evento.annullato">
+              <button
+                v-if="!scegliPartecipanti"
+                type="button"
+                class="btn btn-sm btn-outline theme-primary mb-3"
+                @click="scegliPartecipanti = true"
+              >
+                Cambia i partecipanti
+              </button>
+              <PartecipantiRiunione
+                v-else
+                :riunione="evento"
+                @salvati="partecipantiSalvati"
+                @chiusa="scegliPartecipanti = false"
+              />
+            </template>
             <ul class="list-group">
               <li v-for="p in evento.partecipanti" :key="p.persona_id" class="list-group-item">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">

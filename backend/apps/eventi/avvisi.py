@@ -1,8 +1,8 @@
 """Emails about events (DEC-79): a new event, a change of dates or place, a
 cancellation. To the families of the participants (to the adult member, and to their
 parents while they still see their activities, DEC-26). One message per address, so
-nobody sees the others'. Meetings are not announced (DEC-310): only a single meeting
-moved or cancelled.
+nobody sees the others'. Meetings: one moved or cancelled, and a new one or a new series when
+who creates it chooses so (DEC-431).
 """
 
 from django.conf import settings
@@ -20,6 +20,7 @@ TITOLI_PUSH = {
     "evento_nuovo": "Nuovo evento",
     "evento_modificato": "Evento cambiato",
     "evento_annullato": "Evento annullato",
+    "riunione_nuova": "Nuova riunione",
     "riunione_spostata": "Riunione spostata",
     "riunione_annullata": "Riunione annullata",
 }
@@ -89,12 +90,89 @@ def _quando(evento: Evento) -> str:
     return f"dal {dal} al {al}"
 
 
+def _invitati_e_genitori(partecipanti) -> list[Persona]:
+    """The people themselves, a minor only with their own account, and the parents of the
+    minors (DEC-431): never the parents of an adult."""
+    chi: dict[int, Persona] = {}
+    for persona in partecipanti.select_related("utente"):
+        if not persona.e_minorenne():
+            chi[persona.pk] = persona
+            continue
+        if persona.utente_id:
+            chi[persona.pk] = persona
+        for t in persona.tutori.select_related("tutore__utente").filter(
+            responsabilita_genitoriale=True
+        ):
+            chi[t.tutore_id] = t.tutore
+    return list(chi.values())
+
+
+def _invia_a(chi: list[Persona], modello: str, titolo: str, valori: dict, percorso: str) -> int:
+    indirizzi = []
+    for p in chi:
+        if not accetta(p, "eventi"):
+            continue
+        # A minor's email in the registry may be a parent's: only their account's.
+        if p.e_minorenne():
+            email = p.utente.email if p.utente else ""
+        else:
+            email = p.email or (p.utente.email if p.utente else "")
+        if email and email not in indirizzi:
+            indirizzi.append(email)
+    inviate = invia(
+        modello,
+        {"Evento": titolo, "Link": f"{settings.FRONTEND_URL}{percorso}", **valori},
+        indirizzi,
+    )
+    notifica("eventi", chi, f"{TITOLI_PUSH[modello]}: {titolo}", percorso)
+    return inviate
+
+
+GIORNI = ("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")
+
+
+def riunioni_nuove(eventi: list[Evento], persone: list[Persona] | None = None) -> int:
+    """One email for the meeting or for the whole series just created (DEC-431); with
+    `persone` only to them, chosen later (DEC-430)."""
+    eventi = [e for e in eventi if _da_annunciare(e)]
+    if not eventi:
+        return 0
+    primo, ultimo = eventi[0], eventi[-1]
+    if len(eventi) > 1:
+        inizio, fine = timezone.localtime(primo.inizio), timezone.localtime(primo.fine)
+        quando = (
+            f"ogni {GIORNI[inizio.weekday()]}, dalle {inizio:%H:%M} alle {fine:%H:%M}, "
+            f"dal {inizio:%d/%m/%Y} al {timezone.localtime(ultimo.inizio):%d/%m/%Y}"
+        )
+        percorso = "/riunioni"
+    else:
+        quando = _quando(primo)
+        percorso = f"/riunioni/{primo.pk}"
+    dove = primo.dove()
+    partecipanti = Persona.objects.filter(
+        partecipazioni__evento__in=eventi, partecipazioni__stato=StatoPartecipazione.INVITATO
+    ).distinct()
+    if persone is not None:
+        partecipanti = partecipanti.filter(pk__in=[p.pk for p in persone])
+    return _invia_a(
+        _invitati_e_genitori(partecipanti),
+        "riunione_nuova",
+        primo.titolo,
+        {"Quando": quando + (f", {dove}" if dove else "")},
+        percorso,
+    )
+
+
 def _invia(
     evento: Evento, modello: str, valori: dict[str, str], percorso: str | None = None
 ) -> int:
     partecipanti = Persona.objects.filter(
         partecipazioni__evento=evento, partecipazioni__stato=StatoPartecipazione.INVITATO
     )
+    percorso = percorso or f"/{'riunioni' if _riunione(evento) else 'eventi'}/{evento.pk}"
+    if evento.cerchia == Cerchia.SCELTI:
+        chi = _invitati_e_genitori(partecipanti)
+        return _invia_a(chi, modello, evento.titolo, valori, percorso)
     # A staff meeting is for the capi themselves, never their families (DEC-401).
     diretti = evento.cerchia in CERCHIE_CONVOCATE or evento.cerchia == Cerchia.STAFF
     indirizzi = (
@@ -102,7 +180,6 @@ def _invia(
         if diretti
         else indirizzi_famiglia(partecipanti, "eventi")
     )
-    percorso = percorso or f"/{'riunioni' if _riunione(evento) else 'eventi'}/{evento.pk}"
     inviate = invia(
         modello,
         {"Evento": evento.titolo, "Link": f"{settings.FRONTEND_URL}{percorso}", **valori},

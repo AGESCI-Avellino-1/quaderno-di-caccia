@@ -159,6 +159,8 @@ class EventoOut(Schema):
     motivo_annullamento: str
     # The user's own and their children's participation (families).
     mie: list[MiaPartecipazione]
+    # The user's own, apart from what they only see (DEC-432).
+    mio: bool = True
     puo_gestire: bool
     quota: QuotaEvento | None
 
@@ -230,6 +232,8 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         "annullato": evento.annullato_il is not None,
         "motivo_annullamento": evento.motivo_annullamento,
         "mie": _mie(user, evento),
+        "mio": evento.pk
+        in (cache["miei"] if cache and "miei" in cache else servizi.miei(user, [evento])),
         "puo_gestire": policy.puo_gestire_evento(user, evento),
         "quota": _quota_evento(evento),
     }
@@ -338,8 +342,9 @@ def eventi(
     if al:
         elenco = elenco.filter(inizio__date__lte=al)
     risultato = []
-    cache: dict = {}
-    for evento in elenco.order_by("inizio").prefetch_related("unita"):
+    elenco = list(elenco.order_by("inizio").prefetch_related("unita"))
+    cache: dict = {"miei": servizi.miei(request.auth, elenco)}
+    for evento in elenco:
         if unita is not None and unita not in servizi.unita_coinvolte(evento).values_list(
             "pk", flat=True
         ):
@@ -453,6 +458,8 @@ class DettaglioOut(EventoOut):
     # The participants' medical forms (DEC-195).
     puo_stampare_schede: bool = False
     puo_non_invitare: bool
+    # Of people chosen one by one, who is invited (DEC-430).
+    puo_scegliere: bool = False
     # A meeting deleted for good, and what goes with it (DEC-413).
     puo_eliminare: bool = False
     si_perde: list[str] = []
@@ -482,6 +489,8 @@ def _dettaglio(utente, evento: Evento) -> dict:
         "puo_presenze": policy.puo_segnare_presenze(utente, evento),
         "puo_stampare_schede": policy.puo_stampare_schede_evento(utente, evento),
         "puo_non_invitare": policy.puo_non_invitare(utente, evento),
+        "puo_scegliere": evento.cerchia == Cerchia.SCELTI
+        and policy.puo_gestire_evento(utente, evento),
         **(
             {"puo_eliminare": True, "si_perde": servizi.cosa_si_perde(evento)}
             if policy.puo_eliminare_riunione(utente, evento)
@@ -888,6 +897,8 @@ class EventoCalendario(Schema):
     senza_ora_fine: bool
     luogo: str
     annullato: bool
+    # The user's own, apart from what they only see (DEC-432).
+    mio: bool
 
 
 def _vista(vista: str) -> str:
@@ -911,6 +922,8 @@ def eventi_del_mio_calendario(
         elenco = elenco.filter(fine__date__gte=dal)
     if al:
         elenco = elenco.filter(inizio__date__lte=al)
+    elenco = list(elenco)
+    miei = servizi.miei(request.auth, elenco)
     return [
         {
             "id": e.pk,
@@ -922,6 +935,7 @@ def eventi_del_mio_calendario(
             "senza_ora_fine": e.senza_ora_fine,
             "luogo": e.luogo or ("Online" if e.modalita == "ONLINE" else ""),
             "annullato": e.annullato_il is not None,
+            "mio": e.pk in miei,
         }
         for e in elenco
     ]

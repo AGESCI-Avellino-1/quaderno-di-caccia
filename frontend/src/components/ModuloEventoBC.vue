@@ -4,6 +4,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { api, type DettaglioBC, type EventoBCIn, type TipologiaBC, type VincoliBC } from '@/api/qdc'
 import CampiVincoliBC from '@/components/CampiVincoliBC.vue'
 import SceltaDaElenco from '@/components/SceltaDaElenco.vue'
+import { GIORNI, ORE, useFineCheSegue } from '@/composables/useFineCheSegue'
 
 // An event on BuonaCaccia, new or to change (DEC-158, DEC-391): the day is required, the hour of
 // start and end may come later. Its type is required and brings its default constraints, which
@@ -30,6 +31,23 @@ const modulo = reactive({
   luogo: e?.luogo ?? '',
   descrizione: e?.descrizione ?? '',
   link: e?.link ?? '',
+})
+
+// The end follows the start (DEC-429); an hour not known yet stays empty.
+const stessoGiorno = () => !modulo.giornoFine || modulo.giornoFine === modulo.giornoInizio
+useFineCheSegue({
+  inizio: () => modulo.giornoInizio,
+  fine: () => modulo.giornoFine,
+  imposta: (fine) => (modulo.giornoFine = fine),
+  ...GIORNI,
+})
+useFineCheSegue({
+  inizio: () => modulo.oraInizio,
+  fine: () => modulo.oraFine,
+  imposta: (fine) => (modulo.oraFine = fine),
+  ...ORE,
+  proponi: false,
+  confrontabili: stessoGiorno,
 })
 
 const vincoliDi = (v: VincoliBC): VincoliBC => ({
@@ -143,6 +161,7 @@ function invia() {
           id="bc-ora-fine"
           v-model="modulo.oraFine"
           type="time"
+          :min="stessoGiorno() ? modulo.oraInizio : undefined"
           class="form-control form-control-sm"
         />
       </div>

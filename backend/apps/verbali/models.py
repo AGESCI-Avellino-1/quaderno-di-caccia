@@ -18,6 +18,8 @@ class TipoVerbale(models.TextChoices):
     ASSEMBLEA = "SOCI", "Assemblea dei soci"
     # Optional, like the reparto councils (DEC-401).
     STAFF = "STAFF", "Riunione di staff"
+    # Optional too (DEC-430).
+    SCELTI = "SCELTI", "Riunione"
 
 
 class StatoVerbale(models.TextChoices):

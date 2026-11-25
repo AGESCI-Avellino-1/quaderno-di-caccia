@@ -306,6 +306,26 @@ _TIPI = [
         facoltativa=True,
     ),
     TipoEmail(
+        "riunione_nuova",
+        "Nuova riunione",
+        "Agli invitati e ai genitori dei minorenni, quando chi crea una riunione o una serie "
+        "sceglie di avvisarli.",
+        "Nuova riunione: [Evento]",
+        "<p>Ciao,</p><p>nuova riunione: [Evento]<br>[Quando]</p><p>I dettagli "
+        "nell'app:<br>[Link]</p>",
+        (
+            EVENTO,
+            Segnaposto(
+                "Quando",
+                "data, orari e luogo; di una serie anche il periodo",
+                "07/11/2026, dalle 16:30 alle 18:30, a Sede",
+                True,
+            ),
+            _link("la pagina della riunione"),
+        ),
+        facoltativa=True,
+    ),
+    TipoEmail(
         "riunione_spostata",
         "Riunione spostata",
         "Agli invitati, quando cambiano data, orari o luogo di una singola riunione.",
@@ -790,6 +810,7 @@ GRUPPI: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
             "evento_nuovo",
             "evento_modificato",
+            "riunione_nuova",
             "riunione_spostata",
             "riunione_annullata",
             "evento_annullato",

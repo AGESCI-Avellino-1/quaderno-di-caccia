@@ -66,13 +66,12 @@ class Cerchia(models.TextChoices):
     SOCI = "SOCI", "Assemblea dei soci"
     # The staff of one unit, or the staffs of units chosen freely (DEC-401).
     STAFF = "STAFF", "Riunione di staff"
+    # People chosen one by one, of no unit (DEC-430).
+    SCELTI = "SCELTI", "Partecipanti selezionati"
 
 
 # Convened one at a time with an email and documents; nobody says whether they come (DEC-327).
 CERCHIE_CONVOCATE = {Cerchia.GENITORI, Cerchia.SOCI}
-
-# Seen only by who is invited, the staff of those units and the capigruppo (DEC-401).
-CERCHIE_RISERVATE = {Cerchia.STAFF}
 
 
 class Modalita(models.TextChoices):
@@ -141,8 +140,13 @@ class RiunioneRicorrente(ModelloTracciato):
     """e.g. every Saturday 16–18 from October to June (DEC-78): the app creates one
     event per date, each with its own attendance; a single date can be cancelled."""
 
+    # None: people chosen one by one (DEC-430).
     unita = models.ForeignKey(
-        "organizzazione.Unita", on_delete=models.PROTECT, related_name="riunioni_ricorrenti"
+        "organizzazione.Unita",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="riunioni_ricorrenti",
     )
     giorno_settimana = models.PositiveSmallIntegerField(help_text="0 = lunedì, 6 = domenica.")
     ora_inizio = models.TimeField()
@@ -180,10 +184,15 @@ class RiunioneRicorrente(ModelloTracciato):
         verbose_name_plural = "riunioni ricorrenti"
 
     def __str__(self) -> str:
-        return f"Riunioni di {self.unita}"
+        return f"Riunioni di {self.unita}" if self.unita_id else self.titolo
 
     def clean(self) -> None:
         errori = []
+        if self.cerchia == Cerchia.SCELTI:
+            if not self.titolo:
+                errori.append("Scrivi il titolo della riunione.")
+        elif not self.unita_id:
+            errori.append("Scegli l'unità.")
         if not 0 <= self.giorno_settimana <= 6:
             errori.append("Scegli il giorno della settimana.")
         if self.ora_fine and self.ora_inizio and self.ora_fine <= self.ora_inizio:
@@ -308,6 +317,9 @@ class Evento(ModelloTracciato):
         elif self.cerchia == Cerchia.STAFF:
             if self.livello != Livello.UNITA:
                 errori.append("Una riunione di staff è di una o più unità.")
+        elif self.cerchia == Cerchia.SCELTI:
+            if self.tipo != TipoEvento.RIUNIONE or self.livello != Livello.UNITA:
+                errori.append("Solo una riunione può avere partecipanti selezionati.")
         elif self.cerchia != Cerchia.TUTTI and self.livello != Livello.UNITA:
             errori.append(
                 "Consiglio Capi, Con.Ca.Vi., Alta Squadriglia e Consiglio degli Anziani "

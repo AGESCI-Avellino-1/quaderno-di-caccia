@@ -632,6 +632,16 @@ const SCENE: Scena[] = [
       await pagina.getByRole('menuitem', { name: 'Nuova riunione' }).waitFor()
     },
   },
+  // One's own events apart from the others (DEC-432).
+  {
+    nome: 'capo/calendario-miei',
+    chi: 'capogruppo',
+    percorso: '/calendario',
+    prepara: async (pagina) => {
+      await pagina.getByLabel('Quali eventi vedere').selectOption({ label: 'Tutto il gruppo' })
+      await pagina.getByText('gli altri').first().waitFor()
+    },
+  },
   // The next birthdays of the whole group, the Co.Ca. marked (DEC-417).
   {
     nome: 'capo/calendario-compleanni',
@@ -751,6 +761,23 @@ const SCENE: Scena[] = [
       await pagina.getByLabel('Chi è invitato').selectOption('ALTA_SQ')
       await pagina.getByLabel('Al', { exact: true }).fill(`${new Date().getFullYear() + 1}-05-31`)
       await pagina.getByLabel('Località').selectOption({ label: 'Sede del gruppo' })
+    },
+    intera: true,
+  },
+  {
+    // People chosen one by one, not created (DEC-430).
+    nome: 'capo/riunioni-selezionati',
+    chi: 'capoReparto',
+    percorso: '/riunioni',
+    prepara: async (pagina) => {
+      await pagina.getByRole('button', { name: 'Nuove riunioni' }).click()
+      await pagina.getByLabel('Di chi').selectOption('scelti')
+      await pagina.locator('.qdc-scelta-persone input').first().waitFor()
+      await pagina.locator('.qdc-scelta-persone input').nth(2).check()
+      await pagina.locator('.qdc-scelta-persone input').nth(4).check()
+      await pagina.getByLabel('Una volta').check()
+      await pagina.getByLabel('Dalle').fill('20:30')
+      await pagina.getByLabel('Titolo').fill('Preparazione della festa di apertura')
     },
     intera: true,
   },

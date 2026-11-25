@@ -54,7 +54,7 @@ async function salva() {
       </div>
     </div>
     <p v-else-if="!aperta" class="small mb-5">
-      <button type="button" class="btn btn-sm btn-link px-0" @click="apri">
+      <button type="button" class="btn btn-sm btn-link px-0 text-wrap text-start" @click="apri">
         Regole sul rapporto con il minore indicate dai genitori…
       </button>
     </p>

@@ -167,7 +167,7 @@ async function esciECancella() {
         Il tuo PIN è più lungo di {{ LUNGHEZZA_PIN }} cifre?
       </button>
     </template>
-    <button type="button" class="btn btn-link btn-sm mt-5" @click="esciECancella">
+    <button type="button" class="btn btn-link btn-sm mt-5 text-wrap" @click="esciECancella">
       Non sei tu? Esci e cancella i dati da questo dispositivo
     </button>
   </section>

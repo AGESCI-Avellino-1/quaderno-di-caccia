@@ -45,7 +45,12 @@ async function salva(togli = false) {
       In caso di emergenza per questo evento: <strong>{{ attuale.nome }}</strong>
       <Telefono v-if="attuale.telefono" :numero="attuale.telefono" :di="attuale.nome" />
     </p>
-    <button v-if="!aperta" type="button" class="btn btn-sm btn-link px-0" @click="apri">
+    <button
+      v-if="!aperta"
+      type="button"
+      class="btn btn-sm btn-link px-0 text-wrap text-start"
+      @click="apri"
+    >
       Un altro recapito per le emergenze, solo per questo evento…
     </button>
     <form v-else class="d-flex flex-wrap align-items-end gap-3" @submit.prevent="salva()">

@@ -335,7 +335,7 @@ const quando = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
     <button
       v-if="daAggiungere.includes('CAPI_GRUPPO')"
       type="button"
-      class="btn btn-sm btn-outline theme-primary align-self-start"
+      class="btn btn-sm btn-outline theme-primary align-self-start text-wrap text-start"
       :disabled="inCorso"
       @click="aggiungi"
     >

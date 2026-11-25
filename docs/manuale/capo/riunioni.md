@@ -89,7 +89,9 @@ spunta: gli invitati ricevono la convocazione.
 ## Partecipanti selezionati
 
 In **Di chi** scegli **Partecipanti selezionati** quando vuoi invitare proprio alcune persone, per
-esempio un gruppo di lavoro. Le cerchi per nome e le spunti; tu sei già tra loro e puoi toglierti.
+esempio un gruppo di lavoro. Le cerchi per nome e le spunti; tu sei già tra loro e puoi toglierti. Con il menu delle unità vedi
+solo le persone di un'unità (o della Co.Ca.) e con **Scegli tutti** e **Togli tutti** le spunti o le
+togli insieme; chi è già scelto resta scelto anche se cambi unità.
 Il **Titolo** è obbligatorio.
 
 Lo staff sceglie tra i ragazzi/e delle sue unità (anche collegate) e tutti i capi; i capigruppo tra

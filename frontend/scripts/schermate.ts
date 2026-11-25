@@ -775,10 +775,12 @@ const SCENE: Scena[] = [
       await pagina.locator('.qdc-scelta-persone input').first().waitFor()
       await pagina.locator('.qdc-scelta-persone input').nth(2).check()
       await pagina.locator('.qdc-scelta-persone input').nth(4).check()
+      await pagina.getByLabel('Filtra per unità').selectOption({ index: 1 })
       await pagina.getByLabel('Una volta').check()
       await pagina.getByLabel('Dalle').fill('20:30')
       await pagina.getByLabel('Titolo').fill('Preparazione della festa di apertura')
     },
+    mostra: 'Di chi',
     intera: true,
   },
   {

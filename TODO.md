@@ -11,12 +11,8 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------- | ---------- | ------ |
 | [#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86) | Compleanni: notifica del giorno e «Prossimi compleanni» (DEC-417)               | Funzione      | Basso   | Media      | VER    |
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
-| [#99](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/99) | Riunioni ed eventi: la fine proposta dev'essere dopo l'inizio (DEC-429)         | Miglioramento | Basso   | Bassa      | VER    |
-| [#100](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/100) | Riunioni: nuovo tipo «Partecipanti selezionati» (DEC-430, DEC-431)              | Funzione      | Medio   | Media      | VER    |
-| [#101](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/101) | Calendario: distinguere gli eventi a cui si partecipa dagli altri (DEC-432)     | Miglioramento | Basso   | Bassa      | VER    |
-| [#102](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/102) | Avviso nei browser troppo vecchi (DEC-433)                                      | Miglioramento | Basso   | Bassa      | VER    |
 | [#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103) | Tema 3.0.0a5 e Bootstrap 6.0.0-alpha.2                                          | Miglioramento | Alto    | Media      | VAL    |
-| [#104](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/104) | Riunioni di staff: le serie visibili a tutti i capi                             | Correzione    | Basso   | Bassa      | VAL    |
+| [#104](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/104) | Riunioni di staff: le serie visibili a tutti i capi                             | Correzione    | Basso   | Bassa      | WIP    |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -45,6 +41,10 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                                         | Release                                                                                 |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#102](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/102) | Avviso nei browser troppo vecchi (DEC-433)                                                     | [v1.47.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.47.0) |
+| [#101](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/101) | Calendario: distinguere gli eventi a cui si partecipa dagli altri (DEC-432)                    | [v1.46.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.46.0) |
+| [#100](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/100) | Riunioni: nuovo tipo «Partecipanti selezionati» (DEC-430, DEC-431)                             | [v1.46.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.46.0) |
+| [#99](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/99) | Riunioni ed eventi: la fine proposta dev'essere dopo l'inizio (DEC-429)                        | [v1.46.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.46.0) |
 | [#98](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/98) | Eventi: quota diversa o nessuna per i capi (DEC-428)                                           | [v1.45.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.45.0) |
 | [#97](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/97) | Soci: ordinare per nome, cognome o codice socio (DEC-427)                                      | [v1.44.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.44.0) |
 | [#96](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/96) | Pagine lunghe divise in gruppi che si aprono e si chiudono (DEC-426)                           | [v1.44.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.44.0) |

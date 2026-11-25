@@ -13,6 +13,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
 | [#99](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/99) | Riunioni ed eventi: la fine proposta dev'essere dopo l'inizio (DEC-429)         | Miglioramento | Basso   | Bassa      | VAL    |
 | [#100](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/100) | Riunioni: nuovo tipo «Partecipanti selezionati» (DEC-430, DEC-431)              | Funzione      | Medio   | Media      | VAL    |
+| [#101](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/101) | Calendario: distinguere gli eventi a cui si partecipa dagli altri               | Miglioramento | Basso   | Bassa      |        |
 
 Nessuna segnalazione di sicurezza aperta.
 

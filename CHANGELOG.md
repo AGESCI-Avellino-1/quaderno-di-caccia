@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.49.0 — 25 novembre 2026
+
+### Novità
+
+**Partecipanti selezionati: filtro per unità** ([#106](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/106)): scegliendo le persone di una riunione, un menu mostra solo quelle di un'unità o della Co.Ca.; **Scegli tutti** e **Togli tutti** valgono per le persone mostrate. Chi è già scelto resta scelto cambiando unità.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.49.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+Il manuale del capo spiega il filtro, con le schermate aggiornate.
+
+Provata con i test e nel browser. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.48.1 — 25 novembre 2026
 
 ### Correzioni

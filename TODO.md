@@ -2,7 +2,7 @@
 
 Situazione delle [issue](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues) e delle
 [segnalazioni di sicurezza](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/security/advisories)
-su GitHub, aggiornata il 25/11/2026 (ultima versione: v1.48.1). Le cose ancora aperte del periodo di
+su GitHub, aggiornata il 25/11/2026 (ultima versione: v1.49.0). Le cose ancora aperte del periodo di
 sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 
 ## Aperte
@@ -13,7 +13,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#93](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/93) | Aggiornamento: build prima della manutenzione, pulizia delle immagini (DEC-425) | Miglioramento | Medio   | Media      | VER    |
 | [#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103) | Tema 3.0.0a5 e Bootstrap 6.0.0-alpha.2                                          | Miglioramento | Alto    | Media      | VER    |
 | [#105](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/105) | Pagina di un evento: il link per un altro recapito esce dal riquadro | Correzione | Basso | Bassa | VER |
-| [#106](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/106) | Partecipanti selezionati: filtro per unità | Miglioramento | Basso | Bassa | VAL |
+| [#106](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/106) | Partecipanti selezionati: filtro per unità (DEC-434) | Miglioramento | Basso | Bassa | VER |
 
 Nessuna segnalazione di sicurezza aperta.
 

@@ -163,9 +163,9 @@ breaks the parser, add the case to `tests/export_sintetico.py` first.
 
 ### Theme
 
-Colours and the side menu come from **django-agesci-campania-theme 3.0.0a3**
+Colours and the side menu come from **django-agesci-campania-theme 3.0.0a5**
 (<https://github.com/AGESCI-Campania/django-agesci-campania-theme>), the line built on
-**Bootstrap 6** (`bootstrap@6.0.0-alpha.1`, pinned): the maintainer chose the alpha on
+**Bootstrap 6** (`bootstrap@6.0.0-alpha.2`, pinned): the maintainer chose the alpha on
 purpose, to avoid a second migration later. `frontend/src/theme/_palette.scss`,
 `_branche.scss` and `_sidebar.scss` are copied **byte for byte** (excluded from Prettier).
 To update: copy the three files from the new release, never edit them here. The theme
@@ -190,7 +190,8 @@ light only (`data-bs-theme="light"`). The app's icons are the AGESCI logo (`reso
 applied by `vite.config.ts` to a copy of `public/` at build time (DEC-294). The app image is
 built from the repository root (root `.dockerignore`) to read `resources/`. The manual keeps
 Avellino 1's logo (`resources/logo-avellino1.png`, also in its screenshots). Minimum browsers: Chrome/Edge 130, Firefox 132,
-Safari 18. Font: Titillium Web, bundled
+Safari 18, tried with the alpha.2 on 25/11/2026 (Bootstrap itself declares 138, 147 and 26: try them again at
+every new version). Font: Titillium Web, bundled
 (SIL OFL, `frontend/src/assets/fonts/OFL.txt`) so it works offline.
 
 ## Working on it

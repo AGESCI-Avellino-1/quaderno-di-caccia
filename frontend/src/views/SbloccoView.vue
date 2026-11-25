@@ -146,7 +146,7 @@ async function esciECancella() {
         <CampoOtp
           v-else
           v-model="pin"
-          class="justify-content-center"
+          class="mx-auto"
           :lunghezza="LUNGHEZZA_PIN"
           maschera
           autocomplete="off"

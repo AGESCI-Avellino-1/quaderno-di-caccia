@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.47.0 — 25 novembre 2026
+
+### Novità
+
+**Avviso nei dispositivi troppo vecchi** ([#102](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/102)): dove il browser non ha le funzioni che servono all'app (per esempio un iPhone prima di iOS 17.5), in cima alla pagina un avviso lo dice e invita ad aggiornare il dispositivo o a usarne un altro. Compare anche se l'app non parte e si può chiudere. Chi può usare l'app non lo vede.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.47.0
+```
+
+Nessuna migrazione del database.
+
+### Documentazione
+
+L'introduzione del manuale spiega l'avviso.
+
+Provata con i test e simulando nel browser le funzioni mancanti, non su un dispositivo vecchio vero. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.46.0 — 25 novembre 2026
 
 ### Novità

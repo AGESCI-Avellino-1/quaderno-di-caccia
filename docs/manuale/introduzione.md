@@ -29,6 +29,10 @@ ed Edge ha il tasto **Installa**, su iPhone e iPad ti dice di usare Condividi, s
 Safari il menu **Archivio** → **Aggiungi al Dock**. Se non ti interessa, chiudilo con la
 **×**: ricompare solo dopo qualche giorno (di solito due settimane).
 
+Se il dispositivo è troppo vecchio, in alto leggi «Il tuo dispositivo non è abbastanza aggiornato»:
+aggiorna il sistema o il browser, oppure apri l'app da un altro dispositivo. Puoi chiudere l'avviso
+e provare lo stesso, ma alcune parti potrebbero non funzionare.
+
 La prima volta, in fondo alla pagina compare un avviso: l'app usa solo i cookie tecnici
 che le servono per funzionare, niente statistiche e niente pubblicità. Tocca **Ho
 capito**. In fondo a ogni pagina trovi i link alla **Privacy policy** (chi tratta i dati e

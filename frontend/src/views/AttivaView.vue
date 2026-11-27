@@ -37,15 +37,15 @@ async function conferma() {
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
     <div v-if="inviataA" class="alert theme-success" role="status">
       <div>
-        Ti abbiamo mandato un'email a <strong>{{ inviataA }}</strong
-        >: aprila e tocca il link per creare l'account. Non la trovi? Guarda nella posta
-        indesiderata, oppure riapri questo link e scrivi l'indirizzo giusto.
+        Ti abbiamo mandato un'email a <strong>{{ inviataA }}</strong>: aprila e tocca il link per
+        creare l'account. Non la trovi? Guarda nella posta indesiderata, oppure riapri questo link e
+        scrivi l'indirizzo giusto.
       </div>
     </div>
     <form v-else-if="nome" class="vstack gap-3" @submit.prevent="conferma">
       <p>
-        Ciao <strong>{{ nome }}</strong
-        >, questo è il tuo link per entrare nell'app del gruppo. Prima conferma che sei tu.
+        Ciao <strong>{{ nome }}</strong>, questo è il tuo link per entrare nell'app del gruppo.
+        Prima conferma che sei tu.
       </p>
       <div>
         <label class="form-label" for="attiva-nascita">La tua data di nascita</label>

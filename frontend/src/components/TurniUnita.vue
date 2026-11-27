@@ -128,8 +128,7 @@ const giorno = (iso: string) =>
         <li v-for="p in turni.prossime" :key="p.id" class="py-1 border-bottom">
           <RouterLink :to="{ name: 'riunione', params: { id: p.id } }">{{
             giorno(p.inizio)
-          }}</RouterLink
-          >:
+          }}</RouterLink>:
           <span v-for="(t, n) in p.turni" :key="t.turno">
             {{ n ? ' · ' : '' }}{{ t.turno }} {{ t.gruppo }}
           </span>

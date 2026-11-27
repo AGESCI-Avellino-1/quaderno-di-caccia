@@ -11,8 +11,7 @@ defineProps<{ colori: ColoreAnimale[] }>()
     <li v-for="c in colori" :key="c.nome" class="d-flex align-items-baseline gap-1">
       <span class="campione" :style="{ backgroundColor: c.codice }" aria-hidden="true"></span>
       <span>
-        <strong>{{ c.nome }}</strong
-        ><template v-if="c.significato">: {{ c.significato }}</template>
+        <strong>{{ c.nome }}</strong><template v-if="c.significato">: {{ c.significato }}</template>
       </span>
     </li>
   </ul>

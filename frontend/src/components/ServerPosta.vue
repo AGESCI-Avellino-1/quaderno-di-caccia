@@ -215,8 +215,7 @@ async function prova() {
             Accedi una volta con l'account Google da cui partono le email: l'app chiede solo il
             permesso di inviare, senza leggere la posta. Prima crea il client OAuth in Google Cloud
             (lo spiega la guida di installazione) e registra come indirizzo di reindirizzamento
-            autorizzato <code>{{ impostazioni.gmail_redirect_uri }}</code
-            >.
+            autorizzato <code>{{ impostazioni.gmail_redirect_uri }}</code>.
           </p>
           <div class="md:col-6">
             <label class="form-label small" for="gmail-client">ID client OAuth</label>

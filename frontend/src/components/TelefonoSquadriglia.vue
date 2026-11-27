@@ -62,8 +62,8 @@ async function salva() {
     <div v-if="errore" class="alert theme-danger py-3 small" role="alert">{{ errore }}</div>
     <form class="vstack gap-3" @submit.prevent="salva">
       <p v-if="stato.proprio" class="small mb-0">
-        Numero in squadriglia: <strong>{{ stato.proprio }}</strong
-        >, il suo cellulare registrato in BuonaStrada.
+        Numero in squadriglia: <strong>{{ stato.proprio }}</strong>, il suo cellulare registrato in
+        BuonaStrada.
       </p>
       <template v-else>
         <div>

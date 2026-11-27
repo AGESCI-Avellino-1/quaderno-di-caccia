@@ -307,9 +307,9 @@ const COLORI: Record<string, string> = {
             <div>
               <p class="mb-1">
                 Dal {{ data(p.data) }} {{ p.persone.length === 1 ? 'passa' : 'passano' }} in
-                <strong>{{ p.unita_destinazione }}</strong
-                >: {{ p.persone.map((r) => r.persona).join(', ') }}. Si chiude il percorso nella
-                branca di oggi e se ne apre uno nuovo; cambiano unità, squadriglia e incarichi di
+                <strong>{{ p.unita_destinazione }}</strong>:
+                {{ p.persone.map((r) => r.persona).join(', ') }}. Si chiude il percorso nella branca
+                di oggi e se ne apre uno nuovo; cambiano unità, squadriglia e incarichi di
                 squadriglia.
               </p>
               <button

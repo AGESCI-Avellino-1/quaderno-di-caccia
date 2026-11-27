@@ -1,10 +1,11 @@
 """The book of ceremonies and traditions (DEC-437).
 
-An entry belongs to the group or to a unit. Every capo of the Co.Ca. reads every entry; a
+An entry belongs to the group or to a unit, with the register of who lived it. Every capo of the Co.Ca. reads every entry; a
 ragazzo/a, while an active member, reads the entries whose conditions they meet or they were
 added to by hand; the parents never. Who sees what is decided in `policy.voci_visibili`.
 """
 
+from django.conf import settings
 from django.db import models
 
 from apps.anagrafica.models import Persona
@@ -54,3 +55,29 @@ class VoceLibro(ModelloTracciato):
 
     def __str__(self) -> str:
         return self.titolo
+
+
+class PartecipazioneVoce(ModelloTracciato):
+    """Who lived an entry, and when: the register (DEC-437, block 3). Active ragazzi/e and capi
+    are marked, also for past years; who later leaves stays. Read by every capo and by the
+    other participants of the same entry."""
+
+    voce = models.ForeignKey(VoceLibro, on_delete=models.CASCADE, related_name="partecipazioni")
+    persona = models.ForeignKey(
+        Persona, on_delete=models.CASCADE, related_name="partecipazioni_voci"
+    )
+    data = models.DateField()
+    registrata_da = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "partecipazione a una voce del libro"
+        verbose_name_plural = "partecipazioni alle voci del libro"
+        ordering = ["-data", "persona__cognome", "persona__nome"]
+        constraints = [
+            models.UniqueConstraint(fields=["voce", "persona"], name="una_partecipazione_per_voce")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.persona} in {self.voce}"

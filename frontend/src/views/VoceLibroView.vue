@@ -12,6 +12,7 @@ import {
 } from '@/api/qdc'
 import CondizioniVoce from '@/components/CondizioniVoce.vue'
 import Icona from '@/components/Icona.vue'
+import RegistroVoce from '@/components/RegistroVoce.vue'
 import SceltaPersone from '@/components/SceltaPersone.vue'
 import { opzioniDa, type Opzione } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
@@ -87,7 +88,7 @@ const unita = computed(() => {
 async function chiLegge() {
   if (!modulo.value) return
   const { condizioni, aggiunti } = modulo.value
-  lettori.value = (await esegui(() => api.anteprimaLettori(condizioni, aggiunti))) ?? null
+  lettori.value = (await esegui(() => api.anteprimaLettori(condizioni, aggiunti, props.id))) ?? null
 }
 
 async function salva() {
@@ -159,7 +160,8 @@ async function elimina() {
       <h2 class="h5">Chi la legge</h2>
       <p class="small fg-2">
         Tutti i capi leggono ogni voce; i genitori mai. Dei ragazzi/e la leggono, finché sono nel
-        gruppo, quelli che soddisfano le condizioni e quelli scelti a mano.
+        gruppo, quelli che soddisfano le condizioni, quelli scelti a mano e chi è nel registro di
+        chi l'ha vissuta.
       </p>
       <div v-if="libro" class="mb-5">
         <CondizioniVoce v-model="modulo.condizioni" :libro="libro" />
@@ -226,6 +228,7 @@ async function elimina() {
         <div v-html="voce.testo"></div>
       </div>
       <p v-else class="fg-2">Il testo non è ancora stato scritto.</p>
+      <RegistroVoce v-if="voce.vede_registro" :voce="voce" @aggiornata="voce = $event" />
       <div v-if="voce.puo_modificare" class="mt-7">
         <button
           v-if="!conferma"

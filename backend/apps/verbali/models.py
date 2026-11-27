@@ -101,9 +101,12 @@ class Verbale(ModelloTracciato):
 
 class TipoCollegato(models.TextChoices):
     BILANCIO = "BILANCIO", "Verbale di approvazione del bilancio di esercizio"
-    CAPI_GRUPPO = "CAPI_GRUPPO", (
-        "Verbale della Comunità capi per l'espressione dei Capi Gruppo e la variazione della "
-        "rappresentanza legale e della sede legale"
+    CAPI_GRUPPO = (
+        "CAPI_GRUPPO",
+        (
+            "Verbale della Comunità capi per l'espressione dei Capi Gruppo e la variazione della "
+            "rappresentanza legale e della sede legale"
+        ),
     )
 
 

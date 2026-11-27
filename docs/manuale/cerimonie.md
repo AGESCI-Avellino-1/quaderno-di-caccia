@@ -12,8 +12,8 @@ scritto resta e torna riaccendendola.
 
 - **I capi** leggono tutte le voci, di tutte le unità.
 - **I ragazzi e le ragazze** leggono solo le voci scritte per loro: perché soddisfano le
-  condizioni della voce (per esempio sono nel Consiglio capi o hanno fatto la Promessa) o
-  perché chi la scrive li ha scelti a mano. Solo finché sono nel gruppo. Se non ne hai
+  condizioni della voce (per esempio sono nel Consiglio capi o hanno fatto la Promessa),
+  perché chi la scrive li ha scelti a mano o perché sono nel registro di chi l'ha vissuta. Solo finché sono nel gruppo. Se non ne hai
   nessuna, nel menu la voce non c'è.
 - **I genitori** non leggono niente: molte cerimonie sono riservate.
 
@@ -70,6 +70,7 @@ Squadriglia la legge da quel giorno, chi lascia il gruppo smette di leggerla.
   anche dopo il passaggio (non se il passaggio viene annullato).
 - **Ha fatto la Promessa**, **Ha raggiunto una tappa** (quella tappa o una successiva, nella
   branca scelta), **Ha preso la Partenza**.
+- **Ha vissuto una voce del libro**: è nel [registro](#registro) di quella voce.
 
 Le condizioni si mettono in **gruppi**. Dentro un gruppo devono valere **tutte insieme**: per
 esempio «È nel Consiglio capi» e «Ha fatto la Promessa». Con **Aggiungi un altro gruppo, in
@@ -77,6 +78,33 @@ alternativa** ne aggiungi un altro, scritto dopo un **oppure**: basta che valga 
 gruppi. **Togli** toglie una condizione; togliendo l'ultima sparisce il gruppo.
 
 I capi sestiglia e le pattuglie R/S l'app non li registra: per loro scegli i ragazzi a mano.
+
+(registro)=
+
+## Chi l'ha vissuta
+
+Ogni voce ha il suo **registro**: chi ha vissuto quella cerimonia o tradizione, e quando. Lo
+leggono tutti i capi e, sotto la voce, chi c'è segnato: chi è nel registro legge la voce,
+anche senza condizioni né scelta a mano, e vede gli altri che l'hanno vissuta. Chi legge la
+voce ma non è nel registro non lo vede.
+
+Chi scrive la voce segna i partecipanti:
+
+1. Apri la voce e, sotto il testo, tocca **Segna chi l'ha vissuta**.
+2. Scegli **il giorno**: anche un giorno degli anni passati, per ricostruire chi l'ha vissuta
+   prima dell'app.
+3. In **Da segnare** scegli ragazzi, ragazze e capi del gruppo, poi tocca **Segna**. Chi era
+   già segnato prende il giorno nuovo.
+
+**Togli** toglie una persona dal registro. Chi lascia il gruppo resta nel registro.
+
+Il registro serve anche alle condizioni: con **Ha vissuto una voce del libro** una voce la
+leggono, per esempio, solo quelli che hanno già vissuto un'altra cerimonia.
+
+:::{container} schermate
+![Il registro di una voce sul telefono](img/cerimonie/registro-telefono.png){.telefono width="30%"}
+![Il registro di una voce sul computer](img/cerimonie/registro-computer.png){.computer width="65%"}
+:::
 
 :::{container} schermate
 ![Una voce in modifica sul telefono](img/cerimonie/modifica-telefono.png){.telefono width="30%"}

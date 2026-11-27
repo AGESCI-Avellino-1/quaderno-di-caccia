@@ -482,7 +482,8 @@ implements them:
   off, their API answers 404, their emails and menu entry disappear, their data stay. A new one =
   an entry in `FUNZIONI` + `richiedi()` in each endpoint + its entry behind the profile's
   `funzioni`. The first is Babbo Natale segreto (`apps/babbonatale`, DEC-422); then the book of ceremonies
-  and traditions (`apps/cerimonie`, DEC-437, blocks 1–2 of 5 built: entries, who writes, readers
-  added by hand or by conditions, the totem ceremony moved there).
+  and traditions (`apps/cerimonie`, DEC-437, blocks 1–3 of 5 built: entries, who writes, readers
+  added by hand or by conditions, the register of who lived each, the totem ceremony moved
+  there).
 - Device revocation and idempotency work with the browser session only; the store app
   (X-Session-Token, DEC-105) will need the same checks.

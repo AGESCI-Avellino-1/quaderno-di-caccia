@@ -1218,6 +1218,17 @@ const SCENE: Scena[] = [
     intera: true,
   },
   {
+    nome: 'cerimonie/registro',
+    chi: 'capoReparto',
+    percorso: '/cerimonie',
+    prepara: async (pagina) => {
+      await apri("Notte dell'Alta Squadriglia")(pagina)
+      await pagina.getByRole('button', { name: "Segna chi l'ha vissuta" }).click()
+      await pagina.locator('#registro-cerca').waitFor()
+      await scorriA('[data-registro]')(pagina)
+    },
+  },
+  {
     nome: 'cerimonie/modifica',
     chi: 'capoReparto',
     percorso: '/cerimonie',

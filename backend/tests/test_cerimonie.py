@@ -583,3 +583,120 @@ def test_anteprima(capo, ragazza, csq, lupetto, estraneo, voci):
     )
     assert _client(ragazza).post(f"{URL}/anteprima", {}, "application/json").status_code == 403
     assert _client(estraneo).post(f"{URL}/anteprima", {}, "application/json").status_code == 403
+
+
+# --- The register of who lived an entry (block 3) --------------------------------------------
+
+
+def _segna(chi, voce, persone, giorno=None):
+    return _client(chi).post(
+        f"{URL}/{voce.pk}/partecipanti",
+        {"persone": [p.pk for p in persone], "data": str(giorno or date.today())},
+        "application/json",
+    )
+
+
+def test_segnare_e_togliere_dal_registro(capo, csq, ragazza, voci):
+    from datetime import timedelta
+
+    passato = date.today() - timedelta(days=400)
+    risposta = _segna(capo, voci["reparto"], [csq, capo], passato)
+    assert risposta.status_code == 200
+    registro = risposta.json()["partecipanti"]
+    assert {(p["nome"], p["data"]) for p in registro} == {
+        ("Sara", str(passato)),
+        ("Anna", str(passato)),
+    }
+    # Marked again: the new day.
+    _segna(capo, voci["reparto"], [csq])
+    voce = _client(capo).get(f"{URL}/{voci['reparto'].pk}").json()
+    assert {p["nome"]: p["data"] for p in voce["partecipanti"]}["Sara"] == str(date.today())
+    risposta = _client(capo).delete(f"{URL}/{voci['reparto'].pk}/partecipanti/{csq.pk}")
+    assert [p["nome"] for p in risposta.json()["partecipanti"]] == ["Anna"]
+
+
+def test_registro_errori(capo, genitore, estraneo, voci):
+    from datetime import timedelta
+
+    assert _segna(capo, voci["reparto"], [genitore]).status_code == 400
+    assert _segna(capo, voci["reparto"], [estraneo]).status_code == 400
+    assert _segna(capo, voci["reparto"], []).status_code == 400
+    domani = date.today() + timedelta(days=1)
+    assert _segna(capo, voci["reparto"], [capo], domani).status_code == 400
+
+
+def test_chi_segna(capo, capogruppo, ragazza, csq, voci):
+    # The staff of the reparto: not the branco's register.
+    assert _segna(capo, voci["branco"], [ragazza]).status_code == 403
+    assert _segna(capogruppo, voci["branco"], [ragazza]).status_code == 200
+    voci["reparto"].aggiunti.add(csq)
+    # A ragazzo/a who reads the entry does not mark it.
+    assert _segna(csq, voci["reparto"], [csq]).status_code == 403
+    assert _client(csq).get(f"{URL}/segnabili").status_code == 403
+    nomi = {p["nome"] for p in _client(capo).get(f"{URL}/segnabili").json()}
+    # Ragazzi/e and capi, the active ones.
+    assert {"Giulia", "Sara", "Anna", "Bruno"} <= nomi
+
+
+def test_chi_legge_il_registro(capo, ragazza, csq, voci):
+    voci["reparto"].aggiunti.add(ragazza, csq)
+    _segna(capo, voci["reparto"], [csq, capo])
+    # Every capo; a participant, the others; who reads the entry but was not there, nobody.
+    assert _client(capo).get(f"{URL}/{voci['reparto'].pk}").json()["vede_registro"]
+    letta = _client(csq).get(f"{URL}/{voci['reparto'].pk}").json()
+    assert letta["vede_registro"] and {p["nome"] for p in letta["partecipanti"]} == {"Sara", "Anna"}
+    letta = _client(ragazza).get(f"{URL}/{voci['reparto'].pk}").json()
+    assert not letta["vede_registro"] and letta["partecipanti"] == []
+
+
+def test_condizione_partecipazione(capo, ragazza, csq, voci):
+    _con_condizioni(voci["gruppo"], [[{"tipo": "partecipazione", "voce": voci["reparto"].pk}]])
+    assert _titoli(csq) == set()
+    _segna(capo, voci["reparto"], [csq])
+    # The register opens the entry it records; the condition opens the other.
+    assert _titoli(csq) == {"Alta Squadriglia", "Fuoco di gruppo"}
+    assert _titoli(ragazza) == set()
+    risposta = _client(capo).put(
+        f"{URL}/{voci['reparto'].pk}",
+        _dati(
+            condizioni=[[{"tipo": "partecipazione", "voce": 99999}]],
+            unita_id=voci["reparto"].unita_id,
+        ),
+        "application/json",
+    )
+    assert risposta.status_code == 400
+
+
+def test_registro_e_diritti(capo, csq, voci):
+    _segna(capo, voci["reparto"], [csq])
+    assert diritti.fascicolo(csq)["cerimonie_vissute"][0]["Voce"] == "Alta Squadriglia"
+    diritti.cancella(csq)
+    assert not voci["reparto"].partecipazioni.exists()
+
+
+def test_chi_lascia_resta_nel_registro(capo, csq, voci):
+    _segna(capo, voci["reparto"], [csq])
+    Appartenenza.objects.filter(persona=csq).update(data_fine=date.today())
+    nomi = [
+        p["nome"] for p in _client(capo).get(f"{URL}/{voci['reparto'].pk}").json()["partecipanti"]
+    ]
+    assert nomi == ["Sara"]
+
+
+def test_chi_e_nel_registro_legge_la_voce(capo, csq, ragazza, lupetto, voci):
+    _segna(capo, voci["reparto"], [csq])
+    # No condition, not added by hand: the register is enough (maintainer, 27/11).
+    assert _titoli(csq) == {"Alta Squadriglia"}
+    letta = _client(csq).get(f"{URL}/{voci['reparto'].pk}").json()
+    assert letta["vede_registro"] and [p["nome"] for p in letta["partecipanti"]] == ["Sara"]
+    assert _titoli(ragazza) == set()
+    # The preview counts them for the entry being changed.
+    risposta = _client(capo).post(
+        f"{URL}/anteprima",
+        {"condizioni": [], "aggiunti": [lupetto.pk], "voce_id": voci["reparto"].pk},
+        "application/json",
+    )
+    assert {p["nome"] for p in risposta.json()} == {"Sara", "Lupo"}
+    # Who left no longer reads it, though still in the register.
+    Appartenenza.objects.filter(persona=csq).update(data_fine=date.today())
+    assert _titoli(csq) == set()

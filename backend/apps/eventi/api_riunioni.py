@@ -607,8 +607,7 @@ def elimina_riunione(request, evento_id: int, avvisa: bool = False):
     if not policy.puo_eliminare_riunione(request.auth, evento):
         raise HttpError(
             403,
-            "Non puoi eliminare questa riunione: con presenze o verbale la elimina un "
-            "capogruppo.",
+            "Non puoi eliminare questa riunione: con presenze o verbale la elimina un capogruppo.",
         )
     try:
         servizi.elimina_riunione(evento, avvisa)

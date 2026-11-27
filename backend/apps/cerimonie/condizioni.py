@@ -16,7 +16,8 @@ The kinds, all about today's active members:
   that passage or their part in it was cancelled;
 - `promessa`: made the Promessa, in any branch;
 - `tappa`: reached that phase (tappa, momento or passo) in that branch, or a later one;
-- `partenza`: took the Partenza.
+- `partenza`: took the Partenza;
+- `partecipazione`: is in the register of that entry of the book (block 3).
 Capo sestiglia and pattuglie R/S are not recorded by the app: they are left out (maintainer,
 27/11); for those an entry adds people by hand.
 """
@@ -50,6 +51,7 @@ TIPI = (
     "promessa",
     "tappa",
     "partenza",
+    "partecipazione",
 )
 BRANCHE_DEI_RAGAZZI = (Branca.LC, Branca.EG, Branca.RS)
 # The roles a condition may ask for: the patrol's and the Consiglio degli Anziani.
@@ -85,6 +87,8 @@ def segno(condizione: dict) -> str:
         return f"passaggio:{condizione['da']}>{condizione['a']}"
     if tipo == "tappa":
         return f"tappa:{condizione['branca']}:{condizione['fase']}"
+    if tipo == "partecipazione":
+        return f"partecipazione:{condizione['voce']}"
     return tipo
 
 
@@ -94,7 +98,10 @@ def pulisci(gruppi: list) -> list[list[dict]]:
     if not isinstance(gruppi, list):
         raise CondizioneNonValida("Le condizioni non sono scritte bene.")
     puliti: list[list[dict]] = []
+    from .models import VoceLibro
+
     unita = set(Unita.objects.values_list("pk", flat=True))
+    voci = set(VoceLibro.objects.values_list("pk", flat=True))
     for gruppo in gruppi:
         if not isinstance(gruppo, list):
             raise CondizioneNonValida("Le condizioni non sono scritte bene.")
@@ -102,7 +109,7 @@ def pulisci(gruppi: list) -> list[list[dict]]:
         for c in gruppo:
             if not isinstance(c, dict) or c.get("tipo") not in TIPI:
                 raise CondizioneNonValida("Una condizione non è tra quelle possibili.")
-            condizioni.append(_campi(c, unita))
+            condizioni.append(_campi(c, unita, voci))
         if len(condizioni) > MASSIMO_CONDIZIONI:
             raise CondizioneNonValida(
                 f"In un gruppo ci sono al massimo {MASSIMO_CONDIZIONI} condizioni."
@@ -116,7 +123,7 @@ def pulisci(gruppi: list) -> list[list[dict]]:
     return puliti
 
 
-def _campi(c: dict, unita: set[int]) -> dict:
+def _campi(c: dict, unita: set[int], voci: set[int]) -> dict:
     tipo = c["tipo"]
     branche = {b.value for b in BRANCHE_DEI_RAGAZZI}
     if tipo == "unita":
@@ -139,6 +146,10 @@ def _campi(c: dict, unita: set[int]) -> dict:
         if c.get("branca") not in branche or c.get("fase") not in {f.value for f in _fasi()}:
             raise CondizioneNonValida("Scegli la branca e la tappa della condizione.")
         return {"tipo": tipo, "branca": c["branca"], "fase": c["fase"]}
+    if tipo == "partecipazione":
+        if c.get("voce") not in voci:
+            raise CondizioneNonValida("Scegli la voce del libro a cui ha partecipato.")
+        return {"tipo": tipo, "voce": c["voce"]}
     return {"tipo": tipo}
 
 
@@ -157,7 +168,17 @@ def segni_di(persone_ids: Iterable[int]) -> dict[int, set[str]]:
     _di_squadriglia(ids, segni)
     _di_tribu(ids, segni)
     _di_progressione(ids, segni)
+    _di_registro(ids, segni)
     return segni
+
+
+def _di_registro(ids, segni) -> None:
+    from .models import PartecipazioneVoce
+
+    for persona, voce in PartecipazioneVoce.objects.filter(persona_id__in=ids).values_list(
+        "persona_id", "voce_id"
+    ):
+        segni[persona].add(f"partecipazione:{voce}")
 
 
 def _di_unita(ids, segni) -> None:

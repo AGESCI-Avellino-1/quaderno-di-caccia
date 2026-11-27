@@ -99,11 +99,13 @@ def configurazione(evento: Evento, cache: dict | None = None) -> TurniUnita | No
         conf = _in_cache(
             cache,
             ("conf", unita.pk),
-            lambda u=unita: TurniUnita.objects.filter(
-                Q(unita=u) | Q(unita_id=u.collegata_a_id, con_collegata=True)
-            )
-            .select_related("unita__collegata_a")
-            .first(),
+            lambda u=unita: (
+                TurniUnita.objects.filter(
+                    Q(unita=u) | Q(unita_id=u.collegata_a_id, con_collegata=True)
+                )
+                .select_related("unita__collegata_a")
+                .first()
+            ),
         )
         if conf and conf.nomi and timezone.localdate(evento.inizio) >= conf.dal:
             return conf

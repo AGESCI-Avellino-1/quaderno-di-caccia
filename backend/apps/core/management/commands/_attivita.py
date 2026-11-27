@@ -787,7 +787,7 @@ def crea_attivita(email) -> None:
             "porta un canto e una legna.</p>",
         },
     )
-    capo_reparto(
+    notte = capo_reparto(
         "post",
         "/cerimonie",
         {
@@ -800,5 +800,19 @@ def crea_attivita(email) -> None:
             # The Consiglio capi, or this year's Alta Squadriglia; Giulia chosen by hand.
             "condizioni": [[{"tipo": "consiglio_capi"}], [{"tipo": "alta_squadriglia"}]],
             "aggiunti": [giulia],
+        },
+    )
+    # Its register: Giulia last spring, the capo unità years ago.
+    capo_reparto(
+        "post",
+        f"/cerimonie/{notte['id']}/partecipanti",
+        {"persone": [giulia], "data": anno.inizio.replace(month=5, day=16).isoformat()},
+    )
+    capo_reparto(
+        "post",
+        f"/cerimonie/{notte['id']}/partecipanti",
+        {
+            "persone": [persona["Marco Ferri"].pk],
+            "data": anno.inizio.replace(year=anno.inizio.year - 15, month=5, day=20).isoformat(),
         },
     )

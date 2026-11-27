@@ -254,8 +254,7 @@ def avvisi_massimi(evento: Evento) -> list[str]:
         for unita, quanti in sorted(per_unita.items(), key=lambda x: str(x[0])):
             if quanti > d.massimo_per_unita:
                 avvisi.append(
-                    f"Iscritti di {unita}: {quanti}, il massimo per unità è "
-                    f"{d.massimo_per_unita}."
+                    f"Iscritti di {unita}: {quanti}, il massimo per unità è {d.massimo_per_unita}."
                 )
     return avvisi
 

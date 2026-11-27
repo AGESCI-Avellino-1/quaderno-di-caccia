@@ -17,3 +17,4 @@ class CerimonieConfig(AppConfig):
         # a long text, often reserved; who changed what and when is still recorded. Who was
         # added by hand neither: the names would outlive an erasure (DEC-102).
         auditlog.register(models.VoceLibro, exclude_fields=["testo"])
+        auditlog.register(models.PartecipazioneVoce)

@@ -18,6 +18,7 @@ const TIPI: { tipo: Tipo; nome: string }[] = [
   { tipo: 'promessa', nome: 'Ha fatto la Promessa' },
   { tipo: 'tappa', nome: 'Ha raggiunto una tappa' },
   { tipo: 'partenza', nome: 'Ha preso la Partenza' },
+  { tipo: 'partecipazione', nome: 'Ha vissuto una voce del libro' },
 ]
 const BRANCHE = [
   { valore: 'LC', nome: 'Lupetti e Coccinelle' },
@@ -43,6 +44,8 @@ function nuova(tipo: Tipo): CondizioneVoce {
       return { tipo, da: 'LC', a: 'EG' }
     case 'tappa':
       return { tipo, branca: 'EG', fase: 'SCOPERTA' }
+    case 'partecipazione':
+      return { tipo, voce: props.libro.voci[0]?.id }
     default:
       return { tipo }
   }
@@ -127,6 +130,14 @@ function nuovoGruppo() {
             <option v-for="r in libro.incarichi" :key="r.valore" :value="r.valore">
               {{ r.nome }}
             </option>
+          </select>
+          <select
+            v-if="c.tipo === 'partecipazione'"
+            v-model="c.voce"
+            class="form-control form-control-sm w-auto"
+            aria-label="Voce del libro"
+          >
+            <option v-for="v in libro.voci" :key="v.id" :value="v.id">{{ v.titolo }}</option>
           </select>
           <template v-if="c.tipo === 'passaggio'">
             <select v-model="c.da" class="form-control form-control-sm w-auto" aria-label="Da">

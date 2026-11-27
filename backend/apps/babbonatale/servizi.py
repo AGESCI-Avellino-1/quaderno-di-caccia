@@ -265,8 +265,10 @@ def aggiungi(scambio: ScambioRegali, persona: Persona, da) -> None:
     famiglie = _famiglie([persona, *(p.persona for p in presenti)])
     _caso.shuffle(presenti)
     presenti.sort(
-        key=lambda p: (frozenset((p.persona_id, persona.pk)) in famiglie)
-        + (frozenset((persona.pk, p.a_chi_id)) in famiglie)
+        key=lambda p: (
+            (frozenset((p.persona_id, persona.pk)) in famiglie)
+            + (frozenset((persona.pk, p.a_chi_id)) in famiglie)
+        )
     )
     prima = presenti[0]
     nuovo = Partecipante.objects.create(scambio=scambio, persona=persona, a_chi_id=prima.a_chi_id)

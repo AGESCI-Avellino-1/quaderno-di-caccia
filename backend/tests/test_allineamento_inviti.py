@@ -257,7 +257,11 @@ def test_quota_non_pagata_annullata_con_l_invito(
 
 
 def test_quota_pagata_in_parte_resta_invitata(
-    capo, reparto, ragazza, contanti, django_capture_on_commit_callbacks  # noqa: F811
+    capo,
+    reparto,
+    ragazza,
+    contanti,  # noqa: F811
+    django_capture_on_commit_callbacks,  # noqa: F811
 ):  # noqa: F811
     from decimal import Decimal
 

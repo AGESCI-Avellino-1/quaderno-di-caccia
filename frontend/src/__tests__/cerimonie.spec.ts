@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api, type CondizioneVoce, type LibroCerimonie, type VoceLibro } from '@/api/qdc'
 import CondizioniVoce from '@/components/CondizioniVoce.vue'
+import RegistroVoce from '@/components/RegistroVoce.vue'
 import CerimonieView from '@/views/CerimonieView.vue'
 import VoceLibroView from '@/views/VoceLibroView.vue'
 
@@ -53,6 +54,8 @@ const VOCE: VoceLibro = {
   puo_modificare: false,
   aggiunti: [],
   condizioni: [],
+  vede_registro: false,
+  partecipanti: [],
 }
 
 beforeEach(() => setActivePinia(createPinia()))
@@ -205,7 +208,51 @@ describe('libro delle cerimonie', () => {
       .find((b) => b.text() === 'Chi la legge oggi')!
       .trigger('click')
     await flushPromises()
-    expect(anteprima).toHaveBeenCalledWith([[{ tipo: 'consiglio_capi' }]], [])
+    expect(anteprima).toHaveBeenCalledWith([[{ tipo: 'consiglio_capi' }]], [], 2)
     expect(pagina.find('[data-anteprima]').text()).toContain('Verdi Sara')
+  })
+
+  describe('registro', () => {
+    const PARTECIPANTI = [
+      { id: 3, nome: 'Sara', cognome: 'Verdi', unita: 'Reparto (N1)', data: '2025-06-14' },
+    ]
+
+    it('chi ha partecipato vede gli altri, senza poter cambiare', () => {
+      const pagina = mount(RegistroVoce, {
+        props: { voce: { ...VOCE, vede_registro: true, partecipanti: PARTECIPANTI } },
+      })
+      expect(pagina.text()).toContain('Verdi Sara')
+      expect(pagina.text()).toContain(new Date('2025-06-14T00:00:00').toLocaleDateString('it-IT'))
+      expect(pagina.text()).not.toContain('Segna')
+      expect(pagina.text()).not.toContain('Togli')
+    })
+
+    it('chi scrive la voce segna e toglie', async () => {
+      const voce = { ...VOCE, puo_modificare: true, vede_registro: true, partecipanti: [] }
+      vi.spyOn(api, 'segnabiliRegistro').mockResolvedValue([
+        { id: 3, nome: 'Sara', cognome: 'Verdi', unita: 'Reparto (N1)' },
+      ])
+      const segna = vi
+        .spyOn(api, 'segnaPartecipanti')
+        .mockResolvedValue({ ...voce, partecipanti: PARTECIPANTI })
+      const togli = vi.spyOn(api, 'togliPartecipante').mockResolvedValue(voce)
+      const pagina = mount(RegistroVoce, { props: { voce } })
+      expect(pagina.text()).toContain('Nessuno, per ora.')
+      await pagina
+        .findAll('button')
+        .find((b) => b.text() === "Segna chi l'ha vissuta")!
+        .trigger('click')
+      await flushPromises()
+      await pagina.find('#registro-giorno').setValue('2025-06-14')
+      await pagina.find('#registro-3').setValue(true)
+      await pagina.find('form').trigger('submit')
+      await flushPromises()
+      expect(segna).toHaveBeenCalledWith(2, [3], '2025-06-14')
+      const aggiornata = pagina.emitted('aggiornata')![0]![0] as VoceLibro
+      await pagina.setProps({ voce: aggiornata })
+      await pagina.find('[aria-label="Togli Verdi Sara dal registro"]').trigger('click')
+      await flushPromises()
+      expect(togli).toHaveBeenCalledWith(2, 3)
+    })
   })
 })

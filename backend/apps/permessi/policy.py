@@ -2519,7 +2519,8 @@ def puo_modificare_tribu(user) -> bool:
 def voci_visibili(user):
     """The entries of the book one reads: every capo of the Co.Ca. all of them, with a
     provisional code and trainees too; a ragazzo/a, while an active member, those whose
-    conditions they meet and those they were added to by hand; the parents as such never."""
+    conditions they meet, those they were added to by hand and those whose register they are
+    in (maintainer, 27/11); the parents as such never."""
     from apps.anagrafica.compleanni import soci_attivi
     from apps.cerimonie.condizioni import segni_di, vale
     from apps.cerimonie.models import VoceLibro
@@ -2535,17 +2536,41 @@ def voci_visibili(user):
         for v in VoceLibro.objects.exclude(condizioni=[]).only("pk", "condizioni")
         if vale(v.condizioni, segni)
     ]
-    return VoceLibro.objects.filter(Q(aggiunti=persona) | Q(pk__in=per_condizioni)).distinct()
+    return VoceLibro.objects.filter(
+        Q(aggiunti=persona) | Q(partecipazioni__persona=persona) | Q(pk__in=per_condizioni)
+    ).distinct()
 
 
-def lettori_delle_condizioni(condizioni, aggiunti_ids):
+def vede_registro_voce(user, voce) -> bool:
+    """The register of who lived an entry: every capo; a participant, the others of the same
+    entry (it is read on the entry, so they read the entry too)."""
+    if e_capo(user):
+        return True
+    persona = persona_di(user)
+    return persona is not None and voce.partecipazioni.filter(persona=persona).exists()
+
+
+def segnabili_nel_registro(user):
+    """Who may be marked in an entry's register: the active ragazzi/e and capi (maintainer,
+    27/11), for who writes entries."""
+    from apps.anagrafica.compleanni import soci_attivi
+
+    if not puo_scrivere_voci(user):
+        return Persona.objects.none()
+    return soci_attivi().order_by("cognome", "nome")
+
+
+def lettori_delle_condizioni(condizioni, aggiunti_ids, voce=None):
     """The ragazzi/e who would read an entry with these conditions and these people added by
-    hand, today: the preview for who writes it (DEC-437). The capi read it anyway."""
+    hand, today, with who is in its register: the preview for who writes it (DEC-437). The
+    capi read it anyway."""
     from apps.cerimonie.condizioni import segni_di, vale
 
     candidati = list(aggiungibili_alle_voci_tutti())
     segni = segni_di(p.pk for p in candidati)
     aggiunti = set(aggiunti_ids)
+    if voce is not None:
+        aggiunti |= set(voce.partecipazioni.values_list("persona_id", flat=True))
     return [p for p in candidati if p.pk in aggiunti or vale(condizioni, segni.get(p.pk, set()))]
 
 

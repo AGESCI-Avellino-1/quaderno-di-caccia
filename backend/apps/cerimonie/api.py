@@ -3,6 +3,7 @@ none of it exists (DEC-421). Who reads an entry: `policy.voci_visibili`; who wri
 `policy.puo_scrivere_voce`."""
 
 import re
+from datetime import date
 
 from django.db import transaction
 from django.http import HttpResponse
@@ -10,14 +11,14 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 
 from apps.anagrafica.models import Persona
-from apps.anagrafica.servizi import con_unita
+from apps.anagrafica.servizi import con_unita, unita_delle_persone
 from apps.impostazioni import funzioni
 from apps.impostazioni.html import in_testo, pulisci
 from apps.organizzazione.models import TipoUnita, Unita
 from apps.permessi import policy
 
 from . import condizioni as cond
-from .models import LUNGHEZZA_TESTO, TipoVoce, VoceLibro
+from .models import LUNGHEZZA_TESTO, PartecipazioneVoce, TipoVoce, VoceLibro
 from .stampa import pdf_voce
 
 router = Router(tags=["cerimonie"])
@@ -74,6 +75,14 @@ class LibroOut(Schema):
     incarichi: list[Scelta] = []
 
 
+class Partecipante(Schema):
+    id: int
+    nome: str
+    cognome: str
+    unita: str
+    data: date
+
+
 class VoceOut(VoceBreve):
     unita_id: int | None
     testo: str
@@ -81,6 +90,9 @@ class VoceOut(VoceBreve):
     # Who was added by hand and the conditions: only for who may change the entry.
     aggiunti: list[int]
     condizioni: list[list[dict]]
+    # The register: every capo, and the participants of this entry.
+    vede_registro: bool
+    partecipanti: list[Partecipante]
 
 
 class Aggiungibile(Schema):
@@ -115,9 +127,27 @@ def _breve(voce: VoceLibro) -> dict:
     }
 
 
+def _registro(voce: VoceLibro) -> list[dict]:
+    partecipazioni = list(voce.partecipazioni.select_related("persona"))
+    unita = unita_delle_persone([p.persona for p in partecipazioni])
+    return [
+        {
+            "id": p.persona_id,
+            "nome": p.persona.nome,
+            "cognome": p.persona.cognome,
+            "unita": unita.get(p.persona_id, ""),
+            "data": p.data,
+        }
+        for p in partecipazioni
+    ]
+
+
 def _voce_out(request, voce: VoceLibro) -> dict:
     puo = policy.puo_scrivere_voce(request.auth, voce)
+    registro = policy.vede_registro_voce(request.auth, voce)
     return {
+        "vede_registro": registro,
+        "partecipanti": _registro(voce) if registro else [],
         **_breve(voce),
         "unita_id": voce.unita_id,
         "testo": voce.testo,
@@ -159,6 +189,8 @@ def aggiungibili(request):
 class AnteprimaIn(Schema):
     condizioni: list = []
     aggiunti: list[int] = []
+    # The entry being changed: who is in its register reads it too.
+    voce_id: int | None = None
 
 
 @router.post("/cerimonie/anteprima", response=list[Aggiungibile])
@@ -168,7 +200,8 @@ def anteprima(request, dati: AnteprimaIn):
     if not policy.puo_scrivere_voci(request.auth):
         raise HttpError(403, "Le voci le scrivono lo staff delle unità e i capigruppo.")
     gruppi = _condizioni(dati.condizioni)
-    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti))
+    voce = _leggibile(request, dati.voce_id) if dati.voce_id is not None else None
+    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti, voce))
 
 
 def _condizioni(gruppi: list) -> list[list[dict]]:
@@ -176,6 +209,47 @@ def _condizioni(gruppi: list) -> list[list[dict]]:
         return cond.pulisci(gruppi)
     except cond.CondizioneNonValida as errore:
         raise HttpError(400, str(errore)) from errore
+
+
+@router.get("/cerimonie/segnabili", response=list[Aggiungibile])
+def segnabili(request):
+    _attiva()
+    if not policy.puo_scrivere_voci(request.auth):
+        raise HttpError(403, "Il registro lo segnano lo staff delle unità e i capigruppo.")
+    return con_unita(policy.segnabili_nel_registro(request.auth))
+
+
+class SegnaIn(Schema):
+    persone: list[int]
+    data: date
+
+
+@router.post("/cerimonie/{voce_id}/partecipanti", response=VoceOut)
+def segna(request, voce_id: int, dati: SegnaIn):
+    """Who lived the entry on that day; someone already in the register gets the new day."""
+    voce = _scrivibile(request, voce_id)
+    if dati.data > date.today():
+        raise HttpError(400, "Il giorno non può essere nel futuro.")
+    if not dati.persone:
+        raise HttpError(400, "Scegli chi l'ha vissuta.")
+    possibili = set(policy.segnabili_nel_registro(request.auth).values_list("pk", flat=True))
+    if not set(dati.persone) <= possibili:
+        raise HttpError(400, "Non puoi segnare una di queste persone.")
+    with transaction.atomic():
+        for persona_id in set(dati.persone):
+            PartecipazioneVoce.objects.update_or_create(
+                voce=voce,
+                persona_id=persona_id,
+                defaults={"data": dati.data, "registrata_da": request.auth},
+            )
+    return _voce_out(request, voce)
+
+
+@router.delete("/cerimonie/{voce_id}/partecipanti/{persona_id}", response=VoceOut)
+def togli_partecipante(request, voce_id: int, persona_id: int):
+    voce = _scrivibile(request, voce_id)
+    voce.partecipazioni.filter(persona_id=persona_id).delete()
+    return _voce_out(request, voce)
 
 
 @router.get("/cerimonie/{voce_id}", response=VoceOut)

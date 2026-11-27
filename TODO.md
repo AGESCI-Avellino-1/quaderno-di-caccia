@@ -14,7 +14,6 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103) | Tema 3.0.0a5 e Bootstrap 6.0.0-alpha.2                                          | Miglioramento | Alto    | Media      | VER    |
 | [#105](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/105) | Pagina di un evento: il link per un altro recapito esce dal riquadro | Correzione | Basso | Bassa | VER |
 | [#106](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/106) | Partecipanti selezionati: filtro per unità (DEC-434) | Miglioramento | Basso | Bassa | VER |
-| [#109](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/109) | Babbo Natale nell'admin per l'amministratore tecnico; admin non nell'app installata (DEC-436) | Miglioramento | Basso | Bassa | VER |
 
 Nessuna segnalazione di sicurezza aperta.
 
@@ -43,6 +42,7 @@ richiesta per ultima: da tenere coerenti se si cambia uno dei due.
 
 | Issue                                                                    | Titolo                                                                                         | Release                                                                                 |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [#109](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/109) | Babbo Natale nell'admin per l'amministratore tecnico; admin non nell'app installata (DEC-436) | [v1.50.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.50.0) |
 | [#104](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/104) | Riunioni di staff: le serie visibili a tutti i capi | [v1.47.1](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.47.1) |
 | [#102](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/102) | Avviso nei browser troppo vecchi (DEC-433)                                                     | [v1.47.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.47.0) |
 | [#101](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/101) | Calendario: distinguere gli eventi a cui si partecipa dagli altri (DEC-432)                    | [v1.46.0](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases/tag/v1.46.0) |

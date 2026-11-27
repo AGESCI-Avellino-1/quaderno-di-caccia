@@ -165,6 +165,10 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     descrizione_tribu_base: str = ""
     cerimonia_totem: str = ""
     puo_modificare_tribu: bool = False
+    # The birthday wishes (DEC-435): the group's text and the base one.
+    testo_auguri: str = ""
+    testo_auguri_base: str = ""
+    puo_modificare_auguri: bool = False
     # The features the group may switch off (DEC-421): for who may switch them.
     funzioni: list[FunzioneOut] = []
 
@@ -198,6 +202,7 @@ def _impostazioni(request) -> dict:
         **_testi_scheda(request, imp),
         **_volantino(request, imp),
         **_tribu(request, imp),
+        **_auguri(request, imp),
         "funzioni": _funzioni(request),
     }
 
@@ -353,6 +358,50 @@ def salva_tribu(request, dati: TribuIn):
     imp.descrizione_tribu = "" if descrizione == testi.DESCRIZIONE_BASE else descrizione
     imp.cerimonia_totem = cerimonia
     imp.save(update_fields=["descrizione_tribu", "cerimonia_totem"])
+    return _impostazioni(request)
+
+
+def _auguri(request, imp: Impostazioni) -> dict:
+    from apps.anagrafica import compleanni
+
+    if not policy.puo_modificare_auguri(request.auth):
+        return {}
+    return {
+        "testo_auguri": compleanni.auguri_del_gruppo(imp),
+        "testo_auguri_base": compleanni.AUGURI_BASE,
+        "puo_modificare_auguri": True,
+    }
+
+
+class AuguriIn(Schema):
+    # Empty: back to the base text.
+    testo: str = ""
+
+
+@router.put("/impostazioni/auguri", response=ImpostazioniOut)
+def salva_auguri(request, dati: AuguriIn):
+    """The birthday wishes sent to whoever has the birthday (DEC-435)."""
+    from apps.anagrafica import compleanni
+
+    from . import segnaposto as sp
+
+    if not policy.puo_modificare_auguri(request.auth):
+        raise HttpError(
+            403, "Il testo degli auguri lo cambiano i capigruppo e l'amministratore tecnico."
+        )
+    testo = " ".join(dati.testo.split()) or compleanni.AUGURI_BASE
+    if len(testo) > compleanni.LUNGHEZZA_AUGURI:
+        raise HttpError(400, "Il testo va scritto in breve: al massimo 200 caratteri.")
+    ignoti = sp.sconosciuti(testo, (compleanni.NOME,))
+    if ignoti:
+        elenco = ", ".join(f"[{n}]" for n in ignoti)
+        raise HttpError(400, f"Segnaposto sconosciuto: {elenco}. Puoi usare solo [Nome].")
+    if not any(n.casefold() == compleanni.NOME.casefold() for n in sp.usati(testo)):
+        raise HttpError(400, "Nel testo serve [Nome], il nome di battesimo di chi compie gli anni.")
+    imp = Impostazioni.carica()
+    # The base text saved as it is stays "the base": it follows future versions.
+    imp.testo_auguri = "" if testo == compleanni.AUGURI_BASE else testo
+    imp.save(update_fields=["testo_auguri"])
     return _impostazioni(request)
 
 

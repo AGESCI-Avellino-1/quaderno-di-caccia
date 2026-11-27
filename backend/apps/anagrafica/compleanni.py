@@ -79,3 +79,25 @@ def testo_notifica(nomi: list[str]) -> str:
     if len(nomi) <= 3:
         return f"Oggi compiono gli anni {', '.join(nomi[:-1])} e {nomi[-1]}"
     return f"Oggi compiono gli anni {nomi[0]}, {nomi[1]} e altri {len(nomi) - 2}"
+
+
+# The wishes to whoever has the birthday (DEC-435): the group may change the text, [Nome] is
+# required. A push has no formatting, so it is plain text.
+NOME = "Nome"
+AUGURI_BASE = "Tanti auguri, [Nome]!"
+LUNGHEZZA_AUGURI = 200
+
+
+def auguri_del_gruppo(imp) -> str:
+    """The group's text, or the base one."""
+    return imp.testo_auguri or AUGURI_BASE
+
+
+def frase_di_auguri(nome: str, imp) -> str:
+    """The text with the first name in it (as in the other birthday notifications)."""
+    from apps.impostazioni.segnaposto import SEGNAPOSTO
+
+    return SEGNAPOSTO.sub(
+        lambda m: nome if m.group(1).strip().casefold() == NOME.casefold() else m.group(0),
+        auguri_del_gruppo(imp),
+    )

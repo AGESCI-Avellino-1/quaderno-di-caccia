@@ -29,8 +29,9 @@ Le notifiche si leggono anche a telefono bloccato, quindi dicono solo di cosa si
 salute: i dettagli sono nell'app, che si apre toccando la notifica.
 
 L'unica eccezione sono i compleanni del giorno, che arrivano solo a ragazzi/e e capi: dicono il nome di
-battesimo di chi festeggia, senza cognome né età, per esempio «Oggi compiono gli anni Marco e Giulia». Si
-spengono con **Compleanni del giorno** e non hanno un'email.
+battesimo di chi festeggia, senza cognome né età, per esempio «Oggi compiono gli anni Marco e Giulia». Chi
+compie gli anni riceve invece gli auguri, per esempio «Tanti auguri, Marco!». Si spengono con
+**Compleanni del giorno** e non hanno un'email.
 
 ## Disattivarle
 

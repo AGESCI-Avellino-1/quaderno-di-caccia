@@ -16,6 +16,8 @@ Nel **Calendario** tocca **Prossimi compleanni**: chi compie gli anni nei prossi
 tua unità, capi compresi, con il giorno e gli anni che compie. Nel calendario del mese una piccola
 torta segna i giorni dei compleanni: tocca il giorno per vedere chi festeggia. Se hai attivato le
 [notifiche](../genitore/notifiche.md), alle 8 del mattino ne arriva una con i compleanni del giorno.
+Il giorno del tuo compleanno ti arrivano invece gli auguri; se festeggia anche qualcun altro, la
+notifica con il suo nome arriva a parte.
 
 Per gli eventi su BuonaCaccia (campi di specialità, di competenza…) a volte c'è una scheda
 con delle domande: puoi rispondere tu, come in [Eventi su

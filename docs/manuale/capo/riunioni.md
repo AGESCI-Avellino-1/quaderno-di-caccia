@@ -46,7 +46,9 @@ compleanni.
 
 Con le [notifiche](../genitore/notifiche.md) attive, alle 8 del mattino ne arriva una con i
 compleanni del giorno, ma solo quelli delle unità in cui sei in servizio (anche collegate) e della
-Comunità capi. Se non la vuoi, spegni **Compleanni del giorno** in **Privacy e preferenze**.
+Comunità capi. Il giorno del tuo compleanno ti arrivano invece gli auguri, con il testo scelto dal
+gruppo; se festeggia anche qualcun altro, la notifica con il suo nome arriva a parte. Se non le vuoi,
+spegni **Compleanni del giorno** in **Privacy e preferenze**: si spengono anche gli auguri.
 
 :::{container} schermate
 ![Le riunioni sul telefono](../img/capo/riunioni-telefono.png){.telefono width="30%"}

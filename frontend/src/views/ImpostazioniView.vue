@@ -16,6 +16,7 @@ import ServerPosta from '@/components/ServerPosta.vue'
 import SezioneApribile from '@/components/SezioneApribile.vue'
 import TestiSchedaSanitaria from '@/components/TestiSchedaSanitaria.vue'
 import TestiTribu from '@/components/TestiTribu.vue'
+import TestoAuguri from '@/components/TestoAuguri.vue'
 import TestoVolantino from '@/components/TestoVolantino.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useGruppiPagina } from '@/composables/useGruppiPagina'
@@ -71,7 +72,12 @@ const GRUPPI = {
     d.puo_modificare || d.puo_destinatari_email || d.puo_smtp || d.puo_email_di_prova,
   gruppo: (d: Impostazioni) => d.puo_modificare_intestazione || d.puo_modificare_pagamenti,
   testi: (d: Impostazioni) =>
-    !!(d.puo_modificare_scheda || d.puo_modificare_volantino || d.puo_modificare_tribu),
+    !!(
+      d.puo_modificare_scheda ||
+      d.puo_modificare_volantino ||
+      d.puo_modificare_tribu ||
+      d.puo_modificare_auguri
+    ),
   manutenzione: (d: Impostazioni) => d.puo_manutenzione || d.puo_sbloccare_accessi,
 }
 type ChiaveGruppo = keyof typeof GRUPPI
@@ -311,6 +317,11 @@ useGruppiPagina('impostazioni', () =>
           />
           <TestiTribu
             v-if="dati.puo_modificare_tribu"
+            :impostazioni="dati"
+            @aggiornate="dati = $event"
+          />
+          <TestoAuguri
+            v-if="dati.puo_modificare_auguri"
             :impostazioni="dati"
             @aggiornate="dati = $event"
           />

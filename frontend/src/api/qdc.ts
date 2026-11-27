@@ -346,6 +346,10 @@ export interface Impostazioni extends ImpostazioniSito {
   descrizione_tribu_base?: string
   cerimonia_totem?: string
   puo_modificare_tribu?: boolean
+  /** The birthday wishes (DEC-435): the group's text and the base one. */
+  testo_auguri?: string
+  testo_auguri_base?: string
+  puo_modificare_auguri?: boolean
   /** The features the group may switch off (DEC-421): for who may switch them. */
   funzioni?: FunzioneFacoltativa[]
 }
@@ -3502,6 +3506,8 @@ export const api = {
       metodo: 'PUT',
       corpo: { descrizione, cerimonia },
     }),
+  salvaTestoAuguri: (testo: string) =>
+    richiesta<Impostazioni>('/api/v1/impostazioni/auguri', { metodo: 'PUT', corpo: { testo } }),
   tribu: () => richiesta<Tribu>('/api/v1/tribu'),
   attivaFunzione: (chiave: string, attiva: boolean) =>
     richiesta<Impostazioni>(`/api/v1/impostazioni/funzioni/${chiave}`, {

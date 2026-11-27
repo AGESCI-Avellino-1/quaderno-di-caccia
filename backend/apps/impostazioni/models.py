@@ -82,6 +82,9 @@ class Impostazioni(ModelloTracciato):
     # the totem ceremony, the editor's cleaned HTML, read only by the capi; empty = none.
     descrizione_tribu = models.TextField(blank=True)
     cerimonia_totem = models.TextField(blank=True)
+    # The birthday wishes to whoever has the birthday (DEC-435), plain text with [Nome];
+    # empty = the base text in anagrafica.compleanni.
+    testo_auguri = models.CharField(max_length=200, blank=True)
     # The features switched on (DEC-421), by key (`funzioni.FUNZIONI`): those missing are off.
     funzioni_attive = models.JSONField(default=list, blank=True)
     # Maintenance (DEC-268): only the technical administrators get in

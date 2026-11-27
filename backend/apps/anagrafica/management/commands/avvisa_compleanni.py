@@ -7,12 +7,17 @@ Run once a day at 8 from the host's scheduler:
 One notification per person with the first names of who has the birthday today among those
 they are told about (`policy.compleanni_notificati`). Only who has an account and has not
 switched birthdays off in the notification choices gets it (`notifiche.servizi.vuole`).
+
+Whoever has the birthday gets the wishes instead, a notification of its own, with the group's
+text (DEC-435); the others' birthdays of the day, if any, come apart as usual. The same choice
+switches both off.
 """
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.anagrafica.compleanni import compleanni_tra, soci_attivi, testo_notifica
+from apps.anagrafica.compleanni import compleanni_tra, frase_di_auguri, soci_attivi, testo_notifica
+from apps.impostazioni.models import Impostazioni
 from apps.notifiche.servizi import notifica
 from apps.permessi import policy
 
@@ -28,8 +33,12 @@ class Command(BaseCommand):
         if not festeggiati:
             return
         inviate = 0
+        imp = Impostazioni.carica()
         destinatari = soci_attivi().filter(utente__isnull=False).select_related("utente")
         for persona in destinatari:
+            if persona.pk in festeggiati and policy.riceve_compleanni(persona.utente):
+                auguri = frase_di_auguri(persona.nome, imp)
+                inviate += notifica("compleanni", [persona], auguri, PERCORSO)
             nomi = list(
                 policy.compleanni_notificati(persona.utente)
                 .filter(pk__in=festeggiati)

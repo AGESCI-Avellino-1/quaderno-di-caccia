@@ -65,6 +65,15 @@ che sul volantino diventano il nome e la sigla del gruppo; una riga vuota separa
 ![Il testo del volantino nelle impostazioni, sul computer](../img/gruppo/volantino-computer.png){.computer width="65%"}
 :::
 
+## Auguri di compleanno
+
+Il giorno del compleanno, alle 8, ragazzi/e e capi che hanno attivato le
+[notifiche](../genitore/notifiche.md) ricevono gli auguri sul telefono. In **Auguri di compleanno**
+(gruppo **Testi**) un capogruppo o l'amministratore tecnico ne cambia il testo e tocca **Salva**;
+**Torna al testo di base** rimette «Tanti auguri, [Nome]!». **[Nome]** diventa il nome di battesimo di
+chi compie gli anni e deve esserci, altrimenti il testo non si salva. È una notifica: niente
+grassetto né a capo, al massimo 200 caratteri.
+
 ## Pagamenti
 
 Come le famiglie possono pagare: accendi i modi che il gruppo accetta.

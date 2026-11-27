@@ -7,9 +7,10 @@ import pytest
 from django.core.management import call_command
 from django.test import Client
 
-from apps.anagrafica.compleanni import compleanni_tra, compleanno_nel
+from apps.anagrafica.compleanni import AUGURI_BASE, compleanni_tra, compleanno_nel, frase_di_auguri
 from apps.anagrafica.compleanni import testo_notifica as frase
 from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+from apps.impostazioni.models import Impostazioni
 from apps.iscrizioni.models import RichiestaIscrizione, StatoIscrizione
 from apps.notifiche import servizi
 from apps.notifiche.models import PreferenzePush
@@ -234,11 +235,16 @@ def _iscrivi(chi):
     assert risposta.status_code == 204, risposta.content
 
 
-def _ricevute(spediti) -> dict[str, dict]:
-    return {
-        c["subscription_info"]["endpoint"].removeprefix(ENDPOINT): json.loads(c["data"])
-        for c in spediti
-    }
+def _ricevute(spediti) -> dict[str, list[dict]]:
+    ricevute: dict[str, list[dict]] = {}
+    for c in spediti:
+        chi = c["subscription_info"]["endpoint"].removeprefix(ENDPOINT)
+        ricevute.setdefault(chi, []).append(json.loads(c["data"]))
+    return ricevute
+
+
+def _titoli(ricevute, chi) -> list[str]:
+    return [r["titolo"] for r in ricevute[chi]]
 
 
 def test_notifica_del_mattino(capo, ragazza, genitore, spediti, gruppo_intero):
@@ -247,12 +253,52 @@ def test_notifica_del_mattino(capo, ragazza, genitore, spediti, gruppo_intero):
     call_command("avvisa_compleanni")
     ricevute = _ricevute(spediti)
     assert set(ricevute) == {"Anna", "Giulia", "Lupo"}
-    # First names only, in order; four or more: two and how many others.
-    assert ricevute["Anna"]["titolo"] == "Oggi compiono gli anni Akela, Bruno e altri 2"
-    assert ricevute["Giulia"]["titolo"] == "Oggi compiono gli anni Anna e Sara"
-    assert ricevute["Lupo"]["titolo"] == "Oggi compie gli anni Akela"
-    assert ricevute["Giulia"]["percorso"] == "/calendario?mostra=compleanni"
+    # Everyone has the birthday today: first the wishes, then the others apart, first names
+    # only, in order; four or more: two and how many others.
+    assert _titoli(ricevute, "Anna") == [
+        "Tanti auguri, Anna!",
+        "Oggi compiono gli anni Akela, Bruno e altri 2",
+    ]
+    assert _titoli(ricevute, "Giulia") == [
+        "Tanti auguri, Giulia!",
+        "Oggi compiono gli anni Anna e Sara",
+    ]
+    assert _titoli(ricevute, "Lupo") == ["Tanti auguri, Lupo!", "Oggi compie gli anni Akela"]
+    assert {r["percorso"] for r in sum(ricevute.values(), [])} == {"/calendario?mostra=compleanni"}
     assert "Prova" not in json.dumps(list(ricevute.values()))
+
+
+def test_auguri_soli(ragazza, csq, spediti):
+    # Only Giulia has the birthday: she gets the wishes, never her own birthday; Sara, of
+    # her reparto, the usual one.
+    ragazza.data_nascita = oggi_di(12)
+    ragazza.save()
+    for chi in (ragazza, csq):
+        _iscrivi(chi)
+    call_command("avvisa_compleanni")
+    ricevute = _ricevute(spediti)
+    assert _titoli(ricevute, "Giulia") == ["Tanti auguri, Giulia!"]
+    assert _titoli(ricevute, "Sara") == ["Oggi compie gli anni Giulia"]
+
+
+def test_auguri_col_testo_del_gruppo(ragazza, spediti):
+    ragazza.data_nascita = oggi_di(12)
+    ragazza.save()
+    imp = Impostazioni.carica()
+    imp.testo_auguri = "Buon compleanno [nome], da tutto il gruppo!"
+    imp.save()
+    _iscrivi(ragazza)
+    call_command("avvisa_compleanni")
+    assert _titoli(_ricevute(spediti), "Giulia") == ["Buon compleanno Giulia, da tutto il gruppo!"]
+
+
+def test_niente_auguri_al_genitore(genitore, spediti):
+    # A parent as such never gets birthdays, their own neither.
+    genitore.data_nascita = oggi_di(40)
+    genitore.save()
+    _iscrivi(genitore)
+    call_command("avvisa_compleanni")
+    assert spediti == []
 
 
 def test_notifica_spenta_nelle_preferenze(ragazza, spediti, gruppo_intero):
@@ -271,6 +317,7 @@ def test_notifica_spenta_nelle_preferenze(ragazza, spediti, gruppo_intero):
     assert risposta.status_code == 200
     assert PreferenzePush.objects.get(persona=ragazza).compleanni is False
     call_command("avvisa_compleanni")
+    # The wishes go off with the rest (DEC-435).
     assert spediti == []
 
 
@@ -286,3 +333,60 @@ def test_nessun_compleanno_nessuna_notifica(ragazza, spediti):
     _iscrivi(ragazza)
     call_command("avvisa_compleanni")
     assert spediti == []
+
+
+# --- The text of the wishes (DEC-435) -------------------------------------------------------
+
+
+def test_testo_degli_auguri():
+    imp = Impostazioni.carica()
+    assert frase_di_auguri("Marco", imp) == "Tanti auguri, Marco!"
+    imp.testo_auguri = "[Nome], auguri! [Gruppo]"
+    assert frase_di_auguri("Marco", imp) == "Marco, auguri! [Gruppo]"
+
+
+def test_chi_cambia_gli_auguri(capo, capogruppo, ragazza, csq, genitore, estraneo):
+    from apps.accounts.models import User
+
+    tecnico = User.objects.create_user(email="tecnico@example.invalid", amministratore_tecnico=True)
+    assert policy.puo_modificare_auguri(capogruppo.utente)
+    assert policy.puo_modificare_auguri(tecnico)
+    tecnico_client = Client()
+    tecnico_client.force_login(tecnico)
+    assert tecnico_client.get("/api/v1/impostazioni").json()["puo_modificare_auguri"] is True
+    for chi in (capo, ragazza, csq, genitore, estraneo):
+        assert not policy.puo_modificare_auguri(chi.utente)
+        risposta = _client(chi).put(
+            "/api/v1/impostazioni/auguri", {"testo": "Ciao [Nome]"}, content_type="application/json"
+        )
+        assert risposta.status_code == 403
+    assert Impostazioni.carica().testo_auguri == ""
+
+
+def _salva_auguri(chi, testo):
+    return _client(chi).put(
+        "/api/v1/impostazioni/auguri", {"testo": testo}, content_type="application/json"
+    )
+
+
+def test_api_degli_auguri(capogruppo):
+    dati = _client(capogruppo).get("/api/v1/impostazioni").json()
+    assert dati["testo_auguri"] == AUGURI_BASE == dati["testo_auguri_base"]
+    assert dati["puo_modificare_auguri"] is True
+    risposta = _salva_auguri(capogruppo, "  Buon   compleanno, [Nome]! ")
+    assert risposta.status_code == 200
+    assert risposta.json()["testo_auguri"] == "Buon compleanno, [Nome]!"
+    assert Impostazioni.carica().testo_auguri == "Buon compleanno, [Nome]!"
+    # Back to the base text: empty, or the base text itself.
+    assert _salva_auguri(capogruppo, AUGURI_BASE).status_code == 200
+    assert Impostazioni.carica().testo_auguri == ""
+    assert _salva_auguri(capogruppo, "").json()["testo_auguri"] == AUGURI_BASE
+
+
+def test_auguri_senza_nome_o_con_segnaposto_sconosciuti(capogruppo):
+    risposta = _salva_auguri(capogruppo, "Tanti auguri!")
+    assert risposta.status_code == 400 and "[Nome]" in risposta.json()["detail"]
+    risposta = _salva_auguri(capogruppo, "Auguri [Nome] da [Gruppo]")
+    assert risposta.status_code == 400 and "[Gruppo]" in risposta.json()["detail"]
+    assert _salva_auguri(capogruppo, "[Nome] " + "x" * 200).status_code == 400
+    assert Impostazioni.carica().testo_auguri == ""

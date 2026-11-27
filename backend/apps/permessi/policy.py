@@ -2561,6 +2561,12 @@ def compleanni_visibili(user) -> QuerySet[Persona]:
     return soci_attivi().filter(pk__in=_nelle_unita(unita).values("pk"))
 
 
+def puo_modificare_auguri(user) -> bool:
+    """The text of the birthday wishes (DEC-435): the capigruppo and the technical
+    administrator."""
+    return e_capogruppo(user) or e_amministratore(user)
+
+
 def compleanni_notificati(user) -> QuerySet[Persona]:
     """The day's notification: a capo only for the units they serve (linked ones too) and the
     Co.Ca.; a ragazzo/a as in the calendar. Never one's own birthday."""

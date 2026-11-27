@@ -5,6 +5,33 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.51.0 — 27 novembre 2026
+
+### Novità
+
+**Libro delle cerimonie e tradizioni** ([#110](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/110)): una nuova voce del menu, **Cerimonie e tradizioni**, raccoglie le cerimonie e le tradizioni del gruppo, ognuna di tutto il gruppo o di un'unità, con il testo formattato, il PDF e gli allegati (PDF o immagini fino a 10 MB). È una funzione che si accende nelle **Impostazioni**; arriva spenta.
+
+- **Chi scrive:** le voci di tutto il gruppo i capigruppo, quelle di un'unità lo staff dell'unità (anche collegata) e i capigruppo.
+- **Chi legge:** tutti i capi leggono tutte le voci; i genitori mai. Un ragazzo o una ragazza legge una voce, finché è nel gruppo, se soddisfa le sue condizioni (unità, branca, incarico di squadriglia, Consiglio capi, Alta Squadriglia, nome di totem, passaggio, Promessa, tappa, Partenza, un'altra cerimonia vissuta), se è stato scelto a mano o se è nel registro. Prima di salvare, **Chi la legge oggi** mostra l'elenco.
+- **Chi l'ha vissuta:** ogni voce ha il registro di chi l'ha vissuta, con il giorno, anche negli anni passati. Lo vedono i capi e, per la loro voce, chi c'è segnato.
+- **Senza rete:** aprendo il libro con la rete, il telefono tiene cifrati i testi delle voci che leggi; PDF, allegati e registro solo con la rete.
+
+**Cerimonia del totem nel libro:** il testo che era nelle **Impostazioni** diventa una voce del libro, letta come prima solo dai capi, e «La mia tribù» rimanda lì. Un gruppo che l'aveva già scritta trova il libro acceso dopo l'aggiornamento.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.51.0
+```
+
+Sei migrazioni del database (il libro, con la cerimonia del totem portata dalle impostazioni), applicate dallo script.
+
+### Documentazione
+
+Una nuova pagina del manuale, **Cerimonie e tradizioni**, spiega come leggere, scrivere, scegliere chi legge, segnare chi l'ha vissuta e usare il libro senza rete, con le schermate. Le pagine della tribù e delle impostazioni del gruppo rimandano al libro.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.50.0 — 27 novembre 2026
 
 ### Novità

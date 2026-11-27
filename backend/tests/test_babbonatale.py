@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 from django.core import mail
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import Invito, User
 from apps.anagrafica.models import Appartenenza, Persona, RelazioneTutela, RuoloAppartenenza
@@ -466,3 +467,72 @@ def test_policy_per_ruolo(capo, capogruppo, csq, ragazza, genitore, estraneo, re
         assert not policy.puo_gestire_scambio(chi.utente, scambio)
     assert policy.puo_gestire_scambio(capo.utente, scambio)
     assert policy.puo_gestire_scambio(capogruppo.utente, scambio)
+
+
+# --- The Django admin, read only, for the technical administrator (DEC-436) -----------------
+
+
+@pytest.fixture
+def estratto(reparto, ragazzi):
+    scambio = _scambio(reparto, ragazzi, estratto_il=timezone.now())
+    for chi, a_chi in zip(ragazzi, ragazzi[1:] + ragazzi[:1], strict=True):
+        Partecipante.objects.filter(scambio=scambio, persona=chi).update(a_chi=a_chi)
+    return scambio
+
+
+@pytest.fixture
+def tecnico():
+    return User.objects.create_user(email="tecnico@example.invalid", amministratore_tecnico=True)
+
+
+def test_l_amministratore_tecnico_legge_gli_abbinamenti(tecnico, estratto, ragazzi):
+    _accendi()
+    client = _client(tecnico)
+    assert "Partecipanti" in client.get("/admin/").content.decode()
+    elenco = client.get("/admin/babbonatale/partecipante/?q=Prova")
+    assert elenco.status_code == 200
+    giulia = Partecipante.objects.get(scambio=estratto, persona=ragazzi[0])
+    scheda = client.get(f"/admin/babbonatale/partecipante/{giulia.pk}/change/")
+    assert scheda.status_code == 200 and str(ragazzi[1]) in scheda.content.decode()
+    assert client.get(f"/admin/babbonatale/scambioregali/{estratto.pk}/change/").status_code == 200
+
+
+def test_nell_admin_niente_si_cambia(tecnico, estratto, ragazzi):
+    _accendi()
+    client = _client(tecnico)
+    giulia = Partecipante.objects.get(scambio=estratto, persona=ragazzi[0])
+    assert client.get("/admin/babbonatale/partecipante/add/").status_code == 403
+    assert client.get("/admin/babbonatale/scambioregali/add/").status_code == 403
+    risposta = client.post(
+        f"/admin/babbonatale/partecipante/{giulia.pk}/change/",
+        {"scambio": estratto.pk, "persona": ragazzi[0].pk, "a_chi": ragazzi[2].pk},
+    )
+    assert risposta.status_code == 403
+    assert (
+        client.post(
+            f"/admin/babbonatale/partecipante/{giulia.pk}/delete/", {"post": "yes"}
+        ).status_code
+        == 403
+    )
+    giulia.refresh_from_db()
+    assert giulia.a_chi == ragazzi[1]
+    assert ScambioRegali.objects.filter(pk=estratto.pk).exists()
+
+
+def test_con_la_funzione_spenta_non_c_e_nemmeno_nell_admin(tecnico, estratto):
+    client = _client(tecnico)
+    assert not policy.vede_abbinamenti_in_admin(tecnico)
+    assert "Partecipanti" not in client.get("/admin/").content.decode()
+    assert client.get("/admin/babbonatale/partecipante/").status_code == 403
+
+
+def test_solo_l_amministratore_tecnico(capo, capogruppo, ragazza, genitore, estraneo, estratto):
+    _accendi()
+    # A plain Django staff user enters the admin but does not see them.
+    staff = User.objects.create_user(email="staff@example.invalid", is_staff=True)
+    assert not policy.vede_abbinamenti_in_admin(staff)
+    assert _client(staff).get("/admin/babbonatale/partecipante/").status_code == 403
+    for chi in (capo, capogruppo, ragazza, genitore, estraneo):
+        assert not policy.vede_abbinamenti_in_admin(chi.utente)
+        # They do not even enter the admin.
+        assert _client(chi).get("/admin/babbonatale/partecipante/").status_code == 302

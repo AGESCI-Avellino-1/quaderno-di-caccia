@@ -18,15 +18,26 @@ Può:
 
 ## Il pannello di amministrazione
 
-Nel menu, in **Amministrazione**, tocca **Pannello di amministrazione**: è il pannello
-tecnico, per correggere a mano un account, un invito, un'unità, un incarico. Usalo solo
-quando l'app non offre un'altra strada.
+Apri l'app in una scheda del browser e nel menu, in **Amministrazione**, tocca **Pannello di
+amministrazione**: è il pannello tecnico, per correggere a mano un account, un invito, un'unità,
+un incarico. Usalo solo quando l'app non offre un'altra strada. Nell'app installata sul telefono
+o sul computer la voce non c'è: il pannello serve per gli accessi delicati, che non si fanno
+dall'app.
 
 :::{warning}
 Le schede sanitarie, le note e le regole sul rapporto con i minori non sono nel pannello.
 Il **registro delle modifiche** però conserva i valori cambiati, anche dei dati sanitari: per
 questo l'amministratore tecnico è sempre un capo, o ha una delega dei capigruppo per i dati.
 :::
+
+### Babbo Natale segreto
+
+Se qualcuno non riesce proprio a entrare nell'app e vuole sapere a chi fare il regalo, nel
+pannello, in **Babbo Natale segreto**, apri **Partecipanti** e cerca il suo cognome: la colonna
+**A chi** dice a chi fa il regalo. In **Scambi di regali** vedi ogni scambio con tutti i suoi
+partecipanti. Qui puoi solo leggere: ritiri, aggiunte e nuovi avvisi si fanno nell'app. Lo vede
+solo l'amministratore tecnico, non i capigruppo, e solo mentre la funzione è accesa. Rispetta
+il segreto: dillo solo a chi te l'ha chiesto.
 
 ## Il server di posta
 

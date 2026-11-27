@@ -2589,6 +2589,18 @@ def compleanni_notificati(user) -> QuerySet[Persona]:
 # Every endpoint first asks `impostazioni.funzioni.richiedi` (DEC-421): off, nothing exists.
 
 
+def vede_abbinamenti_in_admin(user) -> bool:
+    """Who gives a gift to whom in the Django admin (DEC-436): the technical administrator
+    alone, read only, while the feature is on; for who cannot get into the app."""
+    from apps.impostazioni import funzioni
+
+    return (
+        bool(getattr(user, "is_active", False))
+        and e_amministratore(user)
+        and funzioni.attiva(funzioni.BABBO_NATALE)
+    )
+
+
 def puo_organizzare_scambi(user) -> bool:
     """Creating exchanges: the staff of a unit for their unit, the capigruppo for anyone."""
     return e_capogruppo(user) or bool(_unita_servite(user))

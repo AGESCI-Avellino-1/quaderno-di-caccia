@@ -1,9 +1,10 @@
 """Babbo Natale segreto (DEC-422).
 
 Who gives a gift to whom (`Partecipante.a_chi`) is read only by the giver and, for a minor who
-gets it through them, by their parents: never by the organisers, the capigruppo or the
-administrators, never in the Django admin (not registered), the audit log (not registered) or the
-logs. It is kept in clear in the database (maintainer's choice, DEC-422).
+gets it through them, by their parents: never by the organisers or the capigruppo,
+never in the audit log (not registered) or the logs. The one exception is
+the Django admin, read only, for the technical administrator alone (`admin.py`, DEC-436). It is
+kept in clear in the database (maintainer's choice, DEC-422).
 """
 
 from datetime import date, timedelta

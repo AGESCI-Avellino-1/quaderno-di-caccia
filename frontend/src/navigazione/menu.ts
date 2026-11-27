@@ -8,6 +8,8 @@ import type { RouteLocationRaw } from 'vue-router'
 
 import type { Profilo } from '@/api/qdc'
 
+import { appInstallata } from '@/pwa/installazione'
+
 import type { NomeIcona } from './icone'
 
 export interface Voce {
@@ -454,13 +456,16 @@ export function gruppiMenu(p: Profilo, contatori: Contatori = {}): Gruppo[] {
           to: '/amministrazione/account',
           descrizione: 'Tutti gli account: accessi, dispositivi, blocchi',
         },
-        p.amministratore_tecnico && {
-          nome: 'Pannello di amministrazione',
-          icona: 'tools',
-          to: '/admin/',
-          esterna: true,
-          descrizione: 'Il pannello tecnico di Django',
-        },
+        // Only in a browser tab, never in the installed app (DEC-436): the admin is for the
+        // technical administrators and delicate accesses, not something done from the app.
+        p.amministratore_tecnico &&
+          !appInstallata() && {
+            nome: 'Pannello di amministrazione',
+            icona: 'tools',
+            to: '/admin/',
+            esterna: true,
+            descrizione: 'Il pannello tecnico di Django',
+          },
       ]),
     },
   ]

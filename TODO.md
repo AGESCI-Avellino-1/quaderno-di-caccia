@@ -14,7 +14,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#103](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/103) | Tema 3.0.0a5 e Bootstrap 6.0.0-alpha.2                                          | Miglioramento | Alto    | Media      | VER    |
 | [#105](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/105) | Pagina di un evento: il link per un altro recapito esce dal riquadro | Correzione | Basso | Bassa | VER |
 | [#106](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/106) | Partecipanti selezionati: filtro per unità (DEC-434) | Miglioramento | Basso | Bassa | VER |
-| [#109](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/109) | Babbo Natale nell'admin per l'amministratore tecnico; admin non nell'app installata (DEC-436) | Miglioramento | Basso | Bassa | VAL |
+| [#109](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/109) | Babbo Natale nell'admin per l'amministratore tecnico; admin non nell'app installata (DEC-436) | Miglioramento | Basso | Bassa | VER |
 
 Nessuna segnalazione di sicurezza aperta.
 

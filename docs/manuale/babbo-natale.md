@@ -2,8 +2,10 @@
 
 Il **Babbo Natale segreto** è uno scambio di regali anonimo: ogni partecipante fa un regalo a
 un altro, estratto a caso dall'app, e ne riceve uno. Chi riceve il regalo scopre chi gliel'ha
-fatto solo alla consegna, di persona. Nessuno può vedere gli abbinamenti, neanche chi
-organizza, i capigruppo o l'amministratore tecnico.
+fatto solo alla consegna, di persona. Nell'app nessuno può vedere gli abbinamenti, neanche chi
+organizza o i capigruppo. Solo l'amministratore tecnico li può leggere, dal pannello di
+amministrazione, per chi proprio non riesce a entrare nell'app (vedi
+[Amministratore tecnico](gruppo/amministratore.md#babbo-natale-segreto)).
 
 È una funzione facoltativa: c'è solo se il gruppo l'ha accesa nelle
 [impostazioni](gruppo/impostazioni). Spenta, non compare da nessuna parte.

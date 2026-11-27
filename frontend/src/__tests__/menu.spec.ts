@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { Profilo } from '@/api/qdc'
 import { gruppiMenu, nomeProgressione, vociProfilo } from '@/navigazione/menu'
@@ -253,5 +253,24 @@ describe('menu', () => {
       ['Iscrizioni da inserire', 2],
       ['Correzioni da inoltrare', 3],
     ])
+  })
+
+  describe('pannello di amministrazione', () => {
+    const tecnico = { ...BASE, amministratore_tecnico: true }
+    const installata = (si: boolean) =>
+      vi.stubGlobal('matchMedia', (q: string) => ({ matches: si && q.includes('standalone') }))
+    afterEach(() => vi.unstubAllGlobals())
+
+    it('compare nella scheda del browser', () => {
+      installata(false)
+      expect(voci(tecnico, 'amministrazione')).toContain('Pannello di amministrazione')
+    })
+
+    it("non compare nell'app installata", () => {
+      installata(true)
+      const elenco = voci(tecnico, 'amministrazione')
+      expect(elenco).not.toContain('Pannello di amministrazione')
+      expect(elenco).toContain('Account')
+    })
   })
 })

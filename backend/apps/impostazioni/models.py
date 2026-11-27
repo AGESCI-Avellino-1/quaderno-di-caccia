@@ -78,10 +78,9 @@ class Impostazioni(ModelloTracciato):
     # The text of the waiting list flyer (DEC-304), with placeholders; empty: the base
     # text in attesa.volantino.
     volantino_attesa = models.TextField(blank=True)
-    # «La mia tribù» (DEC-416): its description, empty = the base text in tribu.testi, and
-    # the totem ceremony, the editor's cleaned HTML, read only by the capi; empty = none.
+    # «La mia tribù» (DEC-416): its description, empty = the base text in tribu.testi. The
+    # totem ceremony is an entry of the book of ceremonies since DEC-437.
     descrizione_tribu = models.TextField(blank=True)
-    cerimonia_totem = models.TextField(blank=True)
     # The birthday wishes to whoever has the birthday (DEC-435), plain text with [Nome];
     # empty = the base text in anagrafica.compleanni.
     testo_auguri = models.CharField(max_length=200, blank=True)

@@ -1207,6 +1207,27 @@ const SCENE: Scena[] = [
     },
     mostra: 'Codice socio',
   },
+  // The book of ceremonies (DEC-437): the capo reads everything, Giulia the reparto's entry
+  // she was added to; the capo unità changes it.
+  { nome: 'cerimonie/elenco', chi: 'capoReparto', percorso: '/cerimonie', intera: true },
+  {
+    nome: 'cerimonie/ragazzo',
+    chi: 'capoSquadriglia',
+    percorso: '/cerimonie',
+    prepara: apri("Notte dell'Alta Squadriglia"),
+    intera: true,
+  },
+  {
+    nome: 'cerimonie/modifica',
+    chi: 'capoReparto',
+    percorso: '/cerimonie',
+    prepara: async (pagina) => {
+      await apri("Notte dell'Alta Squadriglia")(pagina)
+      await pagina.getByRole('button', { name: 'Modifica' }).click()
+      await pagina.locator('#voce-aggiunti-cerca').waitFor()
+    },
+    intera: true,
+  },
   // Totem names (DEC-416): only in the generic manual. Giulia's image waits for a capo.
   {
     nome: 'tribu/ragazzo',

@@ -141,6 +141,8 @@ export interface Profilo {
   funzioni?: string[]
   /** Babbo Natale segreto (DEC-422): who organises, who takes part or whose child does. */
   babbo_natale?: boolean
+  /** The book of ceremonies (DEC-437): who reads some entry or writes them. */
+  cerimonie?: boolean
 }
 
 /** Someone on the waiting list, as the family writes it (DEC-256). */
@@ -344,7 +346,6 @@ export interface Impostazioni extends ImpostazioniSito {
   /** «La mia tribù» (DEC-416): only for who may change them, the capigruppo. */
   descrizione_tribu?: string
   descrizione_tribu_base?: string
-  cerimonia_totem?: string
   puo_modificare_tribu?: boolean
   /** The birthday wishes (DEC-435): the group's text and the base one. */
   testo_auguri?: string
@@ -437,10 +438,56 @@ export interface TotemTribu {
   versione: string
 }
 
+/** The book of ceremonies and traditions (DEC-437). */
+export type TipoVoceLibro = 'CERIMONIA' | 'TRADIZIONE'
+
+export interface VoceLibroBreve {
+  id: number
+  titolo: string
+  tipo: TipoVoceLibro
+  /** «Tutto il gruppo» or the unit. */
+  unita: string
+  cerimonia_del_totem: boolean
+}
+
+export interface LibroCerimonie {
+  voci: VoceLibroBreve[]
+  puo_scrivere: boolean
+  /** Where a new entry may go; the group's only for the capigruppo. */
+  unita: { id: number; nome: string }[]
+  puo_tutto_il_gruppo: boolean
+}
+
+export interface VoceLibro extends VoceLibroBreve {
+  unita_id: number | null
+  testo: string
+  puo_modificare: boolean
+  /** Who was added by hand: only for who may change the entry. */
+  aggiunti: number[]
+}
+
+export interface VoceLibroIn {
+  titolo: string
+  tipo: TipoVoceLibro
+  unita_id: number | null
+  testo: string
+  aggiunti: number[]
+  /** «La mia tribù» links to it: one entry of the whole group, set by a capogruppo. */
+  cerimonia_del_totem: boolean
+}
+
+/** Someone to choose from a list (DEC-395). */
+export interface PersonaScelta {
+  id: number
+  nome: string
+  cognome: string
+  unita: string
+}
+
 export interface Tribu {
   descrizione: string
-  /** The capi, when the group wrote the ceremony. */
-  cerimonia: boolean
+  /** The totem ceremony in the book of ceremonies (DEC-437), for who reads it there. */
+  cerimonia: number | null
   mio: TotemTribu | null
   totem: TotemTribu[]
   /** The capi: images waiting for approval. */
@@ -3468,7 +3515,7 @@ export function elencoIncarichiPdf(
 /** A totem's image; the one waiting for a capo with `inAttesa` (DEC-416). */
 export const immagineTotem = (totem: number, versione: string, inAttesa = false) =>
   `/api/v1/tribu/${totem}/immagine?v=${encodeURIComponent(versione)}${inAttesa ? '&in_attesa=true' : ''}`
-export const cerimoniaTotemPdf = '/api/v1/tribu/cerimonia.pdf'
+export const pdfVoceLibro = (id: number) => `/api/v1/cerimonie/${id}/pdf`
 
 /** The waiting list flyer to print (DEC-304): anyone with an account, online. */
 export const volantinoListaAttesa = '/api/v1/volantino-lista-attesa.pdf'
@@ -3501,10 +3548,10 @@ export const api = {
       metodo: 'PUT',
       corpo: { testo },
     }),
-  salvaTribu: (descrizione: string, cerimonia: string) =>
+  salvaTribu: (descrizione: string) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/tribu', {
       metodo: 'PUT',
-      corpo: { descrizione, cerimonia },
+      corpo: { descrizione },
     }),
   salvaTestoAuguri: (testo: string) =>
     richiesta<Impostazioni>('/api/v1/impostazioni/auguri', { metodo: 'PUT', corpo: { testo } }),
@@ -3546,7 +3593,15 @@ export const api = {
       metodo: 'POST',
       corpo: { persone },
     }),
-  cerimoniaTotem: () => richiesta<{ html: string }>('/api/v1/tribu/cerimonia'),
+  libroCerimonie: () => richiesta<LibroCerimonie>('/api/v1/cerimonie'),
+  voceLibro: (id: number) => richiesta<VoceLibro>(`/api/v1/cerimonie/${id}`),
+  aggiungibiliVoci: () => richiesta<PersonaScelta[]>('/api/v1/cerimonie/aggiungibili'),
+  creaVoceLibro: (dati: VoceLibroIn) =>
+    richiesta<VoceLibro>('/api/v1/cerimonie', { metodo: 'POST', corpo: dati }),
+  modificaVoceLibro: (id: number, dati: VoceLibroIn) =>
+    richiesta<VoceLibro>(`/api/v1/cerimonie/${id}`, { metodo: 'PUT', corpo: dati }),
+  eliminaVoceLibro: (id: number) =>
+    richiesta<void>(`/api/v1/cerimonie/${id}`, { metodo: 'DELETE' }),
   approvaImmagineTotem: (totem: number) =>
     richiesta<TotemTribu>(`/api/v1/tribu/${totem}/immagine/approva`, { metodo: 'POST' }),
   rifiutaImmagineTotem: (totem: number, motivo: string) =>

@@ -15,6 +15,7 @@ from apps.bacheca.api import router as bacheca_router
 from apps.banca.api import router as banca_router
 from apps.buonacaccia.api import router as buonacaccia_router
 from apps.cassa.api import router as cassa_router
+from apps.cerimonie.api import router as cerimonie_router
 from apps.core.api import router as core_router
 from apps.diritti.api import router as diritti_router
 from apps.dispositivi.api import router as dispositivi_router
@@ -80,6 +81,7 @@ api.add_router("/", notifiche_router)
 api.add_router("/", verbali_router)
 api.add_router("/", banca_router)
 api.add_router("/", babbonatale_router)
+api.add_router("/", cerimonie_router)
 api.add_router("/", impostazioni_router)
 api.add_router("/", attesa_router)
 api.add_router("/", tribu_router)

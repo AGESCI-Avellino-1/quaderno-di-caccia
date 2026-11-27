@@ -23,5 +23,6 @@ ragazzo/index
 capo/index
 gruppo/index
 tribu
+cerimonie
 babbo-natale
 ```

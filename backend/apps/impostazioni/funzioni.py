@@ -16,6 +16,7 @@ from ninja.errors import HttpError
 from .models import Impostazioni
 
 BABBO_NATALE = "babbo_natale"
+CERIMONIE = "cerimonie"
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,12 @@ _FUNZIONI = (
         "Scambi di regali anonimi: lo staff e i capigruppo scelgono i partecipanti, l'app "
         "estrae a caso a chi ognuno fa il regalo e lo dice solo a lui.",
         ("babbo_natale_account", "babbo_natale_partecipante", "babbo_natale_genitori"),
+    ),
+    Funzione(
+        CERIMONIE,
+        "Cerimonie e tradizioni",
+        "Il libro delle cerimonie e delle tradizioni del gruppo, con la cerimonia del totem: i "
+        "capi leggono tutto, i ragazzi/e solo le voci scelte per loro, i genitori niente.",
     ),
 )
 FUNZIONI: dict[str, Funzione] = {f.chiave: f for f in _FUNZIONI}

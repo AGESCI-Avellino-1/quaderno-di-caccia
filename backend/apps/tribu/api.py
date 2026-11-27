@@ -14,7 +14,6 @@ from apps.permessi import policy
 
 from . import servizi, testi
 from .models import Totem
-from .stampa import pdf_cerimonia
 
 router = Router(tags=["tribu"])
 
@@ -48,8 +47,8 @@ class TotemOut(Schema):
 
 class TribuOut(Schema):
     descrizione: str
-    # The capi, when the group wrote one.
-    cerimonia: bool
+    # The totem ceremony in the book of ceremonies (DEC-437), for who reads it there.
+    cerimonia: int | None
     mio: TotemOut | None
     totem: list[TotemOut]
     # The capi: images uploaded by ragazzi, waiting for one of them.
@@ -79,7 +78,7 @@ def tribu(request):
     if not policy.vede_totem_altrui(utente):
         return {
             "descrizione": "",
-            "cerimonia": False,
+            "cerimonia": None,
             "mio": None,
             "totem": [],
             "da_approvare": [],
@@ -96,7 +95,7 @@ def tribu(request):
     imp = Impostazioni.carica()
     return {
         "descrizione": testi.descrizione(imp),
-        "cerimonia": policy.vede_cerimonia_totem(utente) and bool(imp.cerimonia_totem),
+        "cerimonia": _cerimonia_del_totem(utente),
         "mio": _totem_out(utente, mio, attesa=True) if mio else None,
         "totem": [_totem_out(utente, t, attesa=capo) for t in tutti if t is not mio],
         "da_approvare": (
@@ -159,28 +158,14 @@ def togli(request, totem_id: int, dati: MotivoIn):
     return _totem_out(request.auth, totem, attesa=True)
 
 
-class CerimoniaOut(Schema):
-    html: str
+def _cerimonia_del_totem(utente) -> int | None:
+    """The entry of the book «La mia tribù» links to (DEC-437): none while the book is off."""
+    from apps.impostazioni import funzioni
 
-
-def _cerimonia(request) -> str:
-    html = Impostazioni.carica().cerimonia_totem
-    if not policy.vede_cerimonia_totem(request.auth) or not html:
-        raise HttpError(404, "Cerimonia non trovata.")
-    return html
-
-
-@router.get("/tribu/cerimonia", response=CerimoniaOut)
-def cerimonia(request):
-    return {"html": _cerimonia(request)}
-
-
-@router.get("/tribu/cerimonia.pdf")
-def cerimonia_pdf(request):
-    risposta = HttpResponse(pdf_cerimonia(_cerimonia(request)), content_type="application/pdf")
-    risposta["Content-Disposition"] = 'attachment; filename="cerimonia-del-totem.pdf"'
-    risposta["Cache-Control"] = "private, no-store"
-    return risposta
+    if not funzioni.attiva(funzioni.CERIMONIE):
+        return None
+    voce = policy.voci_visibili(utente).filter(cerimonia_del_totem=True).first()
+    return voce.pk if voce else None
 
 
 # --- On the person's page ------------------------------------------------------------

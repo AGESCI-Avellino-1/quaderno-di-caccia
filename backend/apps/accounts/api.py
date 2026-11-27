@@ -118,6 +118,8 @@ class Profilo(Schema):
     funzioni: list[str] = []
     # Babbo Natale segreto (DEC-422): who organises, who takes part (or whose child does).
     babbo_natale: bool = False
+    # The book of ceremonies (DEC-437): who reads some entry or writes them.
+    cerimonie: bool = False
     # The buttons next to phone numbers (DEC-301): "chiama", "whatsapp", "sms".
     pulsanti_telefono: list[str] = ["chiama", "whatsapp"]
 
@@ -202,6 +204,8 @@ def _funzioni(user) -> dict:
     return {
         "funzioni": sorted(attive),
         "babbo_natale": funzioni.BABBO_NATALE in attive and policy.vede_babbo_natale(user),
+        "cerimonie": funzioni.CERIMONIE in attive
+        and (policy.puo_scrivere_voci(user) or policy.voci_visibili(user).exists()),
     }
 
 

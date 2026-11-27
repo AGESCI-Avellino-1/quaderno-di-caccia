@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { api, cerimoniaTotemPdf, immagineTotem, type TotemTribu, type Tribu } from '@/api/qdc'
+import { api, immagineTotem, type TotemTribu, type Tribu } from '@/api/qdc'
 import Icona from '@/components/Icona.vue'
 import { useErrore } from '@/composables/useErrore'
 import { useSessioneStore } from '@/stores/sessione'
@@ -10,13 +10,13 @@ import { useSessioneStore } from '@/stores/sessione'
 // «La mia tribù» (DEC-416): the description of the tribe, one's own totem first, then
 // every totem name of the members in the group today. Whose a totem is: the capi always,
 // a ragazzo only for the capi and the members of their own unit. The capi approve the
-// images uploaded by ragazzi and read the ceremony, when the group wrote one. Who may write
+// images uploaded by ragazzi; who reads the totem ceremony in the book of ceremonies finds the
+// link to it (DEC-437). Who may write
 // their own totem name and has none yet sees nothing here until they write it (DEC-418).
 // Online only.
 const sessione = useSessioneStore()
 const { errore, inCorso, esegui } = useErrore()
 const tribu = ref<Tribu | null>(null)
-const cerimonia = ref<string | null>(null)
 // The image being refused: its totem and the reason.
 const rifiuto = ref<{ id: number; motivo: string } | null>(null)
 
@@ -26,15 +26,6 @@ async function carica() {
   tribu.value = (await esegui(() => api.tribu())) ?? tribu.value
 }
 onMounted(carica)
-
-async function mostraCerimonia() {
-  if (cerimonia.value !== null) {
-    cerimonia.value = null
-    return
-  }
-  const esito = await esegui(() => api.cerimoniaTotem())
-  if (esito) cerimonia.value = esito.html
-}
 
 async function decisa(azione: () => Promise<TotemTribu>) {
   if (!(await esegui(azione))) return
@@ -72,17 +63,13 @@ function rifiuta() {
         </p>
       </div>
 
-      <div v-if="tribu.cerimonia" class="d-flex flex-wrap gap-3 mb-5">
-        <button type="button" class="btn btn-sm btn-outline theme-primary" @click="mostraCerimonia">
-          {{ cerimonia === null ? 'Leggi la cerimonia del totem' : 'Nascondi la cerimonia' }}
-        </button>
-        <a :href="cerimoniaTotemPdf" download class="btn btn-sm btn-outline theme-primary">
-          <Icona nome="download" /> Scarica in PDF
-        </a>
-      </div>
-      <div v-if="cerimonia !== null" class="card card-body mb-5">
-        <!-- eslint-disable-next-line vue/no-v-html -- HTML cleaned by the server -->
-        <div v-html="cerimonia"></div>
+      <div v-if="tribu.cerimonia" class="mb-5">
+        <RouterLink
+          :to="{ name: 'voce-libro', params: { id: tribu.cerimonia } }"
+          class="btn btn-sm btn-outline theme-primary"
+        >
+          <Icona nome="book" /> Leggi la cerimonia del totem
+        </RouterLink>
       </div>
 
       <section v-if="tribu.da_approvare.length" class="mb-7">

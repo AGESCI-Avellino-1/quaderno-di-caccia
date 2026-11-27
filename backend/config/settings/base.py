@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "apps.attesa",
     "apps.tribu",
     "apps.babbonatale",
+    "apps.cerimonie",
 ]
 
 MIDDLEWARE = [

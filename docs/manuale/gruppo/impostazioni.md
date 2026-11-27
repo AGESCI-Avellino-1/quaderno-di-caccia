@@ -155,7 +155,8 @@ aggiorni l'app, una funzione nuova di questo tipo arriva **spenta**.
   i suoi modelli di email non compaiono in **Modelli delle email**.
 - Quello che contiene non si perde: riaccendendola torna tutto com'era.
 
-Oggi c'è il [Babbo Natale segreto](../babbo-natale).
+Oggi ci sono il [Babbo Natale segreto](../babbo-natale) e il libro delle
+[cerimonie e tradizioni](../cerimonie).
 
 ## Privacy policy e termini
 

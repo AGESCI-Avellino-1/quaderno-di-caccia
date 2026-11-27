@@ -2506,14 +2506,70 @@ def puo_moderare_immagini_totem(user) -> bool:
     return e_capo(user)
 
 
-def vede_cerimonia_totem(user) -> bool:
-    """The group's totem ceremony: the capi only."""
-    return e_capo(user)
-
-
 def puo_modificare_tribu(user) -> bool:
-    """The description of the tribe and the ceremony, in the settings: the capigruppo."""
+    """The description of the tribe, in the settings: the capigruppo (the ceremony is in the
+    book of ceremonies since DEC-437)."""
     return e_capogruppo(user)
+
+
+# --- Ceremonies and traditions (DEC-437) ----------------------------------------------------
+# Every endpoint first asks `impostazioni.funzioni.richiedi` (DEC-421): off, nothing exists.
+
+
+def voci_visibili(user):
+    """The entries of the book one reads: every capo of the Co.Ca. all of them, with a
+    provisional code and trainees too; a ragazzo/a, while an active member, those they were
+    added to by hand; the parents as such never."""
+    from apps.anagrafica.compleanni import soci_attivi
+    from apps.cerimonie.models import VoceLibro
+
+    if e_capo(user):
+        return VoceLibro.objects.all()
+    persona = persona_di(user)
+    if persona is None or not soci_attivi().filter(pk=persona.pk).exists():
+        return VoceLibro.objects.none()
+    return VoceLibro.objects.filter(aggiunti=persona)
+
+
+def unita_per_voci(user) -> QuerySet[Unita]:
+    """The units whose entries one writes: those one serves on the staff (linked ones too),
+    every active unit for the capigruppo. A capo still waiting for BuonaStrada writes none, as
+    for the other staff checks (DEC-123)."""
+    unita = Unita.objects.filter(attiva=True, archiviata_il__isnull=True)
+    if e_capogruppo(user):
+        return unita
+    if e_capo_in_attesa(user):
+        return Unita.objects.none()
+    return unita.filter(pk__in=_unita_servite(user))
+
+
+def puo_scrivere_voci(user) -> bool:
+    """Writing some entry: the capigruppo (the group's and every unit's), the staffs."""
+    return e_capogruppo(user) or unita_per_voci(user).exists()
+
+
+def puo_scrivere_voce(user, voce) -> bool:
+    """An entry of the group: the capigruppo; of a unit: also its staff (linked units too)."""
+    if e_capogruppo(user):
+        return True
+    return voce.unita_id is not None and unita_per_voci(user).filter(pk=voce.unita_id).exists()
+
+
+def aggiungibili_alle_voci(user):
+    """Who may be added by hand to an entry: the active ragazzi/e of the whole group (a
+    passage's tradition reaches who is in another unit); the capi read everything anyway."""
+    from apps.anagrafica.compleanni import soci_attivi
+
+    if not puo_scrivere_voci(user):
+        return Persona.objects.none()
+    ragazzi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.RAGAZZO)
+    capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
+    return (
+        soci_attivi()
+        .filter(pk__in=ragazzi.values("persona_id"))
+        .exclude(pk__in=capi.values("persona_id"))
+        .order_by("cognome", "nome")
+    )
 
 
 # --- Birthdays (DEC-417) --------------------------------------------------------------------

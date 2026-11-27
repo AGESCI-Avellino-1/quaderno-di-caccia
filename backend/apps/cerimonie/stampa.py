@@ -1,4 +1,5 @@
-"""The totem ceremony as a PDF for the capi (DEC-416): a plain sheet, never stored."""
+"""An entry of the book as a PDF (DEC-437, the totem ceremony's since DEC-416): a plain sheet,
+never stored."""
 
 import io
 
@@ -8,10 +9,8 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from apps.core.testo_pdf import MARGINE, TITOLO, flowable_del_testo
 
-TITOLO_CERIMONIA = "Cerimonia del totem"
 
-
-def pdf_cerimonia(html: str) -> bytes:
+def pdf_voce(titolo: str, html: str) -> bytes:
     uscita = io.BytesIO()
     documento = SimpleDocTemplate(
         uscita,
@@ -20,9 +19,7 @@ def pdf_cerimonia(html: str) -> bytes:
         rightMargin=MARGINE,
         topMargin=18 * mm,
         bottomMargin=16 * mm,
-        title=TITOLO_CERIMONIA,
+        title=titolo,
     )
-    documento.build(
-        [Paragraph(TITOLO_CERIMONIA, TITOLO), Spacer(1, 5 * mm), *flowable_del_testo(html)]
-    )
+    documento.build([Paragraph(titolo, TITOLO), Spacer(1, 5 * mm), *flowable_del_testo(html)])
     return uscita.getvalue()

@@ -287,6 +287,24 @@ const router = createRouter({
       component: () => import('@/views/TribuView.vue'),
     },
     {
+      // The book of ceremonies (DEC-437): the API decides, and answers 404 while the feature
+      // is off (DEC-421).
+      path: '/cerimonie',
+      name: 'cerimonie',
+      component: () => import('@/views/CerimonieView.vue'),
+    },
+    {
+      path: '/cerimonie/nuova',
+      name: 'nuova-voce-libro',
+      component: () => import('@/views/VoceLibroView.vue'),
+    },
+    {
+      path: '/cerimonie/:id(\\d+)',
+      name: 'voce-libro',
+      component: () => import('@/views/VoceLibroView.vue'),
+      props: (rotta) => ({ id: Number(rotta.params.id) }),
+    },
+    {
       // Babbo Natale segreto (DEC-422): the API decides, and answers 404 while the feature is
       // off (DEC-421).
       path: '/babbo-natale',

@@ -53,9 +53,9 @@ ogni nome. Accanto alla voce un numero dice quante immagini aspettano un capo.
 - **Togliere un'immagine non adatta:** apri la scheda della persona, nel riquadro **Nome di
   totem** tocca **Togli l'immagine perché non è adatta** e scrivi il motivo. Resta traccia
   nel registro delle modifiche.
-- **La cerimonia del totem:** se il gruppo l'ha scritta, in **La mia tribù** la leggi con
-  **Leggi la cerimonia del totem** e la scarichi con **Scarica in PDF**. La vedono solo i
-  capi.
+- **La cerimonia del totem:** se il gruppo l'ha scritta nel libro delle
+  [cerimonie e tradizioni](cerimonie.md), in **La mia tribù** tocca
+  **Leggi la cerimonia del totem**. La leggono i capi e i ragazzi/e scelti per quella voce.
 
 ### Assegnare un nome di totem
 
@@ -89,8 +89,15 @@ Finché nessun capo del gruppo ha un nome di totem, l'interruttore lo accendono 
 
 In **Impostazioni**, nella parte **La mia tribù**, scrivi la **descrizione della tribù** che
 compare in cima alla pagina (**Torna alla descrizione di base** rimette quella proposta
-dall'app) e la **cerimonia del totem**, con l'editor di testo. Se lasci vuota la cerimonia,
-nella pagina non compare niente. Tocca **Salva**.
+dall'app) e tocca **Salva**.
+
+### La cerimonia del totem
+
+La cerimonia del totem si scrive nel libro delle [cerimonie e tradizioni](cerimonie.md): in
+una voce di tutto il gruppo spunta **È la cerimonia del totem**, così in **La mia tribù**
+compare **Leggi la cerimonia del totem**, che porta a quella voce. Se il gruppo l'aveva già
+scritta nelle impostazioni, con l'aggiornamento è diventata una voce del libro, letta come
+prima solo dai capi, e il libro si è acceso da solo.
 
 :::{container} schermate
 ![La mia tribù nelle impostazioni sul telefono](img/tribu/impostazioni-telefono.png){.telefono width="30%"}

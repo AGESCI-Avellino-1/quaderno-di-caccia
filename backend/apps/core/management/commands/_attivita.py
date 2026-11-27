@@ -758,7 +758,45 @@ def crea_attivita(email) -> None:
             "descrizione": "Attorno al fuoco della tribù ogni guerriero porta il nome del suo "
             "spirito animale.\n\nQui trovi i fratelli e le sorelle che lo portano con te: "
             "custodisci il tuo nome con orgoglio.",
-            "cerimonia": "<h2>Il fuoco</h2><p>Un testo di prova: qui il gruppo scrive la "
-            "sua cerimonia del totem.</p>",
+        },
+    )
+
+    # The book of ceremonies (DEC-437), switched on by a capigruppo: the totem ceremony of the
+    # group (capi only), a tradition of the reparto read by Giulia, invented texts.
+    capogruppo("put", "/impostazioni/funzioni/cerimonie", {"attiva": True})
+    capogruppo(
+        "post",
+        "/cerimonie",
+        {
+            "titolo": "Cerimonia del totem",
+            "tipo": "CERIMONIA",
+            "unita_id": None,
+            "cerimonia_del_totem": True,
+            "testo": "<h2>Il fuoco</h2><p>Un testo di prova: qui il gruppo scrive la sua "
+            "cerimonia del totem.</p>",
+        },
+    )
+    capogruppo(
+        "post",
+        "/cerimonie",
+        {
+            "titolo": "Fuoco di inizio anno",
+            "tipo": "TRADIZIONE",
+            "unita_id": None,
+            "testo": "<p>A ottobre tutto il gruppo si ritrova attorno al fuoco: ogni unità "
+            "porta un canto e una legna.</p>",
+        },
+    )
+    capo_reparto(
+        "post",
+        "/cerimonie",
+        {
+            "titolo": "Notte dell'Alta Squadriglia",
+            "tipo": "CERIMONIA",
+            "unita_id": reparto.pk,
+            "testo": "<p>Un testo di prova: la veglia dei capi e vice capi squadriglia, con "
+            "la promessa di servire il reparto.</p><ul><li>Il cerchio</li><li>La parola"
+            "</li><li>Il silenzio</li></ul>",
+            "aggiunti": [giulia],
         },
     )

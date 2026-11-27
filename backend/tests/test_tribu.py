@@ -208,36 +208,6 @@ def test_immagine_del_capo_subito_e_tolta(capo, csq, ragazza):
     assert Totem.objects.get(pk=totem.pk).avviso_immagine == ""
 
 
-def test_cerimonia_solo_ai_capi(capo, capogruppo, ragazza):
-    servizi.assegna(ragazza, "Castoro Operoso")
-    # Not written: nothing at all.
-    assert not _client(capo).get("/api/v1/tribu").json()["cerimonia"]
-    assert _client(capo).get("/api/v1/tribu/cerimonia").status_code == 404
-
-    url = "/api/v1/impostazioni/tribu"
-    dati = {"descrizione": "", "cerimonia": "<p>Il <strong>fuoco</strong></p><script>x</script>"}
-    assert _client(capo).put(url, dati, "application/json").status_code == 403
-    risposta = _client(capogruppo).put(url, dati, "application/json")
-    assert risposta.status_code == 200
-    assert risposta.json()["cerimonia_totem"] == "<p>Il <strong>fuoco</strong></p>"
-
-    assert _client(capo).get("/api/v1/tribu").json()["cerimonia"]
-    assert "fuoco" in _client(capo).get("/api/v1/tribu/cerimonia").json()["html"]
-    pdf = _client(capo).get("/api/v1/tribu/cerimonia.pdf")
-    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
-    # Never the ragazzi, even with a totem.
-    assert not _client(ragazza).get("/api/v1/tribu").json()["cerimonia"]
-    assert _client(ragazza).get("/api/v1/tribu/cerimonia").status_code == 404
-    assert _client(ragazza).get("/api/v1/tribu/cerimonia.pdf").status_code == 404
-    # Only the capigruppo read it in the settings.
-    assert "cerimonia_totem" not in _client(capo).get("/api/v1/impostazioni").json() or (
-        _client(capo).get("/api/v1/impostazioni").json()["cerimonia_totem"] == ""
-    )
-    # Empty paragraphs: no ceremony.
-    _client(capogruppo).put(url, {"cerimonia": "<p> </p><p><br></p>"}, "application/json")
-    assert Impostazioni.carica().cerimonia_totem == ""
-
-
 def test_descrizione_della_tribu(capogruppo, ragazza):
     servizi.assegna(ragazza, "Castoro Operoso")
     url = "/api/v1/impostazioni/tribu"

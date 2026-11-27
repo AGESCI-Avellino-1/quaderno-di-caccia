@@ -6,7 +6,9 @@ import { coincide, type Opzione } from '@/components/sceltaDaElenco'
 // People chosen one by one (DEC-430): the list, filtered by what is written, with a check
 // each; who is chosen comes first, in sight also while filtering. The filter by unit takes or
 // leaves everyone it shows in one go (DEC-434).
-const props = defineProps<{ id: string; opzioni: Opzione[] }>()
+const props = withDefaults(defineProps<{ id: string; opzioni: Opzione[]; titolo?: string }>(), {
+  titolo: 'Partecipanti',
+})
 const scelti = defineModel<number[]>({ required: true })
 const testo = ref('')
 const presi = computed(() => new Set(scelti.value))
@@ -39,7 +41,7 @@ function togliTutti() {
 
 <template>
   <fieldset>
-    <legend class="form-label small">Partecipanti ({{ nomiScelti.length }})</legend>
+    <legend class="form-label small">{{ titolo }} ({{ nomiScelti.length }})</legend>
     <div v-if="nomiScelti.length" class="d-flex flex-wrap gap-1 mb-3">
       <button
         v-for="o in nomiScelti"

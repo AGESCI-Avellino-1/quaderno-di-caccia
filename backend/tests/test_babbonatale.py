@@ -90,8 +90,11 @@ def test_spenta_all_inizio_e_non_esiste(capogruppo, capo):
 
 def test_chi_accende_e_spegne(capogruppo, capo, ragazza):
     impostazioni = _client(capogruppo).get("/api/v1/impostazioni").json()
-    assert [f["chiave"] for f in impostazioni["funzioni"]] == [funzioni.BABBO_NATALE]
-    assert impostazioni["funzioni"][0]["attiva"] is False
+    assert [f["chiave"] for f in impostazioni["funzioni"]] == [
+        funzioni.BABBO_NATALE,
+        funzioni.CERIMONIE,
+    ]
+    assert not any(f["attiva"] for f in impostazioni["funzioni"])
     for chi in (capo, ragazza):
         risposta = _client(chi).put(
             "/api/v1/impostazioni/funzioni/babbo_natale",

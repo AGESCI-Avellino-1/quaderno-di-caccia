@@ -8,6 +8,7 @@ import award from 'bootstrap-icons/icons/award.svg?raw'
 import backpack from 'bootstrap-icons/icons/backpack.svg?raw'
 import bank from 'bootstrap-icons/icons/bank.svg?raw'
 import bank2 from 'bootstrap-icons/icons/bank2.svg?raw'
+import book from 'bootstrap-icons/icons/book.svg?raw'
 import boxArrowRight from 'bootstrap-icons/icons/box-arrow-right.svg?raw'
 import boxArrowUp from 'bootstrap-icons/icons/box-arrow-up.svg?raw'
 import cake2 from 'bootstrap-icons/icons/cake2.svg?raw'
@@ -97,6 +98,7 @@ export const ICONE = {
   backpack: backpack,
   bank: bank,
   bank2: bank2,
+  book: book,
   'box-arrow-right': boxArrowRight,
   'box-arrow-up': boxArrowUp,
   cake2: cake2,

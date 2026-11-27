@@ -260,6 +260,8 @@ def fascicolo(persona: Persona) -> dict:
         ],
         "foto_profilo": [_giorno(f.creato_il) for f in FotoProfilo.objects.filter(persona=persona)],
         "nome_di_totem": [t.nome for t in Totem.objects.filter(persona=persona)],
+        # The entries of the book of ceremonies one was added to by hand (DEC-437).
+        "cerimonie_e_tradizioni": list(persona.voci_libro.values_list("titolo", flat=True)),
         "reperibilita_per_evento": [
             {"Evento": r.evento.titolo, "Chi": r.nome, "Telefono": r.telefono}
             for r in ReperibilitaEvento.objects.filter(persona=persona).select_related("evento")
@@ -638,6 +640,8 @@ def cancella(persona: Persona, *, conserva_nome: bool = False) -> dict:
             t.immagine.delete(save=False)
             t.immagine_in_attesa.delete(save=False)
             t.delete()
+        # Added by hand to entries of the book of ceremonies (DEC-437): the entries stay.
+        persona.voci_libro.clear()
         progetti = list(ProgettoCapo.objects.filter(persona=persona))
         _cancella_storico(progetti)
         for p in progetti:

@@ -13,8 +13,6 @@ DESCRIZIONE_BASE = (
     "con orgoglio e valore, e custodisci ciò che accade attorno al fuoco."
 )
 LUNGHEZZA_DESCRIZIONE = 2000
-# The ceremony is written with the editor: room for a long text, not for a book.
-LUNGHEZZA_CERIMONIA = 100_000
 
 
 def descrizione(imp: Impostazioni) -> str:

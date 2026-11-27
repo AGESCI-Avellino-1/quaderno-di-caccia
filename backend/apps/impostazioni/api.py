@@ -159,11 +159,9 @@ class ImpostazioniOut(ImpostazioniSitoIO):
     volantino_attesa: str = ""
     volantino_attesa_base: str = ""
     puo_modificare_volantino: bool = False
-    # «La mia tribù» (DEC-416): the description, the base one, and the ceremony (only for
-    # who may change them).
+    # «La mia tribù» (DEC-416): the description and the base one, only for who may change them.
     descrizione_tribu: str = ""
     descrizione_tribu_base: str = ""
-    cerimonia_totem: str = ""
     puo_modificare_tribu: bool = False
     # The birthday wishes (DEC-435): the group's text and the base one.
     testo_auguri: str = ""
@@ -323,7 +321,6 @@ def _tribu(request, imp: Impostazioni) -> dict:
     return {
         "descrizione_tribu": testi.descrizione(imp),
         "descrizione_tribu_base": testi.DESCRIZIONE_BASE,
-        "cerimonia_totem": imp.cerimonia_totem,
         "puo_modificare_tribu": True,
     }
 
@@ -331,33 +328,23 @@ def _tribu(request, imp: Impostazioni) -> dict:
 class TribuIn(Schema):
     # Empty: back to the base text.
     descrizione: str = ""
-    # The editor's HTML; empty: no ceremony.
-    cerimonia: str = ""
 
 
 @router.put("/impostazioni/tribu", response=ImpostazioniOut)
 def salva_tribu(request, dati: TribuIn):
-    """The description of «La mia tribù» and the totem ceremony (DEC-416): capigruppo."""
+    """The description of «La mia tribù» (DEC-416): capigruppo. The totem ceremony is an entry
+    of the book of ceremonies (DEC-437)."""
     from apps.tribu import testi
 
-    from .html import in_testo, pulisci
-
     if not policy.puo_modificare_tribu(request.auth):
-        raise HttpError(403, "La descrizione della tribù e la cerimonia le cambiano i capigruppo.")
+        raise HttpError(403, "La descrizione della tribù la cambiano i capigruppo.")
     descrizione = testi.in_paragrafi(dati.descrizione)
     if len(descrizione) > testi.LUNGHEZZA_DESCRIZIONE:
         raise HttpError(400, "La descrizione va scritta in breve: al massimo 2000 caratteri.")
-    cerimonia = pulisci(dati.cerimonia, immagini=False)
-    # An editor left with empty paragraphs only: no ceremony.
-    if not in_testo(cerimonia).strip():
-        cerimonia = ""
-    if len(cerimonia) > testi.LUNGHEZZA_CERIMONIA:
-        raise HttpError(400, "La cerimonia è troppo lunga.")
     imp = Impostazioni.carica()
     # The base text saved as it is stays "the base": it follows future versions.
     imp.descrizione_tribu = "" if descrizione == testi.DESCRIZIONE_BASE else descrizione
-    imp.cerimonia_totem = cerimonia
-    imp.save(update_fields=["descrizione_tribu", "cerimonia_totem"])
+    imp.save(update_fields=["descrizione_tribu"])
     return _impostazioni(request)
 
 

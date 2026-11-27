@@ -8,11 +8,13 @@ import TotemPersonaCard from '@/components/TotemPersona.vue'
 import { useSessioneStore } from '@/stores/sessione'
 import TribuView from '@/views/TribuView.vue'
 
-const collegamento = { RouterLink: { props: ['to'], template: '<a><slot /></a>' } }
+const collegamento = {
+  RouterLink: { props: ['to'], template: '<a :data-to="JSON.stringify(to)"><slot /></a>' },
+}
 
 const TRIBU: Tribu = {
   descrizione: 'Attorno al fuoco.\n\nPorta il tuo nome.',
-  cerimonia: false,
+  cerimonia: null,
   mio: {
     id: 1,
     nome: 'Castoro Operoso',
@@ -66,26 +68,24 @@ describe('La mia tribù', () => {
     expect(pagina.text()).not.toContain('cerimonia')
   })
 
-  it('gives the capi the ceremony and the images to approve', async () => {
+  it('gives the capi the link to the ceremony and the images to approve', async () => {
     useSessioneStore().profilo = { capo: true } as Profilo
     vi.spyOn(api, 'tribu').mockResolvedValue({
       ...TRIBU,
       mio: null,
-      cerimonia: true,
+      cerimonia: 7,
       da_approvare: [{ ...TRIBU.mio!, in_attesa: true }],
     })
-    vi.spyOn(api, 'cerimoniaTotem').mockResolvedValue({ html: '<p>Il fuoco</p>' })
     const approva = vi.spyOn(api, 'approvaImmagineTotem').mockResolvedValue(TRIBU.mio!)
     vi.spyOn(useSessioneStore(), 'carica').mockResolvedValue()
     const pagina = mount(TribuView, { global: { stubs: collegamento } })
     await flushPromises()
-    expect(pagina.find('a[download]').attributes('href')).toBe('/api/v1/tribu/cerimonia.pdf')
-    await pagina
-      .findAll('button')
-      .find((b) => b.text().includes('cerimonia'))!
-      .trigger('click')
-    await flushPromises()
-    expect(pagina.html()).toContain('<p>Il fuoco</p>')
+    // The ceremony is an entry of the book of ceremonies (DEC-437).
+    const link = pagina.findAll('a').find((a) => a.text().includes('cerimonia del totem'))!
+    expect(JSON.parse(link.attributes('data-to')!)).toEqual({
+      name: 'voce-libro',
+      params: { id: 7 },
+    })
     await pagina
       .findAll('button')
       .find((b) => b.text() === 'Approva')!

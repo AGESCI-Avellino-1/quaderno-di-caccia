@@ -49,8 +49,7 @@ const provider = (nome: 'google' | 'apple') =>
     <template v-else-if="invito">
       <p>
         Account per <strong>{{ invito.persona }}</strong> con l'indirizzo
-        <strong>{{ invito.email }}</strong
-        >.
+        <strong>{{ invito.email }}</strong>.
       </p>
       <form class="vstack gap-3" @submit.prevent="registrati">
         <label class="form-label" for="nuova-password">Scegli una password</label>

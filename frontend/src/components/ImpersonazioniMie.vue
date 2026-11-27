@@ -23,8 +23,8 @@ const quando = (iso: string) =>
     <p v-if="!elenco.length" class="small fg-2">Nessuno.</p>
     <ul v-else class="list-group small">
       <li v-for="i in elenco" :key="i.id" class="list-group-item">
-        <strong>{{ i.impersonatore }}</strong
-        >, {{ quando(i.iniziata_il) }} – {{ quando(i.finita_il ?? i.scade_il) }}: {{ i.motivo }}
+        <strong>{{ i.impersonatore }}</strong>, {{ quando(i.iniziata_il) }} –
+        {{ quando(i.finita_il ?? i.scade_il) }}: {{ i.motivo }}
       </li>
     </ul>
   </section>

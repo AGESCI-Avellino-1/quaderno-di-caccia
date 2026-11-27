@@ -124,8 +124,7 @@ async function invia() {
 
     <form v-else-if="info" class="vstack gap-3" @submit.prevent="invia">
       <p class="mb-0">
-        Iscrizione a <strong>{{ info.unita }}</strong
-        >.
+        Iscrizione a <strong>{{ info.unita }}</strong>.
         <template v-if="info.per_capi">Riservata ai capi.</template>
       </p>
 

@@ -145,8 +145,7 @@ async function togli(id: number) {
         :key="p.id ?? `unita-${n}`"
         class="list-group-item small"
       >
-        <strong>{{ p.unita }}</strong
-        >, {{ p.anni }}
+        <strong>{{ p.unita }}</strong>, {{ p.anni }}
         <span class="fg-2">· {{ p.ruolo_nome }} · {{ p.gruppo }}</span>
         <span v-if="p.ricostruito" class="badge theme-secondary ms-1">ricostruito</span>
         <button

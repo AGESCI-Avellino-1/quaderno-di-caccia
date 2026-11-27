@@ -68,8 +68,8 @@ const quando = (iso: string) =>
       <h2 class="h5">Chi l'ha fatto</h2>
       <ul class="list-group small">
         <li v-for="i in elenco" :key="i.id" class="list-group-item">
-          <strong>{{ i.impersonatore }}</strong> al posto di <strong>{{ i.impersonato }}</strong
-          >, {{ quando(i.iniziata_il) }} – {{ quando(i.finita_il ?? i.scade_il) }}: {{ i.motivo }}
+          <strong>{{ i.impersonatore }}</strong> al posto di <strong>{{ i.impersonato }}</strong>,
+          {{ quando(i.iniziata_il) }} – {{ quando(i.finita_il ?? i.scade_il) }}: {{ i.motivo }}
         </li>
       </ul>
     </section>

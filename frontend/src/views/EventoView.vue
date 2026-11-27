@@ -355,8 +355,7 @@ useGruppiPagina('evento', () => {
           <h2 class="h5">Turni del gruppo</h2>
           <ul class="list-unstyled mb-0">
             <li v-for="t in evento.turni_gruppo" :key="t.turno" class="py-1">
-              <strong>{{ t.turno }}</strong
-              >: {{ t.unita }}
+              <strong>{{ t.turno }}</strong>: {{ t.unita }}
             </li>
           </ul>
         </section>

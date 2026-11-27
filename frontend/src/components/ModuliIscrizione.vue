@@ -81,8 +81,9 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
     <p v-if="vuoti.length && !moduli.puo_verificare" class="small mb-1">
       Scarica, stampa e firma:
       <template v-for="(m, i) in vuoti" :key="m.id">
-        <a :href="fileModulo(m.id)">{{ m.titolo }}</a
-        ><template v-if="i < vuoti.length - 1">, </template>
+        <a :href="fileModulo(m.id)">{{ m.titolo }}</a><template v-if="i < vuoti.length - 1"
+          >,
+        </template>
       </template>
     </p>
     <ul v-if="moduli.allegati.length" class="list-unstyled small mb-1">

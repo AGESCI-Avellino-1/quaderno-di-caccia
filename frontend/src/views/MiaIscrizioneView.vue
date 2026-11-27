@@ -80,8 +80,7 @@ const daCompletare = (r: RichiestaIscrizione) => r.stato === 'APPROVATA' || r.st
           </template>
           <template v-else-if="r.scadenza_completamento">
             Iscrizione accolta. Completa entro il
-            <strong>{{ data(r.scadenza_completamento) }}</strong
-            >.
+            <strong>{{ data(r.scadenza_completamento) }}</strong>.
           </template>
         </p>
         <p v-if="r.mancanti.length" class="small mb-0">Mancano: {{ r.mancanti.join(', ') }}.</p>

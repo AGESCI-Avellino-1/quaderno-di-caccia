@@ -82,8 +82,7 @@ const pagate = (r: SituazioneQuoteEvento) =>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
     <template v-if="quota">
       <p class="mb-1">
-        <strong>{{ quota.nome }}</strong
-        >: {{ euro(quota.totale) }}
+        <strong>{{ quota.nome }}</strong>: {{ euro(quota.totale) }}
         <template v-if="Number(quota.sconto_famiglia)">
           (sconto famiglia {{ euro(quota.sconto_famiglia) }} sul saldo)</template
         >

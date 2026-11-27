@@ -35,6 +35,7 @@ const LIBRO: LibroCerimonie = {
       id: 1,
       titolo: 'Cerimonia del totem',
       tipo: 'CERIMONIA',
+      ambito: 'GRUPPO',
       unita: 'Tutto il gruppo',
       cerimonia_del_totem: true,
     },
@@ -42,20 +43,24 @@ const LIBRO: LibroCerimonie = {
       id: 2,
       titolo: 'Passaggio dal branco',
       tipo: 'TRADIZIONE',
+      ambito: 'UNITA',
       unita: 'Branco (L1)',
       cerimonia_del_totem: false,
     },
   ],
   puo_scrivere: false,
   unita: [],
+  squadriglie: [],
   puo_tutto_il_gruppo: false,
   unita_condizioni: [],
+  squadriglie_condizioni: [],
   incarichi: [],
 }
 
 const VOCE: VoceLibro = {
   ...LIBRO.voci[1]!,
-  unita_id: 5,
+  unita_ids: [5],
+  squadriglie_ids: [],
   testo: '<p>Il ponte</p>',
   allegati: [],
   puo_modificare: false,
@@ -108,7 +113,7 @@ describe('libro delle cerimonie', () => {
     vi.spyOn(api, 'libroCerimonie').mockResolvedValue({
       ...LIBRO,
       puo_scrivere: true,
-      unita: [{ id: 5, nome: 'Branco (L1)' }],
+      unita: [{ id: 5, nome: 'Branco (L1)', tipo: 'BRANCO' }],
     })
     vi.spyOn(api, 'aggiungibiliVoci').mockResolvedValue([
       { id: 9, nome: 'Giulia', cognome: 'Rossi', unita: 'Branco (L1)' },
@@ -123,8 +128,11 @@ describe('libro delle cerimonie', () => {
       .find((b) => b.text() === 'Modifica')!
       .trigger('click')
     await flushPromises()
-    // The group's only for the capigruppo.
-    expect(pagina.findAll('#voce-unita option').map((o) => o.text())).toEqual(['Branco (L1)'])
+    // The group's and the Co.Ca.'s only for the capigruppo.
+    expect(pagina.findAll('#voce-ambito option').map((o) => o.text())).toEqual([
+      'Una o più unità',
+      'Consiglio degli Anziani',
+    ])
     expect(pagina.text()).toContain('Scelti a mano (1)')
     await pagina.find('#voce-titolo').setValue('Il ponte')
     await pagina.find('form').trigger('submit')
@@ -132,7 +140,9 @@ describe('libro delle cerimonie', () => {
     expect(salva).toHaveBeenCalledWith(2, {
       titolo: 'Il ponte',
       tipo: 'TRADIZIONE',
-      unita_id: 5,
+      ambito: 'UNITA',
+      unita_ids: [5],
+      squadriglie_ids: [],
       testo: '<p>Il ponte</p>',
       aggiunti: [9],
       condizioni: [],
@@ -146,7 +156,7 @@ describe('libro delle cerimonie', () => {
       ...LIBRO,
       puo_scrivere: true,
       puo_tutto_il_gruppo: true,
-      unita: [{ id: 5, nome: 'Branco (L1)' }],
+      unita: [{ id: 5, nome: 'Branco (L1)', tipo: 'BRANCO' }],
     })
     vi.spyOn(api, 'aggiungibiliVoci').mockResolvedValue([])
     const crea = vi.spyOn(api, 'creaVoceLibro').mockResolvedValue({ ...VOCE, id: 3 })
@@ -155,15 +165,58 @@ describe('libro delle cerimonie', () => {
     await pagina.find('#voce-titolo').setValue('Promessa')
     await pagina.find('form').trigger('submit')
     await flushPromises()
-    expect(crea.mock.calls[0]![0]).toMatchObject({ titolo: 'Promessa', unita_id: null })
+    expect(crea.mock.calls[0]![0]).toMatchObject({ titolo: 'Promessa', ambito: 'GRUPPO' })
     expect(sostituisci).toHaveBeenCalledWith({ name: 'voce-libro', params: { id: 3 } })
+  })
+
+  it('scegliendo di chi è la voce propone le condizioni, finché non le cambi', async () => {
+    vi.spyOn(api, 'libroCerimonie').mockResolvedValue({
+      ...LIBRO,
+      puo_scrivere: true,
+      unita: [
+        { id: 5, nome: 'Branco (L1)', tipo: 'BRANCO' },
+        { id: 6, nome: 'Reparto (G1)', tipo: 'REPARTO' },
+      ],
+      squadriglie: [{ id: 7, nome: 'Sq. Aquile', unita_id: 6 }],
+      unita_condizioni: [
+        { id: 5, nome: 'Branco (L1)', tipo: 'BRANCO' },
+        { id: 6, nome: 'Reparto (G1)', tipo: 'REPARTO' },
+      ],
+      squadriglie_condizioni: [{ id: 7, nome: 'Sq. Aquile', unita_id: 6 }],
+    })
+    vi.spyOn(api, 'aggiungibiliVoci').mockResolvedValue([])
+    const crea = vi.spyOn(api, 'creaVoceLibro').mockResolvedValue({ ...VOCE, id: 3 })
+    const pagina = mount(VoceLibroView, { global: { stubs } })
+    await flushPromises()
+    expect(pagina.findAll('#voce-ambito option').map((o) => o.text())).toEqual([
+      'Una o più unità',
+      'Alta Squadriglia',
+      'Consiglio capi',
+      'Una o più squadriglie',
+      'Consiglio degli Anziani',
+    ])
+    await pagina.find('#voce-ambito').setValue('ALTA_SQ')
+    await flushPromises()
+    expect(pagina.findAll('#voce-unita option').map((o) => o.text())).toEqual(['Reparto (G1)'])
+    await pagina.find('#voce-ambito').setValue('SQUADRIGLIE')
+    await pagina.find('#voce-sq-7').setValue(true)
+    await flushPromises()
+    await pagina.find('#voce-titolo').setValue('Fuoco')
+    await pagina.find('form').trigger('submit')
+    await flushPromises()
+    expect(crea.mock.calls[0]![0]).toMatchObject({
+      ambito: 'SQUADRIGLIE',
+      unita_ids: [],
+      squadriglie_ids: [7],
+      condizioni: [[{ tipo: 'squadriglia', squadriglia: 7 }]],
+    })
   })
 
   describe('condizioni', () => {
     const libro: LibroCerimonie = {
       ...LIBRO,
       puo_scrivere: true,
-      unita_condizioni: [{ id: 5, nome: 'Branco (L1)' }],
+      unita_condizioni: [{ id: 5, nome: 'Branco (L1)', tipo: 'BRANCO' }],
       incarichi: [{ valore: 'CSQ', nome: 'Capo squadriglia' }],
     }
 

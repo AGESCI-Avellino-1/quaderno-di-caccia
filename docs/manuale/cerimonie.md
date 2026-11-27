@@ -22,7 +22,9 @@ Alcune cerimonie sono un segreto di chi le ha vissute: custodisci quello che leg
 ## Leggere una voce
 
 1. In **Cerimonie e tradizioni** le voci sono divise in **Cerimonie** e **Tradizioni**;
-   sotto il titolo c'è di chi è, tutto il gruppo o un'unità.
+   sotto il titolo c'è di chi è: tutto il gruppo, la Comunità capi, una o più unità,
+   l'Alta Squadriglia o il Consiglio capi di un reparto, una o più squadriglie, il Consiglio
+   degli Anziani.
 2. Tocca una voce per leggerla. **Scarica in PDF** la salva sul telefono o sul computer, per
    stamparla o leggerla la sera del fuoco.
 3. Sotto il testo, in **Allegati**, ci sono i file della voce (il testo di un canto, uno
@@ -47,13 +49,22 @@ si apre.
 
 ## Scrivere una voce
 
-Le voci di **tutto il gruppo** le scrivono i capigruppo; quelle di un'**unità** lo staff
-dell'unità (anche di un'unità collegata) e i capigruppo.
+Di chi è una voce decide chi la scrive; chi la legge lo decidono le condizioni (vedi sotto).
+
+- **Tutto il gruppo** e **Comunità capi**: i capigruppo.
+- **Una o più unità** (anche il noviziato): lo staff di una qualsiasi di quelle unità (anche di
+  un'unità collegata) e i capigruppo. Lo staff aggiunge solo le proprie unità e ne tiene
+  sempre almeno una.
+- **Alta Squadriglia**, **Consiglio capi** e **una o più squadriglie**: lo staff del reparto
+  (anche collegato) e i capigruppo.
+- **Consiglio degli Anziani**: lo staff del branco o del cerchio e i capigruppo.
 
 1. In **Cerimonie e tradizioni** tocca **Nuova voce**, oppure apri una voce e tocca
    **Modifica**.
 2. Scrivi il **titolo**, scegli se è una **cerimonia** o una **tradizione** e di chi è
-   (**Di**): tutto il gruppo o una delle tue unità.
+   (**Di**), poi le unità, il reparto, il branco o cerchio, o le squadriglie. Scegliendo di chi
+   è, l'app compila le condizioni che corrispondono (per esempio «È in una squadriglia» per una
+   voce di squadriglia): puoi cambiarle o toglierle.
 3. Scrivi il testo con l'editor: titoli, grassetto, elenchi, tabelle.
 4. In **Chi la legge** scegli quali ragazzi e ragazze possono leggerla (i capi non serve
    sceglierli: la leggono tutti):
@@ -81,10 +92,12 @@ Squadriglia la legge da quel giorno, chi lascia il gruppo smette di leggerla.
 
 - **È in un'unità** o **È in una branca**: i ragazzi e le ragazze di quell'unità o di quella
   branca (il noviziato è nella branca Rover e Scolte).
+- **È in una squadriglia**: i suoi squadriglieri.
 - **Ha un incarico**: capo o vice capo squadriglia, un altro incarico di squadriglia, il
   Consiglio degli Anziani.
-- **È nel Consiglio capi**: i capi squadriglia e chi lo staff ha equiparato a loro.
-- **È nell'Alta Squadriglia quest'anno**.
+- **È nel Consiglio capi**: i capi squadriglia e chi lo staff ha equiparato a loro, di
+  qualsiasi reparto o di un reparto (con il reparto collegato).
+- **È nell'Alta Squadriglia**, di qualsiasi reparto o di un reparto.
 - **Passa da una branca all'altra**: da quando lo staff lo mette nel passaggio, e per sempre,
   anche dopo il passaggio (non se il passaggio viene annullato).
 - **Ha fatto la Promessa**, **Ha raggiunto una tappa** (quella tappa o una successiva, nella

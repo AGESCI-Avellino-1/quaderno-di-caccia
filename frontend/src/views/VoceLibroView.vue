@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import {
@@ -11,6 +11,7 @@ import {
   type VoceLibroIn,
 } from '@/api/qdc'
 import AllegatiVoce from '@/components/AllegatiVoce.vue'
+import { NOMI_AMBITO, ambitiPossibili, condizioniProposte, unitaPer } from '@/components/ambitoVoce'
 import CondizioniVoce from '@/components/CondizioniVoce.vue'
 import CopiaLocale from '@/components/CopiaLocale.vue'
 import Icona from '@/components/Icona.vue'
@@ -44,10 +45,13 @@ const copiaDel = ref<string | null>(null)
 const nuova = computed(() => props.id === undefined)
 
 function vuoto(l: LibroCerimonie): VoceLibroIn {
+  const unita = unitaPer('UNITA', l.unita)[0]
   return {
     titolo: '',
     tipo: 'CERIMONIA',
-    unita_id: l.puo_tutto_il_gruppo ? null : (l.unita[0]?.id ?? null),
+    ambito: l.puo_tutto_il_gruppo || !unita ? 'GRUPPO' : 'UNITA',
+    unita_ids: !l.puo_tutto_il_gruppo && unita ? [unita.id] : [],
+    squadriglie_ids: [],
     testo: '',
     aggiunti: [],
     condizioni: [],
@@ -64,7 +68,9 @@ async function apriModulo() {
     ? {
         titolo: voce.value.titolo,
         tipo: voce.value.tipo,
-        unita_id: voce.value.unita_id,
+        ambito: voce.value.ambito,
+        unita_ids: [...voce.value.unita_ids],
+        squadriglie_ids: [...voce.value.squadriglie_ids],
         testo: voce.value.testo,
         aggiunti: [...voce.value.aggiunti],
         condizioni: JSON.parse(JSON.stringify(voce.value.condizioni)),
@@ -83,14 +89,69 @@ onMounted(async () => {
   copiaDel.value = letta?.copiaDel ?? null
 })
 
-// The unit being kept stays a choice even for who no longer serves it.
+// Whose it is (DEC-438). The units and patrols already there stay a choice even for who does
+// not serve them: the staff adds only its own, the capigruppo any.
 const unita = computed(() => {
   const elenco = [...(libro.value?.unita ?? [])]
-  const attuale = voce.value?.unita_id
-  if (attuale && !elenco.some((u) => u.id === attuale))
-    elenco.unshift({ id: attuale, nome: voce.value!.unita })
+  for (const id of voce.value?.unita_ids ?? []) {
+    const u = libro.value?.unita_condizioni.find((x) => x.id === id)
+    if (u && !elenco.some((x) => x.id === id)) elenco.push(u)
+  }
   return elenco
 })
+const squadriglie = computed(() => {
+  const elenco = [...(libro.value?.squadriglie ?? [])]
+  for (const id of voce.value?.squadriglie_ids ?? []) {
+    const q = libro.value?.squadriglie_condizioni.find((x) => x.id === id)
+    if (q && !elenco.some((x) => x.id === id)) elenco.push(q)
+  }
+  return elenco
+})
+const ambiti = computed(() => {
+  if (!libro.value) return []
+  const elenco = ambitiPossibili(libro.value, unita.value, squadriglie.value)
+  const attuale = modulo.value?.ambito
+  return attuale && !elenco.includes(attuale) ? [attuale, ...elenco] : elenco
+})
+const unitaDellAmbito = computed(() =>
+  modulo.value ? unitaPer(modulo.value.ambito, unita.value) : [],
+)
+const unitaSingola = computed({
+  get: () => modulo.value?.unita_ids[0] ?? null,
+  set: (id: number | null) => {
+    if (modulo.value) modulo.value.unita_ids = id === null ? [] : [id]
+  },
+})
+
+/** A new kind keeps the units that still fit, or takes the first one. */
+function cambiaAmbito() {
+  const m = modulo.value
+  if (!m) return
+  const possibili = unitaPer(m.ambito, unita.value).map((u) => u.id)
+  const tenute = m.unita_ids.filter((id) => possibili.includes(id))
+  const scelte = tenute.length ? tenute : possibili.slice(0, 1)
+  m.unita_ids = m.ambito === 'UNITA' ? scelte : scelte.slice(0, 1)
+  if (m.ambito !== 'SQUADRIGLIE') m.squadriglie_ids = []
+  if (m.ambito !== 'GRUPPO') m.cerimonia_del_totem = false
+}
+
+// The conditions follow whose the entry is while who writes has not changed them (DEC-438).
+watch(
+  () =>
+    modulo.value && [
+      modulo.value.ambito,
+      [...modulo.value.unita_ids],
+      [...modulo.value.squadriglie_ids],
+    ],
+  (nuovo, vecchio) => {
+    const m = modulo.value
+    if (!m || !nuovo || !vecchio) return
+    const [ambito, u, q] = vecchio as [VoceLibroIn['ambito'], number[], number[]]
+    const prima = JSON.stringify(condizioniProposte(ambito, u, q))
+    if (m.condizioni.length && JSON.stringify(m.condizioni) !== prima) return
+    m.condizioni = condizioniProposte(m.ambito, m.unita_ids, m.squadriglie_ids)
+  },
+)
 
 async function chiLegge() {
   if (!modulo.value) return
@@ -146,15 +207,57 @@ async function elimina() {
           </select>
         </div>
         <div class="col-12 md:col-3">
-          <label class="form-label small mb-0" for="voce-unita">Di</label>
-          <select id="voce-unita" v-model="modulo.unita_id" class="form-control">
-            <option v-if="libro?.puo_tutto_il_gruppo" :value="null">Tutto il gruppo</option>
-            <option v-for="u in unita" :key="u.id" :value="u.id">{{ u.nome }}</option>
+          <label class="form-label small mb-0" for="voce-ambito">Di</label>
+          <select
+            id="voce-ambito"
+            v-model="modulo.ambito"
+            class="form-control"
+            @change="cambiaAmbito"
+          >
+            <option v-for="a in ambiti" :key="a" :value="a">{{ NOMI_AMBITO[a] }}</option>
           </select>
         </div>
       </div>
+      <fieldset v-if="modulo.ambito === 'UNITA'" class="mb-3" data-unita-voce>
+        <legend class="form-label small mb-0">Unità</legend>
+        <div class="d-flex flex-wrap gap-5">
+          <div v-for="u in unitaDellAmbito" :key="u.id" class="form-field mb-0">
+            <input
+              :id="`voce-unita-${u.id}`"
+              v-model="modulo.unita_ids"
+              type="checkbox"
+              class="check"
+              :value="u.id"
+            />
+            <label :for="`voce-unita-${u.id}`">{{ u.nome }}</label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset v-else-if="modulo.ambito === 'SQUADRIGLIE'" class="mb-3" data-squadriglie-voce>
+        <legend class="form-label small mb-0">Squadriglie</legend>
+        <div class="d-flex flex-wrap gap-5">
+          <div v-for="q in squadriglie" :key="q.id" class="form-field mb-0">
+            <input
+              :id="`voce-sq-${q.id}`"
+              v-model="modulo.squadriglie_ids"
+              type="checkbox"
+              class="check"
+              :value="q.id"
+            />
+            <label :for="`voce-sq-${q.id}`">{{ q.nome }}</label>
+          </div>
+        </div>
+      </fieldset>
+      <div v-else-if="unitaDellAmbito.length" class="mb-3 md:col-6">
+        <label class="form-label small mb-0" for="voce-unita">
+          {{ modulo.ambito === 'CONSIGLIO_ANZIANI' ? 'Branco o cerchio' : 'Reparto' }}
+        </label>
+        <select id="voce-unita" v-model="unitaSingola" class="form-control">
+          <option v-for="u in unitaDellAmbito" :key="u.id" :value="u.id">{{ u.nome }}</option>
+        </select>
+      </div>
       <div
-        v-if="libro?.puo_tutto_il_gruppo && modulo.unita_id === null"
+        v-if="libro?.puo_tutto_il_gruppo && modulo.ambito === 'GRUPPO'"
         class="form-field mb-3"
         data-totem
       >
@@ -168,7 +271,8 @@ async function elimina() {
       <p class="small fg-2">
         Tutti i capi leggono ogni voce; i genitori mai. Dei ragazzi/e la leggono, finché sono nel
         gruppo, quelli che soddisfano le condizioni, quelli scelti a mano e chi è nel registro di
-        chi l'ha vissuta.
+        chi l'ha vissuta. Scegliendo di chi è la voce, le condizioni si compilano da sole: puoi
+        cambiarle.
       </p>
       <div v-if="libro" class="mb-5">
         <CondizioniVoce v-model="modulo.condizioni" :libro="libro" />

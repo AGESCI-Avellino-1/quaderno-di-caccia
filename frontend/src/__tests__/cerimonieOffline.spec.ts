@@ -13,6 +13,7 @@ const TESTI: TestoVoceLibro[] = [
     id: 3,
     titolo: "Notte dell'Alta Squadriglia",
     tipo: 'CERIMONIA',
+    ambito: 'ALTA_SQ',
     unita: 'Reparto (N1)',
     cerimonia_del_totem: false,
     testo: '<p>La veglia</p>',

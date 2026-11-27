@@ -31,7 +31,10 @@ export async function aggiornaTesti(database: DatabaseQdc = dbPredefinito): Prom
 function daTesto(t: TestoVoceLibro): VoceLibro {
   return {
     ...t,
-    unita_id: null,
+    // A copy saved before DEC-438 has no kind of owner.
+    ambito: t.ambito ?? 'GRUPPO',
+    unita_ids: [],
+    squadriglie_ids: [],
     allegati: [],
     puo_modificare: false,
     aggiunti: [],

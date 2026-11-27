@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { CondizioneVoce, LibroCerimonie } from '@/api/qdc'
 
 // The conditions of an entry of the book of ceremonies (DEC-437): groups of conditions, all
@@ -10,9 +12,10 @@ type Tipo = CondizioneVoce['tipo']
 const TIPI: { tipo: Tipo; nome: string }[] = [
   { tipo: 'unita', nome: "È in un'unità" },
   { tipo: 'branca', nome: 'È in una branca' },
+  { tipo: 'squadriglia', nome: 'È in una squadriglia' },
   { tipo: 'incarico', nome: 'Ha un incarico' },
   { tipo: 'consiglio_capi', nome: 'È nel Consiglio capi' },
-  { tipo: 'alta_squadriglia', nome: "È nell'Alta Squadriglia quest'anno" },
+  { tipo: 'alta_squadriglia', nome: "È nell'Alta Squadriglia" },
   { tipo: 'totem', nome: 'Ha il nome di totem' },
   { tipo: 'passaggio', nome: "Passa da una branca all'altra" },
   { tipo: 'promessa', nome: 'Ha fatto la Promessa' },
@@ -31,6 +34,8 @@ const FASI = [
   { valore: 'RESPONSABILITA', nome: 'Responsabilità' },
 ]
 
+const reparti = computed(() => props.libro.unita_condizioni.filter((u) => u.tipo === 'REPARTO'))
+
 /** A condition of that kind with its first choices filled in. */
 function nuova(tipo: Tipo): CondizioneVoce {
   switch (tipo) {
@@ -38,6 +43,8 @@ function nuova(tipo: Tipo): CondizioneVoce {
       return { tipo, unita: props.libro.unita_condizioni[0]?.id }
     case 'branca':
       return { tipo, branca: 'EG' }
+    case 'squadriglia':
+      return { tipo, squadriglia: props.libro.squadriglie_condizioni[0]?.id }
     case 'incarico':
       return { tipo, ruolo: props.libro.incarichi[0]?.valore }
     case 'passaggio':
@@ -103,6 +110,25 @@ function nuovoGruppo() {
           >
             <option v-for="u in libro.unita_condizioni" :key="u.id" :value="u.id">
               {{ u.nome }}
+            </option>
+          </select>
+          <select
+            v-if="c.tipo === 'consiglio_capi' || c.tipo === 'alta_squadriglia'"
+            v-model="c.unita"
+            class="form-control form-control-sm w-auto"
+            aria-label="Reparto"
+          >
+            <option :value="undefined">di qualsiasi reparto</option>
+            <option v-for="u in reparti" :key="u.id" :value="u.id">del {{ u.nome }}</option>
+          </select>
+          <select
+            v-if="c.tipo === 'squadriglia'"
+            v-model="c.squadriglia"
+            class="form-control form-control-sm w-auto"
+            aria-label="Squadriglia"
+          >
+            <option v-for="q in libro.squadriglie_condizioni" :key="q.id" :value="q.id">
+              {{ q.nome }}
             </option>
           </select>
           <select

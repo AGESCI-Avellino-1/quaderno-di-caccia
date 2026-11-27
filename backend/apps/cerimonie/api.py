@@ -18,11 +18,19 @@ from apps.anagrafica.models import Persona
 from apps.anagrafica.servizi import con_unita, unita_delle_persone
 from apps.impostazioni import funzioni
 from apps.impostazioni.html import in_testo, pulisci
-from apps.organizzazione.models import TipoUnita, Unita
+from apps.organizzazione.models import Squadriglia, TipoUnita, Unita
 from apps.permessi import policy
 
 from . import condizioni as cond
-from .models import LUNGHEZZA_TESTO, AllegatoVoce, PartecipazioneVoce, TipoVoce, VoceLibro
+from .models import (
+    AMBITI_DI_UNA_UNITA,
+    LUNGHEZZA_TESTO,
+    AllegatoVoce,
+    AmbitoVoce,
+    PartecipazioneVoce,
+    TipoVoce,
+    VoceLibro,
+)
 from .stampa import pdf_voce
 
 router = Router(tags=["cerimonie"])
@@ -38,7 +46,7 @@ def _attiva() -> None:
 
 def _leggibile(request, voce_id: int) -> VoceLibro:
     _attiva()
-    voce = policy.voci_visibili(request.auth).filter(pk=voce_id).select_related("unita").first()
+    voce = _con_ambito(policy.voci_visibili(request.auth)).filter(pk=voce_id).first()
     if voce is None:
         raise HttpError(404, NON_TROVATA)
     return voce
@@ -51,16 +59,32 @@ def _scrivibile(request, voce_id: int) -> VoceLibro:
     return voce
 
 
+def _con_ambito(voci):
+    return voci.prefetch_related("unita__collegata_a", "squadriglie")
+
+
+# Where the Consiglio degli Anziani sits (DEC-438).
+TIPI_LC = (TipoUnita.BRANCO, TipoUnita.CERCHIO, TipoUnita.BRANCO_CERCHIO)
+
+
 class UnitaScelta(Schema):
     id: int
     nome: str
+    tipo: str = ""
+
+
+class SquadrigliaScelta(Schema):
+    id: int
+    nome: str
+    unita_id: int
 
 
 class VoceBreve(Schema):
     id: int
     titolo: str
     tipo: str
-    # «Tutto il gruppo» or the unit.
+    ambito: str
+    # Whose it is, in words: «Tutto il gruppo», the units, the patrols… (DEC-438).
     unita: str
     cerimonia_del_totem: bool
 
@@ -73,11 +97,14 @@ class Scelta(Schema):
 class LibroOut(Schema):
     voci: list[VoceBreve]
     puo_scrivere: bool
-    # Where a new entry may go; the group's only for the capigruppo.
+    # Where a new entry may go; the group's and the Co.Ca.'s only for the capigruppo.
     unita: list[UnitaScelta]
+    squadriglie: list[SquadrigliaScelta] = []
     puo_tutto_il_gruppo: bool
-    # For the conditions, to who writes: every active unit and the roles one may ask for.
+    # For the conditions, to who writes: every active unit and patrol, and the roles one may
+    # ask for.
     unita_condizioni: list[UnitaScelta] = []
+    squadriglie_condizioni: list[SquadrigliaScelta] = []
     incarichi: list[Scelta] = []
 
 
@@ -96,7 +123,8 @@ class AllegatoOut(Schema):
 
 
 class VoceOut(VoceBreve):
-    unita_id: int | None
+    unita_ids: list[int]
+    squadriglie_ids: list[int]
     testo: str
     allegati: list[AllegatoOut]
     puo_modificare: bool
@@ -118,7 +146,9 @@ class Aggiungibile(Schema):
 class VoceIn(Schema):
     titolo: str
     tipo: str = TipoVoce.CERIMONIA
-    unita_id: int | None = None
+    ambito: str = AmbitoVoce.GRUPPO
+    unita_ids: list[int] = []
+    squadriglie_ids: list[int] = []
     testo: str = ""
     aggiunti: list[int] = []
     condizioni: list = []
@@ -126,8 +156,24 @@ class VoceIn(Schema):
     cerimonia_del_totem: bool = False
 
 
-def _nome_unita(voce: VoceLibro) -> str:
-    return str(voce.unita) if voce.unita_id else "Tutto il gruppo"
+def _elenco(nomi: list[str]) -> str:
+    return nomi[0] if len(nomi) == 1 else ", ".join(nomi[:-1]) + " e " + nomi[-1]
+
+
+def nome_ambito(voce: VoceLibro) -> str:
+    """Whose an entry is, in words (DEC-438): «Tutto il gruppo», «Comunità capi», the units,
+    «Alta Squadriglia · Reparto …» (with the linked one, as they share it, DEC-439)…"""
+    if voce.ambito in (AmbitoVoce.GRUPPO, AmbitoVoce.COCA):
+        return voce.get_ambito_display()
+    if voce.ambito == AmbitoVoce.SQUADRIGLIE:
+        return _elenco(sorted(str(s) for s in voce.squadriglie.all())) if voce.pk else ""
+    unita = sorted(voce.unita.all(), key=str) if voce.pk else []
+    if voce.ambito == AmbitoVoce.ALTA_SQUADRIGLIA:
+        unita += [u.collegata_a for u in unita if u.collegata_a and u.collegata_a not in unita]
+    nomi = _elenco([str(u) for u in unita]) if unita else ""
+    if voce.ambito == AmbitoVoce.UNITA:
+        return nomi
+    return f"{voce.get_ambito_display()} · {nomi}"
 
 
 def _breve(voce: VoceLibro) -> dict:
@@ -135,7 +181,8 @@ def _breve(voce: VoceLibro) -> dict:
         "id": voce.pk,
         "titolo": voce.titolo,
         "tipo": voce.tipo,
-        "unita": _nome_unita(voce),
+        "ambito": voce.ambito,
+        "unita": nome_ambito(voce),
         "cerimonia_del_totem": voce.cerimonia_del_totem,
     }
 
@@ -162,7 +209,8 @@ def _voce_out(request, voce: VoceLibro) -> dict:
         "vede_registro": registro,
         "partecipanti": _registro(voce) if registro else [],
         **_breve(voce),
-        "unita_id": voce.unita_id,
+        "unita_ids": sorted(u.pk for u in voce.unita.all()),
+        "squadriglie_ids": sorted(s.pk for s in voce.squadriglie.all()),
         "testo": voce.testo,
         "allegati": [
             {"id": a.pk, "titolo": a.titolo, "tipo_file": a.tipo_file} for a in voce.allegati.all()
@@ -177,21 +225,32 @@ def _voce_out(request, voce: VoceLibro) -> dict:
 def libro(request):
     _attiva()
     user = request.auth
-    voci = policy.voci_visibili(user).select_related("unita")
+    voci = _con_ambito(policy.voci_visibili(user))
     scrive = policy.puo_scrivere_voci(user)
     attive = Unita.objects.filter(attiva=True, archiviata_il__isnull=True).exclude(
         tipo=TipoUnita.COMUNITA_CAPI
     )
+    sq = Squadriglia.objects.filter(attiva=True).order_by("unita_id", "nome")
     return {
         "voci": [_breve(v) for v in voci],
         "puo_scrivere": scrive,
-        "unita": [{"id": u.pk, "nome": str(u)} for u in policy.unita_per_voci(user)],
+        "unita": [_unita_scelta_out(u) for u in policy.unita_per_voci(user)],
+        "squadriglie": [_squadriglia_out(q) for q in policy.squadriglie_per_voci(user)],
         "puo_tutto_il_gruppo": policy.e_capogruppo(user),
-        "unita_condizioni": [{"id": u.pk, "nome": str(u)} for u in attive] if scrive else [],
+        "unita_condizioni": [_unita_scelta_out(u) for u in attive] if scrive else [],
+        "squadriglie_condizioni": [_squadriglia_out(q) for q in sq] if scrive else [],
         "incarichi": (
             [{"valore": r.value, "nome": r.label} for r in cond.INCARICHI] if scrive else []
         ),
     }
+
+
+def _unita_scelta_out(u: Unita) -> dict:
+    return {"id": u.pk, "nome": str(u), "tipo": u.tipo}
+
+
+def _squadriglia_out(q: Squadriglia) -> dict:
+    return {"id": q.pk, "nome": str(q), "unita_id": q.unita_id}
 
 
 class VoceTesto(VoceBreve):
@@ -204,8 +263,7 @@ def testi(request):
     attachments, no conditions. Not while acting as another user (the copy is one's own)."""
     _attiva()
     return [
-        {**_breve(v), "testo": v.testo}
-        for v in policy.voci_visibili(request.auth).select_related("unita")
+        {**_breve(v), "testo": v.testo} for v in _con_ambito(policy.voci_visibili(request.auth))
     ]
 
 
@@ -298,15 +356,48 @@ def voce_pdf(request, voce_id: int):
     return risposta
 
 
-def _unita_scelta(request, unita_id: int | None) -> Unita | None:
-    if unita_id is None:
-        if not policy.e_capogruppo(request.auth):
-            raise HttpError(403, "Le voci di tutto il gruppo le scrivono i capigruppo.")
-        return None
-    unita = policy.unita_per_voci(request.auth).filter(pk=unita_id).first()
-    if unita is None:
-        raise HttpError(403, "Puoi scrivere le voci solo delle unità in cui sei in servizio.")
-    return unita
+def _ambito(request, voce: VoceLibro, dati: VoceIn) -> tuple[list[Unita], list[Squadriglia]]:
+    """The units and patrols of the entry, checked (DEC-438). The staff adds only the units
+    (or patrols of the reparti) it serves; those already there stay a choice."""
+    user = request.auth
+    if dati.ambito not in AmbitoVoce.values:
+        raise HttpError(400, "Scegli di chi è la voce.")
+    if dati.ambito in (AmbitoVoce.GRUPPO, AmbitoVoce.COCA):
+        if not policy.e_capogruppo(user):
+            raise HttpError(
+                403, "Le voci di tutto il gruppo e della Comunità capi le scrivono i capigruppo."
+            )
+        return [], []
+    if dati.ambito == AmbitoVoce.SQUADRIGLIE:
+        gia = set(voce.squadriglie.values_list("pk", flat=True)) if voce.pk else set()
+        ammesse = set(policy.squadriglie_per_voci(user).values_list("pk", flat=True))
+        if policy.e_capogruppo(user):
+            ammesse = set(Squadriglia.objects.filter(attiva=True).values_list("pk", flat=True))
+        scelte = set(dati.squadriglie_ids)
+        if not scelte:
+            raise HttpError(400, "Scegli almeno una squadriglia.")
+        if not scelte <= ammesse | gia:
+            raise HttpError(
+                403, "Puoi scegliere solo le squadriglie dei reparti in cui sei in servizio."
+            )
+        return [], list(Squadriglia.objects.filter(pk__in=scelte))
+    gia = set(voce.unita.values_list("pk", flat=True)) if voce.pk else set()
+    ammesse = set(policy.unita_per_voci(user).values_list("pk", flat=True))
+    scelte = set(dati.unita_ids)
+    if not scelte:
+        raise HttpError(400, "Scegli l'unità della voce.")
+    if not scelte <= ammesse | gia:
+        raise HttpError(403, "Puoi scegliere solo le unità in cui sei in servizio.")
+    unita = list(Unita.objects.filter(pk__in=scelte))
+    if dati.ambito in AMBITI_DI_UNA_UNITA:
+        tipi = TIPI_LC if dati.ambito == AmbitoVoce.CONSIGLIO_ANZIANI else (TipoUnita.REPARTO,)
+        if len(unita) != 1 or unita[0].tipo not in tipi:
+            if dati.ambito == AmbitoVoce.CONSIGLIO_ANZIANI:
+                raise HttpError(400, "Il Consiglio degli Anziani è di un branco o di un cerchio.")
+            raise HttpError(400, f"{AmbitoVoce(dati.ambito).label} è di un reparto.")
+    elif any(u.tipo == TipoUnita.COMUNITA_CAPI for u in unita):
+        raise HttpError(400, "Per la Comunità capi scegli «Comunità capi».")
+    return unita, []
 
 
 def _aggiunti(request, ids: list[int], gia: set[int]) -> list[Persona]:
@@ -334,13 +425,15 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
     aggiunti = _aggiunti(request, dati.aggiunti, gia)
     voce.condizioni = _condizioni(dati.condizioni)
     voce.titolo, voce.tipo, voce.testo = titolo, dati.tipo, testo
-    voce.unita = _unita_scelta(request, dati.unita_id)
+    unita, squadriglie = _ambito(request, voce, dati)
+    voce.ambito = dati.ambito
+    di_tutti = dati.ambito == AmbitoVoce.GRUPPO
     if dati.cerimonia_del_totem != voce.cerimonia_del_totem:
         if not policy.e_capogruppo(request.auth):
             raise HttpError(403, "La cerimonia del totem la sceglie un capogruppo.")
-        if dati.cerimonia_del_totem and voce.unita_id is not None:
+        if dati.cerimonia_del_totem and not di_tutti:
             raise HttpError(400, "La cerimonia del totem è una voce di tutto il gruppo.")
-    elif voce.cerimonia_del_totem and voce.unita_id is not None:
+    elif voce.cerimonia_del_totem and not di_tutti:
         raise HttpError(400, "La cerimonia del totem è una voce di tutto il gruppo.")
     voce.cerimonia_del_totem = dati.cerimonia_del_totem
     with transaction.atomic():
@@ -351,6 +444,11 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
             )
         voce.save()
         voce.aggiunti.set(aggiunti)
+        voce.unita.set(unita)
+        voce.squadriglie.set(squadriglie)
+        # Who would no longer write it keeps one of their own units (the error undoes it all).
+        if not policy.puo_scrivere_voce(request.auth, voce):
+            raise HttpError(403, "Tieni almeno una delle unità in cui sei in servizio.")
     return voce
 
 

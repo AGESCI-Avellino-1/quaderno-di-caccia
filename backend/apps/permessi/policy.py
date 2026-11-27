@@ -2592,10 +2592,30 @@ def puo_scrivere_voci(user) -> bool:
 
 
 def puo_scrivere_voce(user, voce) -> bool:
-    """An entry of the group: the capigruppo; of a unit: also its staff (linked units too)."""
+    """An entry of the group or the Co.Ca.: the capigruppo; of units, the Alta Squadriglia, the
+    Consiglio capi, the Consiglio degli Anziani: also the staff of one of its units (linked
+    units too); of patrols: also the staff of one of their reparti (DEC-438)."""
     if e_capogruppo(user):
         return True
-    return voce.unita_id is not None and unita_per_voci(user).filter(pk=voce.unita_id).exists()
+    return bool(unita_della_voce(voce) & set(unita_per_voci(user).values_list("pk", flat=True)))
+
+
+def unita_della_voce(voce) -> set[int]:
+    """The units whose staff writes an entry: its own, or its patrols' reparti (DEC-438)."""
+    from apps.cerimonie.models import AmbitoVoce
+
+    if voce.pk is None:
+        return set()
+    if voce.ambito == AmbitoVoce.SQUADRIGLIE:
+        return set(voce.squadriglie.values_list("unita_id", flat=True))
+    if voce.ambito in (AmbitoVoce.GRUPPO, AmbitoVoce.COCA):
+        return set()
+    return set(voce.unita.values_list("pk", flat=True))
+
+
+def squadriglie_per_voci(user) -> QuerySet[Squadriglia]:
+    """The active patrols whose entries one writes: those of the reparti one serves (DEC-438)."""
+    return Squadriglia.objects.filter(attiva=True, unita__in=unita_per_voci(user))
 
 
 def aggiungibili_alle_voci(user):

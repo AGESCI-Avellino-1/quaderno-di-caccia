@@ -1,6 +1,8 @@
 """The book of ceremonies and traditions (DEC-437).
 
-An entry belongs to the group or to a unit, with its attachments and the register of who lived it. Every capo of the Co.Ca. reads every entry; a
+An entry belongs to the group, the Co.Ca., one or more units, the Alta Squadriglia or the
+Consiglio capi of a reparto, one or more patrols, or the Consiglio degli Anziani (DEC-438): that
+decides who writes it, never who reads it. It has its attachments and the register of who lived it. Every capo of the Co.Ca. reads every entry; a
 ragazzo/a, while an active member, reads the entries whose conditions they meet or they were
 added to by hand; the parents never. Who sees what is decided in `policy.voci_visibili`.
 """
@@ -17,6 +19,26 @@ class TipoVoce(models.TextChoices):
     TRADIZIONE = "TRADIZIONE", "Tradizione"
 
 
+class AmbitoVoce(models.TextChoices):
+    """Whose an entry is (DEC-438)."""
+
+    GRUPPO = "GRUPPO", "Tutto il gruppo"
+    COCA = "COCA", "Comunità capi"
+    UNITA = "UNITA", "Unità"
+    ALTA_SQUADRIGLIA = "ALTA_SQ", "Alta Squadriglia"
+    CONSIGLIO_CAPI = "CONSIGLIO_CAPI", "Consiglio capi"
+    SQUADRIGLIE = "SQUADRIGLIE", "Squadriglie"
+    CONSIGLIO_ANZIANI = "CONSIGLIO_ANZIANI", "Consiglio degli Anziani"
+
+
+# The kinds that sit in one unit: a reparto, or a branco/cerchio for the Consiglio degli Anziani.
+AMBITI_DI_UNA_UNITA = (
+    AmbitoVoce.ALTA_SQUADRIGLIA,
+    AmbitoVoce.CONSIGLIO_CAPI,
+    AmbitoVoce.CONSIGLIO_ANZIANI,
+)
+
+
 # Written with the editor: room for a long text, not for a book (as the totem ceremony).
 LUNGHEZZA_TESTO = 100_000
 
@@ -26,13 +48,13 @@ class VoceLibro(ModelloTracciato):
     tipo = models.CharField(max_length=12, choices=TipoVoce.choices, default=TipoVoce.CERIMONIA)
     # The editor's cleaned HTML, no images (attachments come apart).
     testo = models.TextField(blank=True)
-    # The unit whose staff writes it; none = the group's, written by the capigruppo.
-    unita = models.ForeignKey(
-        "organizzazione.Unita",
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        related_name="voci_libro",
+    ambito = models.CharField(max_length=20, choices=AmbitoVoce.choices, default=AmbitoVoce.GRUPPO)
+    # UNITA: its units (one or more); Alta Squadriglia and Consiglio capi: the reparto;
+    # Consiglio degli Anziani: the branco or cerchio. Their staffs write it (DEC-438).
+    unita = models.ManyToManyField("organizzazione.Unita", blank=True, related_name="voci_libro")
+    # SQUADRIGLIE: the patrols, written by the staff of their reparto.
+    squadriglie = models.ManyToManyField(
+        "organizzazione.Squadriglia", blank=True, related_name="voci_libro"
     )
     # The totem ceremony, once in the settings (DEC-416): «La mia tribù» links to it.
     cerimonia_del_totem = models.BooleanField(default=False)

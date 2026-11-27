@@ -770,7 +770,7 @@ def crea_attivita(email) -> None:
         {
             "titolo": "Cerimonia del totem",
             "tipo": "CERIMONIA",
-            "unita_id": None,
+            "ambito": "GRUPPO",
             "cerimonia_del_totem": True,
             "testo": "<h2>Il fuoco</h2><p>Un testo di prova: qui il gruppo scrive la sua "
             "cerimonia del totem.</p>",
@@ -782,7 +782,7 @@ def crea_attivita(email) -> None:
         {
             "titolo": "Fuoco di inizio anno",
             "tipo": "TRADIZIONE",
-            "unita_id": None,
+            "ambito": "GRUPPO",
             "testo": "<p>A ottobre tutto il gruppo si ritrova attorno al fuoco: ogni unità "
             "porta un canto e una legna.</p>",
         },
@@ -793,12 +793,16 @@ def crea_attivita(email) -> None:
         {
             "titolo": "Notte dell'Alta Squadriglia",
             "tipo": "CERIMONIA",
-            "unita_id": reparto.pk,
+            "ambito": "ALTA_SQ",
+            "unita_ids": [reparto.pk],
             "testo": "<p>Un testo di prova: la veglia dei capi e vice capi squadriglia, con "
             "la promessa di servire il reparto.</p><ul><li>Il cerchio</li><li>La parola"
             "</li><li>Il silenzio</li></ul>",
-            # The Consiglio capi, or this year's Alta Squadriglia; Giulia chosen by hand.
-            "condizioni": [[{"tipo": "consiglio_capi"}], [{"tipo": "alta_squadriglia"}]],
+            # The reparto's Consiglio capi, or its Alta Squadriglia; Giulia chosen by hand.
+            "condizioni": [
+                [{"tipo": "consiglio_capi", "unita": reparto.pk}],
+                [{"tipo": "alta_squadriglia", "unita": reparto.pk}],
+            ],
             "aggiunti": [giulia],
         },
     )

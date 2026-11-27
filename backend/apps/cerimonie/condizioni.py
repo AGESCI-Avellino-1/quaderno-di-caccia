@@ -8,9 +8,12 @@ every mark of one of its groups is in that set.
 The kinds, all about today's active members:
 - `unita`: a ragazzo/a of that unit;
 - `branca`: a ragazzo/a of a unit of that branch (the noviziato is R/S);
+- `squadriglia`: a member of that patrol (DEC-438);
 - `incarico`: holds that patrol role, or is in the Consiglio degli Anziani;
-- `consiglio_capi`: capo squadriglia, or a member the staff treats as one (DEC-419);
-- `alta_squadriglia`: in the Alta Squadriglia of this associative year;
+- `consiglio_capi`: capo squadriglia, or a member the staff treats as one (DEC-419); with a
+  `unita`, of that reparto or the one linked to it (DEC-438);
+- `alta_squadriglia`: in the Alta Squadriglia of this associative year; with a `unita`, of that
+  reparto or the one linked to it, which share one (DEC-438);
 - `totem`: has a totem name;
 - `passaggio`: in a passage from one branch to another, from its proposal on, for good, unless
   that passage or their part in it was cancelled;
@@ -27,7 +30,7 @@ from collections.abc import Iterable
 
 from django.db.models import Q
 
-from apps.anagrafica.models import Appartenenza, RuoloAppartenenza
+from apps.anagrafica.models import Appartenenza, AppartenenzaSquadriglia, RuoloAppartenenza
 from apps.core.anno import AnnoAssociativo
 from apps.organizzazione.models import (
     BRANCA_DEL_TIPO,
@@ -37,12 +40,15 @@ from apps.organizzazione.models import (
     EquiparazioneCsq,
     Incarico,
     RuoloIncarico,
+    Squadriglia,
+    TipoUnita,
     Unita,
 )
 
 TIPI = (
     "unita",
     "branca",
+    "squadriglia",
     "incarico",
     "consiglio_capi",
     "alta_squadriglia",
@@ -81,8 +87,12 @@ def segno(condizione: dict) -> str:
         return f"unita:{condizione['unita']}"
     if tipo == "branca":
         return f"branca:{condizione['branca']}"
+    if tipo == "squadriglia":
+        return f"squadriglia:{condizione['squadriglia']}"
     if tipo == "incarico":
         return f"incarico:{condizione['ruolo']}"
+    if tipo in ("consiglio_capi", "alta_squadriglia") and condizione.get("unita"):
+        return f"{tipo}:{condizione['unita']}"
     if tipo == "passaggio":
         return f"passaggio:{condizione['da']}>{condizione['a']}"
     if tipo == "tappa":
@@ -102,6 +112,8 @@ def pulisci(gruppi: list) -> list[list[dict]]:
 
     unita = set(Unita.objects.values_list("pk", flat=True))
     voci = set(VoceLibro.objects.values_list("pk", flat=True))
+    reparti = set(Unita.objects.filter(tipo=TipoUnita.REPARTO).values_list("pk", flat=True))
+    squadriglie = set(Squadriglia.objects.values_list("pk", flat=True))
     for gruppo in gruppi:
         if not isinstance(gruppo, list):
             raise CondizioneNonValida("Le condizioni non sono scritte bene.")
@@ -109,7 +121,7 @@ def pulisci(gruppi: list) -> list[list[dict]]:
         for c in gruppo:
             if not isinstance(c, dict) or c.get("tipo") not in TIPI:
                 raise CondizioneNonValida("Una condizione non è tra quelle possibili.")
-            condizioni.append(_campi(c, unita, voci))
+            condizioni.append(_campi(c, unita, voci, reparti, squadriglie))
         if len(condizioni) > MASSIMO_CONDIZIONI:
             raise CondizioneNonValida(
                 f"In un gruppo ci sono al massimo {MASSIMO_CONDIZIONI} condizioni."
@@ -123,7 +135,7 @@ def pulisci(gruppi: list) -> list[list[dict]]:
     return puliti
 
 
-def _campi(c: dict, unita: set[int], voci: set[int]) -> dict:
+def _campi(c: dict, unita: set[int], voci: set[int], reparti: set[int], sq: set[int]) -> dict:
     tipo = c["tipo"]
     branche = {b.value for b in BRANCHE_DEI_RAGAZZI}
     if tipo == "unita":
@@ -134,6 +146,17 @@ def _campi(c: dict, unita: set[int], voci: set[int]) -> dict:
         if c.get("branca") not in branche:
             raise CondizioneNonValida("Scegli la branca della condizione.")
         return {"tipo": tipo, "branca": c["branca"]}
+    if tipo == "squadriglia":
+        if c.get("squadriglia") not in sq:
+            raise CondizioneNonValida("Scegli la squadriglia della condizione.")
+        return {"tipo": tipo, "squadriglia": c["squadriglia"]}
+    if tipo in ("consiglio_capi", "alta_squadriglia"):
+        # Without a reparto: of any reparto, as before DEC-438.
+        if c.get("unita") is None:
+            return {"tipo": tipo}
+        if c["unita"] not in reparti:
+            raise CondizioneNonValida("Scegli il reparto della condizione.")
+        return {"tipo": tipo, "unita": c["unita"]}
     if tipo == "incarico":
         if c.get("ruolo") not in {r.value for r in INCARICHI}:
             raise CondizioneNonValida("Scegli l'incarico della condizione.")
@@ -193,31 +216,54 @@ def _di_unita(ids, segni) -> None:
             segni[persona].add(f"branca:{branca}")
 
 
+def _collegate() -> dict[int, int]:
+    """Each linked unit and the one it is linked to (DEC-279)."""
+    return dict(Unita.objects.filter(collegata_a__isnull=False).values_list("pk", "collegata_a_id"))
+
+
+def _del_reparto(segni: set[str], tipo: str, reparto: int | None, collegate: dict) -> None:
+    """The mark of any reparto and those of the reparto and the one linked to it (DEC-438)."""
+    segni.add(tipo)
+    if reparto is None:
+        return
+    segni.add(f"{tipo}:{reparto}")
+    if reparto in collegate:
+        segni.add(f"{tipo}:{collegate[reparto]}")
+
+
 def _di_incarichi(ids, segni) -> None:
-    for persona, ruolo in (
+    collegate = _collegate()
+    for persona, ruolo, reparto in (
         Incarico.objects.attivi()
         .filter(persona_id__in=ids, ruolo__in=[r.value for r in INCARICHI])
-        .values_list("persona_id", "ruolo")
+        .values_list("persona_id", "ruolo", "squadriglia__unita_id")
     ):
         segni[persona].add(f"incarico:{ruolo}")
         if ruolo == RuoloIncarico.CSQ:
-            segni[persona].add("consiglio_capi")
+            _del_reparto(segni[persona], "consiglio_capi", reparto, collegate)
 
 
 def _di_squadriglia(ids, segni) -> None:
     from apps.eventi.models import MembroAltaSquadriglia
 
-    for persona in (
+    collegate = _collegate()
+    for persona, squadriglia in (
+        AppartenenzaSquadriglia.objects.attive()
+        .filter(persona_id__in=ids)
+        .values_list("persona_id", "squadriglia_id")
+    ):
+        segni[persona].add(f"squadriglia:{squadriglia}")
+    for persona, reparto in (
         EquiparazioneCsq.objects.attive()
         .filter(appartenenza__persona_id__in=ids)
-        .values_list("appartenenza__persona_id", flat=True)
+        .values_list("appartenenza__persona_id", "appartenenza__squadriglia__unita_id")
     ):
-        segni[persona].add("consiglio_capi")
+        _del_reparto(segni[persona], "consiglio_capi", reparto, collegate)
     anno = AnnoAssociativo.corrente().anno_fine
-    for persona in MembroAltaSquadriglia.objects.filter(persona_id__in=ids, anno=anno).values_list(
-        "persona_id", flat=True
-    ):
-        segni[persona].add("alta_squadriglia")
+    for persona, reparto in MembroAltaSquadriglia.objects.filter(
+        persona_id__in=ids, anno=anno
+    ).values_list("persona_id", "reparto_id"):
+        _del_reparto(segni[persona], "alta_squadriglia", reparto, collegate)
 
 
 def _di_tribu(ids, segni) -> None:

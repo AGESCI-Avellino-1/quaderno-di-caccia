@@ -441,11 +441,28 @@ export interface TotemTribu {
 /** The book of ceremonies and traditions (DEC-437). */
 export type TipoVoceLibro = 'CERIMONIA' | 'TRADIZIONE'
 
+/** Whose an entry is (DEC-438): it decides who writes it, never who reads it. */
+export type AmbitoVoceLibro =
+  'GRUPPO' | 'COCA' | 'UNITA' | 'ALTA_SQ' | 'CONSIGLIO_CAPI' | 'SQUADRIGLIE' | 'CONSIGLIO_ANZIANI'
+
+export interface UnitaVoceLibro {
+  id: number
+  nome: string
+  tipo: string
+}
+
+export interface SquadrigliaVoceLibro {
+  id: number
+  nome: string
+  unita_id: number
+}
+
 export interface VoceLibroBreve {
   id: number
   titolo: string
   tipo: TipoVoceLibro
-  /** «Tutto il gruppo» or the unit. */
+  ambito: AmbitoVoceLibro
+  /** Whose it is, in words: «Tutto il gruppo», the units, the patrols… */
   unita: string
   cerimonia_del_totem: boolean
 }
@@ -458,11 +475,13 @@ export interface TestoVoceLibro extends VoceLibroBreve {
 export interface LibroCerimonie {
   voci: VoceLibroBreve[]
   puo_scrivere: boolean
-  /** Where a new entry may go; the group's only for the capigruppo. */
-  unita: { id: number; nome: string }[]
+  /** Where a new entry may go; the group's and the Co.Ca.'s only for the capigruppo. */
+  unita: UnitaVoceLibro[]
+  squadriglie: SquadrigliaVoceLibro[]
   puo_tutto_il_gruppo: boolean
-  /** For the conditions, to who writes: every active unit and the roles one may ask for. */
-  unita_condizioni: { id: number; nome: string }[]
+  /** For the conditions, to who writes: every active unit and patrol, the roles. */
+  unita_condizioni: UnitaVoceLibro[]
+  squadriglie_condizioni: SquadrigliaVoceLibro[]
   incarichi: { valore: string; nome: string }[]
 }
 
@@ -471,6 +490,7 @@ export interface CondizioneVoce {
   tipo:
     | 'unita'
     | 'branca'
+    | 'squadriglia'
     | 'incarico'
     | 'consiglio_capi'
     | 'alta_squadriglia'
@@ -480,7 +500,9 @@ export interface CondizioneVoce {
     | 'tappa'
     | 'partenza'
     | 'partecipazione'
+  /** `unita`; for `consiglio_capi` and `alta_squadriglia`, the reparto (none = any). */
   unita?: number
+  squadriglia?: number
   branca?: string
   ruolo?: string
   da?: string
@@ -496,7 +518,8 @@ export interface PartecipanteVoce extends PersonaScelta {
 }
 
 export interface VoceLibro extends VoceLibroBreve {
-  unita_id: number | null
+  unita_ids: number[]
+  squadriglie_ids: number[]
   testo: string
   /** Read by who reads the entry, online only. */
   allegati: { id: number; titolo: string; tipo_file: string }[]
@@ -513,7 +536,9 @@ export interface VoceLibro extends VoceLibroBreve {
 export interface VoceLibroIn {
   titolo: string
   tipo: TipoVoceLibro
-  unita_id: number | null
+  ambito: AmbitoVoceLibro
+  unita_ids: number[]
+  squadriglie_ids: number[]
   testo: string
   aggiunti: number[]
   condizioni: CondizioneVoce[][]

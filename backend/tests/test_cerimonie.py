@@ -9,7 +9,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import Client
 
 from apps.anagrafica.models import Appartenenza, Persona, RuoloAppartenenza
-from apps.cerimonie.models import TipoVoce, VoceLibro
+from apps.cerimonie.models import AmbitoVoce, TipoVoce, VoceLibro
 from apps.diritti import servizi as diritti
 from apps.impostazioni import funzioni
 from apps.organizzazione.models import Composizione, Incarico, RuoloIncarico, TipoUnita, Unita
@@ -52,12 +52,8 @@ def lupetto(branco) -> Persona:
 def voci(reparto, branco):
     _accendi()
     gruppo = VoceLibro.objects.create(titolo="Fuoco di gruppo", testo="<p>Il fuoco</p>")
-    del_reparto = VoceLibro.objects.create(
-        titolo="Alta Squadriglia", unita=reparto, testo="<p>La notte</p>"
-    )
-    del_branco = VoceLibro.objects.create(
-        titolo="Passaggio dal branco", tipo=TipoVoce.TRADIZIONE, unita=branco
-    )
+    del_reparto = _voce("Alta Squadriglia", reparto, testo="<p>La notte</p>")
+    del_branco = _voce("Passaggio dal branco", branco, tipo=TipoVoce.TRADIZIONE)
     return {"gruppo": gruppo, "reparto": del_reparto, "branco": del_branco}
 
 
@@ -65,8 +61,20 @@ def _titoli(chi) -> set[str]:
     return {v["titolo"] for v in _client(chi).get(URL).json()["voci"]}
 
 
-def _dati(**campi) -> dict:
-    return {"titolo": "Nuova", "tipo": "CERIMONIA", "unita_id": None, "testo": "", **campi}
+def _voce(titolo: str, *unita: Unita, **campi) -> VoceLibro:
+    """An entry of these units (DEC-438); without any, of the group."""
+    if unita:
+        campi.setdefault("ambito", AmbitoVoce.UNITA)
+    voce = VoceLibro.objects.create(titolo=titolo, **campi)
+    voce.unita.set(unita)
+    return voce
+
+
+def _dati(unita_id: int | None = None, **campi) -> dict:
+    """`unita_id`: an entry of that one unit, as before DEC-438."""
+    if unita_id is not None:
+        campi = {"ambito": "UNITA", "unita_ids": [unita_id], **campi}
+    return {"titolo": "Nuova", "tipo": "CERIMONIA", "testo": "", **campi}
 
 
 # --- Who reads -------------------------------------------------------------------------------
@@ -326,7 +334,7 @@ def test_migrazione_della_cerimonia_del_totem(scritta):
     executor.migrate(executor.loader.graph.leaf_nodes())
     voce = VoceLibro.objects.filter(cerimonia_del_totem=True).first()
     if scritta:
-        assert voce is not None and voce.testo == "<p>Il fuoco</p>" and voce.unita is None
+        assert voce is not None and voce.testo == "<p>Il fuoco</p>" and voce.ambito == "GRUPPO"
         assert voce.titolo == "Cerimonia del totem" and not voce.aggiunti.exists()
         assert funzioni.attiva(funzioni.CERIMONIE)
     else:
@@ -660,7 +668,7 @@ def test_condizione_partecipazione(capo, ragazza, csq, voci):
         f"{URL}/{voci['reparto'].pk}",
         _dati(
             condizioni=[[{"tipo": "partecipazione", "voce": 99999}]],
-            unita_id=voci["reparto"].unita_id,
+            unita_id=voci["reparto"].unita.get().pk,
         ),
         "application/json",
     )
@@ -782,7 +790,15 @@ def test_testi_per_il_dispositivo(capo, ragazza, csq, genitore, voci, settings, 
         "Passaggio dal branco",
     }
     # Only the texts: never the register, the attachments, who reads it.
-    assert set(testi[0]) == {"id", "titolo", "tipo", "unita", "cerimonia_del_totem", "testo"}
+    assert set(testi[0]) == {
+        "id",
+        "titolo",
+        "tipo",
+        "ambito",
+        "unita",
+        "cerimonia_del_totem",
+        "testo",
+    }
     letti = _client(ragazza).get(f"{URL}/testi").json()
     assert [(t["titolo"], t["testo"]) for t in letti] == [("Alta Squadriglia", "<p>La notte</p>")]
     assert _client(genitore).get(f"{URL}/testi").json() == []

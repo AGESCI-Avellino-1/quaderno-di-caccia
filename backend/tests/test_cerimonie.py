@@ -700,3 +700,68 @@ def test_chi_e_nel_registro_legge_la_voce(capo, csq, ragazza, lupetto, voci):
     # Who left no longer reads it, though still in the register.
     Appartenenza.objects.filter(persona=csq).update(data_fine=date.today())
     assert _titoli(csq) == set()
+
+
+# --- Block 4: attachments ----------------------------------------------------------------
+
+
+def _carica(chi, voce, contenuto=b"%PDF-1.4 prova", titolo="Testo del canto"):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    file = SimpleUploadedFile("canto di Giulia.pdf", contenuto)
+    return _client(chi).post(f"{URL}/{voce.pk}/allegati", {"titolo": titolo, "file": file})
+
+
+def test_allegati_letti_da_chi_legge_la_voce(
+    capo, capogruppo, ragazza, csq, genitore, estraneo, voci, settings, tmp_path
+):
+    settings.MEDIA_ROOT = tmp_path
+    risposta = _carica(capo, voci["reparto"])
+    assert risposta.status_code == 201
+    allegato = risposta.json()["allegati"][0]
+    assert allegato["titolo"] == "Testo del canto" and allegato["tipo_file"] == "application/pdf"
+    url = f"/api/v1/allegati-voce/{allegato['id']}"
+    voci["reparto"].aggiunti.add(ragazza)
+    for chi in (capo, capogruppo, ragazza):
+        letto = _client(chi).get(url)
+        assert letto.status_code == 200 and letto.content.startswith(b"%PDF")
+    # The original name may carry a person's: not kept.
+    assert "Giulia" not in letto["Content-Disposition"]
+    assert letto["Cache-Control"] == "private, no-store"
+    # Who does not read the entry: not even that it exists.
+    for chi in (csq, genitore, estraneo):
+        assert _client(chi).get(url).status_code == 404
+    assert _client(ragazza).get(f"{URL}/{voci['reparto'].pk}").json()["allegati"]
+
+
+def test_chi_carica_e_toglie_gli_allegati(capo, capogruppo, ragazza, voci, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    voci["branco"].aggiunti.add(ragazza)
+    # The staff of the reparto, not the branco's; a reader never.
+    assert _carica(capo, voci["branco"]).status_code == 403
+    assert _carica(ragazza, voci["branco"]).status_code == 403
+    allegato = _carica(capogruppo, voci["branco"]).json()["allegati"][0]
+    url = f"/api/v1/allegati-voce/{allegato['id']}"
+    assert _client(ragazza).delete(url).status_code == 403
+    assert _client(capo).delete(url).status_code == 403
+    risposta = _client(capogruppo).delete(url)
+    assert risposta.status_code == 200 and risposta.json()["allegati"] == []
+    assert not list(tmp_path.rglob("*.pdf"))
+
+
+def test_allegati_errori(capo, voci, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    assert _carica(capo, voci["reparto"], b"MZ non un pdf").status_code == 400
+    assert _carica(capo, voci["reparto"], titolo="  ").status_code == 400
+    png = b"\x89PNG\r\n\x1a\n" + b"0" * 20
+    assert _carica(capo, voci["reparto"], png).json()["allegati"][0]["tipo_file"] == "image/png"
+
+
+def test_allegati_via_con_la_voce_e_con_la_funzione(capo, voci, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    allegato = _carica(capo, voci["reparto"]).json()["allegati"][0]
+    funzioni.imposta(funzioni.CERIMONIE, False)
+    assert _client(capo).get(f"/api/v1/allegati-voce/{allegato['id']}").status_code == 404
+    _accendi()
+    assert _client(capo).delete(f"{URL}/{voci['reparto'].pk}").status_code == 204
+    assert not list(tmp_path.rglob("*.pdf"))

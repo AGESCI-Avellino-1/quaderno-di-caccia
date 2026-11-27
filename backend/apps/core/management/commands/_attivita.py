@@ -802,6 +802,12 @@ def crea_attivita(email) -> None:
             "aggiunti": [giulia],
         },
     )
+    # An attachment, read by who reads the entry (block 4).
+    capo_reparto.carica(
+        f"/cerimonie/{notte['id']}/allegati",
+        _pdf_di_prova("Le parole della veglia", "veglia.pdf"),
+        titolo="Le parole della veglia",
+    )
     # Its register: Giulia last spring, the capo unità years ago.
     capo_reparto(
         "post",

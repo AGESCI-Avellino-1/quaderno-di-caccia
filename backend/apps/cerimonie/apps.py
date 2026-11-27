@@ -18,3 +18,4 @@ class CerimonieConfig(AppConfig):
         # added by hand neither: the names would outlive an erasure (DEC-102).
         auditlog.register(models.VoceLibro, exclude_fields=["testo"])
         auditlog.register(models.PartecipazioneVoce)
+        auditlog.register(models.AllegatoVoce)

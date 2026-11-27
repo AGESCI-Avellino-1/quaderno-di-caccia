@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api, type CondizioneVoce, type LibroCerimonie, type VoceLibro } from '@/api/qdc'
+import AllegatiVoce from '@/components/AllegatiVoce.vue'
 import CondizioniVoce from '@/components/CondizioniVoce.vue'
 import RegistroVoce from '@/components/RegistroVoce.vue'
 import CerimonieView from '@/views/CerimonieView.vue'
@@ -51,6 +52,7 @@ const VOCE: VoceLibro = {
   ...LIBRO.voci[1]!,
   unita_id: 5,
   testo: '<p>Il ponte</p>',
+  allegati: [],
   puo_modificare: false,
   aggiunti: [],
   condizioni: [],
@@ -253,6 +255,52 @@ describe('libro delle cerimonie', () => {
       await pagina.find('[aria-label="Togli Verdi Sara dal registro"]').trigger('click')
       await flushPromises()
       expect(togli).toHaveBeenCalledWith(2, 3)
+    })
+  })
+
+  describe('allegati', () => {
+    const ALLEGATO = { id: 7, titolo: 'Testo del canto', tipo_file: 'application/pdf' }
+
+    it('chi legge apre gli allegati, senza caricarne', () => {
+      const pagina = mount(AllegatiVoce, { props: { voce: { ...VOCE, allegati: [ALLEGATO] } } })
+      expect(pagina.find('a').attributes('href')).toBe('/api/v1/allegati-voce/7')
+      expect(pagina.text()).not.toContain('Aggiungi un allegato')
+      expect(pagina.text()).not.toContain('Togli')
+    })
+
+    it('senza allegati, chi legge non vede la sezione', () => {
+      expect(
+        mount(AllegatiVoce, { props: { voce: VOCE } })
+          .find('[data-allegati]')
+          .exists(),
+      ).toBe(false)
+    })
+
+    it('chi scrive la voce carica e toglie', async () => {
+      const voce = { ...VOCE, puo_modificare: true }
+      const carica = vi
+        .spyOn(api, 'caricaAllegatoVoce')
+        .mockResolvedValue({ ...voce, allegati: [ALLEGATO] })
+      const togli = vi.spyOn(api, 'togliAllegatoVoce').mockResolvedValue(voce)
+      const pagina = mount(AllegatiVoce, { props: { voce } })
+      expect(pagina.text()).toContain('Nessun allegato.')
+      await pagina
+        .findAll('button')
+        .find((b) => b.text() === 'Aggiungi un allegato')!
+        .trigger('click')
+      await pagina.find('#allegato-titolo').setValue('Testo del canto')
+      const file = new File(['%PDF-1.4'], 'canto.pdf', { type: 'application/pdf' })
+      const campo = pagina.find('#allegato-file')
+      Object.defineProperty(campo.element, 'files', { value: [file] })
+      await campo.trigger('change')
+      await pagina.find('form').trigger('submit')
+      await flushPromises()
+      expect(carica).toHaveBeenCalledWith(2, 'Testo del canto', file)
+      const aggiornata = pagina.emitted('aggiornata')![0]![0] as VoceLibro
+      await pagina.setProps({ voce: aggiornata })
+      await pagina.find('[aria-label="Togli l\'allegato Testo del canto"]').trigger('click')
+      await flushPromises()
+      expect(togli).toHaveBeenCalledWith(7)
     })
   })
 })

@@ -1,6 +1,6 @@
 """The book of ceremonies and traditions (DEC-437).
 
-An entry belongs to the group or to a unit, with the register of who lived it. Every capo of the Co.Ca. reads every entry; a
+An entry belongs to the group or to a unit, with its attachments and the register of who lived it. Every capo of the Co.Ca. reads every entry; a
 ragazzo/a, while an active member, reads the entries whose conditions they meet or they were
 added to by hand; the parents never. Who sees what is decided in `policy.voci_visibili`.
 """
@@ -81,3 +81,23 @@ class PartecipazioneVoce(ModelloTracciato):
 
     def __str__(self) -> str:
         return f"{self.persona} in {self.voce}"
+
+
+class AllegatoVoce(ModelloTracciato):
+    """A file of an entry (DEC-437, block 4): read by who reads the entry, added and removed by
+    who writes it. PDF and images up to 10 MB, checked on their first bytes, random names,
+    served only by the API, online only (like the notice board, DEC-220)."""
+
+    voce = models.ForeignKey(VoceLibro, on_delete=models.CASCADE, related_name="allegati")
+    file = models.FileField(upload_to="cerimonie/")
+    tipo_file = models.CharField(max_length=30)
+    # What it is, written by who uploads it (the original file name is not kept).
+    titolo = models.CharField(max_length=120)
+
+    class Meta:
+        verbose_name = "allegato a una voce del libro"
+        verbose_name_plural = "allegati alle voci del libro"
+        ordering = ["creato_il", "pk"]
+
+    def __str__(self) -> str:
+        return self.titolo

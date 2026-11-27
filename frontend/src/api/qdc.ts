@@ -493,6 +493,8 @@ export interface PartecipanteVoce extends PersonaScelta {
 export interface VoceLibro extends VoceLibroBreve {
   unita_id: number | null
   testo: string
+  /** Read by who reads the entry, online only. */
+  allegati: { id: number; titolo: string; tipo_file: string }[]
   puo_modificare: boolean
   /** Who was added by hand and the conditions: only for who may change the entry. */
   aggiunti: number[]
@@ -3554,6 +3556,7 @@ export function elencoIncarichiPdf(
 export const immagineTotem = (totem: number, versione: string, inAttesa = false) =>
   `/api/v1/tribu/${totem}/immagine?v=${encodeURIComponent(versione)}${inAttesa ? '&in_attesa=true' : ''}`
 export const pdfVoceLibro = (id: number) => `/api/v1/cerimonie/${id}/pdf`
+export const allegatoVoceLibro = (id: number) => `/api/v1/allegati-voce/${id}`
 
 /** The waiting list flyer to print (DEC-304): anyone with an account, online. */
 export const volantinoListaAttesa = '/api/v1/volantino-lista-attesa.pdf'
@@ -3655,6 +3658,13 @@ export const api = {
     richiesta<VoceLibro>(`/api/v1/cerimonie/${id}`, { metodo: 'PUT', corpo: dati }),
   eliminaVoceLibro: (id: number) =>
     richiesta<void>(`/api/v1/cerimonie/${id}`, { metodo: 'DELETE' }),
+  caricaAllegatoVoce: (id: number, titolo: string, file: File) =>
+    richiesta<VoceLibro>(`/api/v1/cerimonie/${id}/allegati`, {
+      metodo: 'POST',
+      corpo: conFile({ titolo }, file),
+    }),
+  togliAllegatoVoce: (id: number) =>
+    richiesta<VoceLibro>(allegatoVoceLibro(id), { metodo: 'DELETE' }),
   approvaImmagineTotem: (totem: number) =>
     richiesta<TotemTribu>(`/api/v1/tribu/${totem}/immagine/approva`, { metodo: 'POST' }),
   rifiutaImmagineTotem: (totem: number, motivo: string) =>

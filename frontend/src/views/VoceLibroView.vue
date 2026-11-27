@@ -10,6 +10,7 @@ import {
   type VoceLibro,
   type VoceLibroIn,
 } from '@/api/qdc'
+import AllegatiVoce from '@/components/AllegatiVoce.vue'
 import CondizioniVoce from '@/components/CondizioniVoce.vue'
 import Icona from '@/components/Icona.vue'
 import RegistroVoce from '@/components/RegistroVoce.vue'
@@ -21,7 +22,7 @@ const EditorTesto = defineAsyncComponent(() => import('@/components/EditorTesto.
 
 // One entry of the book of ceremonies (DEC-437): its text and PDF for who reads it; for who
 // writes it (the staff of its unit, the capigruppo) the form, with the conditions, the
-// ragazzi/e added by hand and who would read it today.
+// ragazzi/e added by hand and who would read it today. Attachments: `AllegatiVoce`.
 // Without an id: a new entry. Online only for now.
 const props = defineProps<{ id?: number }>()
 const router = useRouter()
@@ -228,6 +229,7 @@ async function elimina() {
         <div v-html="voce.testo"></div>
       </div>
       <p v-else class="fg-2">Il testo non è ancora stato scritto.</p>
+      <AllegatiVoce :voce="voce" @aggiornata="voce = $event" />
       <RegistroVoce v-if="voce.vede_registro" :voce="voce" @aggiornata="voce = $event" />
       <div v-if="voce.puo_modificare" class="mt-7">
         <button

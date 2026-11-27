@@ -1,14 +1,17 @@
 """The book of ceremonies and traditions (DEC-437), online only for now. Off in the settings,
-none of it exists (DEC-421). Who reads an entry: `policy.voci_visibili`; who writes it:
+none of it exists (DEC-421). Attachments are read by who reads the entry, online only. Who reads an entry: `policy.voci_visibili`; who writes it:
 `policy.puo_scrivere_voce`."""
 
 import re
 from datetime import date
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponse
-from ninja import Router, Schema, Status
+from django.shortcuts import get_object_or_404
+from ninja import File, Form, Router, Schema, Status
 from ninja.errors import HttpError
+from ninja.files import UploadedFile
 
 from apps.anagrafica.models import Persona
 from apps.anagrafica.servizi import con_unita, unita_delle_persone
@@ -18,12 +21,14 @@ from apps.organizzazione.models import TipoUnita, Unita
 from apps.permessi import policy
 
 from . import condizioni as cond
-from .models import LUNGHEZZA_TESTO, PartecipazioneVoce, TipoVoce, VoceLibro
+from .models import LUNGHEZZA_TESTO, AllegatoVoce, PartecipazioneVoce, TipoVoce, VoceLibro
 from .stampa import pdf_voce
 
 router = Router(tags=["cerimonie"])
 
 NON_TROVATA = "Voce non trovata."
+
+TIPI_ALLEGATO = {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png"}
 
 
 def _attiva() -> None:
@@ -83,9 +88,16 @@ class Partecipante(Schema):
     data: date
 
 
+class AllegatoOut(Schema):
+    id: int
+    titolo: str
+    tipo_file: str
+
+
 class VoceOut(VoceBreve):
     unita_id: int | None
     testo: str
+    allegati: list[AllegatoOut]
     puo_modificare: bool
     # Who was added by hand and the conditions: only for who may change the entry.
     aggiunti: list[int]
@@ -151,6 +163,9 @@ def _voce_out(request, voce: VoceLibro) -> dict:
         **_breve(voce),
         "unita_id": voce.unita_id,
         "testo": voce.testo,
+        "allegati": [
+            {"id": a.pk, "titolo": a.titolo, "tipo_file": a.tipo_file} for a in voce.allegati.all()
+        ],
         "puo_modificare": puo,
         "aggiunti": sorted(voce.aggiunti.values_list("pk", flat=True)) if puo else [],
         "condizioni": voce.condizioni if puo else [],
@@ -341,5 +356,55 @@ def modifica(request, voce_id: int, dati: VoceIn):
 
 @router.delete("/cerimonie/{voce_id}", response={204: None})
 def elimina(request, voce_id: int):
-    _scrivibile(request, voce_id).delete()
+    voce = _scrivibile(request, voce_id)
+    for allegato in voce.allegati.all():
+        allegato.file.delete(save=False)
+    voce.delete()
     return Status(204, None)
+
+
+@router.post("/cerimonie/{voce_id}/allegati", response={201: VoceOut})
+def carica_allegato(request, voce_id: int, titolo: Form[str], file: File[UploadedFile]):
+    from apps.buonacaccia.servizi import _file_con_nome_casuale
+
+    voce = _scrivibile(request, voce_id)
+    titolo = " ".join(titolo.split())
+    if not titolo:
+        raise HttpError(400, "Scrivi cos'è l'allegato.")
+    try:
+        salvato, tipo_file = _file_con_nome_casuale(
+            file, TIPI_ALLEGATO, "Carica un PDF o un'immagine (JPEG o PNG)."
+        )
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
+    AllegatoVoce.objects.create(voce=voce, titolo=titolo[:120], tipo_file=tipo_file, file=salvato)
+    return Status(201, _voce_out(request, voce))
+
+
+def _allegato(request, allegato_id: int) -> AllegatoVoce:
+    _attiva()
+    allegato = get_object_or_404(AllegatoVoce, pk=allegato_id)
+    # Who does not read the entry does not learn the attachment exists.
+    _leggibile(request, allegato.voce_id)
+    return allegato
+
+
+@router.get("/allegati-voce/{allegato_id}")
+def scarica_allegato(request, allegato_id: int):
+    """Served only here, to who reads the entry; never kept on the device."""
+    allegato = _allegato(request, allegato_id)
+    estensione = TIPI_ALLEGATO.get(allegato.tipo_file, ".bin")
+    risposta = HttpResponse(allegato.file.read(), content_type=allegato.tipo_file)
+    risposta["Content-Disposition"] = f'inline; filename="allegato-{allegato.pk}{estensione}"'
+    risposta["Cache-Control"] = "private, no-store"
+    risposta["X-Content-Type-Options"] = "nosniff"
+    return risposta
+
+
+@router.delete("/allegati-voce/{allegato_id}", response=VoceOut)
+def togli_allegato(request, allegato_id: int):
+    allegato = _allegato(request, allegato_id)
+    voce = _scrivibile(request, allegato.voce_id)
+    allegato.file.delete(save=False)
+    allegato.delete()
+    return _voce_out(request, voce)

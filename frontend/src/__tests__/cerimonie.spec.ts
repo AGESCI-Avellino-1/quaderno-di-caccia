@@ -2,7 +2,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { api, type LibroCerimonie, type VoceLibro } from '@/api/qdc'
+import { api, type CondizioneVoce, type LibroCerimonie, type VoceLibro } from '@/api/qdc'
+import CondizioniVoce from '@/components/CondizioniVoce.vue'
 import CerimonieView from '@/views/CerimonieView.vue'
 import VoceLibroView from '@/views/VoceLibroView.vue'
 
@@ -41,6 +42,8 @@ const LIBRO: LibroCerimonie = {
   puo_scrivere: false,
   unita: [],
   puo_tutto_il_gruppo: false,
+  unita_condizioni: [],
+  incarichi: [],
 }
 
 const VOCE: VoceLibro = {
@@ -49,6 +52,7 @@ const VOCE: VoceLibro = {
   testo: '<p>Il ponte</p>',
   puo_modificare: false,
   aggiunti: [],
+  condizioni: [],
 }
 
 beforeEach(() => setActivePinia(createPinia()))
@@ -96,7 +100,7 @@ describe('libro delle cerimonie', () => {
     await flushPromises()
     // The group's only for the capigruppo.
     expect(pagina.findAll('#voce-unita option').map((o) => o.text())).toEqual(['Branco (L1)'])
-    expect(pagina.text()).toContain('Ragazzi/e che la leggono (1)')
+    expect(pagina.text()).toContain('Scelti a mano (1)')
     await pagina.find('#voce-titolo').setValue('Il ponte')
     await pagina.find('form').trigger('submit')
     await flushPromises()
@@ -106,6 +110,7 @@ describe('libro delle cerimonie', () => {
       unita_id: 5,
       testo: '<p>Il ponte</p>',
       aggiunti: [9],
+      condizioni: [],
       cerimonia_del_totem: false,
     })
     expect(pagina.text()).toContain('Voce salvata.')
@@ -127,5 +132,80 @@ describe('libro delle cerimonie', () => {
     await flushPromises()
     expect(crea.mock.calls[0]![0]).toMatchObject({ titolo: 'Promessa', unita_id: null })
     expect(sostituisci).toHaveBeenCalledWith({ name: 'voce-libro', params: { id: 3 } })
+  })
+
+  describe('condizioni', () => {
+    const libro: LibroCerimonie = {
+      ...LIBRO,
+      puo_scrivere: true,
+      unita_condizioni: [{ id: 5, nome: 'Branco (L1)' }],
+      incarichi: [{ valore: 'CSQ', nome: 'Capo squadriglia' }],
+    }
+
+    function monta(iniziali: CondizioneVoce[][]) {
+      const gruppi = { valore: iniziali }
+      const pagina = mount(CondizioniVoce, {
+        props: {
+          libro,
+          modelValue: iniziali,
+          'onUpdate:modelValue': (v: CondizioneVoce[][]) => (gruppi.valore = v),
+        },
+      })
+      return { pagina, gruppi }
+    }
+
+    const pulsante = (pagina: ReturnType<typeof mount>, testo: string) =>
+      pagina.findAll('button').find((b) => b.text() === testo)!
+
+    it('aggiunge gruppi in alternativa e condizioni con le prime scelte', async () => {
+      const { pagina, gruppi } = monta([])
+      expect(pagina.text()).toContain('Nessuna condizione')
+      await pulsante(pagina, 'Aggiungi una condizione').trigger('click')
+      expect(gruppi.valore).toEqual([[{ tipo: 'unita', unita: 5 }]])
+      await pulsante(pagina, 'Aggiungi un altro gruppo, in alternativa').trigger('click')
+      expect(gruppi.valore).toHaveLength(2)
+      expect(pagina.text()).toContain('oppure')
+      // A different kind brings its own choices.
+      await pagina.find('[data-condizione] select').setValue('tappa')
+      expect(gruppi.valore[0]).toEqual([{ tipo: 'tappa', branca: 'EG', fase: 'SCOPERTA' }])
+      await pagina.find('[data-condizione] select').setValue('incarico')
+      expect(gruppi.valore[0]).toEqual([{ tipo: 'incarico', ruolo: 'CSQ' }])
+    })
+
+    it("togliendo l'ultima condizione toglie il gruppo", async () => {
+      const { pagina, gruppi } = monta([[{ tipo: 'totem' }, { tipo: 'promessa' }]])
+      expect(pagina.text()).toContain('Valgono tutte insieme')
+      await pagina.find('[aria-label="Togli la condizione 1"]').trigger('click')
+      expect(gruppi.valore).toEqual([[{ tipo: 'promessa' }]])
+      await pagina.find('[aria-label="Togli la condizione 1"]').trigger('click')
+      expect(gruppi.valore).toEqual([])
+    })
+  })
+
+  it('mostra chi la legge oggi con le condizioni scritte', async () => {
+    vi.spyOn(api, 'voceLibro').mockResolvedValue({
+      ...VOCE,
+      puo_modificare: true,
+      condizioni: [[{ tipo: 'consiglio_capi' }]],
+    })
+    vi.spyOn(api, 'libroCerimonie').mockResolvedValue({ ...LIBRO, puo_scrivere: true })
+    vi.spyOn(api, 'aggiungibiliVoci').mockResolvedValue([])
+    const anteprima = vi
+      .spyOn(api, 'anteprimaLettori')
+      .mockResolvedValue([{ id: 3, nome: 'Sara', cognome: 'Verdi', unita: 'Reparto (N1)' }])
+    const pagina = mount(VoceLibroView, { props: { id: 2 }, global: { stubs } })
+    await flushPromises()
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Modifica')!
+      .trigger('click')
+    await flushPromises()
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Chi la legge oggi')!
+      .trigger('click')
+    await flushPromises()
+    expect(anteprima).toHaveBeenCalledWith([[{ tipo: 'consiglio_capi' }]], [])
+    expect(pagina.find('[data-anteprima]').text()).toContain('Verdi Sara')
   })
 })

@@ -385,3 +385,201 @@ def test_scegliere_la_cerimonia_del_totem(capogruppo, capo, reparto, voci):
         .status_code
         == 200
     )
+
+
+# --- Conditions (block 2) --------------------------------------------------------------------
+
+
+def _con_condizioni(voce, gruppi):
+    voce.condizioni = gruppi
+    voce.save()
+    return voce
+
+
+def test_condizioni_di_unita_e_branca(ragazza, lupetto, reparto, branco, voci):
+    _con_condizioni(voci["reparto"], [[{"tipo": "unita", "unita": reparto.pk}]])
+    _con_condizioni(voci["branco"], [[{"tipo": "branca", "branca": "LC"}]])
+    assert _titoli(ragazza) == {"Alta Squadriglia"}
+    assert _titoli(lupetto) == {"Passaggio dal branco"}
+
+
+def test_dentro_un_gruppo_tutte_tra_i_gruppi_una(ragazza, csq, lupetto, reparto, voci):
+    # The CSQ of the reparto, or anyone in the branco.
+    _con_condizioni(
+        voci["gruppo"],
+        [
+            [{"tipo": "unita", "unita": reparto.pk}, {"tipo": "incarico", "ruolo": "CSQ"}],
+            [{"tipo": "branca", "branca": "LC"}],
+        ],
+    )
+    assert "Fuoco di gruppo" in _titoli(csq)
+    assert "Fuoco di gruppo" in _titoli(lupetto)
+    assert "Fuoco di gruppo" not in _titoli(ragazza)
+
+
+def test_consiglio_capi_e_alta_squadriglia(ragazza, csq, reparto, squadriglia, voci):
+    from apps.anagrafica.models import AppartenenzaSquadriglia
+    from apps.core.anno import AnnoAssociativo
+    from apps.eventi.models import MembroAltaSquadriglia
+    from apps.organizzazione.models import EquiparazioneCsq
+
+    _con_condizioni(voci["reparto"], [[{"tipo": "consiglio_capi"}]])
+    _con_condizioni(voci["gruppo"], [[{"tipo": "alta_squadriglia"}]])
+    assert _titoli(csq) == {"Alta Squadriglia"}
+    assert _titoli(ragazza) == set()
+    # Treated as the CSQ (DEC-419) and in this year's Alta Squadriglia.
+    EquiparazioneCsq.objects.create(
+        appartenenza=AppartenenzaSquadriglia.objects.get(persona=ragazza),
+        data_inizio=INIZIO_ANNO,
+        data_fine=AnnoAssociativo.corrente().fine.replace(day=30),
+    )
+    MembroAltaSquadriglia.objects.create(
+        reparto=reparto, persona=ragazza, anno=AnnoAssociativo.corrente().anno_fine
+    )
+    assert _titoli(ragazza) == {"Alta Squadriglia", "Fuoco di gruppo"}
+    # Last year's Alta Squadriglia does not count.
+    MembroAltaSquadriglia.objects.filter(persona=ragazza).update(
+        anno=AnnoAssociativo.corrente().anno_fine - 1
+    )
+    assert _titoli(ragazza) == {"Alta Squadriglia"}
+
+
+def test_totem(ragazza, csq, voci):
+    _con_condizioni(voci["gruppo"], [[{"tipo": "totem"}]])
+    tribu.assegna(ragazza, "Castoro Operoso")
+    assert _titoli(ragazza) == {"Fuoco di gruppo"}
+    assert _titoli(csq) == set()
+
+
+def test_passaggio_dalla_proposta_per_sempre(lupetto, branco, reparto, voci):
+    from apps.progressione.models import Passaggio, PassaggioPersona, StatoPassaggio
+
+    _con_condizioni(voci["branco"], [[{"tipo": "passaggio", "da": "LC", "a": "EG"}]])
+    assert _titoli(lupetto) == set()
+    passaggio = Passaggio.objects.create(
+        unita_origine=branco, unita_destinazione=reparto, data=date.today()
+    )
+    parte = PassaggioPersona.objects.create(passaggio=passaggio, persona=lupetto)
+    assert _titoli(lupetto) == {"Passaggio dal branco"}
+    passaggio.stato = StatoPassaggio.ESEGUITO
+    passaggio.save()
+    assert _titoli(lupetto) == {"Passaggio dal branco"}
+    # Their part cancelled after the execution, or the whole passage cancelled: no more.
+    parte.rettificata_il = parte.creato_il
+    parte.save()
+    assert _titoli(lupetto) == set()
+    parte.rettificata_il = None
+    parte.save()
+    passaggio.stato = StatoPassaggio.ANNULLATO
+    passaggio.save()
+    assert _titoli(lupetto) == set()
+
+
+def test_progressione(ragazza, csq, voci):
+    from apps.progressione.models import (
+        Conclusione,
+        Fase,
+        PeriodoBranca,
+        Promessa,
+        Tappa,
+        TipoConclusione,
+    )
+
+    _con_condizioni(voci["gruppo"], [[{"tipo": "promessa"}]])
+    _con_condizioni(voci["reparto"], [[{"tipo": "tappa", "branca": "EG", "fase": "COMPETENZA"}]])
+    _con_condizioni(voci["branco"], [[{"tipo": "partenza"}]])
+    periodo = PeriodoBranca.objects.create(persona=ragazza, branca="EG", data_inizio=INIZIO_ANNO)
+    scoperta = Tappa.objects.create(periodo=periodo, fase=Fase.SCOPERTA, data_inizio=INIZIO_ANNO)
+    assert _titoli(ragazza) == set()
+    Promessa.objects.create(periodo=periodo, data=INIZIO_ANNO)
+    scoperta.data_fine = date.today()
+    scoperta.save()
+    Tappa.objects.create(periodo=periodo, fase=Fase.RESPONSABILITA, data_inizio=date.today())
+    # Reached: Responsabilità is past Competenza.
+    assert _titoli(ragazza) == {"Fuoco di gruppo", "Alta Squadriglia"}
+    # A tappa of another branch does not count.
+    altro = PeriodoBranca.objects.create(persona=csq, branca="LC", data_inizio=INIZIO_ANNO)
+    Tappa.objects.create(periodo=altro, fase=Fase.RESPONSABILITA, data_inizio=INIZIO_ANNO)
+    assert "Alta Squadriglia" not in _titoli(csq)
+    Conclusione.objects.create(periodo=altro, tipo=TipoConclusione.PARTENZA, data=date.today())
+    assert "Passaggio dal branco" in _titoli(csq)
+
+
+def test_condizioni_e_persone_aggiunte_insieme(ragazza, csq, lupetto, reparto, voci):
+    _con_condizioni(voci["reparto"], [[{"tipo": "incarico", "ruolo": "CSQ"}]])
+    voci["reparto"].aggiunti.add(lupetto)
+    assert _titoli(csq) == {"Alta Squadriglia"}
+    assert _titoli(lupetto) == {"Alta Squadriglia"}
+    assert _titoli(ragazza) == set()
+
+
+def test_condizioni_mai_ai_genitori_ne_a_chi_ha_lasciato(ragazza, genitore, voci, reparto):
+    _con_condizioni(voci["reparto"], [[{"tipo": "unita", "unita": reparto.pk}]])
+    assert _titoli(genitore) == set()
+    Appartenenza.objects.filter(persona=ragazza).update(data_fine=date.today())
+    assert _titoli(ragazza) == set()
+
+
+def test_salvare_le_condizioni(capo, reparto, voci):
+    client = _client(capo)
+    condizioni = [
+        [{"tipo": "unita", "unita": reparto.pk, "altro": 1}, {"tipo": "totem"}],
+        [],
+        [{"tipo": "tappa", "branca": "EG", "fase": "SCOPERTA"}, {"tipo": "totem"}],
+    ]
+    risposta = client.put(
+        f"{URL}/{voci['reparto'].pk}",
+        _dati(unita_id=reparto.pk, condizioni=condizioni),
+        "application/json",
+    )
+    assert risposta.status_code == 200
+    # Unknown fields and empty groups go.
+    assert risposta.json()["condizioni"] == [
+        [{"tipo": "unita", "unita": reparto.pk}, {"tipo": "totem"}],
+        [{"tipo": "tappa", "branca": "EG", "fase": "SCOPERTA"}, {"tipo": "totem"}],
+    ]
+    for sbagliate in (
+        [[{"tipo": "boh"}]],
+        [[{"tipo": "unita", "unita": 99999}]],
+        [[{"tipo": "branca", "branca": "COCA"}]],
+        [[{"tipo": "incarico", "ruolo": "CAPOGRUPPO"}]],
+        [[{"tipo": "passaggio", "da": "EG", "a": "EG"}]],
+        [[{"tipo": "tappa", "branca": "EG", "fase": "BOH"}]],
+        [[{"tipo": "totem"}]] * 11,
+        "tutti",
+    ):
+        risposta = client.put(
+            f"{URL}/{voci['reparto'].pk}",
+            _dati(unita_id=reparto.pk, condizioni=sbagliate),
+            "application/json",
+        )
+        assert risposta.status_code in (400, 422), sbagliate
+
+
+def test_le_condizioni_solo_a_chi_scrive(capo, ragazza, reparto, voci):
+    _con_condizioni(voci["reparto"], [[{"tipo": "unita", "unita": reparto.pk}]])
+    assert _client(capo).get(f"{URL}/{voci['reparto'].pk}").json()["condizioni"]
+    assert _client(ragazza).get(f"{URL}/{voci['reparto'].pk}").json()["condizioni"] == []
+    libro = _client(capo).get(URL).json()
+    assert reparto.pk in [u["id"] for u in libro["unita_condizioni"]]
+    assert libro["incarichi"][0] == {"valore": "CSQ", "nome": "Capo squadriglia"}
+    assert _client(ragazza).get(URL).json()["incarichi"] == []
+
+
+def test_anteprima(capo, ragazza, csq, lupetto, estraneo, voci):
+    client = _client(capo)
+    risposta = client.post(
+        f"{URL}/anteprima",
+        {"condizioni": [[{"tipo": "incarico", "ruolo": "CSQ"}]], "aggiunti": [lupetto.pk]},
+        "application/json",
+    )
+    assert risposta.status_code == 200
+    assert {p["nome"] for p in risposta.json()} == {"Sara", "Lupo"}
+    assert (
+        client.post(
+            f"{URL}/anteprima", {"condizioni": [[{"tipo": "boh"}]]}, "application/json"
+        ).status_code
+        == 400
+    )
+    assert _client(ragazza).post(f"{URL}/anteprima", {}, "application/json").status_code == 403
+    assert _client(estraneo).post(f"{URL}/anteprima", {}, "application/json").status_code == 403

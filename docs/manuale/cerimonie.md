@@ -11,8 +11,10 @@ scritto resta e torna riaccendendola.
 ## Chi legge cosa
 
 - **I capi** leggono tutte le voci, di tutte le unità.
-- **I ragazzi e le ragazze** leggono solo le voci per cui li ha scelti chi le scrive, e solo
-  finché sono nel gruppo. Se non ne hai nessuna, nel menu la voce non c'è.
+- **I ragazzi e le ragazze** leggono solo le voci scritte per loro: perché soddisfano le
+  condizioni della voce (per esempio sono nel Consiglio capi o hanno fatto la Promessa) o
+  perché chi la scrive li ha scelti a mano. Solo finché sono nel gruppo. Se non ne hai
+  nessuna, nel menu la voce non c'è.
 - **I genitori** non leggono niente: molte cerimonie sono riservate.
 
 Alcune cerimonie sono un segreto di chi le ha vissute: custodisci quello che leggi.
@@ -41,13 +43,40 @@ dell'unità (anche di un'unità collegata) e i capigruppo.
 2. Scrivi il **titolo**, scegli se è una **cerimonia** o una **tradizione** e di chi è
    (**Di**): tutto il gruppo o una delle tue unità.
 3. Scrivi il testo con l'editor: titoli, grassetto, elenchi, tabelle.
-4. In **Ragazzi/e che la leggono** scegli chi, tra i ragazzi e le ragazze del gruppo, può
-   leggerla: cerca per nome o filtra per unità. Puoi scegliere anche ragazzi di un'altra
-   unità, per esempio i lupetti che passeranno in reparto. I capi non serve sceglierli: la
-   leggono tutti.
-5. Tocca **Salva**.
+4. In **Chi la legge** scegli quali ragazzi e ragazze possono leggerla (i capi non serve
+   sceglierli: la leggono tutti):
+   - con le **condizioni**, che valgono da sole anche per chi arriverà dopo: tocca **Aggiungi
+     una condizione** e scegli quale (vedi sotto);
+   - **scelti a mano**: cerca per nome o filtra per unità. Puoi scegliere anche ragazzi di
+     un'altra unità.
+5. Tocca **Chi la legge oggi** per vedere l'elenco dei ragazzi e delle ragazze che la
+   leggerebbero, prima di salvare.
+6. Tocca **Salva**.
 
 **Elimina la voce** la toglie per tutti, dopo una conferma.
+
+### Le condizioni
+
+Una condizione dice chi legge la voce, ed è controllata ogni volta: chi entra nell'Alta
+Squadriglia la legge da quel giorno, chi lascia il gruppo smette di leggerla.
+
+- **È in un'unità** o **È in una branca**: i ragazzi e le ragazze di quell'unità o di quella
+  branca (il noviziato è nella branca Rover e Scolte).
+- **Ha un incarico**: capo o vice capo squadriglia, un altro incarico di squadriglia, il
+  Consiglio degli Anziani.
+- **È nel Consiglio capi**: i capi squadriglia e chi lo staff ha equiparato a loro.
+- **È nell'Alta Squadriglia quest'anno**.
+- **Passa da una branca all'altra**: da quando lo staff lo mette nel passaggio, e per sempre,
+  anche dopo il passaggio (non se il passaggio viene annullato).
+- **Ha fatto la Promessa**, **Ha raggiunto una tappa** (quella tappa o una successiva, nella
+  branca scelta), **Ha preso la Partenza**.
+
+Le condizioni si mettono in **gruppi**. Dentro un gruppo devono valere **tutte insieme**: per
+esempio «È nel Consiglio capi» e «Ha fatto la Promessa». Con **Aggiungi un altro gruppo, in
+alternativa** ne aggiungi un altro, scritto dopo un **oppure**: basta che valga uno dei
+gruppi. **Togli** toglie una condizione; togliendo l'ultima sparisce il gruppo.
+
+I capi sestiglia e le pattuglie R/S l'app non li registra: per loro scegli i ragazzi a mano.
 
 :::{container} schermate
 ![Una voce in modifica sul telefono](img/cerimonie/modifica-telefono.png){.telefono width="30%"}

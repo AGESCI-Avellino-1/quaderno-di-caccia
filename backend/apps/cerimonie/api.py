@@ -13,9 +13,10 @@ from apps.anagrafica.models import Persona
 from apps.anagrafica.servizi import con_unita
 from apps.impostazioni import funzioni
 from apps.impostazioni.html import in_testo, pulisci
-from apps.organizzazione.models import Unita
+from apps.organizzazione.models import TipoUnita, Unita
 from apps.permessi import policy
 
+from . import condizioni as cond
 from .models import LUNGHEZZA_TESTO, TipoVoce, VoceLibro
 from .stampa import pdf_voce
 
@@ -57,20 +58,29 @@ class VoceBreve(Schema):
     cerimonia_del_totem: bool
 
 
+class Scelta(Schema):
+    valore: str
+    nome: str
+
+
 class LibroOut(Schema):
     voci: list[VoceBreve]
     puo_scrivere: bool
     # Where a new entry may go; the group's only for the capigruppo.
     unita: list[UnitaScelta]
     puo_tutto_il_gruppo: bool
+    # For the conditions, to who writes: every active unit and the roles one may ask for.
+    unita_condizioni: list[UnitaScelta] = []
+    incarichi: list[Scelta] = []
 
 
 class VoceOut(VoceBreve):
     unita_id: int | None
     testo: str
     puo_modificare: bool
-    # Who was added by hand: only for who may change the entry.
+    # Who was added by hand and the conditions: only for who may change the entry.
     aggiunti: list[int]
+    condizioni: list[list[dict]]
 
 
 class Aggiungibile(Schema):
@@ -86,6 +96,7 @@ class VoceIn(Schema):
     unita_id: int | None = None
     testo: str = ""
     aggiunti: list[int] = []
+    condizioni: list = []
     # «La mia tribù» links to it: one entry of the whole group, set by the capigruppo.
     cerimonia_del_totem: bool = False
 
@@ -112,6 +123,7 @@ def _voce_out(request, voce: VoceLibro) -> dict:
         "testo": voce.testo,
         "puo_modificare": puo,
         "aggiunti": sorted(voce.aggiunti.values_list("pk", flat=True)) if puo else [],
+        "condizioni": voce.condizioni if puo else [],
     }
 
 
@@ -120,11 +132,19 @@ def libro(request):
     _attiva()
     user = request.auth
     voci = policy.voci_visibili(user).select_related("unita")
+    scrive = policy.puo_scrivere_voci(user)
+    attive = Unita.objects.filter(attiva=True, archiviata_il__isnull=True).exclude(
+        tipo=TipoUnita.COMUNITA_CAPI
+    )
     return {
         "voci": [_breve(v) for v in voci],
-        "puo_scrivere": policy.puo_scrivere_voci(user),
+        "puo_scrivere": scrive,
         "unita": [{"id": u.pk, "nome": str(u)} for u in policy.unita_per_voci(user)],
         "puo_tutto_il_gruppo": policy.e_capogruppo(user),
+        "unita_condizioni": [{"id": u.pk, "nome": str(u)} for u in attive] if scrive else [],
+        "incarichi": (
+            [{"valore": r.value, "nome": r.label} for r in cond.INCARICHI] if scrive else []
+        ),
     }
 
 
@@ -134,6 +154,28 @@ def aggiungibili(request):
     if not policy.puo_scrivere_voci(request.auth):
         raise HttpError(403, "Le voci le scrivono lo staff delle unità e i capigruppo.")
     return con_unita(policy.aggiungibili_alle_voci(request.auth))
+
+
+class AnteprimaIn(Schema):
+    condizioni: list = []
+    aggiunti: list[int] = []
+
+
+@router.post("/cerimonie/anteprima", response=list[Aggiungibile])
+def anteprima(request, dati: AnteprimaIn):
+    """Who would read an entry today with these conditions: before saving (DEC-437)."""
+    _attiva()
+    if not policy.puo_scrivere_voci(request.auth):
+        raise HttpError(403, "Le voci le scrivono lo staff delle unità e i capigruppo.")
+    gruppi = _condizioni(dati.condizioni)
+    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti))
+
+
+def _condizioni(gruppi: list) -> list[list[dict]]:
+    try:
+        return cond.pulisci(gruppi)
+    except cond.CondizioneNonValida as errore:
+        raise HttpError(400, str(errore)) from errore
 
 
 @router.get("/cerimonie/{voce_id}", response=VoceOut)
@@ -185,6 +227,7 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
     if len(testo) > LUNGHEZZA_TESTO:
         raise HttpError(400, "Il testo è troppo lungo.")
     aggiunti = _aggiunti(request, dati.aggiunti, gia)
+    voce.condizioni = _condizioni(dati.condizioni)
     voce.titolo, voce.tipo, voce.testo = titolo, dati.tipo, testo
     voce.unita = _unita_scelta(request, dati.unita_id)
     if dati.cerimonia_del_totem != voce.cerimonia_del_totem:

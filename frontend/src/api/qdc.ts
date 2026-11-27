@@ -456,14 +456,40 @@ export interface LibroCerimonie {
   /** Where a new entry may go; the group's only for the capigruppo. */
   unita: { id: number; nome: string }[]
   puo_tutto_il_gruppo: boolean
+  /** For the conditions, to who writes: every active unit and the roles one may ask for. */
+  unita_condizioni: { id: number; nome: string }[]
+  incarichi: { valore: string; nome: string }[]
+}
+
+/** One condition of an entry (DEC-437): a kind and its own fields. */
+export interface CondizioneVoce {
+  tipo:
+    | 'unita'
+    | 'branca'
+    | 'incarico'
+    | 'consiglio_capi'
+    | 'alta_squadriglia'
+    | 'totem'
+    | 'passaggio'
+    | 'promessa'
+    | 'tappa'
+    | 'partenza'
+  unita?: number
+  branca?: string
+  ruolo?: string
+  da?: string
+  a?: string
+  fase?: string
 }
 
 export interface VoceLibro extends VoceLibroBreve {
   unita_id: number | null
   testo: string
   puo_modificare: boolean
-  /** Who was added by hand: only for who may change the entry. */
+  /** Who was added by hand and the conditions: only for who may change the entry. */
   aggiunti: number[]
+  /** Groups of conditions: all of a group, one group is enough. */
+  condizioni: CondizioneVoce[][]
 }
 
 export interface VoceLibroIn {
@@ -472,6 +498,7 @@ export interface VoceLibroIn {
   unita_id: number | null
   testo: string
   aggiunti: number[]
+  condizioni: CondizioneVoce[][]
   /** «La mia tribù» links to it: one entry of the whole group, set by a capogruppo. */
   cerimonia_del_totem: boolean
 }
@@ -3596,6 +3623,11 @@ export const api = {
   libroCerimonie: () => richiesta<LibroCerimonie>('/api/v1/cerimonie'),
   voceLibro: (id: number) => richiesta<VoceLibro>(`/api/v1/cerimonie/${id}`),
   aggiungibiliVoci: () => richiesta<PersonaScelta[]>('/api/v1/cerimonie/aggiungibili'),
+  anteprimaLettori: (condizioni: CondizioneVoce[][], aggiunti: number[]) =>
+    richiesta<PersonaScelta[]>('/api/v1/cerimonie/anteprima', {
+      metodo: 'POST',
+      corpo: { condizioni, aggiunti },
+    }),
   creaVoceLibro: (dati: VoceLibroIn) =>
     richiesta<VoceLibro>('/api/v1/cerimonie', { metodo: 'POST', corpo: dati }),
   modificaVoceLibro: (id: number, dati: VoceLibroIn) =>

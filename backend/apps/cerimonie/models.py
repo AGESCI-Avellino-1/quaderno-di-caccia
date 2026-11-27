@@ -1,8 +1,8 @@
 """The book of ceremonies and traditions (DEC-437).
 
 An entry belongs to the group or to a unit. Every capo of the Co.Ca. reads every entry; a
-ragazzo/a, while an active member, reads the entries they were added to by hand (block 1: the
-conditions come later); the parents never. Who sees what is decided in `policy.voci_visibili`.
+ragazzo/a, while an active member, reads the entries whose conditions they meet or they were
+added to by hand; the parents never. Who sees what is decided in `policy.voci_visibili`.
 """
 
 from django.db import models
@@ -37,6 +37,8 @@ class VoceLibro(ModelloTracciato):
     cerimonia_del_totem = models.BooleanField(default=False)
     # Ragazzi/e who read it whatever the conditions say.
     aggiunti = models.ManyToManyField(Persona, blank=True, related_name="voci_libro")
+    # Groups of conditions (`condizioni.py`): all of a group, one group is enough.
+    condizioni = models.JSONField(default=list, blank=True)
 
     class Meta:
         verbose_name = "voce del libro delle cerimonie"

@@ -2518,9 +2518,10 @@ def puo_modificare_tribu(user) -> bool:
 
 def voci_visibili(user):
     """The entries of the book one reads: every capo of the Co.Ca. all of them, with a
-    provisional code and trainees too; a ragazzo/a, while an active member, those they were
-    added to by hand; the parents as such never."""
+    provisional code and trainees too; a ragazzo/a, while an active member, those whose
+    conditions they meet and those they were added to by hand; the parents as such never."""
     from apps.anagrafica.compleanni import soci_attivi
+    from apps.cerimonie.condizioni import segni_di, vale
     from apps.cerimonie.models import VoceLibro
 
     if e_capo(user):
@@ -2528,7 +2529,24 @@ def voci_visibili(user):
     persona = persona_di(user)
     if persona is None or not soci_attivi().filter(pk=persona.pk).exists():
         return VoceLibro.objects.none()
-    return VoceLibro.objects.filter(aggiunti=persona)
+    segni = segni_di([persona.pk]).get(persona.pk, set())
+    per_condizioni = [
+        v.pk
+        for v in VoceLibro.objects.exclude(condizioni=[]).only("pk", "condizioni")
+        if vale(v.condizioni, segni)
+    ]
+    return VoceLibro.objects.filter(Q(aggiunti=persona) | Q(pk__in=per_condizioni)).distinct()
+
+
+def lettori_delle_condizioni(condizioni, aggiunti_ids):
+    """The ragazzi/e who would read an entry with these conditions and these people added by
+    hand, today: the preview for who writes it (DEC-437). The capi read it anyway."""
+    from apps.cerimonie.condizioni import segni_di, vale
+
+    candidati = list(aggiungibili_alle_voci_tutti())
+    segni = segni_di(p.pk for p in candidati)
+    aggiunti = set(aggiunti_ids)
+    return [p for p in candidati if p.pk in aggiunti or vale(condizioni, segni.get(p.pk, set()))]
 
 
 def unita_per_voci(user) -> QuerySet[Unita]:
@@ -2558,10 +2576,15 @@ def puo_scrivere_voce(user, voce) -> bool:
 def aggiungibili_alle_voci(user):
     """Who may be added by hand to an entry: the active ragazzi/e of the whole group (a
     passage's tradition reaches who is in another unit); the capi read everything anyway."""
-    from apps.anagrafica.compleanni import soci_attivi
-
     if not puo_scrivere_voci(user):
         return Persona.objects.none()
+    return aggiungibili_alle_voci_tutti()
+
+
+def aggiungibili_alle_voci_tutti():
+    """The active ragazzi/e of the group, capi left out."""
+    from apps.anagrafica.compleanni import soci_attivi
+
     ragazzi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.RAGAZZO)
     capi = Appartenenza.objects.attive().filter(ruolo=RuoloAppartenenza.CAPO)
     return (

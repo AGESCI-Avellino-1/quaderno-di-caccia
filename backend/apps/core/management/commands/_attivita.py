@@ -797,6 +797,8 @@ def crea_attivita(email) -> None:
             "testo": "<p>Un testo di prova: la veglia dei capi e vice capi squadriglia, con "
             "la promessa di servire il reparto.</p><ul><li>Il cerchio</li><li>La parola"
             "</li><li>Il silenzio</li></ul>",
+            # The Consiglio capi, or this year's Alta Squadriglia; Giulia chosen by hand.
+            "condizioni": [[{"tipo": "consiglio_capi"}], [{"tipo": "alta_squadriglia"}]],
             "aggiunti": [giulia],
         },
     )

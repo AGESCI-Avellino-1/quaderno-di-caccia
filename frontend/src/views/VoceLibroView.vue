@@ -2,7 +2,15 @@
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { api, pdfVoceLibro, type LibroCerimonie, type VoceLibro, type VoceLibroIn } from '@/api/qdc'
+import {
+  api,
+  pdfVoceLibro,
+  type LibroCerimonie,
+  type PersonaScelta,
+  type VoceLibro,
+  type VoceLibroIn,
+} from '@/api/qdc'
+import CondizioniVoce from '@/components/CondizioniVoce.vue'
 import Icona from '@/components/Icona.vue'
 import SceltaPersone from '@/components/SceltaPersone.vue'
 import { opzioniDa, type Opzione } from '@/components/sceltaDaElenco'
@@ -11,7 +19,8 @@ import { useErrore } from '@/composables/useErrore'
 const EditorTesto = defineAsyncComponent(() => import('@/components/EditorTesto.vue'))
 
 // One entry of the book of ceremonies (DEC-437): its text and PDF for who reads it; for who
-// writes it (the staff of its unit, the capigruppo) the form, with the ragazzi/e added by hand.
+// writes it (the staff of its unit, the capigruppo) the form, with the conditions, the
+// ragazzi/e added by hand and who would read it today.
 // Without an id: a new entry. Online only for now.
 const props = defineProps<{ id?: number }>()
 const router = useRouter()
@@ -23,6 +32,8 @@ const aggiungibili = ref<Opzione[]>([])
 const modulo = ref<VoceLibroIn | null>(null)
 const salvata = ref(false)
 const conferma = ref(false)
+// Who would read it with the conditions being written; null until asked.
+const lettori = ref<PersonaScelta[] | null>(null)
 
 const nuova = computed(() => props.id === undefined)
 
@@ -33,6 +44,7 @@ function vuoto(l: LibroCerimonie): VoceLibroIn {
     unita_id: l.puo_tutto_il_gruppo ? null : (l.unita[0]?.id ?? null),
     testo: '',
     aggiunti: [],
+    condizioni: [],
     cerimonia_del_totem: false,
   }
 }
@@ -49,6 +61,7 @@ async function apriModulo() {
         unita_id: voce.value.unita_id,
         testo: voce.value.testo,
         aggiunti: [...voce.value.aggiunti],
+        condizioni: JSON.parse(JSON.stringify(voce.value.condizioni)),
         cerimonia_del_totem: voce.value.cerimonia_del_totem,
       }
     : vuoto(libro.value)
@@ -70,6 +83,12 @@ const unita = computed(() => {
     elenco.unshift({ id: attuale, nome: voce.value!.unita })
   return elenco
 })
+
+async function chiLegge() {
+  if (!modulo.value) return
+  const { condizioni, aggiunti } = modulo.value
+  lettori.value = (await esegui(() => api.anteprimaLettori(condizioni, aggiunti))) ?? null
+}
 
 async function salva() {
   if (!modulo.value) return
@@ -137,17 +156,44 @@ async function elimina() {
       <div class="mb-5">
         <EditorTesto v-model="modulo.testo" etichetta="Testo" :immagini="false" />
       </div>
-      <p class="small fg-2 mb-1">
-        Tutti i capi leggono ogni voce. Dei ragazzi/e la leggono solo quelli che scegli qui, finché
-        sono nel gruppo; i genitori mai.
+      <h2 class="h5">Chi la legge</h2>
+      <p class="small fg-2">
+        Tutti i capi leggono ogni voce; i genitori mai. Dei ragazzi/e la leggono, finché sono nel
+        gruppo, quelli che soddisfano le condizioni e quelli scelti a mano.
       </p>
+      <div v-if="libro" class="mb-5">
+        <CondizioniVoce v-model="modulo.condizioni" :libro="libro" />
+      </div>
       <div class="mb-5">
         <SceltaPersone
           id="voce-aggiunti"
           v-model="modulo.aggiunti"
           :opzioni="aggiungibili"
-          titolo="Ragazzi/e che la leggono"
+          titolo="Scelti a mano"
         />
+      </div>
+      <div class="mb-5" data-anteprima>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline theme-primary"
+          :disabled="inCorso"
+          @click="chiLegge"
+        >
+          Chi la legge oggi
+        </button>
+        <template v-if="lettori">
+          <p v-if="!lettori.length" class="small fg-2 mt-3 mb-0">Nessun ragazzo o ragazza.</p>
+          <template v-else>
+            <p class="small mt-3 mb-1">
+              {{ lettori.length }} tra ragazzi e ragazze, oltre ai capi:
+            </p>
+            <ul class="small mb-0">
+              <li v-for="p in lettori" :key="p.id">
+                {{ p.cognome }} {{ p.nome }} <span class="fg-2">{{ p.unita }}</span>
+              </li>
+            </ul>
+          </template>
+        </template>
       </div>
       <div class="d-flex flex-wrap gap-3">
         <button class="btn btn-solid theme-primary" :disabled="inCorso">Salva</button>

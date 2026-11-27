@@ -5,6 +5,26 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.50.0 — 27 novembre 2026
+
+### Novità
+
+**Auguri di compleanno** ([#86](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/86)): il giorno del compleanno, alle 8, chi compie gli anni riceve sul telefono una notifica di auguri, per esempio «Tanti auguri, Marco!», invece di niente. Se festeggia anche qualcun altro, la notifica con il suo nome arriva a parte. Si spengono con **Compleanni del giorno**, come le altre. Il testo lo cambiano capigruppo e amministratore tecnico in **Impostazioni**, gruppo **Testi**, **Auguri di compleanno**; [Nome] deve esserci.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.50.0
+```
+
+Una migrazione del database (il testo degli auguri), applicata dallo script.
+
+### Documentazione
+
+Il manuale spiega gli auguri nelle pagine dei compleanni e delle notifiche, e il testo nelle impostazioni del gruppo.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.49.0 — 25 novembre 2026
 
 ### Novità

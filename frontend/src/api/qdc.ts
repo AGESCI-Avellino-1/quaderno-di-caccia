@@ -450,6 +450,11 @@ export interface VoceLibroBreve {
   cerimonia_del_totem: boolean
 }
 
+/** An entry's text, for the copy on the device (DEC-437): nothing else. */
+export interface TestoVoceLibro extends VoceLibroBreve {
+  testo: string
+}
+
 export interface LibroCerimonie {
   voci: VoceLibroBreve[]
   puo_scrivere: boolean
@@ -3635,6 +3640,7 @@ export const api = {
       corpo: { persone },
     }),
   libroCerimonie: () => richiesta<LibroCerimonie>('/api/v1/cerimonie'),
+  testiCerimonie: () => richiesta<TestoVoceLibro[]>('/api/v1/cerimonie/testi'),
   voceLibro: (id: number) => richiesta<VoceLibro>(`/api/v1/cerimonie/${id}`),
   aggiungibiliVoci: () => richiesta<PersonaScelta[]>('/api/v1/cerimonie/aggiungibili'),
   segnabiliRegistro: () => richiesta<PersonaScelta[]>('/api/v1/cerimonie/segnabili'),

@@ -28,7 +28,17 @@ Alcune cerimonie sono un segreto di chi le ha vissute: custodisci quello che leg
 3. Sotto il testo, in **Allegati**, ci sono i file della voce (il testo di un canto, uno
    schema, una foto): toccane uno per aprirlo. Li legge chi legge la voce.
 
-Per ora il libro si legge solo con la rete.
+### Senza rete
+
+Ogni volta che apri **Cerimonie e tradizioni** con la rete, l'app salva sul telefono, cifrati
+come gli altri dati (vedi [Proteggere il dispositivo](genitore/protezione)), l'elenco e i
+testi delle voci che leggi.
+Senza rete li leggi lo stesso: in alto c'è «Copia salvata sul dispositivo il …». Il PDF, gli
+allegati e chi l'ha vissuta si vedono solo con la rete, e solo con la rete si scrive una
+voce.
+
+Se il dispositivo non è protetto con un PIN l'app non salva niente, e senza rete il libro non
+si apre.
 
 :::{container} schermate
 ![Una voce del libro sul telefono](img/cerimonie/ragazzo-telefono.png){.telefono width="30%"}

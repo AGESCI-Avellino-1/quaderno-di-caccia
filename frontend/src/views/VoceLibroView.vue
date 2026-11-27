@@ -12,18 +12,21 @@ import {
 } from '@/api/qdc'
 import AllegatiVoce from '@/components/AllegatiVoce.vue'
 import CondizioniVoce from '@/components/CondizioniVoce.vue'
+import CopiaLocale from '@/components/CopiaLocale.vue'
 import Icona from '@/components/Icona.vue'
 import RegistroVoce from '@/components/RegistroVoce.vue'
 import SceltaPersone from '@/components/SceltaPersone.vue'
 import { opzioniDa, type Opzione } from '@/components/sceltaDaElenco'
 import { useErrore } from '@/composables/useErrore'
+import { leggiVoce } from '@/offline/cerimonie'
 
 const EditorTesto = defineAsyncComponent(() => import('@/components/EditorTesto.vue'))
 
 // One entry of the book of ceremonies (DEC-437): its text and PDF for who reads it; for who
 // writes it (the staff of its unit, the capigruppo) the form, with the conditions, the
 // ragazzi/e added by hand and who would read it today. Attachments: `AllegatiVoce`.
-// Without an id: a new entry. Online only for now.
+// Without an id: a new entry. Offline, only its text from the copy on the device (the book's
+// page saves it): no PDF, attachments, register nor changes.
 const props = defineProps<{ id?: number }>()
 const router = useRouter()
 const { errore, inCorso, esegui } = useErrore()
@@ -36,6 +39,7 @@ const salvata = ref(false)
 const conferma = ref(false)
 // Who would read it with the conditions being written; null until asked.
 const lettori = ref<PersonaScelta[] | null>(null)
+const copiaDel = ref<string | null>(null)
 
 const nuova = computed(() => props.id === undefined)
 
@@ -74,7 +78,9 @@ onMounted(async () => {
     await apriModulo()
     return
   }
-  voce.value = (await esegui(() => api.voceLibro(props.id!))) ?? null
+  const letta = await esegui(() => leggiVoce(props.id!))
+  voce.value = letta?.dati ?? null
+  copiaDel.value = letta?.copiaDel ?? null
 })
 
 // The unit being kept stays a choice even for who no longer serves it.
@@ -211,7 +217,13 @@ async function elimina() {
       <p class="small fg-2">
         {{ voce.tipo === 'CERIMONIA' ? 'Cerimonia' : 'Tradizione' }} · {{ voce.unita }}
       </p>
-      <div class="d-flex flex-wrap gap-3 mb-5">
+      <template v-if="copiaDel">
+        <CopiaLocale :del="copiaDel" />
+        <p class="small fg-2" data-senza-rete>
+          Senza rete leggi solo il testo: PDF, allegati e chi l'ha vissuta tornano con la rete.
+        </p>
+      </template>
+      <div v-else class="d-flex flex-wrap gap-3 mb-5">
         <a :href="pdfVoceLibro(voce.id)" download class="btn btn-sm btn-outline theme-primary">
           <Icona nome="download" /> Scarica in PDF
         </a>
@@ -229,7 +241,7 @@ async function elimina() {
         <div v-html="voce.testo"></div>
       </div>
       <p v-else class="fg-2">Il testo non è ancora stato scritto.</p>
-      <AllegatiVoce :voce="voce" @aggiornata="voce = $event" />
+      <AllegatiVoce v-if="!copiaDel" :voce="voce" @aggiornata="voce = $event" />
       <RegistroVoce v-if="voce.vede_registro" :voce="voce" @aggiornata="voce = $event" />
       <div v-if="voce.puo_modificare" class="mt-7">
         <button

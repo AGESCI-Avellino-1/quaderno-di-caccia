@@ -765,3 +765,33 @@ def test_allegati_via_con_la_voce_e_con_la_funzione(capo, voci, settings, tmp_pa
     _accendi()
     assert _client(capo).delete(f"{URL}/{voci['reparto'].pk}").status_code == 204
     assert not list(tmp_path.rglob("*.pdf"))
+
+
+# --- Block 5: offline ----------------------------------------------------------------------
+
+
+def test_testi_per_il_dispositivo(capo, ragazza, csq, genitore, voci, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    _carica(capo, voci["reparto"])
+    _segna(capo, voci["reparto"], [csq])
+    voci["reparto"].aggiunti.add(ragazza)
+    testi = _client(capo).get(f"{URL}/testi").json()
+    assert {t["titolo"] for t in testi} == {
+        "Fuoco di gruppo",
+        "Alta Squadriglia",
+        "Passaggio dal branco",
+    }
+    # Only the texts: never the register, the attachments, who reads it.
+    assert set(testi[0]) == {"id", "titolo", "tipo", "unita", "cerimonia_del_totem", "testo"}
+    letti = _client(ragazza).get(f"{URL}/testi").json()
+    assert [(t["titolo"], t["testo"]) for t in letti] == [("Alta Squadriglia", "<p>La notte</p>")]
+    assert _client(genitore).get(f"{URL}/testi").json() == []
+    funzioni.imposta(funzioni.CERIMONIE, False)
+    assert _client(capo).get(f"{URL}/testi").status_code == 404
+
+
+def test_testi_mai_mentre_si_agisce_per_un_altro():
+    from apps.impersonazione.middleware import bloccata
+
+    assert bloccata("GET", "/api/v1/cerimonie/testi")
+    assert not bloccata("GET", "/api/v1/cerimonie/3")

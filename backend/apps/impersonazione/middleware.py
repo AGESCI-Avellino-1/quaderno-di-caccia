@@ -32,6 +32,7 @@ BLOCCATE = [
     (None, re.compile(r"^/api/v1/richieste-diritti")),  # DEC-102
     (None, re.compile(r"^/api/v1/persone/\d+/fascicolo$")),
     (None, re.compile(r"^/api/v1/campo/")),  # offline downloads: nothing is saved
+    (None, re.compile(r"^/api/v1/cerimonie/testi$")),  # the book's copy on the device
     (None, re.compile(r"^/api/v1/rubrica$")),  # a file saved on the device (DEC-302)
     (None, re.compile(r"^/api/v1/impersonazion(e|i)(?!/fine$)")),  # never nested
     (None, re.compile(r"^/api/v1/amministrazione/account")),  # DEC-313

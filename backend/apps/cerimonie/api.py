@@ -1,5 +1,6 @@
-"""The book of ceremonies and traditions (DEC-437), online only for now. Off in the settings,
-none of it exists (DEC-421). Attachments are read by who reads the entry, online only. Who reads an entry: `policy.voci_visibili`; who writes it:
+"""The book of ceremonies and traditions (DEC-437). Off in the settings, none of it exists
+(DEC-421). Offline, the PWA keeps only the texts of the entries one reads (`/cerimonie/testi`,
+encrypted on the device, DEC-97); attachments and the register are online only. Who reads an entry: `policy.voci_visibili`; who writes it:
 `policy.puo_scrivere_voce`."""
 
 import re
@@ -191,6 +192,21 @@ def libro(request):
             [{"valore": r.value, "nome": r.label} for r in cond.INCARICHI] if scrive else []
         ),
     }
+
+
+class VoceTesto(VoceBreve):
+    testo: str
+
+
+@router.get("/cerimonie/testi", response=list[VoceTesto])
+def testi(request):
+    """The texts of every entry one reads, for the copy on the device: no register, no
+    attachments, no conditions. Not while acting as another user (the copy is one's own)."""
+    _attiva()
+    return [
+        {**_breve(v), "testo": v.testo}
+        for v in policy.voci_visibili(request.auth).select_related("unita")
+    ]
 
 
 @router.get("/cerimonie/aggiungibili", response=list[Aggiungibile])

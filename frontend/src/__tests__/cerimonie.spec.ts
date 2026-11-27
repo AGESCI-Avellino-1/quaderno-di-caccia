@@ -18,6 +18,11 @@ const stubs = {
     template: '<textarea :value="modelValue" />',
   },
 }
+// The real reads, which a test may replace once with a copy from the device.
+vi.mock('@/offline/cerimonie', async (originale) => {
+  const vero = await originale<typeof import('@/offline/cerimonie')>()
+  return { ...vero, leggiVoce: vi.fn(vero.leggiVoce) }
+})
 const sostituisci = vi.fn()
 vi.mock('vue-router', async (originale) => ({
   ...(await originale<typeof import('vue-router')>()),
@@ -81,6 +86,21 @@ describe('libro delle cerimonie', () => {
     expect(pagina.find('a[download]').attributes('href')).toBe('/api/v1/cerimonie/2/pdf')
     expect(pagina.text()).not.toContain('Modifica')
     expect(pagina.text()).not.toContain('Elimina')
+  })
+
+  it('senza rete mostra solo il testo salvato sul dispositivo', async () => {
+    const offline = await import('@/offline/cerimonie')
+    vi.mocked(offline.leggiVoce).mockResolvedValueOnce({
+      dati: { ...VOCE, puo_modificare: false },
+      copiaDel: '2026-11-20T10:00:00Z',
+    })
+    const pagina = mount(VoceLibroView, { props: { id: 2 }, global: { stubs } })
+    await flushPromises()
+    expect(pagina.html()).toContain('<p>Il ponte</p>')
+    expect(pagina.text()).toContain('Copia salvata sul dispositivo')
+    expect(pagina.find('[data-senza-rete]').exists()).toBe(true)
+    expect(pagina.find('a[download]').exists()).toBe(false)
+    expect(pagina.find('[data-allegati]').exists()).toBe(false)
   })
 
   it('lo staff modifica la voce e sceglie chi la legge', async () => {

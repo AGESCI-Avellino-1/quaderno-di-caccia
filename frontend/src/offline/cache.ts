@@ -16,7 +16,7 @@ export interface Letto<T> {
 }
 
 // Never while acting as another user: the device copy is the capo's own.
-const salvabile = () => protetta() && sbloccata() && !inImpersonazione()
+export const salvabile = () => protetta() && sbloccata() && !inImpersonazione()
 
 export async function salvaInCache(
   chiave: string,
@@ -41,7 +41,7 @@ export async function leggiDallaCache<T>(
   return { dati: await decifraValore<T>(voce.valore, chiave), copiaDel: voce.aggiornata_il }
 }
 
-const SERVER_IRRAGGIUNGIBILE = new Set([502, 503, 504])
+export const SERVER_IRRAGGIUNGIBILE = new Set([502, 503, 504])
 
 export async function leggiConCache<T>(
   chiave: string,

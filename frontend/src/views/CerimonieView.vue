@@ -3,16 +3,24 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, type LibroCerimonie, type VoceLibroBreve } from '@/api/qdc'
+import CopiaLocale from '@/components/CopiaLocale.vue'
 import { useErrore } from '@/composables/useErrore'
+import { leggiConCache } from '@/offline/cache'
+import { aggiornaTesti } from '@/offline/cerimonie'
 
 // The book of ceremonies and traditions (DEC-437): the entries one reads, ceremonies first,
 // then traditions; who writes some entry also starts a new one. Off, the API answers 404
-// (DEC-421). Online only for now.
+// (DEC-421). Opened with the network, it saves the list and the texts on the device.
 const { errore, esegui } = useErrore()
 const libro = ref<LibroCerimonie | null>(null)
+const copiaDel = ref<string | null>(null)
 
 onMounted(async () => {
-  libro.value = (await esegui(() => api.libroCerimonie())) ?? null
+  const letto = await esegui(() => leggiConCache('cerimonie', () => api.libroCerimonie()))
+  libro.value = letto?.dati ?? null
+  copiaDel.value = letto?.copiaDel ?? null
+  // Also when the book is refused: the texts' copy goes with it.
+  if (!copiaDel.value) await aggiornaTesti()
 })
 
 const SEZIONI = [
@@ -33,11 +41,12 @@ const perTipo = computed(() =>
     <div v-if="errore" class="alert theme-danger" role="alert">{{ errore }}</div>
 
     <template v-if="libro">
+      <CopiaLocale :del="copiaDel" />
       <p class="fg-2 small">
         Le cerimonie e le tradizioni del gruppo. Alcune sono riservate: custodisci quello che leggi.
       </p>
       <RouterLink
-        v-if="libro.puo_scrivere"
+        v-if="libro.puo_scrivere && !copiaDel"
         :to="{ name: 'nuova-voce-libro' }"
         class="btn btn-solid theme-primary mb-5"
         >Nuova voce</RouterLink

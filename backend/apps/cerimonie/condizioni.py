@@ -12,8 +12,8 @@ The kinds, all about today's active members:
 - `incarico`: holds that patrol role, or is in the Consiglio degli Anziani;
 - `consiglio_capi`: capo squadriglia, or a member the staff treats as one (DEC-419); with a
   `unita`, of that reparto or the one linked to it (DEC-438);
-- `alta_squadriglia`: in the Alta Squadriglia of this associative year; with a `unita`, of that
-  reparto or the one linked to it, which share one (DEC-438);
+- `alta_squadriglia`: in the Alta Squadriglia today, entered, not in its antechamber (DEC-439);
+  with a `unita`, of that reparto or the one linked to it, which share one (DEC-438);
 - `totem`: has a totem name;
 - `passaggio`: in a passage from one branch to another, from its proposal on, for good, unless
   that passage or their part in it was cancelled;
@@ -32,7 +32,6 @@ from collections.abc import Iterable
 from django.db.models import Q
 
 from apps.anagrafica.models import Appartenenza, AppartenenzaSquadriglia, RuoloAppartenenza
-from apps.core.anno import AnnoAssociativo
 from apps.organizzazione.models import (
     BRANCA_DEL_TIPO,
     GUIDE_DI_SQUADRIGLIA,
@@ -210,6 +209,11 @@ def _di_registro(ids, segni) -> None:
     if totem is not None:
         for persona in tribu_della_cerimonia().filter(pk__in=ids).values_list("pk", flat=True):
             segni[persona].add(f"partecipazione:{totem}")
+    # Who entered the Alta Squadriglia lived its entry ceremony (DEC-439).
+    from .servizi import ingressi_vissuti
+
+    for persona, voci in ingressi_vissuti(ids).items():
+        segni[persona].update(f"partecipazione:{voce}" for voce in voci)
 
 
 def _di_unita(ids, segni) -> None:
@@ -267,10 +271,12 @@ def _di_squadriglia(ids, segni) -> None:
         .values_list("appartenenza__persona_id", "appartenenza__squadriglia__unita_id")
     ):
         _del_reparto(segni[persona], "consiglio_capi", reparto, collegate)
-    anno = AnnoAssociativo.corrente().anno_fine
-    for persona, reparto in MembroAltaSquadriglia.objects.filter(
-        persona_id__in=ids, anno=anno
-    ).values_list("persona_id", "reparto_id"):
+    # Who is in today: never the antechamber (DEC-439).
+    for persona, reparto in (
+        MembroAltaSquadriglia.objects.entrati()
+        .filter(persona_id__in=ids)
+        .values_list("persona_id", "reparto_id")
+    ):
         _del_reparto(segni[persona], "alta_squadriglia", reparto, collegate)
 
 

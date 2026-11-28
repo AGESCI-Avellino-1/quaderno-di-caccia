@@ -58,6 +58,9 @@ class VoceLibro(ModelloTracciato):
     )
     # The totem ceremony, once in the settings (DEC-416): «La mia tribù» links to it.
     cerimonia_del_totem = models.BooleanField(default=False)
+    # The entry ceremony of the Alta Squadriglia of its reparto (DEC-439): marked in its
+    # register, a ragazzo/a of the reparto enters; who entered is in it by themselves.
+    cerimonia_ingresso_alta = models.BooleanField(default=False)
     # Ragazzi/e who read it whatever the conditions say.
     aggiunti = models.ManyToManyField(Persona, blank=True, related_name="voci_libro")
     # Groups of conditions (`condizioni.py`): all of a group, one group is enough.

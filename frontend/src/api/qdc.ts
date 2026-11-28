@@ -465,6 +465,8 @@ export interface VoceLibroBreve {
   /** Whose it is, in words: «Tutto il gruppo», the units, the patrols… */
   unita: string
   cerimonia_del_totem: boolean
+  /** The entry ceremony of its Alta Squadriglia (DEC-439). */
+  cerimonia_ingresso_alta?: boolean
 }
 
 /** An entry's text, for the copy on the device (DEC-437): nothing else. */
@@ -517,6 +519,8 @@ export interface PartecipanteVoce extends PersonaScelta {
   /** Null for who is there by themselves, «nella tribù» (DEC-438). */
   data: string | null
   tribu?: boolean
+  /** In the register by themselves (the tribe, who entered the Alta Squadriglia). */
+  automatica?: boolean
 }
 
 export interface VoceLibro extends VoceLibroBreve {
@@ -546,6 +550,8 @@ export interface VoceLibroIn {
   condizioni: CondizioneVoce[][]
   /** «La mia tribù» links to it: one entry of the whole group, set by a capogruppo. */
   cerimonia_del_totem: boolean
+  /** One per Alta Squadriglia: marked in its register, a ragazzo/a enters (DEC-439). */
+  cerimonia_ingresso_alta: boolean
 }
 
 /** Someone to choose from a list (DEC-395). */
@@ -2329,6 +2335,8 @@ export interface EventoIn {
   /** A patrol's mission: for the parents and the capi, not the ragazzi. */
   note_genitori: string
   cerchia: Cerchia
+  /** An Alta Squadriglia's: its antechamber invited too (DEC-439); left out, as it is. */
+  anticamera?: boolean
 }
 
 export interface MiaPartecipazione {
@@ -2371,6 +2379,8 @@ export interface Evento {
   serie_id?: number | null
   localita?: Localita | null
   uniforme?: boolean | null
+  /** An Alta Squadriglia's: its antechamber invited too (DEC-439). */
+  anticamera?: boolean
   informazioni?: string
   modalita?: ModalitaRiunione
   link?: string
@@ -2601,6 +2611,8 @@ export interface RiunioneIn {
   localita_id: number | null
   nuova_localita: LocalitaIn | null
   uniforme: boolean
+  /** An Alta Squadriglia's: its antechamber invited too (DEC-439). */
+  anticamera?: boolean
   modalita?: ModalitaRiunione
   link?: string
   ordine_del_giorno?: string
@@ -2625,6 +2637,7 @@ export interface SerieRiunioni {
   localita: Localita | null
   luogo: string
   uniforme: boolean
+  anticamera?: boolean
   modalita: ModalitaRiunione
   link: string
   puo_essere_online: boolean
@@ -2640,6 +2653,7 @@ export interface ModificaRiunione {
   luogo?: string
   /** null: as its series. */
   uniforme: boolean | null
+  anticamera?: boolean
   informazioni: string
   modalita?: ModalitaRiunione
   link?: string
@@ -2760,10 +2774,30 @@ export interface Delega {
   puo_delegare: boolean
 }
 
+/** A period in the Alta Squadriglia, or a place in its antechamber (DEC-439). */
+export interface MembroAlta {
+  /** 0 for who is not in it (a candidate). */
+  id: number
+  persona_id: number
+  nome: string
+  cognome: string
+  unita: string
+  /** Null: in the antechamber since `in_anticamera_dal`. */
+  dal: string | null
+  in_anticamera_dal: string | null
+  al: string | null
+}
+
+/** The Alta Squadriglia of a reparto, shared with the linked one (DEC-439). */
 export interface AltaSquadriglia {
-  anno: number
-  persone: number[]
+  entrati: MembroAlta[]
+  anticamera: MembroAlta[]
+  /** Who was in and is out, last first. */
+  usciti: MembroAlta[]
+  candidati: MembroAlta[]
   puo_scegliere: boolean
+  /** The entry ceremony in the book, if written. */
+  cerimonia: number | null
 }
 
 export const percorsoPresenze = (evento: number) => `/api/v1/eventi/${evento}/presenze`
@@ -3680,10 +3714,15 @@ export const api = {
     richiesta<VoceLibro>(`/api/v1/cerimonie/${id}/partecipanti/${persona}`, {
       metodo: 'DELETE',
     }),
-  anteprimaLettori: (condizioni: CondizioneVoce[][], aggiunti: number[], voce_id?: number) =>
+  anteprimaLettori: (
+    condizioni: CondizioneVoce[][],
+    aggiunti: number[],
+    voce_id?: number,
+    di?: { ambito: AmbitoVoceLibro; unita_ids: number[] },
+  ) =>
     richiesta<PersonaScelta[]>('/api/v1/cerimonie/anteprima', {
       metodo: 'POST',
-      corpo: { condizioni, aggiunti, voce_id: voce_id ?? null },
+      corpo: { condizioni, aggiunti, voce_id: voce_id ?? null, ...di },
     }),
   creaVoceLibro: (dati: VoceLibroIn) =>
     richiesta<VoceLibro>('/api/v1/cerimonie', { metodo: 'POST', corpo: dati }),
@@ -4525,6 +4564,7 @@ export const api = {
     id: number,
     dati: {
       uniforme: boolean
+      anticamera?: boolean
       localita_id: number | null
       nuova_localita: LocalitaIn | null
       modalita?: ModalitaRiunione
@@ -4677,10 +4717,23 @@ export const api = {
     richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, { metodo: 'DELETE' }),
   altaSquadriglia: (reparto: number) =>
     richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`),
-  scegliAltaSquadriglia: (reparto: number, anno: number, persone: number[]) =>
-    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`, {
-      metodo: 'PUT',
-      corpo: { anno, persone },
+  mettiInAnticamera: (reparto: number, persone: number[]) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia/anticamera`, {
+      metodo: 'POST',
+      corpo: { persone },
+    }),
+  faiEntrareInAlta: (reparto: number, persone: number[], data: string) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia/ingresso`, {
+      metodo: 'POST',
+      corpo: { persone, data },
+    }),
+  rimettiInAnticamera: (reparto: number, membro: number) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia/${membro}/anticamera`, {
+      metodo: 'POST',
+    }),
+  togliDallAlta: (reparto: number, membro: number) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia/${membro}`, {
+      metodo: 'DELETE',
     }),
   vociModelloD: () => richiesta<VoceModelloD[]>('/api/v1/voci-modello-d'),
   casse: () => richiesta<Cassa[]>('/api/v1/casse'),

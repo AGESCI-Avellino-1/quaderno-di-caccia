@@ -56,6 +56,7 @@ function vuoto(l: LibroCerimonie): VoceLibroIn {
     aggiunti: [],
     condizioni: [],
     cerimonia_del_totem: false,
+    cerimonia_ingresso_alta: false,
   }
 }
 
@@ -75,6 +76,7 @@ async function apriModulo() {
         aggiunti: [...voce.value.aggiunti],
         condizioni: JSON.parse(JSON.stringify(voce.value.condizioni)),
         cerimonia_del_totem: voce.value.cerimonia_del_totem,
+        cerimonia_ingresso_alta: !!voce.value.cerimonia_ingresso_alta,
       }
     : vuoto(libro.value)
 }
@@ -133,6 +135,7 @@ function cambiaAmbito() {
   m.unita_ids = m.ambito === 'UNITA' ? scelte : scelte.slice(0, 1)
   if (m.ambito !== 'SQUADRIGLIE') m.squadriglie_ids = []
   if (m.ambito !== 'GRUPPO') m.cerimonia_del_totem = false
+  if (m.ambito !== 'ALTA_SQ') m.cerimonia_ingresso_alta = false
 }
 
 // The conditions follow whose the entry is while who writes has not changed them (DEC-438).
@@ -155,8 +158,11 @@ watch(
 
 async function chiLegge() {
   if (!modulo.value) return
-  const { condizioni, aggiunti } = modulo.value
-  lettori.value = (await esegui(() => api.anteprimaLettori(condizioni, aggiunti, props.id))) ?? null
+  const { condizioni, aggiunti, ambito, unita_ids } = modulo.value
+  lettori.value =
+    (await esegui(() =>
+      api.anteprimaLettori(condizioni, aggiunti, props.id, { ambito, unita_ids }),
+    )) ?? null
 }
 
 async function salva() {
@@ -263,6 +269,17 @@ async function elimina() {
       >
         <input id="voce-totem" v-model="modulo.cerimonia_del_totem" type="checkbox" class="check" />
         <label for="voce-totem">È la cerimonia del totem: «La mia tribù» rimanda qui</label>
+      </div>
+      <div v-if="modulo.ambito === 'ALTA_SQ'" class="form-field mb-3" data-ingresso-alta>
+        <input
+          id="voce-ingresso"
+          v-model="modulo.cerimonia_ingresso_alta"
+          type="checkbox"
+          class="check"
+        />
+        <label for="voce-ingresso">
+          È la cerimonia d'ingresso: chi è segnato tra chi l'ha vissuta entra nell'Alta Squadriglia
+        </label>
       </div>
       <div class="mb-5">
         <EditorTesto v-model="modulo.testo" etichetta="Testo" :immagini="false" />

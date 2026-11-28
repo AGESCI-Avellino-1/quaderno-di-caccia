@@ -2575,11 +2575,23 @@ def voci_visibili(user):
         for v in VoceLibro.objects.exclude(condizioni=[]).only("pk", "condizioni")
         if vale(v.condizioni, segni)
     ]
-    # The tribe lived the totem ceremony (DEC-438).
+    # The tribe lived the totem ceremony (DEC-438), who entered the Alta Squadriglia its entry
+    # ceremony; the antechamber reads none of the Alta Squadriglia's entries (DEC-439).
+    from apps.cerimonie.servizi import ingressi_vissuti, voci_dell_anticamera
+
     tribu = Q(cerimonia_del_totem=True) if _vissuta_dalla_tribu(persona) else Q(pk__in=[])
-    return VoceLibro.objects.filter(
-        Q(aggiunti=persona) | Q(partecipazioni__persona=persona) | Q(pk__in=per_condizioni) | tribu
-    ).distinct()
+    ingressi = Q(pk__in=ingressi_vissuti([persona.pk]).get(persona.pk, set()))
+    return (
+        VoceLibro.objects.filter(
+            Q(aggiunti=persona)
+            | Q(partecipazioni__persona=persona)
+            | Q(pk__in=per_condizioni)
+            | tribu
+            | ingressi
+        )
+        .exclude(pk__in=voci_dell_anticamera(persona))
+        .distinct()
+    )
 
 
 def _vissuta_dalla_tribu(persona: Persona) -> bool:
@@ -2596,6 +2608,10 @@ def vede_registro_voce(user, voce) -> bool:
         return False
     if voce.cerimonia_del_totem and _vissuta_dalla_tribu(persona):
         return True
+    from apps.cerimonie.servizi import entrati_nell_alta
+
+    if persona.pk in entrati_nell_alta(voce):
+        return True
     return voce.partecipazioni.filter(persona=persona).exists()
 
 
@@ -2609,19 +2625,28 @@ def segnabili_nel_registro(user):
     return soci_attivi().order_by("cognome", "nome")
 
 
-def lettori_delle_condizioni(condizioni, aggiunti_ids, voce=None):
+def lettori_delle_condizioni(condizioni, aggiunti_ids, voce=None, reparti_alta=()):
     """The ragazzi/e who would read an entry with these conditions and these people added by
     hand, today, with who is in its register: the preview for who writes it (DEC-437). The
-    capi read it anyway."""
+    capi read it anyway. `reparti_alta`: an entry of that Alta Squadriglia, which its
+    antechamber does not read (DEC-439)."""
     from apps.cerimonie.condizioni import segni_di, vale
+    from apps.cerimonie.servizi import entrati_nell_alta
+    from apps.eventi.models import MembroAltaSquadriglia
 
-    candidati = list(aggiungibili_alle_voci_tutti())
+    anticamera = set(
+        MembroAltaSquadriglia.objects.in_anticamera()
+        .filter(reparto_id__in=set(reparti_alta))
+        .values_list("persona_id", flat=True)
+    )
+    candidati = [p for p in aggiungibili_alle_voci_tutti() if p.pk not in anticamera]
     segni = segni_di(p.pk for p in candidati)
     aggiunti = set(aggiunti_ids)
     if voce is not None:
         aggiunti |= set(voce.partecipazioni.values_list("persona_id", flat=True))
         if voce.cerimonia_del_totem:
             aggiunti |= set(tribu_della_cerimonia().values_list("pk", flat=True))
+        aggiunti |= set(entrati_nell_alta(voce))
     return [p for p in candidati if p.pk in aggiunti or vale(condizioni, segni.get(p.pk, set()))]
 
 

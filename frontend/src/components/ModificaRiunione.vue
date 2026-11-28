@@ -33,6 +33,7 @@ const dati = reactive({
   // 'serie': as its series (only for a meeting of a series).
   uniforme: (r.serie_id ? 'serie' : r.uniforme ? 'si' : 'no') as 'serie' | 'si' | 'no',
   informazioni: r.informazioni ?? '',
+  anticamera: !!r.anticamera,
   online: { modalita: r.modalita ?? 'PRESENZA', link: r.link ?? '' },
 })
 
@@ -63,6 +64,7 @@ async function salva() {
       luogo: !dati.localita.id && !dati.localita.nuova && !r.localita ? r.luogo : '',
       uniforme: dati.uniforme === 'serie' ? null : dati.uniforme === 'si',
       informazioni: dati.informazioni,
+      ...(r.cerchia === 'ALTA_SQ' ? { anticamera: dati.anticamera } : {}),
       ...(r.puo_essere_online ? dati.online : {}),
     }),
   )
@@ -118,6 +120,12 @@ async function salva() {
           <option value="si">Con l'uniforme</option>
           <option value="no">Senza uniforme</option>
         </select>
+      </div>
+      <div v-if="riunione.cerchia === 'ALTA_SQ'" class="col-12">
+        <div class="form-field mb-0">
+          <input id="mr-anticamera" v-model="dati.anticamera" type="checkbox" class="check" />
+          <label for="mr-anticamera">Invita anche chi è nell'anticamera</label>
+        </div>
       </div>
       <div class="col-12">
         <EditorTesto v-model="dati.informazioni" etichetta="Informazioni per questa riunione" />

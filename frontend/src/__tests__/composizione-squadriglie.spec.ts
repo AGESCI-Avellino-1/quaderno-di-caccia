@@ -46,6 +46,18 @@ const dettaglio = (puo_gestire_squadriglie: boolean) => ({
   nomina: [],
 })
 
+// The reparto's Alta Squadriglia has its own answer (DEC-439).
+const ALTA_VUOTA = {
+  entrati: [],
+  anticamera: [],
+  usciti: [],
+  candidati: [],
+  puo_scegliere: false,
+  cerimonia: null,
+}
+const perUrl = (url: string, dati: unknown) =>
+  url.includes('/alta-squadriglia') ? ALTA_VUOTA : dati
+
 async function monta(puo: boolean, chiamate: { url: string; corpo: unknown }[] = []) {
   await nuovoDatabase() // vault to configure: reads go straight to the network
   vi.stubGlobal(
@@ -55,7 +67,7 @@ async function monta(puo: boolean, chiamate: { url: string; corpo: unknown }[] =
         chiamate.push({ url, corpo: JSON.parse((opzioni.body as string) ?? 'null') })
         return risposta(201, { id: 1 })
       }
-      return risposta(200, dettaglio(puo))
+      return risposta(200, perUrl(url, dettaglio(puo)))
     }),
   )
   const pagina = mount(UnitaDettaglioView, {
@@ -133,7 +145,7 @@ describe('two linked reparti', () => {
     await nuovoDatabase()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => risposta(200, dati)),
+      vi.fn(async (url: string) => risposta(200, perUrl(url, dati))),
     )
     const pagina = mount(UnitaDettaglioView, {
       props: { id: 5 },
@@ -176,7 +188,7 @@ describe('choosing the animal', () => {
           chiamate.push({ url, corpo: JSON.parse(opzioni.body as string) })
           return risposta(201, { id: 1 })
         }
-        return risposta(200, url.endsWith('/animali') ? animali : dati)
+        return risposta(200, url.endsWith('/animali') ? animali : perUrl(url, dati))
       }),
     )
     const pagina = mount(UnitaDettaglioView, {
@@ -260,7 +272,7 @@ describe('member treated as the CSQ', () => {
           chiamate.push({ url, corpo: JSON.parse(opzioni.body as string) })
           return risposta(200, { id: 11, equiparato: true })
         }
-        return risposta(200, { ...dettaglio(true), squadriglie })
+        return risposta(200, perUrl(url, { ...dettaglio(true), squadriglie }))
       }),
     )
     const pagina = mount(UnitaDettaglioView, {

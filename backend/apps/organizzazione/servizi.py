@@ -72,6 +72,17 @@ def esci_dal_reparto(persona: Persona, unita: Unita, giorno: date) -> list[str]:
         chiusi.append(f"{persona} — {membro.sestiglia}")
     if unita.tipo != TipoUnita.REPARTO:
         return chiusi
+    # The Alta Squadriglia: the period closes and stays for the history, the antechamber goes
+    # (DEC-439).
+    from apps.eventi.models import MembroAltaSquadriglia
+    from apps.eventi.servizi import togli_dall_alta
+
+    for membro in MembroAltaSquadriglia.objects.filter(
+        persona=persona, reparto=unita, data_fine__isnull=True
+    ):
+        togli_dall_alta(membro, giorno)
+        if membro.data_inizio is not None:
+            chiusi.append(f"{persona} — Alta Squadriglia")
     for membro in (
         AppartenenzaSquadriglia.objects.attive(giorno)
         .filter(persona=persona, squadriglia__unita=unita)

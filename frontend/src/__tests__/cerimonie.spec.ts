@@ -147,6 +147,7 @@ describe('libro delle cerimonie', () => {
       aggiunti: [9],
       condizioni: [],
       cerimonia_del_totem: false,
+      cerimonia_ingresso_alta: false,
     })
     expect(pagina.text()).toContain('Voce salvata.')
   })
@@ -283,7 +284,10 @@ describe('libro delle cerimonie', () => {
       .find((b) => b.text() === 'Chi la legge oggi')!
       .trigger('click')
     await flushPromises()
-    expect(anteprima).toHaveBeenCalledWith([[{ tipo: 'consiglio_capi' }]], [], 2)
+    expect(anteprima).toHaveBeenCalledWith([[{ tipo: 'consiglio_capi' }]], [], 2, {
+      ambito: 'UNITA',
+      unita_ids: [5],
+    })
     expect(pagina.find('[data-anteprima]').text()).toContain('Verdi Sara')
   })
 

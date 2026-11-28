@@ -154,7 +154,6 @@ def test_voce_di_squadriglie(capo, staff_branco, reparto, squadriglia, ragazza, 
 
 def test_condizioni_di_un_reparto(capo, reparto, gruppo, csq, ragazza):
     """Consiglio capi and Alta Squadriglia of a reparto, the linked one counting too."""
-    from apps.core.anno import AnnoAssociativo
     from apps.eventi.models import MembroAltaSquadriglia
 
     _accendi()
@@ -167,9 +166,7 @@ def test_condizioni_di_un_reparto(capo, reparto, gruppo, csq, ragazza):
     alta = _voce("Alta del reparto", reparto, ambito=AmbitoVoce.ALTA_SQUADRIGLIA)
     alta.condizioni = [[{"tipo": "alta_squadriglia", "unita": reparto.pk}]]
     alta.save()
-    MembroAltaSquadriglia.objects.create(
-        reparto=reparto, persona=ragazza, anno=AnnoAssociativo.corrente().anno_fine
-    )
+    MembroAltaSquadriglia.objects.create(reparto=reparto, persona=ragazza, data_inizio=INIZIO_ANNO)
     assert _titoli(csq) == set()
     assert _titoli(ragazza) == {"Alta del reparto"}
     # Linked: one Consiglio capi for every permission.

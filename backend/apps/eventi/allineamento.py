@@ -123,7 +123,13 @@ def _da_incarico(sender, instance, **kwargs) -> None:
 
 
 def _da_alta_squadriglia(sender, instance, **kwargs) -> None:
-    programma(instance.reparto_id)
+    """With the linked reparto: they share one Alta Squadriglia (DEC-439)."""
+    from apps.organizzazione.models import Unita
+
+    collegata = Unita.objects.filter(pk=instance.reparto_id).values_list(
+        "collegata_a_id", flat=True
+    )
+    programma(instance.reparto_id, *collegata)
 
 
 def _da_passaggio(sender, instance, **kwargs) -> None:

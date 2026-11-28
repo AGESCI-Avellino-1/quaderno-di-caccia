@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import { api, type AltaSquadriglia, type PersonaBreve } from '@/api/qdc'
+import { api, type AltaSquadriglia, type MembroAlta } from '@/api/qdc'
 import { useErrore } from '@/composables/useErrore'
 
-// The reparto staff chooses, year by year, the ragazzi of the Alta Squadriglia: its
-// events invite them. Online only.
-const props = defineProps<{ reparto: number; ragazzi: PersonaBreve[] }>()
+// The Alta Squadriglia of a reparto, one for two linked reparti (DEC-439): who is in, since
+// when; the antechamber, about to enter; who was in. The reparto staff puts ragazzi/e in the
+// antechamber and lets them in, from the antechamber or directly, also with a day of past
+// years; taking someone off closes their period, which stays. Its events invite who is in,
+// the antechamber only when chosen. Online only.
+const props = defineProps<{ reparto: number }>()
 const { errore, inCorso, esegui } = useErrore()
 const alta = ref<AltaSquadriglia | null>(null)
 const scelti = ref<number[]>([])
-const salvata = ref(false)
+const oggi = () => new Date().toLocaleDateString('sv-SE')
+const giorno = ref(oggi())
+const aperto = ref(false)
 
 watch(
   () => props.reparto,
   async (id) => {
     try {
       alta.value = await api.altaSquadriglia(id)
-      scelti.value = [...alta.value.persone]
     } catch {
       alta.value = null
     }
@@ -25,44 +29,186 @@ watch(
   { immediate: true },
 )
 
-async function salva() {
-  if (!alta.value) return
-  salvata.value = false
-  const dati = await esegui(() =>
-    api.scegliAltaSquadriglia(props.reparto, alta.value!.anno, scelti.value),
-  )
+const data = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('it-IT')
+const nome = (m: MembroAlta) => `${m.cognome} ${m.nome}`
+// Who may be chosen: not in yet (in the antechamber or not at all).
+const sceglibili = computed(() =>
+  alta.value ? [...alta.value.anticamera, ...alta.value.candidati] : [],
+)
+const daCandidati = computed(() => new Set(alta.value?.candidati.map((m) => m.persona_id) ?? []))
+
+async function aggiorna(azione: () => Promise<AltaSquadriglia>) {
+  const dati = await esegui(azione)
   if (!dati) return
   alta.value = dati
-  salvata.value = true
+  scelti.value = []
+  aperto.value = false
 }
-const etichetta = (fine: number) => `${fine - 1}/${String(fine).slice(-2)}`
+
+const inAnticamera = () =>
+  aggiorna(() =>
+    api.mettiInAnticamera(
+      props.reparto,
+      scelti.value.filter((id) => daCandidati.value.has(id)),
+    ),
+  )
+const entrano = () =>
+  aggiorna(() => api.faiEntrareInAlta(props.reparto, scelti.value, giorno.value))
+const entraOggi = (m: MembroAlta) =>
+  aggiorna(() => api.faiEntrareInAlta(props.reparto, [m.persona_id], oggi()))
+const rimetti = (m: MembroAlta) => aggiorna(() => api.rimettiInAnticamera(props.reparto, m.id))
+const togli = (m: MembroAlta) => aggiorna(() => api.togliDallAlta(props.reparto, m.id))
 </script>
 
 <template>
-  <section v-if="alta" class="card card-body mb-5">
-    <h2 class="h5 mb-1">Alta Squadriglia {{ etichetta(alta.anno) }}</h2>
-    <p class="form-text">Gli eventi di Alta Squadriglia invitano questi ragazzi/e.</p>
+  <section v-if="alta" class="card card-body mb-5" data-alta>
+    <h2 class="h5 mb-1">Alta Squadriglia</h2>
+    <p class="form-text">
+      Gli eventi e le riunioni di Alta Squadriglia invitano chi è entrato; l'anticamera solo se lo
+      scegli. Chi è in anticamera non legge le cerimonie dell'Alta Squadriglia finché non entra.
+      <RouterLink
+        v-if="alta.cerimonia"
+        :to="{ name: 'voce-libro', params: { id: alta.cerimonia } }"
+      >
+        La cerimonia d'ingresso
+      </RouterLink>
+    </p>
     <div v-if="errore" class="alert theme-danger small" role="alert">{{ errore }}</div>
-    <form @submit.prevent="salva">
-      <div class="d-flex flex-wrap gap-5 mb-3">
-        <div v-for="r in ragazzi" :key="r.id" class="form-field mb-0">
-          <input
-            :id="`alta-${r.id}`"
-            v-model="scelti"
-            type="checkbox"
-            class="check"
-            :value="r.id"
-            :disabled="!alta.puo_scegliere"
-          />
-          <label :for="`alta-${r.id}`">{{ r.nome }} {{ r.cognome }}</label>
+
+    <h3 class="h6 mt-3">Dentro</h3>
+    <p v-if="!alta.entrati.length" class="small fg-2">Nessuno, per ora.</p>
+    <ul v-else class="list-group mb-3" data-entrati>
+      <li
+        v-for="m in alta.entrati"
+        :key="m.id"
+        class="list-group-item d-flex flex-wrap gap-3 align-items-center"
+      >
+        <span class="flex-grow-1">
+          {{ nome(m) }} <span class="small fg-2">{{ m.unita }}</span>
+        </span>
+        <span class="small">dal {{ data(m.dal!) }}</span>
+        <template v-if="alta.puo_scegliere">
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            :disabled="inCorso"
+            :aria-label="`Rimetti ${nome(m)} in anticamera`"
+            @click="rimetti(m)"
+          >
+            In anticamera
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            :disabled="inCorso"
+            :aria-label="`Togli ${nome(m)} dall'Alta Squadriglia`"
+            @click="togli(m)"
+          >
+            Togli
+          </button>
+        </template>
+      </li>
+    </ul>
+
+    <h3 class="h6 mt-3">Anticamera</h3>
+    <p v-if="!alta.anticamera.length" class="small fg-2">Nessuno, per ora.</p>
+    <ul v-else class="list-group mb-3" data-anticamera>
+      <li
+        v-for="m in alta.anticamera"
+        :key="m.id"
+        class="list-group-item d-flex flex-wrap gap-3 align-items-center"
+      >
+        <span class="flex-grow-1">
+          {{ nome(m) }} <span class="small fg-2">{{ m.unita }}</span>
+        </span>
+        <span v-if="m.in_anticamera_dal" class="small">dal {{ data(m.in_anticamera_dal) }}</span>
+        <template v-if="alta.puo_scegliere">
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            :disabled="inCorso"
+            :aria-label="`Fai entrare oggi ${nome(m)}`"
+            @click="entraOggi(m)"
+          >
+            Entra oggi
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            :disabled="inCorso"
+            :aria-label="`Togli ${nome(m)} dall'anticamera`"
+            @click="togli(m)"
+          >
+            Togli
+          </button>
+        </template>
+      </li>
+    </ul>
+
+    <template v-if="alta.puo_scegliere && sceglibili.length">
+      <button
+        v-if="!aperto"
+        type="button"
+        class="btn btn-sm btn-outline theme-primary align-self-start"
+        @click="aperto = true"
+      >
+        Aggiungi
+      </button>
+      <form v-else class="card card-body" data-aggiungi @submit.prevent="entrano">
+        <p class="small fg-2">
+          Metti in anticamera chi sta per entrare, oppure fallo entrare con il suo giorno, anche
+          degli anni passati se c'era già prima dell'app.
+        </p>
+        <div class="d-flex flex-wrap gap-5 mb-3">
+          <div v-for="m in sceglibili" :key="m.persona_id" class="form-field mb-0">
+            <input
+              :id="`alta-${m.persona_id}`"
+              v-model="scelti"
+              type="checkbox"
+              class="check"
+              :value="m.persona_id"
+            />
+            <label :for="`alta-${m.persona_id}`">
+              {{ nome(m) }}
+              <span v-if="!daCandidati.has(m.persona_id)" class="small fg-2">(in anticamera)</span>
+            </label>
+          </div>
         </div>
-      </div>
-      <div v-if="alta.puo_scegliere" class="d-flex align-items-center gap-3">
-        <button type="submit" class="btn btn-sm btn-solid theme-primary" :disabled="inCorso">
-          Salva
-        </button>
-        <span v-if="salvata" class="small fg-success">Salvata.</span>
-      </div>
-    </form>
+        <div class="mb-3">
+          <label class="form-label small mb-0" for="alta-giorno">Entra il giorno</label>
+          <input
+            id="alta-giorno"
+            v-model="giorno"
+            type="date"
+            class="form-control w-auto"
+            :max="oggi()"
+            required
+          />
+        </div>
+        <div class="d-flex flex-wrap gap-3">
+          <button class="btn btn-sm btn-solid theme-primary" :disabled="inCorso || !scelti.length">
+            Fai entrare
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline theme-primary"
+            :disabled="inCorso || !scelti.some((id) => daCandidati.has(id))"
+            @click="inAnticamera"
+          >
+            Metti in anticamera
+          </button>
+          <button type="button" class="btn btn-sm btn-link" @click="aperto = false">Annulla</button>
+        </div>
+      </form>
+    </template>
+
+    <details v-if="alta.usciti.length" class="mt-5" data-usciti>
+      <summary class="small">Negli anni passati ({{ alta.usciti.length }})</summary>
+      <ul class="small mt-3 mb-0">
+        <li v-for="m in alta.usciti" :key="m.id">
+          {{ nome(m) }}: dal {{ data(m.dal!) }} al {{ data(m.al!) }}
+        </li>
+      </ul>
+    </details>
   </section>
 </template>

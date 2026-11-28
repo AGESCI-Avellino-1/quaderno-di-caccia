@@ -23,6 +23,8 @@
   whether the uniform is worn, which a single meeting may change.
 """
 
+from datetime import date
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -175,6 +177,8 @@ class RiunioneRicorrente(ModelloTracciato):
         Localita, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     uniforme = models.BooleanField(default=True)
+    # An Alta Squadriglia's: its antechamber invited too (DEC-439), copied to each meeting.
+    anticamera = models.BooleanField(default=False)
     # DEC-402: online or mixed with the platform's link; a meeting may change both.
     modalita = models.CharField(max_length=8, choices=Modalita.choices, default=Modalita.PRESENZA)
     link = models.URLField(max_length=500, blank=True)
@@ -249,6 +253,9 @@ class Evento(ModelloTracciato):
     # staff writes about it, as cleaned HTML.
     uniforme = models.BooleanField(null=True, blank=True)
     informazioni = models.TextField(blank=True)
+    # An Alta Squadriglia's: who is in its antechamber is invited too, chosen by the staff
+    # each time (DEC-439).
+    anticamera = models.BooleanField(default=False)
     # DEC-402: in person, online or mixed, with the link; copied from the series.
     modalita = models.CharField(max_length=8, choices=Modalita.choices, default=Modalita.PRESENZA)
     link = models.URLField(max_length=500, blank=True)
@@ -439,8 +446,30 @@ class DelegaSquadriglia(ModelloTracciato):
         return f"{self.persona} per {self.squadriglia}"
 
 
+class MembroAltaSquadrigliaQuerySet(models.QuerySet):
+    def entrati(self, al_giorno: date | None = None):
+        """Who is in the Alta Squadriglia on that day (today by default): entered, not out."""
+        giorno = al_giorno or date.today()
+        return self.filter(data_inizio__lte=giorno).filter(
+            models.Q(data_fine__isnull=True) | models.Q(data_fine__gt=giorno)
+        )
+
+    def in_anticamera(self):
+        """About to enter, not yet in (DEC-439)."""
+        return self.filter(data_inizio__isnull=True, data_fine__isnull=True)
+
+    def dell_alta(self, reparto):
+        """Of the Alta Squadriglia of this reparto: two linked reparti share one (DEC-439)."""
+        reparti = [reparto.pk] + ([reparto.collegata_a_id] if reparto.collegata_a_id else [])
+        return self.filter(reparto_id__in=reparti)
+
+
 class MembroAltaSquadriglia(ModelloTracciato):
-    """Chosen by the reparto staff, year by year."""
+    """A period in the Alta Squadriglia of a reparto (DEC-439): `data_inizio` = the day of
+    entry, with the entry ceremony or by hand, `data_fine` exclusive = out of the reparto or
+    taken off by the staff. Without `data_inizio`, in the antechamber since
+    `in_anticamera_dal`. Kept after leaving: past meetings keep their invited. The yearly
+    lists of before became periods (migration 0015)."""
 
     reparto = models.ForeignKey(
         "organizzazione.Unita", on_delete=models.CASCADE, related_name="alta_squadriglia"
@@ -448,17 +477,28 @@ class MembroAltaSquadriglia(ModelloTracciato):
     persona = models.ForeignKey(
         "anagrafica.Persona", on_delete=models.CASCADE, related_name="alta_squadriglia"
     )
-    anno = models.PositiveSmallIntegerField(help_text="Anno associativo (anno in cui finisce).")
+    in_anticamera_dal = models.DateField(null=True, blank=True)
+    data_inizio = models.DateField(null=True, blank=True)
+    data_fine = models.DateField(null=True, blank=True)
+
+    objects = MembroAltaSquadrigliaQuerySet.as_manager()
 
     class Meta:
         verbose_name = "membro dell'Alta Squadriglia"
         verbose_name_plural = "Alta Squadriglia"
+        ordering = ["data_inizio", "pk"]
         constraints = [
-            models.UniqueConstraint(fields=["reparto", "persona", "anno"], name="alta_sq_unica")
+            models.UniqueConstraint(
+                fields=["persona"],
+                condition=models.Q(data_fine__isnull=True),
+                name="alta_sq_una_aperta",
+            )
         ]
 
     def __str__(self) -> str:
-        return f"{self.persona} in Alta Squadriglia ({self.anno})"
+        if self.data_inizio is None:
+            return f"{self.persona} nell'anticamera dell'Alta Squadriglia"
+        return f"{self.persona} in Alta Squadriglia dal {self.data_inizio:%d/%m/%Y}"
 
 
 def _token() -> str:

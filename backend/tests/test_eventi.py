@@ -422,7 +422,7 @@ def test_consiglio_capi_e_alta_squadriglia(reparto, squadriglia, csq, ragazza, s
         csq.pk,
         ragazza.pk,
     }
-    servizi.imposta_alta_squadriglia(reparto, 2026, [ragazza])
+    servizi.fai_entrare(reparto, [ragazza], date(2026, 1, 10))
     assert set(consiglio("ALTA_SQ").partecipazioni.values_list("persona_id", flat=True)) == {
         ragazza.pk
     }
@@ -460,14 +460,13 @@ def test_api_delega_e_alta_squadriglia(squadriglia, csq, ragazza, staff, reparto
     risposta = _client(staff).put(url, {"persona_id": ragazza.pk}, content_type="application/json")
     assert risposta.json()["persona_id"] == ragazza.pk
 
-    alta = f"/api/v1/unita/{reparto.pk}/alta-squadriglia"
-    corpo = {"anno": 2026, "persone": [ragazza.pk]}
-    assert _client(csq).put(alta, corpo, content_type="application/json").status_code == 403
-    assert _client(staff).put(alta, corpo, content_type="application/json").json()["persone"] == [
-        ragazza.pk
-    ]
-    fuori = {"anno": 2026, "persone": [rover.pk]}
-    assert _client(staff).put(alta, fuori, content_type="application/json").status_code == 400
+    alta = f"/api/v1/unita/{reparto.pk}/alta-squadriglia/ingresso"
+    corpo = {"persone": [ragazza.pk]}
+    assert _client(csq).post(alta, corpo, content_type="application/json").status_code == 403
+    entrati = _client(staff).post(alta, corpo, content_type="application/json").json()["entrati"]
+    assert [m["persona_id"] for m in entrati] == [ragazza.pk]
+    fuori = {"persone": [rover.pk]}
+    assert _client(staff).post(alta, fuori, content_type="application/json").status_code == 400
 
 
 # --- The event's fee, in instalments (DEC-77) -----------------------------------------------

@@ -92,12 +92,6 @@ async function candidatiUnita(ruolo: string) {
 }
 // Patrol roles: members of their own patrol (DEC-13, DEC-14, DEC-321).
 const candidatiDi = (s: Squadriglia) => async () => s.membri.map((m) => m.persona)
-// The ragazzi of a reparto: patrol members and who is in no patrol yet.
-const ragazziDelReparto = computed(() => [
-  ...squadriglieDi(props.id).flatMap((s) => s.membri.map((m) => m.persona)),
-  ...(dettaglio.value?.senza_squadriglia.filter((p) => p.reparto_id === props.id) ?? []),
-])
-
 // With two linked reparti both are here (DEC-405): a ragazzo moves only among the patrols
 // of their own reparto.
 const squadriglieDi = (reparto: number) =>
@@ -663,11 +657,7 @@ useGruppiPagina('unita', () =>
             </RouterLink>
           </p>
         </section>
-        <AltaSquadriglia
-          v-if="unita.tipo === 'REPARTO'"
-          :reparto="unita.id"
-          :ragazzi="ragazziDelReparto"
-        />
+        <AltaSquadriglia v-if="unita.tipo === 'REPARTO'" :reparto="unita.id" />
       </GruppoPagina>
       <GruppoPagina chiave="staff" titolo="Staff e incarichi">
         <section class="card card-body mb-5">

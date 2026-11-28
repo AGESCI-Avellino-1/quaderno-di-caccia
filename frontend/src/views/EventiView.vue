@@ -98,6 +98,7 @@ const vuoto = (): EventoIn => ({
   descrizione: '',
   note_genitori: '',
   cerchia: 'TUTTI',
+  anticamera: false,
 })
 const modulo = ref<EventoIn | null>(null)
 
@@ -251,6 +252,12 @@ const statoMio = {
             <option value="ALTA_SQ">Alta Squadriglia (reparti)</option>
             <option value="CDA">Consiglio degli Anziani (branchi e cerchi)</option>
           </select>
+        </div>
+        <div v-if="modulo.livello === 'UNITA' && modulo.cerchia === 'ALTA_SQ'" class="col-12">
+          <div class="form-field mb-0">
+            <input id="ev-anticamera" v-model="modulo.anticamera" type="checkbox" class="check" />
+            <label for="ev-anticamera">Invita anche chi è nell'anticamera</label>
+          </div>
         </div>
         <div v-if="modulo.livello === 'SQUADRIGLIA'" class="md:col-8">
           <label class="form-label small" for="ev-squadriglia">Squadriglia</label>

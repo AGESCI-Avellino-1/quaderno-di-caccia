@@ -168,6 +168,8 @@ class RiunioneIn(Schema):
     localita_id: int | None = None
     nuova_localita: LocalitaIn | None = None
     uniforme: bool = True
+    # An Alta Squadriglia's: its antechamber invited too (DEC-439).
+    anticamera: bool = False
     # In person, online or mixed, with the link (DEC-402).
     modalita: Modalita = Modalita.PRESENZA
     link: str = ""
@@ -195,6 +197,7 @@ class SerieOut(Schema):
     localita: LocalitaOut | None
     luogo: str
     uniforme: bool
+    anticamera: bool = False
     modalita: Modalita
     link: str
     puo_essere_online: bool
@@ -218,6 +221,7 @@ def _serie_out(user, serie: RiunioneRicorrente) -> dict:
         "localita": serie.localita,
         "luogo": serie.localita.nome_visibile if serie.localita_id else serie.luogo,
         "uniforme": serie.uniforme,
+        "anticamera": serie.anticamera,
         "modalita": serie.modalita,
         "link": serie.link,
         "puo_essere_online": servizi.puo_essere_online(
@@ -322,6 +326,7 @@ def crea_riunioni(request, dati: RiunioneIn):
                 luogo=localita.nome_visibile if localita else "",
                 localita=localita,
                 uniforme=dati.uniforme,
+                anticamera=dati.anticamera and cerchia == Cerchia.ALTA_SQUADRIGLIA,
                 modalita=dati.modalita,
                 link=link,
             )
@@ -347,6 +352,7 @@ def crea_riunioni(request, dati: RiunioneIn):
                 al=dati.al,
                 localita=localita,
                 uniforme=dati.uniforme,
+                anticamera=dati.anticamera and cerchia == Cerchia.ALTA_SQUADRIGLIA,
                 modalita=dati.modalita,
                 link=link,
                 creata_da=request.auth,
@@ -480,6 +486,8 @@ def elenco_serie(request, unita: int | None = None):
 
 class SerieIn(Schema):
     uniforme: bool
+    # None: as it is (an app not yet updated does not send it).
+    anticamera: bool | None = None
     localita_id: int | None = None
     nuova_localita: LocalitaIn | None = None
     # None: as it is (an app not yet updated does not send them).
@@ -513,7 +521,12 @@ def modifica_serie(request, serie_id: int, dati: SerieIn):
                 ),
             )
             servizi.cambia_serie(
-                serie, uniforme=dati.uniforme, localita=localita, modalita=modalita, link=link
+                serie,
+                uniforme=dati.uniforme,
+                localita=localita,
+                modalita=modalita,
+                link=link,
+                anticamera=dati.anticamera,
             )
     except ValidationError as errore:
         raise _errore(errore) from errore
@@ -540,6 +553,8 @@ class ModificaRiunione(Schema):
     luogo: str = ""
     # None: as its series.
     uniforme: bool | None = None
+    # None: as it is.
+    anticamera: bool | None = None
     informazioni: str = ""
     # None: as it is (an app not yet updated does not send them).
     modalita: Modalita | None = None
@@ -588,6 +603,9 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
         if dati.uniforme is None and evento.riunione_id is None:
             raise HttpError(400, "Scegli se la riunione è con l'uniforme.")
         evento.uniforme = dati.uniforme
+        anticamera = evento.anticamera
+        if dati.anticamera is not None:
+            evento.anticamera = dati.anticamera and evento.cerchia == Cerchia.ALTA_SQUADRIGLIA
         evento.informazioni = pulisci(dati.informazioni) if dati.informazioni.strip() else ""
         try:
             evento.full_clean()
@@ -595,6 +613,11 @@ def modifica_riunione(request, evento_id: int, dati: ModificaRiunione):
             raise _errore(errore) from errore
         evento.save()
         servizi.allinea_partecipanti(evento)
+        if anticamera != evento.anticamera:
+            from .allineamento import programma
+
+            # The antechamber left out: its invitations go (DEC-414, DEC-439).
+            programma(*evento.unita.values_list("pk", flat=True))
     if (evento.inizio, evento.fine, evento.luogo, evento.modalita, evento.link) != prima:
         transaction.on_commit(lambda: avvisi.modificato(evento))
     return _evento_out(request.auth, evento)

@@ -54,6 +54,8 @@ class EventoIn(Schema):
     # A patrol's mission: notes for the parents and the capi, not the ragazzi.
     note_genitori: str = ""
     cerchia: Cerchia = Cerchia.TUTTI
+    # An Alta Squadriglia's: its antechamber invited too (DEC-439). None: as it is.
+    anticamera: bool | None = None
 
 
 class MiaPartecipazione(Schema):
@@ -137,6 +139,8 @@ class EventoOut(Schema):
     note_genitori: str | None  # None: not for this user
     cerchia: Cerchia
     cerchia_nome: str
+    # An Alta Squadriglia's: its antechamber invited too (DEC-439).
+    anticamera: bool = False
     riunione: bool
     # A meeting (DEC-310): its series, place, uniform and the staff's notes (HTML).
     serie_id: int | None = None
@@ -215,6 +219,7 @@ def _evento_out(user, evento: Evento, cache: dict | None = None) -> dict:
         ),
         "cerchia": evento.cerchia,
         "cerchia_nome": evento.get_cerchia_display(),
+        "anticamera": evento.anticamera,
         "riunione": evento.riunione_id is not None,
         "serie_id": evento.riunione_id,
         "localita": evento.localita,
@@ -381,6 +386,9 @@ def _dati(request, evento: Evento, dati: EventoIn) -> list[Unita]:
     evento.descrizione = dati.descrizione.strip()
     evento.note_genitori = dati.note_genitori.strip() if dati.tipo == TipoEvento.MISSIONE else ""
     evento.cerchia = dati.cerchia if dati.livello == Livello.UNITA else Cerchia.TUTTI
+    if dati.anticamera is not None:
+        evento.anticamera = dati.anticamera
+    evento.anticamera = evento.anticamera and evento.cerchia == Cerchia.ALTA_SQUADRIGLIA
     return unita
 
 
@@ -409,6 +417,7 @@ def modifica_evento(request, evento_id: int, dati: EventoIn):
     ):
         raise HttpError(400, "Il livello dell'evento non si cambia: creane uno nuovo.")
     prima = (evento.inizio, evento.fine, evento.luogo)
+    anticamera = evento.anticamera
     unita = _dati(request, evento, dati)
     try:
         evento.full_clean()
@@ -418,6 +427,11 @@ def modifica_evento(request, evento_id: int, dati: EventoIn):
     if evento.livello == Livello.UNITA and unita:
         evento.unita.set(unita)
     servizi.allinea_partecipanti(evento)
+    if anticamera != evento.anticamera:
+        from .allineamento import programma
+
+        # The antechamber left out: its invitations go (DEC-414, DEC-439).
+        programma(*evento.unita.values_list("pk", flat=True))
     if (evento.inizio, evento.fine, evento.luogo) != prima:
         transaction.on_commit(lambda: avvisi.modificato(evento))
     return _evento_out(request.auth, evento)
@@ -644,49 +658,152 @@ def revoca_delega(request, squadriglia_id: int):
     return _delega_out(request.auth, squadriglia)
 
 
-class AltaSquadrigliaIn(Schema):
-    anno: int
-    persone: list[int]
+class MembroAltaOut(Schema):
+    id: int
+    persona_id: int
+    nome: str
+    cognome: str
+    unita: str
+    # None: in the antechamber since `in_anticamera_dal`.
+    dal: date | None
+    in_anticamera_dal: date | None
+    al: date | None
 
 
 class AltaSquadrigliaOut(Schema):
-    anno: int
-    persone: list[int]
+    """The Alta Squadriglia of a reparto, shared with the linked one (DEC-439)."""
+
+    entrati: list[MembroAltaOut]
+    anticamera: list[MembroAltaOut]
+    # Who was in and is out: the history, last first.
+    usciti: list[MembroAltaOut]
+    # The reparto's ragazzi/e not in nor in the antechamber.
+    candidati: list[MembroAltaOut]
     puo_scegliere: bool
+    # The entry ceremony in the book, if written and the book is on.
+    cerimonia: int | None
 
 
-@router.get("/unita/{unita_id}/alta-squadriglia", response=AltaSquadrigliaOut)
-def alta_squadriglia(request, unita_id: int, anno: int | None = None):
-    from apps.core.anno import AnnoAssociativo
+class PersoneAltaIn(Schema):
+    persone: list[int]
+    # For the entry: that day (today if none).
+    data: date | None = None
 
-    from .models import MembroAltaSquadriglia
 
+def _reparto_alta(request, unita_id: int, scrivere: bool = False) -> Unita:
     if not policy.e_capo(request.auth):
         raise HttpError(403, "L'Alta Squadriglia la vedono i capi.")
     reparto = get_object_or_404(Unita, pk=unita_id)
-    anno = anno or AnnoAssociativo.corrente().anno_fine
+    if scrivere and not policy.puo_scegliere_alta_squadriglia(request.auth, reparto):
+        raise HttpError(403, "L'Alta Squadriglia la sceglie lo staff del reparto.")
+    return reparto
+
+
+def _membro_out(membro, unita: dict) -> dict:
     return {
-        "anno": anno,
-        "persone": list(
-            MembroAltaSquadriglia.objects.filter(reparto=reparto, anno=anno).values_list(
-                "persona_id", flat=True
-            )
-        ),
-        "puo_scegliere": policy.puo_scegliere_alta_squadriglia(request.auth, reparto),
+        **_candidato_out(membro.persona, unita),
+        "id": membro.pk,
+        "dal": membro.data_inizio,
+        "in_anticamera_dal": membro.in_anticamera_dal,
+        "al": membro.data_fine,
     }
 
 
-@router.put("/unita/{unita_id}/alta-squadriglia", response=AltaSquadrigliaOut)
-def scegli_alta_squadriglia(request, unita_id: int, dati: AltaSquadrigliaIn):
-    reparto = get_object_or_404(Unita, pk=unita_id)
-    if not policy.puo_scegliere_alta_squadriglia(request.auth, reparto):
-        raise HttpError(403, "L'Alta Squadriglia la sceglie lo staff del reparto.")
+def _candidato_out(persona: Persona, unita: dict) -> dict:
+    return {
+        "id": 0,
+        "persona_id": persona.pk,
+        "nome": persona.nome,
+        "cognome": persona.cognome,
+        "unita": unita.get(persona.pk, ""),
+        "dal": None,
+        "in_anticamera_dal": None,
+        "al": None,
+    }
+
+
+@router.get("/unita/{unita_id}/alta-squadriglia", response=AltaSquadrigliaOut)
+def alta_squadriglia(request, unita_id: int):
+    from apps.anagrafica.servizi import unita_delle_persone
+    from apps.cerimonie.servizi import cerimonia_ingresso
+
+    from .models import MembroAltaSquadriglia
+
+    reparto = _reparto_alta(request, unita_id)
+    membri = list(MembroAltaSquadriglia.objects.dell_alta(reparto).select_related("persona"))
+    aperti = [m for m in membri if m.data_fine is None]
+    dentro = {m.persona_id for m in aperti}
+    candidati = list(
+        servizi.ragazzi_per_alta(reparto).exclude(pk__in=dentro).order_by("cognome", "nome")
+    )
+    unita = unita_delle_persone([m.persona for m in membri] + candidati)
+    per_nome = lambda m: (m.persona.cognome, m.persona.nome)  # noqa: E731
+    return {
+        "entrati": [_membro_out(m, unita) for m in sorted(aperti, key=per_nome) if m.data_inizio],
+        "anticamera": [
+            _membro_out(m, unita) for m in sorted(aperti, key=per_nome) if not m.data_inizio
+        ],
+        "usciti": [
+            _membro_out(m, unita)
+            for m in sorted(
+                (m for m in membri if m.data_fine), key=lambda m: m.data_fine, reverse=True
+            )
+        ],
+        "candidati": [_candidato_out(p, unita) for p in candidati],
+        "puo_scegliere": policy.puo_scegliere_alta_squadriglia(request.auth, reparto),
+        "cerimonia": cerimonia_ingresso(reparto),
+    }
+
+
+def _persone_alta(dati: PersoneAltaIn) -> list[Persona]:
     persone = list(Persona.objects.filter(pk__in=dati.persone))
+    if not persone:
+        raise HttpError(400, "Scegli almeno un ragazzo o una ragazza.")
+    return persone
+
+
+@router.post("/unita/{unita_id}/alta-squadriglia/anticamera", response=AltaSquadrigliaOut)
+def metti_in_anticamera(request, unita_id: int, dati: PersoneAltaIn):
+    reparto = _reparto_alta(request, unita_id, scrivere=True)
     try:
-        servizi.imposta_alta_squadriglia(reparto, dati.anno, persone)
+        servizi.metti_in_anticamera(reparto, _persone_alta(dati))
     except ValidationError as errore:
         raise _errore(errore) from errore
-    return alta_squadriglia(request, unita_id, dati.anno)
+    return alta_squadriglia(request, unita_id)
+
+
+@router.post("/unita/{unita_id}/alta-squadriglia/ingresso", response=AltaSquadrigliaOut)
+def fai_entrare(request, unita_id: int, dati: PersoneAltaIn):
+    """In from a day, from the antechamber or directly (DEC-439)."""
+    reparto = _reparto_alta(request, unita_id, scrivere=True)
+    try:
+        servizi.fai_entrare(reparto, _persone_alta(dati), dati.data or date.today())
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return alta_squadriglia(request, unita_id)
+
+
+def _membro_alta(request, unita_id: int, membro_id: int):
+    from .models import MembroAltaSquadriglia
+
+    reparto = _reparto_alta(request, unita_id, scrivere=True)
+    return get_object_or_404(
+        MembroAltaSquadriglia.objects.dell_alta(reparto), pk=membro_id, data_fine__isnull=True
+    )
+
+
+@router.post(
+    "/unita/{unita_id}/alta-squadriglia/{membro_id}/anticamera", response=AltaSquadrigliaOut
+)
+def rimetti_in_anticamera(request, unita_id: int, membro_id: int):
+    servizi.rimetti_in_anticamera(_membro_alta(request, unita_id, membro_id))
+    return alta_squadriglia(request, unita_id)
+
+
+@router.delete("/unita/{unita_id}/alta-squadriglia/{membro_id}", response=AltaSquadrigliaOut)
+def togli_dall_alta(request, unita_id: int, membro_id: int):
+    servizi.togli_dall_alta(_membro_alta(request, unita_id, membro_id))
+    return alta_squadriglia(request, unita_id)
 
 
 # --- The event's fee, also in instalments (DEC-77) -----------------------------------------

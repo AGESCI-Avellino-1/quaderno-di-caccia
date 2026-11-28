@@ -437,20 +437,18 @@ def test_consiglio_capi_e_alta_squadriglia(ragazza, csq, reparto, squadriglia, v
     _con_condizioni(voci["gruppo"], [[{"tipo": "alta_squadriglia"}]])
     assert _titoli(csq) == {"Alta Squadriglia"}
     assert _titoli(ragazza) == set()
-    # Treated as the CSQ (DEC-419) and in this year's Alta Squadriglia.
+    # Treated as the CSQ (DEC-419) and in the Alta Squadriglia.
     EquiparazioneCsq.objects.create(
         appartenenza=AppartenenzaSquadriglia.objects.get(persona=ragazza),
         data_inizio=INIZIO_ANNO,
         data_fine=AnnoAssociativo.corrente().fine.replace(day=30),
     )
-    MembroAltaSquadriglia.objects.create(
-        reparto=reparto, persona=ragazza, anno=AnnoAssociativo.corrente().anno_fine
-    )
+    MembroAltaSquadriglia.objects.create(reparto=reparto, persona=ragazza, data_inizio=INIZIO_ANNO)
     assert _titoli(ragazza) == {"Alta Squadriglia", "Fuoco di gruppo"}
-    # Last year's Alta Squadriglia does not count.
-    MembroAltaSquadriglia.objects.filter(persona=ragazza).update(
-        anno=AnnoAssociativo.corrente().anno_fine - 1
-    )
+    # Who is out, or only in the antechamber, does not count (DEC-439).
+    MembroAltaSquadriglia.objects.filter(persona=ragazza).update(data_fine=date.today())
+    assert _titoli(ragazza) == {"Alta Squadriglia"}
+    MembroAltaSquadriglia.objects.create(reparto=reparto, persona=ragazza)
     assert _titoli(ragazza) == {"Alta Squadriglia"}
 
 
@@ -799,6 +797,7 @@ def test_testi_per_il_dispositivo(capo, ragazza, csq, genitore, voci, settings, 
         "ambito",
         "unita",
         "cerimonia_del_totem",
+        "cerimonia_ingresso_alta",
         "testo",
     }
     letti = _client(ragazza).get(f"{URL}/testi").json()

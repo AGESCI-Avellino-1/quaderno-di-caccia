@@ -201,8 +201,30 @@ capogruppo nella sua scheda («Eccezioni sulla squadriglia»): tu la vedi, ma no
 registrare. Ogni lettura delle eccezioni resta nel registro degli accessi.
 :::
 
-In reparto c'è anche **Alta Squadriglia**: spunta i ragazzi/e che ne fanno parte e tocca
-**Salva**; gli eventi di Alta Squadriglia invitano loro.
+### Alta Squadriglia
+
+In reparto c'è anche il riquadro **Alta Squadriglia**. Due reparti collegati ne hanno una sola,
+la stessa nelle pagine dei due reparti.
+
+- **Dentro**: chi ne fa parte, con il giorno in cui è entrato. Resta dentro anche gli anni dopo,
+  finché è in reparto.
+- **Anticamera**: chi sta per entrare. Non legge le cerimonie dell'Alta Squadriglia finché non
+  entra; agli eventi e alle riunioni è invitato solo se lo scegli.
+- **Negli anni passati**: chi c'era ed è uscito, dal giorno in cui è entrato a quello in cui è
+  uscito.
+
+Lo staff del reparto (anche collegato) e i capigruppo:
+
+1. Toccano **Aggiungi**, spuntano i ragazzi/e e poi **Metti in anticamera**, oppure scelgono il
+   giorno in **Entra il giorno** e toccano **Fai entrare**. Si può far entrare direttamente,
+   senza anticamera, anche con un giorno degli anni passati: per chi c'era già prima dell'app.
+2. In **Anticamera**, **Entra oggi** fa entrare da oggi; **Togli** lo toglie dall'anticamera.
+3. In **Dentro**, **In anticamera** lo rimette in anticamera; **Togli** lo fa uscire da oggi: resta
+   negli anni passati.
+
+Chi lascia il reparto esce da solo dall'Alta Squadriglia. Se nel libro delle
+[cerimonie e tradizioni](../cerimonie) c'è la cerimonia d'ingresso, chi viene segnato tra chi
+l'ha vissuta entra quel giorno, e chi entra da qui compare da solo tra chi l'ha vissuta.
 
 ## Età per la lista d'attesa
 

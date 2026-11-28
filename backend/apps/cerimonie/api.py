@@ -31,6 +31,7 @@ from .models import (
     TipoVoce,
     VoceLibro,
 )
+from .servizi import entrati_nell_alta, reparti_dell_alta, reparti_della_voce
 from .stampa import pdf_voce
 
 router = Router(tags=["cerimonie"])
@@ -87,6 +88,8 @@ class VoceBreve(Schema):
     # Whose it is, in words: «Tutto il gruppo», the units, the patrols… (DEC-438).
     unita: str
     cerimonia_del_totem: bool
+    # The entry ceremony of its Alta Squadriglia (DEC-439).
+    cerimonia_ingresso_alta: bool = False
 
 
 class Scelta(Schema):
@@ -116,6 +119,9 @@ class Partecipante(Schema):
     # None: in the register by themselves, «nella tribù» (DEC-438).
     data: date | None
     tribu: bool = False
+    # In the register by themselves: the tribe, who entered the Alta Squadriglia (DEC-439).
+    # Not taken off here.
+    automatica: bool = False
 
 
 class AllegatoOut(Schema):
@@ -156,6 +162,8 @@ class VoceIn(Schema):
     condizioni: list = []
     # «La mia tribù» links to it: one entry of the whole group, set by the capigruppo.
     cerimonia_del_totem: bool = False
+    # The entry ceremony of the Alta Squadriglia, one per Alta Squadriglia (DEC-439).
+    cerimonia_ingresso_alta: bool = False
 
 
 def _elenco(nomi: list[str]) -> str:
@@ -186,19 +194,29 @@ def _breve(voce: VoceLibro) -> dict:
         "ambito": voce.ambito,
         "unita": nome_ambito(voce),
         "cerimonia_del_totem": voce.cerimonia_del_totem,
+        "cerimonia_ingresso_alta": voce.cerimonia_ingresso_alta,
     }
 
 
 def _registro(voce: VoceLibro) -> list[dict]:
-    """Who is marked, with their day; for the totem ceremony, after them, the tribe not marked
-    (DEC-438), with no day."""
+    """Who is marked, with their day; after them who is there by themselves: for the totem
+    ceremony the tribe not marked (DEC-438), with no day; for the entry ceremony of the Alta
+    Squadriglia who entered, with the day of entry (DEC-439)."""
     partecipazioni = list(voce.partecipazioni.select_related("persona"))
-    righe = [(p.persona, p.data) for p in partecipazioni]
+    righe = [(p.persona, p.data, False) for p in partecipazioni]
+    segnati = {p.persona_id for p in partecipazioni}
     if voce.cerimonia_del_totem:
-        segnati = {p.persona_id for p in partecipazioni}
         tribu = policy.tribu_della_cerimonia().exclude(pk__in=segnati).order_by("cognome", "nome")
-        righe += [(persona, None) for persona in tribu]
-    unita = unita_delle_persone([persona for persona, _ in righe])
+        righe += [(persona, None, True) for persona in tribu]
+    entrati = {k: v for k, v in entrati_nell_alta(voce).items() if k not in segnati}
+    if entrati:
+        persone = Persona.objects.in_bulk(list(entrati))
+        righe += sorted(
+            ((persone[i], giorno, True) for i, giorno in entrati.items()),
+            key=lambda r: r[1],
+            reverse=True,
+        )
+    unita = unita_delle_persone([persona for persona, _, _ in righe])
     return [
         {
             "id": persona.pk,
@@ -207,8 +225,9 @@ def _registro(voce: VoceLibro) -> list[dict]:
             "unita": unita.get(persona.pk, ""),
             "data": giorno,
             "tribu": giorno is None,
+            "automatica": automatica,
         }
-        for persona, giorno in righe
+        for persona, giorno, automatica in righe
     ]
 
 
@@ -290,6 +309,9 @@ class AnteprimaIn(Schema):
     aggiunti: list[int] = []
     # The entry being changed: who is in its register reads it too.
     voce_id: int | None = None
+    # Whose it is: an Alta Squadriglia's is not read by its antechamber (DEC-439).
+    ambito: str = AmbitoVoce.GRUPPO
+    unita_ids: list[int] = []
 
 
 @router.post("/cerimonie/anteprima", response=list[Aggiungibile])
@@ -300,7 +322,10 @@ def anteprima(request, dati: AnteprimaIn):
         raise HttpError(403, "Le voci le scrivono lo staff delle unità e i capigruppo.")
     gruppi = _condizioni(dati.condizioni)
     voce = _leggibile(request, dati.voce_id) if dati.voce_id is not None else None
-    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti, voce))
+    reparti = (
+        reparti_dell_alta(dati.unita_ids) if dati.ambito == AmbitoVoce.ALTA_SQUADRIGLIA else set()
+    )
+    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti, voce, reparti))
 
 
 def _condizioni(gruppi: list) -> list[list[dict]]:
@@ -341,7 +366,24 @@ def segna(request, voce_id: int, dati: SegnaIn):
                 persona_id=persona_id,
                 defaults={"data": dati.data, "registrata_da": request.auth},
             )
+        if voce.cerimonia_ingresso_alta:
+            _entrano(voce, dati.persone, dati.data)
     return _voce_out(request, voce)
+
+
+def _entrano(voce: VoceLibro, persone: list[int], giorno: date) -> None:
+    """Marked in the entry ceremony: the ragazzi/e of its reparti enter the Alta Squadriglia
+    that day (DEC-439); the others (a capo, who has since moved on) stay only in the register."""
+    from apps.eventi import servizi as eventi
+
+    reparto = voce.unita.first()
+    if reparto is None:
+        return
+    possibili = eventi.ragazzi_per_alta(reparto).filter(pk__in=persone)
+    try:
+        eventi.fai_entrare(reparto, list(possibili), giorno)
+    except ValidationError as errore:
+        raise HttpError(400, " ".join(errore.messages)) from errore
 
 
 @router.delete("/cerimonie/{voce_id}/partecipanti/{persona_id}", response=VoceOut)
@@ -446,6 +488,9 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
     elif voce.cerimonia_del_totem and not di_tutti:
         raise HttpError(400, "La cerimonia del totem è una voce di tutto il gruppo.")
     voce.cerimonia_del_totem = dati.cerimonia_del_totem
+    if dati.cerimonia_ingresso_alta and dati.ambito != AmbitoVoce.ALTA_SQUADRIGLIA:
+        raise HttpError(400, "La cerimonia d'ingresso è una voce dell'Alta Squadriglia.")
+    voce.cerimonia_ingresso_alta = dati.cerimonia_ingresso_alta
     with transaction.atomic():
         if voce.cerimonia_del_totem:
             # Only one: the one chosen now takes the place of the one before.
@@ -456,6 +501,12 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
         voce.aggiunti.set(aggiunti)
         voce.unita.set(unita)
         voce.squadriglie.set(squadriglie)
+        if voce.cerimonia_ingresso_alta:
+            # One per Alta Squadriglia: the one chosen now takes the place of the one before.
+            for altra in VoceLibro.objects.filter(cerimonia_ingresso_alta=True).exclude(pk=voce.pk):
+                if reparti_della_voce(altra) & reparti_della_voce(voce):
+                    altra.cerimonia_ingresso_alta = False
+                    altra.save(update_fields=["cerimonia_ingresso_alta", "aggiornato_il"])
         # Who would no longer write it keeps one of their own units (the error undoes it all).
         if not policy.puo_scrivere_voce(request.auth, voce):
             raise HttpError(403, "Tieni almeno una delle unità in cui sei in servizio.")

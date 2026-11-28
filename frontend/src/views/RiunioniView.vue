@@ -154,6 +154,8 @@ const vuoto = () => ({
     nuova: null as NuovaLocalita | null,
   },
   uniforme: true,
+  // An Alta Squadriglia's: its antechamber too (DEC-439).
+  anticamera: false,
   online: { modalita: 'PRESENZA' as ModalitaRiunione, link: '' },
   ordine_del_giorno: '',
 })
@@ -286,6 +288,7 @@ async function salva() {
       localita_id: m.localita.nuova ? null : m.localita.id,
       nuova_localita: m.localita.nuova,
       uniforme: !genitori && !staff && m.uniforme,
+      anticamera: m.cerchia === 'ALTA_SQ' && m.anticamera,
       modalita: online.modalita,
       link: online.link,
       ordine_del_giorno: conOrdineDelGiorno.value ? m.ordine_del_giorno : '',
@@ -311,6 +314,20 @@ async function cambiaUniforme(s: SerieRiunioni, uniforme: boolean) {
   const fatta = await esegui(() =>
     api.modificaSerie(s.id, {
       uniforme,
+      localita_id: s.localita?.id ?? null,
+      nuova_localita: null,
+    }),
+  )
+  if (!fatta) return
+  await Promise.all([carica(), caricaSerie()])
+}
+
+// The antechamber of an Alta Squadriglia, on the meetings to come that still had it (DEC-439).
+async function cambiaAnticamera(s: SerieRiunioni, anticamera: boolean) {
+  const fatta = await esegui(() =>
+    api.modificaSerie(s.id, {
+      uniforme: s.uniforme,
+      anticamera,
       localita_id: s.localita?.id ?? null,
       nuova_localita: null,
     }),
@@ -631,6 +648,12 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
             </div>
           </div>
         </fieldset>
+        <div v-if="modulo.cerchia === 'ALTA_SQ'" class="col-12">
+          <div class="form-field mb-0">
+            <input id="riu-anticamera" v-model="modulo.anticamera" type="checkbox" class="check" />
+            <label for="riu-anticamera">Invita anche chi è nell'anticamera</label>
+          </div>
+        </div>
         <div v-if="conOrdineDelGiorno" class="col-12">
           <EditorTesto
             v-model="modulo.ordine_del_giorno"
@@ -747,6 +770,19 @@ const data = (iso: string) => new Date(iso).toLocaleDateString('it-IT')
                 />
               </div>
               <label :for="`serie-uniforme-${s.id}`" class="small">Con l'uniforme</label>
+            </div>
+            <div v-if="s.cerchia === 'ALTA_SQ'" class="form-field mb-0">
+              <div class="switch">
+                <input
+                  :id="`serie-anticamera-${s.id}`"
+                  type="checkbox"
+                  role="switch"
+                  :checked="s.anticamera"
+                  :disabled="inCorso"
+                  @change="cambiaAnticamera(s, ($event.target as HTMLInputElement).checked)"
+                />
+              </div>
+              <label :for="`serie-anticamera-${s.id}`" class="small">Anche l'anticamera</label>
             </div>
             <button
               v-if="s.puo_essere_online && serieOnline !== s.id"

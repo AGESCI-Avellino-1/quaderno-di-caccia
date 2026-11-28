@@ -148,9 +148,14 @@ def _previsti_base(evento: Evento) -> QuerySet[Persona]:
             .values("persona_id")
         )
     elif evento.cerchia == Cerchia.ALTA_SQUADRIGLIA:
-        ids = MembroAltaSquadriglia.objects.filter(
-            reparto__in=unita_coinvolte(evento), anno=AnnoAssociativo.da_data(giorno).anno_fine
-        ).values("persona_id")
+        # Who is in on that day; the antechamber only if the staff invited it (DEC-439).
+        unita = unita_coinvolte(evento)
+        reparti = [*unita.values_list("pk", flat=True), *_collegate(unita)]
+        membri = MembroAltaSquadriglia.objects.filter(reparto_id__in=reparti)
+        scelti = Q(pk__in=membri.entrati(giorno).values("pk"))
+        if evento.anticamera:
+            scelti |= Q(pk__in=membri.in_anticamera().values("pk"))
+        ids = membri.filter(scelti).values("persona_id")
     else:
         ids = (
             Appartenenza.objects.attive(giorno)
@@ -532,6 +537,7 @@ def genera_riunioni(riunione: RiunioneRicorrente, utente, persone=()) -> list[Ev
                 luogo=riunione.localita.nome_visibile if riunione.localita_id else riunione.luogo,
                 localita=riunione.localita,
                 riunione=riunione,
+                anticamera=riunione.anticamera,
                 modalita=riunione.modalita,
                 link=riunione.link,
             )
@@ -547,6 +553,7 @@ def cambia_serie(
     localita,
     modalita: str = Modalita.PRESENZA,
     link: str = "",
+    anticamera: bool | None = None,
 ) -> None:
     """The uniform follows by itself on the meetings that did not choose their own; the
     place, and how and where online (DEC-402), change on the future meetings that still had
@@ -569,6 +576,17 @@ def cambia_serie(
         future.filter(modalita=prima_online[0], link=prima_online[1]).update(
             modalita=serie.modalita, link=serie.link
         )
+    # The antechamber (DEC-439): on the meetings to come that still had the series' choice.
+    alta = serie.cerchia == Cerchia.ALTA_SQUADRIGLIA
+    if alta and anticamera is not None and anticamera != serie.anticamera:
+        prima_anticamera = serie.anticamera
+        serie.anticamera = anticamera
+        serie.save(update_fields=["anticamera", "aggiornato_il"])
+        future.filter(anticamera=prima_anticamera).update(anticamera=anticamera)
+        from .allineamento import programma
+
+        # Who is no longer invited goes, as when leaving the unit (DEC-414).
+        programma(*[u.pk for u in unita_della_serie(serie)])
 
 
 # --- Participants ------------------------------------------------------------------------------
@@ -692,22 +710,93 @@ def revoca(squadriglia) -> None:
     )
 
 
-@transaction.atomic
-def imposta_alta_squadriglia(reparto: Unita, anno: int, persone: list[Persona]) -> None:
-    """The members of the reparto in the Alta Squadriglia of a year (replaces the list)."""
-    periodo = AnnoAssociativo(anno)
-    del_reparto = set(
-        Appartenenza.objects.filter(unita=reparto, data_inizio__lte=periodo.fine)
-        .filter(Q(data_fine__isnull=True) | Q(data_fine__gt=periodo.inizio))
-        .values_list("persona_id", flat=True)
+# --- The Alta Squadriglia and its antechamber (DEC-439) ------------------------------------
+
+
+def ragazzi_per_alta(reparto: Unita) -> QuerySet[Persona]:
+    """Who may be in this Alta Squadriglia: the ragazzi/e of the reparto and of the one linked
+    to it, today."""
+    reparti = [reparto.pk] + ([reparto.collegata_a_id] if reparto.collegata_a_id else [])
+    attive = Appartenenza.objects.attive().filter(
+        unita_id__in=reparti, ruolo=RuoloAppartenenza.RAGAZZO
     )
-    if any(p.pk not in del_reparto for p in persone):
+    return Persona.objects.filter(pk__in=attive.values("persona_id"))
+
+
+def _reparto_della_persona(reparto: Unita, persona: Persona) -> Unita:
+    """The reparto of the pair the person belongs to: the period is recorded there."""
+    if reparto.collegata_a_id and (
+        Appartenenza.objects.attive()
+        .filter(persona=persona, unita_id=reparto.collegata_a_id, ruolo=RuoloAppartenenza.RAGAZZO)
+        .exists()
+    ):
+        return reparto.collegata_a
+    return reparto
+
+
+def _aperto(persona: Persona) -> MembroAltaSquadriglia | None:
+    return MembroAltaSquadriglia.objects.filter(persona=persona, data_fine__isnull=True).first()
+
+
+def _controlla(reparto: Unita, persone: list[Persona]) -> None:
+    possibili = set(ragazzi_per_alta(reparto).values_list("pk", flat=True))
+    if any(p.pk not in possibili for p in persone):
         raise ValidationError("L'Alta Squadriglia si sceglie tra i ragazzi/e del reparto.")
-    MembroAltaSquadriglia.objects.filter(reparto=reparto, anno=anno).exclude(
-        persona__in=persone
-    ).delete()
+    stessa = {reparto.pk, reparto.collegata_a_id}
     for persona in persone:
-        MembroAltaSquadriglia.objects.get_or_create(reparto=reparto, persona=persona, anno=anno)
+        aperto = _aperto(persona)
+        if aperto is not None and aperto.reparto_id not in stessa:
+            raise ValidationError(f"{persona} è nell'Alta Squadriglia di un altro reparto.")
+
+
+@transaction.atomic
+def metti_in_anticamera(reparto: Unita, persone: list[Persona]) -> None:
+    """About to enter (DEC-439); who is already in, or in the antechamber, stays as is."""
+    _controlla(reparto, persone)
+    for persona in persone:
+        if _aperto(persona) is None:
+            MembroAltaSquadriglia.objects.create(
+                reparto=_reparto_della_persona(reparto, persona),
+                persona=persona,
+                in_anticamera_dal=date.today(),
+            )
+
+
+@transaction.atomic
+def fai_entrare(reparto: Unita, persone: list[Persona], giorno: date) -> None:
+    """In from that day, from the antechamber or directly, also a day of past years (DEC-439);
+    who is already in gets the new day."""
+    if giorno > date.today():
+        raise ValidationError("Il giorno non può essere nel futuro.")
+    _controlla(reparto, persone)
+    for persona in persone:
+        aperto = _aperto(persona)
+        if aperto is None:
+            aperto = MembroAltaSquadriglia(
+                reparto=_reparto_della_persona(reparto, persona), persona=persona
+            )
+        aperto.data_inizio = giorno
+        aperto.save()
+
+
+@transaction.atomic
+def rimetti_in_anticamera(membro: MembroAltaSquadriglia) -> None:
+    """Back to the antechamber: the day of entry goes (DEC-439)."""
+    membro.data_inizio = None
+    membro.in_anticamera_dal = date.today()
+    membro.save()
+
+
+@transaction.atomic
+def togli_dall_alta(membro: MembroAltaSquadriglia, giorno: date | None = None) -> None:
+    """Out of the antechamber, or out of the Alta Squadriglia from that day: the period stays,
+    closed, for the history (DEC-439); one that began that day never took effect."""
+    giorno = giorno or date.today()
+    if membro.data_inizio is None or membro.data_inizio >= giorno:
+        membro.delete()
+    else:
+        membro.data_fine = giorno
+        membro.save()
 
 
 # --- Budget and accounts of an event (DEC-90, DEC-91) -----------------------------------------

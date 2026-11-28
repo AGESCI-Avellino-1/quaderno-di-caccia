@@ -9,7 +9,8 @@ riunioni hanno una pagina loro: vedi [Riunioni](riunioni).
 2. Scrivi il **Titolo** e scegli il **Tipo** (uscita, campo, autofinanziamento…).
 3. In **Per chi** scegli:
    - **Una o più unità**: spunta le unità e, in **Chi è invitato**, tutti i soci oppure, per i
-     reparti, Consiglio Capi, Con.Ca.Vi. o Alta Squadriglia;
+     reparti, Consiglio Capi, Con.Ca.Vi. o Alta Squadriglia (con **Invita anche chi è
+     nell'anticamera** se vuoi anche chi sta per entrare);
    - **Una branca**, per un evento di tutta la branca;
    - **Una squadriglia**, per un evento di squadriglia (anche la **Missione di squadriglia**,
      con le **Note per i genitori**, che non leggono i ragazzi/e).

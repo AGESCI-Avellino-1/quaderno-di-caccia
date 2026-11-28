@@ -97,7 +97,8 @@ Squadriglia la legge da quel giorno, chi lascia il gruppo smette di leggerla.
   Consiglio degli Anziani.
 - **È nel Consiglio capi**: i capi squadriglia e chi lo staff ha equiparato a loro, di
   qualsiasi reparto o di un reparto (con il reparto collegato).
-- **È nell'Alta Squadriglia**, di qualsiasi reparto o di un reparto.
+- **È nell'Alta Squadriglia**, di qualsiasi reparto o di un reparto: chi ne fa parte, non chi
+  è nell'anticamera.
 - **Passa da una branca all'altra**: da quando lo staff lo mette nel passaggio, e per sempre,
   anche dopo il passaggio (non se il passaggio viene annullato).
 - **Ha fatto la Promessa**, **Ha raggiunto una tappa** (quella tappa o una successiva, nella
@@ -129,6 +130,16 @@ Chi scrive la voce segna i partecipanti:
    già segnato prende il giorno nuovo.
 
 **Togli** toglie una persona dal registro. Chi lascia il gruppo resta nel registro.
+
+### La cerimonia d'ingresso in Alta Squadriglia
+
+In una voce dell'**Alta Squadriglia** lo staff può spuntare **È la cerimonia d'ingresso**: una
+per ogni Alta Squadriglia. Chi viene segnato tra chi l'ha vissuta, se è un ragazzo o una
+ragazza del reparto, entra nell'Alta Squadriglia quel giorno; chi lo staff fa entrare dalla
+pagina dell'unità compare da solo tra chi l'ha vissuta, con il giorno in cui è entrato.
+
+Chi è nell'anticamera dell'Alta Squadriglia non legge nessuna voce dell'Alta Squadriglia, nemmeno
+se scelto a mano, finché non entra.
 
 Il registro serve anche alle condizioni: con **Ha vissuto una voce del libro** una voce la
 leggono, per esempio, solo quelli che hanno già vissuto un'altra cerimonia.

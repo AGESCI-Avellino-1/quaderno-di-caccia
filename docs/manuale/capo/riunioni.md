@@ -63,6 +63,9 @@ spegni **Compleanni del giorno** in **Privacy e preferenze**: si spengono anche 
 3. Per un'unità scegli l'**Unità** e **Chi è invitato**: tutta l'unità oppure, per un reparto,
    l'Alta Squadriglia, il Consiglio Capi o il Con.Ca.Vi., per un branco o un cerchio il
    Consiglio degli Anziani. Se l'unità è collegata a un'altra, puoi spuntare **Insieme a…**.
+   Per l'Alta Squadriglia spunta **Invita anche chi è nell'anticamera** se vuoi anche chi sta
+   per entrare; lo puoi cambiare per le riunioni che verranno (**Anche l'anticamera**) o per
+   una sola riunione.
 4. In **Quando** scegli **Ogni settimana** (il giorno, **Dal** e **Al**: per esempio ogni sabato
    dal 1° ottobre al 31 maggio) oppure **Una volta** (il **Giorno**), poi **Dalle** e **Alle**. Se
    cambi l'inizio, la fine si sposta e la riunione dura lo stesso tempo; puoi sempre cambiarla.

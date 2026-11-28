@@ -5,6 +5,39 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.52.0 — 28 novembre 2026
+
+### Novità
+
+**Libro delle cerimonie: di chi è una voce** ([#111](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/111)): una voce può essere di tutto il gruppo, della Comunità capi, di una o più unità (anche il noviziato), dell'Alta Squadriglia o del Consiglio capi di un reparto, di una o più squadriglie, del Consiglio degli Anziani.
+
+- **Chi scrive:** gruppo e Comunità capi i capigruppo; le voci di più unità lo staff di una qualsiasi di esse (aggiunge solo le proprie); Alta Squadriglia, Consiglio capi e squadriglie lo staff del reparto; Consiglio degli Anziani lo staff del branco o del cerchio. I capigruppo sempre.
+- **Chi legge:** scegliendo di chi è la voce, l'app compila le condizioni che corrispondono; si possono cambiare. Nuova condizione **È in una squadriglia**; **Consiglio capi** e **Alta Squadriglia** si possono chiedere di un reparto (con quello collegato).
+
+**La tribù ha vissuto la cerimonia del totem:** chi ha un nome di totem, o ha acceso **Modifica totem**, compare da solo nel registro della cerimonia del totem («nella tribù» al posto del giorno) e la legge. Chi è segnato lì senza un nome di totem se lo scrive da sé, una volta.
+
+**Alta Squadriglia con l'anticamera:**
+
+- Nella pagina del reparto lo staff mette in **anticamera** chi sta per entrare e lo fa **entrare** con il suo giorno, anche direttamente e con un giorno degli anni passati, per chi c'era già prima dell'app. Chi è entrato resta anche gli anni dopo, finché è in reparto; chi esce o viene tolto resta nella storia, **Negli anni passati**.
+- Due reparti collegati hanno una sola Alta Squadriglia.
+- Chi è in anticamera non legge le voci dell'Alta Squadriglia finché non entra; alle riunioni e agli eventi dell'Alta Squadriglia è invitato solo se lo staff spunta **Invita anche chi è nell'anticamera**.
+- Una voce dell'Alta Squadriglia può essere la **cerimonia d'ingresso**: chi viene segnato tra chi l'ha vissuta entra quel giorno, e chi entra dalla pagina del reparto compare da solo tra chi l'ha vissuta.
+- Con l'aggiornamento gli elenchi per anno di prima diventano periodi: gli anni di fila di ognuno diventano un periodo, dal 1° ottobre del primo al 30 settembre dell'ultimo. Chi è nell'elenco di quest'anno resta dentro.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.52.0
+```
+
+Cinque migrazioni del database (di chi è una voce, la cerimonia d'ingresso, l'Alta Squadriglia a periodi), applicate dallo script.
+
+### Documentazione
+
+Le pagine del manuale sul libro delle cerimonie, sull'unità (il riquadro Alta Squadriglia), sulle riunioni e sugli eventi spiegano le novità; quella della tribù, nel solo manuale generico, la cerimonia del totem. Schermate rifatte per il libro e per la pagina del reparto.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.51.0 — 27 novembre 2026
 
 ### Novità

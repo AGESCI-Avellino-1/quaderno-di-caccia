@@ -826,3 +826,15 @@ def crea_attivita(email) -> None:
             "data": anno.inizio.replace(year=anno.inizio.year - 15, month=5, day=20).isoformat(),
         },
     )
+    # The reparto's Alta Squadriglia (DEC-439): Matteo in since last year, by hand; Alice in
+    # the antechamber, about to enter.
+    alta = f"/unita/{reparto.pk}/alta-squadriglia"
+    capo_reparto(
+        "post",
+        f"{alta}/ingresso",
+        {
+            "persone": [persona["Matteo Greco"].pk],
+            "data": anno.inizio.replace(year=anno.inizio.year - 1, month=4, day=12).isoformat(),
+        },
+    )
+    capo_reparto("post", f"{alta}/anticamera", {"persone": [persona["Alice Marino"].pk]})

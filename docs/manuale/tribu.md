@@ -55,7 +55,8 @@ ogni nome. Accanto alla voce un numero dice quante immagini aspettano un capo.
   nel registro delle modifiche.
 - **La cerimonia del totem:** se il gruppo l'ha scritta nel libro delle
   [cerimonie e tradizioni](cerimonie.md), in **La mia tribù** tocca
-  **Leggi la cerimonia del totem**. La leggono i capi e i ragazzi/e scelti per quella voce.
+  **Leggi la cerimonia del totem**. La leggono i capi, chi fa parte della tribù e i
+  ragazzi/e scelti per quella voce.
 
 ### Assegnare un nome di totem
 
@@ -96,8 +97,16 @@ dall'app) e tocca **Salva**.
 La cerimonia del totem si scrive nel libro delle [cerimonie e tradizioni](cerimonie.md): in
 una voce di tutto il gruppo spunta **È la cerimonia del totem**, così in **La mia tribù**
 compare **Leggi la cerimonia del totem**, che porta a quella voce. Se il gruppo l'aveva già
-scritta nelle impostazioni, con l'aggiornamento è diventata una voce del libro, letta come
-prima solo dai capi, e il libro si è acceso da solo.
+scritta nelle impostazioni, con l'aggiornamento è diventata una voce del libro e il libro si è
+acceso da solo.
+
+Chi fa parte della tribù l'ha vissuta: chi ha un nome di totem, o ha acceso **Modifica
+totem**, compare da solo nel suo registro con la scritta «nella tribù» al posto del giorno, e
+la legge. Se perde il nome di totem (e l'interruttore è spento) ne esce da solo. Se un
+capogruppo lo segna nel registro con un giorno, compare con quel giorno.
+
+Chi è segnato nel registro della cerimonia del totem ma non ha ancora un nome di totem se lo
+scrive da sé, nel suo profilo, una volta: dopo, per cambiarlo, serve **Modifica totem**.
 
 :::{container} schermate
 ![La mia tribù nelle impostazioni sul telefono](img/tribu/impostazioni-telefono.png){.telefono width="30%"}

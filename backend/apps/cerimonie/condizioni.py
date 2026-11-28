@@ -20,7 +20,8 @@ The kinds, all about today's active members:
 - `promessa`: made the Promessa, in any branch;
 - `tappa`: reached that phase (tappa, momento or passo) in that branch, or a later one;
 - `partenza`: took the Partenza;
-- `partecipazione`: is in the register of that entry of the book (block 3).
+- `partecipazione`: is in the register of that entry of the book (block 3); for the totem
+  ceremony, the tribe too (DEC-438).
 Capo sestiglia and pattuglie R/S are not recorded by the app: they are left out (maintainer,
 27/11); for those an entry adds people by hand.
 """
@@ -196,12 +197,19 @@ def segni_di(persone_ids: Iterable[int]) -> dict[int, set[str]]:
 
 
 def _di_registro(ids, segni) -> None:
-    from .models import PartecipazioneVoce
+    from apps.permessi.policy import tribu_della_cerimonia
+
+    from .models import PartecipazioneVoce, VoceLibro
 
     for persona, voce in PartecipazioneVoce.objects.filter(persona_id__in=ids).values_list(
         "persona_id", "voce_id"
     ):
         segni[persona].add(f"partecipazione:{voce}")
+    # The tribe lived the totem ceremony, marked or not (DEC-438).
+    totem = VoceLibro.objects.filter(cerimonia_del_totem=True).values_list("pk", flat=True).first()
+    if totem is not None:
+        for persona in tribu_della_cerimonia().filter(pk__in=ids).values_list("pk", flat=True):
+            segni[persona].add(f"partecipazione:{totem}")
 
 
 def _di_unita(ids, segni) -> None:

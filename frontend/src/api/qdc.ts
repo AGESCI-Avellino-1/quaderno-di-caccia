@@ -514,7 +514,9 @@ export interface CondizioneVoce {
 
 /** Someone in the register of an entry: who lived it, and when (DEC-437). */
 export interface PartecipanteVoce extends PersonaScelta {
-  data: string
+  /** Null for who is there by themselves, «nella tribù» (DEC-438). */
+  data: string | null
+  tribu?: boolean
 }
 
 export interface VoceLibro extends VoceLibroBreve {

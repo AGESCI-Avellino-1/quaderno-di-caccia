@@ -302,6 +302,23 @@ describe('libro delle cerimonie', () => {
       expect(pagina.text()).not.toContain('Togli')
     })
 
+    it('la tribù è nel registro della cerimonia del totem, senza giorno né «Togli»', () => {
+      const pagina = mount(RegistroVoce, {
+        props: {
+          voce: {
+            ...VOCE,
+            puo_modificare: true,
+            vede_registro: true,
+            partecipanti: [
+              { id: 4, nome: 'Luca', cognome: 'Bianchi', unita: '', data: null, tribu: true },
+            ],
+          },
+        },
+      })
+      expect(pagina.text()).toContain('nella tribù')
+      expect(pagina.find('[aria-label^="Togli"]').exists()).toBe(false)
+    })
+
     it('chi scrive la voce segna e toglie', async () => {
       const voce = { ...VOCE, puo_modificare: true, vede_registro: true, partecipanti: [] }
       vi.spyOn(api, 'segnabiliRegistro').mockResolvedValue([

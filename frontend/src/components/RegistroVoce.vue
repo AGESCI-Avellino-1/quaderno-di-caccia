@@ -8,7 +8,8 @@ import { useErrore } from '@/composables/useErrore'
 
 // The register of an entry of the book (DEC-437): who lived it and when. Every capo and the
 // participants read it; who writes the entry marks active ragazzi/e and capi, also for past
-// years, and takes someone off.
+// years, and takes someone off. In the totem ceremony the tribe is there by itself, «nella
+// tribù», and leaves with its totem name (DEC-438): nothing to take off.
 const props = defineProps<{ voce: VoceLibro }>()
 const emit = defineEmits<{ aggiornata: [VoceLibro] }>()
 const { errore, inCorso, esegui } = useErrore()
@@ -56,9 +57,9 @@ async function togli(persona: number) {
         <span class="flex-grow-1">
           {{ p.cognome }} {{ p.nome }} <span class="small fg-2">{{ p.unita }}</span>
         </span>
-        <span class="small">{{ data(p.data) }}</span>
+        <span class="small">{{ p.data ? data(p.data) : 'nella tribù' }}</span>
         <button
-          v-if="voce.puo_modificare"
+          v-if="voce.puo_modificare && p.data"
           type="button"
           class="btn btn-sm btn-link"
           :aria-label="`Togli ${p.cognome} ${p.nome} dal registro`"

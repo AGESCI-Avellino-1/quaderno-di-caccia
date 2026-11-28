@@ -297,10 +297,12 @@ def test_la_mia_tribu_rimanda_alla_cerimonia(capo, ragazza):
     assert _client(capo).get("/api/v1/tribu").json()["cerimonia"] is None
     _accendi()
     assert _client(capo).get("/api/v1/tribu").json()["cerimonia"] == voce.pk
-    # As before, never a ragazzo/a with a totem, unless added to the entry.
-    assert _client(ragazza).get("/api/v1/tribu").json()["cerimonia"] is None
-    voce.aggiunti.add(ragazza)
+    # Who is in the tribe lived it, and reads it (DEC-438).
     assert _client(ragazza).get("/api/v1/tribu").json()["cerimonia"] == voce.pk
+    tribu.assegna(ragazza, "")
+    assert "Cerimonia del totem" not in _titoli(ragazza)
+    voce.aggiunti.add(ragazza)
+    assert "Cerimonia del totem" in _titoli(ragazza)
 
 
 def test_impostazioni_senza_cerimonia(capogruppo):

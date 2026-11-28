@@ -113,7 +113,9 @@ class Partecipante(Schema):
     nome: str
     cognome: str
     unita: str
-    data: date
+    # None: in the register by themselves, «nella tribù» (DEC-438).
+    data: date | None
+    tribu: bool = False
 
 
 class AllegatoOut(Schema):
@@ -188,17 +190,25 @@ def _breve(voce: VoceLibro) -> dict:
 
 
 def _registro(voce: VoceLibro) -> list[dict]:
+    """Who is marked, with their day; for the totem ceremony, after them, the tribe not marked
+    (DEC-438), with no day."""
     partecipazioni = list(voce.partecipazioni.select_related("persona"))
-    unita = unita_delle_persone([p.persona for p in partecipazioni])
+    righe = [(p.persona, p.data) for p in partecipazioni]
+    if voce.cerimonia_del_totem:
+        segnati = {p.persona_id for p in partecipazioni}
+        tribu = policy.tribu_della_cerimonia().exclude(pk__in=segnati).order_by("cognome", "nome")
+        righe += [(persona, None) for persona in tribu]
+    unita = unita_delle_persone([persona for persona, _ in righe])
     return [
         {
-            "id": p.persona_id,
-            "nome": p.persona.nome,
-            "cognome": p.persona.cognome,
-            "unita": unita.get(p.persona_id, ""),
-            "data": p.data,
+            "id": persona.pk,
+            "nome": persona.nome,
+            "cognome": persona.cognome,
+            "unita": unita.get(persona.pk, ""),
+            "data": giorno,
+            "tribu": giorno is None,
         }
-        for p in partecipazioni
+        for persona, giorno in righe
     ]
 
 

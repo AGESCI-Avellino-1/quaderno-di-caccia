@@ -2399,7 +2399,12 @@ def vede_tribu(user) -> bool:
     """The «La mia tribù» entry: all the capi, even without a totem, the members who have
     one and who may write their own (DEC-418), who sees nothing in it until they have."""
     propria = persona_di(user)
-    return e_capo(user) or _ha_totem(propria) or modifica_totem_attiva(propria)
+    return (
+        e_capo(user)
+        or _ha_totem(propria)
+        or modifica_totem_attiva(propria)
+        or totem_dalla_cerimonia(propria)
+    )
 
 
 def vede_totem_altrui(user) -> bool:
@@ -2433,7 +2438,7 @@ def vede_totem_persona(user, persona: Persona) -> bool:
     return (
         propria is not None
         and propria.pk == persona.pk
-        and (_ha_totem(persona) or modifica_totem_attiva(persona))
+        and (_ha_totem(persona) or modifica_totem_attiva(persona) or totem_dalla_cerimonia(persona))
     )
 
 
@@ -2450,9 +2455,43 @@ def puo_assegnare_totem(user, persona: Persona) -> bool:
 
 
 def puo_scrivere_proprio_totem(user, persona: Persona) -> bool:
-    """One's own totem name, once, while «Modifica totem» is on (DEC-418)."""
+    """One's own totem name, once, while «Modifica totem» is on (DEC-418), or while marked by
+    hand in the register of the totem ceremony without one (DEC-438)."""
     propria = persona_di(user)
-    return propria is not None and propria.pk == persona.pk and modifica_totem_attiva(persona)
+    return (
+        propria is not None
+        and propria.pk == persona.pk
+        and (modifica_totem_attiva(persona) or totem_dalla_cerimonia(persona))
+    )
+
+
+def totem_dalla_cerimonia(persona: Persona | None) -> bool:
+    """Marked by hand in the register of the totem ceremony, with no totem name yet: may write
+    their own, once (DEC-438). Only while the book is on."""
+    from apps.cerimonie.models import PartecipazioneVoce
+    from apps.impostazioni import funzioni
+    from apps.tribu.models import Totem
+
+    return (
+        persona is not None
+        and funzioni.attiva(funzioni.CERIMONIE)
+        and PartecipazioneVoce.objects.filter(
+            persona=persona, voce__cerimonia_del_totem=True
+        ).exists()
+        and not Totem.objects.filter(persona=persona).exists()
+        and puo_avere_totem(persona)
+    )
+
+
+def tribu_della_cerimonia() -> QuerySet[Persona]:
+    """Who lived the totem ceremony without being marked (DEC-438): who has a totem name or has
+    «Modifica totem» on, while in the tribe; out again by themselves when both go."""
+    from apps.tribu.models import ModificaTotem, Totem
+
+    return nella_tribu().filter(
+        Q(pk__in=Totem.objects.values("persona_id"))
+        | Q(pk__in=ModificaTotem.objects.values("persona_id"))
+    )
 
 
 def _capo_con_totem(persona: Persona | None) -> bool:
@@ -2536,9 +2575,15 @@ def voci_visibili(user):
         for v in VoceLibro.objects.exclude(condizioni=[]).only("pk", "condizioni")
         if vale(v.condizioni, segni)
     ]
+    # The tribe lived the totem ceremony (DEC-438).
+    tribu = Q(cerimonia_del_totem=True) if _vissuta_dalla_tribu(persona) else Q(pk__in=[])
     return VoceLibro.objects.filter(
-        Q(aggiunti=persona) | Q(partecipazioni__persona=persona) | Q(pk__in=per_condizioni)
+        Q(aggiunti=persona) | Q(partecipazioni__persona=persona) | Q(pk__in=per_condizioni) | tribu
     ).distinct()
+
+
+def _vissuta_dalla_tribu(persona: Persona) -> bool:
+    return tribu_della_cerimonia().filter(pk=persona.pk).exists()
 
 
 def vede_registro_voce(user, voce) -> bool:
@@ -2547,7 +2592,11 @@ def vede_registro_voce(user, voce) -> bool:
     if e_capo(user):
         return True
     persona = persona_di(user)
-    return persona is not None and voce.partecipazioni.filter(persona=persona).exists()
+    if persona is None:
+        return False
+    if voce.cerimonia_del_totem and _vissuta_dalla_tribu(persona):
+        return True
+    return voce.partecipazioni.filter(persona=persona).exists()
 
 
 def segnabili_nel_registro(user):
@@ -2571,6 +2620,8 @@ def lettori_delle_condizioni(condizioni, aggiunti_ids, voce=None):
     aggiunti = set(aggiunti_ids)
     if voce is not None:
         aggiunti |= set(voce.partecipazioni.values_list("persona_id", flat=True))
+        if voce.cerimonia_del_totem:
+            aggiunti |= set(tribu_della_cerimonia().values_list("pk", flat=True))
     return [p for p in candidati if p.pk in aggiunti or vale(condizioni, segni.get(p.pk, set()))]
 
 

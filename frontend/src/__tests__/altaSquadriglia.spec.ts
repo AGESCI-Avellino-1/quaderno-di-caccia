@@ -58,6 +58,13 @@ describe("Alta Squadriglia con l'anticamera", () => {
     expect(pagina.text()).toContain("La cerimonia d'ingresso")
   })
 
+  it('dice con quale reparto collegato è condivisa', async () => {
+    vi.spyOn(api, 'altaSquadriglia').mockResolvedValue({ ...ALTA, insieme_a: 'Reparto Orsa (M2)' })
+    const pagina = mount(AltaSquadrigliaVue, { props: { reparto: 5 }, global: { stubs } })
+    await flushPromises()
+    expect(pagina.find('[data-insieme]').text()).toContain('Reparto Orsa (M2)')
+  })
+
   it('fa entrare, anche direttamente, con il giorno scelto', async () => {
     vi.spyOn(api, 'altaSquadriglia').mockResolvedValue(ALTA)
     const entra = vi.spyOn(api, 'faiEntrareInAlta').mockResolvedValue(ALTA)

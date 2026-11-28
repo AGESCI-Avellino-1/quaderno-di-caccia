@@ -122,6 +122,14 @@ def test_reparti_collegati_una_sola_alta(capo, ragazza, reparto, altro, gruppo):
     # Recorded in each one's own reparto, shown on both pages.
     assert MembroAltaSquadriglia.objects.get(persona=tommaso).reparto == altro
     assert {m["persona_id"] for m in _alta(capo, altro)["entrati"]} == {ragazza.pk, tommaso.pk}
+    assert _alta(capo, altro)["insieme_a"] == str(reparto)
+    # In the book's form, each reparto says which one it is linked to.
+    funzioni.imposta(funzioni.CERIMONIE, True)
+    unita = _client(capo).get("/api/v1/cerimonie").json()["unita"]
+    assert {(u["id"], u["collegata_id"]) for u in unita} == {
+        (reparto.pk, altro.pk),
+        (altro.pk, reparto.pk),
+    }
     # Another reparto, not linked: a different one, and nobody in two.
     terzo = Unita.objects.create(
         gruppo=gruppo, nome="Terzo", tipo=TipoUnita.REPARTO, composizione=Composizione.MISTA

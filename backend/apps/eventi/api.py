@@ -682,6 +682,8 @@ class AltaSquadrigliaOut(Schema):
     puo_scegliere: bool
     # The entry ceremony in the book, if written and the book is on.
     cerimonia: int | None
+    # The linked reparto it is shared with, if any.
+    insieme_a: str = ""
 
 
 class PersoneAltaIn(Schema):
@@ -752,6 +754,7 @@ def alta_squadriglia(request, unita_id: int):
         "candidati": [_candidato_out(p, unita) for p in candidati],
         "puo_scegliere": policy.puo_scegliere_alta_squadriglia(request.auth, reparto),
         "cerimonia": cerimonia_ingresso(reparto),
+        "insieme_a": str(reparto.collegata_a) if reparto.collegata_a_id else "",
     }
 
 

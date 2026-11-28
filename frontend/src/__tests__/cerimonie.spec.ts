@@ -170,6 +170,49 @@ describe('libro delle cerimonie', () => {
     expect(sostituisci).toHaveBeenCalledWith({ name: 'voce-libro', params: { id: 3 } })
   })
 
+  it("due reparti collegati sono una scelta sola per l'Alta Squadriglia", async () => {
+    const reparti = [
+      {
+        id: 6,
+        nome: 'Reparto Millenium (M1)',
+        tipo: 'REPARTO',
+        collegata_id: 8,
+        collegata: 'Reparto Orsa (M2)',
+      },
+      {
+        id: 8,
+        nome: 'Reparto Orsa (M2)',
+        tipo: 'REPARTO',
+        collegata_id: 6,
+        collegata: 'Reparto Millenium (M1)',
+      },
+    ]
+    vi.spyOn(api, 'libroCerimonie').mockResolvedValue({
+      ...LIBRO,
+      puo_scrivere: true,
+      unita: reparti,
+      unita_condizioni: reparti,
+    })
+    vi.spyOn(api, 'aggiungibiliVoci').mockResolvedValue([])
+    // Kept on the second of the two.
+    vi.spyOn(api, 'voceLibro').mockResolvedValue({
+      ...VOCE,
+      ambito: 'ALTA_SQ',
+      unita_ids: [8],
+      puo_modificare: true,
+    })
+    const pagina = mount(VoceLibroView, { props: { id: 2 }, global: { stubs } })
+    await flushPromises()
+    await pagina
+      .findAll('button')
+      .find((b) => b.text() === 'Modifica')!
+      .trigger('click')
+    await flushPromises()
+    const opzioni = pagina.findAll('#voce-unita option')
+    expect(opzioni.map((o) => o.text())).toEqual(['Reparto Millenium (M1) e Reparto Orsa (M2)'])
+    expect((pagina.find('#voce-unita').element as HTMLSelectElement).value).toBe('6')
+  })
+
   it('scegliendo di chi è la voce propone le condizioni, finché non le cambi', async () => {
     vi.spyOn(api, 'libroCerimonie').mockResolvedValue({
       ...LIBRO,

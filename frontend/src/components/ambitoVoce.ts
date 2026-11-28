@@ -24,11 +24,22 @@ const TIPI_LC = ['BRANCO', 'CERCHIO', 'BRANCO_CERCHIO']
 /** The units an entry of that kind may be of, among those given (patrols: none, they are
  * chosen apart). */
 export function unitaPer(ambito: AmbitoVoceLibro, unita: UnitaVoceLibro[]): UnitaVoceLibro[] {
-  if (ambito === 'ALTA_SQ' || ambito === 'CONSIGLIO_CAPI')
-    return unita.filter((u) => u.tipo === 'REPARTO')
+  if (ambito === 'ALTA_SQ' || ambito === 'CONSIGLIO_CAPI') return coppie(unita)
   if (ambito === 'CONSIGLIO_ANZIANI') return unita.filter((u) => TIPI_LC.includes(u.tipo))
   if (ambito === 'UNITA') return unita.filter((u) => u.tipo !== 'COMUNITA_CAPI')
   return []
+}
+
+/** The reparti, two linked ones as one choice with both names: they share one Alta Squadriglia
+ * and count together for the Consiglio capi (DEC-279, DEC-439). */
+function coppie(unita: UnitaVoceLibro[]): UnitaVoceLibro[] {
+  const reparti = unita.filter((u) => u.tipo === 'REPARTO')
+  const elenco: UnitaVoceLibro[] = []
+  for (const u of reparti) {
+    if (u.collegata_id && elenco.some((x) => x.id === u.collegata_id)) continue
+    elenco.push(u.collegata ? { ...u, nome: `${u.nome} e ${u.collegata}` } : u)
+  }
+  return elenco
 }
 
 /** The kinds one may choose: the group's and the Co.Ca.'s for the capigruppo; the others

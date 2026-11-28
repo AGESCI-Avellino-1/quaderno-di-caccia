@@ -72,6 +72,9 @@ class UnitaScelta(Schema):
     id: int
     nome: str
     tipo: str = ""
+    # The unit linked to it (DEC-279): two linked reparti share one Alta Squadriglia (DEC-439).
+    collegata_id: int | None = None
+    collegata: str = ""
 
 
 class SquadrigliaScelta(Schema):
@@ -256,14 +259,18 @@ def libro(request):
     user = request.auth
     voci = _con_ambito(policy.voci_visibili(user))
     scrive = policy.puo_scrivere_voci(user)
-    attive = Unita.objects.filter(attiva=True, archiviata_il__isnull=True).exclude(
-        tipo=TipoUnita.COMUNITA_CAPI
+    attive = (
+        Unita.objects.filter(attiva=True, archiviata_il__isnull=True)
+        .exclude(tipo=TipoUnita.COMUNITA_CAPI)
+        .select_related("collegata_a")
     )
     sq = Squadriglia.objects.filter(attiva=True).order_by("unita_id", "nome")
     return {
         "voci": [_breve(v) for v in voci],
         "puo_scrivere": scrive,
-        "unita": [_unita_scelta_out(u) for u in policy.unita_per_voci(user)],
+        "unita": [
+            _unita_scelta_out(u) for u in policy.unita_per_voci(user).select_related("collegata_a")
+        ],
         "squadriglie": [_squadriglia_out(q) for q in policy.squadriglie_per_voci(user)],
         "puo_tutto_il_gruppo": policy.e_capogruppo(user),
         "unita_condizioni": [_unita_scelta_out(u) for u in attive] if scrive else [],
@@ -275,7 +282,14 @@ def libro(request):
 
 
 def _unita_scelta_out(u: Unita) -> dict:
-    return {"id": u.pk, "nome": str(u), "tipo": u.tipo}
+    collegata = u.collegata_a
+    return {
+        "id": u.pk,
+        "nome": str(u),
+        "tipo": u.tipo,
+        "collegata_id": collegata.pk if collegata else None,
+        "collegata": str(collegata) if collegata else "",
+    }
 
 
 def _squadriglia_out(q: Squadriglia) -> dict:

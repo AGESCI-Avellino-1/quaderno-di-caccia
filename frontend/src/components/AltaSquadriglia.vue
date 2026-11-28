@@ -63,6 +63,9 @@ const togli = (m: MembroAlta) => aggiorna(() => api.togliDallAlta(props.reparto,
 <template>
   <section v-if="alta" class="card card-body mb-5" data-alta>
     <h2 class="h5 mb-1">Alta Squadriglia</h2>
+    <p v-if="alta.insieme_a" class="small mb-1" data-insieme>
+      Una sola con il {{ alta.insieme_a }}, collegato.
+    </p>
     <p class="form-text">
       Gli eventi e le riunioni di Alta Squadriglia invitano chi è entrato; l'anticamera solo se lo
       scegli. Chi è in anticamera non legge le cerimonie dell'Alta Squadriglia finché non entra.

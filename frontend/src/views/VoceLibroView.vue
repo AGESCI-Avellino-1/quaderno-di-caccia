@@ -79,6 +79,14 @@ async function apriModulo() {
         cerimonia_ingresso_alta: !!voce.value.cerimonia_ingresso_alta,
       }
     : vuoto(libro.value)
+  // Two linked reparti are one choice: an entry kept on the second shows it (DEC-439).
+  const m = modulo.value
+  const scelta = unitaDellAmbito.value
+  const id = m.unita_ids[0]
+  if (m.ambito !== 'UNITA' && id && !scelta.some((u) => u.id === id)) {
+    const coppia = scelta.find((u) => u.collegata_id === id)
+    if (coppia) m.unita_ids = [coppia.id]
+  }
 }
 
 onMounted(async () => {

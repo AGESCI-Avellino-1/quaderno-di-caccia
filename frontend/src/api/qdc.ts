@@ -449,6 +449,9 @@ export interface UnitaVoceLibro {
   id: number
   nome: string
   tipo: string
+  /** The unit linked to it: two linked reparti share one Alta Squadriglia (DEC-439). */
+  collegata_id?: number | null
+  collegata?: string
 }
 
 export interface SquadrigliaVoceLibro {
@@ -2798,6 +2801,8 @@ export interface AltaSquadriglia {
   puo_scegliere: boolean
   /** The entry ceremony in the book, if written. */
   cerimonia: number | null
+  /** The linked reparto it is shared with, if any. */
+  insieme_a?: string
 }
 
 export const percorsoPresenze = (evento: number) => `/api/v1/eventi/${evento}/presenze`

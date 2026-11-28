@@ -56,7 +56,8 @@ Di chi è una voce decide chi la scrive; chi la legge lo decidono le condizioni 
   un'unità collegata) e i capigruppo. Lo staff aggiunge solo le proprie unità e ne tiene
   sempre almeno una.
 - **Alta Squadriglia**, **Consiglio capi** e **una o più squadriglie**: lo staff del reparto
-  (anche collegato) e i capigruppo.
+  (anche collegato) e i capigruppo. L'Alta Squadriglia si sceglie per nome, tra quelle aperte
+  (vedi la pagina dell'[unità](capo/unita)).
 - **Consiglio degli Anziani**: lo staff del branco o del cerchio e i capigruppo.
 
 1. In **Cerimonie e tradizioni** tocca **Nuova voce**, oppure apri una voce e tocca
@@ -97,8 +98,8 @@ Squadriglia la legge da quel giorno, chi lascia il gruppo smette di leggerla.
   Consiglio degli Anziani.
 - **È nel Consiglio capi**: i capi squadriglia e chi lo staff ha equiparato a loro, di
   qualsiasi reparto o di un reparto (con il reparto collegato).
-- **È nell'Alta Squadriglia**, di qualsiasi reparto o di un reparto: chi ne fa parte, non chi
-  è nell'anticamera.
+- **È nell'Alta Squadriglia**, in qualsiasi o in quella scelta per nome: chi ne fa parte, non chi
+  è nell'anticamera. Quando un'Alta Squadriglia si chiude non vale più per nessuno.
 - **Passa da una branca all'altra**: da quando lo staff lo mette nel passaggio, e per sempre,
   anche dopo il passaggio (non se il passaggio viene annullato).
 - **Ha fatto la Promessa**, **Ha raggiunto una tappa** (quella tappa o una successiva, nella
@@ -140,6 +141,9 @@ pagina dell'unità compare da solo tra chi l'ha vissuta, con il giorno in cui è
 
 Chi è nell'anticamera dell'Alta Squadriglia non legge nessuna voce dell'Alta Squadriglia, nemmeno
 se scelto a mano, finché non entra.
+
+Quando l'Alta Squadriglia si chiude, le sue voci restano nel libro con il suo nome e «(chiusa)»:
+le leggono i capi e chi le ha vissute. Nella nuova si possono copiare.
 
 Il registro serve anche alle condizioni: con **Ha vissuto una voce del libro** una voce la
 leggono, per esempio, solo quelli che hanno già vissuto un'altra cerimonia.

@@ -443,12 +443,17 @@ def test_consiglio_capi_e_alta_squadriglia(ragazza, csq, reparto, squadriglia, v
         data_inizio=INIZIO_ANNO,
         data_fine=AnnoAssociativo.corrente().fine.replace(day=30),
     )
-    MembroAltaSquadriglia.objects.create(reparto=reparto, persona=ragazza, data_inizio=INIZIO_ANNO)
+    from apps.eventi.servizi import crea_alta
+
+    alta = crea_alta(reparto, "Alta Squadriglia")
+    MembroAltaSquadriglia.objects.create(
+        alta=alta, reparto=reparto, persona=ragazza, data_inizio=INIZIO_ANNO
+    )
     assert _titoli(ragazza) == {"Alta Squadriglia", "Fuoco di gruppo"}
     # Who is out, or only in the antechamber, does not count (DEC-439).
     MembroAltaSquadriglia.objects.filter(persona=ragazza).update(data_fine=date.today())
     assert _titoli(ragazza) == {"Alta Squadriglia"}
-    MembroAltaSquadriglia.objects.create(reparto=reparto, persona=ragazza)
+    MembroAltaSquadriglia.objects.create(alta=alta, reparto=reparto, persona=ragazza)
     assert _titoli(ragazza) == {"Alta Squadriglia"}
 
 

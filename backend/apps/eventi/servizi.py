@@ -30,6 +30,7 @@ from apps.permessi.policy import STAFF_DI_UNITA
 
 from .models import (
     CERCHIE_DI_REPARTO,
+    AltaSquadriglia,
     Cerchia,
     DelegaSquadriglia,
     Evento,
@@ -504,6 +505,11 @@ def titolo_riunione(serie: RiunioneRicorrente, unita: list[Unita] | None = None)
         return titolo_riunione_staff(unita)
     if serie.squadriglia_id:
         return f"Riunione di squadriglia {serie.squadriglia.nome}"
+    if serie.cerchia == Cerchia.ALTA_SQUADRIGLIA and serie.unita_id:
+        # With its name (DEC-440).
+        alta = alta_aperta(serie.unita)
+        if alta is not None:
+            return str(alta)
     if serie.cerchia != Cerchia.TUTTI:
         return serie.get_cerchia_display()
     return f"Riunione di {serie.unita}"
@@ -738,6 +744,18 @@ def _aperto(persona: Persona) -> MembroAltaSquadriglia | None:
     return MembroAltaSquadriglia.objects.filter(persona=persona, data_fine__isnull=True).first()
 
 
+def alta_aperta(reparto: Unita) -> AltaSquadriglia | None:
+    """The Alta Squadriglia open now for this reparto, shared with the linked one (DEC-440)."""
+    return AltaSquadriglia.objects.aperte_di(reparto).select_related("reparto").first()
+
+
+def _alta_o_errore(reparto: Unita) -> AltaSquadriglia:
+    alta = alta_aperta(reparto)
+    if alta is None:
+        raise ValidationError("Il reparto non ha un'Alta Squadriglia: creala prima.")
+    return alta
+
+
 def _controlla(reparto: Unita, persone: list[Persona]) -> None:
     possibili = set(ragazzi_per_alta(reparto).values_list("pk", flat=True))
     if any(p.pk not in possibili for p in persone):
@@ -749,13 +767,58 @@ def _controlla(reparto: Unita, persone: list[Persona]) -> None:
             raise ValidationError(f"{persona} è nell'Alta Squadriglia di un altro reparto.")
 
 
+def _nome(nome: str) -> str:
+    nome = " ".join(nome.split())
+    if not nome:
+        raise ValidationError("Scrivi il nome dell'Alta Squadriglia.")
+    if len(nome) > AltaSquadriglia._meta.get_field("nome").max_length:
+        raise ValidationError("Il nome va scritto in breve: al massimo 120 caratteri.")
+    return nome
+
+
+@transaction.atomic
+def crea_alta(reparto: Unita, nome: str, copia: list[int] = ()) -> AltaSquadriglia:
+    """A new Alta Squadriglia, empty, when none is open (DEC-440); `copia`: entries of the book
+    of the one closed last, copied into it (text, conditions, attachments; no register)."""
+    if alta_aperta(reparto) is not None:
+        raise ValidationError("Il reparto ha già un'Alta Squadriglia: chiudila prima.")
+    precedente = AltaSquadriglia.objects.di(reparto).filter(chiusa_il__isnull=False).first()
+    alta = AltaSquadriglia.objects.create(reparto=reparto, nome=_nome(nome))
+    if copia:
+        from apps.cerimonie.servizi import copia_voci
+
+        if precedente is None:
+            raise ValidationError("Non c'è un'Alta Squadriglia da cui copiare.")
+        copia_voci(precedente, alta, copia)
+    return alta
+
+
+def rinomina_alta(alta: AltaSquadriglia, nome: str) -> AltaSquadriglia:
+    alta.nome = _nome(nome)
+    alta.save(update_fields=["nome", "aggiornato_il"])
+    return alta
+
+
+@transaction.atomic
+def chiudi_alta(alta: AltaSquadriglia, giorno: date | None = None) -> None:
+    """Closed for good (DEC-440): who is in leaves with their period, which stays in its
+    history; the antechamber empties."""
+    giorno = giorno or date.today()
+    for membro in alta.membri.filter(data_fine__isnull=True):
+        togli_dall_alta(membro, giorno)
+    alta.chiusa_il = giorno
+    alta.save(update_fields=["chiusa_il", "aggiornato_il"])
+
+
 @transaction.atomic
 def metti_in_anticamera(reparto: Unita, persone: list[Persona]) -> None:
     """About to enter (DEC-439); who is already in, or in the antechamber, stays as is."""
+    alta = _alta_o_errore(reparto)
     _controlla(reparto, persone)
     for persona in persone:
         if _aperto(persona) is None:
             MembroAltaSquadriglia.objects.create(
+                alta=alta,
                 reparto=_reparto_della_persona(reparto, persona),
                 persona=persona,
                 in_anticamera_dal=date.today(),
@@ -768,12 +831,13 @@ def fai_entrare(reparto: Unita, persone: list[Persona], giorno: date) -> None:
     who is already in gets the new day."""
     if giorno > date.today():
         raise ValidationError("Il giorno non può essere nel futuro.")
+    alta = _alta_o_errore(reparto)
     _controlla(reparto, persone)
     for persona in persone:
         aperto = _aperto(persona)
         if aperto is None:
             aperto = MembroAltaSquadriglia(
-                reparto=_reparto_della_persona(reparto, persona), persona=persona
+                alta=alta, reparto=_reparto_della_persona(reparto, persona), persona=persona
             )
         aperto.data_inizio = giorno
         aperto.save()

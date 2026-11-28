@@ -113,13 +113,24 @@ function nuovoGruppo() {
             </option>
           </select>
           <select
-            v-if="c.tipo === 'consiglio_capi' || c.tipo === 'alta_squadriglia'"
+            v-if="c.tipo === 'consiglio_capi'"
             v-model="c.unita"
             class="form-control form-control-sm w-auto"
             aria-label="Reparto"
           >
             <option :value="undefined">di qualsiasi reparto</option>
             <option v-for="u in reparti" :key="u.id" :value="u.id">del {{ u.nome }}</option>
+          </select>
+          <select
+            v-if="c.tipo === 'alta_squadriglia'"
+            v-model="c.alta"
+            class="form-control form-control-sm w-auto"
+            aria-label="Alta Squadriglia"
+          >
+            <option :value="undefined">qualsiasi</option>
+            <option v-for="a in libro.alte_condizioni ?? []" :key="a.id" :value="a.id">
+              {{ a.nome }}
+            </option>
           </select>
           <select
             v-if="c.tipo === 'squadriglia'"

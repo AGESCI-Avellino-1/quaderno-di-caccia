@@ -454,6 +454,13 @@ export interface UnitaVoceLibro {
   collegata?: string
 }
 
+/** An Alta Squadriglia, by name with its reparti (DEC-440). */
+export interface AltaVoceLibro {
+  id: number
+  nome: string
+  chiusa?: boolean
+}
+
 export interface SquadrigliaVoceLibro {
   id: number
   nome: string
@@ -487,6 +494,9 @@ export interface LibroCerimonie {
   /** For the conditions, to who writes: every active unit and patrol, the roles. */
   unita_condizioni: UnitaVoceLibro[]
   squadriglie_condizioni: SquadrigliaVoceLibro[]
+  /** The open Alte Squadriglie one writes the entries of; every one for the conditions. */
+  alte?: AltaVoceLibro[]
+  alte_condizioni?: AltaVoceLibro[]
   incarichi: { valore: string; nome: string }[]
 }
 
@@ -505,8 +515,10 @@ export interface CondizioneVoce {
     | 'tappa'
     | 'partenza'
     | 'partecipazione'
-  /** `unita`; for `consiglio_capi` and `alta_squadriglia`, the reparto (none = any). */
+  /** `unita`; for `consiglio_capi`, the reparto (none = any). */
   unita?: number
+  /** `alta_squadriglia`: which one (none = any, DEC-440). */
+  alta?: number
   squadriglia?: number
   branca?: string
   ruolo?: string
@@ -529,6 +541,7 @@ export interface PartecipanteVoce extends PersonaScelta {
 export interface VoceLibro extends VoceLibroBreve {
   unita_ids: number[]
   squadriglie_ids: number[]
+  alta_id?: number | null
   testo: string
   /** Read by who reads the entry, online only. */
   allegati: { id: number; titolo: string; tipo_file: string }[]
@@ -548,6 +561,8 @@ export interface VoceLibroIn {
   ambito: AmbitoVoceLibro
   unita_ids: number[]
   squadriglie_ids: number[]
+  /** ALTA_SQ: which Alta Squadriglia (DEC-440). */
+  alta_id?: number | null
   testo: string
   aggiunti: number[]
   condizioni: CondizioneVoce[][]
@@ -2803,6 +2818,21 @@ export interface AltaSquadriglia {
   cerimonia: number | null
   /** The linked reparto it is shared with, if any. */
   insieme_a?: string
+  /** The one open now, with its name (DEC-440); null: to be created. */
+  alta?: AltaBreve | null
+  /** The closed ones, last first, with who was in them. */
+  chiuse?: (AltaBreve & { chiusa_il: string; membri: MembroAlta[] })[]
+  /** Entries of the book of the one closed last, to copy into a new one. */
+  da_copiare?: { id: number; titolo: string; cerimonia_ingresso_alta: boolean }[]
+}
+
+export interface AltaBreve {
+  id: number
+  /** As the staff wrote it. */
+  nome: string
+  /** As it is shown: «Alta Squadriglia «…»». */
+  titolo: string
+  aperta_il: string
 }
 
 export const percorsoPresenze = (evento: number) => `/api/v1/eventi/${evento}/presenze`
@@ -3723,7 +3753,7 @@ export const api = {
     condizioni: CondizioneVoce[][],
     aggiunti: number[],
     voce_id?: number,
-    di?: { ambito: AmbitoVoceLibro; unita_ids: number[] },
+    di?: { alta_id: number | null },
   ) =>
     richiesta<PersonaScelta[]>('/api/v1/cerimonie/anteprima', {
       metodo: 'POST',
@@ -4722,6 +4752,20 @@ export const api = {
     richiesta<Delega>(`/api/v1/squadriglie/${squadriglia}/delega`, { metodo: 'DELETE' }),
   altaSquadriglia: (reparto: number) =>
     richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`),
+  creaAlta: (reparto: number, nome: string, copia: number[]) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`, {
+      metodo: 'POST',
+      corpo: { nome, copia },
+    }),
+  rinominaAlta: (reparto: number, nome: string) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia`, {
+      metodo: 'PUT',
+      corpo: { nome },
+    }),
+  chiudiAlta: (reparto: number) =>
+    richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia/chiudi`, {
+      metodo: 'POST',
+    }),
   mettiInAnticamera: (reparto: number, persone: number[]) =>
     richiesta<AltaSquadriglia>(`/api/v1/unita/${reparto}/alta-squadriglia/anticamera`, {
       metodo: 'POST',

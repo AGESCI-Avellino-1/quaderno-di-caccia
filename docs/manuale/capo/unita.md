@@ -203,15 +203,23 @@ registrare. Ogni lettura delle eccezioni resta nel registro degli accessi.
 
 ### Alta Squadriglia
 
-In reparto c'è anche il riquadro **Alta Squadriglia**. Due reparti collegati ne hanno una sola,
-la stessa nelle pagine dei due reparti.
+In reparto c'è anche il riquadro dell'**Alta Squadriglia**. Due reparti collegati ne hanno una
+sola, la stessa nelle pagine dei due reparti. Ne è aperta una alla volta, con il suo nome.
+
+- **Crearla:** se il reparto non ne ha una aperta, scrivi il **Nome** e tocca **Crea l'Alta
+  Squadriglia**. Se prima ce n'era un'altra, puoi spuntare le voci del libro delle cerimonie da
+  copiare nella nuova (per esempio la cerimonia d'ingresso): la copia ha lo stesso testo, le
+  stesse condizioni e gli stessi allegati, e nessuno tra chi l'ha vissuta.
+- **Cambia nome** corregge il nome quando vuoi.
+- **Chiudi l'Alta Squadriglia**, dopo una conferma, la chiude per sempre: chi è dentro esce e
+  resta nello storico, l'anticamera si svuota. Poi se ne crea una nuova, che parte vuota. Le
+  chiuse restano in fondo al riquadro, in **Alte Squadriglie chiuse**, con chi c'era.
 
 - **Dentro**: chi ne fa parte, con il giorno in cui è entrato. Resta dentro anche gli anni dopo,
   finché è in reparto.
 - **Anticamera**: chi sta per entrare. Non legge le cerimonie dell'Alta Squadriglia finché non
   entra; agli eventi e alle riunioni è invitato solo se lo scegli.
-- **Negli anni passati**: chi c'era ed è uscito, dal giorno in cui è entrato a quello in cui è
-  uscito.
+- **Usciti**: chi c'era ed è uscito, dal giorno in cui è entrato a quello in cui è uscito.
 
 Lo staff del reparto (anche collegato) e i capigruppo:
 
@@ -220,7 +228,7 @@ Lo staff del reparto (anche collegato) e i capigruppo:
    senza anticamera, anche con un giorno degli anni passati: per chi c'era già prima dell'app.
 2. In **Anticamera**, **Entra oggi** fa entrare da oggi; **Togli** lo toglie dall'anticamera.
 3. In **Dentro**, **In anticamera** lo rimette in anticamera; **Togli** lo fa uscire da oggi: resta
-   negli anni passati.
+   tra gli usciti.
 
 Chi lascia il reparto esce da solo dall'Alta Squadriglia. Se nel libro delle
 [cerimonie e tradizioni](../cerimonie) c'è la cerimonia d'ingresso, chi viene segnato tra chi

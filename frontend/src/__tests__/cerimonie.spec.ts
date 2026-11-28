@@ -143,6 +143,7 @@ describe('libro delle cerimonie', () => {
       ambito: 'UNITA',
       unita_ids: [5],
       squadriglie_ids: [],
+      alta_id: null,
       testo: '<p>Il ponte</p>',
       aggiunti: [9],
       condizioni: [],
@@ -170,7 +171,7 @@ describe('libro delle cerimonie', () => {
     expect(sostituisci).toHaveBeenCalledWith({ name: 'voce-libro', params: { id: 3 } })
   })
 
-  it("due reparti collegati sono una scelta sola per l'Alta Squadriglia", async () => {
+  it('due reparti collegati sono una scelta sola per il Consiglio capi', async () => {
     const reparti = [
       {
         id: 6,
@@ -197,7 +198,7 @@ describe('libro delle cerimonie', () => {
     // Kept on the second of the two.
     vi.spyOn(api, 'voceLibro').mockResolvedValue({
       ...VOCE,
-      ambito: 'ALTA_SQ',
+      ambito: 'CONSIGLIO_CAPI',
       unita_ids: [8],
       puo_modificare: true,
     })
@@ -227,6 +228,8 @@ describe('libro delle cerimonie', () => {
         { id: 6, nome: 'Reparto (G1)', tipo: 'REPARTO' },
       ],
       squadriglie_condizioni: [{ id: 7, nome: 'Sq. Aquile', unita_id: 6 }],
+      alte: [{ id: 9, nome: 'Alta Squadriglia «Orsa» · Reparto (G1)' }],
+      alte_condizioni: [{ id: 9, nome: 'Alta Squadriglia «Orsa» · Reparto (G1)' }],
     })
     vi.spyOn(api, 'aggiungibiliVoci').mockResolvedValue([])
     const crea = vi.spyOn(api, 'creaVoceLibro').mockResolvedValue({ ...VOCE, id: 3 })
@@ -239,9 +242,15 @@ describe('libro delle cerimonie', () => {
       'Una o più squadriglie',
       'Consiglio degli Anziani',
     ])
+    // The Alta Squadriglia by its name (DEC-440), with its condition.
     await pagina.find('#voce-ambito').setValue('ALTA_SQ')
     await flushPromises()
-    expect(pagina.findAll('#voce-unita option').map((o) => o.text())).toEqual(['Reparto (G1)'])
+    expect(pagina.findAll('#voce-alta option').map((o) => o.text())).toEqual([
+      'Alta Squadriglia «Orsa» · Reparto (G1)',
+    ])
+    expect(pagina.findComponent(CondizioniVoce).props('modelValue')).toEqual([
+      [{ tipo: 'alta_squadriglia', alta: 9 }],
+    ])
     await pagina.find('#voce-ambito').setValue('SQUADRIGLIE')
     await pagina.find('#voce-sq-7').setValue(true)
     await flushPromises()
@@ -328,8 +337,7 @@ describe('libro delle cerimonie', () => {
       .trigger('click')
     await flushPromises()
     expect(anteprima).toHaveBeenCalledWith([[{ tipo: 'consiglio_capi' }]], [], 2, {
-      ambito: 'UNITA',
-      unita_ids: [5],
+      alta_id: null,
     })
     expect(pagina.find('[data-anteprima]').text()).toContain('Verdi Sara')
   })

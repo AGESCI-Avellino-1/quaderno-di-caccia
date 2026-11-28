@@ -45,6 +45,14 @@ def luca(reparto) -> Persona:
     return persona
 
 
+@pytest.fixture(autouse=True)
+def alta(request, reparto):
+    """The reparto's open Alta Squadriglia (DEC-440); not for the migration tests."""
+    if "migrazione" in request.node.name:
+        return None
+    return servizi.crea_alta(reparto, "Aquile Randagie")
+
+
 @pytest.fixture
 def altro(gruppo, reparto) -> Unita:
     """A reparto linked to `reparto`: one Alta Squadriglia for the two."""
@@ -232,21 +240,21 @@ def test_anticamera_dalle_riunioni_ricorrenti(
 
 
 @pytest.fixture
-def libro(reparto):
+def libro(reparto, alta):
     funzioni.imposta(funzioni.CERIMONIE, True)
     ingresso = VoceLibro.objects.create(
         titolo="Ingresso in Alta",
         ambito=AmbitoVoce.ALTA_SQUADRIGLIA,
+        alta=alta,
         cerimonia_ingresso_alta=True,
-        condizioni=[[{"tipo": "alta_squadriglia", "unita": reparto.pk}]],
+        condizioni=[[{"tipo": "alta_squadriglia", "alta": alta.pk}]],
     )
-    ingresso.unita.set([reparto])
     notte = VoceLibro.objects.create(
         titolo="Notte dell'Alta",
         ambito=AmbitoVoce.ALTA_SQUADRIGLIA,
-        condizioni=[[{"tipo": "alta_squadriglia", "unita": reparto.pk}]],
+        alta=alta,
+        condizioni=[[{"tipo": "alta_squadriglia", "alta": alta.pk}]],
     )
-    notte.unita.set([reparto])
     return {"ingresso": ingresso, "notte": notte}
 
 
@@ -262,7 +270,7 @@ def test_anticamera_non_legge_le_voci_dell_alta(capo, luca, reparto, libro):
     assert _client(luca).get(f"/api/v1/cerimonie/{libro['notte'].pk}").status_code == 404
     risposta = _client(capo).post(
         "/api/v1/cerimonie/anteprima",
-        {"aggiunti": [luca.pk], "ambito": "ALTA_SQ", "unita_ids": [reparto.pk]},
+        {"aggiunti": [luca.pk], "alta_id": libro["notte"].alta_id},
         "application/json",
     )
     assert risposta.json() == []
@@ -298,14 +306,14 @@ def test_cerimonia_d_ingresso_fa_entrare(capo, ragazza, luca, csq, reparto, libr
     assert _alta(capo, reparto)["cerimonia"] == ingresso.pk
 
 
-def test_una_sola_cerimonia_d_ingresso(capo, reparto, altro, libro):
+def test_una_sola_cerimonia_d_ingresso(capo, reparto, altro, alta, libro):
     risposta = _client(capo).post(
         "/api/v1/cerimonie",
         {
             "titolo": "Nuovo ingresso",
             "tipo": "CERIMONIA",
             "ambito": "ALTA_SQ",
-            "unita_ids": [altro.pk],
+            "alta_id": alta.pk,
             "cerimonia_ingresso_alta": True,
         },
         "application/json",

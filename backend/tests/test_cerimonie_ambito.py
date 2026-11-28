@@ -82,26 +82,31 @@ def test_comunita_capi_solo_capigruppo(capo, capogruppo):
     assert risposta.status_code == 201 and risposta.json()["unita"] == "Comunità capi"
 
 
-def test_strutture_di_un_reparto(capo, reparto, branco, gruppo):
+def test_strutture_di_un_reparto(capo, capogruppo, reparto, branco, gruppo):
+    from apps.eventi.servizi import crea_alta
+
     _accendi()
     client = _client(capo)
-    risposta = client.post(URL, _con("ALTA_SQ", [reparto]), "application/json")
+    alta = crea_alta(reparto, "Aquile Randagie")
+    risposta = client.post(URL, _dati(ambito="ALTA_SQ", alta_id=alta.pk), "application/json")
     assert risposta.status_code == 201
-    assert risposta.json()["unita"] == f"Alta Squadriglia · {reparto}"
+    assert risposta.json()["unita"] == "Alta Squadriglia «Aquile Randagie»"
+    assert risposta.json()["alta_id"] == alta.pk
+    assert client.post(URL, _dati(ambito="ALTA_SQ"), "application/json").status_code == 400
     risposta = client.post(URL, _con("CONSIGLIO_CAPI", [reparto]), "application/json")
     assert risposta.json()["unita"] == f"Consiglio capi · {reparto}"
     # One reparto, nothing else.
     altro = Unita.objects.create(
         gruppo=gruppo, nome="Altro", tipo=TipoUnita.REPARTO, composizione=Composizione.MISTA
     )
-    reparto.collegata_a, altro.collegata_a = altro, reparto
-    reparto.save()
-    altro.save()
-    doppio = client.post(URL, _con("ALTA_SQ", [reparto, altro]), "application/json")
+    doppio = _client(capogruppo).post(
+        URL, _con("CONSIGLIO_CAPI", [reparto, altro]), "application/json"
+    )
     assert doppio.status_code == 400
-    # Linked reparti share the Alta Squadriglia, and say so.
-    risposta = client.post(URL, _con("ALTA_SQ", [reparto]), "application/json")
-    assert risposta.json()["unita"] == f"Alta Squadriglia · {reparto} e {altro}"
+    # Another reparto's Alta Squadriglia is not the capo's.
+    estranea = crea_alta(altro, "Altra")
+    risposta = client.post(URL, _dati(ambito="ALTA_SQ", alta_id=estranea.pk), "application/json")
+    assert risposta.status_code == 403
 
 
 def test_consiglio_degli_anziani(staff_branco, capogruppo, reparto, branco):
@@ -163,10 +168,18 @@ def test_condizioni_di_un_reparto(capo, reparto, gruppo, csq, ragazza):
     cc_altro = _voce("Consiglio dell'altro", altro)
     cc_altro.condizioni = [[{"tipo": "consiglio_capi", "unita": altro.pk}]]
     cc_altro.save()
-    alta = _voce("Alta del reparto", reparto, ambito=AmbitoVoce.ALTA_SQUADRIGLIA)
-    alta.condizioni = [[{"tipo": "alta_squadriglia", "unita": reparto.pk}]]
-    alta.save()
-    MembroAltaSquadriglia.objects.create(reparto=reparto, persona=ragazza, data_inizio=INIZIO_ANNO)
+    from apps.eventi.servizi import crea_alta
+
+    di_reparto = crea_alta(reparto, "Aquile Randagie")
+    alta = VoceLibro.objects.create(
+        titolo="Alta del reparto",
+        ambito=AmbitoVoce.ALTA_SQUADRIGLIA,
+        alta=di_reparto,
+        condizioni=[[{"tipo": "alta_squadriglia", "alta": di_reparto.pk}]],
+    )
+    MembroAltaSquadriglia.objects.create(
+        alta=di_reparto, reparto=reparto, persona=ragazza, data_inizio=INIZIO_ANNO
+    )
     assert _titoli(csq) == set()
     assert _titoli(ragazza) == {"Alta del reparto"}
     # Linked: one Consiglio capi for every permission.
@@ -174,13 +187,13 @@ def test_condizioni_di_un_reparto(capo, reparto, gruppo, csq, ragazza):
     reparto.save()
     altro.save()
     assert _titoli(csq) == {"Consiglio dell'altro"}
-    # A reparto that is not one is refused.
+    # An Alta Squadriglia that does not exist is refused.
     risposta = _client(capo).put(
         f"{URL}/{alta.pk}",
-        _con(
-            "ALTA_SQ",
-            [reparto],
-            condizioni=[[{"tipo": "alta_squadriglia", "unita": 99999}]],
+        _dati(
+            ambito="ALTA_SQ",
+            alta_id=di_reparto.pk,
+            condizioni=[[{"tipo": "alta_squadriglia", "alta": 99999}]],
         ),
         "application/json",
     )

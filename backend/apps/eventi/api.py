@@ -670,6 +670,25 @@ class MembroAltaOut(Schema):
     al: date | None
 
 
+class AltaBreve(Schema):
+    id: int
+    # As written by the staff, and as it is shown («Alta Squadriglia «…»»).
+    nome: str
+    titolo: str
+    aperta_il: date
+
+
+class AltaChiusa(AltaBreve):
+    chiusa_il: date
+    membri: list[MembroAltaOut]
+
+
+class VoceDaCopiare(Schema):
+    id: int
+    titolo: str
+    cerimonia_ingresso_alta: bool
+
+
 class AltaSquadrigliaOut(Schema):
     """The Alta Squadriglia of a reparto, shared with the linked one (DEC-439)."""
 
@@ -684,6 +703,22 @@ class AltaSquadrigliaOut(Schema):
     cerimonia: int | None
     # The linked reparto it is shared with, if any.
     insieme_a: str = ""
+    # The one open now, with its name (DEC-440); None: to be created.
+    alta: AltaBreve | None = None
+    # The closed ones, last first, with who was in them.
+    chiuse: list[AltaChiusa] = []
+    # Entries of the book of the one closed last, to copy into a new one.
+    da_copiare: list[VoceDaCopiare] = []
+
+
+class NomeAltaIn(Schema):
+    nome: str
+
+
+class NuovaAltaIn(Schema):
+    nome: str
+    # Entries of the book of the one closed last to copy (DEC-440).
+    copia: list[int] = []
 
 
 class PersoneAltaIn(Schema):
@@ -729,16 +764,23 @@ def alta_squadriglia(request, unita_id: int):
     from apps.anagrafica.servizi import unita_delle_persone
     from apps.cerimonie.servizi import cerimonia_ingresso
 
-    from .models import MembroAltaSquadriglia
+    from .models import AltaSquadriglia, MembroAltaSquadriglia
 
     reparto = _reparto_alta(request, unita_id)
+    alta = servizi.alta_aperta(reparto)
     membri = list(MembroAltaSquadriglia.objects.dell_alta(reparto).select_related("persona"))
+    chiuse = list(
+        AltaSquadriglia.objects.di(reparto)
+        .filter(chiusa_il__isnull=False)
+        .prefetch_related("membri__persona")
+    )
     aperti = [m for m in membri if m.data_fine is None]
     dentro = {m.persona_id for m in aperti}
     candidati = list(
         servizi.ragazzi_per_alta(reparto).exclude(pk__in=dentro).order_by("cognome", "nome")
     )
-    unita = unita_delle_persone([m.persona for m in membri] + candidati)
+    vecchi = [m for c in chiuse for m in c.membri.all() if m.data_inizio]
+    unita = unita_delle_persone([m.persona for m in membri + vecchi] + candidati)
     per_nome = lambda m: (m.persona.cognome, m.persona.nome)  # noqa: E731
     return {
         "entrati": [_membro_out(m, unita) for m in sorted(aperti, key=per_nome) if m.data_inizio],
@@ -751,11 +793,75 @@ def alta_squadriglia(request, unita_id: int):
                 (m for m in membri if m.data_fine), key=lambda m: m.data_fine, reverse=True
             )
         ],
-        "candidati": [_candidato_out(p, unita) for p in candidati],
+        # Nobody to choose while there is no Alta Squadriglia (DEC-440).
+        "candidati": [_candidato_out(p, unita) for p in candidati] if alta else [],
         "puo_scegliere": policy.puo_scegliere_alta_squadriglia(request.auth, reparto),
         "cerimonia": cerimonia_ingresso(reparto),
         "insieme_a": str(reparto.collegata_a) if reparto.collegata_a_id else "",
+        "alta": _alta_breve(alta) if alta else None,
+        "chiuse": [
+            {
+                **_alta_breve(c),
+                "chiusa_il": c.chiusa_il,
+                "membri": [
+                    _membro_out(m, unita)
+                    for m in sorted(
+                        (m for m in c.membri.all() if m.data_inizio), key=lambda m: m.data_inizio
+                    )
+                ],
+            }
+            for c in chiuse
+        ],
+        "da_copiare": _da_copiare(chiuse[0]) if chiuse and not alta else [],
     }
+
+
+def _alta_breve(alta) -> dict:
+    return {"id": alta.pk, "nome": alta.nome, "titolo": str(alta), "aperta_il": alta.aperta_il}
+
+
+def _da_copiare(alta) -> list[dict]:
+    from apps.cerimonie.models import VoceLibro
+
+    return [
+        {"id": v.pk, "titolo": v.titolo, "cerimonia_ingresso_alta": v.cerimonia_ingresso_alta}
+        for v in VoceLibro.objects.filter(alta=alta).order_by("titolo")
+    ]
+
+
+@router.post("/unita/{unita_id}/alta-squadriglia", response=AltaSquadrigliaOut)
+def crea_alta(request, unita_id: int, dati: NuovaAltaIn):
+    """A new one, empty, when none is open; with copies of the old one's entries (DEC-440)."""
+    reparto = _reparto_alta(request, unita_id, scrivere=True)
+    try:
+        servizi.crea_alta(reparto, dati.nome, dati.copia)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return alta_squadriglia(request, unita_id)
+
+
+@router.put("/unita/{unita_id}/alta-squadriglia", response=AltaSquadrigliaOut)
+def rinomina_alta(request, unita_id: int, dati: NomeAltaIn):
+    reparto = _reparto_alta(request, unita_id, scrivere=True)
+    alta = servizi.alta_aperta(reparto)
+    if alta is None:
+        raise HttpError(404, "Il reparto non ha un'Alta Squadriglia.")
+    try:
+        servizi.rinomina_alta(alta, dati.nome)
+    except ValidationError as errore:
+        raise _errore(errore) from errore
+    return alta_squadriglia(request, unita_id)
+
+
+@router.post("/unita/{unita_id}/alta-squadriglia/chiudi", response=AltaSquadrigliaOut)
+def chiudi_alta(request, unita_id: int):
+    """Closed for good: who is in leaves, the history stays (DEC-440)."""
+    reparto = _reparto_alta(request, unita_id, scrivere=True)
+    alta = servizi.alta_aperta(reparto)
+    if alta is None:
+        raise HttpError(404, "Il reparto non ha un'Alta Squadriglia.")
+    servizi.chiudi_alta(alta)
+    return alta_squadriglia(request, unita_id)
 
 
 def _persone_alta(dati: PersoneAltaIn) -> list[Persona]:

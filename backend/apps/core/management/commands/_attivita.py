@@ -787,6 +787,9 @@ def crea_attivita(email) -> None:
             "porta un canto e una legna.</p>",
         },
     )
+    # The reparto's Alta Squadriglia, with its name (DEC-440).
+    alta = f"/unita/{reparto.pk}/alta-squadriglia"
+    alta_id = capo_reparto("post", alta, {"nome": "Orsa Maggiore"})["alta"]["id"]
     notte = capo_reparto(
         "post",
         "/cerimonie",
@@ -794,14 +797,14 @@ def crea_attivita(email) -> None:
             "titolo": "Notte dell'Alta Squadriglia",
             "tipo": "CERIMONIA",
             "ambito": "ALTA_SQ",
-            "unita_ids": [reparto.pk],
+            "alta_id": alta_id,
             "testo": "<p>Un testo di prova: la veglia dei capi e vice capi squadriglia, con "
             "la promessa di servire il reparto.</p><ul><li>Il cerchio</li><li>La parola"
             "</li><li>Il silenzio</li></ul>",
             # The reparto's Consiglio capi, or its Alta Squadriglia; Giulia chosen by hand.
             "condizioni": [
                 [{"tipo": "consiglio_capi", "unita": reparto.pk}],
-                [{"tipo": "alta_squadriglia", "unita": reparto.pk}],
+                [{"tipo": "alta_squadriglia", "alta": alta_id}],
             ],
             "aggiunti": [giulia],
         },
@@ -826,9 +829,8 @@ def crea_attivita(email) -> None:
             "data": anno.inizio.replace(year=anno.inizio.year - 15, month=5, day=20).isoformat(),
         },
     )
-    # The reparto's Alta Squadriglia (DEC-439): Matteo in since last year, by hand; Alice in
-    # the antechamber, about to enter.
-    alta = f"/unita/{reparto.pk}/alta-squadriglia"
+    # Who is in it (DEC-439): Matteo since last year, by hand; Alice in the antechamber, about to
+    # enter.
     capo_reparto(
         "post",
         f"{alta}/ingresso",

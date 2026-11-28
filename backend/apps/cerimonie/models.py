@@ -31,9 +31,9 @@ class AmbitoVoce(models.TextChoices):
     CONSIGLIO_ANZIANI = "CONSIGLIO_ANZIANI", "Consiglio degli Anziani"
 
 
-# The kinds that sit in one unit: a reparto, or a branco/cerchio for the Consiglio degli Anziani.
+# The kinds that sit in one unit: a reparto, or a branco/cerchio for the Consiglio degli Anziani
+# (the Alta Squadriglia has its own, DEC-440).
 AMBITI_DI_UNA_UNITA = (
-    AmbitoVoce.ALTA_SQUADRIGLIA,
     AmbitoVoce.CONSIGLIO_CAPI,
     AmbitoVoce.CONSIGLIO_ANZIANI,
 )
@@ -49,9 +49,17 @@ class VoceLibro(ModelloTracciato):
     # The editor's cleaned HTML, no images (attachments come apart).
     testo = models.TextField(blank=True)
     ambito = models.CharField(max_length=20, choices=AmbitoVoce.choices, default=AmbitoVoce.GRUPPO)
-    # UNITA: its units (one or more); Alta Squadriglia and Consiglio capi: the reparto;
+    # UNITA: its units (one or more); Consiglio capi: the reparto;
     # Consiglio degli Anziani: the branco or cerchio. Their staffs write it (DEC-438).
     unita = models.ManyToManyField("organizzazione.Unita", blank=True, related_name="voci_libro")
+    # ALTA_SQ: which Alta Squadriglia, with its name (DEC-440); kept when it closes.
+    alta = models.ForeignKey(
+        "eventi.AltaSquadriglia",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="voci_libro",
+    )
     # SQUADRIGLIE: the patrols, written by the staff of their reparto.
     squadriglie = models.ManyToManyField(
         "organizzazione.Squadriglia", blank=True, related_name="voci_libro"

@@ -52,6 +52,7 @@ function vuoto(l: LibroCerimonie): VoceLibroIn {
     ambito: l.puo_tutto_il_gruppo || !unita ? 'GRUPPO' : 'UNITA',
     unita_ids: !l.puo_tutto_il_gruppo && unita ? [unita.id] : [],
     squadriglie_ids: [],
+    alta_id: null,
     testo: '',
     aggiunti: [],
     condizioni: [],
@@ -72,6 +73,7 @@ async function apriModulo() {
         ambito: voce.value.ambito,
         unita_ids: [...voce.value.unita_ids],
         squadriglie_ids: [...voce.value.squadriglie_ids],
+        alta_id: voce.value.alta_id ?? null,
         testo: voce.value.testo,
         aggiunti: [...voce.value.aggiunti],
         condizioni: JSON.parse(JSON.stringify(voce.value.condizioni)),
@@ -117,9 +119,17 @@ const squadriglie = computed(() => {
   }
   return elenco
 })
+// The open Alte Squadriglie one writes; the entry's own stays, closed too (DEC-440).
+const alte = computed(() => {
+  const elenco = [...(libro.value?.alte ?? [])]
+  const id = voce.value?.alta_id
+  const sua = libro.value?.alte_condizioni?.find((a) => a.id === id)
+  if (sua && !elenco.some((a) => a.id === id)) elenco.push(sua)
+  return elenco
+})
 const ambiti = computed(() => {
   if (!libro.value) return []
-  const elenco = ambitiPossibili(libro.value, unita.value, squadriglie.value)
+  const elenco = ambitiPossibili(libro.value, unita.value, squadriglie.value, alte.value)
   const attuale = modulo.value?.ambito
   return attuale && !elenco.includes(attuale) ? [attuale, ...elenco] : elenco
 })
@@ -142,6 +152,8 @@ function cambiaAmbito() {
   const scelte = tenute.length ? tenute : possibili.slice(0, 1)
   m.unita_ids = m.ambito === 'UNITA' ? scelte : scelte.slice(0, 1)
   if (m.ambito !== 'SQUADRIGLIE') m.squadriglie_ids = []
+  if (m.ambito !== 'ALTA_SQ') m.alta_id = null
+  else if (!m.alta_id) m.alta_id = alte.value[0]?.id ?? null
   if (m.ambito !== 'GRUPPO') m.cerimonia_del_totem = false
   if (m.ambito !== 'ALTA_SQ') m.cerimonia_ingresso_alta = false
 }
@@ -153,24 +165,25 @@ watch(
       modulo.value.ambito,
       [...modulo.value.unita_ids],
       [...modulo.value.squadriglie_ids],
+      modulo.value.alta_id ?? null,
     ],
   (nuovo, vecchio) => {
     const m = modulo.value
     if (!m || !nuovo || !vecchio) return
-    const [ambito, u, q] = vecchio as [VoceLibroIn['ambito'], number[], number[]]
-    const prima = JSON.stringify(condizioniProposte(ambito, u, q))
+    const [ambito, u, q, a] = vecchio as [VoceLibroIn['ambito'], number[], number[], number | null]
+    const prima = JSON.stringify(condizioniProposte(ambito, u, q, a))
     if (m.condizioni.length && JSON.stringify(m.condizioni) !== prima) return
-    m.condizioni = condizioniProposte(m.ambito, m.unita_ids, m.squadriglie_ids)
+    m.condizioni = condizioniProposte(m.ambito, m.unita_ids, m.squadriglie_ids, m.alta_id)
   },
 )
 
 async function chiLegge() {
   if (!modulo.value) return
-  const { condizioni, aggiunti, ambito, unita_ids } = modulo.value
+  const { condizioni, aggiunti, ambito, alta_id } = modulo.value
+  const alta = ambito === 'ALTA_SQ' ? (alta_id ?? null) : null
   lettori.value =
-    (await esegui(() =>
-      api.anteprimaLettori(condizioni, aggiunti, props.id, { ambito, unita_ids }),
-    )) ?? null
+    (await esegui(() => api.anteprimaLettori(condizioni, aggiunti, props.id, { alta_id: alta }))) ??
+    null
 }
 
 async function salva() {
@@ -262,6 +275,12 @@ async function elimina() {
           </div>
         </div>
       </fieldset>
+      <div v-else-if="modulo.ambito === 'ALTA_SQ'" class="mb-3 md:col-6">
+        <label class="form-label small mb-0" for="voce-alta">Quale</label>
+        <select id="voce-alta" v-model="modulo.alta_id" class="form-control" required>
+          <option v-for="a in alte" :key="a.id" :value="a.id">{{ a.nome }}</option>
+        </select>
+      </div>
       <div v-else-if="unitaDellAmbito.length" class="mb-3 md:col-6">
         <label class="form-label small mb-0" for="voce-unita">
           {{ modulo.ambito === 'CONSIGLIO_ANZIANI' ? 'Branco o cerchio' : 'Reparto' }}

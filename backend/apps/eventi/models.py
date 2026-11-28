@@ -446,6 +446,55 @@ class DelegaSquadriglia(ModelloTracciato):
         return f"{self.persona} per {self.squadriglia}"
 
 
+class AltaSquadrigliaQuerySet(models.QuerySet):
+    def di(self, reparto):
+        """Of this reparto or the one linked to it, open or closed."""
+        reparti = [reparto.pk] + ([reparto.collegata_a_id] if reparto.collegata_a_id else [])
+        return self.filter(reparto_id__in=reparti)
+
+    def aperte_di(self, reparto):
+        return self.di(reparto).filter(chiusa_il__isnull=True)
+
+
+class AltaSquadriglia(ModelloTracciato):
+    """The Alta Squadriglia of a reparto, or of two linked reparti (DEC-440): one open at a time,
+    with a name the staff corrects when it likes; closed, it stays for the history with its
+    periods and its entries of the book, and a new one starts empty."""
+
+    # The reparto it was created for; with the one linked to it, it is theirs.
+    reparto = models.ForeignKey(
+        "organizzazione.Unita", on_delete=models.PROTECT, related_name="alte_squadriglie"
+    )
+    nome = models.CharField(max_length=120)
+    aperta_il = models.DateField(default=date.today)
+    chiusa_il = models.DateField(null=True, blank=True)
+
+    objects = AltaSquadrigliaQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "Alta Squadriglia"
+        verbose_name_plural = "Alte Squadriglie"
+        ordering = ["-aperta_il", "-pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["reparto"],
+                condition=models.Q(chiusa_il__isnull=True),
+                name="una_alta_aperta_per_reparto",
+            )
+        ]
+
+    def __str__(self) -> str:
+        """The name, said as an Alta Squadriglia unless it already is one."""
+        if self.nome.lower().startswith("alta squadriglia"):
+            return self.nome
+        return f"Alta Squadriglia «{self.nome}»"
+
+    def reparti(self) -> list[int]:
+        """Its reparto and the one linked to it."""
+        collegata = self.reparto.collegata_a_id
+        return [self.reparto_id] + ([collegata] if collegata else [])
+
+
 class MembroAltaSquadrigliaQuerySet(models.QuerySet):
     def entrati(self, al_giorno: date | None = None):
         """Who is in the Alta Squadriglia on that day (today by default): entered, not out."""
@@ -459,9 +508,9 @@ class MembroAltaSquadrigliaQuerySet(models.QuerySet):
         return self.filter(data_inizio__isnull=True, data_fine__isnull=True)
 
     def dell_alta(self, reparto):
-        """Of the Alta Squadriglia of this reparto: two linked reparti share one (DEC-439)."""
-        reparti = [reparto.pk] + ([reparto.collegata_a_id] if reparto.collegata_a_id else [])
-        return self.filter(reparto_id__in=reparti)
+        """Of the Alta Squadriglia open now for this reparto: two linked reparti share one
+        (DEC-439, DEC-440)."""
+        return self.filter(alta__in=AltaSquadriglia.objects.aperte_di(reparto))
 
 
 class MembroAltaSquadriglia(ModelloTracciato):
@@ -471,6 +520,8 @@ class MembroAltaSquadriglia(ModelloTracciato):
     `in_anticamera_dal`. Kept after leaving: past meetings keep their invited. The yearly
     lists of before became periods (migration 0015)."""
 
+    # Which one (DEC-440); `reparto` is the person's own, of the two linked ones.
+    alta = models.ForeignKey(AltaSquadriglia, on_delete=models.CASCADE, related_name="membri")
     reparto = models.ForeignKey(
         "organizzazione.Unita", on_delete=models.CASCADE, related_name="alta_squadriglia"
     )

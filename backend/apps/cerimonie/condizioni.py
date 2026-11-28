@@ -12,8 +12,8 @@ The kinds, all about today's active members:
 - `incarico`: holds that patrol role, or is in the Consiglio degli Anziani;
 - `consiglio_capi`: capo squadriglia, or a member the staff treats as one (DEC-419); with a
   `unita`, of that reparto or the one linked to it (DEC-438);
-- `alta_squadriglia`: in the Alta Squadriglia today, entered, not in its antechamber (DEC-439);
-  with a `unita`, of that reparto or the one linked to it, which share one (DEC-438);
+- `alta_squadriglia`: in an Alta Squadriglia today, entered, not in its antechamber (DEC-439);
+  with an `alta`, in that one (DEC-440): once it closes nobody is;
 - `totem`: has a totem name;
 - `passaggio`: in a passage from one branch to another, from its proposal on, for good, unless
   that passage or their part in it was cancelled;
@@ -91,8 +91,10 @@ def segno(condizione: dict) -> str:
         return f"squadriglia:{condizione['squadriglia']}"
     if tipo == "incarico":
         return f"incarico:{condizione['ruolo']}"
-    if tipo in ("consiglio_capi", "alta_squadriglia") and condizione.get("unita"):
+    if tipo == "consiglio_capi" and condizione.get("unita"):
         return f"{tipo}:{condizione['unita']}"
+    if tipo == "alta_squadriglia" and condizione.get("alta"):
+        return f"{tipo}:{condizione['alta']}"
     if tipo == "passaggio":
         return f"passaggio:{condizione['da']}>{condizione['a']}"
     if tipo == "tappa":
@@ -150,13 +152,20 @@ def _campi(c: dict, unita: set[int], voci: set[int], reparti: set[int], sq: set[
         if c.get("squadriglia") not in sq:
             raise CondizioneNonValida("Scegli la squadriglia della condizione.")
         return {"tipo": tipo, "squadriglia": c["squadriglia"]}
-    if tipo in ("consiglio_capi", "alta_squadriglia"):
+    if tipo == "consiglio_capi":
         # Without a reparto: of any reparto, as before DEC-438.
         if c.get("unita") is None:
             return {"tipo": tipo}
         if c["unita"] not in reparti:
             raise CondizioneNonValida("Scegli il reparto della condizione.")
         return {"tipo": tipo, "unita": c["unita"]}
+    if tipo == "alta_squadriglia":
+        # Without one: any Alta Squadriglia.
+        if c.get("alta") is None:
+            return {"tipo": tipo}
+        if c["alta"] not in _alte():
+            raise CondizioneNonValida("Scegli l'Alta Squadriglia della condizione.")
+        return {"tipo": tipo, "alta": c["alta"]}
     if tipo == "incarico":
         if c.get("ruolo") not in {r.value for r in INCARICHI}:
             raise CondizioneNonValida("Scegli l'incarico della condizione.")
@@ -174,6 +183,12 @@ def _campi(c: dict, unita: set[int], voci: set[int], reparti: set[int], sq: set[
             raise CondizioneNonValida("Scegli la voce del libro a cui ha partecipato.")
         return {"tipo": tipo, "voce": c["voce"]}
     return {"tipo": tipo}
+
+
+def _alte() -> set[int]:
+    from apps.eventi.models import AltaSquadriglia
+
+    return set(AltaSquadriglia.objects.values_list("pk", flat=True))
 
 
 def vale(gruppi: list[list[dict]], segni: set[str]) -> bool:
@@ -271,13 +286,13 @@ def _di_squadriglia(ids, segni) -> None:
         .values_list("appartenenza__persona_id", "appartenenza__squadriglia__unita_id")
     ):
         _del_reparto(segni[persona], "consiglio_capi", reparto, collegate)
-    # Who is in today: never the antechamber (DEC-439).
-    for persona, reparto in (
+    # Who is in today: never the antechamber (DEC-439); in which one (DEC-440).
+    for persona, alta in (
         MembroAltaSquadriglia.objects.entrati()
         .filter(persona_id__in=ids)
-        .values_list("persona_id", "reparto_id")
+        .values_list("persona_id", "alta_id")
     ):
-        _del_reparto(segni[persona], "alta_squadriglia", reparto, collegate)
+        segni[persona].update(("alta_squadriglia", f"alta_squadriglia:{alta}"))
 
 
 def _di_tribu(ids, segni) -> None:

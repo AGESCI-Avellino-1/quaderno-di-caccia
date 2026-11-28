@@ -16,6 +16,7 @@ from ninja.files import UploadedFile
 
 from apps.anagrafica.models import Persona
 from apps.anagrafica.servizi import con_unita, unita_delle_persone
+from apps.eventi.models import AltaSquadriglia
 from apps.impostazioni import funzioni
 from apps.impostazioni.html import in_testo, pulisci
 from apps.organizzazione.models import Squadriglia, TipoUnita, Unita
@@ -31,7 +32,7 @@ from .models import (
     TipoVoce,
     VoceLibro,
 )
-from .servizi import entrati_nell_alta, reparti_dell_alta, reparti_della_voce
+from .servizi import entrati_nell_alta
 from .stampa import pdf_voce
 
 router = Router(tags=["cerimonie"])
@@ -61,7 +62,9 @@ def _scrivibile(request, voce_id: int) -> VoceLibro:
 
 
 def _con_ambito(voci):
-    return voci.prefetch_related("unita__collegata_a", "squadriglie")
+    return voci.select_related("alta__reparto").prefetch_related(
+        "unita__collegata_a", "squadriglie"
+    )
 
 
 # Where the Consiglio degli Anziani sits (DEC-438).
@@ -81,6 +84,13 @@ class SquadrigliaScelta(Schema):
     id: int
     nome: str
     unita_id: int
+
+
+class AltaScelta(Schema):
+    id: int
+    # Its name, with the reparti it is of.
+    nome: str
+    chiusa: bool = False
 
 
 class VoceBreve(Schema):
@@ -111,6 +121,10 @@ class LibroOut(Schema):
     # ask for.
     unita_condizioni: list[UnitaScelta] = []
     squadriglie_condizioni: list[SquadrigliaScelta] = []
+    # The open Alte Squadriglie one writes the entries of; every one, closed too, for the
+    # conditions (DEC-440).
+    alte: list[AltaScelta] = []
+    alte_condizioni: list[AltaScelta] = []
     incarichi: list[Scelta] = []
 
 
@@ -136,6 +150,7 @@ class AllegatoOut(Schema):
 class VoceOut(VoceBreve):
     unita_ids: list[int]
     squadriglie_ids: list[int]
+    alta_id: int | None = None
     testo: str
     allegati: list[AllegatoOut]
     puo_modificare: bool
@@ -160,6 +175,8 @@ class VoceIn(Schema):
     ambito: str = AmbitoVoce.GRUPPO
     unita_ids: list[int] = []
     squadriglie_ids: list[int] = []
+    # ALTA_SQ: which Alta Squadriglia (DEC-440).
+    alta_id: int | None = None
     testo: str = ""
     aggiunti: list[int] = []
     condizioni: list = []
@@ -175,14 +192,16 @@ def _elenco(nomi: list[str]) -> str:
 
 def nome_ambito(voce: VoceLibro) -> str:
     """Whose an entry is, in words (DEC-438): «Tutto il gruppo», «Comunità capi», the units,
-    «Alta Squadriglia · Reparto …» (with the linked one, as they share it, DEC-439)…"""
+    the Alta Squadriglia by its name (DEC-440), closed or not…"""
     if voce.ambito in (AmbitoVoce.GRUPPO, AmbitoVoce.COCA):
         return voce.get_ambito_display()
+    if voce.ambito == AmbitoVoce.ALTA_SQUADRIGLIA:
+        if voce.alta is None:
+            return voce.get_ambito_display()
+        return f"{voce.alta} (chiusa)" if voce.alta.chiusa_il else str(voce.alta)
     if voce.ambito == AmbitoVoce.SQUADRIGLIE:
         return _elenco(sorted(str(s) for s in voce.squadriglie.all())) if voce.pk else ""
     unita = sorted(voce.unita.all(), key=str) if voce.pk else []
-    if voce.ambito == AmbitoVoce.ALTA_SQUADRIGLIA:
-        unita += [u.collegata_a for u in unita if u.collegata_a and u.collegata_a not in unita]
     nomi = _elenco([str(u) for u in unita]) if unita else ""
     if voce.ambito == AmbitoVoce.UNITA:
         return nomi
@@ -243,6 +262,7 @@ def _voce_out(request, voce: VoceLibro) -> dict:
         **_breve(voce),
         "unita_ids": sorted(u.pk for u in voce.unita.all()),
         "squadriglie_ids": sorted(s.pk for s in voce.squadriglie.all()),
+        "alta_id": voce.alta_id,
         "testo": voce.testo,
         "allegati": [
             {"id": a.pk, "titolo": a.titolo, "tipo_file": a.tipo_file} for a in voce.allegati.all()
@@ -275,6 +295,12 @@ def libro(request):
         "puo_tutto_il_gruppo": policy.e_capogruppo(user),
         "unita_condizioni": [_unita_scelta_out(u) for u in attive] if scrive else [],
         "squadriglie_condizioni": [_squadriglia_out(q) for q in sq] if scrive else [],
+        "alte": [_alta_out(a) for a in policy.alte_per_voci(user)],
+        "alte_condizioni": (
+            [_alta_out(a) for a in AltaSquadriglia.objects.select_related("reparto__collegata_a")]
+            if scrive
+            else []
+        ),
         "incarichi": (
             [{"valore": r.value, "nome": r.label} for r in cond.INCARICHI] if scrive else []
         ),
@@ -289,6 +315,17 @@ def _unita_scelta_out(u: Unita) -> dict:
         "tipo": u.tipo,
         "collegata_id": collegata.pk if collegata else None,
         "collegata": str(collegata) if collegata else "",
+    }
+
+
+def _alta_out(alta) -> dict:
+    """«Alta Squadriglia «…» · Reparto A e Reparto B», closed or not."""
+    reparti = [alta.reparto] + ([alta.reparto.collegata_a] if alta.reparto.collegata_a else [])
+    nome = f"{alta} · {_elenco([str(r) for r in reparti])}"
+    return {
+        "id": alta.pk,
+        "nome": nome + (" (chiusa)" if alta.chiusa_il else ""),
+        "chiusa": bool(alta.chiusa_il),
     }
 
 
@@ -323,9 +360,8 @@ class AnteprimaIn(Schema):
     aggiunti: list[int] = []
     # The entry being changed: who is in its register reads it too.
     voce_id: int | None = None
-    # Whose it is: an Alta Squadriglia's is not read by its antechamber (DEC-439).
-    ambito: str = AmbitoVoce.GRUPPO
-    unita_ids: list[int] = []
+    # An Alta Squadriglia's is not read by its antechamber (DEC-439).
+    alta_id: int | None = None
 
 
 @router.post("/cerimonie/anteprima", response=list[Aggiungibile])
@@ -336,10 +372,7 @@ def anteprima(request, dati: AnteprimaIn):
         raise HttpError(403, "Le voci le scrivono lo staff delle unità e i capigruppo.")
     gruppi = _condizioni(dati.condizioni)
     voce = _leggibile(request, dati.voce_id) if dati.voce_id is not None else None
-    reparti = (
-        reparti_dell_alta(dati.unita_ids) if dati.ambito == AmbitoVoce.ALTA_SQUADRIGLIA else set()
-    )
-    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti, voce, reparti))
+    return con_unita(policy.lettori_delle_condizioni(gruppi, dati.aggiunti, voce, dati.alta_id))
 
 
 def _condizioni(gruppi: list) -> list[list[dict]]:
@@ -387,12 +420,13 @@ def segna(request, voce_id: int, dati: SegnaIn):
 
 def _entrano(voce: VoceLibro, persone: list[int], giorno: date) -> None:
     """Marked in the entry ceremony: the ragazzi/e of its reparti enter the Alta Squadriglia
-    that day (DEC-439); the others (a capo, who has since moved on) stay only in the register."""
+    that day (DEC-439), if it is still open (DEC-440); the others (a capo, who has since moved
+    on) stay only in the register."""
     from apps.eventi import servizi as eventi
 
-    reparto = voce.unita.first()
-    if reparto is None:
+    if voce.alta is None or voce.alta.chiusa_il is not None:
         return
+    reparto = voce.alta.reparto
     possibili = eventi.ragazzi_per_alta(reparto).filter(pk__in=persone)
     try:
         eventi.fai_entrare(reparto, list(possibili), giorno)
@@ -422,6 +456,25 @@ def voce_pdf(request, voce_id: int):
     return risposta
 
 
+def _alta(request, voce: VoceLibro, dati: VoceIn):
+    """The Alta Squadriglia of the entry (DEC-440): one open of a reparto the staff serves, or
+    the one it already had (closed too)."""
+    from apps.eventi.models import AltaSquadriglia
+
+    if dati.alta_id is None:
+        raise HttpError(400, "Scegli l'Alta Squadriglia della voce.")
+    if voce.alta_id == dati.alta_id:
+        return voce.alta
+    alta = policy.alte_per_voci(request.auth).filter(pk=dati.alta_id).first()
+    if alta is None:
+        if AltaSquadriglia.objects.filter(pk=dati.alta_id, chiusa_il__isnull=False).exists():
+            raise HttpError(400, "Quell'Alta Squadriglia è chiusa: scegli quella di adesso.")
+        raise HttpError(
+            403, "Puoi scegliere solo l'Alta Squadriglia dei reparti in cui sei in servizio."
+        )
+    return alta
+
+
 def _ambito(request, voce: VoceLibro, dati: VoceIn) -> tuple[list[Unita], list[Squadriglia]]:
     """The units and patrols of the entry, checked (DEC-438). The staff adds only the units
     (or patrols of the reparti) it serves; those already there stay a choice."""
@@ -447,6 +500,8 @@ def _ambito(request, voce: VoceLibro, dati: VoceIn) -> tuple[list[Unita], list[S
                 403, "Puoi scegliere solo le squadriglie dei reparti in cui sei in servizio."
             )
         return [], list(Squadriglia.objects.filter(pk__in=scelte))
+    if dati.ambito == AmbitoVoce.ALTA_SQUADRIGLIA:
+        return [], []
     gia = set(voce.unita.values_list("pk", flat=True)) if voce.pk else set()
     ammesse = set(policy.unita_per_voci(user).values_list("pk", flat=True))
     scelte = set(dati.unita_ids)
@@ -492,6 +547,7 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
     voce.condizioni = _condizioni(dati.condizioni)
     voce.titolo, voce.tipo, voce.testo = titolo, dati.tipo, testo
     unita, squadriglie = _ambito(request, voce, dati)
+    voce.alta = _alta(request, voce, dati) if dati.ambito == AmbitoVoce.ALTA_SQUADRIGLIA else None
     voce.ambito = dati.ambito
     di_tutti = dati.ambito == AmbitoVoce.GRUPPO
     if dati.cerimonia_del_totem != voce.cerimonia_del_totem:
@@ -517,10 +573,11 @@ def _applica(request, voce: VoceLibro, dati: VoceIn, gia: set[int]) -> VoceLibro
         voce.squadriglie.set(squadriglie)
         if voce.cerimonia_ingresso_alta:
             # One per Alta Squadriglia: the one chosen now takes the place of the one before.
-            for altra in VoceLibro.objects.filter(cerimonia_ingresso_alta=True).exclude(pk=voce.pk):
-                if reparti_della_voce(altra) & reparti_della_voce(voce):
-                    altra.cerimonia_ingresso_alta = False
-                    altra.save(update_fields=["cerimonia_ingresso_alta", "aggiornato_il"])
+            for altra in VoceLibro.objects.filter(
+                cerimonia_ingresso_alta=True, alta=voce.alta
+            ).exclude(pk=voce.pk):
+                altra.cerimonia_ingresso_alta = False
+                altra.save(update_fields=["cerimonia_ingresso_alta", "aggiornato_il"])
         # Who would no longer write it keeps one of their own units (the error undoes it all).
         if not policy.puo_scrivere_voce(request.auth, voce):
             raise HttpError(403, "Tieni almeno una delle unità in cui sei in servizio.")

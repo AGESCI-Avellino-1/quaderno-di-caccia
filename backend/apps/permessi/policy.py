@@ -2625,18 +2625,18 @@ def segnabili_nel_registro(user):
     return soci_attivi().order_by("cognome", "nome")
 
 
-def lettori_delle_condizioni(condizioni, aggiunti_ids, voce=None, reparti_alta=()):
+def lettori_delle_condizioni(condizioni, aggiunti_ids, voce=None, alta_id=None):
     """The ragazzi/e who would read an entry with these conditions and these people added by
     hand, today, with who is in its register: the preview for who writes it (DEC-437). The
-    capi read it anyway. `reparti_alta`: an entry of that Alta Squadriglia, which its
-    antechamber does not read (DEC-439)."""
+    capi read it anyway. `alta_id`: an entry of that Alta Squadriglia, which its antechamber
+    does not read (DEC-439, DEC-440)."""
     from apps.cerimonie.condizioni import segni_di, vale
     from apps.cerimonie.servizi import entrati_nell_alta
     from apps.eventi.models import MembroAltaSquadriglia
 
     anticamera = set(
         MembroAltaSquadriglia.objects.in_anticamera()
-        .filter(reparto_id__in=set(reparti_alta))
+        .filter(alta_id=alta_id)
         .values_list("persona_id", flat=True)
     )
     candidati = [p for p in aggiungibili_alle_voci_tutti() if p.pk not in anticamera]
@@ -2684,9 +2684,25 @@ def unita_della_voce(voce) -> set[int]:
         return set()
     if voce.ambito == AmbitoVoce.SQUADRIGLIE:
         return set(voce.squadriglie.values_list("unita_id", flat=True))
+    if voce.ambito == AmbitoVoce.ALTA_SQUADRIGLIA:
+        # Its Alta Squadriglia's reparti (DEC-440).
+        return set(voce.alta.reparti()) if voce.alta_id else set()
     if voce.ambito in (AmbitoVoce.GRUPPO, AmbitoVoce.COCA):
         return set()
     return set(voce.unita.values_list("pk", flat=True))
+
+
+def alte_per_voci(user):
+    """The open Alte Squadriglie whose entries one writes: of the reparti one serves, every one
+    for the capigruppo (DEC-440)."""
+    from apps.eventi.models import AltaSquadriglia
+
+    aperte = AltaSquadriglia.objects.filter(chiusa_il__isnull=True).select_related(
+        "reparto__collegata_a"
+    )
+    if e_capogruppo(user):
+        return aperte
+    return aperte.filter(reparto__in=unita_per_voci(user))
 
 
 def squadriglie_per_voci(user) -> QuerySet[Squadriglia]:

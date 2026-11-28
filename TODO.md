@@ -16,6 +16,7 @@ sviluppo sono in [TODO_SVILUPPO.md](TODO_SVILUPPO.md).
 | [#106](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/106) | Partecipanti selezionati: filtro per unità (DEC-434) | Miglioramento | Basso | Bassa | VER |
 | [#110](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/110) | Libro delle cerimonie e tradizioni (DEC-437) | Funzione | Medio | Alta | VER |
 | [#111](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/111) | Libro delle cerimonie: voci di più unità, dell'Alta Squadriglia, del Consiglio capi o di altre strutture; chi è nella tribù o ha «Modifica totem» acceso ha vissuto la cerimonia del totem (DEC-438); Alta Squadriglia con l'anticamera (DEC-439) | Miglioramento | Medio | Alta | VER |
+| [#112](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/112) | La mia tribù: immagini dei totem caricate a metà | Correzione | Medio | Da capire | |
 
 Nessuna segnalazione di sicurezza aperta.
 

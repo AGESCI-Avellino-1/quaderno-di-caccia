@@ -5,6 +5,33 @@ versione installata e quella nuova prima di chiedere se aggiornare. Il dettaglio
 versione, con il manuale in PDF, è nella pagina
 [Releases](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/releases).
 
+## 1.53.0 — 28 novembre 2026
+
+### Novità
+
+**Alta Squadriglia con un nome** ([#113](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/113)): nella pagina del reparto l'Alta Squadriglia ha un nome, che lo staff del reparto e i capigruppo cambiano quando vogliono. Ne è aperta una alla volta per reparto, o per due reparti collegati.
+
+- **Chiuderla:** **Chiudi l'Alta Squadriglia**, dopo una conferma, la chiude per sempre: chi è dentro esce e resta nello storico, l'anticamera si svuota. Le chiuse restano in fondo al riquadro, con chi c'era.
+- **Crearne una nuova:** parte vuota; si possono copiare le voci del libro della vecchia (per esempio la cerimonia d'ingresso), con testo, condizioni e allegati, senza chi le ha vissute.
+- **Nel libro delle cerimonie** una voce dell'Alta Squadriglia si sceglie direttamente per nome, e la condizione **È nell'Alta Squadriglia** chiede quella. Le voci di un'Alta Squadriglia chiusa restano con il suo nome: le leggono i capi e chi le ha vissute.
+- Le riunioni ricorrenti dell'Alta Squadriglia prendono il suo nome.
+
+**Reparti collegati** ([#111](https://github.com/AGESCI-Avellino-1/quaderno-di-caccia/issues/111)): nel modulo di una voce del Consiglio capi i due reparti collegati sono una scelta sola, con tutti e due i nomi; il riquadro dell'Alta Squadriglia dice con quale reparto è condivisa.
+
+### Aggiornare
+
+```bash
+scripts/aggiorna.sh v1.53.0
+```
+
+Tre migrazioni del database, applicate dallo script. L'Alta Squadriglia che c'era diventa quella aperta del reparto, con il nome «Alta Squadriglia» e tutto quello che aveva, storia compresa: cambiale il nome dalla pagina del reparto.
+
+### Documentazione
+
+Le pagine del manuale sull'unità e sul libro delle cerimonie spiegano come creare, rinominare e chiudere l'Alta Squadriglia e cosa succede alle sue voci. Schermate rifatte per la pagina del reparto e per il libro.
+
+Provata con i test. Se qualcosa non va, segnalalo con una issue.
+
 ## 1.52.0 — 28 novembre 2026
 
 ### Novità
